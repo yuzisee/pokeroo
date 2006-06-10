@@ -1,0 +1,56 @@
+;This file was created by Graph (http://www.padowan.dk)
+;Change this file at your own risk.
+[Graph]
+Version = 3.3.1
+Build = 204
+MinVersion = 2.5
+OS = Windows XP 5.1 Service Pack 2
+
+[Axes]
+xMin = -0.350305817550943
+xMax = 0.936528265770296
+xTickUnit = 0.1
+xGridUnit = 0.1
+yMin = -0.0672221726847068
+yMax = 0.330223925628864
+yTickUnit = 0.05
+yGridUnit = 0.05
+AxesColor = clBlue
+GridColor = 0x00FF9999
+ShowLegend = 1
+Radian = 1
+
+[Data]
+FuncCount = 5
+PointSeriesCount = 0
+TextLabelCount = 0
+ShadeCount = 0
+
+[Func1]
+FuncType = 0
+y = ((1+2*x)^0.49)*((1-x)^0.51)-.8
+Color = 0x006600FF
+LegendText = p=0
+
+[Func2]
+FuncType = 0
+y = ((1+2*(1-x)*x)^.49)*((1-x)^.51)-.8
+Color = 0x0033CC00
+
+[Func3]
+FuncType = 0
+y = ((1+.2 + (2*x-.2)*(1-x))^.49)*((1-x)^.51)-.8
+Color = 0x00990000
+LegendText = vc + (1-f)(ef-vc)
+
+[Func4]
+FuncType = 0
+y = .2
+Color = clBlack
+LegendText = bet .2
+
+[Func5]
+FuncType = 0
+y = ((1+.2 + (2*x-.2)*.1/(x+.1))^.49)*((1-x)^.51)-.8
+Color = 0x0090A9AD
+

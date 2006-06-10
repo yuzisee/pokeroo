@@ -1,0 +1,44 @@
+;This file was created by Graph (http://www.padowan.dk)
+;Change this file at your own risk.
+[Graph]
+Version = 3.3.1
+Build = 204
+MinVersion = 2.5
+OS = Windows XP 5.1 Service Pack 2
+
+[Axes]
+xMin = -0.2
+xMax = 1
+xTickUnit = 0.1
+xGridUnit = 0.1
+yMin = -1
+yMax = 3
+yTickUnit = 0.5
+yGridUnit = 0.5
+AxesColor = clBlue
+GridColor = 0x00FF9999
+ShowLegend = 0
+Radian = 1
+Title = 2 bet, $1 to call, $7 = p, 3left
+
+[Data]
+FuncCount = 3
+PointSeriesCount = 0
+TextLabelCount = 0
+ShadeCount = 0
+
+[Func1]
+FuncType = 0
+y = .2+(5*x-.2)*(.8)/(x+.8)
+Color = 0x009300D6
+
+[Func2]
+FuncType = 0
+y = .2+(5*x-.2)*(.24)/(x+.24)
+Color = 0x000033FF
+
+[Func3]
+FuncType = 0
+y = .2+(5*x-.2)*.1/(x+.1)
+Color = 0x0000CC33
+

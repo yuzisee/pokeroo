@@ -1,0 +1,64 @@
+;This file was created by Graph (http://www.padowan.dk)
+;Change this file at your own risk.
+[Graph]
+Version = 3.3.1
+Build = 204
+MinVersion = 2.5
+OS = Windows XP 5.1 Service Pack 2
+
+[Axes]
+xMin = -0.0731645265357358
+xMax = 1.16664644765101
+xTickUnit = 0.1
+xGridUnit = 0.1
+yMin = 0.453232696937841
+yMax = 2.66447378592462
+yTickUnit = 0.2
+yGridUnit = 0.2
+AxesColor = clBlue
+GridColor = 0x00FF9999
+ShowLegend = 1
+Radian = 1
+
+[Data]
+FuncCount = 7
+PointSeriesCount = 0
+TextLabelCount = 0
+ShadeCount = 0
+
+[Func1]
+FuncType = 0
+y = ((1.3  +1*x)^0.99)*((1-x)^0.1)
+Color = 0x006600FF
+LegendText = p=0
+
+[Func2]
+FuncType = 0
+y = ((1.3 +(1-x)*2*x)^.99)*((1-x)^.01)
+Color = 0x0033CC00
+
+[Func3]
+FuncType = 0
+y = ((1.3 +.2 +(1-x)*(2*x-.2))^.99)*((1-x)^.01)
+Color = 0x00990000
+
+[Func4]
+FuncType = 0
+y = ((1.3+.2 + (2*x-.2)*.2/(x+.2))^.99)*((1-x)^.01)
+Color = clGray
+
+[Func5]
+FuncType = 0
+y = .8
+Color = clBlack
+
+[Func6]
+FuncType = 0
+y = 0.99*(1.5+0.2*(2*x-0.2)/(x+0.2))^(-0.01)*(0.4*(x+0.2)-0.2*(2*x-0.2))/(x+0.2)^2*(1-x)^0.01-(1.5+0.2*(2*x-0.2)/(x+0.2))^0.99*0.01*(1-x)^(-0.99)*1
+Color = clRed
+
+[Func7]
+FuncType = 0
+y = 0.99*(1.3+x)^(-0.01)*(1-x)^0.1-(1.3+x)^0.99*0.1*(1-x)^(-0.9)*1
+Color = clRed
+
