@@ -1,3 +1,0 @@
-blinds.o blinds.o: blinds.cpp blinds.h
-
-blinds.h:
