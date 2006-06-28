@@ -24,8 +24,12 @@
 
 #include "engine.h"
 #include "ai.h"
+#include <string>
 #include <iostream>  // I/O
 #include <fstream>   // file I/O
+
+using std::string;
+
 //#include <iomanip.h>   // format manipulation
 
 /*
@@ -58,24 +62,38 @@ myAvg
 class CacheManager
 {
 private:
-	FILE* datafile;
-	float64 myChancesEach;
-	float64 mytotalChances;
-	int32 statCount;
-	int16 moreCards;
-	int32 statGroup;
-	StatResult* myWins;
-	
+    FILE* configfile;
+
 	WinStats* myCachedW;
 	CallStats* myCachedC;
 	DealRemainder myStatBuilder;
-	
+
+	void initCM();
+
+	string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity);
+
 public:
-	CacheManager()
+
+    void Query(WinStats& q, const Hand& withCommunity, const Hand& onlyCommunity, int8 n);
+    void Query(CallStats& q, const Hand& withCommunity, const Hand& onlyCommunity, int8 n);
+
+	CacheManager() : myCachedW(0), myCachedC(0)
 	{
+	    initCM();
 	}
 
 }
 ;
+
+class TriviaDeck : public OrderedDeck
+{
+    private:
+        const static uint32 largestCard(uint32 suitcards);
+    public:
+    string NamePockets() const;
+    const void DiffHand(const Hand&);
+}
+;
+
 
 #endif

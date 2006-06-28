@@ -20,12 +20,15 @@
 
 #include "stratSearch.h"
 
+
 void SearchStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 {
+    /*
+    cachedStats.queryW(ViewHand())
 	searches.UndealAll();
 	searches.OrderedDeck::OmitCards(ViewHand());
 	searches.OrderedDeck::OmitCards(h);
+	*/
 }
-
 
 

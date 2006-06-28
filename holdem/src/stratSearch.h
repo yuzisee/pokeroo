@@ -27,7 +27,7 @@
 class SearchStrategy : public PlayerStrategy
 {
 	protected:
-	DealRemainder searches;
+	CacheManager *cachedStats;
 
 	public:
 

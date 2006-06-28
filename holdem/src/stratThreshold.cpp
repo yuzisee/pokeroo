@@ -34,6 +34,7 @@ ThresholdStrategy::~ThresholdStrategy()
 
 void ThresholdStrategy::SeeCommunity(const CommunityPlus& h, const int8 cardsInCommunity)
 {
+    /*
 	SearchStrategy::SeeCommunity( h, cardsInCommunity);
 
 	cleanstats();
@@ -47,7 +48,7 @@ void ThresholdStrategy::SeeCommunity(const CommunityPlus& h, const int8 cardsInC
 	w = new WinStats(withcommunity, h, cardsInCommunity);
 
 	searches.AnalyzeComplete(w);
-
+    */
 }
 
 float64 ThresholdStrategy::MakeBet()

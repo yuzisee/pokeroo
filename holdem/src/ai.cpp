@@ -105,19 +105,19 @@ const void PlayStats::countLoss(const float64 occ)
 const void WinStats::countSplit(const float64 occ)
 {
 	PlayStats::countSplit(occ);
-	myAvg.splits += occ * myWins[statGroup].repeated / myTotalChances;
-	//myAvg.pct += occ * myWins[statGroup].repeated / myTotalChances / 2;
+	myAvg.splits += occ * myWins[statGroup].repeated;// / myTotalChances;
+
 }
 const void WinStats::countLoss(const float64 occ)
 {
 	PlayStats::countLoss(occ);
-	myAvg.loss += occ * myWins[statGroup].repeated / myTotalChances;
+	myAvg.loss += occ * myWins[statGroup].repeated;// / myTotalChances;
 }
 const void WinStats::countWin(const float64 occ)
 {
 	PlayStats::countWin(occ);
-	myAvg.wins += occ * myWins[statGroup].repeated / myTotalChances;
-	//myAvg.pct += occ * myWins[statGroup].repeated / myTotalChances;
+	myAvg.wins += occ * myWins[statGroup].repeated;// / myTotalChances;
+
 }
 
 const void WinStats::Analyze()
@@ -131,15 +131,16 @@ const void WinStats::Analyze()
 		cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
 				<< myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
 				myWins[i].loss+myWins[i].splits+myWins[i].wins
-				<< "\t×"<< myWins[i].repeated   <<flush;
+				<< "\t×"<< myWins[i].repeated   <<endl;
 	}
 
-	cout << endl << "AVG " << myAvg.loss << " l + "
-				<< myAvg.splits << " s + " << myAvg.wins << " w = " <<
-				myAvg.loss+myAvg.splits+myAvg.wins << "\t×"<< myAvg.repeated <<flush;
+
 #endif
 
 	clearDistr();
+	myAvg.wins /= myTotalChances;
+	myAvg.loss /= myTotalChances;
+	myAvg.splits /= myTotalChances;
 	myAvg.genPCT();
 
 	myDistrPCT = new DistrShape(myTotalChances, myAvg.pct);
@@ -150,7 +151,7 @@ const void WinStats::Analyze()
 		StatResult& wr = myWins[i];
 		wr.genPCT();
 			#ifdef DEBUGFINALCALC
-				cout << wr.pct << endl;
+				cout << wr.pct * wr.repeated << "\t (x" << wr.repeated << ")" << endl;
 			#endif
 		myDistrPCT->AddVal( wr.pct, wr.repeated );
 		myDistrWL->AddVal( wr.genPeripheral(), wr.repeated );
@@ -180,6 +181,13 @@ const void WinStats::Analyze()
 
 
 #ifdef DEBUGFINALCALC
+
+	cout << endl << "AVG " << myAvg.loss << " l + "
+				<< myAvg.splits << " s + " << myAvg.wins << " w = " <<
+				myAvg.loss+myAvg.splits+myAvg.wins << "\t×"<< myAvg.repeated <<endl;
+
+    cout << "myAvg.genPCT " << myAvg.pct << "!"  << endl;
+    cout << "(Mean) " << myDistrPCT->mean * 100 << "%"  << endl;
 	cout << endl << "Adjusted improve? " << myDistrPCT->improve * 100 << "%"  << endl;
 	cout << "Worst:" << myDistrPCT->worst *100 << "%" << endl;
 	cout << "Standard Deviations:" << myDistrPCT->stdDev*100 << "%" << endl;
@@ -376,25 +384,25 @@ const void WinStats::initW(const int8 cardsInCommunity)
 {
 
 		#ifdef DEBUGASSERT
-			int temp1 = oppStrength.CardsInSuit( 0 ) + 
-				oppStrength.CardsInSuit( 1 ) + 
-				oppStrength.CardsInSuit( 2 ) + 
+			int temp1 = oppStrength.CardsInSuit( 0 ) +
+				oppStrength.CardsInSuit( 1 ) +
+				oppStrength.CardsInSuit( 2 ) +
 				oppStrength.CardsInSuit( 3 ) ;
 			if( cardsInCommunity != temp1 )
 			{
 				cout << "MISDEAL COMMUNITY PARAMETERS! WATCH IT." << endl;
 				return;
-			} 
+			}
 				temp1 = myStrength.CardsInSuit( 0 ) +
 				myStrength.CardsInSuit( 1 ) +
-				myStrength.CardsInSuit( 2 ) + 
+				myStrength.CardsInSuit( 2 ) +
 				myStrength.CardsInSuit( 3 )  -temp1;
 			if( 2 !=temp1 )
 			{
 				cout << "MISDEAL ! WATCH " << temp1 << " cards reported in hand" << endl;
 				cout << "COMMUNITY HAS " << cardsInCommunity << endl;
 				return;
-			} 
+			}
 		#endif
 
 	PlayStats::moreCards = (5-cardsInCommunity+2);

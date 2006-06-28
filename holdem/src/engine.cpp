@@ -294,6 +294,7 @@ HoldemUtil::PrintCard(dealtSuit,dealtValue);
 	return occBase/matchesNew;
 }
 
+
 const void OrderedDeck::OmitCards(const Hand& h)
 {
 	OrderedDeck::dealtHand[0] |= h.SeeCards(0);

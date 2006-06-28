@@ -10,10 +10,10 @@
 class OrderedDeck
 {
 
-	private:
-    //int dealtCardsNum;
-		uint32 dealtHand[4]; //master "dealt or not" list
 	protected:
+
+		uint32 dealtHand[4]; //master "dealt or not" list
+
 		int8 firstSuit;
 		int8 nextSuit[4];
 		int8 prevSuit[4];
@@ -25,6 +25,7 @@ class OrderedDeck
 		virtual float64 DealCard(Hand&);
 		const void UndealCard(const DeckLocation&);
 		const void OmitCards(const Hand&);
+
 		const uint32 BaseDealtValue() const
 		{
 			return HoldemConstants::CARD_ACELOW;

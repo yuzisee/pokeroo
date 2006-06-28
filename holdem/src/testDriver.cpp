@@ -24,6 +24,7 @@
 #include "stratManual.h"
 #include "stratThreshold.h"
 #include "arena.h"
+#include "aiCache.h"
 #include "engine.h"
 #include "aiCombo.h"
 #include "portability.h"
@@ -106,7 +107,7 @@ void testW()
 
     }
     DealRemainder deal;
-	
+
 #ifdef DEBUGSITUATION
 	cout << "Cards available to me" << endl;
 	h1.ShowHand(false);
@@ -120,6 +121,14 @@ void testW()
 
 	cout << endl;
 #endif
+
+    cout << "position" << endl;
+    TriviaDeck td;
+    td.OmitCards(h1);
+    td.DiffHand(h2);
+    td.sortSuits();
+    cout << td.NamePockets() << endl;
+
     WinStats ds(h1, h2,FIRST_DEAL-2);
     deal.OmitCards(h1);
      deal.AnalyzeComplete(&ds);

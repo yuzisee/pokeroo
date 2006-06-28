@@ -52,7 +52,7 @@ void DistrShape::Complete(float64 mag)
 void DistrShape::Complete()
 {
 	avgDev /= n;
-	stdDev /= n;	
+	stdDev /= n;
 	stdDev = sqrt(stdDev);
 	improve *= 2/n;
 	improve -= 1;
@@ -69,7 +69,8 @@ void DistrShape::normalize(float64 mag)
 	stdDev /= mag*mag;
 	skew /= mag*mag*mag;
 	kurtosis /= mag*mag*mag*mag;
-	
+
+
 	worst /= mag;
 	mean /= mag;
 }
