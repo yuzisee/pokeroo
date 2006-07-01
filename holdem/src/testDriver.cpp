@@ -39,6 +39,57 @@ using std::flush;
 
 const int FIRST_DEAL = 2;
 
+void genW(CommunityPlus& h1, CommunityPlus& h2)
+{
+    DealRemainder deal;
+
+#ifdef DEBUGSITUATION
+	cout << "Cards available to me" << endl;
+	h1.ShowHand(false);
+	cout << endl;
+#endif
+
+#ifdef DEBUGSITUATION
+	cout << "Cards in community" << endl;
+	h2.ShowHand(false);
+	cout << endl;
+
+	cout << endl;
+#endif
+
+    cout << "position" << endl;
+    TriviaDeck td;
+    td.OmitCards(h1);
+    td.DiffHand(h2);
+    td.sortSuits();
+    cout << td.NamePockets() << endl;
+
+    //WinStats ds(h1, h2,FIRST_DEAL-2);
+    StatResult myWins;
+    DistrShape myDistrPCT(0);
+    StatsManager::Query( &myWins,&myDistrPCT,0,h1, h2,FIRST_DEAL-2);
+    //deal.OmitCards(h1);
+    // deal.AnalyzeComplete(&ds);
+
+    cout << endl << "AVG "  << myWins.loss << " l + "
+            << myWins.splits << " s + " << myWins.wins << " w = " <<
+            myWins.loss+myWins.splits+myWins.wins
+            << "\t×"<< myWins.repeated   <<endl;
+
+    cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;
+    cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
+    cout << endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << endl;
+    cout << "Worst:" << myDistrPCT.worst *100 << "%" << endl;
+    cout << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << endl;
+    cout << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << endl;
+    cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
+    cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
+
+    cout << endl;
+
+cout << "Finish." << endl;
+}
+
 void testHT(int bonus = 0, int bOffsuit = 0)
 {
 	HandPlus h1;
@@ -105,6 +156,23 @@ void testW()
 
 
     }
+    genW(h1,h2);
+}
+
+void testC()
+{
+
+    RandomDeck rd;
+    rd.ShuffleDeck();
+    CommunityPlus h1, h2;
+    short cardcount=FIRST_DEAL;
+    while(cardcount > 0){
+		if (rd.DealCard(h1) > 0){
+			if (cardcount > 2)	h2.AddToHand(rd.dealt);
+			--cardcount;
+		}
+		printf("%d %lu\n",rd.dealt.Suit,rd.dealt.Value);
+    }
     DealRemainder deal;
 
 #ifdef DEBUGSITUATION
@@ -129,27 +197,32 @@ void testW()
     cout << td.NamePockets() << endl;
 
     //WinStats ds(h1, h2,FIRST_DEAL-2);
-    StatResult myWins;
-    DistrShape myDistrPCT(0);
-    StatsManager::Query( &myWins,&myDistrPCT,0,h1, h2,FIRST_DEAL-2);
+    CallCumulation calc;
+    StatsManager::Query( calc,h1, h2,FIRST_DEAL-2);
     //deal.OmitCards(h1);
     // deal.AnalyzeComplete(&ds);
 
-    cout << endl << "AVG "  << myWins.loss << " l + "
-            << myWins.splits << " s + " << myWins.wins << " w = " <<
-            myWins.loss+myWins.splits+myWins.wins
-            << "\t×"<< myWins.repeated   <<endl;
+    cout << endl << "=============Reduced=============" << endl;
+	cout.precision(4);
+	size_t vectorLast = calc.cumulation.size();
+	for(size_t i=0;i<vectorLast;i++)
+	{
+		cout << endl << "{" << i << "}" << calc.cumulation[i].loss << " l +\t"
+				<< calc.cumulation[i].splits << " s +\t" << calc.cumulation[i].wins << " w =\t" <<
+				calc.cumulation[i].pct
+				<< " pct\t×"<< calc.cumulation[i].repeated <<flush;
+	}
 
-    cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;
-    cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
-    cout << endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << endl;
-    cout << "Worst:" << myDistrPCT.worst *100 << "%" << endl;
-    cout << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << endl;
-    cout << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << endl;
-    cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
-    cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
 
-    cout << endl;
+	cout << endl << "Confirm that -0.5:1 odds receives " << calc.pctWillCall(2) <<  endl;
+	cout << endl << "Confirm that .0101:1 odds receives " << calc.pctWillCall(.99) << endl;
+	cout << endl << "Confirm that .333:1 odds receives " << calc.pctWillCall(.75) <<  endl;
+	cout << endl << "Confirm that 1:1 odds receives " << calc.pctWillCall(.5) << endl;
+	cout << endl << "Confirm that heads up 1.333x pot odds receives " << calc.pctWillCall(.3)  << endl;
+	cout << endl << "Confirm that heads up 98x pot odds (ie. I bet 1/98th of the pot) receives " << calc.pctWillCall(.01) << endl;
+	cout << endl << "Confirm that inf:1 odds receives " << calc.pctWillCall(0) <<  endl;
+	cout << endl << "Confirm that -2:1 odds receives " << calc.pctWillCall(-1) << endl;
+
 
 cout << "Finish." << endl;
 }
@@ -367,6 +440,7 @@ int main(int argc, char* argv[])
 	//testDR();
 	//testHands();
 	testW();
+	//testC();
 
 	//testPlay();
 

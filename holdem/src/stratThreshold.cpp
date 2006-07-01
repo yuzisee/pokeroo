@@ -53,7 +53,7 @@ void ThresholdStrategy::SeeCommunity(const CommunityPlus& h, const int8 cardsInC
 
 float64 ThresholdStrategy::MakeBet()
 {
-	if (w->myAvg.pct > aiThreshold)
+	if (w->avgStat().pct > aiThreshold)
 	{
 		return ViewPlayer().GetMoney();
 	}

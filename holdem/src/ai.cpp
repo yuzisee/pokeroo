@@ -211,6 +211,11 @@ const DistrShape& WinStats::wlDistr()
     return *myDistrWL;
 }
 
+const StatResult& WinStats::avgStat()
+{
+    return myAvg;
+}
+
 //Returns whether or not you need to reset addend
 StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 {
@@ -512,10 +517,11 @@ const void CallStats::Analyze()
 
 //populate cumulation
 	int32 i=1;
-	float64 cumulate = 0;
-	vector<StatResult>& cpop = calc->cumulation;
 
+	vector<StatResult>& cpop = calc->cumulation;
 	cpop.reserve(statCount);
+
+    float64 cumulate = myWins[0].repeated;
 
 	cpop.push_back(myWins[0]);
 	size_t vectorLast = cpop.size()-1; //(zero)
@@ -534,23 +540,24 @@ const void CallStats::Analyze()
 		cpop.back().repeated = cumulate;
 		++i;
 	}
-/*
+
 	for(size_t k=0;k<=vectorLast;++k)
 	{
-		calc.cumulation[k].wins /= myChancesEach;
-		calc.cumulation[k].loss /= myChancesEach;
-		calc.cumulation[k].splits /= myChancesEach;
-		calc.cumulation[k].pct = 1 - calc.cumulation[k].pct/myChancesEach;
-		calc.cumulation[k].repeated /= myTotalChances;
+	    StatResult& temptarget = calc->cumulation[k];
+		temptarget.wins /= myChancesEach;
+		temptarget.loss /= myChancesEach;
+		temptarget.splits /= myChancesEach;
+		temptarget.pct = 1 - temptarget.pct/myChancesEach;
+		temptarget.repeated /= myTotalChances;
 	}
-*/
+
 
 #ifdef DEBUGCALLPCT
 cout << endl << "=============Reduced=============" << endl;
 	cout.precision(4);
 	for(size_t i=0;i<=vectorLast;i++)
 	{
-		cout << endl << "{" << i << "}" << calc.cumulation[i].loss << " l +\t"
+		cout << endl << "{" << i << "}" << calc->cumulation[i].loss << " l +\t"
 				<< calc->cumulation[i].splits << " s +\t" << calc->cumulation[i].wins << " w =\t" <<
 				calc->cumulation[i].pct
 				<< " pct\t×"<< calc->cumulation[i].repeated <<flush;
@@ -564,7 +571,7 @@ cout << endl << "=============Reduced=============" << endl;
 
 float64 CallStats::pctWillCall(const float64 oddsFaced) const
 {
-	return calc->pct(oddsFaced);
+	return calc->pctWillCall(oddsFaced);
 }
 
 const void CallStats::DropCard(const DeckLocation deck)

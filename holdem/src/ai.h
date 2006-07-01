@@ -42,7 +42,6 @@ struct StatRequest
 
 class PlayStats
 {
-friend class CacheManager;
     protected:
 
 		const virtual void countWin(const float64);
@@ -116,6 +115,8 @@ friend class CacheManager;
 
 class CallStats : virtual public PlayStats
 {
+    friend class StatsManager;
+    //friend void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
 private:
 	const void initC(const int8);
 protected:
@@ -161,9 +162,14 @@ protected:
 	const virtual void countLoss(const float64);
 	CommunityPlus* myUndo;
 	CommunityPlus* oppUndo;
+
+    DistrShape *myDistrPCT;
+	DistrShape *myDistrWL;
+	StatResult myAvg;
 public:
     const DistrShape& pctDistr();
     const DistrShape& wlDistr();
+    const StatResult& avgStat();
 
 	const virtual void Analyze();
 	virtual StatRequest NewCard(const DeckLocation, const float64 occ);
@@ -177,9 +183,8 @@ public:
     ~WinStats();
 
 //	float64 myImproveChance;
-	DistrShape *myDistrPCT;
-	DistrShape *myDistrWL;
-	StatResult myAvg;
+
+
 //	StatResult myWorst;
 //	StatResult myBest;
 

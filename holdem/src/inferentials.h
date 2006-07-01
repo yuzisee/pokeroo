@@ -24,6 +24,9 @@
 
 #include <vector>
 #include "portability.h"
+
+#define DEFAULT_TIE_SCALE_FACTOR 0.5
+
 using std::vector;
 
 class StatResult
@@ -124,7 +127,8 @@ public:
     const CallCumulation & operator=(const CallCumulation& o);
 
 	vector<StatResult> cumulation;
-	float64 pct(const float64) const;
+	float64 pctWillCall(const float64, const float64) const;
+	float64 pctWillCall(const float64) const;
 }
 ;
 

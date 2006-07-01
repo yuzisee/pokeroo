@@ -75,8 +75,18 @@ void DistrShape::normalize(float64 mag)
 	mean /= mag;
 }
 
+float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
+{
+    return pctWillCall(oddsFaced,DEFAULT_TIE_SCALE_FACTOR);
+}
 
-float64 CallCumulation::pct(const float64 oddsFaced) const
+///oddsFaced is the "virtual chance to win" that would correspond to the pot odds faced.
+///eg. 4:1 pot odds means opponent can bet 1 to win 4, (ie. pay 1 to receive 5 = 20% = 0.2 = oddsFaced)
+///The lower oddsFaced is, the better his/her odds are.
+///On a side note, if you're looking at heads up, and I bet x/3 of the pot, I'm giving him 4:1 or 0.2
+///A quick way to figure out what to put for oddsFaced would be to say:
+///If this is a permanently-even bet to make, what would my chance to win be?
+float64 CallCumulation::pctWillCall(const float64 oddsFaced, const float64 tiefactor) const
 {
 	//binary search
 	size_t first=0;
@@ -85,7 +95,8 @@ float64 CallCumulation::pct(const float64 oddsFaced) const
 	float64 curPCT;
 
 
-
+    ///Binary search for oddsFaced
+    ///Post-analysis of the algorithm defines a DECREASING pct in cumulation
 	while(last > first)
 	{
 		guess = (last+first)/2;
@@ -123,8 +134,10 @@ float64 CallCumulation::pct(const float64 oddsFaced) const
 			first = guess + 1;
 		}
 		else
-		{
-			return cumulation[guess].repeated;
+		{///The odds faced are EXACTLY the chance to win. How many people would take this bet?
+            ///Let's scale this by the scalefactor
+            if( guess == 0 ) return cumulation[guess].repeated;
+			return cumulation[guess].repeated * tiefactor + cumulation[guess-1].repeated * (1 - tiefactor);
 		}
 	}
 	curPCT = cumulation[last].pct;

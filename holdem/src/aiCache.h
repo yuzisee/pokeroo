@@ -27,6 +27,8 @@
 #include <string>
 #include <fstream>
 
+#define DEF_CACHEABLE_MIN 0
+
 
 using std::string;
 using std::ifstream;
@@ -70,7 +72,7 @@ private:
 
     static void initPath();
 
-    static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity);
+    static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity, const string label);
 
     static void serializeDistrShape(ofstream& dataf, const DistrShape& d);
     static void serializeStatResult(ofstream& dataf, const StatResult& d);
@@ -78,7 +80,7 @@ private:
     static bool unserializeStatResult(ifstream& dataf, StatResult* d);
 
 protected:
-    static void SerializeC(ofstream& dataf, CallCumulation& q);
+    static void SerializeC(ofstream& dataf, const CallCumulation& q);
     static void SerializeW(ofstream& dataf, const StatResult& myAvg, const DistrShape& dPCT, const DistrShape& dWL);
     static bool UnserializeC(ifstream& dataf, CallCumulation& q);
     static bool UnserializeW(ifstream& dataf, StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL);
