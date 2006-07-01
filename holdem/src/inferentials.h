@@ -116,6 +116,9 @@ class StatResultZero : public StatResult
 class CallCumulation
 {
 public:
+    CallCumulation(const CallCumulation& o);
+    CallCumulation(){}
+
 	vector<StatResult> cumulation;
 	float64 pct(const float64) const;
 }
@@ -136,6 +139,8 @@ public:
 	float64 improve;  //above or below 1.0
 	float64 skew;     //positive or negative ("Distributions with positive skew have larger means than medians.")
 	float64 kurtosis; //risk-reward magnifier (high k is high risk high reward, long tail)
+
+    DistrShape(const DistrShape &o);
 
 	DistrShape(float64 u) { DistrShape(0,u); }
 	DistrShape(float64 count, float64 u) : n(count), mean(u), worst(u), avgDev(0), stdDev(0), improve(0), skew(0), kurtosis(0) {}

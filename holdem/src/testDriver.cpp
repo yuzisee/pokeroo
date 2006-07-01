@@ -26,7 +26,7 @@
 #include "arena.h"
 #include "aiCache.h"
 #include "engine.h"
-#include "aiCombo.h"
+
 #include "portability.h"
 
 using std::cout;

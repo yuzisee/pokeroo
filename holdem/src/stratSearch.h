@@ -23,6 +23,7 @@
 
 #include "player.h"
 #include "engine.h"
+#include "aiCache.h"
 
 class SearchStrategy : public PlayerStrategy
 {

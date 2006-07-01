@@ -23,6 +23,17 @@
 
 using std::stringstream;
 
+/*
+
+std::ifstream file("../test.dat");
+
+http://www.parashift.com/c++-faq-lite/input-output.html#faq-15.5
+
+http://www.parashift.com/c++-faq-lite/serialization.html#faq-36.6
+
+*/
+
+
 string CacheManager::dbFileName(const Hand& withCommunity, const Hand& onlyCommunity)
 {
     TriviaDeck o;

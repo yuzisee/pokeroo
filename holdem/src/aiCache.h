@@ -51,24 +51,26 @@ cumulation (vector)
 /*
 WinStats:
 myAvg
-[PCT,W/(W+L),Pyth]
-	AvgDev
-	StdDev
-	Improve
-	Skew
-	Kurtosis
+The two *distrShape
+            [PCT,W/(W+L),Pyth]
+                AvgDev
+                StdDev
+                Improve
+                Skew
+                Kurtosis
 */
 
 class CacheManager
 {
 private:
-    FILE* configfile;
+    static const string configfilename;
 
-	WinStats* myCachedW;
-	CallStats* myCachedC;
 	DealRemainder myStatBuilder;
 
 	void initCM();
+
+	WinStats *myCachedW;
+	CallStats *myCachedC;
 
 	string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity);
 
