@@ -20,8 +20,10 @@
 
 #include "aiCache.h"
 #include <sstream>
+#include <fstream>
 
 using std::stringstream;
+using std::ifstream;
 
 /*
 
@@ -33,28 +35,155 @@ http://www.parashift.com/c++-faq-lite/serialization.html#faq-36.6
 
 */
 
+const char* StatsManager::CONFIGFILENAME = "holdemdb.ini";
+const int8 StatsManager::CACHEABLESTAGE = 0;
+string StatsManager::baseDataPath = "";
 
-string CacheManager::dbFileName(const Hand& withCommunity, const Hand& onlyCommunity)
+void StatsManager::initPath()
 {
+	ifstream configfile(CONFIGFILENAME);
+
+	if( configfile.is_open() )
+	{
+		getline (configfile,baseDataPath);
+		configfile.close();
+
+                if( baseDataPath[baseDataPath.length()-1] != '/' )
+                {
+                    baseDataPath = baseDataPath + "/";
+                }
+	}else
+	{
+		baseDataPath = "./";
+	}
+}
+
+string StatsManager::dbFileName(const Hand& withCommunity, const Hand& onlyCommunity)
+{
+    if( "" == baseDataPath ) initPath();
+
     TriviaDeck o;
     o.OmitCards(withCommunity);
     o.DiffHand(onlyCommunity);
     o.sortSuits();
 
-    return o.NamePockets();
+    return baseDataPath + o.NamePockets() + ".holdem";
 
 }
 
-void CacheManager::Query(WinStats& q, const Hand& withCommunity, const Hand& onlyCommunity, int8 n)
+bool StatsManager::unserializeDistrShape(ifstream& dataf, DistrShape* d)
 {
-    myStatBuilder.UndealAll();
-    myStatBuilder.OmitCards(withCommunity);
+    size_t cachebufSize= sizeof(DistrShape);
+    if( 0 == d )
+    {
+        dataf.seekg(cachebufSize,std::ios::cur);
+    }else
+    {
+        char *cachebuf = reinterpret_cast<char*>(d);
+        dataf.read(cachebuf,cachebufSize);
+    }
+    return !(dataf.bad());
+}
+bool StatsManager::unserializeStatResult(ifstream& dataf, StatResult* d)
+{
+    size_t cachebufSize= sizeof(StatResult);
+    if( 0 == d )
+    {
+        dataf.seekg(cachebufSize,std::ios::cur);
+    }else
+    {
+        char *cachebuf = reinterpret_cast<char*>(d);
+
+        //StatResult *cachedAvg = reinterpret_cast<StatResult*>(cachebuf);
+        dataf.read(cachebuf,cachebufSize);
+        return !(dataf.bad());
+        //*myAvg = *cachedAvg;
+
+        //myAvg->genPCT();
+    }
+    return !(dataf.bad());
 }
 
-void CacheManager::Query(CallStats& q, const Hand& withCommunity, const Hand& onlyCommunity, int8 n)
+void StatsManager::serializeDistrShape(ofstream& dataf, const DistrShape& d)
 {
+    const char *cachebuf = reinterpret_cast<const char*>(&d);
+    size_t cachebufSize = sizeof(DistrShape);
+    dataf.write(cachebuf,cachebufSize);
+}
+
+void StatsManager::serializeStatResult(ofstream& dataf, const StatResult& d)
+{
+    const char *cachebuf = reinterpret_cast<const char*>(&d);
+    size_t cachebufSize = sizeof(StatResult);
+    dataf.write(cachebuf,cachebufSize);
+}
+
+void StatsManager::SerializeW( ofstream& dataf, const StatResult& myAvg, const DistrShape& dPCT, const DistrShape& dWL )
+{
+    serializeStatResult( dataf, myAvg );
+    serializeDistrShape( dataf, dPCT );
+    serializeDistrShape( dataf, dWL );
+}
+
+bool StatsManager::UnserializeW( ifstream& dataf, StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL )
+{
+    if(! (unserializeStatResult( dataf, myAvg )) ) return false;
+    if(! (unserializeDistrShape( dataf, dPCT )) ) return false;
+    if(! (unserializeDistrShape( dataf, dWL )) ) return false;
+    return true;
+}
+
+void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
+{
+    string datafilename = "";
+    if( CACHEABLESTAGE >= n )
+    {
+        datafilename = dbFileName(withCommunity, onlyCommunity);
+        ifstream dataserial(datafilename.c_str());
+        if( dataserial.is_open() )
+        {
+            if( UnserializeW( dataserial, myAvg, dPCT, dWL ) )
+            {
+                cout << "Reading from file" << endl;
+                dataserial.close();
+                return;
+            }else
+            {
+                cout << "Error reading " << datafilename << endl;
+                dataserial.close();
+            }
+        }
+    }
+
+    DealRemainder myStatBuilder;
     myStatBuilder.UndealAll();
     myStatBuilder.OmitCards(withCommunity);
+
+    WinStats ds(withCommunity, onlyCommunity,n);
+    myStatBuilder.AnalyzeComplete(&ds);
+
+    if( "" != datafilename )
+    {
+        ofstream newdata(datafilename.c_str(),std::ios::out | std::ios::binary | std::ios::trunc );
+        if( newdata.is_open() )
+        {
+            SerializeW( newdata, ds.myAvg, *(ds.myDistrPCT), *(ds.myDistrWL) );
+        }
+    }
+    if( 0 != myAvg ) *myAvg = ds.myAvg;
+    if( 0 != dPCT ) *dPCT = *(ds.myDistrPCT);
+    if( 0 != dWL ) *dWL = *(ds.myDistrWL);
+
+}
+
+void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
+{
+    DealRemainder myStatBuilder;
+    myStatBuilder.UndealAll();
+    myStatBuilder.OmitCards(withCommunity);
+
+    CallStats ds(withCommunity, onlyCommunity,n);
+    myStatBuilder.AnalyzeComplete(&ds);
 }
 
 

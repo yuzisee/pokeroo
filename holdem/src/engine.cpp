@@ -326,6 +326,10 @@ const void OrderedDeck::UndealAll()
 	OrderedDeck::SetIndependant();
 }
 
+OrderedDeck::~OrderedDeck()
+{
+}
+
 DealRemainder::~DealRemainder()
 {
 	CleanStats();

@@ -293,12 +293,13 @@ const void HandPlus::populateValueset()
 
 }
 
-Hand& Hand::operator=(const Hand& h)
+Hand::~Hand()
 {
-	cardset[0] = h.cardset[0];
-	cardset[1] = h.cardset[1];
-	cardset[2] = h.cardset[2];
-	cardset[3] = h.cardset[3];
+}
+
+const Hand& Hand::operator=(const Hand& h)
+{
+    SetUnique(h);
 	return *this;
 }
 

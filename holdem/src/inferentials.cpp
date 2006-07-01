@@ -75,6 +75,7 @@ void DistrShape::normalize(float64 mag)
 	mean /= mag;
 }
 
+
 float64 CallCumulation::pct(const float64 oddsFaced) const
 {
 	//binary search
@@ -141,3 +142,23 @@ float64 CallCumulation::pct(const float64 oddsFaced) const
 	}
 
 }
+
+const CallCumulation & CallCumulation::operator=(const CallCumulation& o)
+{
+    cumulation = o.cumulation;
+    return *this;
+}
+
+const DistrShape & DistrShape::operator=(const DistrShape& o)
+{
+    avgDev = o.avgDev;
+    improve = o.improve;
+    kurtosis = o.kurtosis;
+    mean = o.mean;
+    n = o.n;
+    skew = o.skew;
+    stdDev= o.stdDev;
+    worst = o.worst;
+    return *this;
+}
+

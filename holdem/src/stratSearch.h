@@ -28,7 +28,7 @@
 class SearchStrategy : public PlayerStrategy
 {
 	protected:
-	CacheManager *cachedStats;
+        StatsManager *cachedStats;
 
 	public:
 

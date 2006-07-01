@@ -84,6 +84,8 @@ class OrderedDeck
 			UndealAll();
 		}
 
+                virtual ~OrderedDeck();
+
 		bool operator==(const OrderedDeck&) const;
 }
 ;

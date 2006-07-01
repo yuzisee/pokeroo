@@ -26,7 +26,6 @@
 #include "arena.h"
 #include "aiCache.h"
 #include "engine.h"
-
 #include "portability.h"
 
 using std::cout;
@@ -38,7 +37,7 @@ using std::flush;
 //FIRST_DEAL = 4 expects 17296
 //Linux DEBUG_SEED = 4 and FIRST_DEAL = 4 yields 17296 (deals 18472)
 
-const int FIRST_DEAL = 6;
+const int FIRST_DEAL = 2;
 
 void testHT(int bonus = 0, int bOffsuit = 0)
 {
@@ -129,9 +128,29 @@ void testW()
     td.sortSuits();
     cout << td.NamePockets() << endl;
 
-    WinStats ds(h1, h2,FIRST_DEAL-2);
-    deal.OmitCards(h1);
-     deal.AnalyzeComplete(&ds);
+    //WinStats ds(h1, h2,FIRST_DEAL-2);
+    StatResult myWins;
+    DistrShape myDistrPCT(0);
+    StatsManager::Query( &myWins,&myDistrPCT,0,h1, h2,FIRST_DEAL-2);
+    //deal.OmitCards(h1);
+    // deal.AnalyzeComplete(&ds);
+
+    cout << endl << "AVG "  << myWins.loss << " l + "
+            << myWins.splits << " s + " << myWins.wins << " w = " <<
+            myWins.loss+myWins.splits+myWins.wins
+            << "\t×"<< myWins.repeated   <<endl;
+
+    cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;
+    cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
+    cout << endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << endl;
+    cout << "Worst:" << myDistrPCT.worst *100 << "%" << endl;
+    cout << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << endl;
+    cout << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << endl;
+    cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
+    cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
+
+    cout << endl;
+
 cout << "Finish." << endl;
 }
 
@@ -348,6 +367,7 @@ int main(int argc, char* argv[])
 	//testDR();
 	//testHands();
 	testW();
+
 	//testPlay();
 
 }

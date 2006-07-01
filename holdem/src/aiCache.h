@@ -25,10 +25,12 @@
 #include "engine.h"
 #include "ai.h"
 #include <string>
-#include <iostream>  // I/O
-#include <fstream>   // file I/O
+#include <fstream>
+
 
 using std::string;
+using std::ifstream;
+using std::ofstream;
 
 //#include <iomanip.h>   // format manipulation
 
@@ -60,29 +62,37 @@ The two *distrShape
                 Kurtosis
 */
 
-class CacheManager
+class StatsManager
 {
 private:
-    static const string configfilename;
+    static const char*	CONFIGFILENAME;
+    static const int8	CACHEABLESTAGE;
 
-	DealRemainder myStatBuilder;
+    static void initPath();
 
-	void initCM();
+    static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity);
 
-	WinStats *myCachedW;
-	CallStats *myCachedC;
+    static void serializeDistrShape(ofstream& dataf, const DistrShape& d);
+    static void serializeStatResult(ofstream& dataf, const StatResult& d);
+    static bool unserializeDistrShape(ifstream& dataf, DistrShape* d);
+    static bool unserializeStatResult(ifstream& dataf, StatResult* d);
 
-	string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity);
-
+protected:
+    static void SerializeC(ofstream& dataf, CallCumulation& q);
+    static void SerializeW(ofstream& dataf, const StatResult& myAvg, const DistrShape& dPCT, const DistrShape& dWL);
+    static bool UnserializeC(ifstream& dataf, CallCumulation& q);
+    static bool UnserializeW(ifstream& dataf, StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL);
+    static string baseDataPath;
 public:
 
-    void Query(WinStats& q, const Hand& withCommunity, const Hand& onlyCommunity, int8 n);
-    void Query(CallStats& q, const Hand& withCommunity, const Hand& onlyCommunity, int8 n);
+    /*
+    static void Query(DistrShape& dPCT, const Hand& withCommunity, const Hand& onlyCommunity, int8 n);
+    static void Query(DistrShape& dPCT, StatResult& myAvg, const Hand& withCommunity, const Hand& onlyCommunity, int8 n);
+    static void Query(DistrShape& dPCT, DistrShape& dWL, const Hand& withCommunity, const Hand& onlyCommunity, int8 n);
+    */
+    static void Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
+    static void Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
 
-	CacheManager() : myCachedW(0), myCachedC(0)
-	{
-	    initCM();
-	}
 
 }
 ;

@@ -25,7 +25,7 @@
 //#define DEBUGDROP
 //#define DEBUGCALC
 //#define DEBUGCOMPARE
-#define DEBUGFINALCALC
+//#define DEBUGFINALCALC
 //#define DEBUGCALLPCT
 
 #define PROGRESSUPDATE

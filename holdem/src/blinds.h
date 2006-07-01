@@ -30,12 +30,13 @@ class BlindStructure
 		double myBigBlind;
 		double mySmallBlind;
 	public:
-		BlindStructure(double small, double big)
-	: myBigBlind(big), mySmallBlind(small) {}
-		virtual void PlayerEliminated(){};
-		virtual void HandPlayed(double=0){}; //support time-based blinds
-		virtual const double BigBlind();
-		virtual const double SmallBlind();
+            BlindStructure(double small, double big)
+    : myBigBlind(big), mySmallBlind(small) {};
+            virtual ~BlindStructure();
+            virtual void PlayerEliminated(){};
+            virtual void HandPlayed(double=0){}; //support time-based blinds
+            virtual const double BigBlind();
+            virtual const double SmallBlind();
 
 }
 ;

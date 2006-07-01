@@ -157,15 +157,22 @@ public:
 	const virtual void AppendUnique(const Hand&);
 	const virtual void SetUnique(const Hand&);
 
-	Hand& operator=(const Hand& h);
+	const Hand& operator=(const Hand& h);
 	bool operator==(const Hand& h) const;
 
 
     Hand()
     {
-    	Empty();
-	}
+        Empty();
+    }
 
+    Hand(const Hand& o)
+    {
+        //Empty();
+        SetUnique(o);
+    }
+
+    virtual ~Hand();
 }
 ;
 

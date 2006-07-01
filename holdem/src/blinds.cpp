@@ -20,6 +20,10 @@
 
 #include "blinds.h"
 
+BlindStructure::~BlindStructure()
+{
+}
+
 const double BlindStructure::SmallBlind()
 {
 	return mySmallBlind;
