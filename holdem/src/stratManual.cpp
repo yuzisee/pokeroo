@@ -228,6 +228,8 @@ void ConsoleStrategy::showSituation()
 
 }
 
+///TODO: HOLD ON!
+///I added cin.sync() to stuff, if that doesn't help the input please revert it.
 float64 UserConsoleStrategy::queryAction()
 {
 	const int16 INPUTLEN = 10;
@@ -307,6 +309,7 @@ float64 UserConsoleStrategy::queryAction()
 						}
 
 						cin.ignore(2000, '\n');
+						cin.sync();
 
 
 					}
@@ -314,6 +317,7 @@ float64 UserConsoleStrategy::queryAction()
 					{
 						cin.clear();
 						cin.ignore(80,'\n');
+						cin.sync();
 					}
 				}
 			}
@@ -330,13 +334,14 @@ float64 UserConsoleStrategy::queryAction()
 						}
 
 						cin.ignore(2000, '\n');
-
+                        cin.sync();
 
 					}
 					else
 					{
 						cin.clear();
 						cin.ignore(2000,'\n');
+						cin.sync();
 					}
 
 				}
@@ -350,6 +355,7 @@ float64 UserConsoleStrategy::queryAction()
 		{
 			cin.clear();
 			cin.ignore(2000,'\n');
+			cin.sync();
 		}
 
 	//End of loop

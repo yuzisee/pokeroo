@@ -65,23 +65,17 @@ public:
 	static const char VALKEY[16];
 	static const char SUITKEY[5];
 
+    ///COMMON PROBLEMS:
+    ///THIS ORDERS THE CARDS LIKE: 2S 2H 2C 2D 3S 3H ...
+    ///it's not 23456789tJQKA.
     const static uint16 CardSuit(const uint8 d)
     {
-		return (d & 3); //That's a 111 mask
+		return (d & 3); //That's a 11 mask
     }
     const static uint16 CardRank(const uint8 d) //returns 0 for two
     {
 		return (d >> 2);
     }
-/*    const static uint16 CardSuitInt(const uint8 d)
-    {
-		return (d & 3);//That's a 111 masl
-    }
-    const static uint16 CardRankInt(const uint8 d) //returns 0 for two
-    {
-        return (d >> 2);
-    }
-*/
     const static void PrintCard(const int8 s, uint32 v)
 	{
 		int8 vn=0;

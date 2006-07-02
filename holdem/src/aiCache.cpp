@@ -93,11 +93,7 @@ bool StatsManager::unserializeStatResult(ifstream& dataf, StatResult* d)
     }else
     {
         char *cachebuf = reinterpret_cast<char*>(d);
-
-        //StatResult *cachedAvg = reinterpret_cast<StatResult*>(cachebuf);
         dataf.read(cachebuf,cachebufSize);
-        //*myAvg = *cachedAvg;
-
         //myAvg->genPCT();
     }
     return !(dataf.bad() || dataf.eof());
@@ -181,7 +177,7 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
     if( CACHEABLESTAGE >= n )
     {
         datafilename = dbFileName(withCommunity, onlyCommunity,"W");
-        ifstream dataserial(datafilename.c_str());
+        ifstream dataserial(datafilename.c_str(),std::ios::in | std::ios::binary);
         if( dataserial.is_open() )
         {
             if( UnserializeW( dataserial, myAvg, dPCT, dWL ) )
@@ -224,7 +220,7 @@ void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, 
     if( CACHEABLESTAGE >= n )
     {
         datafilename = dbFileName(withCommunity, onlyCommunity,"C");
-        ifstream dataserial(datafilename.c_str());
+        ifstream dataserial(datafilename.c_str(),std::ios::in | std::ios::binary);
         if( dataserial.is_open() )
         {
             if( UnserializeC( dataserial, q ) )

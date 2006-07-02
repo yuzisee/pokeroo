@@ -439,21 +439,26 @@ void testPlay()
 	myTable.PlayGame();
 }
 
-void goCMD(int argc, char* argv[])
+void goCMD(int argc, char* argv)
 {
-    	    uint16 procnum = atoi(argv[1]);
+    	    uint16 procnum = atoi(argv);
 	    uint16 handnum = procnum % 338;///From 0-675 to 0-337
 	    procnum = procnum/338;///0 or 1
 
 	    uint16 card1 = handnum / 26; ///0 to 12
 	    uint16 card2 = handnum % 26; ///0 to 25
 
+
+	    ///accomodate the suit-major ordering of HoldemUtil
+	    card1 *= 4;
+	    card2 *= 2;
+
         if( card1 != card2 )
         {
             DeckLocation hands[2];
 
             hands[0].Suit = 0;
-            hands[1].Suit = HoldemUtil::CardSuit( card2 );
+            hands[1].Suit = HoldemUtil::CardSuit( card2 )/2;
 
             hands[0].Rank = HoldemUtil::CardRank( card1 )+1;
             hands[1].Rank = HoldemUtil::CardRank( card2 )+1;
@@ -510,11 +515,12 @@ int main(int argc, char* argv[])
 
 	if( argc == 2 )
 	{
-        goCMD(2,argv);
+        goCMD(2,argv[1]);
 	}else
 	{
-        testW();
-        testC();
+	    goCMD(2,"498");
+        //testW();
+        //testC();
 	}
 	//testPlay();
 
