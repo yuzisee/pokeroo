@@ -73,7 +73,7 @@ public:
     {
 		return (d >> 2);
     }
-    const static uint16 CardSuitInt(const uint8 d)
+/*    const static uint16 CardSuitInt(const uint8 d)
     {
 		return (d & 3);//That's a 111 masl
     }
@@ -81,7 +81,7 @@ public:
     {
         return (d >> 2);
     }
-
+*/
     const static void PrintCard(const int8 s, uint32 v)
 	{
 		int8 vn=0;
@@ -148,7 +148,7 @@ public:
 		if ( HoldemUtil::CARDORDER[aIndex] != aCard )
 		{
  			cout << endl << "DEBUGASSERT:\t Please add cards consistently!"
-				<< endl << "\tindex=" << aIndex << "\tcard=" << aCard << endl;
+				<< endl << "\tindex=" << (int)aIndex << "\tcard=" << aCard << endl;
 		}
 #endif
         cardset[aSuit] |= aCard;

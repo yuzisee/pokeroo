@@ -90,6 +90,12 @@ void genW(CommunityPlus& h1, CommunityPlus& h2)
 cout << "Finish." << endl;
 }
 
+void genW(CommunityPlus& h1)
+{
+    CommunityPlus h2;
+    genW(h1,h2);
+}
+
 void testHT(int bonus = 0, int bOffsuit = 0)
 {
 	HandPlus h1;
@@ -159,21 +165,12 @@ void testW()
     genW(h1,h2);
 }
 
-void testC()
+
+
+void genC(CommunityPlus& h1, CommunityPlus& h2)
 {
 
-    RandomDeck rd;
-    rd.ShuffleDeck();
-    CommunityPlus h1, h2;
-    short cardcount=FIRST_DEAL;
-    while(cardcount > 0){
-		if (rd.DealCard(h1) > 0){
-			if (cardcount > 2)	h2.AddToHand(rd.dealt);
-			--cardcount;
-		}
-		printf("%d %lu\n",rd.dealt.Suit,rd.dealt.Value);
-    }
-    DealRemainder deal;
+     DealRemainder deal;
 
 #ifdef DEBUGSITUATION
 	cout << "Cards available to me" << endl;
@@ -225,6 +222,28 @@ void testC()
 
 
 cout << "Finish." << endl;
+}
+void genC(CommunityPlus& h1)
+{
+    CommunityPlus h2;
+    genC(h1,h2);
+}
+
+void testC()
+{
+
+    RandomDeck rd;
+    rd.ShuffleDeck();
+    CommunityPlus h1, h2;
+    short cardcount=FIRST_DEAL;
+    while(cardcount > 0){
+		if (rd.DealCard(h1) > 0){
+			if (cardcount > 2)	h2.AddToHand(rd.dealt);
+			--cardcount;
+		}
+		printf("%d %lu\n",rd.dealt.Suit,rd.dealt.Value);
+    }
+    genC(h1,h2);
 }
 
 void testHands()
@@ -420,6 +439,55 @@ void testPlay()
 	myTable.PlayGame();
 }
 
+void goCMD(int argc, char* argv[])
+{
+    	    uint16 procnum = atoi(argv[1]);
+	    uint16 handnum = procnum % 338;///From 0-675 to 0-337
+	    procnum = procnum/338;///0 or 1
+
+	    uint16 card1 = handnum / 26; ///0 to 12
+	    uint16 card2 = handnum % 26; ///0 to 25
+
+        if( card1 != card2 )
+        {
+            DeckLocation hands[2];
+
+            hands[0].Suit = 0;
+            hands[1].Suit = HoldemUtil::CardSuit( card2 );
+
+            hands[0].Rank = HoldemUtil::CardRank( card1 )+1;
+            hands[1].Rank = HoldemUtil::CardRank( card2 )+1;
+
+            hands[0].Value = HoldemUtil::CARDORDER[hands[0].Rank];
+            hands[1].Value = HoldemUtil::CARDORDER[hands[1].Rank];
+
+            cout << (int)(hands[0].Suit) << "\t" << (int)(hands[0].Rank) << "\t" << hands[0].Value << endl;
+            cout << (int)(hands[1].Suit) << "\t" << (int)(hands[1].Rank) << "\t" << hands[1].Value << endl;
+
+
+            CommunityPlus h1;
+            h1.AddToHand(hands[0]);
+            h1.AddToHand(hands[1]);
+
+
+
+            if( procnum == 0 )
+            {
+                //h1.DisplayHand();
+                genC(h1);
+                return;
+            }
+
+            if( procnum == 1 )
+            {
+                //h1.DisplayHandBig();
+                genW(h1);
+                return;
+            }
+        }
+
+}
+
 int main(int argc, char* argv[])
 {
 	cout << "test" << endl;
@@ -439,9 +507,15 @@ int main(int argc, char* argv[])
 
 	//testDR();
 	//testHands();
-	testW();
-	//testC();
 
+	if( argc == 2 )
+	{
+        goCMD(2,argv);
+	}else
+	{
+        testW();
+        testC();
+	}
 	//testPlay();
 
 }
