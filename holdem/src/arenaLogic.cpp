@@ -91,21 +91,50 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 				cout << endl << p[curIndex]->GetIdent() << " mucks " << endl;
 			}
 		}
-		else if ( p[curIndex]->allIn >= 0 && !( comp < best ) ) //If all in
+
+		incrIndex();
+
+	}while(curIndex != called);
+
+	///Non all-in players show first,
+	///All-in players are manditorily showing afterwards.
+
+	do
+	{
+		ShowdownRep comp(p[curIndex]->myHand, community, curIndex);
+
+		if ( p[curIndex]->allIn >= 0 ) //If all in
 		{
-			broadcastHand(p[curIndex]->myHand);
-			if( bVerbose )
-			{
-				cout << endl << p[curIndex]->GetIdent() << flush;
-				cout << " is ahead with: " << flush;
-				HandPlus viewHand;
-				viewHand.SetUnique(p[curIndex]->myHand);
-				viewHand.ShowHand(false);
-				cout << endl << "Trying to stay alive, makes" << flush;
-				comp.DisplayHandBig();
-			}
-			winners.push_back(comp);
-			best = comp;
+		    if(  !( comp < best )  )
+		    {
+                broadcastHand(p[curIndex]->myHand);
+                if( bVerbose )
+                {
+                    cout << endl << p[curIndex]->GetIdent() << flush;
+                    cout << " is ahead with: " << flush;
+                    HandPlus viewHand;
+                    viewHand.SetUnique(p[curIndex]->myHand);
+                    viewHand.ShowHand(false);
+                    cout << endl << "Trying to stay alive, makes" << flush;
+                    comp.DisplayHandBig();
+                }
+                winners.push_back(comp);
+                best = comp;
+		    }else
+		    {///His hand was worse, but since he is all-in he MUST show his hand.
+		    //  http://www.texasholdem-poker.com/holdem_rules.php
+		        broadcastHand(p[curIndex]->myHand);
+		        if( bVerbose )
+                {
+                    cout << endl << p[curIndex]->GetIdent() << flush;
+                    cout << " turns over " << flush;
+                    HandPlus viewHand;
+                    viewHand.SetUnique(p[curIndex]->myHand);
+                    viewHand.ShowHand(false);
+                    cout << endl << "Is eliminated after making only" << flush;
+                    comp.DisplayHandBig();
+                }
+		    }
 		}
 		incrIndex();
 
@@ -377,7 +406,7 @@ void HoldemArena::prepareRound(const int8 comSize)
 	///React to community cards (each player gets to do that first)
 	do{
 		incrIndex();
-		if( IsAlive(curIndex) )
+		if( IsInHand(curIndex) )
 		{
 			Player& withP = *(p[curIndex]);
 			withP.myStrat->SeeCommunity(community, comSize);
@@ -651,7 +680,7 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 			}
 
 			broadcastCurrentMove(curIndex, withP.myBetSize, highBet
-					, curIndex == bBlinds);
+					, curIndex == bBlinds && comSize == 0);
 
 			if( withP.myBetSize >= highBet )
 			{
@@ -724,12 +753,26 @@ cout << p[curIndex]->GetIdent() << " up next... same as before?" << endl;
 	}//End of 'Action!' loop
 
 
+///If the round goes check-check-check, it technically means the dealer is the higher better. We want the NEXT person.
+/*
+http://www.playwinningpoker.com/poker/rules/basics/
+If everyone checks (or is all-in) on the final betting round, the player who acted first is the first to show the hand. If there is wagering on the final betting round, the last player to take aggressive action by a bet or raise is the first to show the hand. In order to speed up the game, a player holding a probable winner is encouraged to show the hand without delay. If there is a side pot, players involved in the side pot should show their hands before anyone all-in for only the main pot.
+*/
 	if ( highBet == 0 )
 	{
-		do
-		{
-			incrIndex(highestBetter);
-		}while(!IsInHand(curIndex));
+	    if( playersInHand == playersAllIn)
+	    {
+            do
+            {
+                incrIndex(highestBetter);
+            }while( p[highestBetter]->allIn < 0);
+	    }else
+	    {
+            do
+            {
+                incrIndex(highestBetter);
+            }while(!IsInHand(highestBetter));
+	    }
 	}
 
 	///---------------------------------

@@ -46,6 +46,7 @@ class ShowdownRep
 			utilHand.AppendUnique(h2);
 			utilHand.AppendUnique(h);
 			comp.SetUnique(utilHand);
+			comp.evaluateStrength();
 			strength = comp.strength;
 			valueset = comp.valueset;
 		}
@@ -53,10 +54,8 @@ class ShowdownRep
 		ShowdownRep(const Hand& h, const int8 pIndex)
 			: playerIndex(pIndex), revtiebreak(0)
 		{
-			Hand utilHand;
-
-			utilHand.AppendUnique(h);
-			comp.SetUnique(utilHand);
+			comp.SetUnique(h);
+			comp.evaluateStrength();
 			strength = comp.strength;
 			valueset = comp.valueset;
 		}

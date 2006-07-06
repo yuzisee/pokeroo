@@ -37,7 +37,7 @@ using std::flush;
 //FIRST_DEAL = 4 expects 17296
 //Linux DEBUG_SEED = 4 and FIRST_DEAL = 4 yields 17296 (deals 18472)
 
-const int FIRST_DEAL = 2;
+const int FIRST_DEAL = 5;
 
 void genW(CommunityPlus& h1, CommunityPlus& h2)
 {
@@ -149,7 +149,7 @@ void testW()
     	RandomDeck rd;
     	rd.ShuffleDeck();
     CommunityPlus h1, h2;
-    	short cardcount=FIRST_DEAL;
+    	short cardcount=2;
     while(cardcount > 0)
 	{
 
@@ -235,7 +235,7 @@ void testC()
     RandomDeck rd;
     rd.ShuffleDeck();
     CommunityPlus h1, h2;
-    short cardcount=FIRST_DEAL;
+    short cardcount=2;
     while(cardcount > 0){
 		if (rd.DealCard(h1) > 0){
 			if (cardcount > 2)	h2.AddToHand(rd.dealt);
@@ -427,13 +427,14 @@ void testPlay()
 	HoldemArena myTable(&b, true);
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;
-	ConsoleStrategy manPlay[3];
+	ConsoleStrategy manPlay[2];
+	ThresholdStrategy pushFold;
 	//ConsoleStepStrategy watchPlay;
 
 	//myTable.AddPlayer("Stag", &stagStrat);
 	myTable.AddPlayer("N1", manPlay);
-//	myTable.AddPlayer("N2", manPlay+1);
-//	myTable.AddPlayer("N3", manPlay+2);
+	myTable.AddPlayer("N2", manPlay+1);
+	myTable.AddPlayer("X3", &pushFold);
 	myTable.AddPlayer("P1", &consolePlay);
 
 	myTable.PlayGame();
@@ -510,7 +511,7 @@ int main(int argc, char* argv[])
 	//testHT();
 
 
-	//testDR();
+	//
 	//testHands();
 
 	if( argc == 2 )
@@ -518,7 +519,12 @@ int main(int argc, char* argv[])
         goCMD(2,argv[1]);
 	}else
 	{
-	    goCMD(2,"498");
+
+	    ///Play this hand on force-random
+	    ///Check pre-flop and push all-in after the flop.
+	    ///Now, monitor how the money is divided between N2 and X1.
+	    testPlay();
+	 //   goCMD(2,"498");
         //testW();
         //testC();
 	}

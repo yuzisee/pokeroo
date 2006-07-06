@@ -20,40 +20,29 @@
 
 #include "stratThreshold.h"
 
-
+/*
 void ThresholdStrategy::cleanstats()
 {
 	if(w != 0) delete w;
 	w = 0;
 }
-
+*/
 ThresholdStrategy::~ThresholdStrategy()
 {
-	cleanstats();
+	//cleanstats();
 }
 
 void ThresholdStrategy::SeeCommunity(const CommunityPlus& h, const int8 cardsInCommunity)
 {
-    /*
-	SearchStrategy::SeeCommunity( h, cardsInCommunity);
-
-	cleanstats();
-
-	CommunityPlus withcommunity;
-	withcommunity.SetUnique(ViewHand());
-	withcommunity.AppendUnique(h);
-
-
-
-	w = new WinStats(withcommunity, h, cardsInCommunity);
-
-	searches.AnalyzeComplete(w);
-    */
+    CommunityPlus withCommunity;
+    withCommunity.SetUnique(h);
+    withCommunity.AppendUnique(ViewHand());
+    StatsManager::Query(&w,0,0,withCommunity,h,cardsInCommunity);
 }
 
 float64 ThresholdStrategy::MakeBet()
 {
-	if (w->avgStat().pct > aiThreshold)
+	if (w.pct > aiThreshold)
 	{
 		return ViewPlayer().GetMoney();
 	}

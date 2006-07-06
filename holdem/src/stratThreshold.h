@@ -28,18 +28,18 @@
 class ThresholdStrategy : virtual public SearchStrategy
 {
 	private:
-		WinStats * w;
-		void cleanstats();
+        StatResult w;
+		//void cleanstats();
 		float64 aiThreshold;
 	public:
 
-		ThresholdStrategy(float64 thresh=.5) : SearchStrategy(), w(0), aiThreshold(thresh) {}
+		ThresholdStrategy(float64 thresh=.5) : SearchStrategy(), aiThreshold(thresh) {}
 		~ThresholdStrategy();
 
 		virtual void SeeCommunity(const CommunityPlus&, const int8);
 		virtual float64 MakeBet();
 		virtual void SeeOppHand(const int8, const Hand&){};
-
+        virtual void SeeAction(const HoldemAction&) {};
 }
 ;
 
