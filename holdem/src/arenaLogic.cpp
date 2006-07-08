@@ -105,49 +105,94 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 //cout << "Next phase" << endl;
 	///Non all-in players show first,
 	///All-in players are manditorily showing afterwards.
+    //float64 topAllIn=myPot;
 
-	do
+    ///All-in players reveal in descending order of stack size
+    vector<ShowdownRep> allInRevealOrder;
+
+
+    do
 	{
 	    Player& withP = *p[curIndex];
 
 //cout << p[curIndex]->GetIdent() << "\t now " << p[curIndex]->allIn << endl;
 		if ( withP.allIn >= 0 && !IsInHand(curIndex)) //If all in with no money remaining
 		{
-		    ShowdownRep comp(withP.myHand, community, curIndex);
-		    if(  !( comp < best )  )
-		    {
-                broadcastHand(withP.myHand);
-                if( bVerbose )
-                {
-                    cout << endl << withP.GetIdent() << flush;
-                    cout << " is ahead with: " << flush;
-                    HandPlus viewHand;
-                    viewHand.SetUnique(withP.myHand);
-                    viewHand.ShowHand(false);
-                    cout << endl << "Trying to stay alive, makes" << flush;
-                    comp.DisplayHandBig();
-                }
-                winners.push_back(comp);
-                best = comp;
-		    }else
-		    {///His hand was worse, but since he is all-in he MUST show his hand.
-		    //  http://www.texasholdem-poker.com/holdem_rules.php
-		        broadcastHand(withP.myHand);
-		        if( bVerbose )
-                {
-                    cout << endl << withP.GetIdent() << flush;
-                    cout << " turns over " << flush;
-                    HandPlus viewHand;
-                    viewHand.SetUnique(withP.myHand);
-                    viewHand.ShowHand(false);
-                    cout << endl << "Is eliminated after making only" << flush;
-                    comp.DisplayHandBig();
-                }
-		    }
+            ShowdownRep comp(withP.myHand, community, curIndex);
+            comp.valueset=0;
+            comp.strength=0;
+            comp.revtiebreak = withP.allIn;
 		}
 		incrIndex();
 
 	}while(curIndex != called);
+
+    sort(allInRevealOrder.begin(),allInRevealOrder.end());
+    ///Note: When the vector is sorted it will be in ascending order of stack size
+    vector<ShowdownRep>::reverse_iterator nextReveal;
+    nextReveal = allInRevealOrder.rbegin();
+
+	while(nextReveal != allInRevealOrder.rend())
+	{
+	    Player& withP = *p[nextReveal->playerIndex];
+
+        ShowdownRep comp(withP.myHand, community, curIndex);
+        if( comp > best || comp == best ) //Better hand or tie
+        {
+            broadcastHand(withP.myHand);
+            if( bVerbose )
+            {
+                cout << endl << withP.GetIdent() << flush;
+                if( comp == best )
+                    cout << " also has: " << flush;
+                else
+                    cout << " is ahead with: " << flush;
+                HandPlus viewHand;
+                viewHand.SetUnique(withP.myHand);
+                viewHand.ShowHand(false);
+                cout << endl << "Trying to stay alive, makes" << flush;
+                comp.DisplayHandBig();
+            }
+            winners.push_back(comp);
+            best = comp;
+            //topAllIn = withP.allIn;
+        }
+        ///His hand was worse, but since he is all-in he MUST show his hand.
+        else
+        /*if( withP.allIn > topAllIn )
+        {///May qualify for a side pot! (maybe)
+            broadcastHand(withP.myHand);
+            if( bVerbose )
+            {
+                cout << endl << withP.GetIdent() << flush;
+                cout << " is ahead with: " << flush;
+                HandPlus viewHand;
+                viewHand.SetUnique(withP.myHand);
+                viewHand.ShowHand(false);
+                cout << endl << "Trying to stay alive, makes" << flush;
+                comp.DisplayHandBig();
+            }
+            winners.push_back(comp);
+        }
+        else*/
+        {///Distinctly defeated
+        //  http://www.texasholdem-poker.com/holdem_rules.php
+            broadcastHand(withP.myHand);
+            if( bVerbose )
+            {
+                cout << endl << withP.GetIdent() << flush;
+                cout << " turns over " << flush;
+                HandPlus viewHand;
+                viewHand.SetUnique(withP.myHand);
+                viewHand.ShowHand(false);
+                cout << endl << "Is eliminated after making only" << flush;
+                comp.DisplayHandBig();
+            }
+		}
+
+		++nextReveal;
+
+	}
 }
 
 double* HoldemArena::organizeWinnings(int8& potDistrSize, vector<ShowdownRep>&
@@ -156,29 +201,46 @@ double* HoldemArena::organizeWinnings(int8& potDistrSize, vector<ShowdownRep>&
 
     ///TODO: Is this loop serving its purpose?
 	///The following loop weeds out positionally IRRELEVANT players
-	//The relevant players are placed in potDistr
+	//The relevant players are placed in potDistr (remember the best hand starts at the back)
 	ShowdownRep curComp;
 	ShowdownRep lastComp;
+
+	///Since sorting puts the higher betting players ahead in the list,
+	///This only needs to be updated when curComp != lastComp (curComp < lastComp which uses revtiebreak)
+	float64 highestBetStrongerHands = 0;
+	float64 nextHighBetStrongerHands = 0;
+
 	potDistrSize=0;
 	while( !winners.empty() )
 	{
 		lastComp = curComp; //(we use default values of ShowdownRep carefully)
 		curComp = winners.back();//best hand so far
 
-		if( lastComp > curComp && lastComp.revtiebreak > curComp.revtiebreak )
-		{	//lastCom was the deciding hand in all accounts
+        winners.pop_back();
+
+		if( (!(lastComp == curComp)) && lastComp.revtiebreak == myPot )
+		{	///Special case: lastCom was the deciding hand in all accounts
+            ///Everyone else is worse, and curComp wins all the pot money against anybody worse.
 			winners.clear();
-		}
-		else
+		}else if( lastComp == curComp )
+		{//Split
+            if(  curComp.revtiebreak > highestBetStrongerHands )
+            {
+                potDistr.push_back(curComp);
+                ++potDistrSize;
+            }
+		}else ///Assuming sorting worked, this hand is worse but the last hand didn't take all the money
 		{
-			//if ( curComp.revtiebreak >= mostRecentAllIn )
-			//{
+		    highestBetStrongerHands = nextHighBetStrongerHands;
+			if ( curComp.revtiebreak > highestBetStrongerHands )
+			{
 				potDistr.push_back(curComp);
 				++potDistrSize;
-			//}
+				nextHighBetStrongerHands = curComp.revtiebreak;
+			}
 
-			winners.pop_back();
 		}
+
 	}
 
 	/// Now the best hand is STARTING AT THE FRONT!
@@ -287,7 +349,8 @@ void HoldemArena::PlayShowdown(const int8 called)
 		winners[i].revtiebreak = winnable;
 	}
 
-	sort(winners.begin(), winners.end());
+    //Ascending by default:  http://www.ddj.com/dept/cpp/184403792
+    sort(winners.begin(), winners.end());
 	//Perfect, we start at the back, and that's the best hand
 #ifdef DEBUGALLINS
 if (winners.size() > 1)

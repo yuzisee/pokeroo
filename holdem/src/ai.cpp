@@ -502,8 +502,8 @@ const void CallStats::Analyze()
 	}
 
 
-	sort(myWins,myWins+statCount);
-
+	sort(myWins,myWins+statCount);//Ascending by default
+                                //  http://www.ddj.com/dept/cpp/184403792
 #ifdef DEBUGCALLPCT
 	cout << endl << "=============SORT!=============" << endl;
 	for(int32 i=0;i<statCount;i++)

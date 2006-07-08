@@ -106,7 +106,15 @@ class ShowdownRep
 	{
 		return ((strength == x.strength) && (valueset == x.valueset));
 	}
-
+    const ShowdownRep & operator=(const ShowdownRep& a)
+    {
+        comp.SetUnique(a.comp);
+        strength = a.strength;
+        valueset = a.valueset;
+        playerIndex = a.playerIndex;
+        revtiebreak = a.revtiebreak;
+        return *this;
+    }
 
 	void DisplayHandBig() { comp.DisplayHandBig(); }
 	void DisplayHand() { comp.DisplayHand(); }
