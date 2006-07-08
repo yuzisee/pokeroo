@@ -575,7 +575,6 @@ cout << "Ultimately, allIn=" << allInP.allIn << endl;
 
 void HoldemArena::resolveActions(Player& withP)
 {
-	//cout << "why " << withP.GetIdent();
 
 		if( withP.myBetSize == FOLDED)
 		{
@@ -594,6 +593,9 @@ void HoldemArena::resolveActions(Player& withP)
 			}
 			else
 			{
+
+
+
 				withP.handBetTotal += withP.GetBetSize();
 				withP.myMoney -= withP.GetBetSize();
 				//cout << " clear";
@@ -934,11 +936,11 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 	curIndex = highestBetter;
 
 	do{
-		incrIndex();
+
 		Player& withP = *(p[curIndex]);
 
 		resolveActions(withP);
-
+        incrIndex();
 	}while( curIndex != highestBetter);
 
 	///At this point all "THIS ROUND ONLY" values are useless EXCEPT allIn
@@ -960,6 +962,8 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 		if( playersInHand == 1 )
 		{
 
+
+
 		    ///What if the player that folds is the highest better at the moment?
             ///This can happen on blinds
             if( HasFolded(highestBetter) )
@@ -975,6 +979,20 @@ If everyone checks (or is all-in) on the final betting round, the player who act
                     }
                     incrIndex(findHighestBetter);
                 }
+            }
+
+            /*if(handnum == 9 )
+            {
+                cout << "POT << " << myPot << endl;
+                cout << "money before << " << p[highestBetter]->myMoney << endl;
+                cout << "handBetTotal << " << p[highestBetter]->handBetTotal << endl;
+                cout << "allIn << " << p[highestBetter]->allIn << endl;
+            }*/
+
+            ///When the highest better is allIn, it skips preparations on certain resolveActions
+            if( p[highestBetter]->allIn >= 0 )
+            {
+                myPot = p[highestBetter]->allIn;
             }
 
 			//What if you fold to an all-in? I think it will work just fine.
