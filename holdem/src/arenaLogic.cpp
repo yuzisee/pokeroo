@@ -818,7 +818,7 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 			}
 
 			broadcastCurrentMove(curIndex, withP.myBetSize, highBet
-					, curIndex == bBlinds && comSize == 0 && curIndex != highestBetter,withP.allIn > 0);
+					, curIndex == bBlinds && comSize == 0 && curIndex == highestBetter,withP.allIn > 0);
 
 			if( withP.myBetSize >= highBet )
 			{
