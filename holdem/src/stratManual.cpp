@@ -28,6 +28,10 @@ using std::cout;
 using std::endl;
 using std::cin;
 
+#ifdef DEBUGSAVEGAME
+std::ofstream UserConsoleStrategy::logFile;
+#endif
+
 void UserConsoleStrategy::SeeAction(const HoldemAction& e)
 {
 	const Player& relvPlayer = *(ViewTable().ViewPlayer(e.GetPlayerID()));
@@ -183,6 +187,17 @@ void ConsoleStrategy::printActions()
 	}
 }
 
+UserConsoleStrategy::~UserConsoleStrategy()
+{
+    #ifdef DEBUGSAVEGAME
+        if( logFile.is_open() )
+        {
+            logFile.close();
+        }
+    #endif
+
+}
+
 void ConsoleStrategy::showSituation()
 {
 
@@ -242,6 +257,13 @@ float64 UserConsoleStrategy::queryAction()
 
 	showSituation();
 
+        #ifdef DEBUGSAVEGAME
+            if( !logFile.is_open() )
+            {
+                logFile.open("savegame.log");
+            }
+        #endif
+
 
 	while( bExtraTry != 0 )
 	{
@@ -270,6 +292,9 @@ float64 UserConsoleStrategy::queryAction()
 			{
 				if( bExtraTry == 2 || ViewTable().GetBetToCall() > ViewPlayer().GetBetSize())
 				{
+				        #ifdef DEBUGSAVEGAME
+                            logFile << inputBuf << endl;
+                        #endif
 					returnMe = -1;
 					bExtraTry = 0;
 				}
@@ -284,6 +309,10 @@ float64 UserConsoleStrategy::queryAction()
 			{
 				if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
 				{
+                        #ifdef DEBUGSAVEGAME
+                            logFile << inputBuf << endl;
+                        #endif
+
 					returnMe = ViewTable().GetBetToCall();
 					bExtraTry = 0;
 				}
@@ -294,11 +323,17 @@ float64 UserConsoleStrategy::queryAction()
 			}
 			else if ( strncmp(inputBuf, "call", 4) == 0 )
 			{
+                    #ifdef DEBUGSAVEGAME
+                        logFile << inputBuf << endl;
+                    #endif
 				returnMe = ViewTable().GetBetToCall();
 				bExtraTry = 0;
 			}
 			else if ( strncmp(inputBuf, "raiseby", 7) == 0 )
 			{
+                    #ifdef DEBUGSAVEGAME
+                        logFile << inputBuf << endl;
+                    #endif
 				cout << "By how much?" << endl;
 				while( bExtraTry != 0)
 				{
@@ -306,6 +341,9 @@ float64 UserConsoleStrategy::queryAction()
 					{
 						if( returnMe > 0 )
 						{
+                                #ifdef DEBUGSAVEGAME
+                                    logFile << returnMe << endl;
+                                #endif
 							returnMe += ViewTable().GetBetToCall();
 							bExtraTry = 0;
 						}
@@ -325,13 +363,20 @@ float64 UserConsoleStrategy::queryAction()
 			}
 			else if ( strncmp(inputBuf, "raiseto", 7) == 0 )
 			{
-				cout << "To how much?" << endl;
+                    #ifdef DEBUGSAVEGAME
+                        logFile << inputBuf << endl;
+                    #endif
+                cout << "To how much?" << endl;
 				while( bExtraTry != 0)
 				{
-					if(( cin >> returnMe ))
+
+                    if(( cin >> returnMe ))
 					{
 						if( returnMe > ViewTable().GetBetToCall() )
 						{
+                                #ifdef DEBUGSAVEGAME
+                                    logFile << returnMe << endl;
+                                #endif
 							bExtraTry = 0;
 						}
 
@@ -358,6 +403,9 @@ float64 UserConsoleStrategy::queryAction()
 				    returnMe = -1;
 				}
 				bExtraTry = 0;
+                    #ifdef DEBUGSAVEGAME
+                        logFile << endl;
+                    #endif
 			}
 			else
 			{
@@ -380,6 +428,8 @@ float64 UserConsoleStrategy::queryAction()
 
 	cout << "Command accepted" << endl;
 #endif
+
+
 	return returnMe;
 }
 

@@ -18,9 +18,13 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#define DEBUGSAVEGAME
+
+
 #ifndef HOLDEM_ConsoleStrat
 #define HOLDEM_ConsoleStrat
 
+#include <fstream>
 #include "player.h"
 
 
@@ -59,10 +63,12 @@ class UserConsoleStrategy : virtual public ConsoleStrategy
 {
 	protected:
 		float64 queryAction();
-
+        #ifdef DEBUGSAVEGAME
+        static std::ofstream logFile;
+        #endif
 	public:
 
-
+        virtual ~UserConsoleStrategy();
 		virtual float64 MakeBet();
 		virtual void SeeAction(const HoldemAction&);
 		virtual void SeeCommunity(const Hand&, const int8);
