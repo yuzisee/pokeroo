@@ -102,7 +102,7 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 
 	}while(curIndex != called);
 
-//cout << "Next phase" << endl;
+    //cout << "The following players are all in..." << endl;
 	///Non all-in players show first,
 	///All-in players are manditorily showing afterwards.
     //float64 topAllIn=myPot;
@@ -122,6 +122,7 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
             comp.valueset=0;
             comp.strength=0;
             comp.revtiebreak = withP.allIn;
+            allInRevealOrder.push_back(comp);
 		}
 		incrIndex();
 
@@ -136,7 +137,7 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 	{
 	    Player& withP = *p[nextReveal->playerIndex];
 
-        ShowdownRep comp(withP.myHand, community, curIndex);
+        ShowdownRep comp(withP.myHand, community, nextReveal->playerIndex);
         if( comp > best || comp == best ) //Better hand or tie
         {
             broadcastHand(withP.myHand);
@@ -285,7 +286,7 @@ cout << "Moneywon " << potDistrSize << endl;
 	{
 		cout << endl << p[potDistr[0].playerIndex]->GetIdent() << " can win " <<
 		(potDistr[0].revtiebreak - p[potDistr[0].playerIndex]->handBetTotal) <<
-		"\t(controls " << moneyWon[0] << ")" << endl;
+		"\t(controls " << moneyWon[0] << " of " << myPot << ")" << endl;
 	}
 
 	while(i<potDistrSize)
@@ -296,7 +297,7 @@ cout << "Moneywon " << potDistrSize << endl;
 		{
 			cout << p[potDistr[i].playerIndex]->GetIdent() << " can win " <<
 			(potDistr[i].revtiebreak - p[potDistr[i].playerIndex]->handBetTotal) <<
-			"\t(controls " << moneyWon[i] << ")" << endl;
+			"\t(controls " << moneyWon[i] << " of " << myPot << ")" << endl;
 		}
 
 		++i;++j;
