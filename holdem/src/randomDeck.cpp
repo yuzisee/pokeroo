@@ -39,7 +39,7 @@
 void RandomDeck::ShuffleDeck()
 {
 	#ifdef FORCESEED
-	srand(80); //5
+	srand(20); //5
 	#else
 	srand(time(0));
 	#endif

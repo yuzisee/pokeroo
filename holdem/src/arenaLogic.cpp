@@ -981,12 +981,12 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 			if( bVerbose )
 			{
 				cout << "All fold! " << p[highestBetter]->GetIdent() <<
-				" wins " << (myPot - p[highestBetter]->handBetTotal - p[highestBetter]->myBetSize) << endl;
+				" wins " << (myPot - p[highestBetter]->handBetTotal) << endl;
 			}
 			float64 rh = static_cast<float64>(highestBetter);
 			randRem /= myPot*p[highestBetter]->handBetTotal+rh;
 			randRem *= rh;
-			p[highestBetter]->myMoney += myPot - p[highestBetter]->myBetSize;
+			p[highestBetter]->myMoney += myPot;
 
 		}
 
@@ -1001,7 +1001,13 @@ void HoldemArena::PlayHand()
 	if( bVerbose )
 	{
 		cout << "================================================================" << endl;
-		cout << "============================New Hand============================" << endl;
+		cout << "============================New Hand" <<
+		#ifdef DEBUGSPECIFIC
+		" #"<< handnum <<
+		#else
+		"==" <<
+		#endif
+		"========================" << endl;
 	}
 
 	blinds->HandPlayed(0);
@@ -1071,6 +1077,11 @@ void HoldemArena::PlayGame()
 	curIndex = 0;
 	curDealer = 0;
 
+	#ifdef DEBUGSPECIFIC
+        randRem = 0;
+        handnum = 1;
+    #endif
+
 	while(livePlayers > 1)
 	{
 
@@ -1108,7 +1119,7 @@ void HoldemArena::PlayGame()
 
 			withP.myHand.Empty();
 		}
-
+        ++handnum;
 	}
 #ifdef FORCEPAUSE
     cout << "Quit."<<endl;

@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#define DEBUGSPECIFIC
+
 #ifndef HOLDEM_Arena
 #define HOLDEM_Arena
 
@@ -173,6 +175,10 @@ class HoldemAction
 class HoldemArena
 {
 	private:
+	#ifdef DEBUGSPECIFIC
+        uint32 handnum;
+    #endif
+
 		static const float64 BASE_CHIP_COUNT;
 
 		int8 curDealer;
