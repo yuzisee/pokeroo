@@ -981,12 +981,12 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 			if( bVerbose )
 			{
 				cout << "All fold! " << p[highestBetter]->GetIdent() <<
-				" wins " << (myPot - p[highestBetter]->handBetTotal) << endl;
+				" wins " << (myPot - p[highestBetter]->handBetTotal - p[highestBetter]->myBetSize) << endl;
 			}
 			float64 rh = static_cast<float64>(highestBetter);
 			randRem /= myPot*p[highestBetter]->handBetTotal+rh;
 			randRem *= rh;
-			p[highestBetter]->myMoney += myPot;
+			p[highestBetter]->myMoney += myPot - p[highestBetter]->myBetSize;
 
 		}
 
