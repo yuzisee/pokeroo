@@ -248,11 +248,11 @@ float64 UserConsoleStrategy::queryAction()
 		cout << endl << "[ENTER ACTION]" << endl;
 		if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
 		{
-			cout << "check" << endl;
+			cout << "*check" << endl;
 		}
 		else
 		{
-			cout << "fold" << endl;
+			cout << "*fold" << endl;
 			cout << "call (" << ViewTable().GetBetToCall() << flush;
 			if( ViewPlayer().GetBetSize() > 0 )
 			{
@@ -347,6 +347,17 @@ float64 UserConsoleStrategy::queryAction()
 					}
 
 				}
+			}
+			else if ( 0 == inputBuf[0] )
+			{///Just press [ENTER]: do default action
+                if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
+				{
+					returnMe = ViewTable().GetBetToCall();
+				}else
+				{
+				    returnMe = -1;
+				}
+				bExtraTry = 0;
 			}
 			else
 			{
