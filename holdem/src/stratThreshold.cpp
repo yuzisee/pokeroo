@@ -18,12 +18,27 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-//#define LOGTHRESHOLD
-
 #include <math.h>
 #include "stratThreshold.h"
 ThresholdStrategy::~ThresholdStrategy()
 {
+    #ifdef LOGTHRESHOLD
+        if( logFile.is_open() )
+        {
+            logFile.close();
+        }
+    #endif
+}
+
+void MultiThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
+{
+    #ifdef LOGTHRESHOLD
+        if( !(logFile.is_open()) )
+        {
+            logFile.open((ViewPlayer().GetIdent() + ".MultiThresh.log").c_str());
+        }
+    #endif
+    ThresholdStrategy::SeeCommunity(h, cardsInCommunity);
 }
 
 void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
@@ -44,12 +59,32 @@ void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
     StatsManager::Query(0,w,0,withCommunity,onlyCommunity,cardsInCommunity);
 
+        #ifdef LOGTHRESHOLD
+            if( !(logFile.is_open()) )
+            {
+                logFile.open((ViewPlayer().GetIdent() + ".Thresh.log").c_str());
+            }
+            logFile << endl;
+            HandPlus convertOutput;
+            if( !(convertOutput == h) )
+            {
+                convertOutput.SetUnique(h);
+                convertOutput.DisplayHand(logFile);
+                logFile << "community" << endl;
+            }
+        #endif
+
 }
 
 float64 ThresholdStrategy::MakeBet()
 {
         #ifdef LOGTHRESHOLD
-            cout << w->mean << " > " << aiThreshold << "?" << endl;
+            if( !(logFile.is_open()) )
+            {
+                logFile.open((ViewPlayer().GetIdent() + ".Thresh.log").c_str());
+            }
+
+            logFile << w->mean << " > " << aiThreshold << "?" << endl;
         #endif
 	if (w->mean > aiThreshold)
 	{
@@ -65,12 +100,19 @@ float64 MultiThresholdStrategy::MakeBet()
 {
     float64 multiThreshhold = pow(w->mean,ViewTable().GetNumberInHand());
         #ifdef LOGTHRESHOLD
+
+            if( !(logFile.is_open()) )
+            {
+                logFile.open((ViewPlayer().GetIdent() + ".MultiThresh.log").c_str());
+            }
+
+
             HandPlus convertOutput;
             convertOutput.SetUnique(ViewHand());
-            convertOutput.DisplayHand();
-            cout << "ThresholdAI" << endl;
+            convertOutput.DisplayHand(logFile);
+            logFile << "ThresholdAI" << endl;
 
-            cout << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberInHand()) << endl;
+            logFile << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberInHand()) << endl;
         #endif
 	if (multiThreshhold > aiThreshold)
 	{

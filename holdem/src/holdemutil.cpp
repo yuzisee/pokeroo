@@ -54,8 +54,7 @@ if not full house,
 FLUSH (ADD-SHIFT × 13)
 STRAIGHT (OR the cardsets, then AND-SHIFT × 5)
 */
-
-#include <iostream>
+#include <fstream>
 #include "holdem2.h"
 
 using std::cout;
@@ -124,6 +123,28 @@ const void HandPlus::DisplayHand() const
             temp[suit] >>= 1;
             if ((temp[suit] & 1) == 1)
                 cout << HoldemUtil::VALKEY[val] << HoldemUtil::SUITKEY[suit]
+						<< " " << flush;
+        }
+    }
+}
+
+const void HandPlus::DisplayHand(std::ofstream& logFile) const
+{
+
+	uint32 temp[4];
+
+    for(int8 i=0;i<4;++i)
+    {
+        temp[i] = cardset[i];
+    }
+
+    for(int8 val=2;val<=14;++val)
+    {
+        for(int8 suit=0;suit<4;++suit)
+        {
+            temp[suit] >>= 1;
+            if ((temp[suit] & 1) == 1)
+                logFile << HoldemUtil::VALKEY[val] << HoldemUtil::SUITKEY[suit]
 						<< " " << flush;
         }
     }

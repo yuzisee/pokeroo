@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#define LOGTHRESHOLD
 
 #ifndef HOLDEM_ThresholdStrat
 #define HOLDEM_ThresholdStrat
@@ -28,7 +29,9 @@
 class ThresholdStrategy : virtual public SearchStrategy
 {
 	protected:
-
+        #ifdef LOGTHRESHOLD
+        ofstream logFile;
+        #endif
 		float64 aiThreshold;
 	public:
 
@@ -49,7 +52,7 @@ class MultiThresholdStrategy : virtual public ThresholdStrategy
 		MultiThresholdStrategy(float64 thresh=.5) : ThresholdStrategy(thresh){}
 		//virtual ~MultiThresholdStrategy();
 
-		//virtual void SeeCommunity(const Hand&, const int8);
+		virtual void SeeCommunity(const Hand&, const int8);
 		virtual float64 MakeBet();
 		//virtual void SeeOppHand(const int8, const Hand&);
         //virtual void SeeAction(const HoldemAction&);

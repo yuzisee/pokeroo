@@ -179,6 +179,7 @@ class HandPlus : public virtual Hand
 	public:
 	uint32 valueset; //use most significant 6 (5? 3?) bits to store info?
 	virtual const void DisplayHand() const;
+	virtual const void DisplayHand(std::ofstream&) const;
     virtual const void DisplayHandBig() const;
 	const void ShowHand(const bool) const;
 	const uint32 getValueset() const;
