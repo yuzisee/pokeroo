@@ -20,6 +20,7 @@
 #define DEBUGROUNDINDEX
 //#define EXTRAMONEYUPDATE
 //#define DEBUGALLINS
+#define FORCEPAUSE
 
 #include "arena.h"
 #include <iostream>
@@ -153,7 +154,7 @@ double* HoldemArena::organizeWinnings(int8& potDistrSize, vector<ShowdownRep>&
 	potDistr, vector<ShowdownRep>& winners )
 {
 
-
+    ///TODO: Is this loop serving its purpose?
 	///The following loop weeds out positionally IRRELEVANT players
 	//The relevant players are placed in potDistr
 	ShowdownRep curComp;
@@ -164,7 +165,7 @@ double* HoldemArena::organizeWinnings(int8& potDistrSize, vector<ShowdownRep>&
 		lastComp = curComp; //(we use default values of ShowdownRep carefully)
 		curComp = winners.back();//best hand so far
 
-		if( lastComp > curComp && lastComp.revtiebreak == myPot )
+		if( lastComp > curComp && lastComp.revtiebreak > curComp.revtiebreak )
 		{	//lastCom was the deciding hand in all accounts
 			winners.clear();
 		}
@@ -1045,7 +1046,10 @@ void HoldemArena::PlayGame()
 		}
 
 	}
-
+#ifdef FORCEPAUSE
+    cout << "Quit."<<endl;
+    std::cin >> curIndex;
+#endif
 }
 
 
