@@ -129,11 +129,12 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 	}while(curIndex != called);
 
     sort(allInRevealOrder.begin(),allInRevealOrder.end());
-    ///Note: When the vector is sorted it will be in ascending order of stack size
-    vector<ShowdownRep>::reverse_iterator nextReveal;
-    nextReveal = allInRevealOrder.rbegin();
+    ///Note: When the vector is sorted it will be in descending order of stack size, since
+    ///revtiebreak is always sorted in the OPPOSITE direction
+    vector<ShowdownRep>::const_iterator nextReveal;
+    nextReveal = allInRevealOrder.begin();
 
-	while(nextReveal != allInRevealOrder.rend())
+	while(nextReveal != allInRevealOrder.end())
 	{
 	    Player& withP = *p[nextReveal->playerIndex];
 
@@ -204,40 +205,41 @@ double* HoldemArena::organizeWinnings(int8& potDistrSize, vector<ShowdownRep>&
 	///The following loop weeds out positionally IRRELEVANT players
 	//The relevant players are placed in potDistr (remember the best hand starts at the back)
 	ShowdownRep curComp;
-	ShowdownRep lastComp;
+	ShowdownRep lastComp; //last RELEVANT entry
+	lastComp = curComp; //(we use default values of ShowdownRep carefully)
 
-	///Since sorting puts the higher betting players ahead in the list,
-	///This only needs to be updated when curComp != lastComp (curComp < lastComp which uses revtiebreak)
+	///Since sorting puts the lower betting players better hands ahead in the list,
+	///This can be updated to keep track of who is still relevant
 	float64 highestBetStrongerHands = 0;
-	float64 nextHighBetStrongerHands = 0;
 
 	potDistrSize=0;
 	while( !winners.empty() )
 	{
-		lastComp = curComp; //(we use default values of ShowdownRep carefully)
+		lastComp = curComp;
 		curComp = winners.back();//best hand so far
 
         winners.pop_back();
 
-		if( (!(lastComp == curComp)) && lastComp.revtiebreak == myPot )
-		{	///Special case: lastCom was the deciding hand in all accounts
-            ///Everyone else is worse, and curComp wins all the pot money against anybody worse.
-			winners.clear();
-		}else if( lastComp == curComp )
+
+		if( lastComp == curComp )
 		{//Split
-            if(  curComp.revtiebreak > highestBetStrongerHands )
-            {
+            //if(  curComp.revtiebreak >= highestBetStrongerHands )
+            //ALWAYS TRUE
+            //{
                 potDistr.push_back(curComp);
                 ++potDistrSize;
-            }
-		}else ///Assuming sorting worked, this hand is worse but the last hand didn't take all the money
+                highestBetStrongerHands = curComp.revtiebreak;
+                //lastComp = curComp;
+            //}
+		}else ///Assuming sorting worked, this hand is worse or first
 		{
-		    highestBetStrongerHands = nextHighBetStrongerHands;
+
 			if ( curComp.revtiebreak > highestBetStrongerHands )
 			{
 				potDistr.push_back(curComp);
 				++potDistrSize;
-				nextHighBetStrongerHands = curComp.revtiebreak;
+				highestBetStrongerHands = curComp.revtiebreak;
+				lastComp = curComp;
 			}
 
 		}
@@ -498,7 +500,7 @@ void HoldemArena::prepareRound(const int8 comSize)
 void HoldemArena::defineSidePotsFor(Player& allInP, const int8 id)
 {
 	//allInP.myBetSize = allInP.allIn - allInP.handBetTotal;
-		allInP.allIn = myPot - myBetSum;
+		allInP.allIn = myPot - myBetSum; ///Bets from previous rounds
 
 #ifdef DEBUGALLINS
 cout << allInP.GetIdent() << " determined to be all in." << endl;
@@ -512,7 +514,7 @@ cout << "Past round pots " << allInP.allIn << endl;
 
 				Player& withP = *(p[curIndex]);
 
-				float64 matchedAmount;
+				float64 matchedAmount;///How much for this round are we picking up?
 
 				//cout << "why " << withP.GetIdent();
 
@@ -550,16 +552,18 @@ cout << "Past round pots " << allInP.allIn << endl;
 cout << "Adding " << matchedAmount << ", " << withP.GetIdent() << endl;
 #endif
 
-				if ( matchedAmount > allInP.handBetTotal )
+//Why did I comment this out? (See below)
+/*				if ( matchedAmount > allInP.handBetTotal )
 				{
 					allInP.handBetTotal = matchedAmount;
-				}
+				}*/
 				allInP.allIn += matchedAmount;
 
 				incrIndex();
 			}while( curIndex != id );
-
-
+//Why did I comment this out? I couldn't see the need for handBetTotal to be considered at all in this situation
+//The subroutine begins with [allIn = myPot - myBetSum] which should take care of all action before this round
+/*
 #ifdef DEBUGALLINS
 cout << "And of course " << allInP.handBetTotal << " of money was bet... " << endl;
 #endif
@@ -571,6 +575,11 @@ cout << "Ultimately, allIn=" << allInP.allIn << endl;
 #endif
 
 		allInP.myMoney -= allInP.handBetTotal;
+*/
+//The following lines were added as a (working) substitute for the above block
+//During resolveActions handBetTotal is usually updated...
+//resolveActions is the next thing to happen after calling defineSidePotsFor
+    allInP.allIn += allInP.myBetSize; ///You are able to win back your own bet.
 }
 
 void HoldemArena::resolveActions(Player& withP)
@@ -587,6 +596,9 @@ void HoldemArena::resolveActions(Player& withP)
 
 			withP.lastBetSize = INVALID;
 
+				withP.handBetTotal += withP.GetBetSize();
+				withP.myMoney -= withP.GetBetSize();
+
 			if( withP.allIn > 0 )
 			{
 				withP.myBetSize = INVALID;
@@ -596,8 +608,7 @@ void HoldemArena::resolveActions(Player& withP)
 
 
 
-				withP.handBetTotal += withP.GetBetSize();
-				withP.myMoney -= withP.GetBetSize();
+
 				//cout << " clear";
 				withP.myBetSize = 0;
 			}
@@ -1052,19 +1063,22 @@ void HoldemArena::PlayHand()
 
 	dealer.DealCard(community);
 
-if( handnum == 12 )
+
+/*
+if( handnum == 4 )
 {
     Player& withP0 = *p[0];
     Player& withP1 = *p[1];
     Player& withP2 = *p[2];
     Player& withP3 = *p[3];
-    cout << "DEBUG" << endl;
+    cout << "AllIns are correct here and go haywire later" << endl;
 
-}
+}*/
 
 	if( PlayRound(4) == -1 ) return;
 
 	dealer.DealCard(community);
+
 
 	int8 playerToReveal = PlayRound(5);
 
