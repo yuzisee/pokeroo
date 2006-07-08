@@ -18,33 +18,38 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <math.h>
 #include "stratThreshold.h"
-
-/*
-void ThresholdStrategy::cleanstats()
-{
-	if(w != 0) delete w;
-	w = 0;
-}
-*/
 ThresholdStrategy::~ThresholdStrategy()
 {
-	//cleanstats();
 }
 
-void ThresholdStrategy::SeeCommunity(const CommunityPlus& h, const int8 cardsInCommunity)
+void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 {
+
+
+
+    if( 0 == w ) w = new DistrShape(0);
+
+    CommunityPlus onlyCommunity;
+    onlyCommunity.SetUnique(h);
+
     CommunityPlus withCommunity;
-    withCommunity.SetUnique(h);
-    withCommunity.AppendUnique(ViewHand());
-    StatsManager::Query(&w,0,0,withCommunity,h,cardsInCommunity);
+    withCommunity.SetUnique(ViewHand());
+    withCommunity.AppendUnique(onlyCommunity);
+
+
+
+    StatsManager::Query(0,w,0,withCommunity,onlyCommunity,cardsInCommunity);
+    cout << w->mean << endl;
 }
 
 float64 ThresholdStrategy::MakeBet()
 {
-	if (w.pct > aiThreshold)
+    cout << w->mean << " > " << aiThreshold << "?" << endl;
+	if (w->mean > aiThreshold)
 	{
-		return ViewPlayer().GetMoney();
+		return ViewTable().GetBetToCall();
 	}
 	else
 	{
@@ -52,3 +57,15 @@ float64 ThresholdStrategy::MakeBet()
 	}
 }
 
+float64 MultiThresholdStrategy::MakeBet()
+{
+    cout << w->mean << "^" << (int)(ViewTable().GetNumberInHand()) << " > " << aiThreshold << "?" << endl;
+	if (pow(w->mean,ViewTable().GetNumberInHand()) > aiThreshold)
+	{
+		return ViewPlayer().GetMoney();
+	}
+	else
+	{
+		return ThresholdStrategy::MakeBet();
+	}
+}

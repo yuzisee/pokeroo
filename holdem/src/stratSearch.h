@@ -27,10 +27,13 @@
 
 class SearchStrategy : public PlayerStrategy
 {
-
+    protected:
+        DistrShape* w;
+		void cleanstats();
 	public:
 
-		SearchStrategy() : PlayerStrategy(){}
+		SearchStrategy() : PlayerStrategy(),w(0){}
+        virtual ~SearchStrategy();
 
 		virtual void SeeCommunity(const Hand&, const int8);
 

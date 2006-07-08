@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+//#define DEBUGQUERYW
+
 #include "aiCache.h"
 #include <sstream>
 #include <fstream>
@@ -211,6 +213,35 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
     if( 0 != myAvg ) *myAvg = ds.avgStat();
     if( 0 != dPCT ) *dPCT = ds.pctDistr();
     if( 0 != dWL ) *dWL = ds.wlDistr();
+
+
+
+        #ifdef DEBUGQUERYW
+
+
+            cout << "Cards available to me" << endl;
+            withCommunity.ShowHand(false);
+            cout << endl;
+
+
+            cout << "Cards in community" << endl;
+            onlyCommunity.ShowHand(false);
+            cout << endl;
+
+            cout << endl;
+
+
+            cout << "(Mean) " << ds.pctDistr().mean * 100 << "%"  << endl;
+            cout << endl << "Adjusted improve? " << ds.pctDistr().improve * 100 << "%"  << endl;
+            cout << "Worst:" << ds.pctDistr().worst *100 << "%" << endl;
+            cout << "Standard Deviations:" << ds.pctDistr().stdDev*100 << "%" << endl;
+            cout << "Average Absolute Fluctuation:" << ds.pctDistr().avgDev*100 << "%" << endl;
+            cout << "Skew:" << ds.pctDistr().skew*100 << "%" << endl;
+            cout << "Kurtosis:" << (ds.pctDistr().kurtosis)*100 << "%" << endl;
+
+            cout << endl;
+        #endif
+
 
 }
 

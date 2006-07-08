@@ -227,7 +227,7 @@ class HoldemArena
 		int8 AddPlayer(const char*, PlayerStrategy*);
 		int8 AddPlayer(const char*, float64, PlayerStrategy*);
 
-
+        int8 GetNumberInHand() const;
 		int8 GetNumberAtTable() const;
 		int8 GetTotalPlayers() const;
 

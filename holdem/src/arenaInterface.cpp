@@ -117,6 +117,11 @@ int8 HoldemArena::GetCurPlayer() const
 	return curIndex;
 }
 
+int8 HoldemArena::GetNumberInHand() const
+{
+	return playersInHand;
+}
+
 int8 HoldemArena::GetNumberAtTable() const
 {
 	return livePlayers;

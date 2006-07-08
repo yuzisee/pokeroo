@@ -27,21 +27,33 @@
 
 class ThresholdStrategy : virtual public SearchStrategy
 {
-	private:
-        StatResult w;
-		//void cleanstats();
+	protected:
+
 		float64 aiThreshold;
 	public:
 
 		ThresholdStrategy(float64 thresh=.5) : SearchStrategy(), aiThreshold(thresh) {}
-		~ThresholdStrategy();
+		virtual ~ThresholdStrategy();
 
-		virtual void SeeCommunity(const CommunityPlus&, const int8);
+		virtual void SeeCommunity(const Hand&, const int8);
 		virtual float64 MakeBet();
 		virtual void SeeOppHand(const int8, const Hand&){};
         virtual void SeeAction(const HoldemAction&) {};
 }
 ;
 
+class MultiThresholdStrategy : virtual public ThresholdStrategy
+{
+	public:
+
+		MultiThresholdStrategy(float64 thresh=.5) : ThresholdStrategy(thresh){}
+		//virtual ~MultiThresholdStrategy();
+
+		//virtual void SeeCommunity(const Hand&, const int8);
+		virtual float64 MakeBet();
+		//virtual void SeeOppHand(const int8, const Hand&);
+        //virtual void SeeAction(const HoldemAction&);
+}
+;
 
 #endif

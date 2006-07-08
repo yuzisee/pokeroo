@@ -20,15 +20,28 @@
 
 #include "stratSearch.h"
 
+void SearchStrategy::cleanstats()
+{
+	if(w != 0) delete w;
+	w = 0;
+}
+SearchStrategy::~SearchStrategy()
+{
+	cleanstats();
+}
+
 
 void SearchStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 {
-    /*
-    cachedStats.queryW(ViewHand())
-	searches.UndealAll();
-	searches.OrderedDeck::OmitCards(ViewHand());
-	searches.OrderedDeck::OmitCards(h);
-	*/
+    if( 0 == w ) w = new DistrShape(0);
+
+    CommunityPlus onlyCommunity;
+    onlyCommunity.SetUnique(h);
+
+    CommunityPlus withCommunity;
+    withCommunity.SetUnique(ViewHand());
+    withCommunity.AppendUnique(onlyCommunity);
+    StatsManager::Query(0,w,0,withCommunity,onlyCommunity,cardsInCommunity);
 }
 
 

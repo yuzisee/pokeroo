@@ -461,7 +461,7 @@ float64 DealRemainder::executeIterative()
 
 				#ifdef DEBUGORDER
 				++debugCount[curDepth];
-				if( debugCount[0] >= 40 )
+				if( debugCount[0] <= 1 )
 				{
 					bDebugVerbose = true;
 					cout << lastStats->statGroup << "\t" << flush;

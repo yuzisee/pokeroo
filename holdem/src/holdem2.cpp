@@ -585,23 +585,26 @@ const void CommunityPlus::AppendUnique(const CommunityPlus& h)
 			nextbestPair = h.nextbestPair;
 		}
 		mockValueset = valueset;
+		///We count downwards here to find the BEST pair first.
 		for(unsigned char i=13;i>bestPair;--i)
 		{
-			mockValueset >>= 2;
-			if( (mockValueset & 3) >= 2 ) //== would be fine, there ARE NO trips
+
+			if( (mockValueset & HoldemConstants::VALUE_ACEHIGH) >> 26 >= 2 ) //== would be fine, there ARE NO trips
 			{
 				nextbestPair = bestPair;
 				bestPair = i;
 			}
+			mockValueset <<= 2;
 		}
-		mockValueset = valueset;
+
 		for(unsigned char i=bestPair-1;i>nextbestPair;--i)
 		{
-			mockValueset >>= 2;
-			if( (mockValueset & 3) >= 2 ) //== would be fine, there ARE NO trips
+
+			if( (mockValueset & HoldemConstants::VALUE_ACEHIGH) >> 26 >= 2 ) //== would be fine, there ARE NO trips
 			{
 				nextbestPair = i;
 			}
+			mockValueset <<= 2;
 		}
 	}
 

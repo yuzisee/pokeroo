@@ -427,8 +427,8 @@ void testPlay()
 	HoldemArena myTable(&b, true);
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;
-	ConsoleStrategy manPlay[2];
-	ThresholdStrategy pushFold;
+	ConsoleStrategy manPlay[3];
+	MultiThresholdStrategy pushFold;
 	//ConsoleStepStrategy watchPlay;
 
 	//myTable.AddPlayer("Stag", &stagStrat);
@@ -436,6 +436,7 @@ void testPlay()
 	myTable.AddPlayer("N2", manPlay+1);
 	myTable.AddPlayer("X3", &pushFold);
 	myTable.AddPlayer("P1", &consolePlay);
+	//myTable.AddPlayer("P1", manPlay);
 
 	myTable.PlayGame();
 }
@@ -494,6 +495,63 @@ void goCMD(int argc, char* argv)
 
 }
 
+void testPosition()
+{
+    const uint8 dealtCommunityNumber=4;
+    CommunityPlus h1, h2;
+
+//Community
+    h2.AddToHand(HoldemConstants::SPADES, 12, HoldemConstants::CARD_KING );
+    h2.AddToHand(HoldemConstants::HEARTS, 2, HoldemConstants::CARD_TREY );
+    h2.AddToHand(HoldemConstants::CLUBS, 11, HoldemConstants::CARD_QUEEN );
+    h2.AddToHand(HoldemConstants::DIAMONDS, 4, HoldemConstants::CARD_FIVE );
+
+    h1.SetUnique(h2);
+
+//Hole cards
+    h1.AddToHand(HoldemConstants::SPADES, 4, HoldemConstants::CARD_FIVE );
+    h1.AddToHand(HoldemConstants::DIAMONDS, 13, HoldemConstants::CARD_ACEHIGH );
+
+
+
+#ifdef DEBUGSITUATION
+	cout << "Cards available to me" << endl;
+	h1.ShowHand(false);
+	cout << endl;
+#endif
+
+#ifdef DEBUGSITUATION
+	cout << "Cards with community" << endl;
+	h2.ShowHand(false);
+	cout << endl;
+
+	cout << endl;
+#endif
+
+    //WinStats ds(h1, h2,FIRST_DEAL-2);
+    StatResult myWins;
+    DistrShape myDistrPCT(0);
+    StatsManager::Query(0,&myDistrPCT,0,h1, h2,dealtCommunityNumber);
+    //deal.OmitCards(h1);
+    // deal.AnalyzeComplete(&ds);
+
+    cout << endl << "AVG "  << myWins.loss << " l + "
+            << myWins.splits << " s + " << myWins.wins << " w = " <<
+            myWins.loss+myWins.splits+myWins.wins
+            << "\t×"<< myWins.repeated   <<endl;
+
+    cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;
+    cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
+    cout << endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << endl;
+    cout << "Worst:" << myDistrPCT.worst *100 << "%" << endl;
+    cout << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << endl;
+    cout << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << endl;
+    cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
+    cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
+
+    cout << endl;
+}
+
 int main(int argc, char* argv[])
 {
 	cout << "test" << endl;
@@ -523,6 +581,7 @@ int main(int argc, char* argv[])
 	    ///Play this hand on force-random
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
+	    //testPosition();
 	    testPlay();
 	 //   goCMD(2,"506");
 
