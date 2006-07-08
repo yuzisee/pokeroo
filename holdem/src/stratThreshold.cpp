@@ -112,7 +112,7 @@ float64 MultiThresholdStrategy::MakeBet()
             convertOutput.DisplayHand(logFile);
             logFile << "ThresholdAI" << endl;
 
-            logFile << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberInHand()) << endl;
+            logFile << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberInHand()-1) << endl;
         #endif
 	if (multiThreshhold > aiThreshold)
 	{
