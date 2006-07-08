@@ -524,9 +524,8 @@ int main(int argc, char* argv[])
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
 	    testPlay();
-	 //   goCMD(2,"498");
-        //testW();
-        //testC();
+	 //   goCMD(2,"506");
+
 	}
 	//testPlay();
 

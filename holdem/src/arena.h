@@ -134,10 +134,11 @@ class HoldemAction
 		float64 bet;
 		float64 callAmount;
 		bool bCheckBlind;
+		bool bAllIn;
 	public:
 
-		HoldemAction(const int8 i, const float64 b, const float64 c, const bool checked = false)
-	: myPlayerIndex(i), bet(b), callAmount(c), bCheckBlind(checked) {} ;
+		HoldemAction(const int8 i, const float64 b, const float64 c, const bool checked = false, const bool allin = false)
+	: myPlayerIndex(i), bet(b), callAmount(c), bCheckBlind(checked), bAllIn(allin) {} ;
 
 		int8 GetPlayerID() const {return myPlayerIndex;}
 		float64 GetAmount() const {return bet;}
@@ -153,9 +154,9 @@ class HoldemAction
 			}
 		}
 
-		bool IsFold() const {return bet < callAmount;}
+		bool IsFold() const {return bet < callAmount && !bAllIn;}
 		bool IsCheck() const {return (bet == 0) || bCheckBlind;}
-		bool IsCall() const {return bet == callAmount && callAmount > 0;}
+		bool IsCall() const {return (bet == callAmount || bAllIn) && callAmount > 0;}
 		bool IsRaise() const {return bet > callAmount && callAmount > 0;}
 }
 ;
@@ -194,7 +195,7 @@ class HoldemArena
 
 		void broadcastHand(const Hand&);
 		void broadcastCurrentMove(const int8&, const float64&,
-									const float64&, const bool&);
+									const float64&, const bool&, const bool&);
 		void PlayHand();
 			void defineSidePotsFor(Player&, const int8);
 			void resolveActions(Player&);

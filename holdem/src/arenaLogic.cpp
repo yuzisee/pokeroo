@@ -35,25 +35,29 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 
 	do
 	{
-		ShowdownRep comp(p[curIndex]->myHand, community, curIndex);
 
+//cout << p[curIndex]->GetIdent() << "\tallIn=" << p[curIndex]->allIn << endl;
 		if( IsInHand(curIndex) ) //If STILL IN HAND (not all in)
 		{
+
+		    Player& withP = *p[curIndex];
+            ShowdownRep comp(withP.myHand, community, curIndex);
+
 			if( comp > best ) //best hand yet
 			{
 
 				///We set the allIn, since this player "IsInHand()"
-				p[curIndex]->allIn = myPot;
+				withP.allIn = myPot;
 
-				broadcastHand(p[curIndex]->myHand);
+				broadcastHand(withP.myHand);
 				if( bVerbose )
 				{
 
 
-					cout << endl << p[curIndex]->GetIdent() << flush;
+					cout << endl << withP.GetIdent() << flush;
 					cout << " reveals: " << flush;
 					HandPlus viewHand;
-					viewHand.SetUnique(p[curIndex]->myHand);
+					viewHand.SetUnique(withP.myHand);
 					viewHand.ShowHand(false);
 					cout << endl << "Making," << flush;
 					comp.DisplayHandBig();
@@ -68,14 +72,14 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 			else if( comp == best ) //can only split, if not beaten later
 			{
 
-				broadcastHand(p[curIndex]->myHand);
+				broadcastHand(withP.myHand);
 				if( bVerbose )
 				{
 					HandPlus viewHand;
 
-					cout << endl << p[curIndex]->GetIdent() << flush;
+					cout << endl << withP.GetIdent() << flush;
 					cout << " turns up: " << endl;
-					viewHand.SetUnique(p[curIndex]->myHand);
+					viewHand.SetUnique(withP.myHand);
 					viewHand.ShowHand(true);
 
 					cout << "Split..." << flush;
@@ -88,7 +92,7 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 			}
 			else
 			{
-				cout << endl << p[curIndex]->GetIdent() << " mucks " << endl;
+				cout << endl << withP.GetIdent() << " mucks " << endl;
 			}
 		}
 
@@ -96,24 +100,27 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 
 	}while(curIndex != called);
 
+//cout << "Next phase" << endl;
 	///Non all-in players show first,
 	///All-in players are manditorily showing afterwards.
 
 	do
 	{
-		ShowdownRep comp(p[curIndex]->myHand, community, curIndex);
+	    Player& withP = *p[curIndex];
 
-		if ( p[curIndex]->allIn >= 0 ) //If all in
+//cout << p[curIndex]->GetIdent() << "\t now " << p[curIndex]->allIn << endl;
+		if ( withP.allIn >= 0 && !IsInHand(curIndex)) //If all in with no money remaining
 		{
+		    ShowdownRep comp(withP.myHand, community, curIndex);
 		    if(  !( comp < best )  )
 		    {
-                broadcastHand(p[curIndex]->myHand);
+                broadcastHand(withP.myHand);
                 if( bVerbose )
                 {
-                    cout << endl << p[curIndex]->GetIdent() << flush;
+                    cout << endl << withP.GetIdent() << flush;
                     cout << " is ahead with: " << flush;
                     HandPlus viewHand;
-                    viewHand.SetUnique(p[curIndex]->myHand);
+                    viewHand.SetUnique(withP.myHand);
                     viewHand.ShowHand(false);
                     cout << endl << "Trying to stay alive, makes" << flush;
                     comp.DisplayHandBig();
@@ -123,13 +130,13 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 		    }else
 		    {///His hand was worse, but since he is all-in he MUST show his hand.
 		    //  http://www.texasholdem-poker.com/holdem_rules.php
-		        broadcastHand(p[curIndex]->myHand);
+		        broadcastHand(withP.myHand);
 		        if( bVerbose )
                 {
-                    cout << endl << p[curIndex]->GetIdent() << flush;
+                    cout << endl << withP.GetIdent() << flush;
                     cout << " turns over " << flush;
                     HandPlus viewHand;
-                    viewHand.SetUnique(p[curIndex]->myHand);
+                    viewHand.SetUnique(withP.myHand);
                     viewHand.ShowHand(false);
                     cout << endl << "Is eliminated after making only" << flush;
                     comp.DisplayHandBig();
@@ -246,6 +253,13 @@ void HoldemArena::PlayShowdown(const int8 called)
 		cout << "\t!!!!!!!!!!" <<
 		endl << "\t!Showdown!" << endl;
 		cout << "\t!!!!!!!!!!" << endl;
+
+		cout << "Final Community Cards:" << endl;
+
+        HandPlus displayCom;
+        displayCom.SetUnique(community);
+        displayCom.DisplayHand();
+        cout << endl << endl;
 	}
 
 	vector<ShowdownRep> winners;
@@ -318,7 +332,7 @@ cout << p[potDistr[j].playerIndex]->GetIdent() << "\t"
 			if( bVerbose )
 			{
 				cout << p[potDistr[i].playerIndex]->GetIdent() << " splits with " <<
-				splitCount << " other" << endl;
+				(int)(splitCount) << " other" << endl;
 			}
 
 			///Loop through each player that:
@@ -551,47 +565,6 @@ int8 HoldemArena::PlayRound(const int8 comSize)
 
 	curIndex = curDealer;
 
-	///Weird stuff to simulate blind bets
-	if( comSize == 0 && playersInHand >= 2)
-	{
-		do
-		{
-			incrIndex();
-		}while(!IsInHand(curIndex));
-		p[curIndex]->myBetSize = GetSmallBlind();
-
-			if( bVerbose )
-			{
-				cout  << p[curIndex]->GetIdent() <<
-					" posts " << GetSmallBlind() << endl;
-			}
-
-		do
-		{
-			incrIndex();
-		}while(!IsInHand(curIndex));
-		p[curIndex]->myBetSize = GetBigBlind();
-
-			if( bVerbose )
-			{
-				cout  << p[curIndex]->GetIdent() <<
-					" posts " << GetBigBlind() << endl;
-			}
-
-		bBlinds = curIndex;
-
-		addBets(GetSmallBlind()+GetBigBlind());
-		highestBetter = curIndex;
-		highBet = GetBigBlind();
-	}
-/*	else
-	{
-		//bBlinds = -1;
-		incrIndex(highestBetter);
-	}*/
-
-	incrIndex();
-
 
 
 
@@ -608,6 +581,100 @@ int8 HoldemArena::PlayRound(const int8 comSize)
 
 	int8* allInsNow = new int8[nextNewPlayer];
 	int8 allInsNowCount = 0;
+
+	///Weird stuff to simulate blind bets
+	if( comSize == 0 && playersInHand >= 2)
+	{
+
+	    ///TODO: If a blind puts you all-in, that mechanic has to occur:
+	    /*
+            Player& withP = p[curIndex];
+            if( withP.myBetSize > withP.myMoney )
+            {
+				withP.myBetSize = withP.myMoney;
+				withP.allIn = withP.myMoney;
+					//we must remember allIn as above: it's what we can win/person
+
+				++playersAllIn;
+
+				allInsNow[allInsNowCount] = curIndex;
+				++allInsNowCount;
+            }
+	    */
+		do
+		{
+			incrIndex();
+		}while(!IsInHand(curIndex));
+
+        int8 smallBlindIndex = curIndex;
+        Player& withP1 = *p[curIndex];
+        withP1.myBetSize = GetSmallBlind();
+
+        if( withP1.myBetSize > withP1.myMoney )
+        {
+            withP1.myBetSize = withP1.myMoney;
+            withP1.allIn = withP1.myMoney;
+                //we must remember allIn as above: it's what we can win/person
+
+            ++playersAllIn;
+
+            allInsNow[allInsNowCount] = curIndex;
+            ++allInsNowCount;
+        }
+
+            if( bVerbose )
+            {
+                cout  << withP1.GetIdent() <<
+                    " posts " << withP1.myBetSize << endl;
+            }
+
+		do
+		{
+			incrIndex();
+		}while(!IsInHand(curIndex));
+
+		Player& withP2 = *p[curIndex];
+		withP2.myBetSize = GetBigBlind();
+
+        if( withP2.myBetSize > withP2.myMoney )
+        {
+            withP2.myBetSize = withP2.myMoney;
+            withP2.allIn = withP2.myMoney;
+                //we must remember allIn as above: it's what we can win/person
+
+            ++playersAllIn;
+
+            allInsNow[allInsNowCount] = curIndex;
+            ++allInsNowCount;
+        }
+
+            if( bVerbose )
+            {
+                cout  << withP2.GetIdent() <<
+                    " posts " << withP2.myBetSize << endl;
+            }
+
+		bBlinds = curIndex;
+
+		addBets(withP1.myBetSize+withP2.myBetSize);
+		highestBetter = curIndex;
+		highBet = withP2.myBetSize;
+		if( withP1.myBetSize > withP2.myBetSize )
+		{
+		    highestBetter = smallBlindIndex;
+            highBet = withP1.myBetSize;
+		}
+	}
+/*	else
+	{
+		//bBlinds = -1;
+		incrIndex(highestBetter);
+	}*/
+
+	incrIndex();
+
+
+
 
 	///---------------------------------
 	///Action time!
@@ -668,7 +735,7 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 				++allInsNowCount;
 			}
 			else if( withP.myBetSize < highBet )
-			{
+			{///Player folds.
 				randRem /= myBetSum+playersInHand;
 
 				///You're taking money away here. addBets happenned a while ago
@@ -677,10 +744,13 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 				withP.myMoney -= withP.lastBetSize;
 				withP.myBetSize = FOLDED;
 				--playersInHand;
+
+
+
 			}
 
 			broadcastCurrentMove(curIndex, withP.myBetSize, highBet
-					, curIndex == bBlinds && comSize == 0);
+					, curIndex == bBlinds && comSize == 0,withP.allIn > 0);
 
 			if( withP.myBetSize >= highBet )
 			{
@@ -692,11 +762,19 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 					highestBetter = curIndex;
 
 
-					randRem *= myBetSum*myPot;
+                        randRem *= myBetSum*myPot;
 				}
-				randRem /= myPot + curIndex;
+                    randRem /= myPot + curIndex;
 
 
+			}
+			else if( withP.allIn > 0 )
+			{   ///If you are going all in with LESS money than to call
+                ///The money you have left over still NEEDs to be added to the pot
+                ///Without this section, it wouldn't happen
+			    addBets(withP.myBetSize - withP.lastBetSize);
+
+                    randRem += myBetSum/curIndex;
 			}
 
 #ifdef DEBUGALLINS
@@ -761,13 +839,13 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 	if ( highBet == 0 )
 	{
 	    if( playersInHand == playersAllIn)
-	    {
+	    {///Find the first player after the dealer
             do
             {
                 incrIndex(highestBetter);
             }while( p[highestBetter]->allIn < 0);
 	    }else
-	    {
+	    {///Find the first player to check
             do
             {
                 incrIndex(highestBetter);
@@ -815,6 +893,24 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 	{
 		if( playersInHand == 1 )
 		{
+
+		    ///What if the player that folds is the highest better at the moment?
+            ///This can only happen on blinds.
+            if( !IsInHand(highestBetter) )
+            {
+                int8 findHighestBetter = highestBetter;
+
+                incrIndex(findHighestBetter);
+                while(findHighestBetter != curIndex)
+                {
+                    if( p[findHighestBetter]->myBetSize == highBet )
+                    {
+                        highestBetter = findHighestBetter;
+                    }
+                    incrIndex(findHighestBetter);
+                }
+            }
+
 			//What if you fold to an all-in? I think it will work just fine.
 			if( bVerbose )
 			{
@@ -825,6 +921,7 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 			randRem /= myPot*p[highestBetter]->handBetTotal+rh;
 			randRem *= rh;
 			p[highestBetter]->myMoney += myPot;
+
 		}
 
 		return -1;
@@ -933,6 +1030,10 @@ void HoldemArena::PlayGame()
 			}
 			else
 			{
+			    if(bVerbose)
+			    {
+			        cout << withP.GetIdent() << " now has " << withP.GetMoney() << endl;
+			    }
 				withP.myBetSize = 0;
 			}
 			withP.handBetTotal = 0;

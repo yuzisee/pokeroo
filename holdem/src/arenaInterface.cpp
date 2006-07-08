@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+//#define LEAVE_TABLE_WHEN_LOSING
+
 #include "arena.h"
 
  const float64 HoldemArena::BASE_CHIP_COUNT = 100;
@@ -43,9 +45,9 @@ void HoldemArena::incrIndex()
 }
 
 void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theBet
-	, const float64& toCall, const bool& isBlindCheck)
+	, const float64& toCall, const bool& isBlindCheck, const bool& isAllIn)
 {
-	const HoldemAction currentMove(playerID, theBet, toCall, isBlindCheck);
+	const HoldemAction currentMove(playerID, theBet, toCall, isBlindCheck, isAllIn);
 
 	//ASSERT ( playerID == curIndex )
 	int8 cycleIndex = curIndex;
@@ -53,11 +55,11 @@ void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theB
 
 	while(cycleIndex != curIndex)
 	{
-		if( IsAlive(curIndex) )
-		{
-			(*p[curIndex]).myStrat->SeeAction(currentMove);
-		}
-		incrIndex();
+            #ifdef LEAVE_TABLE_WHEN_LOSING
+                if( IsAlive(curIndex) )
+            #endif
+        (*p[curIndex]).myStrat->SeeAction(currentMove);
+    	incrIndex();
 	}
 
 }
@@ -69,10 +71,10 @@ void HoldemArena::broadcastHand(const Hand& h)
 
 	while(cycleIndex != curIndex)
 	{
-		if( IsAlive(curIndex) )
-		{
-			(*p[curIndex]).myStrat->SeeOppHand(cycleIndex, h);
-		}
+            #ifdef LEAVE_TABLE_WHEN_LOSING
+                if( IsAlive(curIndex) )
+            #endif
+        (*p[curIndex]).myStrat->SeeOppHand(cycleIndex, h);
 		incrIndex();
 	}
 }
