@@ -98,7 +98,7 @@ float64 ThresholdStrategy::MakeBet()
 
 float64 MultiThresholdStrategy::MakeBet()
 {
-    float64 multiThreshhold = pow(w->mean,ViewTable().GetNumberInHand());
+    float64 multiThreshhold = pow(w->mean,ViewTable().GetNumberInHand()-1); //subtract yourself
         #ifdef LOGTHRESHOLD
 
             if( !(logFile.is_open()) )
