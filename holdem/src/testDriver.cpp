@@ -495,22 +495,43 @@ void goCMD(int argc, char* argv)
 
 }
 
+
+
+
 void testPosition()
 {
     const uint8 dealtCommunityNumber=4;
     CommunityPlus h1, h2;
 
+
+
+
+
+
+
+
+
 //Community
-    h2.AddToHand(HoldemConstants::SPADES, 12, HoldemConstants::CARD_KING );
-    h2.AddToHand(HoldemConstants::HEARTS, 2, HoldemConstants::CARD_TREY );
-    h2.AddToHand(HoldemConstants::CLUBS, 11, HoldemConstants::CARD_QUEEN );
-    h2.AddToHand(HoldemConstants::DIAMONDS, 4, HoldemConstants::CARD_FIVE );
+    h2.AddToHand(HoldemConstants::SPADES, 5, HoldemConstants::CARD_SIX );
+    h2.AddToHand(HoldemConstants::SPADES, 8, HoldemConstants::CARD_NINE );
+    h2.AddToHand(HoldemConstants::CLUBS, 9, HoldemConstants::CARD_TEN );
+    h2.AddToHand(HoldemConstants::DIAMONDS, 5, HoldemConstants::CARD_SIX );
 
     h1.SetUnique(h2);
 
 //Hole cards
-    h1.AddToHand(HoldemConstants::SPADES, 4, HoldemConstants::CARD_FIVE );
-    h1.AddToHand(HoldemConstants::DIAMONDS, 13, HoldemConstants::CARD_ACEHIGH );
+    h1.AddToHand(HoldemConstants::DIAMONDS, 7, HoldemConstants::CARD_EIGHT );
+    h1.AddToHand(HoldemConstants::DIAMONDS, 9, HoldemConstants::CARD_TEN );
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -531,7 +552,7 @@ void testPosition()
     //WinStats ds(h1, h2,FIRST_DEAL-2);
     StatResult myWins;
     DistrShape myDistrPCT(0);
-    StatsManager::Query(0,&myDistrPCT,0,h1, h2,dealtCommunityNumber);
+    StatsManager::Query(&myWins,&myDistrPCT,0,h1, h2,dealtCommunityNumber);
     //deal.OmitCards(h1);
     // deal.AnalyzeComplete(&ds);
 

@@ -41,7 +41,7 @@ void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
 
     StatsManager::Query(0,w,0,withCommunity,onlyCommunity,cardsInCommunity);
-    cout << w->mean << endl;
+
 }
 
 float64 ThresholdStrategy::MakeBet()
@@ -59,8 +59,14 @@ float64 ThresholdStrategy::MakeBet()
 
 float64 MultiThresholdStrategy::MakeBet()
 {
-    cout << w->mean << "^" << (int)(ViewTable().GetNumberInHand()) << " > " << aiThreshold << "?" << endl;
-	if (pow(w->mean,ViewTable().GetNumberInHand()) > aiThreshold)
+
+    HandPlus convertOutput;
+    convertOutput.SetUnique(ViewHand());
+    convertOutput.DisplayHand();
+    cout << "ThresholdAI" << endl;
+    float64 multiThreshhold = pow(w->mean,ViewTable().GetNumberInHand());
+    cout << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberInHand()) << endl;
+	if (multiThreshhold > aiThreshold)
 	{
 		return ViewPlayer().GetMoney();
 	}

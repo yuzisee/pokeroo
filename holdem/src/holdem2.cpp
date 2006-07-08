@@ -539,8 +539,8 @@ const void CommunityPlus::AppendUnique(const CommunityPlus& h)
 	unsigned long mockValueset = valueset;
     for(unsigned char i=13;i>threeOfAKind;--i)
     {
-    	mockValueset >>= 2;
-    	if( (mockValueset & 3) == 3 )
+
+    	if( (mockValueset & HoldemConstants::VALUE_ACEHIGH) >> 26 == 3 )
     	{
 			threeOfAKind = i;
 			if( bestPair == i )
@@ -554,6 +554,7 @@ const void CommunityPlus::AppendUnique(const CommunityPlus& h)
 			}
 			break; //Unnecessary, I'm not sure if this slows things down or not
     	}
+    	mockValueset <<= 2;
     }
 
 ///threeOfAKind is now undoubtedly the highest trip available
@@ -570,11 +571,12 @@ const void CommunityPlus::AppendUnique(const CommunityPlus& h)
 		mockValueset = valueset;
 		for(unsigned char i=13;i>bestPair;--i)
 		{
-			mockValueset >>= 2;
-			if( (mockValueset & 3) >= 2 && i != threeOfAKind )
+
+			if( (mockValueset & HoldemConstants::VALUE_ACEHIGH) >> 26 >= 2 && i != threeOfAKind )
 			{
 				bestPair = i;
 			}
+			mockValueset <<= 2;
 		}
 	}
 	else
@@ -585,7 +587,7 @@ const void CommunityPlus::AppendUnique(const CommunityPlus& h)
 			nextbestPair = h.nextbestPair;
 		}
 		mockValueset = valueset;
-		///We count downwards here to find the BEST pair first.
+		///We count downwards here to find if there is BEST a pair better than what we assume currently
 		for(unsigned char i=13;i>bestPair;--i)
 		{
 
@@ -599,12 +601,14 @@ const void CommunityPlus::AppendUnique(const CommunityPlus& h)
 
 		for(unsigned char i=bestPair-1;i>nextbestPair;--i)
 		{
-
+		    ///Why does this decrement before and the above loop decrements after?
+		    ///Think about it. We are skipping the scenario where i=bestPair which is the case after the above loop
+            mockValueset <<= 2;
 			if( (mockValueset & HoldemConstants::VALUE_ACEHIGH) >> 26 >= 2 ) //== would be fine, there ARE NO trips
 			{
 				nextbestPair = i;
 			}
-			mockValueset <<= 2;
+
 		}
 	}
 
