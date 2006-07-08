@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+//#define LOGTHRESHOLD
+
 #include <math.h>
 #include "stratThreshold.h"
 ThresholdStrategy::~ThresholdStrategy()
@@ -46,26 +48,30 @@ void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
 float64 ThresholdStrategy::MakeBet()
 {
-    cout << w->mean << " > " << aiThreshold << "?" << endl;
+        #ifdef LOGTHRESHOLD
+            cout << w->mean << " > " << aiThreshold << "?" << endl;
+        #endif
 	if (w->mean > aiThreshold)
 	{
 		return ViewTable().GetBetToCall();
 	}
 	else
 	{
-		return 0;
+		return ViewPlayer().GetBetSize();
 	}
 }
 
 float64 MultiThresholdStrategy::MakeBet()
 {
-
-    HandPlus convertOutput;
-    convertOutput.SetUnique(ViewHand());
-    convertOutput.DisplayHand();
-    cout << "ThresholdAI" << endl;
     float64 multiThreshhold = pow(w->mean,ViewTable().GetNumberInHand());
-    cout << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberInHand()) << endl;
+        #ifdef LOGTHRESHOLD
+            HandPlus convertOutput;
+            convertOutput.SetUnique(ViewHand());
+            convertOutput.DisplayHand();
+            cout << "ThresholdAI" << endl;
+
+            cout << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberInHand()) << endl;
+        #endif
 	if (multiThreshhold > aiThreshold)
 	{
 		return ViewPlayer().GetMoney();

@@ -702,7 +702,7 @@ float64 rval = totalRuns[0];
 		delete [] (storePrevSuit[k]);
 	}
 
-cout << "Return..." << endl;
+//cout << "Return..." << endl;
 	return rval;
 }
 /*

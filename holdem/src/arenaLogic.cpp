@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 #define DEBUGROUNDINDEX
+//#define EXTRAMONEYUPDATE
 //#define DEBUGALLINS
 
 #include "arena.h"
@@ -1030,10 +1031,11 @@ void HoldemArena::PlayGame()
 			}
 			else
 			{
-			    if(bVerbose)
+
+/*			    if(bVerbose)
 			    {
 			        cout << withP.GetIdent() << " now has " << withP.GetMoney() << endl;
-			    }
+			    }*/
 				withP.myBetSize = 0;
 			}
 			withP.handBetTotal = 0;

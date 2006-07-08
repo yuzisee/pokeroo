@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+//#define USERFEEDBACK
+
 #include "stratManual.h"
 #include <iostream>
 #include <string>
@@ -360,12 +362,13 @@ float64 UserConsoleStrategy::queryAction()
 
 	//End of loop
 	}
+#ifdef USERFEEDBACK
 	cout << "To bet " << returnMe << endl;
 
 
 
 	cout << "Command accepted" << endl;
-
+#endif
 	return returnMe;
 }
 
