@@ -899,7 +899,7 @@ cout << p[curIndex]->GetIdent() << " up next... same as before?" << endl;
 	}//End of 'Action!' loop
 
 
-///If the round goes check-check-check, it technically means the dealer is the higher better. We want the NEXT person.
+///If the round goes check-check-check, it technically makes the dealer is the higher better. We want the NEXT person.
 /*
 http://www.playwinningpoker.com/poker/rules/basics/
 If everyone checks (or is all-in) on the final betting round, the player who acted first is the first to show the hand. If there is wagering on the final betting round, the last player to take aggressive action by a bet or raise is the first to show the hand. In order to speed up the game, a player holding a probable winner is encouraged to show the hand without delay. If there is a side pot, players involved in the side pot should show their hands before anyone all-in for only the main pot.
@@ -912,6 +912,12 @@ If everyone checks (or is all-in) on the final betting round, the player who act
             {
                 incrIndex(highestBetter);
             }while( p[highestBetter]->allIn < 0);
+	    }else if( playersInHand -1 == playersAllIn)
+	    {///Find the player that is not allin
+	        do
+            {
+                incrIndex(highestBetter);
+            }while( (!IsAlive(highestBetter)) || p[highestBetter]->allIn < 0);//Obviously you have to skip dead people too
 	    }else
 	    {///Find the first player to check
             do
@@ -1041,9 +1047,20 @@ void HoldemArena::PlayHand()
 	dealer.DealCard(community);
 	dealer.DealCard(community);
 
+
 	if( PlayRound(3) == -1 ) return;
 
 	dealer.DealCard(community);
+
+if( handnum == 12 )
+{
+    Player& withP0 = *p[0];
+    Player& withP1 = *p[1];
+    Player& withP2 = *p[2];
+    Player& withP3 = *p[3];
+    cout << "DEBUG" << endl;
+
+}
 
 	if( PlayRound(4) == -1 ) return;
 
