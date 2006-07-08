@@ -961,9 +961,9 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 		{
 
 		    ///What if the player that folds is the highest better at the moment?
-            ///This can only happen on blinds.
-            if( !IsInHand(highestBetter) )
-            {
+            ///This can happen on blinds
+            if( HasFolded(highestBetter) )
+            {///If it's due to blinds, figure out who really wins.
                 int8 findHighestBetter = highestBetter;
 
                 incrIndex(findHighestBetter);
