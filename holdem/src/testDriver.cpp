@@ -499,7 +499,7 @@ void goCMD(int argc, char* argv)
 
 void testFunctions()
 {
-    DummyFunctionModel m;
+    DummyFunctionModel m(0.0001);
     cout << m.FindTurningPoint(0,1.4) << endl;
     cout << m.FindZero(0,1.4) << endl;
 }
@@ -610,7 +610,7 @@ int main(int argc, char* argv[])
 	    ///Now, monitor how the money is divided between N2 and X1.
 	    //testPosition();
 	    //testPlay();
-	    testFunctions();
+	    //testFunctions();
 	 //   goCMD(2,"506");
 
 	}

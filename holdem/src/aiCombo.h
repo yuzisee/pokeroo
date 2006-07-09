@@ -119,7 +119,7 @@ protected:
 public:
 	float64 pctWillCall(const float64 oddsFaced) const
 	{
-		return calc.pct(oddsFaced);
+		return calc.pctWillCall(oddsFaced);
 	}
 
 	const virtual void Analyze();

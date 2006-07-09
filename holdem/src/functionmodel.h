@@ -23,7 +23,7 @@
 
 #define DEFAULT_EPS_STEP 0.001
 
-#include "portability.h"
+#include "inferentials.h"
 
 class ScalarFunctionModel
 {
@@ -36,7 +36,7 @@ class ScalarFunctionModel
 
     public:
     float64 quantum;
-    ScalarFunctionModel() {quantum = DEFAULT_EPS_STEP; };
+    ScalarFunctionModel(float64 step) : quantum(step){};
     virtual float64 f(float64) const = 0;
     virtual float64 fd(float64, float64) const = 0;
     virtual float64 FindTurningPoint(float64,float64);
@@ -49,6 +49,8 @@ class ScalarFunctionModel
 
 class DummyFunctionModel : public virtual ScalarFunctionModel
 {
+	public:
+	DummyFunctionModel(float64 step) : ScalarFunctionModel(step){};
     virtual float64 f(float64) const;
     virtual float64 fd(float64, float64) const;
 }
@@ -56,6 +58,13 @@ class DummyFunctionModel : public virtual ScalarFunctionModel
 
 class GainModel : public virtual ScalarFunctionModel
 {
+	protected:
+	DistrShape shape;
+	CallCumulation *e;
+	public:
+	GainModel(DistrShape s,CallCumulation *c, float64 step): ScalarFunctionModel(step), shape(s),e(c){}; 
+	virtual float64 f(float64) const;
+    virtual float64 fd(float64, float64) const;
 }
 ;
 

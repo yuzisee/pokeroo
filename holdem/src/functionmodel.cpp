@@ -282,5 +282,14 @@ float64 DummyFunctionModel::fd(float64 x, float64 y) const
     return -4*x+2;
 }
 
+float64 GainModel::f(float64 x) const
+{
+}
+
+
+float64 GainModel::fd(float64 x,float64 y) const
+{
+}
+
 
 
