@@ -285,14 +285,16 @@ float64 DummyFunctionModel::fd(const float64 x, const float64 y) const
 
 float64 GainModel::f(const float64 x) const
 {
+	float64 exf = e->pctWillCall(x/(2*x+f_pot));
+
 	float64 sav=1;
 	for(int i=1;i<=e_fix;++i)
 	{
-		sav *= pow(1+( f_pot+x*(e_fix-i) )/(i+1) , HoldemUtil::nchoosep<float64>(e_fix,i)*pow(shape.wins,e_fix-i)*pow(shape.splits,i) );
+		sav *= pow(1+( f_pot+x*(e_fix-i)*exf )/(i+1) , HoldemUtil::nchoosep<float64>(e_fix,i)*pow(shape.wins,e_fix-i)*pow(shape.splits,i) );
 	}
 
 	return
-	pow(1+f_pot+e_fix*e->pctWillCall(x/(2*x+f_pot))*x , pow(shape.wins,e_fix))
+	pow(1+f_pot+e_fix*exf*x , pow(shape.wins,e_fix))
 	*
 	pow(1-x , 1 - pow(1 - shape.loss,e_fix))
 	*sav;
@@ -306,6 +308,27 @@ float64 GainModel::f(const float64 x) const
 
 float64 GainModel::fd(const float64 x, const float64 y) const
 {
+	float64 exf = e->pctWillCall(x/(2*x+f_pot));
+	
+	float64 savd=1;
+	for(int i=1;i<e_fix;++i)
+	{
+		savd += HoldemUtil::nchoosep<float64>(e_fix,i)*pow(shape.wins,e_fix-i)*pow(shape.splits,i)*(e_fix-i)*exf
+				/
+				( 1 + (f_pot+x*(e_fix-i)*exf)/(i+1) )
+				;
+	}
+	
+	return
+	y*
+	(
+	e_fix*exf*pow(shape.wins,e_fix)/(1+f_pot+e_fix*exf*x)
+	+
+	(pow(1-shape.loss,e_fix)-1)/(1-x)
+	+
+	savd
+	);
+	
 }
 
 

@@ -502,6 +502,7 @@ void testFunctions()
     DummyFunctionModel m(0.0001);
     cout << m.FindTurningPoint(0,1.4) << endl;
     cout << m.FindZero(0,1.4) << endl;
+	
 }
 
 void testPosition()
@@ -558,8 +559,10 @@ void testPosition()
     //WinStats ds(h1, h2,FIRST_DEAL-2);
     StatResult myWins;
     DistrShape myDistrPCT(0);
+	CallCumulation o;
     StatsManager::Query(&myWins,&myDistrPCT,0,h1, h2,dealtCommunityNumber);
-    //deal.OmitCards(h1);
+    StatsManager::Query(o,h1, h2,dealtCommunityNumber);
+	//deal.OmitCards(h1);
     // deal.AnalyzeComplete(&ds);
 
     cout << endl << "AVG "  << myWins.loss << " l + "
@@ -575,6 +578,11 @@ void testPosition()
     cout << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << endl;
     cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
+	
+	GainModel g(myWins,&o,0.03,3,0.005);
+	float64 turningPoint = g.FindTurningPoint(0,1);
+	cout << "Goal bet " << turningPoint << endl;
+	cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
 
     cout << endl;
 }
@@ -608,7 +616,7 @@ int main(int argc, char* argv[])
 	    ///Play this hand on force-random
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
-	    //testPosition();
+	    testPosition();
 	    //testPlay();
 	    //testFunctions();
 	 //   goCMD(2,"506");

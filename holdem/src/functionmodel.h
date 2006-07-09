@@ -61,11 +61,11 @@ class GainModel : public virtual ScalarFunctionModel
 	protected:
 	StatResult shape;
 	CallCumulation *e;
-	public:
 	float64 f_pot;
 	uint8 e_fix; //REMEMBER e_fix is the number of OPPONENTS, not the number of players.
-	GainModel(const StatResult s,CallCumulation *c, const float64 step)
-		: ScalarFunctionModel(step), f_pot(0),e_fix(1),shape(s),e(c){}; 
+	public:
+	GainModel(const StatResult s,CallCumulation *c, float64 pot, uint8 oppCount, const float64 step)
+		: ScalarFunctionModel(step), f_pot(pot),e_fix(oppCount),shape(s),e(c){}; 
 	virtual float64 f(const float64) const;
     virtual float64 fd(const float64, const float64) const;
 }
