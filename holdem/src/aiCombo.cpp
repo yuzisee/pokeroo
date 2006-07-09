@@ -355,7 +355,7 @@ const void WinCallStats::initWC(const CommunityPlus& withCom, const int8 cardsIn
 		cout << "CAREFULLY CHECK HASH TABLE BUILD FUNCTIONALITY!" << endl;
 	}
 	#endif
-	callChancesEach = nchoosep<double>(cardsAvail - 2,5-cardsInCommunity);
+	callChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
 }
 
 /*

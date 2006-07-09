@@ -21,6 +21,7 @@
 #include <iostream>
 #include <math.h>
 #include "functionmodel.h"
+#include "ai.h"
 
 using std::cout;
 using std::endl;
@@ -271,23 +272,39 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
 }
 
 
-float64 DummyFunctionModel::f(float64 x) const
+float64 DummyFunctionModel::f(const float64 x) const
 {
     return 1+2*(1-x)*x;
 }
 
-float64 DummyFunctionModel::fd(float64 x, float64 y) const
+float64 DummyFunctionModel::fd(const float64 x, const float64 y) const
 {
 
     return -4*x+2;
 }
 
-float64 GainModel::f(float64 x) const
+float64 GainModel::f(const float64 x) const
 {
+	float64 sav=1;
+	for(int i=1;i<=e_fix;++i)
+	{
+		sav *= pow(1+( f_pot+x*(e_fix-i) )/(i+1) , HoldemUtil::nchoosep<float64>(e_fix,i)*pow(shape.wins,e_fix-i)*pow(shape.splits,i) );
+	}
+
+	return
+	pow(1+f_pot+e_fix*e->pctWillCall(x/(2*x+f_pot))*x , pow(shape.wins,e_fix))
+	*
+	pow(1-x , 1 - pow(1 - shape.loss,e_fix))
+	*sav;
+	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix));  plays more cautiously to account for most people playing better cards only
+	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix*e->pctWillCall())); 
+	
+	//let's round e_fix downward on input
+	//floor()
 }
 
 
-float64 GainModel::fd(float64 x,float64 y) const
+float64 GainModel::fd(const float64 x, const float64 y) const
 {
 }
 

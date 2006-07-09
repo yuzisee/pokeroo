@@ -461,7 +461,7 @@ const void WinStats::initW(const int8 cardsInCommunity)
 
 		int8 cardsDealt = cardsInCommunity + 2;
 
-		statCount = nchoosep<int32>(52-cardsDealt,cardsToNextBet);
+		statCount = HoldemUtil::nchoosep<int32>(52-cardsDealt,cardsToNextBet);
 		myTotalChances = static_cast<float64>(statCount);
 
 		myWins = new StatResult[statCount];
@@ -473,9 +473,9 @@ const void WinStats::initW(const int8 cardsInCommunity)
 
 		cardsDealt += cardsToNextBet;
 		//moreCards is the number of cards to be dealt to table + opponent
-		myChancesEach = nchoosep<float64>(52 - cardsDealt,moreCards-cardsToNextBet-2);
+		myChancesEach = HoldemUtil::nchoosep<float64>(52 - cardsDealt,moreCards-cardsToNextBet-2);
 		cardsDealt += moreCards-cardsToNextBet-2;
-		myChancesEach *= nchoosep<float64>(52 - cardsDealt,2);
+		myChancesEach *= HoldemUtil::nchoosep<float64>(52 - cardsDealt,2);
 	}
 
 
@@ -677,7 +677,7 @@ const void CallStats::initC(const int8 cardsInCommunity)
 
     myWins = new StatResult[oppHands];
 
-    myChancesEach = nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
+    myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
 
 	if (moreCards == 2)
 	{

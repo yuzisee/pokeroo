@@ -92,6 +92,18 @@ public:
 	}
 
 	const static uint8 cleanz(const uint32);
+	
+		template<typename T>
+        static T nchoosep(const int32 n, const int32 p) //inline
+        {
+            T r = 1;
+            for(int32 factorial=0;factorial < p;++factorial)
+            {
+                r*=(n-factorial);
+                r/= factorial+1;
+            }
+            return r;
+        }
 }
 ;
 

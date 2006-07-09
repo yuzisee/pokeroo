@@ -37,8 +37,8 @@ class ScalarFunctionModel
     public:
     float64 quantum;
     ScalarFunctionModel(float64 step) : quantum(step){};
-    virtual float64 f(float64) const = 0;
-    virtual float64 fd(float64, float64) const = 0;
+    virtual float64 f(const float64) const = 0;
+    virtual float64 fd(const float64, const float64) const = 0;
     virtual float64 FindTurningPoint(float64,float64);
     virtual float64 FindZero(float64,float64);
     virtual ~ScalarFunctionModel();
@@ -51,20 +51,23 @@ class DummyFunctionModel : public virtual ScalarFunctionModel
 {
 	public:
 	DummyFunctionModel(float64 step) : ScalarFunctionModel(step){};
-    virtual float64 f(float64) const;
-    virtual float64 fd(float64, float64) const;
+    virtual float64 f(const float64) const;
+    virtual float64 fd(const float64, const float64) const;
 }
 ;
 
 class GainModel : public virtual ScalarFunctionModel
 {
 	protected:
-	DistrShape shape;
+	StatResult shape;
 	CallCumulation *e;
 	public:
-	GainModel(DistrShape s,CallCumulation *c, float64 step): ScalarFunctionModel(step), shape(s),e(c){}; 
-	virtual float64 f(float64) const;
-    virtual float64 fd(float64, float64) const;
+	float64 f_pot;
+	uint8 e_fix; //REMEMBER e_fix is the number of OPPONENTS, not the number of players.
+	GainModel(const StatResult s,CallCumulation *c, const float64 step)
+		: ScalarFunctionModel(step), f_pot(0),e_fix(1),shape(s),e(c){}; 
+	virtual float64 f(const float64) const;
+    virtual float64 fd(const float64, const float64) const;
 }
 ;
 

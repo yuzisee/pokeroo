@@ -58,17 +58,7 @@ class PlayStats
 
 		int16 currentCard;
 
-		template<typename T>
-        static T nchoosep(const int32 n, const int32 p) //inline
-        {
-            T r = 1;
-            for(int32 factorial=0;factorial < p;++factorial)
-            {
-                r*=(n-factorial);
-                r/= factorial+1;
-            }
-            return r;
-        }
+
 
         //std::vector<int32> myWins;
         //std::vector<int32> myReps;
