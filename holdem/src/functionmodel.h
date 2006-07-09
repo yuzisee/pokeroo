@@ -21,7 +21,7 @@
 #ifndef HOLDEM_ScalarFunctions
 #define HOLDEM_ScalarFunctions
 
-#define SAFETYFACTOR 4
+#define DEFAULT_EPS_STEP 0.001
 
 #include "portability.h"
 
@@ -36,7 +36,7 @@ class ScalarFunctionModel
 
     public:
     float64 quantum;
-    ScalarFunctionModel() {};
+    ScalarFunctionModel() {quantum = DEFAULT_EPS_STEP; };
     virtual float64 f(float64) const = 0;
     virtual float64 fd(float64, float64) const = 0;
     virtual float64 FindTurningPoint(float64,float64);
@@ -49,6 +49,8 @@ class ScalarFunctionModel
 
 class DummyFunctionModel : public virtual ScalarFunctionModel
 {
+    virtual float64 f(float64) const;
+    virtual float64 fd(float64, float64) const;
 }
 ;
 

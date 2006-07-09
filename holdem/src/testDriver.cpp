@@ -27,6 +27,7 @@
 #include "aiCache.h"
 #include "engine.h"
 #include "portability.h"
+#include "functionmodel.h"
 
 using std::cout;
 using std::endl;
@@ -496,7 +497,12 @@ void goCMD(int argc, char* argv)
 }
 
 
-
+void testFunctions()
+{
+    DummyFunctionModel m;
+    cout << m.FindTurningPoint(0,1.4) << endl;
+    cout << m.FindZero(0,1.4) << endl;
+}
 
 void testPosition()
 {
@@ -603,7 +609,8 @@ int main(int argc, char* argv[])
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
 	    //testPosition();
-	    testPlay();
+	    //testPlay();
+	    testFunctions();
 	 //   goCMD(2,"506");
 
 	}
