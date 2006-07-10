@@ -64,6 +64,7 @@ class GainModel : public virtual ScalarFunctionModel
 	float64 f_pot;
 	uint8 e_fix; //REMEMBER e_fix is the number of OPPONENTS, not the number of players.
 	public:
+	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 	GainModel(const StatResult s,CallCumulation *c, float64 pot, uint8 oppCount, const float64 step)
 		: ScalarFunctionModel(step), f_pot(pot),e_fix(oppCount),shape(s),e(c){}; 
 	virtual float64 f(const float64) const;

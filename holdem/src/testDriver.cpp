@@ -503,6 +503,11 @@ void testFunctions()
     cout << m.FindTurningPoint(0,1.4) << endl;
     cout << m.FindZero(0,1.4) << endl;
 	
+	StatResult t = GainModel::ComposeBreakdown(0.5,0.7);
+	cout << endl << t.loss << " l +\t"
+				<< t.splits << " s +\t" << t.wins << " w =\t" <<
+				t.pct
+				<< " pct\t×"<< t.genPeripheral() <<flush;
 }
 
 void testPosition()
@@ -557,20 +562,20 @@ void testPosition()
 #endif
 
     //WinStats ds(h1, h2,FIRST_DEAL-2);
-    StatResult myWins;
     DistrShape myDistrPCT(0);
+    DistrShape myDistrWL(0);
 	CallCumulation o;
-    StatsManager::Query(&myWins,&myDistrPCT,0,h1, h2,dealtCommunityNumber);
+    StatsManager::Query(0,&myDistrPCT,&myDistrWL,h1, h2,dealtCommunityNumber);
     StatsManager::Query(o,h1, h2,dealtCommunityNumber);
 	//deal.OmitCards(h1);
     // deal.AnalyzeComplete(&ds);
 
-    cout << endl << "AVG "  << myWins.loss << " l + "
+   /* cout << endl << "AVG "  << myWins.loss << " l + "
             << myWins.splits << " s + " << myWins.wins << " w = " <<
             myWins.loss+myWins.splits+myWins.wins
             << "\t×"<< myWins.repeated   <<endl;
 
-    cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;
+    cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;*/
     cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
     cout << endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << endl;
     cout << "Worst:" << myDistrPCT.worst *100 << "%" << endl;
@@ -579,10 +584,15 @@ void testPosition()
     cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
 	
-	GainModel g(myWins,&o,0.03,3,0.005);
+	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&o,0.03,3,0.005);
 	float64 turningPoint = g.FindTurningPoint(0,1);
 	cout << "Goal bet " << turningPoint << endl;
 	cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
+
+	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&o,0.03,3,0.005);
+	turningPoint = gm.FindTurningPoint(0,1);
+	cout << "Minimum target " << turningPoint << endl;
+	cout << "Safe fold bet " << gm.FindZero(turningPoint,1) << endl;
 
     cout << endl;
 }
@@ -616,9 +626,9 @@ int main(int argc, char* argv[])
 	    ///Play this hand on force-random
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
-	    testPosition();
+	    //testPosition();
 	    //testPlay();
-	    //testFunctions();
+	    testFunctions();
 	 //   goCMD(2,"506");
 
 	}

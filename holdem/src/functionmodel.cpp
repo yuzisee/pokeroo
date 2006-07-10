@@ -333,3 +333,25 @@ float64 GainModel::fd(const float64 x, const float64 y) const
 
 
 
+StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
+{
+	StatResult a;
+	
+	if( wl == 0.5 )
+	{///PCT is 0.5 here also
+		a.wins = 0.5;
+		a.loss = 0.5;
+		a.splits = 0;
+	}
+	else
+	{
+		a.wins = (2*pct - 1)*wl/(2*wl-1);
+		a.splits = (pct - a.wins)*2;
+		a.loss = 1 - a.wins - a.splits;
+		a.genPCT();
+	}
+	return a;
+}
+
+
+
