@@ -118,6 +118,8 @@ class StatResultZero : public StatResult
 
 class CallCumulation
 {
+protected:
+	size_t searchGap(const float64) const;
 public:
     CallCumulation(const CallCumulation& o)
     {
@@ -127,8 +129,18 @@ public:
     const CallCumulation & operator=(const CallCumulation& o);
 
 	vector<StatResult> cumulation;
+	//float64 pctWillCallDEBUG(const float64, const float64) const;
 	float64 pctWillCall(const float64, const float64) const;
 	float64 pctWillCall(const float64) const;
+}
+;
+
+class CallCumulationD : public CallCumulation
+{
+private:
+	float64 slopeof(const size_t, const size_t) const;
+public:
+	float64 pctWillCallD(const float64) const;
 }
 ;
 

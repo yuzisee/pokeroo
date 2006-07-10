@@ -73,12 +73,12 @@ float64 ScalarFunctionModel::searchStep(float64 x1, float64 y1, float64 x2, floa
 {
     float64 dx = fd(x2,y2);
 
-    if( y1 > y2 && y3 > y2 )//  U
+    if( y1 > y2 && y3 > y2 )//  U  find a min
     {
         if( dx > 0 ) return (x2+x1)/2;
         return (x2+x3)/2;
     }
-    else if( y1 < y2 && y3 < y2 )// ^
+    else if( y1 < y2 && y3 < y2 )//  ^  find a max
     {
         if( dx > 0 ) return (x2+x3)/2;
         return (x2+x1)/2;
@@ -340,6 +340,7 @@ float64 GainModel::f(const float64 x) const
 float64 GainModel::fd(const float64 x, const float64 y) const
 {
 	float64 exf = e->pctWillCall(x/(2*x+f_pot));
+	float64 dexf = 0; ///!!!!!
 	
 	float64 savd=1;
 	for(int i=1;i<e_fix;++i)
@@ -353,7 +354,7 @@ float64 GainModel::fd(const float64 x, const float64 y) const
 	return
 	(y+1)*
 	(
-	e_fix*exf*pow(shape.wins,e_fix)/(1+f_pot+e_fix*exf*x)
+	(x*exf*dexf + e_fix*exf)*pow(shape.wins,e_fix)/(1+f_pot+e_fix*exf*x)
 	+
 	(pow(1-shape.loss,e_fix)-1)/(1-x)
 	+

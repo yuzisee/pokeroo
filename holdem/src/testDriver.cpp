@@ -68,7 +68,7 @@ void genW(CommunityPlus& h1, CommunityPlus& h2)
     //WinStats ds(h1, h2,FIRST_DEAL-2);
     StatResult myWins;
     DistrShape myDistrPCT(0);
-    StatsManager::Query( &myWins,&myDistrPCT,0,h1, h2,FIRST_DEAL-2);
+    StatsManager::Query( &myWins,&myDistrPCT,0,h1, h2,0);
     //deal.OmitCards(h1);
     // deal.AnalyzeComplete(&ds);
 
@@ -195,8 +195,8 @@ void genC(CommunityPlus& h1, CommunityPlus& h2)
     cout << td.NamePockets() << endl;
 
     //WinStats ds(h1, h2,FIRST_DEAL-2);
-    CallCumulation calc;
-    StatsManager::Query( calc,h1, h2,FIRST_DEAL-2);
+    CallCumulationD calc;
+    StatsManager::Query( calc,h1, h2,0);
     //deal.OmitCards(h1);
     // deal.AnalyzeComplete(&ds);
 
@@ -221,6 +221,25 @@ void genC(CommunityPlus& h1, CommunityPlus& h2)
 	cout << endl << "Confirm that inf:1 odds receives " << calc.pctWillCall(0) <<  endl;
 	cout << endl << "Confirm that -2:1 odds receives " << calc.pctWillCall(-1) << endl;
 
+	cout << endl << "Confirm that -0.5:1 odds slope " << calc.pctWillCallD(2) <<  endl;
+	cout << endl << "Confirm that .0101:1 odds slope " << calc.pctWillCallD(.99) << endl;
+	cout << endl << "Confirm that .333:1 odds slope " << calc.pctWillCallD(.75) <<  endl;
+	cout << endl << "Confirm that 1:1 odds slope " << calc.pctWillCallD(.5) << endl;
+	cout << endl << "Confirm that heads up 1.333x pot odds slope " << calc.pctWillCallD(.3)  << endl;
+	cout << endl << "Confirm that heads up 98x pot odds (ie. I bet 1/98th of the pot) slope " << calc.pctWillCallD(.01) << endl;
+	cout << endl << "Confirm that inf:1 odds slope " << calc.pctWillCallD(0) <<  endl;
+	cout << endl << "Confirm that -2:1 odds slope " << calc.pctWillCallD(-1) << endl;
+
+/*
+	cout << endl << "Confirm that -0.5:1 odds receives " << calc.pctWillCallDEBUG(2,.5) <<  endl;
+	cout << endl << "Confirm that .0101:1 odds receives " << calc.pctWillCallDEBUG(.99,.5) << endl;
+	cout << endl << "Confirm that .333:1 odds receives " << calc.pctWillCallDEBUG(.75,.5) <<  endl;
+	cout << endl << "Confirm that 1:1 odds receives " << calc.pctWillCallDEBUG(.5,.5) << endl;
+	cout << endl << "Confirm that heads up 1.333x pot odds receives " << calc.pctWillCallDEBUG(.3,.5)  << endl;
+	cout << endl << "Confirm that heads up 98x pot odds (ie. I bet 1/98th of the pot) receives " << calc.pctWillCallDEBUG(.01,.5) << endl;
+	cout << endl << "Confirm that inf:1 odds receives " << calc.pctWillCallDEBUG(0,.5) <<  endl;
+	cout << endl << "Confirm that -2:1 odds receives " << calc.pctWillCallDEBUG(-1,.5) << endl;
+*/
 
 cout << "Finish." << endl;
 }
@@ -628,10 +647,11 @@ int main(int argc, char* argv[])
 	    ///Play this hand on force-random
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
-	    testPosition();
+	    //testPosition();
 	    //testPlay();
 	    //testFunctions();
-	 //   goCMD(2,"506");
+		testC();
+		//goCMD(2,"505");
 
 	}
 	//testPlay();

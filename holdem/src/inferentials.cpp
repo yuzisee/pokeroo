@@ -88,6 +88,43 @@ float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
 ///If this is a permanently-even bet to make, what would my chance to win be?
 float64 CallCumulation::pctWillCall(const float64 oddsFaced, const float64 tiefactor) const
 {
+	size_t guess = searchGap(oddsFaced);
+	if( guess  == cumulation.size() +1 ) return 0;
+	if( guess == cumulation.size() ) return 1;
+	float64 curPCT = cumulation[guess].repeated;
+	if( curPCT == oddsFaced )
+	{
+		if( guess == 0 ) return 0;
+		return cumulation[guess].repeated * tiefactor + cumulation[guess-1].repeated * (1 - tiefactor);
+	}
+	return curPCT;
+}
+
+float64 CallCumulationD::slopeof(const size_t x1, const size_t x0) const
+{
+	return (cumulation[x1].repeated - cumulation[x0].repeated)/(cumulation[x1].pct - cumulation[x0].pct);
+}
+
+
+float64 CallCumulationD::pctWillCallD(const float64 oddsFaced) const
+{
+	size_t maxsize = cumulation.size();
+	if( maxsize <= 1 ) return 0;
+	size_t guess = searchGap(oddsFaced);
+	if( guess >= maxsize ) return 0; //This is either less than 0 or more than maxsize-1, to return 0 slope
+	if( guess == maxsize -1 ) return slopeof(maxsize-1,maxsize-2);
+	if( guess == 0 ) return slopeof(1,0);
+	float64 curPCT = cumulation[guess].repeated;
+	if( curPCT == oddsFaced )
+	{
+		return slopeof(guess+1,guess-1);
+	}
+	return slopeof(guess,guess-1);
+}
+
+/*
+float64 CallCumulation::pctWillCallDEBUG(const float64 oddsFaced, const float64 tiefactor) const
+{
 	//binary search
 	size_t first=0;
 	size_t last=cumulation.size()-1;
@@ -152,6 +189,82 @@ float64 CallCumulation::pctWillCall(const float64 oddsFaced, const float64 tiefa
 	else
 	{
 		return cumulation[last].repeated;
+	}
+
+}
+*/
+//Search for the first element with a lower .pct and oddsFaced from a descending set in a binary manner
+//The last element of cumulation represents my weakest hand. This also represents the opponent's strongest hand.
+//As such, the largest "call number" will occur at the bottom.
+//So for any given odds, we want to find the .repeated of the NEXT ELEMENT DOWN (we list front to back : 0 to size()-1 : top to bottom)
+//because that is the cumulative sum of all the "repeated" that are better (below)
+size_t CallCumulation::searchGap(const float64 oddsFaced) const
+{
+	//binary search
+	size_t first=0;
+	size_t last=cumulation.size()-1;
+	size_t guess;
+	float64 curPCT;
+
+
+    ///Binary search for oddsFaced
+    ///Post-analysis of the algorithm defines a DECREASING pct in cumulation
+	while(last > first)
+	{
+		guess = (last+first)/2;
+		curPCT = cumulation[guess].pct;
+
+		if (curPCT < oddsFaced)
+		{
+
+			if (guess == first)
+			{ //A. guess == first implies last == first + 1
+				if (guess == 0) return cumulation.size()+1;
+				return guess-1;
+			}
+			last = guess - 1;
+		}
+		else if (curPCT > oddsFaced)
+		{
+			if (guess + 1 == last)
+			{ //B. first  + 1 == last - 1
+				if ( cumulation[last].pct > oddsFaced )
+				{
+					++last;
+					if (last == cumulation.size() ) return cumulation.size();
+					return last;
+				}
+				else if (cumulation[last].pct < oddsFaced)
+				{
+					return guess;
+				}
+				else
+				{// cumulation[last].pct == oddsFaced
+					return last;
+				}
+			}
+			first = guess + 1;
+		}
+		else
+		{///The odds faced are EXACTLY the chance to win. How many people would take this bet?
+            ///Let's scale this by the scalefactor
+            //if( guess == 0 ) return cumulation[guess].repeated;
+			return guess; //Please check if(cumulation[searchGap(oddsFaced)].pct == oddsFaced) then SCALEFACTOR
+			//return cumulation[guess].repeated * tiefactor + cumulation[guess-1].repeated * (1 - tiefactor);
+		}
+	}
+	curPCT = cumulation[last].pct;
+	if(curPCT < oddsFaced)
+	{
+		if (last == 0)
+		{
+			return cumulation.size()+1;
+		}
+		return last-1;
+	}
+	else
+	{
+		return last;
 	}
 
 }
