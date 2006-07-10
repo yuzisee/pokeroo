@@ -179,15 +179,12 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 
         yn = f(xn);
 
-///Commented out because:
-//Imagine: (0,13), (1,14), (2,11), (3,10) and the maximum is at (1.5,15). This is still valid but 11 < 13 would trigger what is below.
-/*
-        if( signDir*yn < signDir*y1 || signDir*yn < signDir*y2 )
+        if( signDir*yn < signDir*y1 && signDir*yn < signDir*y2 )
         {
             cout << "WARNING: Function has multiple turning points!" << endl;
             return xb;
         }
-*/
+
 
         if( yb == yn )
         {
