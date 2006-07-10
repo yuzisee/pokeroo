@@ -500,14 +500,16 @@ void goCMD(int argc, char* argv)
 void testFunctions()
 {
     DummyFunctionModel m(0.0001);
-    cout << m.FindTurningPoint(0,1.4) << endl;
+    cout << m.FindMax(0,1.4) << endl;
     cout << m.FindZero(0,1.4) << endl;
 	
-	StatResult t = GainModel::ComposeBreakdown(0.5,0.7);
-	cout << endl << t.loss << " l +\t"
+//	StatResult t = GainModel::ComposeBreakdown(0.5,0.7);
+	//StatResult t = GainModel::ComposeBreakdown(0.6,0.7);
+	StatResult t = GainModel::ComposeBreakdown(0.4,0.45);
+		cout << endl << t.loss << " l +\t"
 				<< t.splits << " s +\t" << t.wins << " w =\t" <<
 				t.pct
-				<< " pct\t×"<< t.genPeripheral() <<flush;
+				<< " pct\t"<< t.genPeripheral() <<flush;
 }
 
 void testPosition()
@@ -585,12 +587,12 @@ void testPosition()
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
 	
 	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&o,0.03,3,0.005);
-	float64 turningPoint = g.FindTurningPoint(0,1);
+	float64 turningPoint = g.FindMax(0,1);
 	cout << "Goal bet " << turningPoint << endl;
 	cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
 
 	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&o,0.03,3,0.005);
-	turningPoint = gm.FindTurningPoint(0,1);
+	turningPoint = gm.FindMax(0,1);
 	cout << "Minimum target " << turningPoint << endl;
 	cout << "Safe fold bet " << gm.FindZero(turningPoint,1) << endl;
 
@@ -626,9 +628,9 @@ int main(int argc, char* argv[])
 	    ///Play this hand on force-random
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
-	    //testPosition();
+	    testPosition();
 	    //testPlay();
-	    testFunctions();
+	    //testFunctions();
 	 //   goCMD(2,"506");
 
 	}

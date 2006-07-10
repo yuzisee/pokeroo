@@ -33,14 +33,15 @@ class ScalarFunctionModel
         float64 quadraticStep(float64,float64,float64,float64,float64,float64);
         float64 newtonStep(float64,float64);
         float64 bisectionStep(float64,float64);
-
+		virtual float64 FindTurningPoint(float64,float64,float64,float64,float64,float64,float64);
     public:
     float64 quantum;
     ScalarFunctionModel(float64 step) : quantum(step){};
     virtual float64 f(const float64) const = 0;
     virtual float64 fd(const float64, const float64) const = 0;
-    virtual float64 FindTurningPoint(float64,float64);
-    virtual float64 FindZero(float64,float64);
+	virtual float64 FindMax(float64,float64);
+	virtual float64 FindMin(float64,float64);
+	virtual float64 FindZero(float64,float64);
     virtual ~ScalarFunctionModel();
 
 

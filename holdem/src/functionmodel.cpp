@@ -91,42 +91,71 @@ float64 ScalarFunctionModel::searchStep(float64 x1, float64 y1, float64 x2, floa
 
 }
 
-float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 x2)
+float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
+{
+    float64 y1 = f(x1);
+    float64 y2 = f(x2);
+
+    float64 xb = bisectionStep(x1,x2);
+    float64 yb = f(xb);
+	
+	if( yb <= y1 && yb <= y2)
+	{
+        cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
+        return xb;
+    }
+	
+	return FindTurningPoint(x1, y1, xb, yb, x2, x2, 1);
+}
+
+float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
+{
+    float64 y1 = f(x1);
+    float64 y2 = f(x2);
+
+    float64 xb = bisectionStep(x1,x2);
+    float64 yb = f(xb);
+	
+	if( yb >= y1 && yb >= y2)
+	{
+        cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
+        return xb;
+    }
+
+	
+	return FindTurningPoint(x1, y1, xb, yb, x2, x2, -1);
+}
+
+
+float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb, float64 yb, float64 x2, float64 y2, float64 signDir)
 {
     int8 stepMode = 0;
 
-    float64 signDir;
-    float64 y1,yb,y2,yn;
-    float64 xb;
+    float64 yn;
     float64 xn;
+	
+	if( y1 == yb && yb == y2 )
+	{
+		return xb;
+	}
 
-    y1 = f(x1);
-    y2 = f(x2);
-
-    xb = bisectionStep(x1,x2);
-    yb = f(xb);
-
-
-    if( (y1-yb)*(y2-yb) < 0 )
+    while( (y1-yb)*(y2-yb) < 0 && x2 - x1 > quantum)
     {   ///(y1-yb) and (y2-yb) have different signs
-        ///therefore y1 and y2 are OPPOSITE vertical directions from yb. fd is not monotomic.
-        cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
-        return xb;
-    }
+        ///therefore y1 and y2 are OPPOSITE vertical directions from yb.
+		if( y1*signDir > y2*signDir ) ///y1 is closer
+		{
+			x2 = xb;
+			y2 = yb;
+		}else//y2 is closer
+		{
+			x1 = xb;
+			y1 = yb;
+		}
+		
+		xb = bisectionStep(x1,x2);
+		yb = f(xb);
+	}
 
-    if( yb >= y1 )
-    {
-        signDir = +1;
-    }
-    else if( yb <= y2 )
-    {
-        signDir = -1;
-    }
-    else
-    {///They must be equal
-        cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
-        return xb;
-    }
 
     while(x2 - x1 > quantum)
     {
@@ -293,11 +322,12 @@ float64 GainModel::f(const float64 x) const
 		sav *= pow(1+( f_pot+x*(e_fix-i)*exf )/(i+1) , HoldemUtil::nchoosep<float64>(e_fix,i)*pow(shape.wins,e_fix-i)*pow(shape.splits,i) );
 	}
 
-	return
+	return(
 	pow(1+f_pot+e_fix*exf*x , pow(shape.wins,e_fix))
 	*
 	pow(1-x , 1 - pow(1 - shape.loss,e_fix))
-	*sav;
+	*sav)
+	-1;
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix));  plays more cautiously to account for most people playing better cards only
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix*e->pctWillCall())); 
 	
@@ -320,7 +350,7 @@ float64 GainModel::fd(const float64 x, const float64 y) const
 	}
 	
 	return
-	y*
+	(y+1)*
 	(
 	e_fix*exf*pow(shape.wins,e_fix)/(1+f_pot+e_fix*exf*x)
 	+
