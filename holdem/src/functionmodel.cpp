@@ -340,7 +340,7 @@ float64 GainModel::f(const float64 x) const
 float64 GainModel::fd(const float64 x, const float64 y) const
 {
 	float64 exf = e->pctWillCall(x/(2*x+f_pot));
-	float64 dexf = 0; ///!!!!!
+	float64 dexf = e->pctWillCallD(x/(2*x+f_pot));
 	
 	float64 savd=1;
 	for(int i=1;i<e_fix;++i)

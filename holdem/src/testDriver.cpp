@@ -585,7 +585,7 @@ void testPosition()
     //WinStats ds(h1, h2,FIRST_DEAL-2);
     DistrShape myDistrPCT(0);
     DistrShape myDistrWL(0);
-	CallCumulation o;
+	CallCumulationD o;
     StatsManager::Query(0,&myDistrPCT,&myDistrWL,h1, h2,dealtCommunityNumber);
     StatsManager::Query(o,h1, h2,dealtCommunityNumber);
 	//deal.OmitCards(h1);
@@ -605,12 +605,12 @@ void testPosition()
     cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
 	
-	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&o,0.03,3,0.005);
+	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&o,0.03,3,0.005/2);
 	float64 turningPoint = g.FindMax(0,1);
 	cout << "Goal bet " << turningPoint << endl;
 	cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
 
-	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&o,0.03,3,0.005);
+	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&o,0.03,3,0.005/2);
 	turningPoint = gm.FindMax(0,1);
 	cout << "Minimum target " << turningPoint << endl;
 	cout << "Safe fold bet " << gm.FindZero(turningPoint,1) << endl;
@@ -647,10 +647,10 @@ int main(int argc, char* argv[])
 	    ///Play this hand on force-random
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
-	    //testPosition();
+	    testPosition();
 	    //testPlay();
 	    //testFunctions();
-		testC();
+		//testC();
 		//goCMD(2,"505");
 
 	}
