@@ -82,18 +82,42 @@ class GainModel : public virtual ScalarFunctionModel
     #ifdef DEBUG_GAIN
         void breakdown(float points, std::ostream& target, float start=0, float end=1)
         {
+
             float dist = (end-start)/points;
-            target << "x,exf,gain,dexf,dgain" << std::endl;
+
+            target << "x,gain,dgain,vodd,exf,dexf" << std::endl;
             for( float i=start;i<end;i+=dist)
             {
-
+                float vodd = i/(2*i+f_pot);
                 float y = f(i);
-                float exf = e->pctWillCall(i/(2*i+f_pot));
-                float64 dexf = e->pctWillCallD(i/(2*i+f_pot));
-                target << i << "," << exf  << "," << f(i) << "," << dexf << "," << fd(i,y) << std::endl;
+                float exf = e->pctWillCall(vodd);
+                float64 dexf = e->pctWillCallD(vodd) * f_pot / (2*i+f_pot) /(2*i+f_pot);
+                target << i << "," << f(i) << "," << fd(i,y) << "," << vodd << "," << exf << "," << dexf << std::endl;
 
             }
+
+
         }
+        void breakdownC(float points, std::ostream& target, float start=0, float end=1)
+        {
+            float dist = (end-start)/points;
+
+            target << "i,exf,dexf" << std::endl;
+            for( float vodd=start;vodd<end;vodd+=dist)
+            {
+                float exf = e->pctWillCall(vodd);
+                float64 dexf = e->pctWillCallD(vodd);
+                target << vodd << "," << exf << "," << dexf << std::endl;
+
+            }
+
+
+        }
+       /* void breakdownE(float points, std::ostream& target)
+        {
+            e->breakdown(points,target);
+
+        }*/
     #endif
 }
 ;

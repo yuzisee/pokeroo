@@ -27,6 +27,10 @@
 
 #define DEFAULT_TIE_SCALE_FACTOR 0.5
 
+
+//#define DEBUG_DEXF
+//#include <iostream>
+
 using std::vector;
 
 class StatResult
@@ -141,6 +145,25 @@ private:
 	float64 slopeof(const size_t, const size_t) const;
 public:
 	float64 pctWillCallD(const float64) const;
+        #ifdef DEBUG_DEXF
+            void breakdown(float points, std::ostream& target)
+            {
+
+
+                target << "midpoint,exf,dexf,mandexf" << std::endl;
+                for( size_t elementNum=1;elementNum<cumulation.size();++elementNum)
+                {
+                    float64 midpoint = (cumulation[elementNum-1].pct + cumulation[elementNum].pct)/2;
+                    float64 exf = pctWillCall(midpoint);
+                    float64 dexf = pctWillCallD(midpoint);
+                    float64 mandexf = slopeof(elementNum-1,elementNum);
+                    target << midpoint << "," << exf << "," << dexf << "," << mandexf <</* "," << exf << "," << dexf <<*/ std::endl;
+
+                }
+
+
+            }
+        #endif
 }
 ;
 

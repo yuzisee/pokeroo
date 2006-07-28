@@ -339,11 +339,12 @@ float64 GainModel::f(const float64 x) const
 
 float64 GainModel::fd(const float64 x, const float64 y) const
 {
-	float64 exf = e->pctWillCall(x/(2*x+f_pot));
-	float64 dexf = e->pctWillCallD(x/(2*x+f_pot));
+    float64 qdenom = (2*x+f_pot);
+	float64 exf = e->pctWillCall(x/qdenom);
+	float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
 
-	float64 savd=1;
-	for(int i=1;i<e_call;++i)
+	float64 savd=0;
+	for(int8 i=1;i<e_call;++i)
 	{
 		savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)*(e_call-i)*exf
 				/
@@ -351,7 +352,7 @@ float64 GainModel::fd(const float64 x, const float64 y) const
 				;
 	}
 
-	return
+ 	return
 	(y+1)*
 	(
 	(x*exf*dexf + e_call*exf)*pow(shape.wins,e_battle)/(1+f_pot+e_call*exf*x)

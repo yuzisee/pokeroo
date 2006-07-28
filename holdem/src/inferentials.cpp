@@ -21,6 +21,7 @@
 #include <math.h>
 #include "inferentials.h"
 
+
 void DistrShape::AddVal(float64 x, float64 occ)
 {
 	float64 d = (x - mean);
@@ -115,8 +116,15 @@ float64 CallCumulationD::pctWillCallD(const float64 oddsFaced) const
 	size_t maxsize = cumulation.size();
 	if( maxsize <= 1 ) return 0;
 	size_t guess = searchGap(oddsFaced);
-	if( guess >= maxsize ) return 0; //This is either less than 0 or more than maxsize-1, to return 0 slope
-	if( guess == maxsize -1 ) return slopeof(maxsize-1,maxsize-2);
+	if( guess >= maxsize )
+    {
+        return 0; //This is either less than 0 or more than maxsize-1, to return 0 slope
+    }
+	if( guess == maxsize -1 )
+	{
+	    return slopeof(maxsize-1,maxsize-2);
+	}
+
 	if( guess == 0 ) return slopeof(1,0);
 	float64 curPCT = cumulation[guess].repeated;
 	if( curPCT == oddsFaced )

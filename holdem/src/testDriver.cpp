@@ -605,24 +605,31 @@ void testPosition()
     cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
 
-	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&o,0.03,3,0.005/2);
+	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&o,0.03,3,1.0/100.0);
 	float64 turningPoint = g.FindMax(0,1);
 
     std::ofstream excel("functionlog.csv");
-    g.breakdown(40,excel);
+    g.breakdown(40,excel,0,0.4);
+    //g.breakdownE(40,excel);
     excel.close();
 
     cout << endl << endl;
 
-//	cout << "Goal bet " << turningPoint << endl;
-//	cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
+	cout << "Goal bet " << turningPoint << endl;
+	cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
 
 
 
-	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&o,0.03,3,0.005/2);
+	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&o,0.03,3,0.01);
 	turningPoint = gm.FindMax(0,1);
 	cout << "Minimum target " << turningPoint << endl;
 	cout << "Safe fold bet " << gm.FindZero(turningPoint,1) << endl;
+
+    excel.open("functionlog.safe.csv");
+    gm.breakdown(40,excel,0,0.4);
+    //g.breakdownE(40,excel);
+    excel.close();
+
 
     cout << endl;
 }
