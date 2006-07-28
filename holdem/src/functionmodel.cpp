@@ -98,13 +98,13 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 
     float64 xb = bisectionStep(x1,x2);
     float64 yb = f(xb);
-	
+
 	if( yb <= y1 && yb <= y2)
 	{
         cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
         return xb;
     }
-	
+
 	return FindTurningPoint(x1, y1, xb, yb, x2, y2, 1);
 }
 
@@ -115,14 +115,14 @@ float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
 
     float64 xb = bisectionStep(x1,x2);
     float64 yb = f(xb);
-	
+
 	if( yb >= y1 && yb >= y2)
 	{
         cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
         return xb;
     }
 
-	
+
 	return FindTurningPoint(x1, y1, xb, yb, x2, y2, -1);
 }
 
@@ -133,7 +133,7 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 
     float64 yn;
     float64 xn;
-	
+
 	if( y1 == yb && yb == y2 )
 	{
 		return xb;
@@ -151,7 +151,7 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 			x1 = xb;
 			y1 = yb;
 		}
-		
+
 		xb = bisectionStep(x1,x2);
 		yb = f(xb);
 	}
@@ -318,20 +318,20 @@ float64 GainModel::f(const float64 x) const
 	float64 exf = e->pctWillCall(x/(2*x+f_pot));
 
 	float64 sav=1;
-	for(int i=1;i<=e_fix;++i)
+	for(int i=1;i<=e_call;++i)
 	{
-		sav *= pow(1+( f_pot+x*(e_fix-i)*exf )/(i+1) , HoldemUtil::nchoosep<float64>(e_fix,i)*pow(shape.wins,e_fix-i)*pow(shape.splits,i) );
+		sav *= pow(1+( f_pot+x*(e_call-i)*exf )/(i+1) , HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i) );
 	}
 
 	return(
-	pow(1+f_pot+e_fix*exf*x , pow(shape.wins,e_fix))
+	pow(1+f_pot+e_call*exf*x , pow(shape.wins,e_battle))
 	*
-	pow(1-x , 1 - pow(1 - shape.loss,e_fix))
+	pow(1-x , 1 - pow(1 - shape.loss,e_battle))
 	*sav)
 	-1;
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix));  plays more cautiously to account for most people playing better cards only
-	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix*e->pctWillCall())); 
-	
+	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix*e->pctWillCall()));
+
 	//let's round e_fix downward on input
 	//floor()
 }
@@ -341,26 +341,26 @@ float64 GainModel::fd(const float64 x, const float64 y) const
 {
 	float64 exf = e->pctWillCall(x/(2*x+f_pot));
 	float64 dexf = e->pctWillCallD(x/(2*x+f_pot));
-	
+
 	float64 savd=1;
-	for(int i=1;i<e_fix;++i)
+	for(int i=1;i<e_call;++i)
 	{
-		savd += HoldemUtil::nchoosep<float64>(e_fix,i)*pow(shape.wins,e_fix-i)*pow(shape.splits,i)*(e_fix-i)*exf
+		savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)*(e_call-i)*exf
 				/
-				( 1 + (f_pot+x*(e_fix-i)*exf)/(i+1) )
+				( 1 + (f_pot+x*(e_call-i)*exf)/(i+1) )
 				;
 	}
-	
+
 	return
 	(y+1)*
 	(
-	(x*exf*dexf + e_fix*exf)*pow(shape.wins,e_fix)/(1+f_pot+e_fix*exf*x)
+	(x*exf*dexf + e_call*exf)*pow(shape.wins,e_battle)/(1+f_pot+e_call*exf*x)
 	+
-	(pow(1-shape.loss,e_fix)-1)/(1-x)
+	(pow(1-shape.loss,e_battle)-1)/(1-x)
 	+
 	savd
 	);
-	
+
 }
 
 
@@ -368,7 +368,7 @@ float64 GainModel::fd(const float64 x, const float64 y) const
 StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 {
 	StatResult a;
-	
+
 	if( wl == 0.5 )
 	{///PCT is 0.5 here also
 		a.wins = 0.5;

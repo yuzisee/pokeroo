@@ -525,21 +525,40 @@ const void CallStats::Analyze()
 
 	cpop.push_back(myWins[0]);
 	size_t vectorLast = cpop.size()-1; //(zero)
+	int lastStreak=1;
 
 	while(i < statCount)
 	{
 
 		cumulate += myWins[i].repeated ;
 
-		if (!( myWins[i].bIdenticalTo( myWins[i-1]) ))
+        StatResult &b = cpop.back();
+
+		//if (!( myWins[i].bIdenticalTo( myWins[i-1]) ))
+		if( myWins[i].pct != myWins[i-1].pct )
 		{	//add new StatResult
+            b.wins /= lastStreak;
+            b.splits /= lastStreak;
+            b.loss /= lastStreak;
 			cpop.push_back(myWins[i]);
 			++vectorLast;
+			lastStreak = 1;
+		}else
+        {
+            b.wins += myWins[i].wins;
+            b.splits += myWins[i].splits;
+            b.loss += myWins[i].loss;
+            ++lastStreak;
 		}
 		//cumulation[vectorLast].repeated = cumulate;
 		cpop.back().repeated = cumulate;
 		++i;
 	}
+    StatResult &b = cpop.back();
+    b.wins /= lastStreak;
+    b.splits /= lastStreak;
+    b.loss /= lastStreak;
+
 
 	for(size_t k=0;k<=vectorLast;++k)
 	{
@@ -562,6 +581,7 @@ cout << endl << "=============Reduced=============" << endl;
 				calc->cumulation[i].pct
 				<< " pct\t×"<< calc->cumulation[i].repeated <<flush;
 	}
+	cout << endl;
 #endif
 
 //How many of them would call a bet of x?

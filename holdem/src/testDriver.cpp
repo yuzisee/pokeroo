@@ -521,7 +521,7 @@ void testFunctions()
     DummyFunctionModel m(0.0001);
     cout << m.FindMax(0,1.4) << endl;
     cout << m.FindZero(0,1.4) << endl;
-	
+
 //	StatResult t = GainModel::ComposeBreakdown(0.5,0.7);
 	//StatResult t = GainModel::ComposeBreakdown(0.6,0.7);
 	StatResult t = GainModel::ComposeBreakdown(0.4,0.45);
@@ -604,11 +604,20 @@ void testPosition()
     cout << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << endl;
     cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
-	
+
 	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&o,0.03,3,0.005/2);
 	float64 turningPoint = g.FindMax(0,1);
-	cout << "Goal bet " << turningPoint << endl;
-	cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
+
+    std::ofstream excel("functionlog.csv");
+    g.breakdown(40,excel);
+    excel.close();
+
+    cout << endl << endl;
+
+//	cout << "Goal bet " << turningPoint << endl;
+//	cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
+
+
 
 	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&o,0.03,3,0.005/2);
 	turningPoint = gm.FindMax(0,1);
