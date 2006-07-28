@@ -343,21 +343,22 @@ float64 GainModel::fd(const float64 x, const float64 y) const
     float64 qdenom = (2*x+f_pot);
 	float64 exf = e->pctWillCall(x/qdenom);
 	float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
+	float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;
     int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
 
 	float64 savd=0;
 	for(int8 i=1;i<e_call;++i)
 	{
-		savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)*(e_call-i)*exf
+		savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)*(e_called + qdfe_minus_called - i)
 				/
-				( 1 + (f_pot+x*(e_call-i)*exf)/(i+1) )
+				( 1 + (f_pot+x*(e_called + e_tocall*exf - i))/(i+1) )
 				;
 	}
 
  	return
 	(y+1)*
 	(
-	(e_tocall*x*dexf + (e_called + e_tocall*exf))*pow(shape.wins,e_battle)/(1+f_pot+e_call*exf*x)
+	(e_called + qdfe_minus_called)*pow(shape.wins,e_battle)/(1+f_pot+(e_called + e_tocall*exf)*x)
 	+
 	(pow(1-shape.loss,e_battle)-1)/(1-x)
 	+
