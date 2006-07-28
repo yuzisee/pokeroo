@@ -533,7 +533,6 @@ void testFunctions()
 
 void testPosition()
 {
-    const uint8 dealtCommunityNumber=4;
     CommunityPlus h1, h2;
 
 
@@ -545,17 +544,16 @@ void testPosition()
 
 
 //Community
-    h2.AddToHand(HoldemConstants::SPADES, 5, HoldemConstants::CARD_SIX );
-    h2.AddToHand(HoldemConstants::SPADES, 8, HoldemConstants::CARD_NINE );
-    h2.AddToHand(HoldemConstants::CLUBS, 9, HoldemConstants::CARD_TEN );
-    h2.AddToHand(HoldemConstants::DIAMONDS, 5, HoldemConstants::CARD_SIX );
+    h2.AddToHand(HoldemConstants::HEARTS, 12, HoldemConstants::CARD_KING );
+    h2.AddToHand(HoldemConstants::DIAMONDS, 7, HoldemConstants::CARD_EIGHT );
+    h2.AddToHand(HoldemConstants::CLUBS, 4, HoldemConstants::CARD_FIVE );
 
     h1.SetUnique(h2);
 
 //Hole cards
-    h1.AddToHand(HoldemConstants::DIAMONDS, 7, HoldemConstants::CARD_EIGHT );
-    h1.AddToHand(HoldemConstants::DIAMONDS, 9, HoldemConstants::CARD_TEN );
-
+    h1.AddToHand(HoldemConstants::SPADES, 12, HoldemConstants::CARD_KING );
+    h1.AddToHand(HoldemConstants::DIAMONDS, 8, HoldemConstants::CARD_NINE );
+    const uint8 dealtCommunityNumber=3;
 
 
 
@@ -605,7 +603,7 @@ void testPosition()
     cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
 
-	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&o,0.03,3,1.0/100.0);
+	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&o,0.35,0,1,2,1.0/100.0);
 	float64 turningPoint = g.FindMax(0,1);
 
     std::ofstream excel("functionlog.csv");
@@ -620,7 +618,7 @@ void testPosition()
 
 
 
-	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&o,0.03,3,0.01);
+	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&o,0.03,0,1,2,0.01);
 	turningPoint = gm.FindMax(0,1);
 	cout << "Minimum target " << turningPoint << endl;
 	cout << "Safe fold bet " << gm.FindZero(turningPoint,1) << endl;
