@@ -316,15 +316,16 @@ float64 DummyFunctionModel::fd(const float64 x, const float64 y) const
 float64 GainModel::f(const float64 x) const
 {
 	float64 exf = e->pctWillCall(x/(2*x+f_pot));
+    int8 e_call = static_cast<int8>(round(e_called + e_tocall));
 
 	float64 sav=1;
-	for(int i=1;i<=e_call;++i)
+	for(int8 i=1;i<e_call;++i)
 	{
 		sav *= pow(1+( f_pot+x*(e_call-i)*exf )/(i+1) , HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i) );
 	}
 
 	return(
-	pow(1+f_pot+e_call*exf*x , pow(shape.wins,e_battle))
+	pow(1+f_pot+(e_called + e_tocall*exf)*x , pow(shape.wins,e_battle))
 	*
 	pow(1-x , 1 - pow(1 - shape.loss,e_battle))
 	*sav)
@@ -342,6 +343,7 @@ float64 GainModel::fd(const float64 x, const float64 y) const
     float64 qdenom = (2*x+f_pot);
 	float64 exf = e->pctWillCall(x/qdenom);
 	float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
+    int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
 
 	float64 savd=0;
 	for(int8 i=1;i<e_call;++i)
@@ -355,7 +357,7 @@ float64 GainModel::fd(const float64 x, const float64 y) const
  	return
 	(y+1)*
 	(
-	(x*exf*dexf + e_call*exf)*pow(shape.wins,e_battle)/(1+f_pot+e_call*exf*x)
+	(e_tocall*x*dexf + (e_called + e_tocall*exf))*pow(shape.wins,e_battle)/(1+f_pot+e_call*exf*x)
 	+
 	(pow(1-shape.loss,e_battle)-1)/(1-x)
 	+

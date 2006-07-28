@@ -552,7 +552,7 @@ void testPosition()
 
 //Hole cards
     h1.AddToHand(HoldemConstants::SPADES, 12, HoldemConstants::CARD_KING );
-    h1.AddToHand(HoldemConstants::DIAMONDS, 8, HoldemConstants::CARD_NINE );
+    h1.AddToHand(HoldemConstants::DIAMONDS, 13, HoldemConstants::CARD_ACEHIGH );
     const uint8 dealtCommunityNumber=3;
 
 
