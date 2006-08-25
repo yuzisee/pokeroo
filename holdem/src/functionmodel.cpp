@@ -313,10 +313,16 @@ float64 DummyFunctionModel::fd(const float64 x, const float64 y) const
     return -4*x+2;
 }
 
-float64 GainModel::f(const float64 x) const
+GainModel::~GainModel()
 {
-	float64 exf = e->pctWillCall(x/(2*x+f_pot));
-    int8 e_call = static_cast<int8>(round(e_called + e_tocall));
+}
+
+float64 GainModel::f(const float64 betSize) const
+{
+	//float64 exf = e->pctWillCall(x/(2*x+f_pot));
+	const float64 x = e->betFraction(betSize);
+	const float64 exf = e->exf(betSize);
+    const int8 e_call = static_cast<int8>(round(e_called + e_tocall));
 
 	float64 sav=1;
 	for(int8 i=1;i<e_call;++i)
@@ -338,13 +344,16 @@ float64 GainModel::f(const float64 x) const
 }
 
 
-float64 GainModel::fd(const float64 x, const float64 y) const
+float64 GainModel::fd(const float64 betSize, const float64 y) const
 {
-    float64 qdenom = (2*x+f_pot);
-	float64 exf = e->pctWillCall(x/qdenom);
-	float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
-	float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;
-    int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
+	//const float64 exf = e->pctWillCall(x/qdenom);
+	//const float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
+    const float64 x = e->betFraction(betSize);
+    //const float64 qdenom = (2*x+f_pot);
+	const float64 exf = e->exf(betSize);
+	const float64 dexf = e->dexf(betSize);
+	const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;
+    const int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
 
 	float64 savd=0;
 	for(int8 i=1;i<e_call;++i)

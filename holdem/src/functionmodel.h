@@ -22,7 +22,7 @@
 #define HOLDEM_ScalarFunctions
 
 
-#define DEBUG_GAIN
+//#define DEBUG_GAIN
 
 
 
@@ -30,6 +30,7 @@
 #define DEFAULT_EPS_STEP 0.001
 
 #include "inferentials.h"
+#include "arenaSituation.h"
 
 class ScalarFunctionModel
 {
@@ -67,19 +68,24 @@ class GainModel : public virtual ScalarFunctionModel
 {
 	protected:
 	StatResult shape;
-	CallCumulationD *e;
+	ExpectedCallD *e;
 	float64 f_pot;
 	float64 e_called; //REMEMBER e_call is the number of OPPONENTS, not the number of players.
 	float64 e_tocall; //REMEMBER e_call is the number of OPPONENTS, not the number of players.
 	uint8 e_battle;
 	public:
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
-	GainModel(const StatResult s,CallCumulationD *c, float64 pot, float64 called, float64 tocall, uint8 oppTable, const float64 step)
-		: ScalarFunctionModel(step),shape(s),e(c), f_pot(pot),e_called(called),e_tocall(tocall),e_battle(oppTable)
+	GainModel(const StatResult s,ExpectedCallD *c, float64 pot, float64 called, float64 tocall, uint8 oppTable, const float64 step)
+		: ScalarFunctionModel(step),shape(s), f_pot(pot),e_called(called),e_tocall(tocall),e_battle(oppTable)
 		{};
+    GainModel(const StatResult s, float64 pot, float64 called, float64 tocall, uint8 oppTable, const float64 step)
+		: ScalarFunctionModel(step),shape(s),e(0),f_pot(pot),e_called(called),e_tocall(tocall),e_battle(oppTable)
+		{};
+
+    virtual ~GainModel();
+
 	virtual float64 f(const float64) const;
     virtual float64 fd(const float64, const float64) const;
-
 
     #ifdef DEBUG_GAIN
         void breakdown(float points, std::ostream& target, float start=0, float end=1)

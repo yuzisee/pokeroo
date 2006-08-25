@@ -461,9 +461,8 @@ void testPlay()
 	myTable.PlayGame();
 }
 
-void goCMD(int argc, char* argv)
+void genCMD(uint16 procnum)
 {
-    	    uint16 procnum = atoi(argv);
 	    uint16 handnum = procnum % 338;///From 0-675 to 0-337
 	    procnum = procnum/338;///0 or 1
 
@@ -513,6 +512,11 @@ void goCMD(int argc, char* argv)
             }
         }
 
+}
+
+void goCMD(int argc, char* argv)
+{
+ genCMD(atoi(argv));
 }
 
 
@@ -652,16 +656,26 @@ int main(int argc, char* argv[])
 	//
 	//testHands();
 
+
 	if( argc == 2 )
 	{
         goCMD(2,argv[1]);
+    }else if( argc == 4 )
+    {
+        uint16 i=675;
+		while(1)
+        {
+             genCMD(i);
+			 if( i == 0 ) break;
+			 --i;
+        }
 	}else
 	{
 
 	    ///Play this hand on force-random
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
-	    testPosition();
+	    //testPosition();
 	    //testPlay();
 	    //testFunctions();
 		//testC();

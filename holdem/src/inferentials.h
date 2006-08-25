@@ -130,21 +130,24 @@ public:
         *this = o;
     }
     CallCumulation(){}
+    virtual ~CallCumulation();
     const CallCumulation & operator=(const CallCumulation& o);
 
 	vector<StatResult> cumulation;
 	//float64 pctWillCallDEBUG(const float64, const float64) const;
-	float64 pctWillCall(const float64, const float64) const;
-	float64 pctWillCall(const float64) const;
+	virtual float64 pctWillCall(const float64, const float64) const;
+	virtual float64 pctWillCall(const float64) const;
+
 }
 ;
 
-class CallCumulationD : public CallCumulation
+class CallCumulationD : public virtual CallCumulation
 {
 private:
-	float64 slopeof(const size_t, const size_t) const;
+	virtual float64 slopeof(const size_t, const size_t) const;
 public:
-	float64 pctWillCallD(const float64) const;
+	virtual float64 pctWillCallD(const float64) const;
+
         #ifdef DEBUG_DEXF
             void breakdown(float points, std::ostream& target)
             {
@@ -166,6 +169,16 @@ public:
         #endif
 }
 ;
+
+class CallCumulationZero : public virtual CallCumulationD
+{
+    virtual float64 pctWillCall(const float64 oddsFaced, const float64 tiefactor) const
+    {return 0;}
+    virtual float64 pctWillCallD(const float64 oddsFaced) const
+    {return 0;}
+}
+;
+
 
 class DistrShape
 {

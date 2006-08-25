@@ -75,6 +75,9 @@ void DistrShape::normalize(float64 mag)
 	worst /= mag;
 	mean /= mag;
 }
+CallCumulation::~CallCumulation()
+{
+}
 
 float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
 {
