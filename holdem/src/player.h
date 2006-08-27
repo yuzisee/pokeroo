@@ -81,7 +81,7 @@ class Player
 		float64 myBetSize; //Within a betting round, the current bet on the table
 		float64 lastBetSize; //Within a betting round, the bet before myBetSize
 
-		Player( double money, const std::string name, PlayerStrategy* strat, float64 init_play)
+		Player( float64 money, const std::string name, PlayerStrategy* strat, float64 init_play)
 		: myStrat(strat),  allIn(init_play), myMoney(money),
 		 handBetTotal(0), myBetSize(0), lastBetSize(init_play)
 		{
