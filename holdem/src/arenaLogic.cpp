@@ -643,7 +643,7 @@ int8 HoldemArena::PlayRound(const int8 comSize)
 	highBet = 0;
 
 	curIndex = curDealer;
-
+	lastRaise = GetBigBlind();
 
 
 
@@ -665,22 +665,7 @@ int8 HoldemArena::PlayRound(const int8 comSize)
 	if( comSize == 0 && playersInHand >= 2)
 	{
 
-	    ///TODO: If a blind puts you all-in, that mechanic has to occur:
-	    /*
-            Player& withP = p[curIndex];
-            if( withP.myBetSize > withP.myMoney )
-            {
-				withP.myBetSize = withP.myMoney;
-				withP.allIn = withP.myMoney;
-					//we must remember allIn as above: it's what we can win/person
-
-				++playersAllIn;
-
-				allInsNow[allInsNowCount] = curIndex;
-				++allInsNowCount;
-            }
-	    */
-		do
+	    do
 		{
 			incrIndex();
 		}while(!IsInHand(curIndex));
@@ -813,19 +798,22 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 				allInsNow[allInsNowCount] = curIndex;
 				++allInsNowCount;
 			}
-			else if( withP.myBetSize < highBet )
-			{///Player folds.
-				randRem /= myBetSum+playersInHand;
+			else
+			{//Not all-in
+				if( withP.myBetSize < highBet )
+				{///Player folds.
+					randRem /= myBetSum+playersInHand;
 
-				///You're taking money away here. addBets happenned a while ago
-				withP.handBetTotal = withP.lastBetSize;
-						//CAUTION: TRICKY USE OF handBetTotal
-				withP.myMoney -= withP.lastBetSize;
-				withP.myBetSize = FOLDED;
-				--playersInHand;
-
-
-
+					///You're taking money away here. addBets happenned a while ago
+					withP.handBetTotal = withP.lastBetSize;
+							//CAUTION: TRICKY USE OF handBetTotal
+					withP.myMoney -= withP.lastBetSize;
+					withP.myBetSize = FOLDED;
+					--playersInHand;
+				}else if( withP.myBetSize < highBet + GetMinRaise() )
+				{//You raised less than the MinRaise
+					withP.myBetSize = highBet;
+				}
 			}
 
 			broadcastCurrentMove(curIndex, withP.myBetSize, highBet
@@ -836,10 +824,10 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 				addBets(withP.myBetSize - withP.lastBetSize);
 
 				if( withP.myBetSize > highBet )
-				{
+				{//It was a raise
+					lastRaise = withP.myBetSize - highBet;
 					highBet = withP.myBetSize;
 					highestBetter = curIndex;
-
 
                         randRem *= myBetSum*myPot;
 				}

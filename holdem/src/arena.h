@@ -202,6 +202,7 @@ class HoldemArena
 		BlindStructure* blinds;
 
 		void addBets(float64);
+		float64 lastRaise;
 		float64 highBet;
 		float64 myPot; //incl. betSum
 		float64 myBetSum; //Just the current round.
@@ -232,36 +233,36 @@ class HoldemArena
 		HoldemArena(BlindStructure* b, bool illustrate)
 		: curIndex(-1),  nextNewPlayer(0),
 		bVerbose(illustrate),livePlayers(0), blinds(b),
-		highBet(0), myPot(0), myBetSum(0)
+		lastRaise(0),highBet(0), myPot(0), myBetSum(0)
 
 		{}
 
-		~HoldemArena();
+		virtual ~HoldemArena();
 
-		int8 AddPlayer(const char*, PlayerStrategy*);
-		int8 AddPlayer(const char*, float64, PlayerStrategy*);
+		virtual int8 AddPlayer(const char*, PlayerStrategy*);
+		virtual int8 AddPlayer(const char* id, float64 money, PlayerStrategy* newStrat);
 
-        int8 GetNumberInHand() const;
-		int8 GetNumberAtTable() const;
-		int8 GetTotalPlayers() const;
+        virtual int8 GetNumberInHand() const;
+		virtual int8 GetNumberAtTable() const;
+		virtual int8 GetTotalPlayers() const;
 
-		int8 GetCurPlayer() const;
+		virtual int8 GetCurPlayer() const;
 
-		const Player* ViewPlayer(int8) const;
+		virtual const Player* ViewPlayer(int8) const;
 
-		bool IsAlive(int8) const;
-		bool IsInHand(int8) const;
-		bool HasFolded(int8) const;
+		virtual bool IsAlive(int8) const;
+		virtual bool IsInHand(int8) const;
+		virtual bool HasFolded(int8) const;
 
 
-		float64 GetDeadPotSize() const; //That's pot - betSum;
-		float64 GetRoundPotSize() const; //ThisRound pot size
-		float64 GetPotSize() const;
-		float64 GetBetToCall() const; //since ROUND start
-		float64 GetMaxShowdown() const;
-		float64 GetMinRaise() const;
-		float64 GetBigBlind() const;
-		float64 GetSmallBlind() const;
+		virtual float64 GetDeadPotSize() const; //That's pot - betSum;
+		virtual float64 GetRoundPotSize() const; //ThisRound pot size
+		virtual float64 GetPotSize() const;
+		virtual float64 GetBetToCall() const; //since ROUND start
+		virtual float64 GetMaxShowdown() const;
+		virtual float64 GetMinRaise() const;
+		virtual float64 GetBigBlind() const;
+		virtual float64 GetSmallBlind() const;
 }
 ;
 

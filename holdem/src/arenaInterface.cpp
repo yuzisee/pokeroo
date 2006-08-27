@@ -175,6 +175,12 @@ float64 HoldemArena::GetRoundPotSize() const
 	return myBetSum;
 }
 
+float64 HoldemArena::GetMinRaise() const
+{
+    return lastRaise;
+	//return 0;
+}
+
 float64 HoldemArena::GetBigBlind() const
 {
 	return blinds->BigBlind();
