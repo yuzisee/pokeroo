@@ -82,10 +82,9 @@ void ExactCallD::query(float64 betSize)
                 float64 oppBetMake = betSize - oppBetAlready;
                 //To understand the above, consider that totalexf ALREADY includes
 
-                nextexf = oppBankRoll * (
-                            oppBetAlready + e->pctWillCall(oppBetMake / (oppBetMake + totalexf) )
-                            );
-                nextdexf = oppBankRoll * e->pctWillCallD(  oppBetMake/(oppBetMake+totalexf)  )
+                nextexf = oppBetAlready + oppBetMake * e->pctWillCall(oppBetMake / (oppBetMake + totalexf) );
+
+                nextdexf = oppBetMake * e->pctWillCallD(  oppBetMake/(oppBetMake+totalexf)  )
                                                 * (totalexf - oppBetMake * totaldexf)
                                                  /(oppBetMake + totalexf) /(oppBetMake + totalexf);
             }else
@@ -93,9 +92,8 @@ void ExactCallD::query(float64 betSize)
                 float64 deadpot = table->GetDeadPotSize();
                 float64 effroundpot = (totalexf - deadpot) * oppBankRoll / betSize;
                 float64 oppBetMake = oppBankRoll - oppBetAlready;
-                nextexf = oppBankRoll * (
-                            oppBetAlready + e->pctWillCall(oppBetMake / (oppBetMake + deadpot + effroundpot) )
-                            );
+                nextexf = oppBetAlready + oppBetMake * e->pctWillCall(oppBetMake / (oppBetMake + deadpot + effroundpot) );
+
                 nextdexf = 0;
             }
             //lastexf = nextexf;
