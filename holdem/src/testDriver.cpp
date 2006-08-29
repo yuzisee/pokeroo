@@ -615,7 +615,7 @@ void testPosition()
     UserConsoleStrategy testDummy;
     UserConsoleStrategy testDummy2;//CAN'T ADD THE SAME STRATEGY TWICE!
 	myTable.AddPlayer("TestDummy",1, &testDummy);
-	//myTable.AddPlayer("TestDummyOpponent",1, &testDummy2);
+	myTable.AddPlayer("TestDummyOpponent",1, &testDummy2);
 
     ExactCallD myExpectedCall(0, &myTable, &o);
 
