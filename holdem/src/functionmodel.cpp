@@ -319,23 +319,41 @@ GainModel::~GainModel()
 
 float64 GainModel::f(const float64 betSize) const
 {
-	//float64 exf = e->pctWillCall(x/(2*x+f_pot));
+
+	const float64 f_pot = e->deadpotFraction();
 	const float64 x = e->betFraction(betSize);
 	const float64 exf = e->exf(betSize);
-    const int8 e_call = static_cast<int8>(round(e_called + e_tocall));
+
+    const int8 e_call = static_cast<int8>(round(exf/x));
 
 	float64 sav=1;
 	for(int8 i=1;i<e_call;++i)
 	{
-		sav *= pow(1+( f_pot+x*(e_call-i)*exf )/(i+1) , HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i) );
+        //In our model, we can assume that if it is obvious many (everyone) will split, only those who don't see that opportunity will definately fold
+        //  however if it is not clear there will be a split (few split) everybody will call as expected
+        //The dragCalls multiplier achieves this:
+        float64 dragCalls = e_call - i;
+        dragCalls *= dragCalls;
+        dragCalls /= static_cast<float64>(e_call);
+        dragCalls += i;
+
+		sav *=  pow(
+                    1+( f_pot+exf*dragCalls )/(i+1)
+                        ,
+                        HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
+                );
 	}
 
-	return(
-	pow(1+f_pot+(e_called + e_tocall*exf)*x , pow(shape.wins,e_battle))
-	*
-	pow(1-x , 1 - pow(1 - shape.loss,e_battle))
-	*sav)
-	-1;
+	return
+
+        (
+        pow(1+f_pot+exf , pow(shape.wins,e_battle))
+        *
+        pow(1-x , 1 - pow(1 - shape.loss,e_battle))
+        *sav)
+	-
+		1
+	;
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix));  plays more cautiously to account for most people playing better cards only
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix*e->pctWillCall()));
 
@@ -349,25 +367,34 @@ float64 GainModel::fd(const float64 betSize, const float64 y) const
 	//const float64 exf = e->pctWillCall(x/qdenom);
 	//const float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
     const float64 x = e->betFraction(betSize);
+    const float64 f_pot = e->deadpotFraction();
     //const float64 qdenom = (2*x+f_pot);
 	const float64 exf = e->exf(betSize);
 	const float64 dexf = e->dexf(betSize);
-	const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;
-    const int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
+	//const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;n
+    //const int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
+    const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
 
 	float64 savd=0;
 	for(int8 i=1;i<e_call;++i)
 	{
-		savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)*(e_called + qdfe_minus_called - i)
+        float64 dragCalls = e_call - i;
+        dragCalls *= dragCalls;
+        dragCalls /= static_cast<float64>(e_call);
+        dragCalls += i;
+
+		savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
+				*
+				dexf
 				/
-				( 1 + (f_pot+x*(e_called + e_tocall*exf - i))/(i+1) )
+				( (i+1+f_pot)/dragCalls + exf )
 				;
 	}
 
  	return
 	(y+1)*
 	(
-	(e_called + qdfe_minus_called)*pow(shape.wins,e_battle)/(1+f_pot+(e_called + e_tocall*exf)*x)
+	pow(shape.wins,e_battle)*dexf/(1+f_pot+exf)
 	+
 	(pow(1-shape.loss,e_battle)-1)/(1-x)
 	+
@@ -382,7 +409,7 @@ StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 {
 	StatResult a;
 
-	if( wl == 0.5 )
+	if( wl == 1/2 )
 	{///PCT is 0.5 here also
 		a.wins = 0.5;
 		a.loss = 0.5;

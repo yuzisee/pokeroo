@@ -22,7 +22,7 @@
 #define HOLDEM_ScalarFunctions
 
 
-//#define DEBUG_GAIN
+#define DEBUG_GAIN
 
 
 
@@ -69,17 +69,14 @@ class GainModel : public virtual ScalarFunctionModel
 	protected:
 	StatResult shape;
 	ExpectedCallD *e;
-	float64 f_pot;
-	float64 e_called; //REMEMBER e_call is the number of OPPONENTS, not the number of players.
-	float64 e_tocall; //REMEMBER e_call is the number of OPPONENTS, not the number of players.
 	uint8 e_battle;
 	public:
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
-	GainModel(const StatResult s,ExpectedCallD *c, float64 pot, float64 called, float64 tocall, uint8 oppTable, const float64 step)
-		: ScalarFunctionModel(step),shape(s), f_pot(pot),e_called(called),e_tocall(tocall),e_battle(oppTable)
+	GainModel(const StatResult s,ExpectedCallD *c, uint8 oppTable, const float64 step)
+		: ScalarFunctionModel(step),shape(s),e_battle(oppTable)
 		{};
-    GainModel(const StatResult s, float64 pot, float64 called, float64 tocall, uint8 oppTable, const float64 step)
-		: ScalarFunctionModel(step),shape(s),e(0),f_pot(pot),e_called(called),e_tocall(tocall),e_battle(oppTable)
+    GainModel(const StatResult s, uint8 oppTable, const float64 step)
+		: ScalarFunctionModel(step),shape(s),e(0),e_battle(oppTable)
 		{};
 
     virtual ~GainModel();
@@ -96,26 +93,32 @@ class GainModel : public virtual ScalarFunctionModel
             target << "x,gain,dgain,vodd,exf,dexf" << std::endl;
             for( float i=start;i<end;i+=dist)
             {
-                float vodd = i/(2*i+f_pot);
+                float vodd = i/(2*i+e->deadpotFraction());
                 float y = f(i);
-                float exf = e->pctWillCall(vodd);
-                float64 dexf = e->pctWillCallD(vodd) * f_pot / (2*i+f_pot) /(2*i+f_pot);
+                //float exf = e->pctWillCall(vodd);
+                //float64 dexf = e->pctWillCallD(vodd) * f_pot / (2*i+f_pot) /(2*i+f_pot);
+                float exf = e->exf(i);
+                float dexf = e->dexf(i);
+
                 target << i << "," << f(i) << "," << fd(i,y) << "," << vodd << "," << exf << "," << dexf << std::endl;
 
             }
 
 
         }
+
         void breakdownC(float points, std::ostream& target, float start=0, float end=1)
         {
             float dist = (end-start)/points;
 
             target << "i,exf,dexf" << std::endl;
-            for( float vodd=start;vodd<end;vodd+=dist)
+            for( float i=start;i<end;i+=dist)
             {
-                float exf = e->pctWillCall(vodd);
-                float64 dexf = e->pctWillCallD(vodd);
-                target << vodd << "," << exf << "," << dexf << std::endl;
+                //float exf = e->pctWillCall(vodd);
+                //float dexf = e->pctWillCallD(vodd);
+                float exf = e->exf(i);
+                float dexf = e->dexf(i);
+                target << i << "," << exf << "," << dexf << std::endl;
 
             }
 

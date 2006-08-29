@@ -28,6 +28,7 @@
 #include "engine.h"
 #include "portability.h"
 #include "functionmodel.h"
+#include "arenaSituation.h"
 
 using std::cout;
 using std::endl;
@@ -607,31 +608,44 @@ void testPosition()
     cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
 
-	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&o,0.35,0,1,2,1.0/100.0);
+
+
+	BlindStructure b(0.005,0.01);
+	HoldemArena myTable(&b, true);
+    UserConsoleStrategy testDummy;
+	myTable.AddPlayer("TestDummy",1, &testDummy);
+	myTable.AddPlayer("TestDummyOpponent",1, &testDummy);
+    ExactCallD myExpectedCall(0, &myTable, &o);
+
+
+
+	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&myExpectedCall,0,1,2,1.0/100.0);
 	float64 turningPoint = g.FindMax(0,1);
+        #ifdef DEBUG_GAIN
+            std::ofstream excel("functionlog.csv");
+            g.breakdown(40,excel,0,0.4);
+            //g.breakdownE(40,excel);
+            excel.close();
 
-    std::ofstream excel("functionlog.csv");
-    g.breakdown(40,excel,0,0.4);
-    //g.breakdownE(40,excel);
-    excel.close();
+            cout << endl << endl;
 
-    cout << endl << endl;
-
-	cout << "Goal bet " << turningPoint << endl;
-	cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
+            cout << "Goal bet " << turningPoint << endl;
+            cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
+        #endif
 
 
-
-	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&o,0.03,0,1,2,0.01);
+	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&myExpectedCall,0,1,2,0.01);
 	turningPoint = gm.FindMax(0,1);
-	cout << "Minimum target " << turningPoint << endl;
-	cout << "Safe fold bet " << gm.FindZero(turningPoint,1) << endl;
 
-    excel.open("functionlog.safe.csv");
-    gm.breakdown(40,excel,0,0.4);
-    //g.breakdownE(40,excel);
-    excel.close();
+        #ifdef DEBUG_GAIN
+            cout << "Minimum target " << turningPoint << endl;
+            cout << "Safe fold bet " << gm.FindZero(turningPoint,1) << endl;
 
+            excel.open("functionlog.safe.csv");
+            gm.breakdown(40,excel,0,0.4);
+            //g.breakdownE(40,excel);
+            excel.close();
+        #endif
 
     cout << endl;
 }
@@ -675,7 +689,7 @@ int main(int argc, char* argv[])
 	    ///Play this hand on force-random
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
-	    //testPosition();
+	    testPosition();
 	    //testPlay();
 	    //testFunctions();
 		//testC();
