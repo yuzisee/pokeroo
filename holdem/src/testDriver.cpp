@@ -613,13 +613,15 @@ void testPosition()
 	BlindStructure b(0.005,0.01);
 	HoldemArena myTable(&b, true);
     UserConsoleStrategy testDummy;
+    UserConsoleStrategy testDummy2;//CAN'T ADD THE SAME STRATEGY TWICE!
 	myTable.AddPlayer("TestDummy",1, &testDummy);
-	myTable.AddPlayer("TestDummyOpponent",1, &testDummy);
+	//myTable.AddPlayer("TestDummyOpponent",1, &testDummy2);
+
     ExactCallD myExpectedCall(0, &myTable, &o);
 
 
-
-	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&myExpectedCall,0,1,2,1.0/100.0);
+///TODO compare with revision 46
+	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&myExpectedCall);
 	float64 turningPoint = g.FindMax(0,1);
         #ifdef DEBUG_GAIN
             std::ofstream excel("functionlog.csv");
@@ -634,7 +636,7 @@ void testPosition()
         #endif
 
 
-	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&myExpectedCall,0,1,2,0.01);
+	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&myExpectedCall);
 	turningPoint = gm.FindMax(0,1);
 
         #ifdef DEBUG_GAIN

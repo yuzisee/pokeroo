@@ -47,6 +47,8 @@ public:
 
     virtual ~ExpectedCallD();
 
+    virtual float64 minBet() const;
+    virtual int8 handsDealt() const;
     virtual float64 deadpotFraction() const;
     virtual float64 betFraction(const float64 betSize) const;
     virtual float64 exf(float64 betSize) = 0;
@@ -83,12 +85,23 @@ public:
     : ExpectedCallD(id,base,data)
     {
         queryinput = UNITIALIZED_QUERY;
-    };
+    }
 
     virtual float64 exf(float64 betSize);
     virtual float64 dexf(float64 betSize);
 }
 ;
+
+class ZeroCallD : public virtual ExpectedCallD
+{
+public:
+    ZeroCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data)
+    : ExpectedCallD(id,base,data)
+    {}
+
+    virtual float64 exf(float64 betSize);
+    virtual float64 dexf(float64 betSize);
+};
 
 /*
 class DummyArena : public virtual HoldemArena

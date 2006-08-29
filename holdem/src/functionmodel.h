@@ -72,12 +72,11 @@ class GainModel : public virtual ScalarFunctionModel
 	uint8 e_battle;
 	public:
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
-	GainModel(const StatResult s,ExpectedCallD *c, uint8 oppTable, const float64 step)
-		: ScalarFunctionModel(step),shape(s),e_battle(oppTable)
-		{};
-    GainModel(const StatResult s, uint8 oppTable, const float64 step)
-		: ScalarFunctionModel(step),shape(s),e(0),e_battle(oppTable)
-		{};
+	GainModel(const StatResult s,ExpectedCallD *c)
+		: ScalarFunctionModel(c->minBet()),shape(s),e(c),e_battle(c->handsDealt())
+		{
+		    if( quantum == 0 ) quantum = 1;
+		}
 
     virtual ~GainModel();
 
@@ -93,7 +92,14 @@ class GainModel : public virtual ScalarFunctionModel
             target << "x,gain,dgain,vodd,exf,dexf" << std::endl;
             for( float i=start;i<end;i+=dist)
             {
-                float vodd = i/(2*i+e->deadpotFraction());
+                float vodd;
+                if( i == 0 )
+                {
+                    vodd = 0;
+                }else
+                {
+                    vodd = i/(2*i+e->deadpotFraction());
+                }
                 float y = f(i);
                 //float exf = e->pctWillCall(vodd);
                 //float64 dexf = e->pctWillCallD(vodd) * f_pot / (2*i+f_pot) /(2*i+f_pot);
