@@ -760,7 +760,7 @@ int8 HoldemArena::PlayRound(const int8 comSize)
 cout << withP.GetIdent() << "'s turn" << endl;
 #endif
 
-		if( IsInHand(curIndex) && p[curIndex]->allIn == INVALID )
+		if( CanStillBet(curIndex) )
 		{
 #ifdef DEBUGALLINS
 cout << IsInHand(curIndex) << " && " << (p[curIndex]->allIn == INVALID) << endl;
@@ -811,7 +811,7 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 					withP.myBetSize = FOLDED;
 					--playersInHand;
 				}else if( withP.myBetSize < highBet + GetMinRaise() )
-				{//You raised less than the MinRaise
+				{///You raised less than the MinRaise
 					withP.myBetSize = highBet;
 				}
 			}

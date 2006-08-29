@@ -196,6 +196,11 @@ bool HoldemArena::HasFolded(int8 n) const
 	return p[n]->myBetSize == FOLDED;
 }
 
+bool HoldemArena::CanStillBet(int8 n) const
+{
+    return IsInHand(curIndex) && p[curIndex]->allIn == INVALID;
+}
+
 float64 HoldemArena::GetBetToCall() const
 {
 	return highBet;

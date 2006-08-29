@@ -253,6 +253,7 @@ class HoldemArena
 		virtual bool IsAlive(int8) const;
 		virtual bool IsInHand(int8) const;
 		virtual bool HasFolded(int8) const;
+		virtual bool CanStillBet(int8) const; //This will not include players who have pushed all in
 
 
 		virtual float64 GetDeadPotSize() const; //That's pot - betSum;
