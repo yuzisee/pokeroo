@@ -75,11 +75,11 @@ void ExactCallD::query(float64 betSize)
     //float64 lastdexf = totaldexf;
 
 
-
     int8 pIndex = playerID;
+    table->incrIndex(pIndex);
+    while( pIndex != playerID )
+    {
 
-    do{
-        table->incrIndex(pIndex);
         if( table->CanStillBet(pIndex) )
         {///Predict how much the bet will be
             float64 oppBankRoll = table->ViewPlayer(pIndex)->GetMoney();
@@ -88,18 +88,25 @@ void ExactCallD::query(float64 betSize)
             float64 nextdexf;
 
 
-            if( betSize >= oppBankRoll )
+            if( betSize < oppBankRoll )
             {
 
                 float64 oppBetMake = betSize - oppBetAlready;
                 //To understand the above, consider that totalexf includes already made bets
 
-                nextexf = e->pctWillCall(oppBetMake / (oppBetMake + totalexf) );
+                if( oppBetMake == 0 )
+                {
+                    nextexf = 0;
+                    nextdexf = 1;
+                }else
+                {
+                    nextexf = e->pctWillCall(oppBetMake / (oppBetMake + totalexf) );
 
-                nextdexf = nextexf + oppBetMake * e->pctWillCallD(  oppBetMake/(oppBetMake+totalexf)  )
-                                                * (totalexf - oppBetMake * totaldexf)
-                                                 /(oppBetMake + totalexf) /(oppBetMake + totalexf);
-                nextexf *= oppBetMake;
+                    nextdexf = nextexf + oppBetMake * e->pctWillCallD(  oppBetMake/(oppBetMake+totalexf)  )
+                                                    * (totalexf - oppBetMake * totaldexf)
+                                                     /(oppBetMake + totalexf) /(oppBetMake + totalexf);
+                    nextexf *= oppBetMake;
+                }
             }else
             {///Opponent would be all-in to call this bet
                 float64 deadpot = table->GetDeadPotSize();
@@ -115,7 +122,9 @@ void ExactCallD::query(float64 betSize)
             //lastdexf = nextdexf;
             totaldexf += nextdexf;
         }
-    }while( pIndex != playerID );
+
+        table->incrIndex(pIndex);
+    }
 
     totalexf = betFraction(totalexf - myexf);
     totaldexf = betFraction(totaldexf - mydexf);
