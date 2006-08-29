@@ -25,7 +25,7 @@ ExpectedCallD::~ExpectedCallD()
 {
 }
 
-float64 ExpectedCallD::potFraction() const
+float64 ExpectedCallD::deadpotFraction() const
 {
     return (  table->GetPotSize() / table->ViewPlayer(playerID)->GetMoney()  );
 }
@@ -71,15 +71,20 @@ void ExactCallD::query(float64 betSize)
         if( table->CanStillBet(pIndex) )
         {///Predict how much the bet will be
             float64 oppBankRoll = table->ViewPlayer(pIndex)->GetMoney();
+            float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
             float64 nextexf;
             float64 nextdexf;
 
+
             if( betSize >= oppBankRoll )
             {
-                float64 oppBetMake = betSize - table->ViewPlayer(pIndex)->GetBetSize();
+
+                float64 oppBetMake = betSize - oppBetAlready;
                 //To understand the above, consider that totalexf ALREADY includes
 
-                nextexf = oppBankRoll * e->pctWillCall(oppBetMake / (oppBetMake + totalexf) );
+                nextexf = oppBankRoll * (
+                            oppBetAlready + e->pctWillCall(oppBetMake / (oppBetMake + totalexf) )
+                            );
                 nextdexf = oppBankRoll * e->pctWillCallD(  oppBetMake/(oppBetMake+totalexf)  )
                                                 * (totalexf - oppBetMake * totaldexf)
                                                  /(oppBetMake + totalexf) /(oppBetMake + totalexf);
@@ -87,8 +92,10 @@ void ExactCallD::query(float64 betSize)
             {///Opponent would be all-in to call this bet
                 float64 deadpot = table->GetDeadPotSize();
                 float64 effroundpot = (totalexf - deadpot) * oppBankRoll / betSize;
-                float64 oppBetMake = oppBankRoll - table->ViewPlayer(pIndex)->GetBetSize();
-                nextexf = oppBankRoll * e->pctWillCall(oppBetMake / (oppBetMake + deadpot + effroundpot) );
+                float64 oppBetMake = oppBankRoll - oppBetAlready;
+                nextexf = oppBankRoll * (
+                            oppBetAlready + e->pctWillCall(oppBetMake / (oppBetMake + deadpot + effroundpot) )
+                            );
                 nextdexf = 0;
             }
             //lastexf = nextexf;

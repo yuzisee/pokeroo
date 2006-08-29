@@ -47,7 +47,7 @@ public:
 
     virtual ~ExpectedCallD();
 
-    virtual float64 potFraction() const;
+    virtual float64 deadpotFraction() const;
     virtual float64 betFraction(const float64 betSize) const;
     virtual float64 exf(float64 betSize) = 0;
     virtual float64 dexf(float64 betSize) = 0;
