@@ -37,7 +37,7 @@ float64 ExpectedCallD::maxBet() const
 
 float64 ExpectedCallD::chipDenom() const
 {
-    return table->GetBigBlind();
+    return table->GetChipDenom();
 }
 
 int8 ExpectedCallD::handsDealt() const
@@ -111,9 +111,6 @@ void ExactCallD::query(float64 betSize)
                 }else
                 {
                     nextexf = e->pctWillCall(oppBetMake / (oppBetMake + totalexf) );
-                        #ifdef DEBUGBETMODEL
-                            const float64 pre_t_pwcd = e->pctWillCallD(  oppBetMake/(oppBetMake+totalexf)  );
-                        #endif
                     nextdexf = nextexf + oppBetMake * e->pctWillCallD(  oppBetMake/(oppBetMake+totalexf)  )
                                                     * (totalexf - oppBetMake * totaldexf)
                                                      /(oppBetMake + totalexf) /(oppBetMake + totalexf);

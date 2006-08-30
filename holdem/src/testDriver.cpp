@@ -609,7 +609,7 @@ void testPosition()
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
 
 
-    const float64 chipDenom = 0.0025;
+    float64 chipDenom = 1.0/200;
 	BlindStructure b(chipDenom,chipDenom*2);
 	DebugArena myTable(&b, true);
     UserConsoleStrategy testDummy;
@@ -630,7 +630,7 @@ void testPosition()
         #ifdef DEBUG_GAIN
             std::ofstream excel("functionlog.csv");
             if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
-            g.breakdown((.05-t_myBet)/myTable.GetChipDenom()+1,excel,myTable.PeekCallBet(),0.05);
+            g.breakdown((.05-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),0.05);
             //g.breakdownE(40,excel);
             excel.close();
 

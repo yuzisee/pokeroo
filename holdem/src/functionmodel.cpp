@@ -396,7 +396,7 @@ float64 GainModel::fd(const float64 betSize, const float64 y) const
     const float64 exf_live = exf - f_pot;
 	//const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;n
     //const int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
-    const float64 cbt = e->callBet();
+    //const float64 cbt = e->callBet();
 
     if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 

@@ -75,6 +75,7 @@ class GainModel : public virtual ScalarFunctionModel
 	GainModel(const StatResult s,ExpectedCallD *c)
 		: ScalarFunctionModel(c->chipDenom()),shape(s),e(c),e_battle(c->handsDealt()-1)
 		{
+//		    const float64 t = c->chipDenom();
 		    if( quantum == 0 ) quantum = 1;
 		}
 
