@@ -812,6 +812,11 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 					--playersInHand;
 				}else if( withP.myBetSize < highBet + GetMinRaise() )
 				{///You raised less than the MinRaise
+                    if( bVerbose )
+                    {
+                        cout << "The minimum raise bet is " << highBet + GetMinRaise() << endl;
+                    }
+
 					withP.myBetSize = highBet;
 				}
 			}

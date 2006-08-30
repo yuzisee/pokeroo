@@ -20,7 +20,7 @@
 
 #define DEBUGSITUATION
 
-
+#include "stratPosition.h"
 #include "stratManual.h"
 #include "stratThreshold.h"
 #include "arena.h"
@@ -451,10 +451,11 @@ void testPlay()
 	ConsoleStrategy manPlay[3];
 	MultiThresholdStrategy pushFold;
 	//ConsoleStepStrategy watchPlay;
+	PositionalStrategy smartPlay;
 
 	//myTable.AddPlayer("Stag", &stagStrat);
 	myTable.AddPlayer("N1", manPlay);
-	myTable.AddPlayer("N2", manPlay+1);
+	myTable.AddPlayer("Y2", &smartPlay);
 	myTable.AddPlayer("X3", &pushFold);
 	myTable.AddPlayer("P1", &consolePlay);
 	//myTable.AddPlayer("P1", manPlay);
@@ -616,9 +617,10 @@ void testPosition()
     UserConsoleStrategy testDummy2;//CAN'T ADD THE SAME STRATEGY TWICE!
 
 	myTable.SetDeadPot(0);
+	const float64 t_chipCount = 1;
 	const float64 t_myBet = myTable.GetSmallBlind();
-    myTable.SetBet(  myTable.AddPlayer("TestDummy",1, &testDummy) , t_myBet );
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent",1, &testDummy2) ,  myTable.GetBigBlind() );
+    myTable.SetBet(  myTable.AddPlayer("TestDummy",t_chipCount, &testDummy) , t_myBet );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent",t_chipCount, &testDummy2) ,  myTable.GetBigBlind() );
 
     ExactCallD myExpectedCall(0, &myTable, &o);
     //ZeroCallD myExpectedCall(0, &myTable, &o);
@@ -630,7 +632,7 @@ void testPosition()
         #ifdef DEBUG_GAIN
             std::ofstream excel("functionlog.csv");
             if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
-            g.breakdown((.05-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),0.05);
+            g.breakdown((1-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),t_chipCount);
             //g.breakdownE(40,excel);
             excel.close();
 
@@ -697,8 +699,8 @@ int main(int argc, char* argv[])
 	    ///Play this hand on force-random
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
-	    testPosition();
-	    //testPlay();
+	    //testPosition();
+	    testPlay();
 	    //testFunctions();
 		//testC();
 		//goCMD(2,"505");
