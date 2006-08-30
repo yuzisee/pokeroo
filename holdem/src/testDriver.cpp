@@ -625,7 +625,7 @@ void testPosition()
 	float64 turningPoint = g.FindMax(0,1);
         #ifdef DEBUG_GAIN
             std::ofstream excel("functionlog.csv");
-            g.breakdown(40,excel,0,0.4);
+            g.breakdown(40,excel,0,0.004);
             //g.breakdownE(40,excel);
             excel.close();
 

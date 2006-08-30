@@ -320,22 +320,35 @@ GainModel::~GainModel()
 float64 GainModel::f(const float64 betSize) const
 {
 
-	const float64 f_pot = e->deadpotFraction();
+    const float64 f_pot = e->deadpotFraction();
 	const float64 x = e->betFraction(betSize);
 	const float64 exf = e->exf(betSize);
 
-    const int8 e_call = static_cast<int8>(round(exf/x));
+
+
+    const float64& t_w = shape.wins;
+    const float64& t_s = shape.splits;
+    const float64& t_l = shape.loss;
+    const float64 t_1w = 1+f_pot+exf;
+    const float64 t_cw = pow(shape.wins,e_battle);
+    const float64 t_1wp = pow(t_1w , t_cw);
+    const float64 t_1l = 1-x ;
+    const float64 t_cl = 1 - pow(1 - shape.loss,e_battle);
+    const float64 t_1lp = pow(t_1l, t_cl);
+
+
+    const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
 
 	float64 sav=1;
-	for(int8 i=1;i<e_call;++i)
+	for(int8 i=1;i<=e_call;++i)
 	{
         //In our model, we can assume that if it is obvious many (everyone) will split, only those who don't see that opportunity will definately fold
         //  however if it is not clear there will be a split (few split) everybody will call as expected
         //The dragCalls multiplier achieves this:
-        float64 dragCalls = e_call - i;
-        dragCalls *= dragCalls;
-        dragCalls /= static_cast<float64>(e_call);
-        dragCalls += i;
+        float64 dragCalls = i;
+        dragCalls /= e_call;
+        dragCalls = 1 - dragCalls;
+        dragCalls = dragCalls * dragCalls - dragCalls + 1;
 
 		sav *=  pow(
                     1+( f_pot+exf*dragCalls )/(i+1)
@@ -343,6 +356,8 @@ float64 GainModel::f(const float64 betSize) const
                         HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
                 );
 	}
+
+    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
 	return
 

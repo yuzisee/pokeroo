@@ -73,7 +73,7 @@ class GainModel : public virtual ScalarFunctionModel
 	public:
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 	GainModel(const StatResult s,ExpectedCallD *c)
-		: ScalarFunctionModel(c->minBet()),shape(s),e(c),e_battle(c->handsDealt())
+		: ScalarFunctionModel(c->minBet()),shape(s),e(c),e_battle(c->handsDealt()-1)
 		{
 		    if( quantum == 0 ) quantum = 1;
 		}
