@@ -101,7 +101,7 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2) const
 
 	if( yb <= y1 && yb <= y2)
 	{
-        cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
+	    if( x1 != x2 ) cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
         return xb;
     }
 
@@ -118,7 +118,7 @@ float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2) const
 
 	if( yb >= y1 && yb >= y2)
 	{
-        cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
+        if( x1 != x2 ) cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
         return xb;
     }
 

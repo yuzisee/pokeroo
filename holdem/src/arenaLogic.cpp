@@ -804,18 +804,19 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 				{///Player folds.
 					randRem /= myBetSum+playersInHand;
 
+
 					///You're taking money away here. addBets happenned a while ago
 					withP.handBetTotal = withP.lastBetSize;
 							//CAUTION: TRICKY USE OF handBetTotal
 					withP.myMoney -= withP.lastBetSize;
 					withP.myBetSize = FOLDED;
 					--playersInHand;
-				}else if( withP.myBetSize < highBet + GetMinRaise() )
+				}else if( withP.myBetSize > highBet && withP.myBetSize < highBet + GetMinRaise() )
 				{///You raised less than the MinRaise
-                    if( bVerbose )
-                    {
-                        cout << "The minimum raise bet is " << highBet + GetMinRaise() << endl;
-                    }
+                        if( bVerbose )
+                        {
+                            cout << "The minimum raise bet is " << highBet + GetMinRaise() << endl;
+                        }
 
 					withP.myBetSize = highBet;
 				}

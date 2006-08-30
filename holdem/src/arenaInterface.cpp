@@ -88,6 +88,7 @@ int8 HoldemArena::AddPlayer(const char* id, float64 money, PlayerStrategy* newSt
 {
 	if( curIndex != -1 || newStrat->game != 0 || newStrat->me != 0) return -1;
 
+    newStrat->myPositionIndex = nextNewPlayer;
 	newStrat->game = this;
 	Player* newP = new Player(money, id,newStrat, INVALID);
 	newStrat->me = newP;

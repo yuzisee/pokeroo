@@ -57,7 +57,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
         #ifdef LOGPOSITION
             if( !(logFile.is_open()) )
             {
-                logFile.open((ViewPlayer().GetIdent() + ".Thresh.log").c_str());
+                logFile.open((ViewPlayer().GetIdent() + ".Positional.log").c_str());
             }
             logFile << endl;
             HandPlus convertOutput;
@@ -76,8 +76,8 @@ float64 PositionalStrategy::MakeBet()
     const float64 myMoney = ViewPlayer().GetMoney();
     const float64 betToCall = ViewTable().GetBetToCall();
 
-    ExactCallD myExpectedCall(0, &(ViewTable()), &callcumu);
-    //ZeroCallD myExpectedCall(0, *(ViewTable()), &callcumu);
+    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
+    //ZeroCallD myExpectedCall(myPositionIndex, *(ViewTable()), &callcumu);
 
     GainModel gainmean(statmean,&myExpectedCall);
     float64 goalPoint = gainmean.FindBestBet();
@@ -87,11 +87,20 @@ float64 PositionalStrategy::MakeBet()
     float64 leastPoint = gainworse.FindBestBet();
     float64 leastFold = gainworse.FindZero(leastPoint,myMoney);
 
+    std::ofstream excel("functionlog.csv");
+    if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
+    gainmean.breakdown(100,excel,ViewTable().GetBetToCall(),ViewPlayer().GetMoney());
+    excel.close();
+    excel.open("functionlog.safe.csv");
+    if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
+    gainworse.breakdown(100,excel,ViewTable().GetBetToCall(),ViewPlayer().GetMoney());
+    excel.close();
+
         #ifdef LOGPOSITION
 
             if( !(logFile.is_open()) )
             {
-                logFile.open((ViewPlayer().GetIdent() + ".MultiThresh.log").c_str());
+                logFile.open((ViewPlayer().GetIdent() + ".Positional.log").c_str());
             }
 
 
@@ -99,10 +108,22 @@ float64 PositionalStrategy::MakeBet()
             convertOutput.SetUnique(ViewHand());
             convertOutput.DisplayHand(logFile);
 
+            logFile << "Bet to call " << betToCall << endl;
             logFile << "Goal bet " << goalPoint << endl;
             logFile << "Fold bet " << goalFold << endl;
-            cout << "Minimum target " << leastPoint << endl;
-            cout << "Safe fold bet " << leastFold << endl;
+            logFile << "Minimum target " << leastPoint << endl;
+            logFile << "Safe fold bet " << leastFold << endl;
+
+            if( goalPoint < betToCall || leastPoint < betToCall )
+            {
+                cout << "Failed assertion" << endl;
+                goalPoint = gainmean.FindBestBet();
+                goalFold = gainmean.FindZero(goalPoint,myMoney);
+
+
+                leastPoint = gainworse.FindBestBet();
+                leastFold = gainworse.FindZero(leastPoint,myMoney);
+            }
         #endif
 
 
@@ -112,16 +133,34 @@ float64 PositionalStrategy::MakeBet()
     float64 choicePoint = leastPoint * (1-choiceScale) + goalPoint * (choiceScale);
     float64 choiceFold = leastFold * (1-choiceScale) + goalFold * (choiceScale);
 
+    if( choicePoint == choiceFold )
+    {///The highest point was the point closest to zero.
+        if( betToCall == choiceFold )
+        {
+            logFile << "CHECK/FOLD" << endl;
+            return 0;
+        }
+    }
+
     if( betToCall <= choicePoint )
 	{
+	    logFile << "RAISETO " << choicePoint << endl;
 		return choicePoint;
 	}//else
     {
-        if( betToCall > choiceFold )
+            #ifdef DEBUGASSERT
+                if( !(betToCall >= choiceFold) )
+                {
+                    cout << "ALL choiceXXXX should be AT LEAST betToCall as defined!" << endl;
+                }
+            #endif
+       /* if( betToCall >= choiceFold )
         {
+            logFile << "FOLD" << endl;
             return 0;
-        }//else
+        }//else*/
         {
+            logFile << "CALL " << choicePoint << endl;
             return betToCall;
         }
     }

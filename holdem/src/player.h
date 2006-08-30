@@ -44,6 +44,9 @@ class PlayerStrategy
 		Hand* myHand;
 		Player* me;
 		HoldemArena* game;
+    protected:
+
+        int8 myPositionIndex;
 
 	public:
 
@@ -51,7 +54,7 @@ class PlayerStrategy
 		const Player& ViewPlayer() const {return *me;}
 		const HoldemArena& ViewTable() const {return *game; }
 
-		PlayerStrategy() : me(0), game(0){}
+		PlayerStrategy() : me(0), game(0), myPositionIndex(0) {}
 		virtual ~PlayerStrategy(){};
 
 		virtual void SeeCommunity(const Hand&, const int8) = 0;
