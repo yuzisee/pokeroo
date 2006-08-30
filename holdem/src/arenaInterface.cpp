@@ -191,6 +191,11 @@ float64 HoldemArena::GetSmallBlind() const
 	return blinds->SmallBlind();
 }
 
+float64 HoldemArena::GetChipDenom() const
+{
+    return smallestChip;
+}
+
 bool HoldemArena::HasFolded(int8 n) const
 {
 	return p[n]->myBetSize == FOLDED;

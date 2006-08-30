@@ -25,7 +25,17 @@ ExpectedCallD::~ExpectedCallD()
 {
 }
 
-float64 ExpectedCallD::minBet() const
+float64 ExpectedCallD::callBet() const
+{
+    return table->GetBetToCall();
+}
+
+float64 ExpectedCallD::maxBet() const
+{
+    return table->ViewPlayer(playerID)->GetMoney();
+}
+
+float64 ExpectedCallD::chipDenom() const
 {
     return table->GetBigBlind();
 }
@@ -68,7 +78,7 @@ void ExactCallD::query(float64 betSize)
     const float64 myexf = betSize;
     const float64 mydexf = 1;
 
-    totalexf = table->GetPotSize() + myexf;
+    totalexf = table->GetPotSize() + myexf - table->ViewPlayer(playerID)->GetBetSize();
     //float64 lastexf = totalexf;
 
     totaldexf = mydexf;
@@ -101,7 +111,9 @@ void ExactCallD::query(float64 betSize)
                 }else
                 {
                     nextexf = e->pctWillCall(oppBetMake / (oppBetMake + totalexf) );
-
+                        #ifdef DEBUGBETMODEL
+                            const float64 pre_t_pwcd = e->pctWillCallD(  oppBetMake/(oppBetMake+totalexf)  );
+                        #endif
                     nextdexf = nextexf + oppBetMake * e->pctWillCallD(  oppBetMake/(oppBetMake+totalexf)  )
                                                     * (totalexf - oppBetMake * totaldexf)
                                                      /(oppBetMake + totalexf) /(oppBetMake + totalexf);
@@ -165,6 +177,46 @@ float64 ZeroCallD::dexf(float64 betSize)
     return 0;
 }
 
+void DebugArena::updatePot()
+{
+    highBet = 0;
+    float64 livePot=0;
+    if( livePlayers == 0 )
+    {
+        HoldemArena::myPot = 0;
+    }else
+    {
+        int8 i = 0;
+        ///Assume all players are live players
+        do{
+            float64 tbet = p[i]->GetBetSize();
+            livePot += tbet;
+            if( tbet > highBet ) highBet = tbet;
+            incrIndex(i);
+        }while(i > 0);
+        HoldemArena::myPot = deadPot + livePot;
+    }
+}
 
+
+#ifdef DEBUGBETMODEL
+
+const float64 DebugArena::PeekCallBet()
+{
+    return highBet;
+}
+
+void DebugArena::SetDeadPot(float64 amount)
+{
+    deadPot = amount;
+    updatePot();
+}
+
+void DebugArena::SetBet(int8 playerNum, float64 amount)
+{
+    p[playerNum]->myBetSize = amount;
+    updatePot();
+}
+#endif
 
 

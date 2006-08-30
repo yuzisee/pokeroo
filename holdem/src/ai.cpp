@@ -576,10 +576,11 @@ cout << endl << "=============Reduced=============" << endl;
 	cout.precision(4);
 	for(size_t i=0;i<=vectorLast;i++)
 	{
-		cout << endl << "{" << i << "}" << calc->cumulation[i].loss << " l +\t"
-				<< calc->cumulation[i].splits << " s +\t" << calc->cumulation[i].wins << " w =\t" <<
+		cout << endl << "{" << i << "}" << calc->cumulation[i].loss << " l + "
+				<< calc->cumulation[i].splits << " s + " << calc->cumulation[i].wins << " w =\t" <<
 				calc->cumulation[i].pct
-				<< " pct\t×"<< calc->cumulation[i].repeated <<flush;
+				//<< " pct\t×"<< calc->cumulation[i].repeated <<flush;
+				<< " \t"<< calc->cumulation[i].repeated << "\ttocall" << flush;
 	}
 	cout << endl;
 #endif

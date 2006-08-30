@@ -200,6 +200,7 @@ class HoldemArena
 		int8 playersAllIn;
 
 		BlindStructure* blinds;
+		float64 smallestChip;
 
 		void addBets(float64);
 		float64 lastRaise;
@@ -235,7 +236,9 @@ class HoldemArena
 		bVerbose(illustrate),livePlayers(0), blinds(b),
 		lastRaise(0),highBet(0), myPot(0), myBetSum(0)
 
-		{}
+		{
+		    smallestChip = b->SmallBlind(); ///This INITIAL small blind should be assumed to be one chip.
+        }
 
 		virtual ~HoldemArena();
 
@@ -264,6 +267,7 @@ class HoldemArena
 		virtual float64 GetMinRaise() const;
 		virtual float64 GetBigBlind() const;
 		virtual float64 GetSmallBlind() const;
+		virtual float64 GetChipDenom() const;
 }
 ;
 

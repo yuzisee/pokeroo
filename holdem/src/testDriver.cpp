@@ -609,23 +609,28 @@ void testPosition()
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
 
 
-
-	BlindStructure b(0.005,0.01);
-	HoldemArena myTable(&b, true);
+    const float64 chipDenom = 0.0025;
+	BlindStructure b(chipDenom,chipDenom*2);
+	DebugArena myTable(&b, true);
     UserConsoleStrategy testDummy;
     UserConsoleStrategy testDummy2;//CAN'T ADD THE SAME STRATEGY TWICE!
-	myTable.AddPlayer("TestDummy",1, &testDummy);
-	myTable.AddPlayer("TestDummyOpponent",1, &testDummy2);
+
+	myTable.SetDeadPot(0);
+	const float64 t_myBet = myTable.GetSmallBlind();
+    myTable.SetBet(  myTable.AddPlayer("TestDummy",1, &testDummy) , t_myBet );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent",1, &testDummy2) ,  myTable.GetBigBlind() );
 
     ExactCallD myExpectedCall(0, &myTable, &o);
+    //ZeroCallD myExpectedCall(0, &myTable, &o);
 
 
 ///TODO compare with revision 46
 	GainModel g(GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean),&myExpectedCall);
-	float64 turningPoint = g.FindMax(0,1);
+	float64 turningPoint = g.FindBestBet();
         #ifdef DEBUG_GAIN
             std::ofstream excel("functionlog.csv");
-            g.breakdown(40,excel,0,0.004);
+            if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
+            g.breakdown((.05-t_myBet)/myTable.GetChipDenom()+1,excel,myTable.PeekCallBet(),0.05);
             //g.breakdownE(40,excel);
             excel.close();
 
@@ -637,14 +642,15 @@ void testPosition()
 
 
 	GainModel gm(GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst),&myExpectedCall);
-	turningPoint = gm.FindMax(0,1);
+	turningPoint = gm.FindBestBet();
 
         #ifdef DEBUG_GAIN
             cout << "Minimum target " << turningPoint << endl;
             cout << "Safe fold bet " << gm.FindZero(turningPoint,1) << endl;
 
             excel.open("functionlog.safe.csv");
-            gm.breakdown(40,excel,0,0.4);
+            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
+            gm.breakdown(100,excel,0,0.75);
             //g.breakdownE(40,excel);
             excel.close();
         #endif

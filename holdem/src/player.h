@@ -21,6 +21,10 @@
 #ifndef HOLDEM_PlayerBase
 #define HOLDEM_PlayerBase
 
+
+#define DEBUGBETMODEL
+
+
 #include "holdem2.h"
 #include "arena.h"
 #include "player.h"
@@ -69,6 +73,9 @@ class PlayerStrategy
 
 class Player
 {
+#ifdef DEBUGBETMODEL
+    friend class DebugArena;
+#endif
 	friend class HoldemArena;
 	private:
 		static const int16 NAMECHARS = 40;

@@ -30,7 +30,7 @@ ScalarFunctionModel::~ScalarFunctionModel()
 {
 }
 
-float64 ScalarFunctionModel::quadraticStep(float64 x1, float64 y1, float64 x2, float64 y2, float64 x3, float64 y3)
+float64 ScalarFunctionModel::quadraticStep(float64 x1, float64 y1, float64 x2, float64 y2, float64 x3, float64 y3) const
 {
     float64 a1,a2,a3;
 
@@ -47,7 +47,7 @@ float64 ScalarFunctionModel::quadraticStep(float64 x1, float64 y1, float64 x2, f
 
 }
 
-float64 ScalarFunctionModel::trisectionStep(float64 x1, float64 y1, float64 x2, float64 y2, float64 x3, float64 y3)
+float64 ScalarFunctionModel::trisectionStep(float64 x1, float64 y1, float64 x2, float64 y2, float64 x3, float64 y3) const
 {
     float64 ldiff, rdiff;
     ldiff = (x2-x1);
@@ -69,7 +69,7 @@ float64 ScalarFunctionModel::trisectionStep(float64 x1, float64 y1, float64 x2, 
 
 }
 
-float64 ScalarFunctionModel::searchStep(float64 x1, float64 y1, float64 x2, float64 y2, float64 x3, float64 y3)
+float64 ScalarFunctionModel::searchStep(float64 x1, float64 y1, float64 x2, float64 y2, float64 x3, float64 y3) const
 {
     float64 dx = fd(x2,y2);
 
@@ -91,7 +91,7 @@ float64 ScalarFunctionModel::searchStep(float64 x1, float64 y1, float64 x2, floa
 
 }
 
-float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
+float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2) const
 {
     float64 y1 = f(x1);
     float64 y2 = f(x2);
@@ -108,7 +108,7 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 	return FindTurningPoint(x1, y1, xb, yb, x2, y2, 1);
 }
 
-float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
+float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2) const
 {
     float64 y1 = f(x1);
     float64 y2 = f(x2);
@@ -127,7 +127,7 @@ float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
 }
 
 
-float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb, float64 yb, float64 x2, float64 y2, float64 signDir)
+float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb, float64 yb, float64 x2, float64 y2, float64 signDir) const
 {
     int8 stepMode = 0;
 
@@ -238,17 +238,17 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 }
 
 
-float64 ScalarFunctionModel::newtonStep(float64 x1, float64 y1)
+float64 ScalarFunctionModel::newtonStep(float64 x1, float64 y1) const
 {
     return x1 - y1/fd(x1,y1);
 }
 
-float64 ScalarFunctionModel::bisectionStep(float64 x1, float64 x2)
+float64 ScalarFunctionModel::bisectionStep(float64 x1, float64 x2) const
 {
     return (x1+x2)/2;
 }
 
-float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
+float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2) const
 {
 
     float64 y1 = f(x1);
@@ -317,15 +317,20 @@ GainModel::~GainModel()
 {
 }
 
+float64 GainModel::FindBestBet() const
+{
+    return FindMax(e->callBet(),e->maxBet());
+}
+
 float64 GainModel::f(const float64 betSize) const
 {
 
-    const float64 f_pot = e->deadpotFraction();
 	const float64 x = e->betFraction(betSize);
 	const float64 exf = e->exf(betSize);
+    const float64 f_pot = e->deadpotFraction();
+    const float64 exf_live = exf - f_pot;
 
-
-
+/*
     const float64& t_w = shape.wins;
     const float64& t_s = shape.splits;
     const float64& t_l = shape.loss;
@@ -335,7 +340,9 @@ float64 GainModel::f(const float64 betSize) const
     const float64 t_1l = 1-x ;
     const float64 t_cl = 1 - pow(1 - shape.loss,e_battle);
     const float64 t_1lp = pow(t_1l, t_cl);
+*/
 
+    if( betSize < e->callBet() ) return 0; ///"Negative raise" means betting less than the minimum call = FOLD
 
     const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
 
@@ -351,18 +358,18 @@ float64 GainModel::f(const float64 betSize) const
         dragCalls = dragCalls * dragCalls - dragCalls + 1;
 
 		sav *=  pow(
-                    1+( f_pot+exf*dragCalls )/(i+1)
+                    1+( f_pot+exf_live*dragCalls )/(i+1)
                         ,
                         HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
                 );
 	}
 
-    const float64 t_result = t_1wp * t_1lp * sav - 1;
+//    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
 	return
 
         (
-        pow(1+f_pot+exf , pow(shape.wins,e_battle))
+        pow(1+exf , pow(shape.wins,e_battle))
         *
         pow(1-x , 1 - pow(1 - shape.loss,e_battle))
         *sav)
@@ -382,12 +389,17 @@ float64 GainModel::fd(const float64 betSize, const float64 y) const
 	//const float64 exf = e->pctWillCall(x/qdenom);
 	//const float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
     const float64 x = e->betFraction(betSize);
-    const float64 f_pot = e->deadpotFraction();
     //const float64 qdenom = (2*x+f_pot);
 	const float64 exf = e->exf(betSize);
 	const float64 dexf = e->dexf(betSize);
+    const float64 f_pot = e->deadpotFraction();
+    const float64 exf_live = exf - f_pot;
 	//const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;n
     //const int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
+    const float64 cbt = e->callBet();
+
+    if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
+
     const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
 
 	float64 savd=0;
@@ -398,18 +410,21 @@ float64 GainModel::fd(const float64 betSize, const float64 y) const
         dragCalls /= static_cast<float64>(e_call);
         dragCalls += i;
 
-		savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
-				*
-				dexf
-				/
-				( (i+1+f_pot)/dragCalls + exf )
-				;
+        if( dragCalls != 0 )
+        {
+            savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
+                    *
+                    dexf
+                    /
+                    ( (i+1+f_pot)/dragCalls + exf_live )
+                    ;
+        }///Else you'd just {savd+=0;} anyways
 	}
 
  	return
 	(y+1)*
 	(
-	pow(shape.wins,e_battle)*dexf/(1+f_pot+exf)
+	pow(shape.wins,e_battle)*dexf/(1+exf)
 	+
 	(pow(1-shape.loss,e_battle)-1)/(1-x)
 	+

@@ -149,7 +149,7 @@ public:
 	virtual float64 pctWillCallD(const float64) const;
 
         #ifdef DEBUG_DEXF
-            void breakdown(float points, std::ostream& target)
+            void breakdown(float64 points, std::ostream& target)
             {
 
 

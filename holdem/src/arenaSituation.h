@@ -47,12 +47,17 @@ public:
 
     virtual ~ExpectedCallD();
 
-    virtual float64 minBet() const;
+
+    virtual float64 callBet() const;
+    virtual float64 chipDenom() const;
+    virtual float64 maxBet() const;
     virtual int8 handsDealt() const;
     virtual float64 deadpotFraction() const;
     virtual float64 betFraction(const float64 betSize) const;
     virtual float64 exf(float64 betSize) = 0;
     virtual float64 dexf(float64 betSize) = 0;
+
+
 }
 ;
 
@@ -103,18 +108,28 @@ public:
     virtual float64 dexf(float64 betSize);
 };
 
-/*
-class DummyArena : public virtual HoldemArena
+
+#ifdef DEBUGBETMODEL
+
+class DebugArena : public virtual HoldemArena
 {
+private:
+    void updatePot();
+protected:
+    float64 deadPot;
 public:
 
-    DummyArena(BlindStructure* b, bool illustrate) : HoldemArena(b,illustrate)
+    DebugArena(BlindStructure* b, bool illustrate) : HoldemArena(b,illustrate), deadPot(0)
     {}
 
-    virtual const Player* ViewPlayer(int8) const;
+    const float64 PeekCallBet();
+    void SetDeadPot(float64 amount);
+    void SetBet(int8 playerNum, float64 amount);
+
+
 }
 ;
-*/
+#endif
 
 
 #endif

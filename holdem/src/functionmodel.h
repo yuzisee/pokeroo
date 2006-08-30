@@ -35,20 +35,20 @@
 class ScalarFunctionModel
 {
     protected:
-        float64 trisectionStep(float64,float64,float64,float64,float64,float64);
-        float64 searchStep(float64,float64,float64,float64,float64,float64);
-        float64 quadraticStep(float64,float64,float64,float64,float64,float64);
-        float64 newtonStep(float64,float64);
-        float64 bisectionStep(float64,float64);
-		virtual float64 FindTurningPoint(float64,float64,float64,float64,float64,float64,float64);
+        float64 trisectionStep(float64,float64,float64,float64,float64,float64) const;
+        float64 searchStep(float64,float64,float64,float64,float64,float64) const;
+        float64 quadraticStep(float64,float64,float64,float64,float64,float64) const;
+        float64 newtonStep(float64,float64) const;
+        float64 bisectionStep(float64,float64) const;
+		virtual float64 FindTurningPoint(float64,float64,float64,float64,float64,float64,float64) const;
     public:
     float64 quantum;
     ScalarFunctionModel(float64 step) : quantum(step){};
     virtual float64 f(const float64) const = 0;
     virtual float64 fd(const float64, const float64) const = 0;
-	virtual float64 FindMax(float64,float64);
-	virtual float64 FindMin(float64,float64);
-	virtual float64 FindZero(float64,float64);
+	virtual float64 FindMax(float64,float64) const;
+	virtual float64 FindMin(float64,float64) const;
+	virtual float64 FindZero(float64,float64) const;
     virtual ~ScalarFunctionModel();
 
 
@@ -73,26 +73,28 @@ class GainModel : public virtual ScalarFunctionModel
 	public:
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 	GainModel(const StatResult s,ExpectedCallD *c)
-		: ScalarFunctionModel(c->minBet()),shape(s),e(c),e_battle(c->handsDealt()-1)
+		: ScalarFunctionModel(c->chipDenom()),shape(s),e(c),e_battle(c->handsDealt()-1)
 		{
 		    if( quantum == 0 ) quantum = 1;
 		}
 
     virtual ~GainModel();
 
+    virtual float64 FindBestBet() const;
+
 	virtual float64 f(const float64) const;
     virtual float64 fd(const float64, const float64) const;
 
     #ifdef DEBUG_GAIN
-        void breakdown(float points, std::ostream& target, float start=0, float end=1)
+        void breakdown(float64 points, std::ostream& target, float64 start=0, float64 end=1)
         {
 
-            float dist = (end-start)/points;
+            float64 dist = (end-start)/points;
 
             target << "x,gain,dgain,vodd,exf,dexf" << std::endl;
-            for( float i=start;i<end;i+=dist)
+            for( float64 i=start;i<end;i+=dist)
             {
-                float vodd;
+                float64 vodd;
                 if( i == 0 )
                 {
                     vodd = 0;
@@ -100,11 +102,11 @@ class GainModel : public virtual ScalarFunctionModel
                 {
                     vodd = i/(2*i+e->deadpotFraction());
                 }
-                float y = f(i);
-                //float exf = e->pctWillCall(vodd);
+                float64 y = f(i);
+                //float64 exf = e->pctWillCall(vodd);
                 //float64 dexf = e->pctWillCallD(vodd) * f_pot / (2*i+f_pot) /(2*i+f_pot);
-                float exf = e->exf(i);
-                float dexf = e->dexf(i);
+                float64 exf = e->exf(i);
+                float64 dexf = e->dexf(i);
 
                 target << i << "," << f(i) << "," << fd(i,y) << "," << vodd << "," << exf << "," << dexf << std::endl;
 
@@ -113,24 +115,24 @@ class GainModel : public virtual ScalarFunctionModel
 
         }
 
-        void breakdownC(float points, std::ostream& target, float start=0, float end=1)
+        void breakdownC(float64 points, std::ostream& target, float64 start=0, float64 end=1)
         {
-            float dist = (end-start)/points;
+            float64 dist = (end-start)/points;
 
             target << "i,exf,dexf" << std::endl;
-            for( float i=start;i<end;i+=dist)
+            for( float64 i=start;i<end;i+=dist)
             {
-                //float exf = e->pctWillCall(vodd);
-                //float dexf = e->pctWillCallD(vodd);
-                float exf = e->exf(i);
-                float dexf = e->dexf(i);
+                //float64 exf = e->pctWillCall(vodd);
+                //float64 dexf = e->pctWillCallD(vodd);
+                float64 exf = e->exf(i);
+                float64 dexf = e->dexf(i);
                 target << i << "," << exf << "," << dexf << std::endl;
 
             }
 
 
         }
-       /* void breakdownE(float points, std::ostream& target)
+       /* void breakdownE(float64 points, std::ostream& target)
         {
             e->breakdown(points,target);
 

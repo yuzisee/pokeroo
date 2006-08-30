@@ -106,10 +106,10 @@ float64 CallCumulation::pctWillCall(const float64 oddsFaced, const float64 tiefa
 
 float64 CallCumulationD::slopeof(const size_t x1, const size_t x0) const
 {
-    const float& y0 = cumulation[x0].repeated;
-    const float& y1 = cumulation[x1].repeated;
-    const float& p0 = cumulation[x0].pct;
-    const float& p1 = cumulation[x1].pct;
+    const float64& y0 = cumulation[x0].repeated;
+    const float64& y1 = cumulation[x1].repeated;
+    const float64& p0 = cumulation[x0].pct;
+    const float64& p1 = cumulation[x1].pct;
 	return (y1 - y0)/(p1 - p0);
 }
 
