@@ -455,9 +455,9 @@ void testPlay()
 	PositionalStrategy smartPlay;
 
 	//myTable.AddPlayer("Stag", &stagStrat);
-	myTable.AddPlayer("N1", manPlay);
-	//myTable.AddPlayer("Y2", &smartPlay);
-	myTable.AddPlayer("N2", manPlay+1);
+	//myTable.AddPlayer("N1", manPlay);
+	myTable.AddPlayer("Y2", &smartPlay);
+	//myTable.AddPlayer("N2", manPlay+1);
 	myTable.AddPlayer("X3", &pushFold);
 	myTable.AddPlayer("P1", &consolePlay);
 	//myTable.AddPlayer("P1", manPlay);
