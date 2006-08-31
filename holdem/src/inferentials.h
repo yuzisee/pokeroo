@@ -27,7 +27,10 @@
 
 #define DEFAULT_TIE_SCALE_FACTOR 0.5
 
-
+#define DEBUGLOGINFERENTIALS
+    #ifdef DEBUGLOGINFERENTIALS
+        #include <iostream>
+    #endif
 //#define DEBUG_DEXF
 //#include <iostream>
 
@@ -162,6 +165,22 @@ public:
 	virtual float64 pctWillCall(const float64, const float64) const;
 	virtual float64 pctWillCall(const float64) const;
 
+	#ifdef DEBUGLOGINFERENTIALS
+        static void displayCallCumulation(std::ostream &targetoutput, const CallCumulation& calc)
+        {
+            targetoutput << std::endl << "=============Reduced=============" << std::endl;
+            targetoutput.precision(4);
+            size_t vectorLast = calc.cumulation.size();
+            for(size_t i=0;i<vectorLast;i++)
+            {
+                targetoutput << std::endl << "{" << i << "}" << calc.cumulation[i].loss << " l +\t"
+                        << calc.cumulation[i].splits << " s +\t" << calc.cumulation[i].wins << " w =\t" <<
+                        calc.cumulation[i].pct
+                        << " pct\t×"<< calc.cumulation[i].repeated << std::flush;
+            }
+        }
+    #endif
+
 }
 ;
 
@@ -233,7 +252,25 @@ public:
 	void Complete();
 	void Complete(float64);
 
-        const DistrShape & operator=(const DistrShape& o);
+    const DistrShape & operator=(const DistrShape& o);
+
+    #ifdef DEBUGLOGINFERENTIALS
+        static void displayDistr(std::ostream& targetoutput, const DistrShape& myDistrPCT)
+        {
+
+            //targetoutput << "myAvg.genPCT " << myWins.pct << "!"  << endl;
+            targetoutput << "(Mean) " << myDistrPCT.mean * 100 << "%"  << std::endl;
+            targetoutput << std::endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << std::endl;
+            targetoutput << "Worst:" << myDistrPCT.worst *100 << "%" << std::endl;
+            targetoutput << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << std::endl;
+            targetoutput << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << std::endl;
+            targetoutput << "Skew:" << myDistrPCT.skew*100 << "%" << std::endl;
+            targetoutput << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << std::endl;
+
+            targetoutput << std::endl;
+        }
+
+    #endif
 }
 ;
 

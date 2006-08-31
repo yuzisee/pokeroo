@@ -25,6 +25,11 @@ ExpectedCallD::~ExpectedCallD()
 {
 }
 
+float64 ExpectedCallD::foldGain() const
+{
+    return 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
+}
+
 float64 ExpectedCallD::callBet() const
 {
     return table->GetBetToCall();

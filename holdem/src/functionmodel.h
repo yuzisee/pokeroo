@@ -54,7 +54,7 @@ class ScalarFunctionModel
 
 }
 ;
-
+/*
 class DummyFunctionModel : public virtual ScalarFunctionModel
 {
 	public:
@@ -63,7 +63,7 @@ class DummyFunctionModel : public virtual ScalarFunctionModel
     virtual float64 fd(const float64, const float64) const;
 }
 ;
-
+*/
 class GainModel : public virtual ScalarFunctionModel
 {
 	protected:

@@ -301,7 +301,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2) const
     return round(xb/quantum)*quantum;
 }
 
-
+/*
 float64 DummyFunctionModel::f(const float64 x) const
 {
     return 1+2*(1-x)*x;
@@ -312,6 +312,7 @@ float64 DummyFunctionModel::fd(const float64 x, const float64 y) const
 
     return -4*x+2;
 }
+*/
 
 GainModel::~GainModel()
 {
@@ -319,7 +320,10 @@ GainModel::~GainModel()
 
 float64 GainModel::FindBestBet() const
 {
-    return FindMax(e->callBet(),e->maxBet());
+    const float64& myMoney = e->maxBet();
+    const float64& betToCall = e->callBet();
+    if( myMoney < betToCall ) return myMoney;
+    return FindMax(betToCall,myMoney);
 }
 
 float64 GainModel::f(const float64 betSize) const
@@ -374,7 +378,7 @@ float64 GainModel::f(const float64 betSize) const
         pow(1-x , 1 - pow(1 - shape.loss,e_battle))
         *sav)
 	-
-		1
+		e->foldGain()
 	;
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix));  plays more cautiously to account for most people playing better cards only
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix*e->pctWillCall()));
@@ -422,7 +426,7 @@ float64 GainModel::fd(const float64 betSize, const float64 y) const
 	}
 
  	return
-	(y+1)*
+	(y+e->foldGain())*
 	(
 	pow(shape.wins,e_battle)*dexf/(1+exf)
 	+

@@ -92,6 +92,7 @@ void genW(CommunityPlus& h1, CommunityPlus& h2)
 cout << "Finish." << endl;
 }
 
+
 void genW(CommunityPlus& h1)
 {
     CommunityPlus h2;
@@ -455,7 +456,8 @@ void testPlay()
 
 	//myTable.AddPlayer("Stag", &stagStrat);
 	myTable.AddPlayer("N1", manPlay);
-	myTable.AddPlayer("Y2", &smartPlay);
+	//myTable.AddPlayer("Y2", &smartPlay);
+	myTable.AddPlayer("N2", manPlay+1);
 	myTable.AddPlayer("X3", &pushFold);
 	myTable.AddPlayer("P1", &consolePlay);
 	//myTable.AddPlayer("P1", manPlay);
@@ -521,7 +523,7 @@ void goCMD(int argc, char* argv)
  genCMD(atoi(argv));
 }
 
-
+/*
 void testFunctions()
 {
     DummyFunctionModel m(0.0001);
@@ -536,7 +538,7 @@ void testFunctions()
 				t.pct
 				<< " pct\t"<< t.genPeripheral() <<flush;
 }
-
+*/
 void testPosition()
 {
     CommunityPlus h1, h2;
@@ -550,16 +552,15 @@ void testPosition()
 
 
 //Community
-    h2.AddToHand(HoldemConstants::HEARTS, 12, HoldemConstants::CARD_KING );
-    h2.AddToHand(HoldemConstants::DIAMONDS, 7, HoldemConstants::CARD_EIGHT );
-    h2.AddToHand(HoldemConstants::CLUBS, 4, HoldemConstants::CARD_FIVE );
-
-    h1.SetUnique(h2);
+//    h2.AddToHand(HoldemConstants::HEARTS, 12, HoldemConstants::CARD_KING );
+//    h2.AddToHand(HoldemConstants::DIAMONDS, 7, HoldemConstants::CARD_EIGHT );
+//    h2.AddToHand(HoldemConstants::CLUBS, 4, HoldemConstants::CARD_FIVE );
+//    h1.SetUnique(h2);
 
 //Hole cards
-    h1.AddToHand(HoldemConstants::SPADES, 12, HoldemConstants::CARD_KING );
-    h1.AddToHand(HoldemConstants::DIAMONDS, 13, HoldemConstants::CARD_ACEHIGH );
-    const uint8 dealtCommunityNumber=3;
+    h1.AddToHand(HoldemConstants::HEARTS, 12, HoldemConstants::CARD_KING );
+    h1.AddToHand(HoldemConstants::CLUBS, 13, HoldemConstants::CARD_ACEHIGH );
+    const uint8 dealtCommunityNumber=0;
 
 
 
@@ -610,17 +611,17 @@ void testPosition()
     cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
 
 
-    float64 chipDenom = 1.0/200;
+    float64 chipDenom = 1.25;
 	BlindStructure b(chipDenom,chipDenom*2);
 	DebugArena myTable(&b, true);
-    UserConsoleStrategy testDummy;
-    UserConsoleStrategy testDummy2;//CAN'T ADD THE SAME STRATEGY TWICE!
+    UserConsoleStrategy testDummy[3];
 
 	myTable.SetDeadPot(0);
-	const float64 t_chipCount = 1;
-	const float64 t_myBet = myTable.GetSmallBlind();
-    myTable.SetBet(  myTable.AddPlayer("TestDummy",t_chipCount, &testDummy) , t_myBet );
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent",t_chipCount, &testDummy2) ,  myTable.GetBigBlind() );
+	const float64 t_chipCount = 87.5;
+	const float64 t_myBet = 0;//myTable.GetSmallBlind();
+    myTable.SetBet(  myTable.AddPlayer("TestDummy",t_chipCount, testDummy) , t_myBet );
+    myTable.SetBet(  myTable.AddPlayer("X3",125, testDummy+1) ,  myTable.GetSmallBlind() );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",187.5, testDummy+2) ,  myTable.GetBigBlind() );
 
     ExactCallD myExpectedCall(0, &myTable, &o);
     //ZeroCallD myExpectedCall(0, &myTable, &o);
@@ -632,14 +633,14 @@ void testPosition()
         #ifdef DEBUG_GAIN
             std::ofstream excel("functionlog.csv");
             if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
-            g.breakdown((1-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),t_chipCount);
+            g.breakdown((t_chipCount-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),t_chipCount);
             //g.breakdownE(40,excel);
             excel.close();
 
             cout << endl << endl;
 
             cout << "Goal bet " << turningPoint << endl;
-            cout << "Fold bet " << g.FindZero(turningPoint,1) << endl;
+            cout << "Fold bet " << g.FindZero(turningPoint,t_chipCount) << endl;
         #endif
 
 
@@ -648,7 +649,7 @@ void testPosition()
 
         #ifdef DEBUG_GAIN
             cout << "Minimum target " << turningPoint << endl;
-            cout << "Safe fold bet " << gm.FindZero(turningPoint,1) << endl;
+            cout << "Safe fold bet " << gm.FindZero(turningPoint,t_chipCount) << endl;
 
             excel.open("functionlog.safe.csv");
             if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
@@ -701,8 +702,9 @@ int main(int argc, char* argv[])
 	    ///Now, monitor how the money is divided between N2 and X1.
 	    //testPosition();
 	    testPlay();
-	    //testFunctions();
-		//testC();
+
+
+	    //testC();
 		//goCMD(2,"505");
 
 	}

@@ -74,19 +74,17 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 float64 PositionalStrategy::MakeBet()
 {
     const float64 myMoney = ViewPlayer().GetMoney();
-    const float64 betToCall = ViewTable().GetBetToCall();
+    float64 betToCall = ViewTable().GetBetToCall();
+
+    if( myMoney < betToCall ) betToCall = myMoney;
 
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
     //ZeroCallD myExpectedCall(myPositionIndex, *(ViewTable()), &callcumu);
 
-    GainModel gainmean(statmean,&myExpectedCall);
-    float64 goalPoint = gainmean.FindBestBet();
-    float64 goalFold = gainmean.FindZero(goalPoint,myMoney);
 
-    GainModel gainworse(statworse,&myExpectedCall);
-    float64 leastPoint = gainworse.FindBestBet();
-    float64 leastFold = gainworse.FindZero(leastPoint,myMoney);
 
+
+/*
     std::ofstream excel("functionlog.csv");
     if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
     gainmean.breakdown(100,excel,ViewTable().GetBetToCall(),ViewPlayer().GetMoney());
@@ -95,8 +93,29 @@ float64 PositionalStrategy::MakeBet()
     if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
     gainworse.breakdown(100,excel,ViewTable().GetBetToCall(),ViewPlayer().GetMoney());
     excel.close();
+*/
+
+    ///TODO: Enhance this. Maybe scale each separately depending on different factors? Ooooh.
+
+    float64 choiceScale = roundNumber+1;
+    choiceScale /= 5;
+
+    StatResult statchoice = statworse * (1-choiceScale) + statmean * (choiceScale);
+
+    GainModel choicegain(statchoice,&myExpectedCall);
+    const float64 choicePoint = choicegain.FindBestBet();
+    const float64 choiceFold = choicegain.FindZero(choicePoint,myMoney);
+    const float64 callGain = choicegain.f(betToCall);
 
         #ifdef LOGPOSITION
+
+            GainModel gainmean(statmean,&myExpectedCall);
+            float64 goalPoint = gainmean.FindBestBet();
+            float64 goalFold = gainmean.FindZero(goalPoint,myMoney);
+
+            GainModel gainworse(statworse,&myExpectedCall);
+            float64 leastPoint = gainworse.FindBestBet();
+            float64 leastFold = gainworse.FindZero(leastPoint,myMoney);
 
             if( !(logFile.is_open()) )
             {
@@ -114,6 +133,10 @@ float64 PositionalStrategy::MakeBet()
             logFile << "Minimum target " << leastPoint << endl;
             logFile << "Safe fold bet " << leastFold << endl;
 
+            logFile << "CHOICE OPTIMAL " << choicePoint << endl;
+            logFile << "CHOICE FOLD " << choiceFold << endl;
+            logFile << "f("<< betToCall <<")=" << callGain << endl;
+
             if( goalPoint < betToCall || leastPoint < betToCall )
             {
                 cout << "Failed assertion" << endl;
@@ -124,27 +147,32 @@ float64 PositionalStrategy::MakeBet()
                 leastPoint = gainworse.FindBestBet();
                 leastFold = gainworse.FindZero(leastPoint,myMoney);
             }
+
+
+            std::ofstream excel("positionlog.csv");
+            if( !excel.is_open() ) std::cerr << "\n!positionlog.cvs file access denied" << std::endl;
+            choicegain.breakdown(1000,excel,ViewTable().GetBetToCall(),ViewPlayer().GetMoney());
+            excel.close();
+
+            excel.open("positioninfo.txt");
+            if( !excel.is_open() ) std::cerr << "\n!positioninfo.txt file access denied" << std::endl;
+            CallCumulation::displayCallCumulation(excel, callcumu);
+            excel << endl << endl << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
+            excel.close();
         #endif
 
 
-    ///TODO: Enhance this. Maybe scale each separately depending on different factors? Ooooh.
-    float64 choiceScale = roundNumber;
-    choiceScale /= 4;
-    float64 choicePoint = leastPoint * (1-choiceScale) + goalPoint * (choiceScale);
-    float64 choiceFold = leastFold * (1-choiceScale) + goalFold * (choiceScale);
 
-    if( choicePoint == choiceFold )
-    {///The highest point was the point closest to zero.
-        if( betToCall == choiceFold )
-        {
-            logFile << "CHECK/FOLD" << endl;
-            return 0;
-        }
+    if( choicePoint == choiceFold && betToCall == choiceFold && callGain < 0 )
+    {///The highest point was the point closest to zero, and the least you can bet if you call--still worse than folding
+        logFile << "CHECK/FOLD" << endl;
+        return 0;
     }
+
 
     if( betToCall <= choicePoint )
 	{
-	    logFile << "RAISETO " << choicePoint << endl;
+	    logFile << "RAISETO " << choicePoint << endl << endl;
 		return choicePoint;
 	}//else
     {

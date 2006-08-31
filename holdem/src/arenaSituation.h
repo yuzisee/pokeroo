@@ -47,7 +47,7 @@ public:
 
     virtual ~ExpectedCallD();
 
-
+    virtual float64 foldGain() const;
     virtual float64 callBet() const;
     virtual float64 chipDenom() const;
     virtual float64 maxBet() const;
