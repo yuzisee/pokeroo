@@ -65,6 +65,30 @@ class StatResult
 		return *this;
 	}
 
+	const StatResult operator+(const StatResult& b) const
+	{
+	    StatResult temp;
+		temp.wins = wins + b.wins;
+		temp.splits = splits + b.splits;
+		temp.loss = loss + b.loss;
+		temp.repeated = repeated + b.repeated;
+		temp.pct = pct + b.pct;
+
+		return (temp);
+	}
+
+	const StatResult operator*(const float64& fx) const
+	{
+	    StatResult temp;
+		temp.wins = wins * fx;
+		temp.splits = splits * fx;
+		temp.loss = loss * fx;
+		temp.repeated = repeated * fx;
+		temp.pct = pct * fx;
+
+		return (temp);
+	}
+
 	float64 wins;
 	float64 splits;
 	float64 loss;
