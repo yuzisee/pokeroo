@@ -821,7 +821,7 @@ cout << "Entered, " << withP.myBetSize << " vs " << highBet << endl;
 					withP.myBetSize = highBet;
 				}
 			}
-
+///Reraises need to say RERAISE.
 			broadcastCurrentMove(curIndex, withP.myBetSize, highBet
 					, curIndex == bBlinds && comSize == 0 && curIndex == highestBetter,withP.allIn > 0);
 
@@ -1037,6 +1037,14 @@ void HoldemArena::PlayHand()
 		"==" <<
 		#endif
 		"========================" << endl;
+/*
+		#ifdef DEBUGSPECIFIC
+		if (handnum == 16)
+		{
+		    cout << "Monitor situation" << endl;
+		}
+		#endif
+*/
 	}
 
 	blinds->HandPlayed(0);
