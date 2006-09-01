@@ -1037,14 +1037,14 @@ void HoldemArena::PlayHand()
 		"==" <<
 		#endif
 		"========================" << endl;
-/*
+
 		#ifdef DEBUGSPECIFIC
-		if (handnum == 16)
+		if (handnum == 13)
 		{
 		    cout << "Monitor situation" << endl;
 		}
 		#endif
-*/
+
 	}
 
 	blinds->HandPlayed(0);

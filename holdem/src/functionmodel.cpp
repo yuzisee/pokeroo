@@ -62,6 +62,7 @@ float64 ScalarFunctionModel::trisectionStep(float64 x1, float64 y1, float64 x2, 
     }
     else
     {
+
         if( y1 > y3 ) return (x2 - ldiff/2);
         return (x2 + rdiff/2);
     }
@@ -346,7 +347,7 @@ float64 GainModel::f(const float64 betSize) const
     const float64 t_1lp = pow(t_1l, t_cl);
 */
 
-    if( betSize < e->callBet() ) return 0; ///"Negative raise" means betting less than the minimum call = FOLD
+    if( betSize < e->callBet() && betSize < e->maxBet() ) return 0; ///"Negative raise" means betting less than the minimum call = FOLD
 
     const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
 

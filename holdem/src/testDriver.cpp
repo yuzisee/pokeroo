@@ -445,7 +445,7 @@ cout << endl << "Finished " << deal.AnalyzeComplete(&ws) << endl;
 
 void testPlay()
 {
-	BlindStructure b(1.25,2.5);
+	BlindStructure b(.5,1);
 	HoldemArena myTable(&b, true);
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;

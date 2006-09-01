@@ -159,6 +159,8 @@ bool StatsManager::UnserializeC( ifstream& dataf,  CallCumulation& q )
     dataf.read(reinterpret_cast<char*>(&vcount),sizeof(size_t));
     if( dataf.bad() || dataf.eof() ) return false;
 
+    q.cumulation.clear();
+
     StatResult tempstat;
     for(size_t i=0;i<vcount;++i)
     {
@@ -254,6 +256,7 @@ void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, 
         ifstream dataserial(datafilename.c_str(),std::ios::in | std::ios::binary);
         if( dataserial.is_open() )
         {
+
             if( UnserializeC( dataserial, q ) )
             {
 //                cout << "Reading from file" << endl;

@@ -67,6 +67,25 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
                 convertOutput.DisplayHand(logFile);
                 logFile << "community" << endl;
             }
+
+            std::ofstream excel("positioninfo.txt");
+            if( !excel.is_open() ) std::cerr << "\n!positioninfo.txt file access denied" << std::endl;
+
+            excel << "Cards available to me" << endl;
+            HandPlus uhand;
+            uhand.SetUnique(ViewHand());
+            uhand.DisplayHand(excel);
+            excel << endl;
+            excel << "Cards with community" << endl;
+            uhand.SetUnique(withCommunity);
+            uhand.DisplayHand(excel);
+            excel << endl;
+
+            cout << endl;
+
+            CallCumulation::displayCallCumulation(excel, callcumu);
+            excel << endl << endl << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
+            excel.close();
         #endif
 
 }
@@ -103,24 +122,34 @@ float64 PositionalStrategy::MakeBet()
     StatResult statchoice = statworse * (1-choiceScale) + statmean * (choiceScale);
 
     GainModel choicegain(statchoice,&myExpectedCall);
-    const float64 choicePoint = choicegain.FindBestBet();
-    const float64 choiceFold = choicegain.FindZero(choicePoint,myMoney);
-    const float64 callGain = choicegain.f(betToCall);
 
         #ifdef LOGPOSITION
 
-            GainModel gainmean(statmean,&myExpectedCall);
+            if( !(logFile.is_open()) )
+            {
+                logFile.open((ViewPlayer().GetIdent() + ".Positional.log").c_str());
+            }
+
+            std::ofstream excel("positionlog.csv");
+            if( !excel.is_open() ) std::cerr << "\n!positionlog.cvs file access denied" << std::endl;
+            choicegain.breakdown(1000,excel,ViewTable().GetBetToCall(),ViewPlayer().GetMoney());
+            excel.close();
+
+        #endif
+
+    const float64 choicePoint = choicegain.FindBestBet();
+    const float64 choiceFold = choicegain.FindZero(choicePoint,myMoney);
+    GainModel gainmean(statmean,&myExpectedCall);
+    const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
+
+        #ifdef LOGPOSITION
+
             float64 goalPoint = gainmean.FindBestBet();
             float64 goalFold = gainmean.FindZero(goalPoint,myMoney);
 
             GainModel gainworse(statworse,&myExpectedCall);
             float64 leastPoint = gainworse.FindBestBet();
             float64 leastFold = gainworse.FindZero(leastPoint,myMoney);
-
-            if( !(logFile.is_open()) )
-            {
-                logFile.open((ViewPlayer().GetIdent() + ".Positional.log").c_str());
-            }
 
 
             HandPlus convertOutput;
@@ -148,18 +177,8 @@ float64 PositionalStrategy::MakeBet()
                 leastFold = gainworse.FindZero(leastPoint,myMoney);
             }
 
-
-            std::ofstream excel("positionlog.csv");
-            if( !excel.is_open() ) std::cerr << "\n!positionlog.cvs file access denied" << std::endl;
-            choicegain.breakdown(1000,excel,ViewTable().GetBetToCall(),ViewPlayer().GetMoney());
-            excel.close();
-
-            excel.open("positioninfo.txt");
-            if( !excel.is_open() ) std::cerr << "\n!positioninfo.txt file access denied" << std::endl;
-            CallCumulation::displayCallCumulation(excel, callcumu);
-            excel << endl << endl << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
-            excel.close();
         #endif
+
 
 
 
