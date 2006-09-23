@@ -168,10 +168,10 @@ class ShowdownRep
     bool bIdenticalTo (const ShowdownRep& x) const
     {
         return (
-        strength == x.strength
-        & valueset == x.valueset
-        & playerIndex == x.playerIndex
-        & revtiebreak == x.revtiebreak
+         (strength == x.strength)
+        && (valueset == x.valueset)
+        && (playerIndex == x.playerIndex)
+        && (revtiebreak == x.revtiebreak)
         );
     }
 

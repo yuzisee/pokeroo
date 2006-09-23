@@ -583,7 +583,7 @@ const void CommunityPlus::SetUnique(const Hand& h)
 
 const void CommunityPlus::preEvalStrength()
 {
-	unsigned long tempforflush[4];
+	uint32 tempforflush[4];
     for(int8 i=0;i<4;++i)
     {
         flushCount[i] = -5;
@@ -619,13 +619,13 @@ const void CommunityPlus::preEvalStrength()
 
 
 		tempforflush[0] >>= 1;
-		flushCount[0] += tempforflush[0] & 1;
+		flushCount[0] += static_cast<int8>(tempforflush[0] & 1);
         tempforflush[1] >>= 1;
-        flushCount[1] += tempforflush[1] & 1;
+        flushCount[1] += static_cast<int8>(tempforflush[1] & 1);
         tempforflush[2] >>= 1;
-        flushCount[2] += tempforflush[2] & 1;
+        flushCount[2] += static_cast<int8>(tempforflush[2] & 1);
         tempforflush[3] >>= 1;
-        flushCount[3] += tempforflush[3] & 1;
+        flushCount[3] += static_cast<int8>(tempforflush[3] & 1);
 
     }
 }

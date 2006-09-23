@@ -411,7 +411,7 @@ float64 DealRemainder::executeIterative()
 
 	//int depth = moreCards;
 	int8 curDepth = 0;
-	int8 maxDepth = moreCards;
+	int16 maxDepth = moreCards;
 	char *execState = new char[maxDepth];
 	execState[curDepth] = 'B';
 	/*

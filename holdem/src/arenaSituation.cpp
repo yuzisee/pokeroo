@@ -23,6 +23,8 @@
 
 //#define DEBUGWATCHPARMS
 
+const float64 ExactCallD::UNITIALIZED_QUERY = -1;
+
 ExpectedCallD::~ExpectedCallD()
 {
 }

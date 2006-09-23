@@ -25,6 +25,7 @@
 
 #include "arena.h"
 #include <fstream>
+#include <algorithm>
 
 using std::cout;
 using std::endl;

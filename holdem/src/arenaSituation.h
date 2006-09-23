@@ -102,7 +102,7 @@ public:
 class ExactCallD : public virtual ExpectedCallD
 {
 protected:
-    static const float64 UNITIALIZED_QUERY = -1;
+    static const float64 UNITIALIZED_QUERY;
     float64 queryinput;
     float64 totalexf;
     float64 totaldexf;

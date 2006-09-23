@@ -70,11 +70,11 @@ public:
     ///COMMON PROBLEMS:
     ///THIS ORDERS THE CARDS LIKE: 2S 2H 2C 2D 3S 3H ...
     ///it's not 23456789tJQKA.
-    const static uint16 CardSuit(const uint8 d)
+    const static uint8 CardSuit(const uint8 d)
     {
 		return (d & 3); //That's a 11 mask
     }
-    const static uint16 CardRank(const uint8 d) //returns 0 for two
+    const static uint8 CardRank(const uint8 d) //returns 0 for two
     {
 		return (d >> 2);
     }

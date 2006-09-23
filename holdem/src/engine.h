@@ -110,7 +110,7 @@ class DealRemainder : public OrderedDeck
 		Hand addend; //temporary
 //		double executeRecursive(int,unsigned long,double);
 		float64 executeIterative();
-		int8 moreCards;
+		int16 moreCards;
 	public:
 
 //		bool bRecursive;
