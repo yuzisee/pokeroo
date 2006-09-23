@@ -18,9 +18,13 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef HOLDEM_ScalarFunctions
-#define HOLDEM_ScalarFunctions
+#ifndef HOLDEM_GainModels
+#define HOLDEM_GainModels
 
+#include "functionbase.h"
+#include "inferentials.h"
+#include "arenaSituation.h"
+#include <math.h>
 
 #define DEBUG_GAIN
 
@@ -29,31 +33,49 @@
 
 #define DEFAULT_EPS_STEP 0.001
 
-#include "inferentials.h"
-#include "arenaSituation.h"
-
-class ScalarFunctionModel
+class HoldemFunctionModel : public virtual ScalarFunctionModel
 {
     protected:
-        float64 trisectionStep(float64,float64,float64,float64,float64,float64) const;
-        float64 searchStep(float64,float64,float64,float64,float64,float64) const;
-        float64 quadraticStep(float64,float64,float64,float64,float64,float64) const;
-        float64 newtonStep(float64,float64) const;
-        float64 bisectionStep(float64,float64) const;
-		virtual float64 FindTurningPoint(float64,float64,float64,float64,float64,float64,float64) const;
+    ExpectedCallD *e;
     public:
-    float64 quantum;
-    ScalarFunctionModel(float64 step) : quantum(step){};
-    virtual float64 f(const float64) const = 0;
-    virtual float64 fd(const float64, const float64) const = 0;
-	virtual float64 FindMax(float64,float64) const;
-	virtual float64 FindMin(float64,float64) const;
-	virtual float64 FindZero(float64,float64) const;
-    virtual ~ScalarFunctionModel();
 
+    HoldemFunctionModel(float64 step,ExpectedCallD *c) : ScalarFunctionModel(step),e(c){};
+
+    virtual float64 FindBestBet();
+
+
+    #ifdef DEBUG_GAIN
+        void breakdown(float64 points, std::ostream& target, float64 start=0, float64 end=1)
+        {
+
+            float64 dist;
+            if( points > 0 ) dist = (end-start)/points;
+
+
+            target << "x,gain,dgain" << std::endl;
+            if( points > 0 && dist > 0 )
+            {
+                for( float64 i=start;i<=end;i+=dist)
+                {
+
+                    float64 y = f(i);
+
+
+                    target << i << "," << y << "," << fd(i,y) << "," << std::endl;
+
+                }
+            }else
+            {
+                target << end << "," << f(end) << "," << fd(end,f(end)) << std::endl;
+            }
+
+
+        }
+    #endif
 
 }
 ;
+
 /*
 class DummyFunctionModel : public virtual ScalarFunctionModel
 {
@@ -64,53 +86,55 @@ class DummyFunctionModel : public virtual ScalarFunctionModel
 }
 ;
 */
-class GainModel : public virtual ScalarFunctionModel
+
+class GainModel : public virtual HoldemFunctionModel
 {
 	protected:
 	StatResult shape;
-	ExpectedCallD *e;
 	uint8 e_battle;
+	float64 p_cl;
+	float64 p_cw;
 	public:
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 	GainModel(const StatResult s,ExpectedCallD *c)
-		: ScalarFunctionModel(c->chipDenom()),shape(s),e(c),e_battle(c->handsDealt()-1)
+		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s),e_battle(c->handsDealt()-1)
 		{
 //		    const float64 t = c->chipDenom();
 		    if( quantum == 0 ) quantum = 1;
+            p_cl =  1 - pow(1 - shape.loss,e_battle);
+            p_cw = pow(shape.wins,e_battle);
 		}
 
     virtual ~GainModel();
 
-    virtual float64 FindBestBet() const;
-
-	virtual float64 f(const float64) const;
-    virtual float64 fd(const float64, const float64) const;
+	virtual float64 f(const float64);
+    virtual float64 fd(const float64, const float64);
 
     #ifdef DEBUG_GAIN
         void breakdown(float64 points, std::ostream& target, float64 start=0, float64 end=1)
         {
 
-            float64 dist = (end-start)/points;
+            float64 dist;
+            if( points > 0 ) dist = (end-start)/points;
 
-            target << "x,gain,dgain,vodd,exf,dexf" << std::endl;
-            for( float64 i=start;i<end;i+=dist)
+
+            target << "x,gain,dgain,exf.chips,dexf,win,lose" << std::endl;
+            if( points > 0 && dist > 0 )
             {
-                float64 vodd;
-                if( i == 0 )
+                for( float64 i=start;i<=end;i+=dist)
                 {
-                    vodd = 0;
-                }else
-                {
-                    vodd = i/(2*i+e->deadpotFraction());
+                    float64 y = f(i);
+                    //float64 exf = e->pctWillCall(vodd);
+                    //float64 dexf = e->pctWillCallD(vodd) * f_pot / (2*i+f_pot) /(2*i+f_pot);
+                    float64 exf = e->exf(i);
+                    float64 dexf = e->dexf(i);
+
+                    target << i << "," << y << "," << fd(i,y) << "," << exf << "," << dexf << "," << p_cw << "," << p_cl << std::endl;
+
                 }
-                float64 y = f(i);
-                //float64 exf = e->pctWillCall(vodd);
-                //float64 dexf = e->pctWillCallD(vodd) * f_pot / (2*i+f_pot) /(2*i+f_pot);
-                float64 exf = e->exf(i);
-                float64 dexf = e->dexf(i);
-
-                target << i << "," << f(i) << "," << fd(i,y) << "," << vodd << "," << exf << "," << dexf << std::endl;
-
+            }else
+            {
+                target << end << "," << f(end) << "," << fd(end,f(end)) << "," << e->exf(end) << "," << e->dexf(end) << "," << p_cw << "," << p_cl <<std::endl;
             }
 
 
@@ -120,7 +144,7 @@ class GainModel : public virtual ScalarFunctionModel
         {
             float64 dist = (end-start)/points;
 
-            target << "i,exf,dexf" << std::endl;
+            target << "i,exf.chips,dexf" << std::endl;
             for( float64 i=start;i<end;i+=dist)
             {
                 //float64 exf = e->pctWillCall(vodd);
@@ -139,6 +163,70 @@ class GainModel : public virtual ScalarFunctionModel
 
         }*/
     #endif
+}
+;
+
+class GainModelNoRisk : public virtual GainModel
+{
+    public:
+	GainModelNoRisk(const StatResult s,ExpectedCallD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c){}
+	virtual ~GainModelNoRisk();
+
+	virtual float64 f(const float64);
+    virtual float64 fd(const float64, const float64);
+}
+;
+
+class GainModelReverseNoRisk : public virtual GainModel
+{
+    public:
+
+    //virtual float64 FindBestBet();
+
+	GainModelReverseNoRisk(const StatResult s,ExpectedCallD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c){}
+	virtual ~GainModelReverseNoRisk();
+
+	virtual float64 f(const float64);
+    virtual float64 fd(const float64, const float64);
+}
+;
+
+class GainModelReverse : public virtual GainModel
+{
+    public:
+
+    //virtual float64 FindBestBet();
+
+	GainModelReverse(const StatResult s,ExpectedCallD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c){}
+	virtual ~GainModelReverse();
+
+	virtual float64 f(const float64);
+    virtual float64 fd(const float64, const float64);
+}
+;
+
+
+
+class SlidingPairFunction : public virtual HoldemFunctionModel
+{
+    protected:
+        virtual void query(float64 x);
+        float64 slider;
+        float64 last_x;
+        float64 y;
+        float64 dy;
+        ScalarFunctionModel *left;
+        ScalarFunctionModel *right;
+    public:
+	SlidingPairFunction(ScalarFunctionModel *f_left, ScalarFunctionModel *f_right, const float64 scale,ExpectedCallD *c)
+	: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(f_left->quantum*(1-scale)+f_right->quantum*scale, c), slider(scale), left(f_left), right(f_right){
+	    query(0);
+	    }
+	virtual ~SlidingPairFunction(){}
+
+	virtual float64 f(const float64);
+    virtual float64 fd(const float64, const float64);
+
 }
 ;
 

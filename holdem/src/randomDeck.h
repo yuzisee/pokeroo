@@ -28,6 +28,8 @@ class RandomDeck : virtual public OrderedDeck
 	private:
 		static const uint8 DECKSIZE = 52;
 	protected:
+        bool bDeckEmpty;
+        bool bAutoShuffle;
 		uint8 deckOrder[DECKSIZE];
 		int8 lastDealtPos;
 		int8 firstDealtPos;
@@ -38,9 +40,8 @@ class RandomDeck : virtual public OrderedDeck
 
 		virtual float64 DealCard(Hand&);
 
-		RandomDeck() : OrderedDeck()
+		RandomDeck(bool autoshuffle = false) : OrderedDeck(), bDeckEmpty(false), bAutoShuffle(autoshuffle), lastDealtPos(-1)
 		{
-			lastDealtPos = -1;
 			firstDealtPos = DECKSIZE-1;
 			for(uint8 i=0;i<DECKSIZE;++i)
 			{

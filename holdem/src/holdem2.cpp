@@ -338,60 +338,7 @@ const void CommunityPlus::evaluateStrength()
     //COMPLETE!
 }
 
-/*
-void CommunityPlus::constructDefaultCommunity()
-{
 
-    std::ifstream existTester;
-    existTester.open( "comdata.ini" );
-
-    //only do if the file doesn't exist
-    if( existTester.fail() )
-    {
-        existTester.clear( std::ios::failbit );
-        std::ofstream outputFile;
-        outputFile.open( "comdata.ini", std::ofstream::out);
-        if(outputFile)
-        {
-            //HERE
-        }
-        outputFile.close();
-    }
-    else
-    {
-        existTester.close();
-    }
-}
-
-
-CommunityPlus::CommunityPlus(const int cardNum, const char* cards)
-{
-    //HOPEFULLY cardNum is always 7
-    tempcardset[0] = 0;
-    tempcardset[1] = 0;
-    tempcardset[2] = 0;
-    tempcardset[3] = 0;
-    *(this->flushCount) = 0;
-    *(this->flushCount+1) = 0;
-    *(this->flushCount+2) = 0;
-    *(this->flushCount+3) = 0;
-
-    for(int i=0;i<cardNum;++i)
-    {
-        ++flushCount[HoldemUtil::CardSuitInt(cards[i])];
-        //substitute += for |= to remove protection from duplicate cards
-        tempcardset[ HoldemUtil::CardSuitInt(cards[i]) ]
-        |=
-            HoldemUtil::CARDORDER[ HoldemUtil::CardRankInt(cards[i]) + 1 ];
-    }
-
-    cardset[0] = tempcardset[0];
-    cardset[1] = tempcardset[1];
-    cardset[2] = tempcardset[2];
-    cardset[3] = tempcardset[3];
-    evaluateStrength();
-}
-*/
 
 ///HEAVILY INEFFICIENT. Avoid Use
 const void CommunityPlus::RemoveFromHand(
@@ -399,6 +346,7 @@ const void CommunityPlus::RemoveFromHand(
 {
 #ifdef DEBUGASSERT
 	cout << "HEAVILY INEFFICIENT. Avoid Use" << endl;
+	exit(1);
 #endif
 
 	HandPlus::RemoveFromHand(aSuit,aIndex,aCard);

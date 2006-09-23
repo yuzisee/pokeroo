@@ -27,16 +27,16 @@
 class BlindStructure
 {
 	protected:
-		double myBigBlind;
-		double mySmallBlind;
+		float64 myBigBlind;
+		float64 mySmallBlind;
 	public:
-            BlindStructure(double small, double big)
+            BlindStructure(float64 small, float64 big)
     : myBigBlind(big), mySmallBlind(small) {};
             virtual ~BlindStructure();
             virtual void PlayerEliminated(){};
-            virtual void HandPlayed(double=0){}; //support time-based blinds
-            virtual const double BigBlind();
-            virtual const double SmallBlind();
+            virtual void HandPlayed(float64 timepassed=0){}; //support time-based blinds
+            virtual const float64 BigBlind();
+            virtual const float64 SmallBlind();
 
 }
 ;
@@ -44,10 +44,10 @@ class BlindStructure
 class GeomPlayerBlinds : virtual public BlindStructure
 {
 	protected:
-		double bigRatio;
-		double smallRatio;
+		float64 bigRatio;
+		float64 smallRatio;
 	public:
-		GeomPlayerBlinds(double small, double big, double smallIncr, double bigIncr)
+		GeomPlayerBlinds(float64 small, float64 big, float64 smallIncr, float64 bigIncr)
 	: BlindStructure(small, big), bigRatio(bigIncr), smallRatio(smallIncr) {}
 
 		virtual void PlayerEliminated();
@@ -65,7 +65,7 @@ class AlgbHandBlinds : virtual public BlindStructure
 		AlgbHandBlinds(float64 small, float64 big, float64 smallIncr, float64 bigIncr, int16 afterHands)
 	: BlindStructure(small, big), bigPlus(bigIncr), smallPlus(smallIncr), freq(afterHands),since(0) {}
 
-		virtual void HandPlayed(double=0); //support time-based blinds
+		virtual void HandPlayed(float64 timepassed=0); //support time-based blinds
 
 }
 ;

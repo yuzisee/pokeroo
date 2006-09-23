@@ -21,6 +21,9 @@
 #include <math.h>
 #include "inferentials.h"
 
+//#define SMOOTHED_CALLCUMULATION
+#define SMOOTHED_CALLCUMULATION_D
+
 
 void DistrShape::AddVal(float64 x, float64 occ)
 {
@@ -92,16 +95,54 @@ float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
 ///If this is a permanently-even bet to make, what would my chance to win be?
 float64 CallCumulation::pctWillCall(const float64 oddsFaced, const float64 tiefactor) const
 {
-	size_t guess = searchGap(oddsFaced);
-	if( guess  == cumulation.size() +1 ) return 0;
-	if( guess == cumulation.size() ) return 1;
+
+/*    if( (oddsFaced - .63 < 0.0001 && oddsFaced - .63 > -0.0001) || (oddsFaced - .48 < 0.0001 && oddsFaced - .48 > -0.0001) )
+    {
+        searchGap(oddsFaced);
+    }*/
+
+    const size_t maxsize = cumulation.size();
+	const size_t guess = searchGap(oddsFaced);
+	if( guess  == maxsize +1 ) return 0;
+	if( guess == maxsize ) return 1;
 	float64 curPCT = cumulation[guess].repeated;
 	if( curPCT == oddsFaced )
 	{
 		if( guess == 0 ) return 0;
 		return cumulation[guess].repeated * tiefactor + cumulation[guess-1].repeated * (1 - tiefactor);
 	}
+	#ifdef SMOOTHED_CALLCUMULATION
+		if( guess == maxsize -1 || guess == 0 )
+        {
+            return curPCT;
+        }
+
+/*        if( (oddsFaced - .63 < 0.0001 && oddsFaced - .63 > -0.0001) || (oddsFaced - .48 < 0.0001 && oddsFaced - .48 > -0.0001) )
+        {
+         const StatResult& sn1 = cumulation[guess-1];
+         const StatResult& s0 = cumulation[guess];
+         const StatResult& s2 = cumulation[guess+1];
+         float64 s = (
+                cumulation[guess].repeated * (oddsFaced - cumulation[guess+1].pct)
+                +
+                cumulation[guess+1].repeated * (cumulation[guess].pct - oddsFaced)
+              )
+              / (cumulation[guess].pct - cumulation[guess+1].pct)
+                ;
+         float64 h = (cumulation[guess].pct - cumulation[guess+1].pct);
+        }
+*/
+        curPCT =
+            (
+                cumulation[guess].repeated * (oddsFaced - cumulation[guess+1].pct)
+                +
+                cumulation[guess+1].repeated * (cumulation[guess].pct - oddsFaced)
+            )
+            / (cumulation[guess].pct - cumulation[guess+1].pct)
+                ;
+	#endif
 	return curPCT;
+
 }
 
 float64 CallCumulationD::slopeof(const size_t x1, const size_t x0) const
@@ -116,9 +157,9 @@ float64 CallCumulationD::slopeof(const size_t x1, const size_t x0) const
 
 float64 CallCumulationD::pctWillCallD(const float64 oddsFaced) const
 {
-	size_t maxsize = cumulation.size();
+	const size_t maxsize = cumulation.size();
 	if( maxsize <= 1 ) return 0;
-	size_t guess = searchGap(oddsFaced);
+	const size_t guess = searchGap(oddsFaced);
 	if( guess >= maxsize )
     {
         return 0; //This is either less than 0 or more than maxsize-1, to return 0 slope
@@ -134,7 +175,19 @@ float64 CallCumulationD::pctWillCallD(const float64 oddsFaced) const
 	{
 		return slopeof(guess+1,guess-1);
 	}
-	return slopeof(guess,guess-1);
+	#ifdef SMOOTHED_CALLCUMULATION_D
+	if( guess == 1 || guess == maxsize-2 )
+	#endif
+	{
+        return slopeof(guess,guess-1);
+	}
+	#ifdef SMOOTHED_CALLCUMULATION_D
+	if( guess == 2 || guess == maxsize-3 )
+	{
+	    return slopeof(guess+1,guess-2);
+	}
+    return slopeof(guess+2,guess-3);
+    #endif
 }
 
 /*
@@ -237,7 +290,7 @@ size_t CallCumulation::searchGap(const float64 oddsFaced) const
 				if (guess == 0) return cumulation.size()+1;
 				return guess-1;
 			}
-			last = guess - 1;
+			last = guess;
 		}
 		else if (curPCT > oddsFaced)
 		{
@@ -258,7 +311,7 @@ size_t CallCumulation::searchGap(const float64 oddsFaced) const
 					return last;
 				}
 			}
-			first = guess + 1;
+			first = guess;
 		}
 		else
 		{///The odds faced are EXACTLY the chance to win. How many people would take this bet?

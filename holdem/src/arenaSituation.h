@@ -22,6 +22,9 @@
 #define HOLDEM_ArenaSituations
 
 #include "arena.h"
+
+#define DEBUG_EXFDEXF
+
 /*
 class ExpectedCall
 {
@@ -47,16 +50,36 @@ public:
 
     virtual ~ExpectedCallD();
 
+    virtual float64 forfeitChips() const;
     virtual float64 foldGain() const;
+    virtual float64 alreadyBet() const;
     virtual float64 callBet() const;
     virtual float64 chipDenom() const;
+    virtual float64 allChips() const;
     virtual float64 maxBet() const;
     virtual int8 handsDealt() const;
-    virtual float64 deadpotFraction() const;
+    virtual float64 prevpotChips() const;
     virtual float64 betFraction(const float64 betSize) const;
     virtual float64 exf(float64 betSize) = 0;
     virtual float64 dexf(float64 betSize) = 0;
 
+
+        #ifdef DEBUG_EXFDEXF
+            void breakdown(float64 dist, std::ostream& target)
+            {
+
+
+
+                target << "vodd,exf.pct,dexf" << std::endl;
+                for( float64 i=0;i<=1;i+=dist)
+                {
+
+                    target << i << "," << e->pctWillCall(i) << "," << e->pctWillCallD(i) << std::endl;
+
+                }
+
+            }
+        #endif
 
 }
 ;
@@ -119,7 +142,7 @@ protected:
     float64 deadPot;
 public:
 
-    DebugArena(BlindStructure* b, bool illustrate) : HoldemArena(b,illustrate), deadPot(0)
+    DebugArena(BlindStructure* b, bool illustrate) : HoldemArena(b,illustrate,false), deadPot(0)
     {}
 
     const float64 PeekCallBet();

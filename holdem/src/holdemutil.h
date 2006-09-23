@@ -59,7 +59,9 @@ class HoldemUtil
         //			[TIES: treat as "straight"]
     */
 public:
-    static const uint32 CARDORDER[14];
+	static const uint32 PRIMES[14];
+
+	static const uint32 CARDORDER[14];
     static const uint32 VALUEORDER[14];
     static const uint32 INCRORDER[14];
 	static const char VALKEY[16];
@@ -92,12 +94,12 @@ public:
 	}
 
 	const static uint8 cleanz(const uint32);
-	
+
 		template<typename T>
         static T nchoosep(const int32 n, int32 p) //inline
         {
 			if( (n-p) < p ) p = n-p;/* OPTIMIZATION INCLUDED LATER */
-			
+
             T r = 1;
             for(int32 factorial=0;factorial < p;++factorial)
             {
@@ -119,6 +121,12 @@ public:
 	const uint8 GetIndex() const
 	{
 		return static_cast<uint8>(Suit) + (Rank-1)*4;
+	}
+	const void SetByIndex(int8 n)
+	{
+		Rank = HoldemUtil::CardRank(n) + 1;
+		Suit = HoldemUtil::CardSuit(n);
+		Value = HoldemUtil::CARDORDER[Rank];
 	}
 }
 ;
@@ -157,6 +165,7 @@ public:
 		{
  			cout << endl << "DEBUGASSERT:\t Please add cards consistently!"
 				<< endl << "\tindex=" << (int)aIndex << "\tcard=" << aCard << endl;
+            exit(1);
 		}
 #endif
         cardset[aSuit] |= aCard;

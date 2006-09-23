@@ -163,7 +163,7 @@ float64 OrderedDeck::DealCard(Hand& h) //(int maxSuit, unsigned long maxCard)
 
 #ifdef DEBUGDEAL
 cout << " dealing@" << flush;
-HoldemUtil::PrintCard(dealtSuit,dealtValue);
+HoldemUtil::PrintCard(dealt.Suit,dealt.Value);
 #endif
 
 	if(dealt.Suit == HoldemConstants::NO_SUIT)
@@ -294,6 +294,11 @@ HoldemUtil::PrintCard(dealtSuit,dealtValue);
 	return occBase/matchesNew;
 }
 
+
+const void OrderedDeck::OmitCard(const DeckLocation& deck)
+{
+	dealtHand[deck.Suit] |= deck.Value;
+}
 
 const void OrderedDeck::OmitCards(const Hand& h)
 {

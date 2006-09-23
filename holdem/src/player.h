@@ -101,7 +101,7 @@ class Player
 
 	protected:
 
-		Hand myHand;
+		CommunityPlus myHand;
 		const Hand& GetHand() const { return myHand; }
 
 	public:

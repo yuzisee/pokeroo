@@ -31,7 +31,6 @@
 
 class OrderedDeck
 {
-
 	protected:
 
 		uint32 dealtHand[4]; //master "dealt or not" list
@@ -46,6 +45,7 @@ class OrderedDeck
 		const void UndealAll();//Make sure you Empty all the hands!
 		virtual float64 DealCard(Hand&);
 		const void UndealCard(const DeckLocation&);
+		const void OmitCard(const DeckLocation&);
 		const void OmitCards(const Hand&);
 
 		const uint32 BaseDealtValue() const
@@ -68,6 +68,19 @@ class OrderedDeck
 
     //after redealing it, set dealtSuit and dealtValue to
     //0 and ACELOW. This allows the next card to be independant
+        OrderedDeck(const OrderedDeck& other)
+        {
+            firstSuit = other.firstSuit;
+
+            for( int8 i=0;i<4;++i)
+            {
+                nextSuit[i] = other.nextSuit[i];
+                prevSuit[i] = other.prevSuit[i];
+                dealtHand[i] = other.dealtHand[i];
+            }
+			dealt = other.dealt;
+        }
+
 		OrderedDeck()
 		{
 			firstSuit = 0;

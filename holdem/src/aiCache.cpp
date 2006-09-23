@@ -21,6 +21,7 @@
 //#define DEBUGQUERYW
 
 #include "aiCache.h"
+#include "functionmodel.h"
 #include <sstream>
 #include <fstream>
 
@@ -64,7 +65,7 @@ string StatsManager::dbFileName(const Hand& withCommunity, const Hand& onlyCommu
 {
     if( "" == baseDataPath ) initPath();
 
-    TriviaDeck o;
+    NamedTriviaDeck o;
     o.OmitCards(withCommunity);
     o.DiffHand(onlyCommunity);
     o.sortSuits();
@@ -247,7 +248,39 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
 
 }
 
-void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
+void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity)
+{
+    CommunityPlus emptyHand;
+    PreflopCallStats pfcs(withCommunity, emptyHand);
+    pfcs.AutoPopulate();
+    pfcs.Analyze();
+
+    const CallCumulation &newC = *(pfcs.calc);
+    q = newC;
+}
+
+void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
+{
+    string datafilename = "";
+    if( CACHEABLESTAGE >= n )
+    {
+        QueryOffense(q, withCommunity);
+        return;
+    }
+
+    DealRemainder myStatBuilder;
+    myStatBuilder.UndealAll();
+    myStatBuilder.OmitCards(onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
+
+    CommunityCallStats ds(withCommunity, onlyCommunity,n);
+    myStatBuilder.AnalyzeComplete(&ds);
+    const CallCumulation &newC = *(ds.calc);
+
+
+    q = newC;
+}
+
+void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
 {
     string datafilename = "";
     if( CACHEABLESTAGE >= n )
@@ -289,8 +322,147 @@ void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, 
     q = newC;
 }
 
+void StatsManager::Query(CallCumulation* offense, CallCumulation* defense, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
+{
+    if( offense != 0 ) QueryOffense(*offense,withCommunity,onlyCommunity,n);
+    if( defense != 0 ) QueryDefense(*defense,withCommunity,onlyCommunity,n);
+}
 
-string TriviaDeck::NamePockets() const
+int8 PreflopCallStats::largestDiscount(int8 * discount)
+{
+    return (  (discount[0]<discount[1]) ? discount[0] : discount[1]);
+}
+
+int8 PreflopCallStats::getDiscount(const char carda, const char cardb)
+{
+    return (
+            ( carda == cardb ) ? -1 : 0
+           );
+}
+
+int8 PreflopCallStats::oppSuitedOcc(int8 * discount, char mySuited )
+{
+    //dOcc = 4;
+    if( mySuited == 'S' )
+    {
+       /* if( discount[0] + discount[1] < 0 )
+        {///We couldn't be in the same suit
+            return 3;
+        }
+        return 4;
+        */
+        return 4 + largestDiscount(discount);
+    }//else
+    {///Opp is suited. I cover separate suits. For each collision he can't have that suit
+        return 4 + discount[0]+discount[1];
+    }
+}
+
+int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
+{
+    CommunityPlus oppTempStrength;
+
+    NamedTriviaDeck handOpp;DeckLocation tempOpp;
+    tempOpp.SetByIndex(carda);oppTempStrength.AddToHand(tempOpp);
+    tempOpp.SetByIndex(cardb);oppTempStrength.AddToHand(tempOpp);
+    handOpp.OmitCards(oppTempStrength);
+    handOpp.sortSuits();
+
+    NamedTriviaDeck myPockets;
+    myPockets.OmitCards(myStrength);
+    myPockets.DiffHand(oppStrength);
+    myPockets.sortSuits();
+
+    string oppPocketName = handOpp.NamePockets() ;
+    string myPocketName = myPockets.NamePockets() ;
+
+
+    ///Subtract "discount" the cards that YOU are holding
+    int8 discount[2];
+    discount[0] = getDiscount( myPocketName[0] , oppPocketName[0] );
+    discount[1] = getDiscount( myPocketName[0] , oppPocketName[1] );
+    discount[0] += getDiscount( myPocketName[1] , oppPocketName[0] );
+    discount[1] += getDiscount( myPocketName[1] , oppPocketName[1] );
+
+    bool oppPair = (oppPocketName[0] == oppPocketName[1]);
+
+    int8 dOcc;
+
+
+    if( oppPocketName[2] == 'S' )
+    {
+        dOcc = oppSuitedOcc(discount,myPocketName[2]);
+    }else ///Opp is OFFSUIT
+    {
+        if( oppPair )
+        {
+            dOcc = 4 + largestDiscount(discount);
+            dOcc = dOcc * (dOcc - 1) / 2;
+        }else
+        {
+            dOcc = (4 + discount[0]) * (4 + discount[1]);
+            dOcc -= oppSuitedOcc(discount,myPocketName[2]);
+        }
+    }
+
+    //cout << "%" << oppPocketName << "\t" << (int)(dOcc) << "\t\t(" << myPocketName << ")" <<  endl;
+
+    CommunityPlus emptyHand;
+    StatResult * entryTarget = myWins+statGroup;
+    DistrShape pctShape(0);
+    DistrShape wlShape(0);
+    StatsManager::Query( 0, &pctShape, &wlShape, oppTempStrength, emptyHand, 0);
+    *entryTarget = GainModel::ComposeBreakdown(pctShape.mean,wlShape.mean);
+    entryTarget->repeated = dOcc;
+    ++statGroup;
+
+    return dOcc;
+}
+
+void PreflopCallStats::AutoPopulate()
+{
+    statGroup = 0;
+
+
+    OrderedDeck myPockets;
+    myPockets.OmitCards(myStrength);
+        #ifdef SUPERPROGRESSUPDATE
+            cout << "Analyzing...                    \r" << flush;
+        #endif
+    for(int8 carda=0;carda<52;carda+=4)
+    {
+        int8 cardx = carda+1;
+
+        popSet(carda,cardx);
+
+        for( int8 cards=carda;cards>0;)
+        {
+            cards -= 4;
+            cardx -= 4;
+
+            popSet(carda,cardx);
+            popSet(carda,cards);
+        }
+    }
+    statCount = statGroup;
+    //myChancesEach =
+        #ifdef SUPERPROGRESSUPDATE
+            cout << "Deciding.....                    \r" << endl;
+        #endif
+}
+
+void PreflopCallStats::initPC()
+{
+
+	//moreCards = 7;
+
+//    int8 cardsAvail = realCardsAvailable(0);
+
+    myChancesEach = 1;
+}
+
+
+string NamedTriviaDeck::NamePockets() const
 {
     stringstream ss;
     string temp;
@@ -341,12 +513,4 @@ string TriviaDeck::NamePockets() const
     return ss.str();
 }
 
-const void TriviaDeck::DiffHand(const Hand& h)
-{
-    OrderedDeck::dealtHand[0] ^= OrderedDeck::dealtHand[0] & h.SeeCards(0);
-	OrderedDeck::dealtHand[1] ^= OrderedDeck::dealtHand[1] & h.SeeCards(1);
-	OrderedDeck::dealtHand[2] ^= OrderedDeck::dealtHand[2] & h.SeeCards(2);
-	OrderedDeck::dealtHand[3] ^= OrderedDeck::dealtHand[3] & h.SeeCards(3);
-
-}
 

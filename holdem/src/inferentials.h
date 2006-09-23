@@ -92,6 +92,18 @@ class StatResult
 		return (temp);
 	}
 
+    const StatResult operator/(const float64& fx) const
+	{
+	    StatResult temp;
+		temp.wins = wins / fx;
+		temp.splits = splits / fx;
+		temp.loss = loss / fx;
+		temp.repeated = repeated / fx;
+		temp.pct = pct / fx;
+
+		return (temp);
+	}
+
 	float64 wins;
 	float64 splits;
 	float64 loss;
@@ -123,7 +135,7 @@ class StatResult
 		pyth *= (wins+loss+splits);
 	}
 	*/
-	float64 genPeripheral()
+	float64 genPeripheral() const
 	{
 		if( loss == 0 && wins == 0 )
 		{ //All split maybe?
@@ -133,6 +145,7 @@ class StatResult
 			return wins / (wins + loss) * (wins + loss + splits);
 		}
 	}
+
 }
 ;
 /*
@@ -219,6 +232,15 @@ class CallCumulationZero : public virtual CallCumulationD
     {return 0;}
     virtual float64 pctWillCallD(const float64 oddsFaced) const
     {return 0;}
+}
+;
+
+class CallCumulationFlat : public virtual CallCumulationD
+{
+    virtual float64 pctWillCall(const float64 oddsFaced, const float64 tiefactor) const
+    {return 1-oddsFaced;}
+    virtual float64 pctWillCallD(const float64 oddsFaced) const
+    {return -1;}
 }
 ;
 

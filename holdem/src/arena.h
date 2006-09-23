@@ -18,7 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#define DEBUGSPECIFIC
+//#define DEBUGSPECIFIC 39
+#define GRAPHMONEY
+#define REPRODUCIBLE
 
 #ifndef HOLDEM_Arena
 #define HOLDEM_Arena
@@ -28,113 +30,11 @@
 #include "randomDeck.h"
 #include "blinds.h"
 #include <vector>
+#include <iostream>
 
 class Player;
 class PlayerStrategy;
 
-
-//This class allows hands to be COMPARABLE at a showdown, that's all...
-class ShowdownRep
-{
-	public:
-
-		ShowdownRep() : strength(0), valueset(0), playerIndex(-1), revtiebreak(0) {}
-
-		ShowdownRep(const Hand& h, const Hand& h2, const int8 pIndex)
-			: playerIndex(pIndex), revtiebreak(0)
-		{
-			Hand utilHand;
-
-			utilHand.AppendUnique(h2);
-			utilHand.AppendUnique(h);
-			comp.SetUnique(utilHand);
-			comp.evaluateStrength();
-			strength = comp.strength;
-			valueset = comp.valueset;
-		}
-
-		ShowdownRep(const Hand& h, const int8 pIndex)
-			: playerIndex(pIndex), revtiebreak(0)
-		{
-			comp.SetUnique(h);
-			comp.evaluateStrength();
-			strength = comp.strength;
-			valueset = comp.valueset;
-		}
-
-	bool operator> (const ShowdownRep& x) const
-	{
-		if( strength > x.strength )
-		{
-			return true;
-		}
-		else if (strength < x.strength)
-		{
-			return false;
-		}
-		else
-		{//equal strength
-			if( valueset == x.valueset )
-			{
-				//We need an operation that will correctly return
-				//valueset == x.valueset is !(valueset > x.valueset)
-				//but will also use the tiebreak if necessary.
-				//Notice the tiebreak is compared in the OPPOSITE direction
-				return revtiebreak < x.revtiebreak;
-			}
-			return (valueset > x.valueset);
-		}
-	}
-	bool operator< (const ShowdownRep& x) const
-	{
-		if( strength < x.strength )
-		{
-			return true;
-		}
-		else if (strength > x.strength)
-		{
-			return false;
-		}
-		else
-		{//equal strength
-			if( valueset == x.valueset )
-			{
-				return revtiebreak > x.revtiebreak;
-			}
-			return (valueset < x.valueset);
-		}
-	}
-	bool operator== (const ShowdownRep& x) const
-	{
-		return ((strength == x.strength) && (valueset == x.valueset));
-	}
-    const ShowdownRep & operator=(const ShowdownRep& a)
-    {
-        comp.SetUnique(a.comp);
-        strength = a.strength;
-        valueset = a.valueset;
-        playerIndex = a.playerIndex;
-        revtiebreak = a.revtiebreak;
-        return *this;
-    }
-
-	void DisplayHandBig() { comp.DisplayHandBig(); }
-	void DisplayHand() { comp.DisplayHand(); }
-
-	CommunityPlus comp;
-	uint8 strength;
-	uint32 valueset;
-	int8 playerIndex;
-	double revtiebreak;
-	/*	What is revtiebreak? Well, it's an interesting multiuse variable.
-		The first reason is it remembers the amount a player can win. But the
-		second reason is that it is used as a comparable when you > or <.
-		Why you ask? When we sort a vector of ShowdownReps, we want them to be
-		in JUST the right order, such that our organizeWinnings() can process
-		them in O(n) time. Have a look!
-	*/
-}
-;
 
 
 class HoldemAction
@@ -168,6 +68,7 @@ class HoldemAction
 		bool IsCheck() const {return (bet == 0) || (bCheckBlind && bet == callAmount);}
 		bool IsCall() const {return (bet == callAmount || (bet < callAmount && bAllIn)) && callAmount > 0;}
 		bool IsRaise() const {return bet > callAmount && callAmount > 0;}
+
 }
 ;
 
@@ -175,9 +76,6 @@ class HoldemAction
 class HoldemArena
 {
 	private:
-	#ifdef DEBUGSPECIFIC
-        uint32 handnum;
-    #endif
 
 		static const float64 BASE_CHIP_COUNT;
 
@@ -192,8 +90,9 @@ class HoldemArena
 		RandomDeck dealer;
 		float64 randRem;
 
-		Hand community;
+		CommunityPlus community;
 		bool bVerbose;
+		bool bSpectate;
 
 		int8 livePlayers;
 		int8 playersInHand;
@@ -201,12 +100,14 @@ class HoldemArena
 
 		BlindStructure* blinds;
 		float64 smallestChip;
+		float64 allChips;
 
 		void addBets(float64);
 		float64 lastRaise;
 		float64 highBet;
 		float64 myPot; //incl. betSum
 		float64 myBetSum; //Just the current round.
+		float64 prevRoundPot;
 		vector<Player*> p;
 
 		void broadcastHand(const Hand&);
@@ -225,16 +126,22 @@ class HoldemArena
 
 	public:
 
+	#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+        uint32 handnum;
+    #endif
+
 		void incrIndex(int8&) const;
-		void PlayGame();
+		Player* PlayGame();
+
+        static void ToString(const HoldemAction& e, std::ostream& o);
 
 		static const float64 FOLDED;
 		static const float64 INVALID;
 
-		HoldemArena(BlindStructure* b, bool illustrate)
+		HoldemArena(BlindStructure* b, bool illustrate, bool spectate)
 		: curIndex(-1),  nextNewPlayer(0),
-		bVerbose(illustrate),livePlayers(0), blinds(b),
-		lastRaise(0),highBet(0), myPot(0), myBetSum(0)
+		bVerbose(illustrate),bSpectate(spectate),livePlayers(0), blinds(b),allChips(0),
+		lastRaise(0),highBet(0), myPot(0), myBetSum(0), prevRoundPot(0)
 
 		{
 		    smallestChip = b->SmallBlind(); ///This INITIAL small blind should be assumed to be one chip.
@@ -258,9 +165,11 @@ class HoldemArena
 		virtual bool HasFolded(int8) const;
 		virtual bool CanStillBet(int8) const; //This will not include players who have pushed all in
 
-
+        virtual float64 GetAllChips() const;
 		virtual float64 GetDeadPotSize() const; //That's pot - betSum;
+		virtual float64 GetLivePotSize() const;
 		virtual float64 GetRoundPotSize() const; //ThisRound pot size
+		virtual float64 GetPrevPotSize() const; //Pot size from previous rounds
 		virtual float64 GetPotSize() const;
 		virtual float64 GetBetToCall() const; //since ROUND start
 		virtual float64 GetMaxShowdown() const;

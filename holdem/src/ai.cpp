@@ -26,12 +26,12 @@
 //#define DEBUGCALC
 //#define DEBUGCOMPARE
 //#define DEBUGFINALCALC
+
 //#define DEBUGCALLPCT
 
-#define PROGRESSUPDATE
-//#define SUPERPROGRESSUPDATE
 
-#include <cmath>
+#include <algorithm>
+#include <math.h>
 #include "ai.h"
 #include "engine.h"
 
@@ -396,6 +396,7 @@ const void WinStats::initW(const int8 cardsInCommunity)
 			if( cardsInCommunity != temp1 )
 			{
 				cout << "MISDEAL COMMUNITY PARAMETERS! WATCH IT." << endl;
+				exit(1);
 				return;
 			}
 				temp1 = myStrength.CardsInSuit( 0 ) +
@@ -510,7 +511,7 @@ const void CallStats::Analyze()
 	{
 		cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
 				<< myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
-				myWins[i].loss+myWins[i].splits+myWins[i].wins
+				myWins[i].loss+myWins[i].splits+myWins[i].wins << "(" << myWins[i].pct << ")"
 				<< "\t×"<< myWins[i].repeated <<flush;
 	}
 #endif
@@ -562,23 +563,28 @@ const void CallStats::Analyze()
 
 	for(size_t k=0;k<=vectorLast;++k)
 	{
+            #ifdef DEBUGCALLPCT
+                const float64 & t_myChancesEach = myChancesEach;
+                const float64 & t_myTotalChances = myTotalChances;
+            #endif
 	    StatResult& temptarget = calc->cumulation[k];
 		temptarget.wins /= myChancesEach;
 		temptarget.loss /= myChancesEach;
 		temptarget.splits /= myChancesEach;
-		temptarget.pct = 1 - temptarget.pct/myChancesEach;
+		temptarget.pct = 1 - temptarget.pct/myChancesEach;///This is where we convert myPCT to oppPCT.
 		temptarget.repeated /= myTotalChances;
 	}
 
 
 #ifdef DEBUGCALLPCT
 cout << endl << "=============Reduced=============" << endl;
-	cout.precision(4);
+	cout.precision(2);
 	for(size_t i=0;i<=vectorLast;i++)
 	{
 		cout << endl << "{" << i << "}" << calc->cumulation[i].loss << " l + "
-				<< calc->cumulation[i].splits << " s + " << calc->cumulation[i].wins << " w =\t" <<
-				calc->cumulation[i].pct
+				<< calc->cumulation[i].splits << " s + " << calc->cumulation[i].wins << " w =\t" << flush;
+				cout.precision(8);
+				cout << calc->cumulation[i].pct
 				//<< " pct\t×"<< calc->cumulation[i].repeated <<flush;
 				<< " \t"<< calc->cumulation[i].repeated << "\ttocall" << flush;
 	}
@@ -588,6 +594,35 @@ cout << endl << "=============Reduced=============" << endl;
 //How many of them would call a bet of x?
 //It's the number of myWins elements that have a PCT above the pot odds implied by x.
 
+}
+
+
+
+const void CallStats::myAddCard(const DeckLocation& cardinfo, const int16 undoIndex)
+{
+    myUndo[undoIndex].SetUnique(myStrength);
+    myStrength.AddToHand(cardinfo);
+}
+
+const void CallStats::myRevert(const int16 undoIndex)
+{
+    myStrength.SetUnique(myUndo[undoIndex]);
+}
+
+const void CallStats::myEval()
+{
+    myStrength.evaluateStrength();
+}
+
+const void CallStats::setCurrentGroupOcc(const float64 occ)
+{
+    myWins[statGroup].repeated = occ;
+}
+
+const void CallStats::showProgressUpdate() const
+{
+    if (statGroup == 0 ) cout << endl << endl;
+    cout << "C: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 }
 
 float64 CallStats::pctWillCall(const float64 oddsFaced) const
@@ -604,7 +639,7 @@ const void CallStats::DropCard(const DeckLocation deck)
 	if (currentCard > 2)
 	{
 		///TODO: Confirm...
-		myStrength.SetUnique(myUndo[currentCard-3]);
+		myRevert(currentCard-3);
 		//myStrength.RemoveFromHand(deck);
 	}
 
@@ -638,38 +673,40 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
 	if ( currentCard > 2 )
 	{
-		myUndo[currentCard-3].SetUnique(myStrength);
 		//past dealing opp hand
-		myStrength.AddToHand(deck);
+		myAddCard(deck,currentCard-3);
 		if ( currentCard == moreCards )
 		{
-			myStrength.evaluateStrength();
+			myEval();
 			oppStrength.evaluateStrength();
 		}
 	}
-	else if ( currentCard == 2 )
+	else
 	{
+	    mynoAddCard(deck,currentCard-1);
+	    if ( currentCard == 2 )
+        {
 
-		if( moreCards == 2) oppStrength.evaluateStrength();
+            if( moreCards == 2) oppStrength.evaluateStrength();
 
-		++statGroup;
+            ++statGroup;
 
-#ifdef PROGRESSUPDATE
-	if (statGroup == 0 ) cout << endl << endl;
-	cout << "C: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
+                #ifdef PROGRESSUPDATE
+                    showProgressUpdate();
 
-#endif
+                #endif
 
-		r.bTareOcc = true;
-		r.bNewHand = true;
+            r.bTareOcc = true;
+            r.bNewHand = true;
 
-		myWins[statGroup].repeated = occ;
+            setCurrentGroupOcc(occ);
 
-		if(occ > 1)
-		{
-			statCount -= static_cast<int32>(occ) - 1;
-		}
+            if(occ > 1)
+            {
+                statCount -= static_cast<int32>(occ) - 1;
+            }
 
+        }
 	}
 
 	return r;
@@ -680,6 +717,10 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 //                        |ChancesEach---
 //community|His Hole Cards|To 5 community
 
+const int8 CallStats::realCardsAvailable(const int8 cardsInCommunity) const
+{
+    return 52 - cardsInCommunity - 2;
+}
 
 const void CallStats::initC(const int8 cardsInCommunity)
 {
@@ -690,7 +731,7 @@ const void CallStats::initC(const int8 cardsInCommunity)
 	myUndo = new CommunityPlus[moreCards-2];
 	oppUndo = new CommunityPlus[moreCards];
 
-    int8 cardsAvail = 52 - cardsInCommunity - 2;
+    int8 cardsAvail = realCardsAvailable(cardsInCommunity);
 
     int32 oppHands = cardsAvail*(cardsAvail-1)/2;
     myTotalChances = static_cast<float64>(oppHands);
@@ -702,7 +743,7 @@ const void CallStats::initC(const int8 cardsInCommunity)
 
 	if (moreCards == 2)
 	{
-		myStrength.evaluateStrength();
+        myEval();
 	}
 }
 

@@ -17,13 +17,14 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#define DEBUGROUNDINDEX
+
 //#define EXTRAMONEYUPDATE
 //#define DEBUGALLINS
-#define FORCEPAUSE
+//#define FORCEPAUSE
+
 
 #include "arena.h"
-#include <iostream>
+#include <fstream>
 
 using std::cout;
 using std::endl;
@@ -43,7 +44,7 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 		{
 
 		    Player& withP = *p[curIndex];
-            ShowdownRep comp(withP.myHand, community, curIndex);
+            ShowdownRep comp(&(withP.myHand), &community, curIndex);
 
 			if( comp > best ) //best hand yet
 			{
@@ -118,7 +119,7 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 //cout << p[curIndex]->GetIdent() << "\t now " << p[curIndex]->allIn << endl;
 		if ( withP.allIn >= 0 && !IsInHand(curIndex)) //If all in with no money remaining
 		{
-            ShowdownRep comp(withP.myHand, community, curIndex);
+            ShowdownRep comp(&(withP.myHand), &community, curIndex);
             comp.valueset=0;
             comp.strength=0;
             comp.revtiebreak = withP.allIn;
@@ -138,7 +139,7 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 	{
 	    Player& withP = *p[nextReveal->playerIndex];
 
-        ShowdownRep comp(withP.myHand, community, nextReveal->playerIndex);
+        ShowdownRep comp(&(withP.myHand), &community, nextReveal->playerIndex);
         if( comp > best || comp == best ) //Better hand or tie
         {
             broadcastHand(withP.myHand);
@@ -639,6 +640,7 @@ int8 HoldemArena::PlayRound(const int8 comSize)
 								//ie, if called, you can still reraise.
 								//BUT, it also handles the check-check-check
 	myBetSum = 0;
+	prevRoundPot = myPot;
 	int8 highestBetter = curDealer;
 	highBet = 0;
 
@@ -962,13 +964,13 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 	highBet = 0;
 
 
-	///End hand if all folded
+
 	if( playersInHand > 1 )
 	{
 		//Except for showdown order, this is only necessarily NOT 'return -1;'
 		return highestBetter;
 	}
-	else
+	else ///End hand if all folded
 	{
 		if( playersInHand == 1 )
 		{
@@ -1012,13 +1014,17 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 				cout << "All fold! " << p[highestBetter]->GetIdent() <<
 				" wins " << (myPot - p[highestBetter]->handBetTotal) << endl;
 			}
-			float64 rh = static_cast<float64>(highestBetter);
+			float64 rh = static_cast<float64>(highestBetter)+1;
 			randRem /= myPot*p[highestBetter]->handBetTotal+rh;
 			randRem *= rh;
 			p[highestBetter]->myMoney += myPot;
-
-		}
-
+#ifdef DEBUGASSERT
+		}else
+		{
+            cout << "Overfold!" << endl;
+            exit(1);
+#endif
+        }
 		return -1;
 	}
 
@@ -1031,7 +1037,7 @@ void HoldemArena::PlayHand()
 	{
 		cout << "================================================================" << endl;
 		cout << "============================New Hand" <<
-		#ifdef DEBUGSPECIFIC
+		#if defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE)
 		" #"<< handnum <<
 		#else
 		"==" <<
@@ -1039,7 +1045,7 @@ void HoldemArena::PlayHand()
 		"========================" << endl;
 
 		#ifdef DEBUGSPECIFIC
-		if (handnum == 13)
+		if (handnum == DEBUGSPECIFIC)
 		{
 		    cout << "Monitor situation" << endl;
 		}
@@ -1056,14 +1062,27 @@ void HoldemArena::PlayHand()
 
 	if( PlayRound(0) == -1 ) return;
 
-	dealer.DealCard(community);
-	dealer.DealCard(community);
-	dealer.DealCard(community);
+	if (!dealer.DealCard(community))  cout << "OUT OF CARDS ERROR" << endl;
+	if (!dealer.DealCard(community))  cout << "OUT OF CARDS ERROR" << endl;
+	if (!dealer.DealCard(community))  cout << "OUT OF CARDS ERROR" << endl;
+    if( bSpectate )
+    {
+
+        cout << "Dealer deals\t" << flush;
+        community.DisplayHand();
+    }
 
 
 	if( PlayRound(3) == -1 ) return;
 
-	dealer.DealCard(community);
+    if( bSpectate )
+    {
+        cout << "Previously\t" << flush;
+        community.DisplayHand();
+        cout << "Dealer deals\t" << flush;
+    }
+	if (!dealer.DealCard(community))  cout << "OUT OF CARDS ERROR" << endl;
+	if( bSpectate ) HoldemUtil::PrintCard(dealer.dealt.Suit,dealer.dealt.Value);
 
 
 /*
@@ -1079,7 +1098,15 @@ if( handnum == 4 )
 
 	if( PlayRound(4) == -1 ) return;
 
+
+    if( bSpectate )
+    {
+        cout << "Previously\t" << flush;
+        community.DisplayHand();
+        cout << "Dealer deals\t" << flush;
+    }
 	dealer.DealCard(community);
+    if( bSpectate ) HoldemUtil::PrintCard(dealer.dealt.Suit,dealer.dealt.Value);
 
 
 	int8 playerToReveal = PlayRound(5);
@@ -1098,7 +1125,14 @@ void HoldemArena::DealHand()
 	{
 		dealer.ShuffleDeck(randRem);
 		randRem = 1;
+#ifdef DEBUGASSERT
 	}
+	else
+	{
+        cout << "YOU DIDN'T SHUFFLE" << endl;
+        exit(1);
+#endif
+    }
 
 	while(dealtEach < 2)
 	{
@@ -1108,7 +1142,7 @@ void HoldemArena::DealHand()
 
 		if(withP.myMoney > 0)
 		{
-			dealer.DealCard(withP.myHand);
+			if (!dealer.DealCard(withP.myHand)) cout << "OUT OF CARDS ERROR" << endl;
 		}
 		else
 		{
@@ -1120,18 +1154,34 @@ void HoldemArena::DealHand()
 	}
 }
 
-void HoldemArena::PlayGame()
+Player* HoldemArena::PlayGame()
 {
-	if( p.empty() ) return;
+	if( p.empty() ) return 0;
 
 	dealer.ShuffleDeck(static_cast<float64>(livePlayers));
 	curIndex = 0;
 	curDealer = 0;
 
+
 	#ifdef DEBUGSPECIFIC
-        randRem = 0;
+        randRem = 1;
         handnum = 1;
+    #else
+        #ifdef GRAPHMONEY
+            handnum = 1;
+            std::ofstream scoreboard("chipcount.csv");
+            scoreboard << "Hand #";
+            for(int8 i=0;i<nextNewPlayer;++i)
+            {
+                scoreboard << "," << (p[i])->GetIdent();
+            }
+            scoreboard << endl;
+        #endif
     #endif
+    #ifdef REPRODUCIBLE
+        randRem = 1;
+    #endif
+
 
 	while(livePlayers > 1)
 	{
@@ -1142,11 +1192,21 @@ void HoldemArena::PlayGame()
 		}while(!IsAlive(curDealer));
 
 		myPot = 0;
+		prevRoundPot = 0;
 
 		curIndex = curDealer;
 
 		DealHand();
 		PlayHand();
+
+		if( bSpectate )
+		{
+		    cout << "\n\n==========\nCHIP COUNT" << endl;
+		}
+		#ifdef GRAPHMONEY
+            scoreboard << handnum << flush;
+        #endif
+
 		for(int8 i=0;i<nextNewPlayer;++i)
 		{
 			Player& withP = *(p[i]);
@@ -1155,27 +1215,65 @@ void HoldemArena::PlayGame()
 				--livePlayers;
 				withP.myMoney = -1;
 				withP.myBetSize = INVALID;
+				///TODO: THAT LINE
+                blinds->PlayerEliminated();
+				#ifdef GRAPHMONEY
+                    scoreboard << ",0";
+                #endif
+
 			}
 			else
 			{
 
-/*			    if(bVerbose)
-			    {
-			        cout << withP.GetIdent() << " now has " << withP.GetMoney() << endl;
-			    }*/
 				withP.myBetSize = 0;
+
+				if( bSpectate )
+                {
+                    if( withP.GetMoney() > 0 ) cout << withP.GetIdent() << " now has " << withP.GetMoney() << endl;
+                }
+                #ifdef GRAPHMONEY
+                    if( withP.GetMoney() < 0 )
+                    {
+                        scoreboard << ",0";
+                    }else
+                    {
+                        scoreboard << "," << withP.GetMoney();
+                    }
+                #endif
+
 			}
 			withP.handBetTotal = 0;
 			withP.allIn = INVALID;
 
 			withP.myHand.Empty();
+
+
 		}
+		#ifdef DEBUGSPECIFIC
         ++handnum;
+        #else
+            #ifdef GRAPHMONEY
+                scoreboard << endl;
+                ++handnum;
+            #endif
+        #endif
 	}
+
+#ifdef GRAPHMONEY
+    scoreboard.close();
+#endif
+
 #ifdef FORCEPAUSE
-    cout << "Quit."<<endl;
+    cout << "Quit. (std::cin >> curIndex;)"<<endl;
     std::cin >> curIndex;
 #endif
+
+    for(int8 i=0;i<nextNewPlayer;++i)
+    {
+        Player *withP = (p[i]);
+        if( withP->myMoney > 0 ) return withP;
+    }
+
 }
 
 

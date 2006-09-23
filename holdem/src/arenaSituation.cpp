@@ -19,15 +19,36 @@
  ***************************************************************************/
 
 #include "arenaSituation.h"
+#include <math.h>
 
+//#define DEBUGWATCHPARMS
 
 ExpectedCallD::~ExpectedCallD()
 {
 }
 
+float64 ExpectedCallD::forfeitChips() const
+{
+        #ifdef DEBUGWATCHPARMS
+            const float64 a = alreadyBet();
+            const float64 r = prevpotChips();
+            const float64 hc = table->ViewPlayer(playerID)->GetContribution();
+        #endif
+    return ( alreadyBet() + prevpotChips() - table->ViewPlayer(playerID)->GetContribution() );
+}
+
 float64 ExpectedCallD::foldGain() const
 {
+
+        #ifdef DEBUGWATCHPARMS
+            const float64 a = 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
+        #endif
     return 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
+}
+
+float64 ExpectedCallD::alreadyBet() const
+{
+    return table->ViewPlayer(playerID)->GetBetSize();
 }
 
 float64 ExpectedCallD::callBet() const
@@ -40,6 +61,11 @@ float64 ExpectedCallD::maxBet() const
     return table->ViewPlayer(playerID)->GetMoney();
 }
 
+float64 ExpectedCallD::allChips() const
+{
+    return table->GetAllChips();
+}
+
 float64 ExpectedCallD::chipDenom() const
 {
     return table->GetChipDenom();
@@ -50,9 +76,9 @@ int8 ExpectedCallD::handsDealt() const
     return table->GetNumberAtTable(); //Number of live players
 }
 
-float64 ExpectedCallD::deadpotFraction() const
+float64 ExpectedCallD::prevpotChips() const
 {
-    return (  table->GetPotSize() / table->ViewPlayer(playerID)->GetMoney()  );
+    return (  table->GetPrevPotSize()  );
 }
 
 
@@ -79,11 +105,11 @@ float64 EstimateCallD::dexf(float64 betSize)
 
 void ExactCallD::query(float64 betSize)
 {
-
+	const float64 significance = 1/static_cast<double>( handsDealt()-1 );
     const float64 myexf = betSize;
     const float64 mydexf = 1;
 
-    totalexf = table->GetPotSize() + myexf - table->ViewPlayer(playerID)->GetBetSize();
+    totalexf = table->GetPotSize() - table->ViewPlayer(playerID)->GetBetSize()  +  myexf;
     //float64 lastexf = totalexf;
 
     totaldexf = mydexf;
@@ -115,18 +141,24 @@ void ExactCallD::query(float64 betSize)
                     nextdexf = 1;
                 }else
                 {
-                    nextexf = e->pctWillCall(oppBetMake / (oppBetMake + totalexf) );
-                    nextdexf = nextexf + oppBetMake * e->pctWillCallD(  oppBetMake/(oppBetMake+totalexf)  )
+                        #ifdef DEBUGWATCHPARMS
+                            const float64 vodd = pow(  oppBetMake / (oppBetMake + totalexf), significance);
+                            const float64 willCall = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
+                            const float64 willCallD = e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  );
+                        #endif
+                    nextexf = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
+                    nextdexf = nextexf + oppBetMake * e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  )
+													*  pow(  oppBetMake / (oppBetMake + totalexf)  , significance - 1 ) * significance
                                                     * (totalexf - oppBetMake * totaldexf)
                                                      /(oppBetMake + totalexf) /(oppBetMake + totalexf);
                     nextexf *= oppBetMake;
                 }
             }else
             {///Opponent would be all-in to call this bet
-                float64 deadpot = table->GetDeadPotSize();
-                float64 effroundpot = (totalexf - deadpot) * oppBankRoll / betSize;
+                float64 oldpot = table->GetPrevPotSize();
+                float64 effroundpot = (totalexf - oldpot) * oppBankRoll / betSize;
                 float64 oppBetMake = oppBankRoll - oppBetAlready;
-                nextexf = oppBetMake * e->pctWillCall(oppBetMake / (oppBetMake + deadpot + effroundpot) );
+                nextexf = oppBetMake * e->pctWillCall( pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significance) );
 
                 nextdexf = 0;
             }
@@ -140,8 +172,8 @@ void ExactCallD::query(float64 betSize)
         table->incrIndex(pIndex);
     }
 
-    totalexf = betFraction(totalexf - myexf);
-    totaldexf = betFraction(totaldexf - mydexf);
+    totalexf = totalexf - myexf;
+    totaldexf = totaldexf - mydexf;
 }
 
 float64 ExactCallD::exf(float64 betSize)
@@ -170,7 +202,7 @@ float64 ExactCallD::dexf(float64 betSize)
 float64 ZeroCallD::exf(float64 betSize)
 {///Only money already put into the pot.
 //Recall that GetPotSize == GetDeadPotSize + GetRoundPotSize
-    return betFraction(table->GetPotSize());
+    return table->GetPotSize();
 }
 
 

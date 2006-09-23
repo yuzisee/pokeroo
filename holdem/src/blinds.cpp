@@ -40,7 +40,7 @@ void GeomPlayerBlinds::PlayerEliminated()
 	mySmallBlind *= smallRatio;
 }
 
-void AlgbHandBlinds::HandPlayed(double time)
+void AlgbHandBlinds::HandPlayed(float64 timepassed)
 {
 	++since;
 	if( since >= freq )

@@ -21,10 +21,42 @@
 //#define LEAVE_TABLE_WHEN_LOSING
 
 #include "arena.h"
+#include <iostream>
+
 
  const float64 HoldemArena::BASE_CHIP_COUNT = 100;
  const float64 HoldemArena::FOLDED = -1;
  const float64 HoldemArena::INVALID = -2;
+
+void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
+{
+    if ( e.IsFold() )
+    {
+        o << "folds." << endl;
+    }
+    else if ( e.IsCheck() )
+    {
+        o << "checks." << endl;
+    }
+    else if ( e.IsCall() )
+    {
+        o << "calls." << endl;
+    }
+    else
+    {
+        if ( e.IsRaise() )
+        {
+            o << "raises by " << e.GetRaiseBy()
+                << " to " << flush;
+        }
+        else
+        {
+            o << "bets " << flush;
+        }
+        o << e.GetAmount() << "." << endl;
+    }
+}
+
 
 void HoldemArena::addBets(float64 b)
 {
@@ -61,6 +93,11 @@ void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theB
         (*p[curIndex]).myStrat->SeeAction(currentMove);
     	incrIndex();
 	}
+	if( bSpectate )
+	{
+	    std::cout << p[currentMove.GetPlayerID()]->GetIdent() << " " << flush;
+	    ToString(currentMove, std::cout);
+	}
 
 }
 
@@ -95,7 +132,7 @@ int8 HoldemArena::AddPlayer(const char* id, float64 money, PlayerStrategy* newSt
 	newStrat->myHand = &(newP->myHand);
 	p.push_back( newP );
 
-
+    allChips += money;
 
 	++nextNewPlayer;
 	++livePlayers;
@@ -118,11 +155,17 @@ int8 HoldemArena::GetCurPlayer() const
 	return curIndex;
 }
 
+float64 HoldemArena::GetAllChips() const
+{
+	return allChips;
+}
+
 int8 HoldemArena::GetNumberInHand() const
 {
 	return playersInHand;
 }
 
+///Number "left" at table
 int8 HoldemArena::GetNumberAtTable() const
 {
 	return livePlayers;
@@ -171,10 +214,22 @@ float64 HoldemArena::GetDeadPotSize() const
 	return myPot - myBetSum;
 }
 
-float64 HoldemArena::GetRoundPotSize() const
+float64 HoldemArena::GetLivePotSize() const
 {
 	return myBetSum;
 }
+
+float64 HoldemArena::GetRoundPotSize() const
+{
+	return myPot - prevRoundPot;
+}
+
+float64 HoldemArena::GetPrevPotSize() const
+{
+	return prevRoundPot;
+}
+
+
 
 float64 HoldemArena::GetMinRaise() const
 {
@@ -214,11 +269,11 @@ float64 HoldemArena::GetBetToCall() const
 
 float64 HoldemArena::GetMaxShowdown() const
 {
-	int8 highest = 1;
-	int8 secondhighest = 1;
+	int8 highest = 0;
+	int8 secondhighest = 0;
 
 
-	for(int8 i=0;i<nextNewPlayer;++i)
+	for(int8 i=1;i<nextNewPlayer;++i)
 	{
 		if(! HasFolded(i) )
 		{

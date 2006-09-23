@@ -25,10 +25,12 @@
 #ifndef HOLDEM_AI
 #define HOLDEM_AI
 
-#include <algorithm>
 #include "holdem2.h"
 
 #include "inferentials.h"
+
+#define PROGRESSUPDATE
+//#define SUPERPROGRESSUPDATE
 
 
 struct StatRequest
@@ -71,7 +73,7 @@ class PlayStats
 		int32 statGroup;
 
         const virtual void Analyze() = 0;
-		const virtual void Compare(const float64);
+		const virtual void Compare(const float64 occ);
 
 
 
@@ -114,6 +116,14 @@ protected:
 	CommunityPlus* oppUndo;
 
 	CallCumulation* calc;
+
+    const virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
+    const virtual void showProgressUpdate() const;
+    const virtual void setCurrentGroupOcc(const float64 occ);
+    const virtual void mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex){}
+    const virtual void myAddCard(const DeckLocation& cardinfo, const int16 undoIndex);
+	const virtual void myEval();
+	const virtual void myRevert(const int16 undoIndex);
 public:
 	float64 pctWillCall(const float64) const;
 

@@ -22,6 +22,7 @@
 #ifndef HOLDEM_AICache
 #define HOLDEM_AICache
 
+#include "aiInformation.h"
 #include "engine.h"
 #include "ai.h"
 #include <string>
@@ -64,6 +65,8 @@ The two *distrShape
                 Kurtosis
 */
 
+class PreflopCallStats;
+
 class StatsManager
 {
 private:
@@ -85,27 +88,47 @@ protected:
     static bool UnserializeC(ifstream& dataf, CallCumulation& q);
     static bool UnserializeW(ifstream& dataf, StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL);
     static string baseDataPath;
+
 public:
 
-    /*
-    static void Query(DistrShape& dPCT, const Hand& withCommunity, const Hand& onlyCommunity, int8 n);
-    static void Query(DistrShape& dPCT, StatResult& myAvg, const Hand& withCommunity, const Hand& onlyCommunity, int8 n);
-    static void Query(DistrShape& dPCT, DistrShape& dWL, const Hand& withCommunity, const Hand& onlyCommunity, int8 n);
-    */
     static void Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
-    static void Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
-
+    static void QueryDefense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
+    static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
+    static void Query(CallCumulation* offense, CallCumulation* defense, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
+    static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity);
 
 }
 ;
 
-class TriviaDeck : public OrderedDeck
+
+class PreflopCallStats : public virtual CallStats
 {
     private:
-        const static uint32 largestCard(uint32 suitcards);
+        void initPC();
+
+        int8 largestDiscount(int8 * discount);
+        int8 oppSuitedOcc(int8 * discount, char mySuited );
+        int8 getDiscount(const char carda, const char cardb);
+        int8 popSet(const int8 carda, const int8 cardb);
+
+        //const virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
+    public:
+        PreflopCallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity)
+            : PlayStats(hP,onlycommunity),CallStats(hP,onlycommunity,0)
+            {
+                initPC();
+            }
+
+    virtual void AutoPopulate();
+}
+;
+
+
+class NamedTriviaDeck : public TriviaDeck
+{
     public:
     string NamePockets() const;
-    const void DiffHand(const Hand&);
+
 }
 ;
 

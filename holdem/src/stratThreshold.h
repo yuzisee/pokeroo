@@ -47,9 +47,11 @@ class ThresholdStrategy : virtual public SearchStrategy
 
 class MultiThresholdStrategy : virtual public ThresholdStrategy
 {
+    protected:
+        int8 redundancy;
 	public:
 
-		MultiThresholdStrategy(float64 thresh=.5) : ThresholdStrategy(thresh){}
+		MultiThresholdStrategy(int8 tight = 0, float64 thresh=.5) : ThresholdStrategy(thresh), redundancy(tight){}
 		//virtual ~MultiThresholdStrategy();
 
 		virtual void SeeCommunity(const Hand&, const int8);

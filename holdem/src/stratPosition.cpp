@@ -39,7 +39,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     roundNumber /= 8;
 
     DistrShape w_wl(0);
-    DistrShape w_pct(0);
+
 
     CommunityPlus onlyCommunity;
     onlyCommunity.SetUnique(h);
@@ -49,10 +49,10 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     withCommunity.AppendUnique(onlyCommunity);
 
 
-    StatsManager::Query(callcumu,withCommunity,onlyCommunity,cardsInCommunity);
-    StatsManager::Query(0,&w_pct,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
-    statmean = GainModel::ComposeBreakdown(w_pct.mean,w_wl.mean);
-    statworse = GainModel::ComposeBreakdown(w_pct.worst,w_wl.worst);
+    StatsManager::QueryOffense(callcumu,withCommunity,onlyCommunity,cardsInCommunity);
+    StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
+    statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+    statworse = GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
 
         #ifdef LOGPOSITION
             if( !(logFile.is_open()) )
@@ -66,8 +66,16 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
                 convertOutput.SetUnique(h);
                 convertOutput.DisplayHand(logFile);
                 logFile << "community" << endl;
+
+                    #ifdef GRAPHMONEY
             }
 
+            else
+            {
+                    logFile << "==========#" << ViewTable().handnum << "==========" << endl;
+                    #endif
+            }
+/*
             std::ofstream excel("positioninfo.txt");
             if( !excel.is_open() ) std::cerr << "\n!positioninfo.txt file access denied" << std::endl;
 
@@ -85,120 +93,213 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
             CallCumulation::displayCallCumulation(excel, callcumu);
             excel << endl << endl << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
-            excel.close();
+            excel << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
+            excel.close();*/
         #endif
 
 }
 
 float64 PositionalStrategy::MakeBet()
 {
+
+
+
     const float64 myMoney = ViewPlayer().GetMoney();
     float64 betToCall = ViewTable().GetBetToCall();
+    const float64 myBet = ViewPlayer().GetBetSize();
 
     if( myMoney < betToCall ) betToCall = myMoney;
+
+
+
+
+
+    ///TODO: Enhance this. Maybe scale each separately depending on different factors? Ooooh.
+    ///I want you to remember that after the river is dealt and no more community cards will come, that
+    ///skew and kurtosis are undefined and other DistrShape related values are meaningless.
+
+    float64 maxShowdown = ViewTable().GetMaxShowdown();
+    if( maxShowdown > myMoney ) maxShowdown = myMoney;
+    float64 choiceScale = (betToCall - myBet)/(maxShowdown - myBet);
+    if( maxShowdown == myBet || maxShowdown < betToCall ) choiceScale = 1;
+    if( choiceScale > 1 ) choiceScale = 1;
+    if( choiceScale < 0 ) choiceScale = 0;
+
+    //float64 distrScale = 0.5 ;
+    float64 distrScale = myMoney / ViewTable().GetAllChips() ;
+
+    if( bGamble / 2 == 0 )/* 0,1 */
+    {
+        distrScale = 1 - distrScale;
+    }/* else 2,3 */
+
+    if( bGamble % 2 == 0 ) /* 0,2 */
+    {
+        distrScale += detailPCT.improve*detailPCT.stdDev;
+
+    }else /* 1,3 */
+    {
+        distrScale -= detailPCT.improve*detailPCT.stdDev;
+    }
+    if( distrScale > 1 ) distrScale = 1;
+    if( distrScale < 0 ) distrScale = 0;
+
+    const StatResult statchoice = statworse * (1-choiceScale) + statmean * (choiceScale);
+
 
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
     //ZeroCallD myExpectedCall(myPositionIndex, *(ViewTable()), &callcumu);
 
 
+    //GainModel choicegain_r(statchoice,&myExpectedCall);
+    GainModel choicegain_base(statchoice,&myExpectedCall);
+    GainModelReverse choicegain_rev(statchoice,&myExpectedCall);
+
+    GainModelNoRisk choicegain_nr(statworse,&myExpectedCall);
+    GainModelReverseNoRisk choicegain_rnr(statworse,&myExpectedCall);
+    //GainModelNoRisk gainmean_nr(statmean,&myExpectedCall);
+
+	SlidingPairFunction gp(&choicegain_base,&choicegain_rev,distrScale,&myExpectedCall);
+	SlidingPairFunction ap(&choicegain_nr,&choicegain_rnr,distrScale,&myExpectedCall);
+
+    SlidingPairFunction choicegain(&gp,&ap,choiceScale/2,&myExpectedCall);
+    //SlidingPairFunction gainmean(&gainmean_r,&gainmean_nr,choiceScale,&myExpectedCall);
 
 
-/*
-    std::ofstream excel("functionlog.csv");
-    if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
-    gainmean.breakdown(100,excel,ViewTable().GetBetToCall(),ViewPlayer().GetMoney());
-    excel.close();
-    excel.open("functionlog.safe.csv");
-    if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-    gainworse.breakdown(100,excel,ViewTable().GetBetToCall(),ViewPlayer().GetMoney());
-    excel.close();
+
+    /*
+    GainModel* targetModel = &choicegain;
+    GainModel* targetFold = &gainmean;
+    if( choiceScale == 1 )
+    {
+        targetModel = &choicegain_nr;
+        targetFold = &gainmean_nr;
+    }
 */
 
-    ///TODO: Enhance this. Maybe scale each separately depending on different factors? Ooooh.
+        #ifdef DEBUGSPECIFIC
+        if( ViewTable().handnum == DEBUGSPECIFIC )
+        {
+            std::ofstream excel( (ViewPlayer().GetIdent() + "functionlog.csv").c_str() );
+            if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
+            choicegain_base.breakdown(1000,excel,betToCall,maxShowdown);
+            //myExpectedCall.breakdown(0.005,excel);
 
-    float64 choiceScale = roundNumber+1;
-    choiceScale /= 5;
-
-    StatResult statchoice = statworse * (1-choiceScale) + statmean * (choiceScale);
-
-    GainModel choicegain(statchoice,&myExpectedCall);
-
-        #ifdef LOGPOSITION
-
-            if( !(logFile.is_open()) )
-            {
-                logFile.open((ViewPlayer().GetIdent() + ".Positional.log").c_str());
-            }
-
-            std::ofstream excel("positionlog.csv");
-            if( !excel.is_open() ) std::cerr << "\n!positionlog.cvs file access denied" << std::endl;
-            choicegain.breakdown(1000,excel,ViewTable().GetBetToCall(),ViewPlayer().GetMoney());
             excel.close();
 
+            excel.open ((ViewPlayer().GetIdent() + "functionlog.reverse.csv").c_str());
+            if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
+            choicegain_rev.breakdown(1000,excel,betToCall,maxShowdown);
+            //myExpectedCall.breakdown(0.005,excel);
+
+            excel.close();
+
+            excel.open((ViewPlayer().GetIdent() + "functionlog.norisk.csv").c_str());
+            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
+            choicegain_nr.breakdown(1000,excel,betToCall,maxShowdown);
+            //g.breakdownE(40,excel);
+            excel.close();
+
+
+
+            excel.open((ViewPlayer().GetIdent() + "functionlog.anti.csv").c_str());
+            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
+            choicegain_rnr.breakdown(1000,excel,betToCall,maxShowdown);
+            //g.breakdownE(40,excel);
+            excel.close();
+
+          excel.open((ViewPlayer().GetIdent() + "functionlog.GP.csv").c_str());
+
+            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
+            gp.breakdown(1000,excel,betToCall,maxShowdown);
+            //g.breakdownE(40,excel);
+            excel.close();
+
+
+            excel.open((ViewPlayer().GetIdent() + "functionlog.AP.csv").c_str());
+            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
+            ap.breakdown(1000,excel,betToCall,maxShowdown);
+            //g.breakdownE(40,excel);
+            excel.close();
+
+            excel.open((ViewPlayer().GetIdent() + "functionlog.safe.csv").c_str());
+            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
+            choicegain.breakdown(1000,excel,betToCall,maxShowdown);
+            //g.breakdownE(40,excel);
+            excel.close();
+        }
         #endif
+
+
+
 
     const float64 choicePoint = choicegain.FindBestBet();
     const float64 choiceFold = choicegain.FindZero(choicePoint,myMoney);
-    GainModel gainmean(statmean,&myExpectedCall);
-    const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
+
+    //const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
+    const float64 callGain = choicegain.f(betToCall);
+
 
         #ifdef LOGPOSITION
 
+            GainModel gainmean(statmean,&myExpectedCall);
             float64 goalPoint = gainmean.FindBestBet();
             float64 goalFold = gainmean.FindZero(goalPoint,myMoney);
-
+/*
             GainModel gainworse(statworse,&myExpectedCall);
             float64 leastPoint = gainworse.FindBestBet();
             float64 leastFold = gainworse.FindZero(leastPoint,myMoney);
-
+*/
+            float64 gpPoint = gp.FindBestBet();
+            float64 gpFold = gp.FindZero(gpPoint,myMoney);
 
             HandPlus convertOutput;
             convertOutput.SetUnique(ViewHand());
             convertOutput.DisplayHand(logFile);
 
-            logFile << "Bet to call " << betToCall << endl;
+            logFile << "Bet to call " << betToCall << " (from " << myBet << ")" << endl;
+            logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
+            logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
             logFile << "Goal bet " << goalPoint << endl;
             logFile << "Fold bet " << goalFold << endl;
-            logFile << "Minimum target " << leastPoint << endl;
-            logFile << "Safe fold bet " << leastFold << endl;
-
-            logFile << "CHOICE OPTIMAL " << choicePoint << endl;
-            logFile << "CHOICE FOLD " << choiceFold << endl;
+            logFile << "GP target " << gpPoint << endl;
+            logFile << "GP fold bet " << gpFold << endl;
+            //logFile << "Safe target " << leastPoint << endl;
+            //logFile << "Safe fold bet " << leastFold << endl;
+            logFile << "switch(" << distrScale << ")" << endl;
+            logFile << "scale(" << choiceScale << ")" << endl;
+            logFile << "Choice Optimal " << choicePoint << endl;
+            logFile << "Choice Fold " << choiceFold << endl;
             logFile << "f("<< betToCall <<")=" << callGain << endl;
 
-            if( goalPoint < betToCall || leastPoint < betToCall )
+            if( goalPoint < betToCall )
             {
                 cout << "Failed assertion" << endl;
-                goalPoint = gainmean.FindBestBet();
-                goalFold = gainmean.FindZero(goalPoint,myMoney);
 
-
-                leastPoint = gainworse.FindBestBet();
-                leastFold = gainworse.FindZero(leastPoint,myMoney);
+                exit(1);
             }
 
         #endif
 
 
-
-
-    if( choicePoint == choiceFold && betToCall == choiceFold && callGain < 0 )
+    if( choicePoint == choiceFold && betToCall == choiceFold && callGain <= 0 )
     {///The highest point was the point closest to zero, and the least you can bet if you call--still worse than folding
         logFile << "CHECK/FOLD" << endl;
         return 0;
     }
 
 
-    if( betToCall <= choicePoint )
+    if( betToCall < choicePoint )
 	{
 	    logFile << "RAISETO " << choicePoint << endl << endl;
 		return choicePoint;
 	}//else
     {
             #ifdef DEBUGASSERT
-                if( !(betToCall >= choiceFold) )
+                if( (betToCall > choiceFold) )
                 {
                     cout << "ALL choiceXXXX should be AT LEAST betToCall as defined!" << endl;
+                    exit(1);
                 }
             #endif
        /* if( betToCall >= choiceFold )

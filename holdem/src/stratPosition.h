@@ -18,19 +18,23 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#define LOGPOSITION
-
 #ifndef HOLDEM_PositionalStrat
 #define HOLDEM_PositionalStrat
 
 #include "stratSearch.h"
 #include "ai.h"
 
+#define LOGPOSITION
+//#define DEBUGSPECIFIC
+
+
 ///TODO: Modularize this class so as to try other combinations
 class PositionalStrategy : virtual public PlayerStrategy
 {
 	protected:
+        int8 bGamble; /* 0,1,2,3 */
         int8 roundNumber;
+        DistrShape detailPCT;
         StatResult statmean;
         StatResult statworse;
         CallCumulationD callcumu;
@@ -39,7 +43,7 @@ class PositionalStrategy : virtual public PlayerStrategy
         #endif
 	public:
 
-		PositionalStrategy() : PlayerStrategy() {}
+		PositionalStrategy(int8 riskymode) : PlayerStrategy(), bGamble(riskymode), detailPCT(0) {}
 		virtual ~PositionalStrategy();
 
 		virtual void SeeCommunity(const Hand&, const int8);

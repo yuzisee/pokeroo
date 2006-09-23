@@ -60,6 +60,11 @@ STRAIGHT (OR the cardsets, then AND-SHIFT × 5)
 using std::cout;
 using std::endl;
 
+const uint32 HoldemUtil::PRIMES[14] =
+	{1,2,3,5,7,11,13,17,19,23,29,31,37,41};
+
+
+
 const char HoldemUtil::VALKEY[16] =
 	{'?','?','2','3','4','5','6','7','8','9','t','J','Q','K','A', '?'};
 const char HoldemUtil::SUITKEY[5] =

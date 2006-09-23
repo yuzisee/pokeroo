@@ -19,288 +19,11 @@
  ***************************************************************************/
 
 #include <iostream>
-#include <math.h>
 #include "functionmodel.h"
 #include "ai.h"
 
-using std::cout;
-using std::endl;
+//#define DEBUGVIEWINTERMEDIARIES
 
-ScalarFunctionModel::~ScalarFunctionModel()
-{
-}
-
-float64 ScalarFunctionModel::quadraticStep(float64 x1, float64 y1, float64 x2, float64 y2, float64 x3, float64 y3) const
-{
-    float64 a1,a2,a3;
-
-
-    a2 = (y3-y1)*x2;
-    a1 = (y2-y3)*x1;
-    a3 = (y1-y2)*x3;
-
-    float64 xn = ( a2*x2 + a1*x1 + a3*x3 )/(a2+a1+a3)/2;
-
-    /*if( xn < x1 ) return x1;
-    if( xn > x3 ) return x3;*/
-    return xn;
-
-}
-
-float64 ScalarFunctionModel::trisectionStep(float64 x1, float64 y1, float64 x2, float64 y2, float64 x3, float64 y3) const
-{
-    float64 ldiff, rdiff;
-    ldiff = (x2-x1);
-    rdiff = (x3-x2);
-    if( ldiff > rdiff )
-    {
-        return (x2 - ldiff/2);
-    }
-    else if( ldiff < rdiff )
-    {
-        return (x2 + rdiff/2);
-    }
-    else
-    {
-
-        if( y1 > y3 ) return (x2 - ldiff/2);
-        return (x2 + rdiff/2);
-    }
-
-
-}
-
-float64 ScalarFunctionModel::searchStep(float64 x1, float64 y1, float64 x2, float64 y2, float64 x3, float64 y3) const
-{
-    float64 dx = fd(x2,y2);
-
-    if( y1 > y2 && y3 > y2 )//  U  find a min
-    {
-        if( dx > 0 ) return (x2+x1)/2;
-        return (x2+x3)/2;
-    }
-    else if( y1 < y2 && y3 < y2 )//  ^  find a max
-    {
-        if( dx > 0 ) return (x2+x3)/2;
-        return (x2+x1)/2;
-    }
-    else
-    {
-        return trisectionStep(x1,y1,x2,y2,x3,y3);
-    }
-
-
-}
-
-float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2) const
-{
-    float64 y1 = f(x1);
-    float64 y2 = f(x2);
-
-    float64 xb = bisectionStep(x1,x2);
-    float64 yb = f(xb);
-
-	if( yb <= y1 && yb <= y2)
-	{
-	    if( x1 != x2 ) cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
-        return xb;
-    }
-
-	return FindTurningPoint(x1, y1, xb, yb, x2, y2, 1);
-}
-
-float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2) const
-{
-    float64 y1 = f(x1);
-    float64 y2 = f(x2);
-
-    float64 xb = bisectionStep(x1,x2);
-    float64 yb = f(xb);
-
-	if( yb >= y1 && yb >= y2)
-	{
-        if( x1 != x2 ) cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
-        return xb;
-    }
-
-
-	return FindTurningPoint(x1, y1, xb, yb, x2, y2, -1);
-}
-
-
-float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb, float64 yb, float64 x2, float64 y2, float64 signDir) const
-{
-    int8 stepMode = 0;
-
-    float64 yn;
-    float64 xn;
-
-	if( y1 == yb && yb == y2 )
-	{
-		return xb;
-	}
-
-    while( (y1-yb)*(y2-yb) < 0 && x2 - x1 > quantum)
-    {   ///(y1-yb) and (y2-yb) have different signs
-        ///therefore y1 and y2 are OPPOSITE vertical directions from yb.
-		if( y1*signDir > y2*signDir ) ///y1 is closer
-		{
-			x2 = xb;
-			y2 = yb;
-		}else//y2 is closer
-		{
-			x1 = xb;
-			y1 = yb;
-		}
-
-		xb = bisectionStep(x1,x2);
-		yb = f(xb);
-	}
-
-
-    while(x2 - x1 > quantum)
-    {
-        ++stepMode;
-        stepMode %= 4;
-        switch(stepMode)
-        {
-            case 0:
-            case 2:
-            case 3:
-                xn = quadraticStep(x1,y1,xb,yb,x2,y2);
-                if( xb == xn || xn > x2 || xn < x1 )
-                {
-                    xn = searchStep(x1,y1,xb,yb,x2,y2);
-                }
-                break;
-            case 1:
-                xn = searchStep(x1,y1,xb,yb,x2,y2);
-                break;
-        }
-
-        yn = f(xn);
-
-        if( signDir*yn < signDir*y1 && signDir*yn < signDir*y2 )
-        {
-            cout << "WARNING: Function has multiple turning points!" << endl;
-            return xb;
-        }
-
-
-        if( yb == yn )
-        {
-            if( xb < xn )
-            {
-                x1 = xb;
-                y1 = yb;
-                x2 = xn;
-                y2 = yn;
-            }
-            else// xn < xb
-            {
-                x1 = xn;
-                y1 = yn;
-                x2 = xb;
-                y2 = yb;
-            }
-            xb = bisectionStep(x1,x2);
-            yb = f(xb);
-        }
-        else if( yb*signDir > yn*signDir ) ///b is the dominant point
-        {
-            if( xb < xn )
-            {
-                x2 = xn;
-                y2 = yn;
-            }
-            else// xn < xb
-            {
-                x1 = xn;
-                y1 = yn;
-            }
-        }else //n is the dominant point
-        {
-            if( xb < xn )
-            {
-                x1 = xb;
-                y1 = yb;
-            }else// xn < xb
-            {
-                x2 = xb;
-                y2 = yb;
-            }
-            xb = xn;
-            yb = yn;
-        }
-
-        //xn = searchStep(x1,y1,xb,yb,x2,y2);
-    }
-    return round(bisectionStep(x1,x2)/quantum)*quantum;
-}
-
-
-float64 ScalarFunctionModel::newtonStep(float64 x1, float64 y1) const
-{
-    return x1 - y1/fd(x1,y1);
-}
-
-float64 ScalarFunctionModel::bisectionStep(float64 x1, float64 x2) const
-{
-    return (x1+x2)/2;
-}
-
-float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2) const
-{
-
-    float64 y1 = f(x1);
-    float64 y2 = f(x2);
-
-    if( y1 > 0 && y2 > 0 ) //x1*x2 > 0
-    {
-        if( y1 > y2 ) return x2;
-        return x1;
-    }
-
-    if( y1 < 0 && y2 < 0 ) //x1*x2 > 0
-    {
-        if( y1 > y2 ) return x1;
-        return x2;
-    }
-
-    float64 yb;
-    float64 xb,xn;
-    xb = bisectionStep(x1,x2);
-    yb = f(xb);
-
-    while( x2 - x1 > quantum )
-    {
-
-        xn = newtonStep(xb,yb);
-
-        if(xn < x2 && xn > x1)
-        {
-            xb = xn;
-        }///Otherwise we stay with xb which is bisection
-
-        yb = f(xb);
-
-        if( yb == 0 ) return xb;
-
-        if( yb*y1 > 0 ) //same sign as y1
-        {
-            y1 = yb;
-            x1 = xb;
-        }
-        else
-        {
-            y2 = yb;
-            x2 = xb;
-        }
-        xb = bisectionStep(x1,x2);
-        yb = f(xb);
-    }
-    return round(xb/quantum)*quantum;
-}
 
 /*
 float64 DummyFunctionModel::f(const float64 x) const
@@ -314,12 +37,23 @@ float64 DummyFunctionModel::fd(const float64 x, const float64 y) const
     return -4*x+2;
 }
 */
+GainModelReverseNoRisk::~GainModelReverseNoRisk()
+{
+}
+
+GainModelReverse::~GainModelReverse()
+{
+}
+
+GainModelNoRisk::~GainModelNoRisk()
+{
+}
 
 GainModel::~GainModel()
 {
 }
 
-float64 GainModel::FindBestBet() const
+float64 HoldemFunctionModel::FindBestBet()
 {
     const float64& myMoney = e->maxBet();
     const float64& betToCall = e->callBet();
@@ -327,25 +61,25 @@ float64 GainModel::FindBestBet() const
     return FindMax(betToCall,myMoney);
 }
 
-float64 GainModel::f(const float64 betSize) const
+float64 GainModel::f(const float64 betSize)
 {
 
 	const float64 x = e->betFraction(betSize);
-	const float64 exf = e->exf(betSize);
-    const float64 f_pot = e->deadpotFraction();
+	const float64 exf = e->betFraction(e->exf(betSize));
+    const float64 f_pot = e->betFraction( e->prevpotChips() );
     const float64 exf_live = exf - f_pot;
 
-/*
-    const float64& t_w = shape.wins;
-    const float64& t_s = shape.splits;
-    const float64& t_l = shape.loss;
-    const float64 t_1w = 1+f_pot+exf;
-    const float64 t_cw = pow(shape.wins,e_battle);
-    const float64 t_1wp = pow(t_1w , t_cw);
-    const float64 t_1l = 1-x ;
-    const float64 t_cl = 1 - pow(1 - shape.loss,e_battle);
-    const float64 t_1lp = pow(t_1l, t_cl);
-*/
+    #ifdef DEBUGVIEWINTERMEDIARIES
+        const float64& t_w = shape.wins;
+        const float64& t_s = shape.splits;
+        const float64& t_l = shape.loss;
+        const float64 t_1w = 1+exf;
+        const float64 t_cw = pow(shape.wins,e_battle);
+        const float64 t_1wp = pow(t_1w , t_cw);
+        const float64 t_1l = 1-x ;
+        const float64 t_cl = 1 - pow(1 - shape.loss,e_battle);
+        const float64 t_1lp = pow(t_1l, t_cl);
+    #endif
 
     if( betSize < e->callBet() && betSize < e->maxBet() ) return 0; ///"Negative raise" means betting less than the minimum call = FOLD
 
@@ -374,9 +108,9 @@ float64 GainModel::f(const float64 betSize) const
 	return
 
         (
-        pow(1+exf , pow(shape.wins,e_battle))
+        pow(1+exf , p_cw)
         *
-        pow(1-x , 1 - pow(1 - shape.loss,e_battle))
+        pow(1-x , p_cl)
         *sav)
 	-
 		e->foldGain()
@@ -389,26 +123,37 @@ float64 GainModel::f(const float64 betSize) const
 }
 
 
-float64 GainModel::fd(const float64 betSize, const float64 y) const
+float64 GainModel::fd(const float64 betSize, const float64 y)
 {
+
 	//const float64 exf = e->pctWillCall(x/qdenom);
 	//const float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
-    const float64 x = e->betFraction(betSize);
+    float64 x = e->betFraction(betSize);
+    if( x == 1 ) x -= quantum/4; //Approximate extremes to avoide division by zero
+
     //const float64 qdenom = (2*x+f_pot);
-	const float64 exf = e->exf(betSize);
+	const float64 exf = e->betFraction(e->exf(betSize));
+		//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B
 	const float64 dexf = e->dexf(betSize);
-    const float64 f_pot = e->deadpotFraction();
+    const float64 f_pot = e->betFraction(e->prevpotChips());
     const float64 exf_live = exf - f_pot;
 	//const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;n
     //const int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
-    //const float64 cbt = e->callBet();
+
+        #ifdef DEBUGVIEWINTERMEDIARIES
+            const StatResult & t_s = shape;
+            const float64 & t_cl = p_cl;
+            const float64 & t_cw = p_cw;
+        #endif
+
 
     if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
-    const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
+    //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
+    const int8 e_call = e_battle; //Probably manditory if dragCalls is used
 
 	float64 savd=0;
-	for(int8 i=1;i<e_call;++i)
+	for(int8 i=1;i<=e_call;++i)
 	{
         float64 dragCalls = e_call - i;
         dragCalls *= dragCalls;
@@ -429,9 +174,9 @@ float64 GainModel::fd(const float64 betSize, const float64 y) const
  	return
 	(y+e->foldGain())*
 	(
-	pow(shape.wins,e_battle)*dexf/(1+exf)
-	+
-	(pow(1-shape.loss,e_battle)-1)/(1-x)
+	p_cw*dexf/(1+exf)
+
+	-(p_cl)/(1-x)
 	+
 	savd
 	);
@@ -444,7 +189,7 @@ StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 {
 	StatResult a;
 
-	if( wl == 1/2 )
+	if( wl == 1.0/2.0)
 	{///PCT is 0.5 here also
 		a.wins = 0.5;
 		a.loss = 0.5;
@@ -460,5 +205,372 @@ StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 	return a;
 }
 
+
+
+float64 GainModelNoRisk::f(const float64 betSize)
+{
+
+	const float64 x = e->betFraction(betSize);
+	const float64 exf = e->betFraction(e->exf(betSize));
+    const float64 f_pot = e->betFraction(e->prevpotChips());
+    const float64 exf_live = exf - f_pot;
+
+        #ifdef DEBUGVIEWINTERMEDIARIES
+
+            const float64& t_w = shape.wins;
+            const float64& t_s = shape.splits;
+            const float64& t_l = shape.loss;
+            const float64 t_1w = 1+exf;
+            const float64 t_cw = pow(shape.wins,e_battle);
+            const float64 t_1wp = (t_1w * t_cw);
+            const float64 t_1l = 1-x ;
+            const float64 t_cl = 1 - pow(1 - shape.loss,e_battle);
+            const float64 t_1lp = (t_1l* t_cl);
+
+        #endif
+
+    if( betSize < e->callBet() && betSize < e->maxBet() ) return 0; ///"Negative raise" means betting less than the minimum call = FOLD
+
+    const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
+
+	float64 sav=0;
+	for(int8 i=1;i<=e_call;++i)
+	{
+        //In our model, we can assume that if it is obvious many (everyone) will split, only those who don't see that opportunity will definately fold
+        //  however if it is not clear there will be a split (few split) everybody will call as expected
+        //The dragCalls multiplier achieves this:
+        float64 dragCalls = i;
+        dragCalls /= e_call;
+        dragCalls = 1 - dragCalls;
+        dragCalls = dragCalls * dragCalls - dragCalls + 1;
+
+		sav +=
+                (    1+( f_pot+exf_live*dragCalls )/(i+1)    )
+                        *
+                (        HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)    )
+                ;
+	}
+
+//    const float64 t_result = t_1wp * t_1lp * sav - 1;
+
+	return
+
+		   (1+exf) * p_cw
+        +
+           (1-x) * p_cl
+        +
+		   sav
+	-
+		e->foldGain()
+	;
+
+	//let's round e_fix downward on input
+	//floor()
+}
+
+
+float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
+{
+
+//    const float64 x = e->betFraction(betSize);
+
+//	const float64 exf = e->betFraction(e->exf(betSize));
+
+	//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B
+	const float64 dexf = e->dexf(betSize);
+
+
+
+    if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
+
+    //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
+    const int8 e_call = e_battle; //Probably manditory if dragCalls is used
+
+	float64 savd=0;
+	for(int8 i=1;i<=e_call;++i)
+	{
+        float64 dragCalls = e_call - i;
+        dragCalls *= dragCalls;
+        dragCalls /= static_cast<float64>(e_call);
+        dragCalls += i;
+
+        if( dragCalls != 0 )
+        {
+            savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
+                    *
+                    dexf * dragCalls
+                    /
+					(i+1)
+                    ;
+        }///Else you'd just {savd+=0;} anyways
+	}
+
+ 	return
+
+	(
+	p_cw*dexf
+	-
+	(p_cl)
+	+
+	savd
+	);
+
+}
+
+
+/*
+float64 GainModelReverse::FindBestBet()
+{
+    const float64& myMoney = e->maxBet();
+    const float64& betToCall = e->callBet();
+    if( myMoney < betToCall ) return myMoney;
+    return FindMin(betToCall,myMoney);
+}*/
+
+float64 GainModelReverse::f(const float64 betSize)
+{
+    const float64 oppBankroll = e->allChips() - e->maxBet();
+    const float64 oppFoldGain = 1 + e->forfeitChips()/oppBankroll;
+	const float64 x = betSize / oppBankroll;
+	const float64 exf = e->exf(betSize)/oppBankroll;
+    const float64 f_pot = e->prevpotChips()/oppBankroll;
+    const float64 exf_live = exf - f_pot;
+
+
+    if( betSize < e->callBet() && betSize < e->maxBet() ) return 0; ///"Negative raise" means betting less than the minimum call = FOLD
+
+    const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
+
+	float64 sav=1;
+	for(int8 i=1;i<=e_call;++i)
+	{
+        //In our model, we can assume that if it is obvious many (everyone) will split, only those who don't see that opportunity will definately fold
+        //  however if it is not clear there will be a split (few split) everybody will call as expected
+        //The dragCalls multiplier achieves this:
+        float64 dragCalls = i;
+        dragCalls /= e_call;
+        dragCalls = 1 - dragCalls;
+        dragCalls = dragCalls * dragCalls - dragCalls + 1;
+
+		sav *=  pow(
+                    1-( f_pot+exf_live*dragCalls )/(i+1)
+                        ,
+                        HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
+                );
+	}
+
+
+	return
+    oppFoldGain -
+        (
+        pow(1-exf , p_cw)
+        *
+        pow(1+x , p_cl)
+        *sav)
+	;
+}
+
+
+float64 GainModelReverse::fd(const float64 betSize, const float64 y)
+{
+    const float64 oppBankroll = e->allChips() - e->maxBet();
+    const float64 oppFoldGain = 1 + e->forfeitChips()/oppBankroll;
+	float64 x = betSize / oppBankroll;
+
+    float64 exf = e->exf(betSize)/oppBankroll;
+
+    if( exf == 1 )
+    {
+        x -= quantum/4; //Approximate extremes to avoide division by zero
+        exf = e->exf(x * oppBankroll);
+    }
+
+	const float64 dexf = e->dexf(betSize);
+
+    //if( x == 1 ) x -= quantum/4; //Approximate extremes to avoide division by zero
+
+    const float64 f_pot = e->prevpotChips() / oppBankroll;
+    const float64 exf_live = exf - f_pot;
+
+
+
+    if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
+
+    //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
+    const int8 e_call = e_battle; //Probably manditory if dragCalls is used
+
+	float64 savd=0;
+	for(int8 i=1;i<=e_call;++i)
+	{
+        float64 dragCalls = e_call - i;
+        dragCalls *= dragCalls;
+        dragCalls /= static_cast<float64>(e_call);
+        dragCalls += i;
+
+        if( dragCalls != 0 )
+        {
+            savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
+                    *
+                    (-dexf)
+                    /
+                    ( (i+1+f_pot)/dragCalls - exf_live )
+                    ;
+        }///Else you'd just {savd+=0;} anyways
+	}
+
+ 	return
+ 	(
+            (y-oppFoldGain)*
+            (
+            p_cw*(-dexf)/(1-exf)
+
+            +(p_cl)/(1+x)
+            +
+            savd
+            )
+	);
+	;
+
+}
+
+
+float64 GainModelReverseNoRisk::f(const float64 betSize)
+{
+
+    const float64 oppBankroll = e->allChips() - e->maxBet();
+    const float64 f_pot = e->prevpotChips()/oppBankroll;
+    const float64 oppFoldGain = 1 + e->forfeitChips()/oppBankroll;
+	const float64 x = betSize / oppBankroll;
+	const float64 exf = e->exf(betSize)/oppBankroll;
+    const float64 exf_live = exf - f_pot;
+
+
+
+    if( betSize < e->callBet() && betSize < e->maxBet() ) return 0; ///"Negative raise" means betting less than the minimum call = FOLD
+
+    const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
+
+	float64 sav=0;
+	for(int8 i=1;i<=e_call;++i)
+	{
+        //In our model, we can assume that if it is obvious many (everyone) will split, only those who don't see that opportunity will definately fold
+        //  however if it is not clear there will be a split (few split) everybody will call as expected
+        //The dragCalls multiplier achieves this:
+        float64 dragCalls = i;
+        dragCalls /= e_call;
+        dragCalls = 1 - dragCalls;
+        dragCalls = dragCalls * dragCalls - dragCalls + 1;
+
+		sav +=
+                (    1-( f_pot+exf_live*dragCalls )/(i+1)    )
+                        *
+                (        HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)    )
+                ;
+	}
+
+//    const float64 t_result = t_1wp * t_1lp * sav - 1;
+
+	return
+    oppFoldGain
+    -
+    (
+		   (1-exf) * p_cw
+        +
+           (1+x) * p_cl
+        +
+		   sav
+	)
+	;
+
+	//let's round e_fix downward on input
+	//floor()
+}
+
+
+float64 GainModelReverseNoRisk::fd(const float64 betSize, const float64 y)
+{
+
+//    const float64 oppBankroll = e->allChips() - e->maxBet();
+//    const float64 oppFoldGain = 1 + e->forfeitChips();
+//	float64 x = betSize / oppBankroll;
+//    float64 exf = e->exf(betSize)/oppBankroll;
+/*
+    if( exf == 1 )
+    {
+        x -= quantum/4; //Approximate extremes to avoid division by zero
+        exf = e->exf(x * oppBankroll);
+    }
+*/
+	const float64 dexf = e->dexf(betSize);
+
+//    const float64 f_pot = e->deadpotChips() / oppBankroll;
+//    const float64 exf_live = exf - f_pot;
+
+
+
+    if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
+
+    //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
+    const int8 e_call = e_battle; //Probably manditory if dragCalls is used
+
+	float64 savd=0;
+	for(int8 i=1;i<=e_call;++i)
+	{
+        float64 dragCalls = e_call - i;
+        dragCalls *= dragCalls;
+        dragCalls /= static_cast<float64>(e_call);
+        dragCalls += i;
+
+        if( dragCalls != 0 )
+        {
+            savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
+                    *
+                    (-dexf) * dragCalls
+                    /
+					(i+1)
+                    ;
+        }///Else you'd just {savd+=0;} anyways
+	}
+
+ 	return
+
+	(
+	-p_cw*(-dexf)
+	-
+	(p_cl)
+	-
+	savd
+	);
+
+}
+
+
+
+void SlidingPairFunction::query(float64 x)
+{
+    const float64 yl = left->f(x);
+    const float64 yr = right->f(x);
+    last_x = x;
+    y = yl*(1-slider)+yr*slider;
+    dy = left->fd(x,yl)*(1-slider) + right->fd(x,yr)*slider;
+}
+
+float64 SlidingPairFunction::f(const float64 x)
+{
+    if( last_x != x )
+    {
+        query(x);
+    }
+    return y;
+}
+
+float64 SlidingPairFunction::fd(const float64 x, const float64 y)
+{
+    if( last_x != x )
+    {
+        query(x);
+    }
+    return dy;
+}
 
 

@@ -39,13 +39,13 @@
 void RandomDeck::ShuffleDeck()
 {
 	#ifdef FORCESEED
-	srand(20); //5
+	srand(5); //5
 	#else
 	srand(time(0));
 	#endif
 
-
-	firstDealtPos = lastDealtPos;
+    bDeckEmpty = false;
+	firstDealtPos = (lastDealtPos + DECKSIZE) % DECKSIZE;
 
 	for(uint8 i=0;i<DECKSIZE;++i)
 	{
@@ -130,13 +130,21 @@ void RandomDeck::ShuffleDeck(float64 seedShift)
 
 float64 RandomDeck::DealCard(Hand& h)
 {
+    if( bDeckEmpty )
+    {
+        if( bAutoShuffle )
+        {
+            ShuffleDeck();
+        }else
+        {
+            return 0;
+        }
+    }
+
 	++lastDealtPos;
 	lastDealtPos %= DECKSIZE;
 
-	if( lastDealtPos == firstDealtPos )
-	{
-		return 0;
-	}
+	bDeckEmpty = ( lastDealtPos == firstDealtPos );
 
 	dealt.Rank = HoldemUtil::CardRank(deckOrder[lastDealtPos])+1;
 	dealt.Value = HoldemUtil::CARDORDER[dealt.Rank];

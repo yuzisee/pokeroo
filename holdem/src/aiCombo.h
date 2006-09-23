@@ -27,44 +27,47 @@
 
 
 
-struct MappedHand
+class HandHash
 {
-	OrderedDeck mySortedHand;
-	/*unsigned char a;
-	unsigned char b;*/
-	StatResult r;
+public:
+	static const uint32 hashCardPattern(const Hand& h, uint32 tableSize);
+	static const uint32 hashValueset(const HandPlus& h, uint32 tableSize);
+	static const uint32 hashValues(const Hand& h, uint32 tableSize);
+	static const uint32 hashSuitCounts(const CommunityPlus& h, uint32 tableSize);
 }
 ;
 
-class CallCumulationMap
+class PocketHash
+{
+public:
+	static const uint32 hashRank(const PocketHand& h, const uint32 tableSize);
+	static const bool sameDealtHand(const PocketHand& a, const PocketHand& b);
+}
+;
+
+
+
+class PocketsMap
 {
 private:
-
 	//static const uint32 PRIMESIZE_2d;
 	static const uint32 PRIMESIZE_1d;
-	static const uint32 PRIMES[14];
-
-
-	const uint32 hashCardPattern(const Hand&) const;
-	const uint32 hashValueset(const HandPlus&) const;
-	const uint32 hashValues(const Hand&) const;
-	const uint32 hashSuitCounts(const CommunityPlus&) const;
-
 	virtual void cleanup();
 
 protected:
 ///TODO: on new, store BOTH [31][52] and [52][31]
 ///TODO: on hit, store INTO BOTH ^^^^^^^^^^^^^^^^
-	MappedHand **table;
+	PocketHand **table;
 	uint32 tableSize;
 	uint32 itrIndex;
 
 	StatResult *(callWinsPtr[52][52]);
 
-	const virtual void add(const Hand&, const uint8, const uint8) ;
-
 public:
 
+	const virtual void add(const struct PocketHand& p) ;
+	//const virtual void add(const Hand&, const uint8, const uint8) ;
+/*
 #ifdef DEBUGASSERT
 	double
 #else
@@ -73,7 +76,7 @@ public:
 virtual BuildTable(const Hand& h);
 
 	//void Hash2D(const CommunityPlus&, uint32 &, uint32 &) const;
-	CallCumulationMap() : itrIndex(0)
+	PocketsMap() : itrIndex(0)
 	{
 		for(int8 ia=0;ia<52;++ia)
 		{for(int8 ib=0;ib<52;++ib){
@@ -81,14 +84,14 @@ virtual BuildTable(const Hand& h);
 		}}
 
 		tableSize=PRIMESIZE_1d;
-		table = new MappedHand *[tableSize];
+		table = new PocketHand *[tableSize];
 		for(uint32 i=0;i<tableSize;++i)
 		{
 			table[i] = 0;
 		}
 	}
-
-	virtual ~CallCumulationMap();
+*/
+	virtual ~PocketsMap();
 
 	virtual StatResult & fetchStat(const uint8, const uint8);
 	virtual void BeginIteration();
@@ -96,59 +99,5 @@ virtual BuildTable(const Hand& h);
 
 }
 ;
-
-class WinCallStats : public virtual WinStats
-{
-private:
-	const void loadCumulation();
-	const void initWC(const CommunityPlus&, const int8);
-	//static const void mergeIn(StatResult&, const StatResult&);
-protected:
-	const virtual void countWin(const float64);
-	const virtual void countSplit(const float64);
-	const virtual void countLoss(const float64);
-//TODO: Init and delete calcmap
-	CallCumulationMap calcmap;
-	CallCumulation calc;
-	double callChancesEach;
-	double callTotalChances;
-	DeckLocation callDeck[2];
-
-	virtual StatResult & getCallWins();
-
-public:
-	float64 pctWillCall(const float64 oddsFaced) const
-	{
-		return calc.pctWillCall(oddsFaced);
-	}
-
-	const virtual void Analyze();
-	virtual StatRequest NewCard(const DeckLocation, const float64 occ);
-
-	WinCallStats(const CommunityPlus& myP, const CommunityPlus& cP,
-		const short cardsInCommunity)
-		 : PlayStats(myP, cP), WinStats(myP, cP, cardsInCommunity)
-	{
-		initWC(myP, cardsInCommunity);
-	}
-
-		#ifdef DEBUGCALLPART
-			void debugPrint()
-			{
-				cout << endl << "s[" << callDeck[0].GetIndex() << "," << callDeck[1].GetIndex() <<
-				"]\t x" << myWins[statGroup].repeated;
-				oppStrength.DisplayHandBig();
-				myStrength.DisplayHandBig();
-			}
-
-			const DeckLocation* debugViewD(int i)
-			{
-				return callDeck+i;
-			}
-		#endif
-
-}
-;
-
 
 #endif

@@ -36,31 +36,7 @@ void UserConsoleStrategy::SeeAction(const HoldemAction& e)
 {
 	const Player& relvPlayer = *(ViewTable().ViewPlayer(e.GetPlayerID()));
 	cout << relvPlayer.GetIdent() << " " << flush;
-	if ( e.IsFold() )
-	{
-		cout << "folds." << endl;
-	}
-	else if ( e.IsCheck() )
-	{
-		cout << "checks." << endl;
-	}
-	else if ( e.IsCall() )
-	{
-		cout << "calls." << endl;
-	}
-	else
-	{
-		if ( e.IsRaise() )
-		{
-			cout << "raises by " << e.GetRaiseBy()
-				<< " to " << flush;
-		}
-		else
-		{
-			cout << "bets " << flush;
-		}
-		cout << e.GetAmount() << "." << endl;
-	}
+	HoldemArena::ToString(e,cout);
 }
 
 void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
@@ -232,7 +208,7 @@ void ConsoleStrategy::showSituation()
 		tempIndex %= totalPlayers;
 	}
 
-	cout << "The pot contains " << ViewTable().GetDeadPotSize() << " from previous rounds and "
+	cout << "The pot contains " << ViewTable().GetPrevPotSize() << " from previous rounds and "
 			<< ViewTable().GetRoundPotSize() << " from this round" << endl;
 
 	cout << "You ("<< ViewPlayer().GetIdent() <<") have:" << flush;
