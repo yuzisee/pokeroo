@@ -33,7 +33,6 @@
 #include "holdem2.h"
 #include "ai.h"
 
-using std::cout;
 using std::endl;
 
 ///Assumes sorted
@@ -163,7 +162,7 @@ float64 OrderedDeck::DealCard(Hand& h) //(int maxSuit, unsigned long maxCard)
 
 #ifdef DEBUGDEAL
 cout << " dealing@" << flush;
-HoldemUtil::PrintCard(dealt.Suit,dealt.Value);
+HoldemUtil::PrintCard(cout,dealt.Suit,dealt.Value);
 #endif
 
 	if(dealt.Suit == HoldemConstants::NO_SUIT)
@@ -443,7 +442,7 @@ float64 DealRemainder::executeIterative()
 	lastDealt[0] = dealt;
 	fromRuns[0] = 1;
 	totalRuns[0] = 0;
-	justDealt[0].Empty();
+	justDealt[0].SetEmpty();
 
 		#ifdef DEBUGORDER
 		bool bDebugVerbose = false;
@@ -732,7 +731,7 @@ cout << "^^-A^^" << flush;
 #ifdef DEBUGINFLOOP
 cout << "^^-A1^^" << flush;
 #endif
-		//c.DisplayHandBig();
+		//c.DisplayHandBig(cout);
 //		deals += fromRuns;
 		//if(deals % 100000 == 0) printf("\n%ld",deals);
 		lastStats->Compare(fromRuns);
@@ -775,7 +774,7 @@ if(moreCards>=0)
 
 cout << lastStats->statGroup << "x" << moreCards << "\t+" << flush;
 
- HoldemUtil::PrintCard(lastSuit,lastCard);
+ HoldemUtil::PrintCard( lastSuit,lastCard);
 
 }
 

@@ -35,16 +35,15 @@
 #include "ai.h"
 #include "engine.h"
 
-using std::cout;
 using std::endl;
 using std::sort;
 
 const void PlayStats::Compare(const float64 occ)
 {
 #ifdef DEBUGCOMPARE
-	myStrength.DisplayHandBig();
+	myStrength.DisplayHandBig(cout);
 	cout << "\nvs" << endl;
-	oppStrength.DisplayHandBig();
+	oppStrength.DisplayHandBig(cout);
 	cout << endl << endl;
 #endif
 	if ( myStrength.strength > oppStrength.strength )
@@ -258,8 +257,8 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 			++statGroup;
 
 				#ifdef PROGRESSUPDATE
-				if (statGroup == 0 ) cout << endl << endl;
-					cout << "\rW: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
+                if (statGroup == 0 ) std::cout << endl << endl;
+                std::cout << "\rW: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 				#endif
 
 				#ifdef DEBUGLEAK
@@ -318,7 +317,7 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 
 				myStrength.evaluateStrength();
 #ifdef DEBUGNEW
-				myStrength.DisplayHandBig();
+				myStrength.DisplayHandBig(cout);
 #endif
 				//r.bTareOcc = false;
                 r.bNewHand = true;
@@ -389,13 +388,13 @@ const void WinStats::initW(const int8 cardsInCommunity)
 {
 
 		#ifdef DEBUGASSERT
-			int temp1 = oppStrength.CardsInSuit( 0 ) +
+			int8 temp1 = oppStrength.CardsInSuit( 0 ) +
 				oppStrength.CardsInSuit( 1 ) +
 				oppStrength.CardsInSuit( 2 ) +
 				oppStrength.CardsInSuit( 3 ) ;
 			if( cardsInCommunity != temp1 )
 			{
-				cout << "MISDEAL COMMUNITY PARAMETERS! WATCH IT." << endl;
+                std::cerr << "MISDEAL COMMUNITY PARAMETERS! WATCH IT." << endl;
 				exit(1);
 				return;
 			}
@@ -405,8 +404,8 @@ const void WinStats::initW(const int8 cardsInCommunity)
 				myStrength.CardsInSuit( 3 )  -temp1;
 			if( 2 !=temp1 )
 			{
-				cout << "MISDEAL ! WATCH " << temp1 << " cards reported in hand" << endl;
-				cout << "COMMUNITY HAS " << cardsInCommunity << endl;
+				std::cerr << "MISDEAL!!\nWATCH " << static_cast<int>(temp1) << " cards reported in hand" << endl;
+				std::cerr << "COMMUNITY HAS " << (int)(cardsInCommunity) << endl;
 				return;
 			}
 		#endif
@@ -506,10 +505,10 @@ const void CallStats::Analyze()
 	sort(myWins,myWins+statCount);//Ascending by default
                                 //  http://www.ddj.com/dept/cpp/184403792
 #ifdef DEBUGCALLPCT
-	cout << endl << "=============SORT!=============" << endl;
+	std::cout << endl << "=============SORT!=============" << endl;
 	for(int32 i=0;i<statCount;i++)
 	{
-		cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
+		std::cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
 				<< myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
 				myWins[i].loss+myWins[i].splits+myWins[i].wins << "(" << myWins[i].pct << ")"
 				<< "\t×"<< myWins[i].repeated <<flush;
@@ -577,18 +576,18 @@ const void CallStats::Analyze()
 
 
 #ifdef DEBUGCALLPCT
-cout << endl << "=============Reduced=============" << endl;
-	cout.precision(2);
+std::cout << endl << "=============Reduced=============" << endl;
+	std::cout.precision(2);
 	for(size_t i=0;i<=vectorLast;i++)
 	{
-		cout << endl << "{" << i << "}" << calc->cumulation[i].loss << " l + "
+		std::cout << endl << "{" << i << "}" << calc->cumulation[i].loss << " l + "
 				<< calc->cumulation[i].splits << " s + " << calc->cumulation[i].wins << " w =\t" << flush;
-				cout.precision(8);
-				cout << calc->cumulation[i].pct
+				std::cout.precision(8);
+				std::cout << calc->cumulation[i].pct
 				//<< " pct\t×"<< calc->cumulation[i].repeated <<flush;
 				<< " \t"<< calc->cumulation[i].repeated << "\ttocall" << flush;
 	}
-	cout << endl;
+	std::cout << endl;
 #endif
 
 //How many of them would call a bet of x?
@@ -621,8 +620,8 @@ const void CallStats::setCurrentGroupOcc(const float64 occ)
 
 const void CallStats::showProgressUpdate() const
 {
-    if (statGroup == 0 ) cout << endl << endl;
-    cout << "C: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
+    if (statGroup == 0 ) std::cout << endl << endl;
+    std::cout << "C: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 }
 
 float64 CallStats::pctWillCall(const float64 oddsFaced) const

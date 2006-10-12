@@ -18,10 +18,13 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "arenaSituation.h"
+#include "callSituation.h"
 #include <math.h>
 
 //#define DEBUGWATCHPARMS
+#ifdef DEBUGWATCHPARAMS
+#include <iostream>
+#endif
 
 const float64 ExactCallD::UNITIALIZED_QUERY = -1;
 
@@ -46,6 +49,11 @@ float64 ExpectedCallD::foldGain() const
             const float64 a = 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
         #endif
     return 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
+}
+
+float64 ExpectedCallD::oppBet() const
+{
+    return table->GetRoundBetsTotal();
 }
 
 float64 ExpectedCallD::alreadyBet() const
@@ -73,9 +81,10 @@ float64 ExpectedCallD::chipDenom() const
     return table->GetChipDenom();
 }
 
+
 int8 ExpectedCallD::handsDealt() const
 {
-    return table->GetNumberAtTable(); //Number of live players
+    return table->GetNumberAtTable();  //Number of live players
 }
 
 float64 ExpectedCallD::prevpotChips() const
@@ -88,6 +97,20 @@ float64 ExpectedCallD::betFraction(const float64 betSize) const
 {
     return (  betSize / table->ViewPlayer(playerID)->GetMoney()  );
 }
+
+
+#ifdef ASSUMEFOLDS
+void ExpectedCallD::callingPlayers(float64 n)
+{
+    eFold = n;
+}
+
+float64 ExpectedCallD::callingPlayers() const
+{
+    return eFold;
+}
+#endif
+
 /*
 float64 EstimateCallD::exf(float64 betSize)
 {
@@ -105,7 +128,12 @@ float64 EstimateCallD::dexf(float64 betSize)
 */
 
 
-void ExactCallD::query(float64 betSize)
+void ExactCallD::SetImpliedFactor(const float64 bonus)
+{
+    impliedFactor = bonus;
+}
+
+void ExactCallD::query(const float64 betSize)
 {
 	const float64 significance = 1/static_cast<double>( handsDealt()-1 );
     const float64 myexf = betSize;
@@ -147,6 +175,15 @@ void ExactCallD::query(float64 betSize)
                             const float64 vodd = pow(  oppBetMake / (oppBetMake + totalexf), significance);
                             const float64 willCall = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
                             const float64 willCallD = e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  );
+
+/*
+                            std::cout << willCall << " ... " << willCallD << std::endl;
+                            std::cout << "significance " << significance << std::endl;
+                            std::cout << "(oppBetMake + totalexf) " << (oppBetMake + totalexf) << std::endl;
+                            std::cout << "(oppBetMake ) " << (oppBetMake ) << std::endl;
+                            std::cout << "(betSize) " << (oppBetMake) << std::endl;
+                            std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
+*/
                         #endif
                     nextexf = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
                     nextdexf = nextexf + oppBetMake * e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  )
@@ -154,6 +191,7 @@ void ExactCallD::query(float64 betSize)
                                                     * (totalexf - oppBetMake * totaldexf)
                                                      /(oppBetMake + totalexf) /(oppBetMake + totalexf);
                     nextexf *= oppBetMake;
+
                 }
             }else
             {///Opponent would be all-in to call this bet
@@ -176,9 +214,11 @@ void ExactCallD::query(float64 betSize)
 
     totalexf = totalexf - myexf;
     totaldexf = totaldexf - mydexf;
+
+
 }
 
-float64 ExactCallD::exf(float64 betSize)
+float64 ExactCallD::exf(const float64 betSize)
 {
     //if( queryinput == UNINITIALIZED_QUERY )
     if( queryinput != betSize )
@@ -186,10 +226,10 @@ float64 ExactCallD::exf(float64 betSize)
         query(betSize);
         queryinput = betSize;
     }
-    return totalexf;
+    return totalexf*impliedFactor;
 }
 
-float64 ExactCallD::dexf(float64 betSize)
+float64 ExactCallD::dexf(const float64 betSize)
 {
 //    if( query == UNINITIALIZED_QUERY )
     if( queryinput != betSize )
@@ -197,8 +237,10 @@ float64 ExactCallD::dexf(float64 betSize)
         query(betSize);
         queryinput = betSize;
     }
-    return totaldexf;
+    return totaldexf*impliedFactor;
 }
+
+
 
 
 float64 ZeroCallD::exf(float64 betSize)
@@ -242,9 +284,20 @@ const float64 DebugArena::PeekCallBet()
     return highBet;
 }
 
+void DebugArena::InitGame()
+{
+    playersInHand = livePlayers;
+}
+
+void DebugArena::SetBlindPot(float64 amount)
+{
+    blindBetSum = amount;
+}
+
 void DebugArena::SetDeadPot(float64 amount)
 {
     deadPot = amount;
+    prevRoundPot = amount;
     updatePot();
 }
 
@@ -253,6 +306,17 @@ void DebugArena::SetBet(int8 playerNum, float64 amount)
     p[playerNum]->myBetSize = amount;
     updatePot();
 }
+
+void DebugArena::GiveCards(int8 playerNum, CommunityPlus h)
+{
+    p[playerNum]->myHand.SetUnique(h);
+}
+
+void DebugArena::AssignHandNum(uint32 n)
+{
+    handnum = n;
+}
+
 #endif
 
 

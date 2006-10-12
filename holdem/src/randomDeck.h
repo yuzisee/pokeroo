@@ -23,7 +23,21 @@
 
 #include "engine.h"
 
-class RandomDeck : virtual public OrderedDeck
+
+class GameDeck : virtual public OrderedDeck
+{
+
+public:
+        
+    virtual void ShuffleDeck()=0;
+    virtual void ShuffleDeck(float64)=0;
+    
+    virtual float64 DealCard(Hand&)=0;
+    
+}
+;
+
+class RandomDeck : virtual public GameDeck
 {
 	private:
 		static const uint8 DECKSIZE = 52;
@@ -50,6 +64,22 @@ class RandomDeck : virtual public OrderedDeck
 			ShuffleDeck();
 		}
 
+}
+;
+
+class LiveDeck : virtual public GameDeck
+{
+    protected:
+    vector<DeckLocation> nextDeal;
+    public:
+    virtual void ShuffleDeck(){}
+    virtual void ShuffleDeck(float64){}
+    
+    virtual float64 DealCard(Hand&)=0;
+    
+    void SetTopCard(const DeckLocation &d);
+    
+    LiveDeck() {}
 }
 ;
 

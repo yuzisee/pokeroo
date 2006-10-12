@@ -28,10 +28,9 @@
 #include <iostream>
 #include "holdem2.h"
 
-using std::cout;
 using std::endl;
 
-const void CommunityPlus::PrintInterpretHand() const
+const void CommunityPlus::PrintInterpretHand(std::ostream& targetFile) const
 {
     unsigned long tempv = valueset;
     const char cardNamePlural[13][8]
@@ -56,43 +55,43 @@ const void CommunityPlus::PrintInterpretHand() const
             highCardNum--;
             tempv <<= 1;
         }
-		cout << cardNameSingular[highCardNum] << "-High " << flush;
+		targetFile << cardNameSingular[highCardNum] << "-High " << flush;
 
         if (strength == HoldemConstants::ROYAL
                 || strength == HoldemConstants::STRAIGHT)
         {
-			cout << "Straight" << flush;
+			targetFile << "Straight" << flush;
         }
         if (strength == HoldemConstants::ROYAL
                 || strength == HoldemConstants::FLUSH)
         {
-			cout << "Flush " << flush;
+			targetFile << "Flush " << flush;
         }
         return;
     }
 
     if (strength == HoldemConstants::BOAT)
     {
-        cout << "Full House: ";
-		cout << cardNamePlural[ (tempv / HoldemConstants::CARD_ACEHIGH) -1] ;
-        cout << " over ";
-        cout << cardNamePlural[ (tempv % HoldemConstants::CARD_ACEHIGH) -1] << flush;
+        targetFile << "Full House: ";
+		targetFile << cardNamePlural[ (tempv / HoldemConstants::CARD_ACEHIGH) -1] ;
+        targetFile << " over ";
+        targetFile << cardNamePlural[ (tempv % HoldemConstants::CARD_ACEHIGH) -1] << flush;
         return;
     }
 
     if (strength >= HoldemConstants::QUAD_LOW
             && strength <= HoldemConstants::QUAD_HIGH)
     {
-        cout << "Quad ";
-        cout << cardNamePlural[ strength - HoldemConstants::QUAD_LOW ] << flush;
+        targetFile << "Quad ";
+        targetFile << cardNamePlural[ strength - HoldemConstants::QUAD_LOW ] << flush;
         return;
     }
 
     if (strength > HoldemConstants::SET_ZERO
             && strength <= HoldemConstants::SET_HIGH)
     {
-        cout << "Trip ";
-        cout << cardNamePlural[ strength - HoldemConstants::SET_ZERO - 1 ] << flush;
+        targetFile << "Trip ";
+        targetFile << cardNamePlural[ strength - HoldemConstants::SET_ZERO - 1 ] << flush;
         return;
     }
 
@@ -110,19 +109,19 @@ const void CommunityPlus::PrintInterpretHand() const
 			++tempbestpair;
         }
         tempnextbestpair = tempStrength - tempSum;
-        cout << cardNamePlural[ tempbestpair ];
-        cout << " and ";
-        cout << cardNamePlural[ tempnextbestpair] << flush;
+        targetFile << cardNamePlural[ tempbestpair ];
+        targetFile << " and ";
+        targetFile << cardNamePlural[ tempnextbestpair] << flush;
         return;
     }
 
     if (strength > HoldemConstants::PAIR_ZERO)
     {
-        cout << "Pair of " <<
+        targetFile << "Pair of " <<
 			cardNamePlural[ strength - 1 - HoldemConstants::PAIR_ZERO ] << flush;
         return;
     }
-    cout << "Nothing" << flush;
+    targetFile << "Nothing" << flush;
 }
 
 const int8 CommunityPlus::CardsInSuit(const int8 a) const
@@ -130,24 +129,24 @@ const int8 CommunityPlus::CardsInSuit(const int8 a) const
 	return (flushCount[a] + 5);
 }
 
-const void CommunityPlus::DisplayHand() const
+const void CommunityPlus::DisplayHand(std::ostream& targetFile) const
 {
-	HandPlus::DisplayHand();
-	cout << "\t" << static_cast<int>(strength) << " : " << valueset << endl;
+	HandPlus::DisplayHand(targetFile);
+	targetFile << "\t" << static_cast<int>(strength) << " : " << valueset << endl;
 }
 
-const void CommunityPlus::DisplayHandBig() const
+const void CommunityPlus::DisplayHandBig(std::ostream& targetFile) const
 {
-	cout << endl;
+	targetFile << endl;
     if (strength < 10)
-		cout << "0";
+		targetFile << "0";
     if (strength < 100)
-		cout << "0";
-	cout << static_cast<int>(strength) << "\t\t";
-    PrintInterpretHand();
-    cout << endl;
+		targetFile << "0";
+	targetFile << static_cast<int>(strength) << "\t\t";
+    PrintInterpretHand(targetFile);
+    targetFile << endl;
 
-	HandPlus::DisplayHandBig();
+	HandPlus::DisplayHandBig(targetFile);
 }
 
 const void CommunityPlus::cleanLastTwo()
@@ -234,7 +233,7 @@ const void CommunityPlus::evaluateStrength()
 			--valueset;
 			straights <<= 1;
 				#ifdef DEBUGASSERT
-				//cout << "INFINTE LOOP: Quad-no-kicker!" << endl;
+				//std::cerr << "INFINTE LOOP: Quad-no-kicker!" << endl;
 				#endif
 		}
 
@@ -284,7 +283,7 @@ const void CommunityPlus::evaluateStrength()
             valueset <<= shiftCount;
 
             #ifdef DEBUGFLUSH
-				DisplayHandBig();
+				DisplayHandBig(cout);
             #endif
             return;
         }
@@ -345,7 +344,7 @@ const void CommunityPlus::RemoveFromHand(
 	const int8 aSuit,const uint8 aIndex,const uint32 aCard)
 {
 #ifdef DEBUGASSERT
-	cout << "HEAVILY INEFFICIENT. Avoid Use" << endl;
+	std::cerr << "HEAVILY INEFFICIENT. Avoid Use" << endl;
 	exit(1);
 #endif
 
@@ -368,7 +367,7 @@ const void CommunityPlus::AddToHand(
 				{
 					cout << "b" << bestPair << " n" << nextbestPair << endl;
 					cout << threeOfAKind << endl;
-					HandPlus::DisplayHandBig();
+					HandPlus::DisplayHandBig(cout);
 				}
 			#endif
 
@@ -418,7 +417,7 @@ const void CommunityPlus::AddToHand(
 				#ifdef DEBUGPAIR
 					cout << "b" << bestPair << " n" << nextbestPair << endl;
 					cout << threeOfAKind << endl;
-					HandPlus::DisplayHandBig();
+					HandPlus::DisplayHandBig(cout);
 				#endif
 
 
@@ -562,9 +561,9 @@ const void CommunityPlus::AppendUnique(const CommunityPlus& h)
 
 }
 
-const void CommunityPlus::Empty()
+const void CommunityPlus::SetEmpty()
 {
-	HandPlus::Empty();
+	HandPlus::SetEmpty();
 	flushCount[0] = -5;
 	flushCount[1] = -5;
 	flushCount[2] = -5;
@@ -655,7 +654,7 @@ const void CommunityPlus::SetUnique(const CommunityPlus& h)
 
 CommunityPlus::CommunityPlus()
 {
-	Empty();
+	SetEmpty();
 }
 /*
 CommunityPlus::CommunityPlus(const uint32 tempcardset[4])

@@ -71,6 +71,14 @@ void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
                 convertOutput.SetUnique(h);
                 convertOutput.DisplayHand(logFile);
                 logFile << "community" << endl;
+
+            #ifdef GRAPHMONEY
+            }
+
+            else
+            {
+                    logFile << "==========#" << ViewTable().handnum << "==========" << endl;
+            #endif
             }
         #endif
 
@@ -98,7 +106,7 @@ float64 ThresholdStrategy::MakeBet()
 
 float64 MultiThresholdStrategy::MakeBet()
 {
-    float64 multiThreshhold = pow(w->mean,ViewTable().GetNumberInHand()-1+redundancy); //subtract yourself
+    float64 multiThreshhold = pow(w->mean,ViewTable().GetNumberAtTable()-1+redundancy); //subtract yourself
         #ifdef LOGTHRESHOLD
 
             if( !(logFile.is_open()) )
@@ -112,7 +120,7 @@ float64 MultiThresholdStrategy::MakeBet()
             convertOutput.DisplayHand(logFile);
             logFile << "ThresholdAI" << endl;
 
-            logFile << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberInHand()-1+redundancy) << endl;
+            logFile << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberAtTable()-1+redundancy) << endl;
         #endif
 	if (multiThreshhold > aiThreshold)
 	{
@@ -120,7 +128,13 @@ float64 MultiThresholdStrategy::MakeBet()
 	}
 	else
 	{
-	    //if( redundancy > 0 ) return 0;
-		return ThresholdStrategy::MakeBet();
+	    logFile << "call" << endl;
+	    if( bCall == 3 ) return ViewTable().GetBigBlind()*2;
+	    if( bCall == 2 )
+	    {
+	        if( ThresholdStrategy::MakeBet() > ViewPlayer().GetBetSize() ) return ViewTable().GetBigBlind()*2;
+        }
+		if( bCall == 1 ) return ThresholdStrategy::MakeBet();
+		return ViewPlayer().GetBetSize();
 	}
 }

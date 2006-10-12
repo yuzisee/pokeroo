@@ -24,6 +24,8 @@
 #include "arena.h"
 
 #define DEBUG_EXFDEXF
+#define ASSUMEFOLDS
+
 
 /*
 class ExpectedCall
@@ -43,15 +45,29 @@ protected:
     const int8 playerID;
     const HoldemArena* table;
     const CallCumulationD* e;
+
+    #ifdef ASSUMEFOLDS
+    float64 eFold;
+/*
+    float64 wPct;
+    float64 scaleToMean;
+    float64 offset;
+*/
+    #endif
+
 public:
     ExpectedCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data)
     : playerID(id), table(base), e(data)
+    #ifdef ASSUMEFOLDS
+    ,eFold(base->GetNumberAtTable()-1)
+    #endif
     {}
 
     virtual ~ExpectedCallD();
 
     virtual float64 forfeitChips() const;
     virtual float64 foldGain() const;
+    virtual float64 oppBet() const;
     virtual float64 alreadyBet() const;
     virtual float64 callBet() const;
     virtual float64 chipDenom() const;
@@ -60,8 +76,13 @@ public:
     virtual int8 handsDealt() const;
     virtual float64 prevpotChips() const;
     virtual float64 betFraction(const float64 betSize) const;
-    virtual float64 exf(float64 betSize) = 0;
-    virtual float64 dexf(float64 betSize) = 0;
+    virtual float64 exf(const float64 betSize) = 0;
+    virtual float64 dexf(const float64 betSize) = 0;
+
+    #ifdef ASSUMEFOLDS
+    virtual float64 callingPlayers() const;
+    virtual void callingPlayers(float64 n);
+    #endif
 
 
         #ifdef DEBUG_EXFDEXF
@@ -107,16 +128,20 @@ protected:
     float64 totalexf;
     float64 totaldexf;
 
-    void query(float64 betSize);
+    float64 impliedFactor;
+
+    void query(const float64 betSize);
 public:
     ExactCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data)
-    : ExpectedCallD(id,base,data)
+    : ExpectedCallD(id,base,data), impliedFactor(1)
     {
         queryinput = UNITIALIZED_QUERY;
     }
 
-    virtual float64 exf(float64 betSize);
-    virtual float64 dexf(float64 betSize);
+    virtual float64 exf(const float64 betSize);
+    virtual float64 dexf(const float64 betSize);
+
+    virtual void SetImpliedFactor(const float64 bonus);
 }
 ;
 
@@ -127,8 +152,8 @@ public:
     : ExpectedCallD(id,base,data)
     {}
 
-    virtual float64 exf(float64 betSize);
-    virtual float64 dexf(float64 betSize);
+    virtual float64 exf(const float64 betSize);
+    virtual float64 dexf(const float64 betSize);
 };
 
 
@@ -142,14 +167,18 @@ protected:
     float64 deadPot;
 public:
 
-    DebugArena(BlindStructure* b, bool illustrate) : HoldemArena(b,illustrate,false), deadPot(0)
+    DebugArena(BlindStructure* b,std::ostream& target, bool illustrate) : HoldemArena(b,target,illustrate,false), deadPot(0)
     {}
 
+    void InitGame();
     const float64 PeekCallBet();
+    void SetBlindPot(float64 amount);
     void SetDeadPot(float64 amount);
     void SetBet(int8 playerNum, float64 amount);
 
+    void GiveCards(int8 playerNum, CommunityPlus h);
 
+    void AssignHandNum( uint32 n );
 }
 ;
 #endif

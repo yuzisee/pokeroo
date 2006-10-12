@@ -21,8 +21,12 @@
 #include <math.h>
 #include "inferentials.h"
 
+//#include <iostream>
+
 //#define SMOOTHED_CALLCUMULATION
 #define SMOOTHED_CALLCUMULATION_D
+
+const float64 CallCumulation::tiefactor = DEFAULT_TIE_SCALE_FACTOR;
 
 
 void DistrShape::AddVal(float64 x, float64 occ)
@@ -82,18 +86,13 @@ CallCumulation::~CallCumulation()
 {
 }
 
-float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
-{
-    return pctWillCall(oddsFaced,DEFAULT_TIE_SCALE_FACTOR);
-}
-
 ///oddsFaced is the "virtual chance to win" that would correspond to the pot odds faced.
 ///eg. 4:1 pot odds means opponent can bet 1 to win 4, (ie. pay 1 to receive 5 = 20% = 0.2 = oddsFaced)
 ///The lower oddsFaced is, the better his/her odds are.
 ///On a side note, if you're looking at heads up, and I bet x/3 of the pot, I'm giving him 4:1 or 0.2
 ///A quick way to figure out what to put for oddsFaced would be to say:
 ///If this is a permanently-even bet to make, what would my chance to win be?
-float64 CallCumulation::pctWillCall(const float64 oddsFaced, const float64 tiefactor) const
+float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
 {
 
 /*    if( (oddsFaced - .63 < 0.0001 && oddsFaced - .63 > -0.0001) || (oddsFaced - .48 < 0.0001 && oddsFaced - .48 > -0.0001) )
@@ -160,6 +159,8 @@ float64 CallCumulationD::pctWillCallD(const float64 oddsFaced) const
 	const size_t maxsize = cumulation.size();
 	if( maxsize <= 1 ) return 0;
 	const size_t guess = searchGap(oddsFaced);
+
+
 	if( guess >= maxsize )
     {
         return 0; //This is either less than 0 or more than maxsize-1, to return 0 slope
@@ -190,6 +191,15 @@ float64 CallCumulationD::pctWillCallD(const float64 oddsFaced) const
     #endif
 }
 
+float64 SlidingPairCallCumulationD::pctWillCall(const float64 oddsFaced) const
+{
+    return left->pctWillCall(oddsFaced) * (1-slider) + right->pctWillCall(oddsFaced) * (slider);
+}
+
+float64 SlidingPairCallCumulationD::pctWillCallD(const float64 oddsFaced) const
+{
+    return left->pctWillCallD(oddsFaced) * (1-slider) + right->pctWillCallD(oddsFaced) * (slider);
+}
 /*
 float64 CallCumulation::pctWillCallDEBUG(const float64 oddsFaced, const float64 tiefactor) const
 {

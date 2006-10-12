@@ -30,10 +30,11 @@ typedef signed short int int16;
 
 typedef unsigned long int uint32;
 typedef signed long int int32;
-
+/*
+ISO C++ doesn't support 'long long'
 typedef unsigned long long int uint64;
 typedef signed long long int int64;
-
+*/
 
 typedef long double float128;
 typedef double float64;

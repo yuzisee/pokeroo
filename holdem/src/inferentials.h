@@ -164,6 +164,7 @@ class CallCumulation
 {
 protected:
 	size_t searchGap(const float64) const;
+    static const float64 tiefactor;
 public:
     CallCumulation(const CallCumulation& o)
     {
@@ -175,7 +176,6 @@ public:
 
 	vector<StatResult> cumulation;
 	//float64 pctWillCallDEBUG(const float64, const float64) const;
-	virtual float64 pctWillCall(const float64, const float64) const;
 	virtual float64 pctWillCall(const float64) const;
 
 	#ifdef DEBUGLOGINFERENTIALS
@@ -228,7 +228,7 @@ public:
 
 class CallCumulationZero : public virtual CallCumulationD
 {
-    virtual float64 pctWillCall(const float64 oddsFaced, const float64 tiefactor) const
+    virtual float64 pctWillCall(const float64 oddsFaced) const
     {return 0;}
     virtual float64 pctWillCallD(const float64 oddsFaced) const
     {return 0;}
@@ -237,10 +237,25 @@ class CallCumulationZero : public virtual CallCumulationD
 
 class CallCumulationFlat : public virtual CallCumulationD
 {
-    virtual float64 pctWillCall(const float64 oddsFaced, const float64 tiefactor) const
+    virtual float64 pctWillCall(const float64 oddsFaced) const
     {return 1-oddsFaced;}
     virtual float64 pctWillCallD(const float64 oddsFaced) const
     {return -1;}
+}
+;
+
+class SlidingPairCallCumulationD : public virtual CallCumulationD
+{
+    protected:
+        float64 slider;
+        const CallCumulationD *left;
+        const CallCumulationD *right;
+    public:
+        SlidingPairCallCumulationD( const CallCumulationD* e_left, const CallCumulationD* e_right, const float64 scale )
+        : slider( scale ), left(e_left), right(e_right)
+        {}
+        virtual float64 pctWillCall(const float64 oddsFaced) const;
+        virtual float64 pctWillCallD(const float64 oddsFaced) const;
 }
 ;
 

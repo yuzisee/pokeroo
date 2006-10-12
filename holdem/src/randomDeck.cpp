@@ -21,7 +21,7 @@
 //#define DEBUGRANDOMDEAL
 //#include <iostream>
 
-#define FORCESEED
+//#define FORCESEED
 
 //#define COOLSEEDINGVIEWER
 
@@ -161,4 +161,16 @@ float64 RandomDeck::DealCard(Hand& h)
 	return 1;//return 0; if no cards left
 }
 
+float64 LiveDeck::DealCard(Hand& h)
+{
+    if( nextDeal.empty() ) return 0;
+	h.AddToHand(nextDeal.back());
+	nextDeal.pop_back();
+    return 1;//return 0; if no cards left
+}
+
+void LiveDeck::SetTopCard(const DeckLocation& d)
+{
+    nextDeal.push_back(d);
+}
 

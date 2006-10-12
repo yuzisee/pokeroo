@@ -21,14 +21,12 @@
 #define DEBUGSITUATION
 
 #include "stratPosition.h"
+#include "stratTournament.h"
 #include "stratManual.h"
 #include "stratThreshold.h"
 #include "arena.h"
 #include "aiCache.h"
-#include "engine.h"
-#include "portability.h"
 #include "functionmodel.h"
-#include "arenaSituation.h"
 #include "aiInformation.h"
 #include <algorithm>
 
@@ -49,13 +47,13 @@ void genW(CommunityPlus& h1, CommunityPlus& h2)
 
 #ifdef DEBUGSITUATION
 	cout << "Cards available to me" << endl;
-	h1.ShowHand(false);
+	h1.DisplayHand(cout);
 	cout << endl;
 #endif
 
 #ifdef DEBUGSITUATION
 	cout << "Cards in community" << endl;
-	h2.ShowHand(false);
+	h2.DisplayHand(cout);
 	cout << endl;
 
 	cout << endl;
@@ -118,7 +116,7 @@ void testHT(int bonus = 0, int bOffsuit = 0)
 			++cardcount;
 		}
 		cout << "Cards dealt" << endl;
-		h1.HandPlus::DisplayHandBig();
+		h1.HandPlus::DisplayHandBig(cout);
 		cout << endl;
 	}else
 	{
@@ -179,13 +177,13 @@ void genC(CommunityPlus& h1, CommunityPlus& h2)
 
 #ifdef DEBUGSITUATION
 	cout << "Cards available to me" << endl;
-	h1.ShowHand(false);
+	h1.DisplayHand(cout);
 	cout << endl;
 #endif
 
 #ifdef DEBUGSITUATION
 	cout << "Cards in community" << endl;
-	h2.ShowHand(false);
+	h2.DisplayHand(cout);
 	cout << endl;
 
 	cout << endl;
@@ -269,7 +267,7 @@ void testC()
     }
     genC(h1,h2);
 }
-
+#ifdef DEBUG_TESTDEALINTERFACE
 void testHands()
 {
     	RandomDeck rd;
@@ -294,6 +292,8 @@ void testHands()
     deal.OmitCards(h1);
      deal.AnalyzeComplete(&ds);
 }
+
+#endif
 
 void testDR()
 {
@@ -336,18 +336,18 @@ void testDR()
 
 #ifdef DEBUGSITUATION
 	cout << "Cards available to me" << endl;
-	h1.ShowHand(true);
+	h1.DisplayHandBig(cout);
 	cout << endl;
 #endif
 	/*
 	a.FillShowHand(h1.cardset,false);printf("\n");
 	CommunityPlus cm(h1.cardset,h1.suitCount);
-	cm.DisplayHandBig();printf("\n");
+	cm.DisplayHandBig(cout);printf("\n");
 	cm.DisplayHand();printf("\n");
 	*/
 #ifdef DEBUGSITUATION
 	cout << "Cards in community" << endl;
-	h2.ShowHand(true);
+	h2.DisplayHandBig(cout);
 	cout << endl;
 
 //	a.FillShowHand(h2.cardset,false);
@@ -367,19 +367,19 @@ void testDR()
 //	if( i == 0 )deal.bRecursive = false;
 
 	CommunityPlus m, co;
-	//h1.DisplayHandBig();
+	//h1.DisplayHandBig(cout);
 	m.SetUnique(h1);
 
 
 			/*		cout << "b" << m.bestPair << " n" << m.nextbestPair << endl;
 					cout << m.threeOfAKind << endl;
-					m.HandPlus::DisplayHandBig();
+					m.HandPlus::DisplayHandBig(cout);
 					cout <<endl<<endl;
-h2.DisplayHandBig();*/
+h2.DisplayHandBig(cout);*/
 co.SetUnique(h2);
 					/*cout << "b" << co.bestPair << " n" << co.nextbestPair << endl;
 					cout << co.threeOfAKind << endl;
-					co.HandPlus::DisplayHandBig();
+					co.HandPlus::DisplayHandBig(cout);
 */
 
 /*
@@ -490,7 +490,7 @@ void genCMD(uint16 procnum)
 
             if( procnum == 1 )
             {
-                //h1.DisplayHandBig();
+                //h1.DisplayHandBig(cout);
                 genW(h1);
                 return;
             }
@@ -503,7 +503,7 @@ void goCMD(int argc, char* argv)
  genCMD(atoi(argv));
 }
 
-
+/*
 void testFunction()
 {
     RandomDeck rd;
@@ -519,7 +519,7 @@ void testFunction()
     c[0] = a[0];
     for(int32 i=1;i<50*50*50*50;++i)
     {
-        x.Empty();
+        x.SetEmpty();
         a[i] = (a[i-1]*17 + (rd.dealt.Value+5)/(rd.dealt.Suit+5)*19)/41;
         if( a[i] > 1e30 || a[i] < -1e30 )
         {
@@ -587,21 +587,9 @@ void testFunction()
     delete [] a;
     delete [] c;
     cout << "Cleanup" << endl;
-    /*
-    DummyFunctionModel m(0.0001);
-    cout << m.FindMax(0,1.4) << endl;
-    cout << m.FindZero(0,1.4) << endl;
 
-//	StatResult t = GainModel::ComposeBreakdown(0.5,0.7);
-	//StatResult t = GainModel::ComposeBreakdown(0.6,0.7);
-	StatResult t = GainModel::ComposeBreakdown(0.4,0.45);
-		cout << endl << t.loss << " l +\t"
-				<< t.splits << " s +\t" << t.wins << " w =\t" <<
-				t.pct
-				<< " pct\t"<< t.genPeripheral() <<flush;
-				*/
 }
-
+*/
 void testNewCallStats()
 {
     CommunityPlus h1, h2;
@@ -672,10 +660,10 @@ void testPosition()
     h1.SetUnique(h2);
 */
 //Hole cards
-    //h1.AddToHand(HoldemConstants::SPADES, 11, HoldemConstants::CARD_QUEEN );
-    //h1.AddToHand(HoldemConstants::CLUBS, 13, HoldemConstants::CARD_ACEHIGH );
-    h1.AddToHand(HoldemConstants::HEARTS, 3, HoldemConstants::CARD_FOUR );
-    h1.AddToHand(HoldemConstants::CLUBS, 7, HoldemConstants::CARD_EIGHT );
+    h1.AddToHand(HoldemConstants::SPADES,6, HoldemConstants::CARD_SEVEN );
+    h1.AddToHand(HoldemConstants::CLUBS, 6, HoldemConstants::CARD_SEVEN );
+    //h1.AddToHand(HoldemConstants::HEARTS, 3, HoldemConstants::CARD_FOUR );
+    //h1.AddToHand(HoldemConstants::CLUBS, 7, HoldemConstants::CARD_EIGHT );
     const uint8 dealtCommunityNumber=0;
 
 
@@ -691,13 +679,13 @@ void testPosition()
 
 #ifdef DEBUGSITUATION
 	cout << "Cards available to me" << endl;
-	h1.ShowHand(false);
+	h1.DisplayHand(cout);
 	cout << endl;
 #endif
 
 #ifdef DEBUGSITUATION
 	cout << "Cards with community" << endl;
-	h2.ShowHand(false);
+	h2.DisplayHand(cout);
 	cout << endl;
 
 	cout << endl;
@@ -706,9 +694,10 @@ void testPosition()
     //WinStats ds(h1, h2,FIRST_DEAL-2);
     DistrShape myDistrPCT(0);
     DistrShape myDistrWL(0);
-	CallCumulationD o;
+	CallCumulationD o,ofd;
     StatsManager::Query(0,&myDistrPCT,&myDistrWL,h1, h2,dealtCommunityNumber);
     StatsManager::QueryOffense(o,h1, h2,dealtCommunityNumber);
+    StatsManager::QueryDefense(ofd,h1, h2,dealtCommunityNumber);
 	//deal.OmitCards(h1);
     // deal.AnalyzeComplete(&ds);
 
@@ -729,8 +718,8 @@ void testPosition()
 
     float64 chipDenom = .25;
 	BlindStructure b(chipDenom,chipDenom*2);
-	DebugArena myTable(&b, true);
-    UserConsoleStrategy testDummy[3];
+	DebugArena myTable(&b,cout, true);
+    UserConsoleStrategy testDummy[5];
 
 	myTable.SetDeadPot(0);
 	const float64 t_chipCount = 87.5;
@@ -742,18 +731,27 @@ void testPosition()
     const bool bCallAllIn = false;
     float64 oppBet = 87.5;
     if ( !bCallAllIn ) oppBet = myTable.GetBigBlind() ;
-    StatResult worstStatResult = GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst);
-    StatResult myChoiceStatResult = worstStatResult;
-    if( bCallAllIn ) myChoiceStatResult = GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean);
 
     myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",87.5, testDummy+2) , oppBet );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",87.5, testDummy+4) , 0 );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",87.5, testDummy+3) , 0 );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",87.5, testDummy+1) , 0 );
 
 
     ExactCallD myExpectedCall(0, &myTable, &o);
     //ZeroCallD myExpectedCall(0, &myTable, &flat);
 
+    StatResult worstStatResult = GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst);
+    StatResult meanStatResult = GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean);
 
 
+    StatResult myChoiceStatResult = worstStatResult*.75 + meanStatResult*.25;
+    if( bCallAllIn ) myChoiceStatResult = GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean);
+
+    //myExpectedCall.SetFoldScale(0.25,meanStatResult.wins,1);
+
+    cout << "myExpectedCall.handsDealt(): " << (int)myExpectedCall.handsDealt() << endl;
+    cout << "myTable.GetNumberAtTable(): " << (int)myTable.GetNumberAtTable() << endl;
 
 ///TODO compare with revision 46
 	GainModel g(myChoiceStatResult,&myExpectedCall);
@@ -795,11 +793,11 @@ void testPosition()
         #endif
 
 
-	GainModelNoRisk gno(worstStatResult,&myExpectedCall);
-	GainModelReverseNoRisk grno(worstStatResult,&myExpectedCall);
-	SlidingPairFunction gp(&g,&gr,0.5,&myExpectedCall);
-	SlidingPairFunction ap(&gno,&grno,0.5,&myExpectedCall);
-	SlidingPairFunction gpp(&gp,&ap,0.5,&myExpectedCall);
+	GainModelNoRisk gno(myChoiceStatResult,&myExpectedCall);
+	GainModelReverseNoRisk grno(myChoiceStatResult,&myExpectedCall);
+	SlidingPairFunction gp(&g,&gr,0.8,&myExpectedCall);
+	SlidingPairFunction ap(&gno,&grno,0.8,&myExpectedCall);
+	SlidingPairFunction gpp(&gp,&ap,.25,&myExpectedCall);
 
 
         #ifdef DEBUG_GAIN
@@ -866,36 +864,170 @@ turningPoint = gpp.FindBestBet();
 }
 
 
-void testPlay()
+void debugPosition()
 {
-	BlindStructure b(.5,1);
+
+    CommunityPlus h1, honly, h2;
+
+
+
+
+
+
+//Community 3S 3H 3C KD AD
+    h2.AddToHand(HoldemConstants::DIAMONDS, 13, HoldemConstants::CARD_ACEHIGH );
+    h2.AddToHand(HoldemConstants::DIAMONDS, 12, HoldemConstants::CARD_KING );
+    h2.AddToHand(HoldemConstants::HEARTS, 2, HoldemConstants::CARD_TREY );
+    h2.AddToHand(HoldemConstants::SPADES, 2, HoldemConstants::CARD_TREY );
+    h2.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
+    h1.SetUnique(h2);
+
+//Hole cards 8S 8H, JH JD
+    //honly.AddToHand(HoldemConstants::SPADES,7, HoldemConstants::CARD_EIGHT );
+    //honly.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
+    honly.AddToHand(HoldemConstants::DIAMONDS,10, HoldemConstants::CARD_JACK );
+    honly.AddToHand(HoldemConstants::HEARTS, 10, HoldemConstants::CARD_JACK );
+    h1.AppendUnique(honly);
+    const uint8 dealtCommunityNumber=5;
+
+
+#ifdef DEBUGSITUATION
+	cout << "Cards available to me" << endl;
+	h1.DisplayHand(cout);
+	cout << endl;
+#endif
+
+#ifdef DEBUGSITUATION
+	cout << "Cards with community" << endl;
+	h2.DisplayHand(cout);
+	cout << endl;
+
+	cout << endl;
+#endif
+
+   float64 chipDenom = .25;
+	BlindStructure b(chipDenom,chipDenom*2);
+	DebugArena myTable(&b,cout, true);
+    UserConsoleStrategy testDummy[5];
+
+
+
+    PositionalStrategy a(1);
+    //TournamentStrategy a;
+
+
+
+    #ifdef DEBUGSPECIFIC
+    myTable.AssignHandNum(DEBUGSPECIFIC);
+    #endif
+    myTable.SetBlindPot(0);
+	myTable.SetDeadPot(30);
+
+
+    myTable.SetBet(  myTable.AddPlayer("Me",35, &a) , 0 );
+    //myTable.SetBet(  myTable.AddPlayer("X3",125, testDummy+1) ,  myTable.GetSmallBlind() );
+
+
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",74, testDummy+2) , 0 );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",17, testDummy+4) , 0 );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",50, testDummy+1) , 0 );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",420, testDummy+3) , 0 );
+    myTable.InitGame();
+
+    cout << "Number in hand " << (int)(myTable.GetNumberInHand()) << endl;
+
+    myTable.GiveCards(0,honly);
+
+    a.SeeCommunity(h2,dealtCommunityNumber);
+
+    cout << endl << a.MakeBet() << endl;
+}
+
+
+
+
+Player* testPlay(char headsUp = 'G')
+{
+	BlindStructure b(.05,.1);
 	GeomPlayerBlinds bg(b.SmallBlind()/2,b.BigBlind()/2,2,2);
-	HoldemArena myTable(&bg, true, true);
+	HoldemArena myTable(&bg, cout,true, true);
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;
 	ConsoleStrategy manPlay[3];
-	MultiThresholdStrategy pushFold;
-	MultiThresholdStrategy tightPushFold(1);
+	MultiThresholdStrategy pushFold(0,2);
+	MultiThresholdStrategy tightPushFold(1,0);
 	//ConsoleStepStrategy watchPlay;
 	PositionalStrategy smartConserveDefence(0);
 	PositionalStrategy smartGambleDefence(1);
 	PositionalStrategy smartConserveOffence(2);
 	PositionalStrategy smartGambleOffence(3);
+	PositionalStrategy smartConserveLoose(4);
+	PositionalStrategy smartGambleLoose(5);
+
+    TournamentStrategy asterisk;
+    TournamentStrategy gruff(1);
 
 	//myTable.AddPlayer("Stag", &stagStrat);
 	//myTable.AddPlayer("N1", manPlay);
-	//myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
-	//myTable.AddPlayer("S2", &smartGambleOffence); /* riskymode = 3 */
-	myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
-	//myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
 	//myTable.AddPlayer("N2", manPlay+1);
-	//myTable.AddPlayer("X3", &pushFold);
+	myTable.AddPlayer("X3", &pushFold);
 	myTable.AddPlayer("A3", &tightPushFold);
+	//myTable.AddPlayer("bluff", &gruff); /* riskymode = 0 */
 	//myTable.AddPlayer("P1", &consolePlay);
 
-	myTable.PlayGame();
+    switch(headsUp)
+    {
+        case 'M':
+            myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
+            break;
+        case 'S':
+            myTable.AddPlayer("S2", &smartGambleOffence); /* riskymode = 3 */
+            break;
+        case 'G':
+            myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
+            break;
+        case 'V':
+            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
+            break;
+        case 'W':
+            myTable.AddPlayer("W2", &smartConserveLoose); /* riskymode = 4 */
+            break;
+        case 'Q':
+            myTable.AddPlayer("Q2", &smartGambleLoose); /* riskymode = 5 */
+            break;
+        default:
+            myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
+            myTable.AddPlayer("S2", &smartGambleOffence); /* riskymode = 3 */
+            myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
+            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
+            myTable.AddPlayer("Q2", &smartGambleLoose); /* riskymode = 5 */
+            myTable.AddPlayer("W2", &smartConserveLoose); /* riskymode = 4 */
+            case '*':
+            myTable.AddPlayer("_xa", &asterisk); /* riskymode = 6 */
+            break;
+
+    }
+	return myTable.PlayTable();
 }
 
+
+void superGame(char headsUp = 0)
+{
+    while(true)
+    {
+        Player* iWin = testPlay(headsUp);
+        system("pause");
+        std::ofstream tourny("batchResults.txt", std::ios::app);
+        if( iWin == 0 )
+        {
+            tourny << "[No winner]?" << endl;
+        }else
+        {
+            tourny << iWin->GetIdent() << endl;
+        }
+        tourny.close();
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -920,7 +1052,8 @@ int main(int argc, char* argv[])
 
 	if( argc == 2 )
 	{
-        goCMD(2,argv[1]);
+        //goCMD(2,argv[1]);
+        testPlay(argv[1][0]);
     }else if( argc == 4 )
     {
         uint16 i=675;
@@ -930,16 +1063,19 @@ int main(int argc, char* argv[])
 			 if( i == 0 ) break;
 			 --i;
         }
-	}else
+	}
+	else
 	{
 
 	    ///Play this hand on force-random
 	    ///Check pre-flop and push all-in after the flop.
 	    ///Now, monitor how the money is divided between N2 and X1.
 	    //testPosition();
-	    testPlay();
-        //testFunction();
-        //testNewCallStats();
+	    //debugPosition();
+	    superGame(0);
+	    //testPlay(0);
+	    //testPlay('*');
+
 
 	    //testC();
 		//goCMD(2,"505");

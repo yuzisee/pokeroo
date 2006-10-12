@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 by Joseph Huang                                    *
+ *   Copyright (C) 2006 by Joseph Huang                                    *
  *                                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -18,27 +18,44 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef HOLDEM_SearchBaseStrat
-#define HOLDEM_SearchBaseStrat
+#ifndef HOLDEM_ScalarFunctions
+#define HOLDEM_ScalarFunctions
 
-#include "arena.h"
-#include "engine.h"
-#include "aiCache.h"
+#include "portability.h"
 
-class SearchStrategy : public PlayerStrategy
+
+//#define SINGLETURNINGPOINT
+#define BYPASS_ANOMALIES
+
+class ScalarFunctionModel
 {
+    private:
+        #ifndef SINGLETURNINGPOINT
+        float64 SplitTurningPoint(float64 x1,float64 y1,float64 xb,float64 yb,float64 xn,float64 yn,float64 x2,float64 y2,float64 signDir);
+        #endif
     protected:
-        DistrShape* w;
-		void cleanstats();
-	public:
+        float64 trisectionStep(float64,float64,float64,float64,float64,float64) const;
+        float64 searchStep(float64,float64,float64,float64,float64,float64);
+        float64 quadraticStep(float64,float64,float64,float64,float64,float64) const;
+        float64 newtonStep(float64,float64);
+        float64 bisectionStep(float64,float64) const;
+		virtual float64 FindTurningPoint(float64 x1,float64 y1,float64 xb,float64 yb,float64 x2,float64 y2,float64 signDir);
+    public:
+    float64 quantum;
+    ScalarFunctionModel(float64 step) : quantum(step){};
+    virtual float64 f(const float64) = 0;
+    virtual float64 fd(const float64, const float64) = 0;
+	virtual float64 FindMax(float64,float64) ;
+	virtual float64 FindMin(float64,float64) ;
+	virtual float64 FindZero(float64,float64) ;
+    virtual ~ScalarFunctionModel();
 
-		SearchStrategy() : PlayerStrategy(),w(0){}
-        virtual ~SearchStrategy();
-
-		virtual void SeeCommunity(const Hand&, const int8);
 
 }
 ;
 
+
+
 #endif
+
 

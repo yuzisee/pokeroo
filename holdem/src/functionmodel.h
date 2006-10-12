@@ -23,7 +23,7 @@
 
 #include "functionbase.h"
 #include "inferentials.h"
-#include "arenaSituation.h"
+#include "callSituation.h"
 #include <math.h>
 
 #define DEBUG_GAIN
@@ -91,18 +91,34 @@ class GainModel : public virtual HoldemFunctionModel
 {
 	protected:
 	StatResult shape;
+	float64 f_battle;
 	uint8 e_battle;
 	float64 p_cl;
 	float64 p_cw;
 	public:
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 	GainModel(const StatResult s,ExpectedCallD *c)
-		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s),e_battle(c->handsDealt()-1)
+		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s),f_battle(c->callingPlayers())
 		{
+		    //e_battle = static_cast<int8>(f_battle); //Truncate
+		    e_battle = c->handsDealt()-1;
 //		    const float64 t = c->chipDenom();
 		    if( quantum == 0 ) quantum = 1;
-            p_cl =  1 - pow(1 - shape.loss,e_battle);
-            p_cw = pow(shape.wins,e_battle);
+
+		    float64 oldTotal = 1 - pow(1 - shape.loss,e_battle) + pow(shape.wins,e_battle);
+
+            //std::cout << "Old <p_cl,p_cw>: " <<  1 - pow(1 - shape.loss,e_battle) << "," << pow(shape.wins,e_battle) << endl;
+            //std::cout << "e_battle is " << (int)e_battle << "\tf_battle is " << f_battle << endl;
+
+            p_cl =  1 - pow(1 - shape.loss,f_battle);
+            p_cw = pow(shape.wins,f_battle);
+
+            float64 newTotal = p_cl + p_cw;
+
+            p_cl *= oldTotal/newTotal;
+            p_cw *= oldTotal/newTotal;
+
+            //std::cout << "New <p_cl,p_cw>: " << p_cl << "," << p_cw << endl;
 		}
 
     virtual ~GainModel();
@@ -117,7 +133,6 @@ class GainModel : public virtual HoldemFunctionModel
             float64 dist;
             if( points > 0 ) dist = (end-start)/points;
 
-
             target << "x,gain,dgain,exf.chips,dexf,win,lose" << std::endl;
             if( points > 0 && dist > 0 )
             {
@@ -131,12 +146,16 @@ class GainModel : public virtual HoldemFunctionModel
 
                     target << i << "," << y << "," << fd(i,y) << "," << exf << "," << dexf << "," << p_cw << "," << p_cl << std::endl;
 
+
                 }
             }else
             {
-                target << end << "," << f(end) << "," << fd(end,f(end)) << "," << e->exf(end) << "," << e->dexf(end) << "," << p_cw << "," << p_cl <<std::endl;
+                target << end << "," << f(end);
+                target << "," << fd(end,f(end));
+                target << "," << e->exf(end);
+                target << "," << e->dexf(end);
+                target << "," << p_cw << "," << p_cl <<std::endl;
             }
-
 
         }
 

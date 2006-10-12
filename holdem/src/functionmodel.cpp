@@ -57,6 +57,7 @@ float64 HoldemFunctionModel::FindBestBet()
 {
     const float64& myMoney = e->maxBet();
     const float64& betToCall = e->callBet();
+
     if( myMoney < betToCall ) return myMoney;
     return FindMax(betToCall,myMoney);
 }
@@ -65,7 +66,8 @@ float64 GainModel::f(const float64 betSize)
 {
 
 	const float64 x = e->betFraction(betSize);
-	const float64 exf = e->betFraction(e->exf(betSize));
+	float64 exf = e->betFraction(e->exf(betSize));
+	if( exf > 1 ) exf = 1; //This is necessary because of impliedFactor
     const float64 f_pot = e->betFraction( e->prevpotChips() );
     const float64 exf_live = exf - f_pot;
 
@@ -132,7 +134,8 @@ float64 GainModel::fd(const float64 betSize, const float64 y)
     if( x == 1 ) x -= quantum/4; //Approximate extremes to avoide division by zero
 
     //const float64 qdenom = (2*x+f_pot);
-	const float64 exf = e->betFraction(e->exf(betSize));
+	float64 exf = e->betFraction(e->exf(betSize));
+	if( exf > 1 ) exf = 1; //This is necessary because of impliedFactor
 		//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B
 	const float64 dexf = e->dexf(betSize);
     const float64 f_pot = e->betFraction(e->prevpotChips());
@@ -211,7 +214,8 @@ float64 GainModelNoRisk::f(const float64 betSize)
 {
 
 	const float64 x = e->betFraction(betSize);
-	const float64 exf = e->betFraction(e->exf(betSize));
+	float64 exf = e->betFraction(e->exf(betSize));
+	if( exf > 1 ) exf = 1; //This is necessary because of impliedFactor
     const float64 f_pot = e->betFraction(e->prevpotChips());
     const float64 exf_live = exf - f_pot;
 
@@ -332,7 +336,8 @@ float64 GainModelReverse::f(const float64 betSize)
     const float64 oppBankroll = e->allChips() - e->maxBet();
     const float64 oppFoldGain = 1 + e->forfeitChips()/oppBankroll;
 	const float64 x = betSize / oppBankroll;
-	const float64 exf = e->exf(betSize)/oppBankroll;
+	float64 exf = e->exf(betSize)/oppBankroll;
+	if( exf > 1 ) exf = 1; //This is necessary because of impliedFactor
     const float64 f_pot = e->prevpotChips()/oppBankroll;
     const float64 exf_live = exf - f_pot;
 
@@ -359,7 +364,7 @@ float64 GainModelReverse::f(const float64 betSize)
                 );
 	}
 
-
+//Notice that if (exf > 1), then (e->exf(betSize) > oppBankroll) which is impossible. This caused a -1.#IND. bug in the past
 	return
     oppFoldGain -
         (
@@ -378,6 +383,7 @@ float64 GainModelReverse::fd(const float64 betSize, const float64 y)
 	float64 x = betSize / oppBankroll;
 
     float64 exf = e->exf(betSize)/oppBankroll;
+    if( exf > 1 ) exf = 1; //This is necessary because of impliedFactor
 
     if( exf == 1 )
     {
@@ -441,7 +447,8 @@ float64 GainModelReverseNoRisk::f(const float64 betSize)
     const float64 f_pot = e->prevpotChips()/oppBankroll;
     const float64 oppFoldGain = 1 + e->forfeitChips()/oppBankroll;
 	const float64 x = betSize / oppBankroll;
-	const float64 exf = e->exf(betSize)/oppBankroll;
+	float64 exf = e->exf(betSize)/oppBankroll;
+	if( exf > 1 ) exf = 1; //This is necessary because of impliedFactor
     const float64 exf_live = exf - f_pot;
 
 
@@ -564,7 +571,7 @@ float64 SlidingPairFunction::f(const float64 x)
     return y;
 }
 
-float64 SlidingPairFunction::fd(const float64 x, const float64 y)
+float64 SlidingPairFunction::fd(const float64 x, const float64 y_dummy)
 {
     if( last_x != x )
     {

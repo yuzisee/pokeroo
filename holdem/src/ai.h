@@ -29,9 +29,10 @@
 
 #include "inferentials.h"
 
-#define PROGRESSUPDATE
-//#define SUPERPROGRESSUPDATE
 
+//#define PROGRESSUPDATE
+//#define SUPERPROGRESSUPDATE
+//#define DEBUG_TESTDEALINTERFACE
 
 struct StatRequest
 {
@@ -143,8 +144,8 @@ public:
 			void debugPrint()
 			{
 				cout << endl << "CallStats repeated=" << myWins[statGroup].repeated;
-				oppStrength.DisplayHandBig();
-				myStrength.DisplayHandBig();
+				oppStrength.DisplayHandBig(cout);
+				myStrength.DisplayHandBig(cout);
 			}
 		#endif
 }
@@ -192,6 +193,8 @@ public:
 ;
 
 
+#ifdef DEBUG_TESTDEALINTERFACE
+
 class DummyStats : virtual public PlayStats
 {
 	public:
@@ -211,7 +214,7 @@ class DummyStats : virtual public PlayStats
 		        viewer.SetUnique(myStrength);
 		        viewer.AddToHand(dk);
 		        viewer.evaluateStrength();
-		        viewer.DisplayHandBig();
+		        viewer.DisplayHandBig(cout);
 		    }
 			StatRequest a;
 			a.bNewHand = false;
@@ -233,14 +236,15 @@ class DummyStats : virtual public PlayStats
 			myWins[0].loss = 0;
 			myWins[0].splits = 0;
 			myWins[0].repeated = 0;
-            oppStrength.Empty();
+            oppStrength.SetEmpty();
             oppStrength.SetUnique(community);
-            oppStrength.DisplayHandBig();
+            oppStrength.DisplayHandBig(cout);
             currentCard=0;
 		}
 
 }
 ;
+#endif
 
 
 

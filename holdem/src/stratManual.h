@@ -18,15 +18,17 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#define DEBUGSAVEGAME
+
 
 
 #ifndef HOLDEM_ConsoleStrat
 #define HOLDEM_ConsoleStrat
 
-#include <fstream>
-#include "player.h"
 
+#include "arena.h"
+#ifdef DEBUGSAVEGAME
+#include <fstream>
+#endif
 
 
 class ConsoleStrategy : public PlayerStrategy

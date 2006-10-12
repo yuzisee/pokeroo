@@ -27,7 +27,6 @@
 
 #include <iostream>
 
-using std::cout;
 using std::endl;
 using std::flush;
 
@@ -78,7 +77,7 @@ public:
     {
 		return (d >> 2);
     }
-    const static void PrintCard(const int8 s, uint32 v)
+    const static void PrintCard(std::ostream& target, const int8 s, uint32 v)
 	{
 		int8 vn=0;
 		for(int8 val=2;val<=14;++val)
@@ -90,7 +89,7 @@ public:
 				break;
 			}
 		}
-		cout << VALKEY[vn]<< SUITKEY[s] << flush;
+		target << VALKEY[vn]<< SUITKEY[s] << flush;
 	}
 
 	const static uint8 cleanz(const uint32);
@@ -145,7 +144,8 @@ public:
 		return cardset[someSuit];
 	}
 //    const int Occurrences() const;
-    const virtual void Empty();
+    const virtual void SetEmpty();
+    const virtual bool IsEmpty() const;
 
     virtual void AddToHand(const DeckLocation& deck)
     {
@@ -163,7 +163,7 @@ public:
 #ifdef DEBUGASSERT
 		if ( HoldemUtil::CARDORDER[aIndex] != aCard )
 		{
- 			cout << endl << "DEBUGASSERT:\t Please add cards consistently!"
+ 			std::cerr << endl << "DEBUGASSERT:\t Please add cards consistently!"
 				<< endl << "\tindex=" << (int)aIndex << "\tcard=" << aCard << endl;
             exit(1);
 		}
@@ -180,7 +180,7 @@ public:
 
     Hand()
     {
-        Empty();
+        SetEmpty();
     }
 
     Hand(const Hand& o)
@@ -201,16 +201,14 @@ class HandPlus : public virtual Hand
 
 	public:
 	uint32 valueset; //use most significant 6 (5? 3?) bits to store info?
-	virtual const void DisplayHand() const;
-	virtual const void DisplayHand(std::ofstream&) const;
-    virtual const void DisplayHandBig() const;
-	const void ShowHand(const bool) const;
+	virtual const void DisplayHand(std::ostream&) const;
+    virtual const void DisplayHandBig(std::ostream&) const;
 	const uint32 getValueset() const;
 
 
 	HandPlus() : Hand(), valueset(0)
 	{
-		Empty();
+		SetEmpty();
 	}
 	const virtual void AppendUnique(const HandPlus&);
 	const virtual void AppendUnique(const Hand&);
@@ -225,7 +223,8 @@ class HandPlus : public virtual Hand
 	const virtual void AddToHand(const int8,const uint8,const uint32);
 	const virtual void RemoveFromHand(const int8,const uint8,const uint32);
 
-	const virtual void Empty();
+	const virtual void SetEmpty();
+	const virtual bool IsEmpty() const;
 
 }
 ;

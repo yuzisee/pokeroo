@@ -24,19 +24,27 @@
 #include "stratSearch.h"
 #include "ai.h"
 
+
+
 #define LOGPOSITION
 //#define DEBUGSPECIFIC
+
+
+///RULE OF THUMB:
+///It looks like increasing winPCT loosens up the player
+///However, you add aggressiveness by modifying exf?
 
 
 ///TODO: Modularize this class so as to try other combinations
 class PositionalStrategy : virtual public PlayerStrategy
 {
-	protected:
-        int8 bGamble; /* 0,1,2,3 */
-        int8 roundNumber;
+    protected:
+        int8 bGamble;
+        int8 roundNumber[3];
         DistrShape detailPCT;
         StatResult statmean;
         StatResult statworse;
+        //CallCumulationD foldcumu;
         CallCumulationD callcumu;
         #ifdef LOGPOSITION
         ofstream logFile;

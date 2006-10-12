@@ -42,7 +42,7 @@ void UserConsoleStrategy::SeeAction(const HoldemAction& e)
 void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 {
 	bNoPrint = (cardsInCommunity <= 0);
-	comBuf.Empty();
+	comBuf.SetEmpty();
 	comBuf.AppendUnique(h);
 }
 
@@ -86,7 +86,7 @@ void ConsoleStrategy::printCommunity()
 	HandPlus u;
 		cout << "The community now shows:" << endl;
 		u.SetUnique(comBuf);
-		u.ShowHand(true);
+		u.DisplayHandBig(cout);
 }
 
 void ConsoleStrategy::printActions()
@@ -215,7 +215,7 @@ void ConsoleStrategy::showSituation()
 
 	HandPlus u;
 	u.SetUnique(ViewHand());
-	u.ShowHand(false);
+	u.DisplayHand(cout);
 
 	cout << endl;
 
@@ -236,7 +236,7 @@ float64 UserConsoleStrategy::queryAction()
         #ifdef DEBUGSAVEGAME
             if( !logFile.is_open() )
             {
-                logFile.open("savegame.log");
+                logFile.open(DEBUGSAVEGAME,std::ios::app);
             }
         #endif
 

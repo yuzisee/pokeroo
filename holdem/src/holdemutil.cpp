@@ -57,7 +57,6 @@ STRAIGHT (OR the cardsets, then AND-SHIFT × 5)
 #include <fstream>
 #include "holdem2.h"
 
-using std::cout;
 using std::endl;
 
 const uint32 HoldemUtil::PRIMES[14] =
@@ -112,28 +111,7 @@ const uint8 HoldemUtil::cleanz(const uint32 j)
 	}
 }
 
-const void HandPlus::DisplayHand() const
-{
-	uint32 temp[4];
-
-    for(int8 i=0;i<4;++i)
-    {
-        temp[i] = cardset[i];
-    }
-
-    for(int8 val=2;val<=14;++val)
-    {
-        for(int8 suit=0;suit<4;++suit)
-        {
-            temp[suit] >>= 1;
-            if ((temp[suit] & 1) == 1)
-                cout << HoldemUtil::VALKEY[val] << HoldemUtil::SUITKEY[suit]
-						<< " " << flush;
-        }
-    }
-}
-
-const void HandPlus::DisplayHand(std::ofstream& logFile) const
+const void HandPlus::DisplayHand(std::ostream& logFile) const
 {
 
 	uint32 temp[4];
@@ -156,7 +134,7 @@ const void HandPlus::DisplayHand(std::ofstream& logFile) const
 }
 
 
-const void HandPlus::DisplayHandBig() const
+const void HandPlus::DisplayHandBig(std::ostream& logFile) const
 {
 	uint32 temp[4];
     uint32 tempv = valueset;
@@ -172,12 +150,12 @@ const void HandPlus::DisplayHandBig() const
         {
             temp[suit] >>= 1;
             if ((temp[suit] & 1) == 1)
-                cout << HoldemUtil::VALKEY[val] << " " << flush;
+                logFile << HoldemUtil::VALKEY[val] << " " << flush;
         }
     }
-	cout << "\t" << flush;
-    for(int8 val=14;val>=2;val--) cout << HoldemUtil::VALKEY[val] << flush;
-	cout << endl;
+	logFile << "\t" << flush;
+    for(int8 val=14;val>=2;val--) logFile << HoldemUtil::VALKEY[val] << flush;
+	logFile << endl;
 
     for(int8 i=0;i<4;++i)
     {
@@ -190,37 +168,29 @@ const void HandPlus::DisplayHandBig() const
         {
             temp[suit] >>= 1;
             if ((temp[suit] & 1) == 1)
-                cout << HoldemUtil::SUITKEY[suit] << " " << flush;
+                logFile << HoldemUtil::SUITKEY[suit] << " " << flush;
         }
     }
 
-    cout << "\t" << flush;
+    logFile << "\t" << flush;
 
 
     for(int8 val=0;val<=12;++val)
     {
-		cout << HoldemUtil::cleanz((tempv & HoldemConstants::VALUE_ACEHIGH) >> 26) << flush;
+		logFile << HoldemUtil::cleanz((tempv & HoldemConstants::VALUE_ACEHIGH) >> 26) << flush;
      	tempv <<= 2;
     }
 
-	cout << endl;
+	logFile << endl;
 }
 
-const void HandPlus::ShowHand(const bool bBig) const
-{
-
-	if (bBig)
-		DisplayHandBig();
-	else
-		DisplayHand();
-}
 
 const uint32 HandPlus::getValueset() const
 {
 	return valueset;
 }
 
-const void Hand::Empty()
+const void Hand::SetEmpty()
 {
 
     cardset[0] = 0;
@@ -229,14 +199,27 @@ const void Hand::Empty()
     cardset[3] = 0;
 }
 
-const void HandPlus::Empty()
+const bool Hand::IsEmpty() const
 {
-	Hand::Empty();
+    return (cardset[0] == 0)
+    && (cardset[1] == 0)
+    && (cardset[2] == 0)
+    && (cardset[3] == 0);
+}
+
+const void HandPlus::SetEmpty()
+{
+	Hand::SetEmpty();
 	valueset = 0;
 	cardset[0] = 0;
 	cardset[1] = 0;
 	cardset[2] = 0;
 	cardset[3] = 0;
+}
+
+const bool HandPlus::IsEmpty() const
+{
+    return (valueset == 0);
 }
 
 const void HandPlus::SetUnique(const HandPlus& h)

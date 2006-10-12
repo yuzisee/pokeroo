@@ -18,27 +18,16 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef HOLDEM_SearchBaseStrat
-#define HOLDEM_SearchBaseStrat
+#ifndef HOLDEM_ArenaEvents
+#define HOLDEM_ArenaEvents
+
 
 #include "arena.h"
-#include "engine.h"
-#include "aiCache.h"
 
-class SearchStrategy : public PlayerStrategy
-{
-    protected:
-        DistrShape* w;
-		void cleanstats();
-	public:
+class HoldemArena;
 
-		SearchStrategy() : PlayerStrategy(),w(0){}
-        virtual ~SearchStrategy();
-
-		virtual void SeeCommunity(const Hand&, const int8);
-
-}
-;
 
 #endif
+
+
 

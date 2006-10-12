@@ -27,7 +27,6 @@
 #include "holdemutil.h"
 #include <iostream>
 
-using std::cout;
 using std::endl;
 
 
@@ -42,7 +41,6 @@ private:
 
 	const void preEvalStrength();
     const void cleanLastTwo();
-    const void PrintInterpretHand() const;
 public:
 
 
@@ -66,13 +64,14 @@ public:
 	const virtual void SetUnique(const HandPlus&);
 	const virtual void SetUnique(const CommunityPlus&);
 
-    const virtual void Empty();
+    const virtual void SetEmpty();
 
     CommunityPlus();
 
 	const int8 CardsInSuit(const int8) const;
-	const virtual void DisplayHand() const;
-    const virtual void DisplayHandBig() const;
+	const virtual void DisplayHand(std::ostream&) const;
+    const virtual void DisplayHandBig(std::ostream&) const;
+    const void PrintInterpretHand(std::ostream&) const;
 }
 ;
 
@@ -82,7 +81,7 @@ class ShowdownRep
 {
 	public:
 
-		ShowdownRep() : strength(0), valueset(0), playerIndex(-1), revtiebreak(0) {}
+		ShowdownRep(int8 playerID) : strength(0), valueset(0), playerIndex(playerID), revtiebreak(0) {}
 
 
 		ShowdownRep(const CommunityPlus* h, const CommunityPlus* h2, const int8 pIndex)
@@ -168,15 +167,15 @@ class ShowdownRep
     bool bIdenticalTo (const ShowdownRep& x) const
     {
         return (
-         (strength == x.strength)
+        (strength == x.strength)
         && (valueset == x.valueset)
         && (playerIndex == x.playerIndex)
         && (revtiebreak == x.revtiebreak)
         );
     }
 
-	void DisplayHandBig() { comp.DisplayHandBig(); }
-	void DisplayHand() { comp.DisplayHand(); }
+	void DisplayHandBig(std::ostream& o) const { comp.DisplayHandBig(o); }
+	void DisplayHand(std::ostream& o) const { comp.DisplayHand(o); }
 
 
     void Reset(const CommunityPlus* h)

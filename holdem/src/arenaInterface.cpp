@@ -95,24 +95,25 @@ void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theB
 	}
 	if( bSpectate )
 	{
-	    std::cout << p[currentMove.GetPlayerID()]->GetIdent() << " " << flush;
-	    ToString(currentMove, std::cout);
+	    gamelog << p[currentMove.GetPlayerID()]->GetIdent() << " " << flush;
+	    ToString(currentMove, gamelog);
 	}
 
 }
 
-void HoldemArena::broadcastHand(const Hand& h)
+void HoldemArena::broadcastHand(const Hand& h, const int8 broadcaster)
 {
-	int8 cycleIndex = curIndex;
-	incrIndex();
 
-	while(cycleIndex != curIndex)
+	int8 cycleIndex = broadcaster;
+	incrIndex(cycleIndex);
+
+	while(cycleIndex != broadcaster)
 	{
             #ifdef LEAVE_TABLE_WHEN_LOSING
-                if( IsAlive(curIndex) )
+                if( IsAlive(cycleIndex) )
             #endif
-        (*p[curIndex]).myStrat->SeeOppHand(cycleIndex, h);
-		incrIndex();
+        (*p[cycleIndex]).myStrat->SeeOppHand(broadcaster, h);
+		incrIndex(cycleIndex);
 	}
 }
 
@@ -229,6 +230,11 @@ float64 HoldemArena::GetPrevPotSize() const
 	return prevRoundPot;
 }
 
+///This is the sum of bets made this round by people still in the round
+float64 HoldemArena::GetRoundBetsTotal() const
+{
+    return GetRoundPotSize() - blindBetSum;
+}
 
 
 float64 HoldemArena::GetMinRaise() const
@@ -266,17 +272,32 @@ float64 HoldemArena::GetBetToCall() const
 {
 	return highBet;
 }
-
+/*
 float64 HoldemArena::GetMaxShowdown() const
 {
-	int8 highest = 0;
-	int8 secondhighest = 0;
+	int8 highest;
+	int8 secondhighest;
 
+    std::cout << p[0]->GetIdent() << " can still bet " << p[0]->GetMoney() - p[0]->GetBetSize() << std::endl;
+    std::cout << p[1]->GetIdent() << " can still bet " << p[1]->GetMoney() - p[1]->GetBetSize() << std::endl;
 
-	for(int8 i=1;i<nextNewPlayer;++i)
+    if( p[1]->GetMoney() - p[1]->GetBetSize()
+             >
+             p[0]->GetMoney() - p[0]->GetBetSize() )
+    {
+        highest = 1;
+        secondhighest = 0;
+    }else
+    {
+        highest = 0;
+        secondhighest = 1;
+    }
+
+	for(int8 i=2;i<nextNewPlayer;++i)
 	{
 		if(! HasFolded(i) )
 		{
+		    std::cout << p[i]->GetIdent() << " can still bet " << p[i]->GetMoney() - p[i]->GetBetSize() << std::endl;
 			if( p[i]->GetMoney() - p[i]->GetBetSize()
 						 >
 						 p[highest]->GetMoney() - p[highest]->GetBetSize() )
@@ -289,4 +310,40 @@ float64 HoldemArena::GetMaxShowdown() const
 
 	return p[secondhighest]->GetMoney() - p[secondhighest]->GetBetSize();
 }
+
+*/
+float64 HoldemArena::GetMaxShowdown() const
+{
+	int8 highest;
+	int8 secondhighest;
+
+    if( p[1]->GetMoney()
+             >
+             p[0]->GetMoney() )
+    {
+        highest = 1;
+        secondhighest = 0;
+    }else
+    {
+        highest = 0;
+        secondhighest = 1;
+    }
+
+	for(int8 i=2;i<nextNewPlayer;++i)
+	{
+		if(! HasFolded(i) )
+		{
+			if( p[i]->GetMoney()
+						 >
+						 p[highest]->GetMoney() )
+			{
+				secondhighest = highest;
+				highest = i;
+			}
+		}
+	}
+
+	return p[secondhighest]->GetMoney();
+}
+
 

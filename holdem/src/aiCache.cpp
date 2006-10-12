@@ -192,7 +192,7 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
                 return;
             }else
             {
-                cout << "Error reading " << datafilename << endl;
+                std::cerr << "Error reading " << datafilename << endl;
                 dataserial.close();
             }
         }
@@ -223,12 +223,12 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
 
 
             cout << "Cards available to me" << endl;
-            withCommunity.ShowHand(false);
+            withCommunity.DisplayHand(cout);
             cout << endl;
 
 
             cout << "Cards in community" << endl;
-            onlyCommunity.ShowHand(false);
+            onlyCommunity.DisplayHand(cout);
             cout << endl;
 
             cout << endl;
@@ -297,7 +297,7 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
                 return;
             }else
             {
-                cout << "Error reading " << datafilename << endl;
+                std::cerr << "Error reading " << datafilename << endl;
                 dataserial.close();
             }
         }
