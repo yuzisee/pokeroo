@@ -484,18 +484,18 @@ const void WinStats::initW(const int8 cardsInCommunity)
 
 const void CallStats::Analyze()
 {
-/*
-#ifdef DEBUGFINALCALC
-	cout << endl << statCount << " with " << myChancesEach << "'s each" << endl;
+
+#ifdef DEBUGCALLPCT
+    std::cout << endl << statCount << " with " << myChancesEach << "'s each" << endl;
 	for(int32 i=0;i<statCount;i++)
 	{
-		cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
+		std::cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
 				<< myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
-				myWins[i].loss+myWins[i].splits+myWins[i].wins
+        myWins[i].loss+myWins[i].splits+myWins[i].wins << "(" << myWins[i].pct << ")"
 				<< "\t×"<< myWins[i].repeated <<flush;
 	}
 #endif
-*/
+
 	for(int32 k=0;k<statCount;++k)
 	{
 		myWins[k].genPCT();
@@ -516,7 +516,7 @@ const void CallStats::Analyze()
 #endif
 
 //populate cumulation
-	int32 i=1;
+	int32 count=1;
 
 	vector<StatResult>& cpop = calc->cumulation;
 	cpop.reserve(statCount);
@@ -527,32 +527,32 @@ const void CallStats::Analyze()
 	size_t vectorLast = cpop.size()-1; //(zero)
 	int lastStreak=1;
 
-	while(i < statCount)
+	while(count < statCount)
 	{
 
-		cumulate += myWins[i].repeated ;
+		cumulate += myWins[count].repeated ;
 
         StatResult &b = cpop.back();
 
 		//if (!( myWins[i].bIdenticalTo( myWins[i-1]) ))
-		if( myWins[i].pct != myWins[i-1].pct )
+		if( myWins[count].pct != myWins[count-1].pct )
 		{	//add new StatResult
             b.wins /= lastStreak;
             b.splits /= lastStreak;
             b.loss /= lastStreak;
-			cpop.push_back(myWins[i]);
+			cpop.push_back(myWins[count]);
 			++vectorLast;
 			lastStreak = 1;
 		}else
         {
-            b.wins += myWins[i].wins;
-            b.splits += myWins[i].splits;
-            b.loss += myWins[i].loss;
+            b.wins += myWins[count].wins;
+            b.splits += myWins[count].splits;
+            b.loss += myWins[count].loss;
             ++lastStreak;
 		}
 		//cumulation[vectorLast].repeated = cumulate;
 		cpop.back().repeated = cumulate;
-		++i;
+		++count;
 	}
     StatResult &b = cpop.back();
     b.wins /= lastStreak;
@@ -578,14 +578,14 @@ const void CallStats::Analyze()
 #ifdef DEBUGCALLPCT
 std::cout << endl << "=============Reduced=============" << endl;
 	std::cout.precision(2);
-	for(size_t i=0;i<=vectorLast;i++)
+	for(size_t j=0;j<=vectorLast;j++)
 	{
-		std::cout << endl << "{" << i << "}" << calc->cumulation[i].loss << " l + "
-				<< calc->cumulation[i].splits << " s + " << calc->cumulation[i].wins << " w =\t" << flush;
+		std::cout << endl << "{" << j << "}" << calc->cumulation[j].loss << " l + "
+				<< calc->cumulation[j].splits << " s + " << calc->cumulation[j].wins << " w =\t" << flush;
 				std::cout.precision(8);
-				std::cout << calc->cumulation[i].pct
+				std::cout << calc->cumulation[j].pct
 				//<< " pct\t×"<< calc->cumulation[i].repeated <<flush;
-				<< " \t"<< calc->cumulation[i].repeated << "\ttocall" << flush;
+				<< " \t"<< calc->cumulation[j].repeated << "\ttocall" << flush;
 	}
 	std::cout << endl;
 #endif

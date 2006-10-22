@@ -38,9 +38,14 @@ http://www.parashift.com/c++-faq-lite/serialization.html#faq-36.6
 
 */
 
+
+
 const char* StatsManager::CONFIGFILENAME = "holdemdb.ini";
 const int8 StatsManager::CACHEABLESTAGE = DEF_CACHEABLE_MIN;
 string StatsManager::baseDataPath = "";
+#ifdef GLOBAL_AICACHE_SPEEDUP
+CommunityPlus StatsManager::dsCommunity;
+#endif
 
 void StatsManager::initPath()
 {
@@ -259,7 +264,11 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
     q = newC;
 }
 
+#ifdef GLOBAL_AICACHE_SPEEDUP
+void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n, CommunityCallStats **lastds)
+#else
 void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
+#endif
 {
     string datafilename = "";
     if( CACHEABLESTAGE >= n )
@@ -268,16 +277,48 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
         return;
     }
 
-    DealRemainder myStatBuilder;
-    myStatBuilder.UndealAll();
-    myStatBuilder.OmitCards(onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
+#ifdef GLOBAL_AICACHE_SPEEDUP
+    if( lastds == 0 )
+    {
+#endif
+        DealRemainder myStatBuilder;
+        myStatBuilder.UndealAll();
+        myStatBuilder.OmitCards(onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
 
-    CommunityCallStats ds(withCommunity, onlyCommunity,n);
-    myStatBuilder.AnalyzeComplete(&ds);
-    const CallCumulation &newC = *(ds.calc);
+        CommunityCallStats ds(withCommunity, onlyCommunity,n);
+        myStatBuilder.AnalyzeComplete(&ds);
+        const CallCumulation &newC = *(ds.calc);
+        q = newC;
+#ifdef GLOBAL_AICACHE_SPEEDUP
+    }else
+    {///There is a pointer to work with, lastds
+        if( *lastds != 0 && onlyCommunity == dsCommunity )
+        {
+            CommunityCallStats *newds;
+            newds = new CommunityCallStats(**lastds,withCommunity,onlyCommunity);
+            newds->Analyze();
+            const CallCumulation &newC = *(newds->calc);
+            q = newC;
+            delete newds;
+        }else
+        {///New community being queried
+            if( *lastds != 0 ) delete *lastds;
+
+            DealRemainder myStatBuilder;
+            myStatBuilder.UndealAll();
+            myStatBuilder.OmitCards(onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
+
+            *lastds = new CommunityCallStats(withCommunity, onlyCommunity,n);
+            myStatBuilder.AnalyzeComplete(*lastds);
+            const CallCumulation &newC = *((*lastds)->calc);
+            q = newC;
+        }
+
+        dsCommunity.SetUnique(onlyCommunity);
+    }
+#endif
 
 
-    q = newC;
 }
 
 void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)

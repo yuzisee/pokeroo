@@ -671,6 +671,7 @@ void HoldemArena::RefreshPlayers()
                 scoreboard << ",0";
             }else
             {
+                scoreboard.precision(10);
                 scoreboard << "," << withP.GetMoney();
             }
 #endif

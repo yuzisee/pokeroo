@@ -29,7 +29,7 @@
 #include <fstream>
 
 #define DEF_CACHEABLE_MIN 0
-
+#define GLOBAL_AICACHE_SPEEDUP
 
 using std::string;
 using std::ifstream;
@@ -73,6 +73,11 @@ private:
     static const char*	CONFIGFILENAME;
     static const int8	CACHEABLESTAGE;
 
+
+    #ifdef GLOBAL_AICACHE_SPEEDUP
+    static CommunityPlus dsCommunity;
+    #endif
+
     static void initPath();
 
     static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity, const string label);
@@ -93,7 +98,11 @@ public:
 
     static void Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     static void QueryDefense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
+    #ifdef GLOBAL_AICACHE_SPEEDUP
+    static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n, CommunityCallStats **lastds=0);
+    #else
     static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
+    #endif
     static void Query(CallCumulation* offense, CallCumulation* defense, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity);
 

@@ -30,7 +30,7 @@
 #define HOLDEM_Arena
 
 //#include "player.h"
-#include "arenaEvents.h"
+
 #include "engine.h"
 #include "randomDeck.h"
 #include "blinds.h"

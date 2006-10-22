@@ -56,6 +56,14 @@ public:
 	{
 	    return result == x.result;
 	}
+    const PocketHand& operator= (const PocketHand& o)
+    {
+        a = o.a;
+        b = o.b;
+        repeated = o.repeated;
+        result = o.result;
+        return *this;
+    }
 
 	void PopulateByIndex();
 }
@@ -65,6 +73,7 @@ class CommunityCallStats : public virtual CallStats
 {
 private:
 	const void initCC(const int8);
+    bool bSortedHands;
 protected:
 
 	int8 indexHistory[2];
@@ -90,6 +99,27 @@ public:
 	{
 	    initCC(cardsInCommunity);
 	}
+    CommunityCallStats(const CommunityCallStats& covered, const CommunityPlus& withCommunity, const CommunityPlus& onlycommunity)
+        : PlayStats(withCommunity,onlycommunity)
+        ,CallStats(withCommunity,onlycommunity,7-covered.moreCards)
+    {
+        initCC(7-covered.moreCards);
+        showdownIndex = covered.showdownIndex;
+        showdownCount = covered.showdownCount;
+        showdownMax = covered.showdownMax;
+        for( int i=0;i<showdownCount;++i )
+        {
+            myHands[i].a = covered.myHands[i].a;
+            myHands[i].b = covered.myHands[i].b;
+            myHands[i].repeated = covered.myHands[i].repeated;
+            myHands[i].result.strength = covered.myHands[i].result.strength;
+            myHands[i].result.valueset = covered.myHands[i].result.valueset;
+            myHands[i].result.revtiebreak = covered.myHands[i].result.revtiebreak;
+        }
+        statCount = covered.statCount;
+        bSortedHands = covered.bSortedHands;
+    }
+    
     virtual ~CommunityCallStats();
 
 	const virtual void Analyze();

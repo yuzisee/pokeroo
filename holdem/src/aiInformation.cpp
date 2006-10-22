@@ -148,7 +148,7 @@ const void CommunityCallStats::fillMyWins(StatResult ** table)
             float64 prevsplitRepeated = 0;
             for(int32 curgroupItr=splitgroupStart;curgroupItr<splitgroupAfter;++curgroupItr)
             {
-                PocketHand &tableEntry = myHands[curgroupItr];
+                const PocketHand &tableEntry = myHands[curgroupItr];
                 int8 carda = tableEntry.a;
                 int8 cardb = tableEntry.b;
 
@@ -211,7 +211,11 @@ const void CommunityCallStats::Analyze()
         #ifdef PROGRESSUPDATE
             std::cout << "Analyzing...                    \r" << flush;
         #endif
-    std::sort(myHands,myHands+showdownIndex);
+    if( !bSortedHands )
+    {
+        std::sort(myHands,myHands+showdownIndex);
+        bSortedHands = true;
+    }
         #ifdef PROGRESSUPDATE
             std::cout << "Deciding.....                    \r" << endl;
         #endif
@@ -334,6 +338,7 @@ const void CommunityCallStats::initCC(const int8 cardsInCommunity)
     //const float64 & t_f  = myChancesEach;
     showdownIndex = 0;
     showdownMax = 0;
+    bSortedHands = false;
 
 }
 

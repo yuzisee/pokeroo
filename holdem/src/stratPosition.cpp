@@ -389,11 +389,11 @@ float64 PositionalStrategy::MakeBet()
             logFile << "risk/call(" << choiceScale << ")" << endl;
             //logFile << "timing[" << (int)DT << "](" << timing[DT] << ")" << endl;
             logFile << "impliedFactor " << impliedFactor << endl;
-            if( bGamble / 4 == 1 ){
+            /*if( bGamble / 4 == 1 ){
                 float64 alreadyCalled = 0;
                 if( betToCall != 0 ) alreadyCalled = (ViewTable().GetRoundBetsTotal() - ViewPlayer().GetBetSize())/highBet;
                 logFile << "expected versus (" << myExpectedCall.callingPlayers() << ") from " << alreadyCalled << endl;
-            }
+            }*/
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
             logFile << "f("<< betToCall <<")=" << callGain << endl;
@@ -403,7 +403,9 @@ float64 PositionalStrategy::MakeBet()
 
     if( choicePoint < betToCall )
     {///It's probably really close though
+        #ifdef LOGPOSITION
         logFile << "Choice Optimal < Bet to call" << endl;
+        #endif
         #ifdef DEBUGASSERT
             if ( choicePoint + ViewTable().GetChipDenom()/2 < betToCall )
             {
@@ -419,7 +421,9 @@ float64 PositionalStrategy::MakeBet()
     //Remember, due to rounding and chipDenom, (betToCall < choiceFold) is possible
     if( choicePoint >= choiceFold && betToCall >= choiceFold && callGain <= 0 )
     {///The highest point was the point closest to zero, and the least you can bet if you call--still worse than folding
+        #ifdef LOGPOSITION
         logFile << "CHECK/FOLD" << endl;
+        #endif
         return myBet;
     }
     ///Else you play wherever choicePoint is.
@@ -428,15 +432,20 @@ float64 PositionalStrategy::MakeBet()
     #ifdef DEBUGASSERT
         if( raiseGain < 0 )
         {
+            #ifdef LOGPOSITION
             logFile << "raiseGain: f("<< choicePoint <<")=" << raiseGain << endl;
             logFile << "Redundant CHECK/FOLD detect required" << endl;
+            #endif
             return myBet;
         }
     #endif
 
     if( betToCall < choicePoint )
 	{
+	    #ifdef LOGPOSITION
+	    if( choicePoint - betToCall > ViewTable().GetMinRaise() ) logFile << "*MinRaise " << (ViewTable().GetMinRaise() + betToCall) << endl;
 	    logFile << "RAISETO " << choicePoint << endl << endl;
+	    #endif
 		return choicePoint;
 	}
 
@@ -453,7 +462,9 @@ float64 PositionalStrategy::MakeBet()
         #endif
     }
 */
+    #ifdef LOGPOSITION
     logFile << "CALL " << choicePoint << endl;
+    #endif
     return betToCall;
 
 
