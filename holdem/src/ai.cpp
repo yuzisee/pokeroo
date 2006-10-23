@@ -38,7 +38,7 @@
 using std::endl;
 using std::sort;
 
-const void PlayStats::Compare(const float64 occ)
+void PlayStats::Compare(const float64 occ)
 {
 #ifdef DEBUGCOMPARE
 	myStrength.DisplayHandBig(cout);
@@ -86,40 +86,40 @@ if( ttt >= myChancesEach - 2 || ttt == 0 )
 
 }
 
-const void PlayStats::countWin(const float64 occ)
+void PlayStats::countWin(const float64 occ)
 {
 	myWins[statGroup].wins += occ;
 	//myWins[statGroup].pct += occ;
 }
-const void PlayStats::countSplit(const float64 occ)
+void PlayStats::countSplit(const float64 occ)
 {
 	myWins[statGroup].splits += occ;
 	//myWins[statGroup].pct += occ/2;
 }
-const void PlayStats::countLoss(const float64 occ)
+void PlayStats::countLoss(const float64 occ)
 {
 	myWins[statGroup].loss += occ;
 }
 
-const void WinStats::countSplit(const float64 occ)
+void WinStats::countSplit(const float64 occ)
 {
 	PlayStats::countSplit(occ);
 	myAvg.splits += occ * myWins[statGroup].repeated;// / myTotalChances;
 
 }
-const void WinStats::countLoss(const float64 occ)
+void WinStats::countLoss(const float64 occ)
 {
 	PlayStats::countLoss(occ);
 	myAvg.loss += occ * myWins[statGroup].repeated;// / myTotalChances;
 }
-const void WinStats::countWin(const float64 occ)
+void WinStats::countWin(const float64 occ)
 {
 	PlayStats::countWin(occ);
 	myAvg.wins += occ * myWins[statGroup].repeated;// / myTotalChances;
 
 }
 
-const void WinStats::Analyze()
+void WinStats::Analyze()
 {
 
 
@@ -345,7 +345,7 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 	}
 }
 
-const void WinStats::DropCard(const DeckLocation deck)
+void WinStats::DropCard(const DeckLocation deck)
 {
 
 
@@ -384,7 +384,7 @@ const void WinStats::DropCard(const DeckLocation deck)
 //                    |ChancesEach-----------
 //community|before bet|fillCom|His Hole Cards
 
-const void WinStats::initW(const int8 cardsInCommunity)
+void WinStats::initW(const int8 cardsInCommunity)
 {
 
 		#ifdef DEBUGASSERT
@@ -482,7 +482,7 @@ const void WinStats::initW(const int8 cardsInCommunity)
 }
 
 
-const void CallStats::Analyze()
+void CallStats::Analyze()
 {
 
 #ifdef DEBUGCALLPCT
@@ -597,28 +597,28 @@ std::cout << endl << "=============Reduced=============" << endl;
 
 
 
-const void CallStats::myAddCard(const DeckLocation& cardinfo, const int16 undoIndex)
+void CallStats::myAddCard(const DeckLocation& cardinfo, const int16 undoIndex)
 {
     myUndo[undoIndex].SetUnique(myStrength);
     myStrength.AddToHand(cardinfo);
 }
 
-const void CallStats::myRevert(const int16 undoIndex)
+void CallStats::myRevert(const int16 undoIndex)
 {
     myStrength.SetUnique(myUndo[undoIndex]);
 }
 
-const void CallStats::myEval()
+void CallStats::myEval()
 {
     myStrength.evaluateStrength();
 }
 
-const void CallStats::setCurrentGroupOcc(const float64 occ)
+void CallStats::setCurrentGroupOcc(const float64 occ)
 {
     myWins[statGroup].repeated = occ;
 }
 
-const void CallStats::showProgressUpdate() const
+void CallStats::showProgressUpdate() const
 {
     if (statGroup == 0 ) std::cout << endl << endl;
     std::cout << "C: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
@@ -629,7 +629,7 @@ float64 CallStats::pctWillCall(const float64 oddsFaced) const
 	return calc->pctWillCall(oddsFaced);
 }
 
-const void CallStats::DropCard(const DeckLocation deck)
+void CallStats::DropCard(const DeckLocation deck)
 {
 	///TODO: Confirm
 	//oppStrength.RemoveFromHand(deck);
@@ -721,7 +721,7 @@ const int8 CallStats::realCardsAvailable(const int8 cardsInCommunity) const
     return 52 - cardsInCommunity - 2;
 }
 
-const void CallStats::initC(const int8 cardsInCommunity)
+void CallStats::initC(const int8 cardsInCommunity)
 {
 	calc = new CallCumulation();
 

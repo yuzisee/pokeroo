@@ -72,7 +72,7 @@ public:
 class CommunityCallStats : public virtual CallStats
 {
 private:
-	const void initCC(const int8);
+	void initCC(const int8);
     bool bSortedHands;
 protected:
 
@@ -83,15 +83,15 @@ protected:
 	float64 showdownMax;
     float64 groupRepeated;
 
-    const virtual void fillMyWins(StatResult ** table);
+    virtual void fillMyWins(StatResult ** table);
 
     const virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
-    const virtual void showProgressUpdate() const;
-    const virtual void setCurrentGroupOcc(const float64 occ);
-    const virtual void mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex);
-    const virtual void myAddCard(const DeckLocation& cardinfo, const int16 undoIndex){}
-	const virtual void myEval(){}
-	const virtual void myRevert(const int16 undoIndex){}
+    virtual void showProgressUpdate() const;
+    virtual void setCurrentGroupOcc(const float64 occ);
+    virtual void mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex);
+    virtual void myAddCard(const DeckLocation& cardinfo, const int16 undoIndex){}
+	virtual void myEval(){}
+	virtual void myRevert(const int16 undoIndex){}
 public:
 
     CommunityCallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity,
@@ -119,12 +119,12 @@ public:
         statCount = covered.statCount;
         bSortedHands = covered.bSortedHands;
     }
-    
+
     virtual ~CommunityCallStats();
 
-	const virtual void Analyze();
+	virtual void Analyze();
 
-	const virtual void Compare(const float64 occ);
+	virtual void Compare(const float64 occ);
 }
 ;
 
@@ -133,7 +133,7 @@ class TriviaDeck : public OrderedDeck
     private:
         const static uint32 largestCard(uint32 suitcards);
     public:
-    const void DiffHand(const Hand&);
+    void DiffHand(const Hand&);
 
 }
 ;

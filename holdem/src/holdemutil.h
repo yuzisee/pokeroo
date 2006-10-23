@@ -121,7 +121,7 @@ public:
 	{
 		return static_cast<uint8>(Suit) + (Rank-1)*4;
 	}
-	const void SetByIndex(int8 n)
+	void SetByIndex(int8 n)
 	{
 		Rank = HoldemUtil::CardRank(n) + 1;
 		Suit = HoldemUtil::CardSuit(n);
@@ -144,7 +144,7 @@ public:
 		return cardset[someSuit];
 	}
 //    const int Occurrences() const;
-    const virtual void SetEmpty();
+    virtual void SetEmpty();
     const virtual bool IsEmpty() const;
 
     virtual void AddToHand(const DeckLocation& deck)
@@ -154,11 +154,11 @@ public:
     virtual void RemoveFromHand(const DeckLocation& deck)
     {	RemoveFromHand(deck.Suit,deck.Rank,deck.Value);	}
 
-    const virtual void RemoveFromHand(const int8 aSuit,const uint8 aIndex,const uint32 aCard)
+    virtual void RemoveFromHand(const int8 aSuit,const uint8 aIndex,const uint32 aCard)
     {
         cardset[aSuit] &= ~aCard;
     }
-    const virtual void AddToHand(const int8 aSuit,const uint8 aIndex,const uint32 aCard)
+    virtual void AddToHand(const int8 aSuit,const uint8 aIndex,const uint32 aCard)
     {///NO ERROR CHECKING. Use carefully.
 #ifdef DEBUGASSERT
 		if ( HoldemUtil::CARDORDER[aIndex] != aCard )
@@ -171,8 +171,8 @@ public:
         cardset[aSuit] |= aCard;
     }
 
-	const virtual void AppendUnique(const Hand&);
-	const virtual void SetUnique(const Hand&);
+	virtual void AppendUnique(const Hand&);
+	virtual void SetUnique(const Hand&);
 
 	const Hand& operator=(const Hand& h);
 	bool operator==(const Hand& h) const;
@@ -196,13 +196,13 @@ public:
 class HandPlus : public virtual Hand
 {
 	protected:
-		const void populateValueset();
+		void populateValueset();
     //unsigned long tempcardset[4]; //short?
 
 	public:
 	uint32 valueset; //use most significant 6 (5? 3?) bits to store info?
-	virtual const void DisplayHand(std::ostream&) const;
-    virtual const void DisplayHandBig(std::ostream&) const;
+	virtual void DisplayHand(std::ostream&) const;
+    virtual void DisplayHandBig(std::ostream&) const;
 	const uint32 getValueset() const;
 
 
@@ -210,20 +210,20 @@ class HandPlus : public virtual Hand
 	{
 		SetEmpty();
 	}
-	const virtual void AppendUnique(const HandPlus&);
-	const virtual void AppendUnique(const Hand&);
-	const virtual void SetUnique(const Hand&);
-	const virtual void SetUnique(const HandPlus&);
+	virtual void AppendUnique(const HandPlus&);
+	virtual void AppendUnique(const Hand&);
+	virtual void SetUnique(const Hand&);
+	virtual void SetUnique(const HandPlus&);
 
     virtual void AddToHand(const DeckLocation& deck)
     {	AddToHand(deck.Suit,deck.Rank,deck.Value);	}
     virtual void RemoveFromHand(const DeckLocation& deck)
     {	RemoveFromHand(deck.Suit,deck.Rank,deck.Value);	}
 
-	const virtual void AddToHand(const int8,const uint8,const uint32);
-	const virtual void RemoveFromHand(const int8,const uint8,const uint32);
+	virtual void AddToHand(const int8,const uint8,const uint32);
+	virtual void RemoveFromHand(const int8,const uint8,const uint32);
 
-	const virtual void SetEmpty();
+	virtual void SetEmpty();
 	const virtual bool IsEmpty() const;
 
 }

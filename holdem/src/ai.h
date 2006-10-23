@@ -47,9 +47,9 @@ class PlayStats
 {
     protected:
 
-		const virtual void countWin(const float64);
-		const virtual void countSplit(const float64);
-		const virtual void countLoss(const float64);
+		virtual void countWin(const float64);
+		virtual void countSplit(const float64);
+		virtual void countLoss(const float64);
 
 		CommunityPlus myStrength;
 		CommunityPlus oppStrength;
@@ -73,8 +73,8 @@ class PlayStats
 		int16 moreCards;
 		int32 statGroup;
 
-        const virtual void Analyze() = 0;
-		const virtual void Compare(const float64 occ);
+        virtual void Analyze() = 0;
+		virtual void Compare(const float64 occ);
 
 
 
@@ -94,7 +94,7 @@ class PlayStats
 		//Returns whether or not you need to reset addend
 
 		virtual StatRequest NewCard(const DeckLocation, const float64 occ) = 0;
-		const virtual void DropCard(const DeckLocation) = 0;
+		virtual void DropCard(const DeckLocation) = 0;
         virtual ~PlayStats();
 
 
@@ -111,7 +111,7 @@ class CallStats : virtual public PlayStats
     friend class StatsManager;
     //friend void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
 private:
-	const void initC(const int8);
+	void initC(const int8);
 protected:
 	CommunityPlus* myUndo;
 	CommunityPlus* oppUndo;
@@ -119,18 +119,18 @@ protected:
 	CallCumulation* calc;
 
     const virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
-    const virtual void showProgressUpdate() const;
-    const virtual void setCurrentGroupOcc(const float64 occ);
-    const virtual void mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex){}
-    const virtual void myAddCard(const DeckLocation& cardinfo, const int16 undoIndex);
-	const virtual void myEval();
-	const virtual void myRevert(const int16 undoIndex);
+    virtual void showProgressUpdate() const;
+    virtual void setCurrentGroupOcc(const float64 occ);
+    virtual void mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex){}
+    virtual void myAddCard(const DeckLocation& cardinfo, const int16 undoIndex);
+	virtual void myEval();
+	virtual void myRevert(const int16 undoIndex);
 public:
 	float64 pctWillCall(const float64) const;
 
     //double myCallPct(double); //give pct of HIS percieved bankroll and returns chance to call
-    const virtual void Analyze();
-    const virtual void DropCard(const DeckLocation);
+    virtual void Analyze();
+    virtual void DropCard(const DeckLocation);
     virtual StatRequest NewCard(const DeckLocation, const float64 occ);
 
 	CallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity,
@@ -155,12 +155,12 @@ class WinStats : virtual public PlayStats
 {
 private:
 	short cardsToNextBet;
-	const void initW(const int8);
+	void initW(const int8);
 	void clearDistr();
 protected:
-	const virtual void countWin(const float64);
-	const virtual void countSplit(const float64);
-	const virtual void countLoss(const float64);
+	virtual void countWin(const float64);
+	virtual void countSplit(const float64);
+	virtual void countLoss(const float64);
 	CommunityPlus* myUndo;
 	CommunityPlus* oppUndo;
 
@@ -172,9 +172,9 @@ public:
     const DistrShape& wlDistr();
     const StatResult& avgStat();
 
-	const virtual void Analyze();
+	virtual void Analyze();
 	virtual StatRequest NewCard(const DeckLocation, const float64 occ);
-	const virtual void DropCard(const DeckLocation);
+	virtual void DropCard(const DeckLocation);
 
 	WinStats(const CommunityPlus& myP, const CommunityPlus& cP,
 		const int8 cardsInCommunity) : PlayStats(myP, cP), myDistrPCT(0), myDistrWL(0)
@@ -198,7 +198,7 @@ public:
 class DummyStats : virtual public PlayStats
 {
 	public:
-		const virtual void Analyze(){};
+		virtual void Analyze(){};
 		virtual StatRequest NewCard(const DeckLocation dk, const float64 occ)
 		{
 		    ++currentCard;
@@ -221,7 +221,7 @@ class DummyStats : virtual public PlayStats
 			a.bTareOcc = false;
 			return a;
 		};
-		const virtual void DropCard(const DeckLocation)
+		virtual void DropCard(const DeckLocation)
 		{
 		    --currentCard;
 

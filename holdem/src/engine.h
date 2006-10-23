@@ -28,6 +28,8 @@
 #include "ai.h"
 
 
+#define GLOBAL_AICACHE_SPEEDUP
+
 
 class OrderedDeck
 {
@@ -39,14 +41,14 @@ class OrderedDeck
 		int8 nextSuit[4];
 		int8 prevSuit[4];
 	public:
-		const void sortSuits();
+		void sortSuits();
     //static const int Occurrences(unsigned long*);
     //int lastOccurrences;
-		const void UndealAll();//Make sure you Empty all the hands!
+		void UndealAll();//Make sure you Empty all the hands!
 		virtual float64 DealCard(Hand&);
-		const void UndealCard(const DeckLocation&);
-		const void OmitCard(const DeckLocation&);
-		const void OmitCards(const Hand&);
+		void UndealCard(const DeckLocation&);
+		void OmitCard(const DeckLocation&);
+		void OmitCards(const Hand&);
 
 		const uint32 BaseDealtValue() const
 		{
@@ -63,8 +65,8 @@ class OrderedDeck
 
 		DeckLocation dealt;
 
-		const void SetIndependant();
-		const void SetNextSuit();
+		void SetIndependant();
+		void SetNextSuit();
 
     //after redealing it, set dealtSuit and dealtValue to
     //0 and ACELOW. This allows the next card to be independant
@@ -117,7 +119,7 @@ class DealRemainder : public OrderedDeck
 
 		PlayStats* lastStats;
 
-		const void CleanStats();
+		void CleanStats();
 
 		//double deals;
 

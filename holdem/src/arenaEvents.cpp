@@ -539,11 +539,10 @@ gamelog << p[curIndex]->GetIdent() << " up now" << endl;
 
 }
 
+HoldemArenaBetting::~HoldemArenaBetting()
+{
 
-
-
-
-
+}
 
 
 

@@ -265,7 +265,7 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
 }
 
 #ifdef GLOBAL_AICACHE_SPEEDUP
-void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n, CommunityCallStats **lastds)
+void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n,  CommunityCallStats ** lastds)
 #else
 void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
 #endif

@@ -29,7 +29,6 @@
 #include <fstream>
 
 #define DEF_CACHEABLE_MIN 0
-#define GLOBAL_AICACHE_SPEEDUP
 
 using std::string;
 using std::ifstream;
@@ -99,7 +98,7 @@ public:
     static void Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     static void QueryDefense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     #ifdef GLOBAL_AICACHE_SPEEDUP
-    static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n, CommunityCallStats **lastds=0);
+    static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n, CommunityCallStats  ** lastds=0);
     #else
     static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     #endif

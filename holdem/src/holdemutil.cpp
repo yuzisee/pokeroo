@@ -111,7 +111,7 @@ const uint8 HoldemUtil::cleanz(const uint32 j)
 	}
 }
 
-const void HandPlus::DisplayHand(std::ostream& logFile) const
+void HandPlus::DisplayHand(std::ostream& logFile) const
 {
 
 	uint32 temp[4];
@@ -134,7 +134,7 @@ const void HandPlus::DisplayHand(std::ostream& logFile) const
 }
 
 
-const void HandPlus::DisplayHandBig(std::ostream& logFile) const
+void HandPlus::DisplayHandBig(std::ostream& logFile) const
 {
 	uint32 temp[4];
     uint32 tempv = valueset;
@@ -190,7 +190,7 @@ const uint32 HandPlus::getValueset() const
 	return valueset;
 }
 
-const void Hand::SetEmpty()
+void Hand::SetEmpty()
 {
 
     cardset[0] = 0;
@@ -207,7 +207,7 @@ const bool Hand::IsEmpty() const
     && (cardset[3] == 0);
 }
 
-const void HandPlus::SetEmpty()
+void HandPlus::SetEmpty()
 {
 	Hand::SetEmpty();
 	valueset = 0;
@@ -222,31 +222,31 @@ const bool HandPlus::IsEmpty() const
     return (valueset == 0);
 }
 
-const void HandPlus::SetUnique(const HandPlus& h)
+void HandPlus::SetUnique(const HandPlus& h)
 {
 	Hand::SetUnique(h);
 	valueset = h.valueset;
 }
 
-const void HandPlus::SetUnique(const Hand& h)
+void HandPlus::SetUnique(const Hand& h)
 {
 	Hand::SetUnique(h);
 	populateValueset();
 }
 
-const void HandPlus::AppendUnique(const Hand& h)
+void HandPlus::AppendUnique(const Hand& h)
 {
 	Hand::AppendUnique(h);
 	populateValueset();
 }
 
-const void HandPlus::AppendUnique(const HandPlus& h)
+void HandPlus::AppendUnique(const HandPlus& h)
 {
 	Hand::AppendUnique(h);
 	valueset += h.valueset;
 }
 
-const void HandPlus::RemoveFromHand(
+void HandPlus::RemoveFromHand(
 	const int8 aSuit,const uint8 aIndex,const uint32 aCard)
 {
 	Hand::RemoveFromHand(aSuit,aIndex,aCard);
@@ -254,7 +254,7 @@ const void HandPlus::RemoveFromHand(
 }
 
 ///aIndex is NOT RANK
-const void HandPlus::AddToHand(
+void HandPlus::AddToHand(
 	const int8 aSuit,const uint8 aIndex,const uint32 aCard)
 {
 	Hand::AddToHand(aSuit,aIndex,aCard);
@@ -263,7 +263,7 @@ const void HandPlus::AddToHand(
 }
 
 ///NO ERROR PREVENTION
-const void Hand::AppendUnique(const Hand& h)
+void Hand::AppendUnique(const Hand& h)
 {
 	for(int i=0;i<4;++i)
 	{
@@ -272,7 +272,7 @@ const void Hand::AppendUnique(const Hand& h)
 }
 
 
-const void Hand::SetUnique(const Hand& h)
+void Hand::SetUnique(const Hand& h)
 {
 	/*
 	for(int i=0;i<4;++i)
@@ -286,7 +286,7 @@ const void Hand::SetUnique(const Hand& h)
 	cardset[3] = h.cardset[3];
 }
 
-const void HandPlus::populateValueset()
+void HandPlus::populateValueset()
 {
 	valueset = 0;
     //The ACE_LOW is always zero in valueset.

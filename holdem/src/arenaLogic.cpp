@@ -30,7 +30,6 @@
 using std::endl;
 
 
-
 double* HoldemArena::organizeWinnings(int8& potDistrSize, vector<ShowdownRep>&
 	potDistr, vector<ShowdownRep>& winners )
 {
@@ -305,6 +304,8 @@ gamelog << p[potDistr[i].playerIndex]->GetIdent() << "\t"
 
 void HoldemArena::prepareRound(const int8 comSize)
 {
+    cardsInCommunity = comSize;
+
 	if( bVerbose )
 	{
 		gamelog <<endl<<endl<<endl;
@@ -483,8 +484,7 @@ void HoldemArena::resolveActions(Player& withP)
 ///			Finally, the round pot and round bets are moved into hand bets/pot
 int8 HoldemArena::PlayRound(const int8 comSize)
 {
-
-    HoldemArenaBetting b(this,comSize);
+    HoldemArenaBetting b(this, comSize);
 
     while(b.bBetState == 'b')
     {

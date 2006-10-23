@@ -30,7 +30,7 @@
 
 using std::endl;
 
-const void CommunityPlus::PrintInterpretHand(std::ostream& targetFile) const
+void CommunityPlus::PrintInterpretHand(std::ostream& targetFile) const
 {
     unsigned long tempv = valueset;
     const char cardNamePlural[13][8]
@@ -129,13 +129,13 @@ const int8 CommunityPlus::CardsInSuit(const int8 a) const
 	return (flushCount[a] + 5);
 }
 
-const void CommunityPlus::DisplayHand(std::ostream& targetFile) const
+void CommunityPlus::DisplayHand(std::ostream& targetFile) const
 {
 	HandPlus::DisplayHand(targetFile);
 	targetFile << "\t" << static_cast<int>(strength) << " : " << valueset << endl;
 }
 
-const void CommunityPlus::DisplayHandBig(std::ostream& targetFile) const
+void CommunityPlus::DisplayHandBig(std::ostream& targetFile) const
 {
 	targetFile << endl;
     if (strength < 10)
@@ -149,7 +149,7 @@ const void CommunityPlus::DisplayHandBig(std::ostream& targetFile) const
 	HandPlus::DisplayHandBig(targetFile);
 }
 
-const void CommunityPlus::cleanLastTwo()
+void CommunityPlus::cleanLastTwo()
 {
 	const int8 VALUESETSHIFT = 2;
     //THIS MEANS WE ALWAYS HAVE SEVEN CARDS!!
@@ -170,7 +170,7 @@ const void CommunityPlus::cleanLastTwo()
 }
 
 
-const void CommunityPlus::evaluateStrength()
+void CommunityPlus::evaluateStrength()
 {
 
 	//unsigned long tempcardset[4];
@@ -340,7 +340,7 @@ const void CommunityPlus::evaluateStrength()
 
 
 ///HEAVILY INEFFICIENT. Avoid Use
-const void CommunityPlus::RemoveFromHand(
+void CommunityPlus::RemoveFromHand(
 	const int8 aSuit,const uint8 aIndex,const uint32 aCard)
 {
 #ifdef DEBUGASSERT
@@ -355,7 +355,7 @@ const void CommunityPlus::RemoveFromHand(
 }
 
 ///aIndex is NOT RANK
-const void CommunityPlus::AddToHand(
+void CommunityPlus::AddToHand(
 	const int8 aSuit,const uint8 aIndex,const uint32 aCard)
 {
 	HandPlus::AddToHand(aSuit,aIndex,aCard);
@@ -440,13 +440,13 @@ const void CommunityPlus::AddToHand(
 	}
 }
 
-const void CommunityPlus::AppendUnique(const Hand& h)
+void CommunityPlus::AppendUnique(const Hand& h)
 {
 	HandPlus::AppendUnique(h);
 	preEvalStrength();
 }
 
-const void CommunityPlus::AppendUnique(const HandPlus& h)
+void CommunityPlus::AppendUnique(const HandPlus& h)
 {
 	uint32 hValueset = h.valueset;
 	for(uint8 i=1;i<=13;++i)
@@ -466,7 +466,7 @@ const void CommunityPlus::AppendUnique(const HandPlus& h)
 	}
 }
 
-const void CommunityPlus::AppendUnique(const CommunityPlus& h)
+void CommunityPlus::AppendUnique(const CommunityPlus& h)
 {
 	HandPlus::AppendUnique(h);
 	for(int cd=0;cd<4;++cd)
@@ -561,7 +561,7 @@ const void CommunityPlus::AppendUnique(const CommunityPlus& h)
 
 }
 
-const void CommunityPlus::SetEmpty()
+void CommunityPlus::SetEmpty()
 {
 	HandPlus::SetEmpty();
 	flushCount[0] = -5;
@@ -573,14 +573,14 @@ const void CommunityPlus::SetEmpty()
 	nextbestPair = 0;
 }
 
-const void CommunityPlus::SetUnique(const Hand& h)
+void CommunityPlus::SetUnique(const Hand& h)
 {
 	HandPlus::SetUnique(h);
 	//set valueset
 	preEvalStrength();
 }
 
-const void CommunityPlus::preEvalStrength()
+void CommunityPlus::preEvalStrength()
 {
 	uint32 tempforflush[4];
     for(int8 i=0;i<4;++i)
@@ -629,7 +629,7 @@ const void CommunityPlus::preEvalStrength()
     }
 }
 
-const void CommunityPlus::SetUnique(const HandPlus& h)
+void CommunityPlus::SetUnique(const HandPlus& h)
 {
 	HandPlus::SetUnique(h);
 
@@ -637,7 +637,7 @@ const void CommunityPlus::SetUnique(const HandPlus& h)
 
 }
 
-const void CommunityPlus::SetUnique(const CommunityPlus& h)
+void CommunityPlus::SetUnique(const CommunityPlus& h)
 {
 	HandPlus::SetUnique(h);
 
@@ -662,7 +662,7 @@ CommunityPlus::CommunityPlus(const uint32 tempcardset[4])
     Refill(tempcardset);
 }
 
-const void CommunityPlus::Refill(const uint32 tempcardset[4])
+void CommunityPlus::Refill(const uint32 tempcardset[4])
 {
 	threeOfAKind = 0;
 	bestPair = 0;

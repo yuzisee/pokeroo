@@ -55,7 +55,7 @@ bool OrderedDeck::operator==(const OrderedDeck& o) const
 	return bMatch;
 }
 
-const void OrderedDeck::sortSuits()
+void OrderedDeck::sortSuits()
 {
 	//Mergesort
 
@@ -143,7 +143,7 @@ const void OrderedDeck::sortSuits()
 }
 
 
-const void OrderedDeck::UndealCard(const DeckLocation& deck)
+void OrderedDeck::UndealCard(const DeckLocation& deck)
 {
 	dealtHand[deck.Suit] &= ~deck.Value;
 	dealt = deck;
@@ -294,12 +294,12 @@ HoldemUtil::PrintCard(cout,dealt.Suit,dealt.Value);
 }
 
 
-const void OrderedDeck::OmitCard(const DeckLocation& deck)
+void OrderedDeck::OmitCard(const DeckLocation& deck)
 {
 	dealtHand[deck.Suit] |= deck.Value;
 }
 
-const void OrderedDeck::OmitCards(const Hand& h)
+void OrderedDeck::OmitCards(const Hand& h)
 {
 	OrderedDeck::dealtHand[0] |= h.SeeCards(0);
 	OrderedDeck::dealtHand[1] |= h.SeeCards(1);
@@ -307,21 +307,21 @@ const void OrderedDeck::OmitCards(const Hand& h)
 	OrderedDeck::dealtHand[3] |= h.SeeCards(3);
 }
 
-const void OrderedDeck::SetIndependant()
+void OrderedDeck::SetIndependant()
 {
 	dealt.Value = BaseDealtValue();
 	dealt.Suit = BaseDealtSuit();
 	dealt.Rank = BaseDealtRank();
 }
 
-const void OrderedDeck::SetNextSuit()
+void OrderedDeck::SetNextSuit()
 {
 	dealt.Suit = nextSuit[dealt.Suit];
 	dealt.Value = BaseDealtValue();
 	dealt.Rank = BaseDealtRank();
 }
 
-const void OrderedDeck::UndealAll()
+void OrderedDeck::UndealAll()
 {
 	OrderedDeck::dealtHand[0] = 0;
 	OrderedDeck::dealtHand[1] = 0;
@@ -338,7 +338,7 @@ DealRemainder::~DealRemainder()
 {
 	CleanStats();
 }
-const void DealRemainder::CleanStats()
+void DealRemainder::CleanStats()
 {
 	/*
     if (lastStats != NULL)

@@ -48,7 +48,8 @@ void TournamentStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
 
     //StatsManager::QueryDefense(foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
-    StatsManager::QueryOffense(callcumu,withCommunity,onlyCommunity,cardsInCommunity);
+    ViewTable().CachedQueryOffense(callcumu,withCommunity);
+    //StatsManager::QueryOffense(callcumu,withCommunity,onlyCommunity,cardsInCommunity, &(ViewTable().communityBuffer) );
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
     statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
     statworse = GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);

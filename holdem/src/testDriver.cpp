@@ -628,25 +628,25 @@ void testNewCallStats()
 
     CommunityCallStats ds(h1, h2,dealtCommunityNumber);
     myStatBuilder.AnalyzeComplete(&ds);
-    
-    
+
+
     cout << endl << endl << "Next part" << endl;
-    
-    
+
+
     h1.SetUnique(h2);
-    
+
     //Hole cards
     h1.AddToHand(HoldemConstants::SPADES, 12, HoldemConstants::CARD_KING );
     h1.AddToHand(HoldemConstants::DIAMONDS, 5, HoldemConstants::CARD_SIX );
-    
+
     myStatBuilder.UndealAll();
     myStatBuilder.OmitCards(h2); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
-    
+
     CommunityCallStats dsCOPY(ds,h1,h2);
     CommunityCallStats ds2(h1, h2,dealtCommunityNumber);
     myStatBuilder.AnalyzeComplete(&ds2);
     dsCOPY.Analyze();
-    
+
 }
 
 void testPosition()
@@ -1091,10 +1091,10 @@ int main(int argc, char* argv[])
 	    ///Now, monitor how the money is divided between N2 and X1.
 	    //testPosition();
 	    //debugPosition();
-	    //superGame(0);
+	    superGame(0);
 	    //testPlay(0);
 	    //testPlay('*');
-        testNewCallStats();
+        //testNewCallStats();
 
 	    //testC();
 		//goCMD(2,"505");

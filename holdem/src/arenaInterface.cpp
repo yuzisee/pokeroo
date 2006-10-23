@@ -141,9 +141,22 @@ int8 HoldemArena::AddPlayer(const char* id, float64 money, PlayerStrategy* newSt
 	return (nextNewPlayer-1);
 }
 
+#ifdef GLOBAL_AICACHE_SPEEDUP
+void HoldemArena::CachedQueryOffense(CallCumulation& q, const CommunityPlus& withCommunity) const
+{
+    StatsManager::QueryOffense(q,withCommunity,community,cardsInCommunity,&communityBuffer);
+}
+#endif
 
 HoldemArena::~HoldemArena()
 {
+#ifdef GLOBAL_AICACHE_SPEEDUP
+    if( communityBuffer != 0 )
+    {
+        delete communityBuffer;
+        communityBuffer = 0;
+    }
+#endif
 	while(! (p.empty()) )
 	{
 		delete p.back();

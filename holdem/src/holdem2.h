@@ -39,17 +39,17 @@ private:
 	uint8 bestPair;
 	uint8 nextbestPair;
 
-	const void preEvalStrength();
-    const void cleanLastTwo();
+	void preEvalStrength();
+    void cleanLastTwo();
 public:
 
 
-	const void evaluateStrength();
+	void evaluateStrength();
     char strength;
 
-	const virtual void AppendUnique(const Hand&);
-	const virtual void AppendUnique(const HandPlus&);
-	const virtual void AppendUnique(const CommunityPlus&);
+	virtual void AppendUnique(const Hand&);
+	virtual void AppendUnique(const HandPlus&);
+	virtual void AppendUnique(const CommunityPlus&);
 
 
     virtual void AddToHand(const DeckLocation& deck)
@@ -57,21 +57,21 @@ public:
     virtual void RemoveFromHand(const DeckLocation& deck)
     {	RemoveFromHand(deck.Suit,deck.Rank,deck.Value);	}
 
-	const virtual void AddToHand(const int8,const uint8,const uint32);
-	const virtual void RemoveFromHand(const int8,const uint8,const uint32);
+	virtual void AddToHand(const int8,const uint8,const uint32);
+	virtual void RemoveFromHand(const int8,const uint8,const uint32);
 
-	const virtual void SetUnique(const Hand&);
-	const virtual void SetUnique(const HandPlus&);
-	const virtual void SetUnique(const CommunityPlus&);
+	virtual void SetUnique(const Hand&);
+	virtual void SetUnique(const HandPlus&);
+	virtual void SetUnique(const CommunityPlus&);
 
-    const virtual void SetEmpty();
+    virtual void SetEmpty();
 
     CommunityPlus();
 
 	const int8 CardsInSuit(const int8) const;
-	const virtual void DisplayHand(std::ostream&) const;
-    const virtual void DisplayHandBig(std::ostream&) const;
-    const void PrintInterpretHand(std::ostream&) const;
+	virtual void DisplayHand(std::ostream&) const;
+    virtual void DisplayHandBig(std::ostream&) const;
+    void PrintInterpretHand(std::ostream&) const;
 }
 ;
 

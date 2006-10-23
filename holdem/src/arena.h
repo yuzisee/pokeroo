@@ -31,6 +31,8 @@
 
 //#include "player.h"
 
+
+
 #include "engine.h"
 #include "randomDeck.h"
 #include "blinds.h"
@@ -38,6 +40,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+
+#ifdef GLOBAL_AICACHE_SPEEDUP
+#include "aiCache.h"
+//class CommunityCallStats;
+#endif
 
 
 using std::string;
@@ -211,6 +218,7 @@ class HoldemArena
 		RandomDeck dealer;
 		float64 randRem;
 
+        int8 cardsInCommunity;
 		CommunityPlus community;
 		bool bVerbose;
 		bool bSpectate;
@@ -233,6 +241,12 @@ class HoldemArena
 		float64 blindBetSum; //Bets that have been made blind before the player has had a chance to make another bet.
         vector<Player*> p;
 
+
+    #ifdef GLOBAL_AICACHE_SPEEDUP
+        mutable CommunityCallStats *communityBuffer;
+    #endif
+
+
 		void broadcastHand(const Hand&,const int8 broadcaster);
 		void broadcastCurrentMove(const int8& playerID, const float64& theBet
                                 , const float64& toCall, const bool& isBlindCheck, const bool& isAllIn);
@@ -253,6 +267,9 @@ class HoldemArena
 	#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
         uint32 handnum;
     #endif
+    #ifdef GLOBAL_AICACHE_SPEEDUP
+        void CachedQueryOffense(CallCumulation& q, const CommunityPlus& withCommunity) const;
+    #endif
 
 		void incrIndex(int8&) const;
 		Player* PlayTable();
@@ -267,7 +284,9 @@ class HoldemArena
 		,gamelog(targetout)
         ,bVerbose(illustrate),bSpectate(spectate),livePlayers(0), blinds(b),allChips(0)
 		,lastRaise(0),highBet(0), myPot(0), myBetSum(0), prevRoundPot(0),blindBetSum(0)
-
+		#ifdef GLOBAL_AICACHE_SPEEDUP
+		,communityBuffer(0)
+        #endif
 		{
 		    smallestChip = b->SmallBlind(); ///This INITIAL small blind should be assumed to be one chip.
         }
@@ -375,7 +394,7 @@ class HoldemArenaEventBase
 class HoldemArenaBetting : public HoldemArenaEventBase
 {
     private:
-    int8 comSize;
+    const int8 comSize;
 
     protected:
     int8 bBlinds;
@@ -390,23 +409,22 @@ class HoldemArenaBetting : public HoldemArenaEventBase
     void incrPlayerNumber(Player& currentPlayer);
 
 
-
-
-
     public:
     HoldemArenaBetting(HoldemArena * table, int8 communitySize)
-     : HoldemArenaEventBase(table), comSize(communitySize),  playerCalled(-1), bBetState('b')
+     : HoldemArenaEventBase(table), comSize(communitySize)
+
+	,  playerCalled(-1), bBetState('b')
     {
         startBettingRound();
     }
+
+    ~HoldemArenaBetting();
 
     ///playerCalled is used when there is a showdown that needs to take place.
     ///playerCalled will be set to the first player to make the highest bet.
     ///This is the also the player who must reveal his/her cards first
     int8 playerCalled;
     char bBetState;
-
-
 
     ///MakeBet will set bBetState to one of the following characters:
     ///'b' if there is still more betting

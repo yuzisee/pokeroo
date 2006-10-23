@@ -34,7 +34,7 @@
 
 
 ///Rather than truely 'diff'ing the hands, this diffs against only the COMMON cards
-const void TriviaDeck::DiffHand(const Hand& h)
+void TriviaDeck::DiffHand(const Hand& h)
 {
     OrderedDeck::dealtHand[0] ^= OrderedDeck::dealtHand[0] & h.SeeCards(0);
 	OrderedDeck::dealtHand[1] ^= OrderedDeck::dealtHand[1] & h.SeeCards(1);
@@ -43,7 +43,7 @@ const void TriviaDeck::DiffHand(const Hand& h)
 
 }
 
-const void CommunityCallStats::Compare(const float64 occ)
+void CommunityCallStats::Compare(const float64 occ)
 {
         #ifdef DEBUGASSERT
             if( showdownIndex >= showdownCount )
@@ -80,12 +80,12 @@ const void CommunityCallStats::Compare(const float64 occ)
 }
 
 
-const void CommunityCallStats::setCurrentGroupOcc(const float64 occ)
+void CommunityCallStats::setCurrentGroupOcc(const float64 occ)
 {
     groupRepeated = occ;
 }
 
-const void CommunityCallStats::mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex)
+void CommunityCallStats::mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex)
 {
     indexHistory[undoIndex] = cardinfo.GetIndex();
         #ifdef DEBUGNEWORDER
@@ -102,7 +102,7 @@ const void CommunityCallStats::mynoAddCard(const DeckLocation& cardinfo, const i
         #endif
 }
 
-const void CommunityCallStats::fillMyWins(StatResult ** table)
+void CommunityCallStats::fillMyWins(StatResult ** table)
 {
     ///Going from index 0, worst hands first.
     int32 curgroupStart;
@@ -189,7 +189,7 @@ const void CommunityCallStats::fillMyWins(StatResult ** table)
     }
 }
 
-const void CommunityCallStats::Analyze()
+void CommunityCallStats::Analyze()
 {
     #ifdef DEBUGASSERT
         const int32 countedDealt = static_cast<int32>(showdownMax);
@@ -309,7 +309,7 @@ const void CommunityCallStats::Analyze()
     CallStats::Analyze();
 }
 
-const void CommunityCallStats::showProgressUpdate() const
+void CommunityCallStats::showProgressUpdate() const
 {
     if (statGroup == 0 ) std::cout << endl << endl;
     std::cout << "I: " << showdownIndex << "/" << showdownCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
@@ -321,7 +321,7 @@ const int8 CommunityCallStats::realCardsAvailable(const int8 cardsInCommunity) c
     return 52 - cardsInCommunity;
 }
 
-const void CommunityCallStats::initCC(const int8 cardsInCommunity)
+void CommunityCallStats::initCC(const int8 cardsInCommunity)
 {
 
 	int8 cardsAvail = realCardsAvailable(cardsInCommunity);
