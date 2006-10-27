@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #define DEBUGSITUATION
+#define SUPERINTOLOG
 
 #include "stratPosition.h"
 #include "stratTournament.h"
@@ -617,6 +618,8 @@ void testNewCallStats()
     const uint8 dealtCommunityNumber=3;
 
 
+
+
     /*CommunityPlus emptyCards;
     PreflopCallStats pfcs(h1, emptyCards);
     pfcs.AutoPopulate();
@@ -627,7 +630,7 @@ void testNewCallStats()
     myStatBuilder.OmitCards(h2); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
 
     CommunityCallStats ds(h1, h2,dealtCommunityNumber);
-    myStatBuilder.AnalyzeComplete(&ds);
+    //myStatBuilder.AnalyzeComplete(&ds);
 
 
     cout << endl << endl << "Next part" << endl;
@@ -642,10 +645,16 @@ void testNewCallStats()
     myStatBuilder.UndealAll();
     myStatBuilder.OmitCards(h2); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
 
-    CommunityCallStats dsCOPY(ds,h1,h2);
-    CommunityCallStats ds2(h1, h2,dealtCommunityNumber);
-    myStatBuilder.AnalyzeComplete(&ds2);
-    dsCOPY.Analyze();
+    CommunityCallStats *pds = 0;
+    CallCumulation dsCopyCC;
+    CallCumulation ds2CC;
+    StatsManager::QueryOffense(ds2CC,h1,h2,dealtCommunityNumber,&pds);
+    StatsManager::QueryOffense(dsCopyCC,h1,h2,dealtCommunityNumber,&pds);
+
+    //CommunityCallStats dsCOPY(ds,h1,h2);
+    //CommunityCallStats ds2(h1, h2,dealtCommunityNumber);
+    //myStatBuilder.AnalyzeComplete(&ds2);
+    //dsCOPY.Analyze();
 
 }
 
@@ -965,11 +974,11 @@ void debugPosition()
 
 
 
-Player* testPlay(char headsUp = 'G')
+Player* testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
 	BlindStructure b(.05,.1);
 	GeomPlayerBlinds bg(b.SmallBlind()/2,b.BigBlind()/2,2,2);
-	HoldemArena myTable(&bg, cout,true, true);
+	HoldemArena myTable(&bg, gameLog,true, true);
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;
 	ConsoleStrategy manPlay[3];
@@ -1034,8 +1043,14 @@ void superGame(char headsUp = 0)
 {
     while(true)
     {
+        #ifdef SUPERINTOLOG
+        std::ofstream gameOutput("game.log");
+        Player* iWin = testPlay(headsUp, gameOutput);
+        gameOutput.close();
+        #else
         Player* iWin = testPlay(headsUp);
-        system("pause");
+        #endif
+        //system("pause");
         std::ofstream tourny("batchResults.txt", std::ios::app);
         if( iWin == 0 )
         {
