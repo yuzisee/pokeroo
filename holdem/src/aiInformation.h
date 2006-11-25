@@ -113,6 +113,7 @@ public:
         {
             myHands[i].a = covered.myHands[i].a;
             myHands[i].b = covered.myHands[i].b;
+            myHands[i].abRepeated = covered.myHands[i].abRepeated;
             myHands[i].repeated = covered.myHands[i].repeated;
             myHands[i].result.strength = covered.myHands[i].result.strength;
             myHands[i].result.valueset = covered.myHands[i].result.valueset;
