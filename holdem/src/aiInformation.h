@@ -32,16 +32,17 @@ class PocketHand
 public:
 	uint8 a;
 	uint8 b;
+    float64 abRepeated;
 	float64 repeated;
 	ShowdownRep result;
 
 	PocketHand() : result(-1){}
 
-	PocketHand(const CommunityPlus* h, const uint8 carda, const uint8 cardb, const float64 occ)
-	: a(carda), b(cardb), repeated(occ), result(h,-1)
+	PocketHand(const CommunityPlus* h, const uint8 carda, const uint8 cardb, const float64 groupRepeated, const float64 occ)
+	: a(carda), b(cardb), abRepeated(groupRepeated), repeated(occ), result(h,-1)
 	{}
 	PocketHand(const PocketHand& p)
-	: a(p.a), b(p.b), repeated(p.repeated), result(p.result)
+	: a(p.a), b(p.b), abRepeated(p.abRepeated),repeated(p.repeated), result(p.result)
 	{}
 
     bool operator> (const PocketHand& x) const
@@ -60,6 +61,7 @@ public:
     {
         a = o.a;
         b = o.b;
+        abRepeated = o.abRepeated;
         repeated = o.repeated;
         result = o.result;
         return *this;

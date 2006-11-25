@@ -189,7 +189,7 @@ public:
                 targetoutput << std::endl << "{" << i << "}" << calc.cumulation[i].loss << " l +\t"
                         << calc.cumulation[i].splits << " s +\t" << calc.cumulation[i].wins << " w =\t" <<
                         calc.cumulation[i].pct
-                        << " pct\t×"<< calc.cumulation[i].repeated << std::flush;
+                        << " pct\tx;"<< calc.cumulation[i].repeated << std::flush;
             }
         }
     #endif

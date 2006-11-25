@@ -130,7 +130,7 @@ void WinStats::Analyze()
 		cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
 				<< myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
 				myWins[i].loss+myWins[i].splits+myWins[i].wins
-				<< "\t×"<< myWins[i].repeated   <<endl;
+				<< "\tx;"<< myWins[i].repeated   <<endl;
 	}
 
 
@@ -183,7 +183,7 @@ void WinStats::Analyze()
 
 	cout << endl << "AVG " << myAvg.loss << " l + "
 				<< myAvg.splits << " s + " << myAvg.wins << " w = " <<
-				myAvg.loss+myAvg.splits+myAvg.wins << "\t×"<< myAvg.repeated <<endl;
+				myAvg.loss+myAvg.splits+myAvg.wins << "\tx;"<< myAvg.repeated <<endl;
 
     cout << "myAvg.genPCT " << myAvg.pct << "!"  << endl;
     cout << "(Mean) " << myDistrPCT->mean * 100 << "%"  << endl;
@@ -492,8 +492,19 @@ void CallStats::Analyze()
 		std::cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
 				<< myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
         myWins[i].loss+myWins[i].splits+myWins[i].wins << "(" << myWins[i].pct << ")"
-				<< "\t×"<< myWins[i].repeated <<flush;
+				<< "\tx;"<< myWins[i].repeated <<flush;
 	}
+
+    std::cout << endl << statCount << " with " << myChancesEach << "'s each" << endl;
+	for(int32 i=0;i<statCount;i++)
+	{
+	    float64 px = myWins[i].loss+myWins[i].splits+myWins[i].wins;
+		std::cout << endl << "{" << i << "}" << ((myWins[i].loss)/px) << "% l + "
+				<< ((myWins[i].splits)/px) << "% s + " << ((myWins[i].wins)/px) << "% w = " <<
+        1 << "(" << ((myWins[i].pct)/px) << ")"
+				<< "\tx;"<< myWins[i].repeated <<flush;
+	}
+
 #endif
 
 	for(int32 k=0;k<statCount;++k)
@@ -511,7 +522,7 @@ void CallStats::Analyze()
 		std::cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
 				<< myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
 				myWins[i].loss+myWins[i].splits+myWins[i].wins << "(" << myWins[i].pct << ")"
-				<< "\t×"<< myWins[i].repeated <<flush;
+				<< "\tx;"<< myWins[i].repeated <<flush;
 	}
 #endif
 
@@ -584,7 +595,7 @@ std::cout << endl << "=============Reduced=============" << endl;
 				<< calc->cumulation[j].splits << " s + " << calc->cumulation[j].wins << " w =\t" << flush;
 				std::cout.precision(8);
 				std::cout << calc->cumulation[j].pct
-				//<< " pct\t×"<< calc->cumulation[i].repeated <<flush;
+				//<< " pct\tx;"<< calc->cumulation[i].repeated <<flush;
 				<< " \t"<< calc->cumulation[j].repeated << "\ttocall" << flush;
 	}
 	std::cout << endl;

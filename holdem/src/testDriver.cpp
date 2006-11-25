@@ -77,7 +77,7 @@ void genW(CommunityPlus& h1, CommunityPlus& h2)
     cout << endl << "AVG "  << myWins.loss << " l + "
             << myWins.splits << " s + " << myWins.wins << " w = " <<
             myWins.loss+myWins.splits+myWins.wins
-            << "\t×"<< myWins.repeated   <<endl;
+            << "\tx;"<< myWins.repeated   <<endl;
 
     cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;
     cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
@@ -211,7 +211,7 @@ void genC(CommunityPlus& h1, CommunityPlus& h2)
 		cout << endl << "{" << i << "}" << calc.cumulation[i].loss << " l +\t"
 				<< calc.cumulation[i].splits << " s +\t" << calc.cumulation[i].wins << " w =\t" <<
 				calc.cumulation[i].pct
-				<< " pct\t×"<< calc.cumulation[i].repeated <<flush;
+				<< " pct\tx;"<< calc.cumulation[i].repeated <<flush;
 	}
 
 
@@ -732,7 +732,7 @@ void testPosition()
    /* cout << endl << "AVG "  << myWins.loss << " l + "
             << myWins.splits << " s + " << myWins.wins << " w = " <<
             myWins.loss+myWins.splits+myWins.wins
-            << "\t×"<< myWins.repeated   <<endl;
+            << "\tx;"<< myWins.repeated   <<endl;
 
     cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;*/
     cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
@@ -903,20 +903,20 @@ void debugPosition()
 
 
 //Community 3S 3H 3C KD AD
-    h2.AddToHand(HoldemConstants::DIAMONDS, 13, HoldemConstants::CARD_ACEHIGH );
-    h2.AddToHand(HoldemConstants::DIAMONDS, 12, HoldemConstants::CARD_KING );
-    h2.AddToHand(HoldemConstants::HEARTS, 2, HoldemConstants::CARD_TREY );
-    h2.AddToHand(HoldemConstants::SPADES, 2, HoldemConstants::CARD_TREY );
-    h2.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
+    h2.AddToHand(HoldemConstants::HEARTS, 11, HoldemConstants::CARD_QUEEN );
+    h2.AddToHand(HoldemConstants::CLUBS, 12, HoldemConstants::CARD_KING );
+    h2.AddToHand(HoldemConstants::CLUBS, 8, HoldemConstants::CARD_NINE );
+    //h2.AddToHand(HoldemConstants::SPADES, 2, HoldemConstants::CARD_TREY );
+    //BlindStructure.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
     h1.SetUnique(h2);
 
 //Hole cards 8S 8H, JH JD
     //honly.AddToHand(HoldemConstants::SPADES,7, HoldemConstants::CARD_EIGHT );
     //honly.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
-    honly.AddToHand(HoldemConstants::DIAMONDS,10, HoldemConstants::CARD_JACK );
-    honly.AddToHand(HoldemConstants::HEARTS, 10, HoldemConstants::CARD_JACK );
+    honly.AddToHand(HoldemConstants::CLUBS,11, HoldemConstants::CARD_QUEEN );
+    honly.AddToHand(HoldemConstants::SPADES, 11, HoldemConstants::CARD_QUEEN );
     h1.AppendUnique(honly);
-    const uint8 dealtCommunityNumber=5;
+    const uint8 dealtCommunityNumber=3;
 
 
 #ifdef DEBUGSITUATION
@@ -938,9 +938,7 @@ void debugPosition()
 	DebugArena myTable(&b,cout, true);
     UserConsoleStrategy testDummy[5];
 
-
-
-    PositionalStrategy a(1);
+    PositionalStrategy a(5);
     //TournamentStrategy a;
 
 
@@ -964,7 +962,9 @@ void debugPosition()
 
     cout << "Number in hand " << (int)(myTable.GetNumberInHand()) << endl;
 
+
     myTable.GiveCards(0,honly);
+    myTable.SetCommunity(h2,dealtCommunityNumber);
 
     a.SeeCommunity(h2,dealtCommunityNumber);
 
@@ -1101,12 +1101,9 @@ int main(int argc, char* argv[])
 	else
 	{
 
-	    ///Play this hand on force-random
-	    ///Check pre-flop and push all-in after the flop.
-	    ///Now, monitor how the money is divided between N2 and X1.
 	    //testPosition();
-	    //debugPosition();
-	    superGame(0);
+	    debugPosition();
+	    //superGame(0);
 	    //testPlay(0);
 	    //testPlay('*');
         //testNewCallStats();

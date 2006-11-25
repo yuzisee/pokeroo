@@ -312,6 +312,12 @@ void DebugArena::GiveCards(int8 playerNum, CommunityPlus h)
     p[playerNum]->myHand.SetUnique(h);
 }
 
+void DebugArena::SetCommunity(const CommunityPlus h, const int8 cardnum)
+{
+    community = h;
+    cardsInCommunity = cardnum;
+}
+
 void DebugArena::AssignHandNum(uint32 n)
 {
     handnum = n;

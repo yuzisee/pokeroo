@@ -177,6 +177,7 @@ public:
     void SetBet(int8 playerNum, float64 amount);
 
     void GiveCards(int8 playerNum, CommunityPlus h);
+    void SetCommunity(const CommunityPlus h, const int8 cardsInComunity);
 
     void AssignHandNum( uint32 n );
 }

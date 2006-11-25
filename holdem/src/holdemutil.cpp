@@ -47,12 +47,12 @@ You could list the strengths in order, what are their occurrances (given that th
 
 /*
 Start with
-Straight Flush (AND-SHIFT × 5)
+Straight Flush (AND-SHIFT x; 5)
 Quads (AND the cardsets)
 BUILD Valueset
 if not full house,
-FLUSH (ADD-SHIFT × 13)
-STRAIGHT (OR the cardsets, then AND-SHIFT × 5)
+FLUSH (ADD-SHIFT x; 13)
+STRAIGHT (OR the cardsets, then AND-SHIFT x; 5)
 */
 #include <fstream>
 #include "holdem2.h"

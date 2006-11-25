@@ -20,7 +20,7 @@
 
 
 //#define DEBUGCALLPART
-//#define DEBUGCALLPCT
+#define DEBUGCALLPCT
 
 #ifndef HOLDEM_AI
 #define HOLDEM_AI
@@ -30,7 +30,7 @@
 #include "inferentials.h"
 
 
-//#define PROGRESSUPDATE
+#define PROGRESSUPDATE
 //#define SUPERPROGRESSUPDATE
 //#define DEBUG_TESTDEALINTERFACE
 

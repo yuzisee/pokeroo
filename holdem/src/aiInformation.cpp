@@ -53,11 +53,15 @@ void CommunityCallStats::Compare(const float64 occ)
             }
         #endif
 
+    PocketHand & newEntry = myHands[showdownIndex];
+    
+    
     //showdownMax += occ;
     const float64 incr = groupRepeated*occ;
     showdownMax += incr;
-    PocketHand & newEntry = myHands[showdownIndex];
     newEntry.repeated = incr;
+    newEntry.abRepeated = groupRepeated;
+    
     if( newEntry.a > newEntry.b ) ///Because the 0...51 count is suit-major, we should match all pairs
     {
         newEntry.a = indexHistory[1];
@@ -67,6 +71,7 @@ void CommunityCallStats::Compare(const float64 occ)
         newEntry.a = indexHistory[0];
         newEntry.b = indexHistory[1];
     }
+    
     ///TODO: WTF If I use Reset(oppStrength) then it fails to SetUnique correctly the valueset field.
     newEntry.result.strength = oppStrength.strength;
     newEntry.result.valueset = oppStrength.valueset;
@@ -83,6 +88,9 @@ void CommunityCallStats::Compare(const float64 occ)
 void CommunityCallStats::setCurrentGroupOcc(const float64 occ)
 {
     groupRepeated = occ;
+    #ifdef DEBUGNEWORDER
+    std::cout << "Set " << occ << std::endl;
+    #endif
 }
 
 void CommunityCallStats::mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex)
@@ -91,19 +99,25 @@ void CommunityCallStats::mynoAddCard(const DeckLocation& cardinfo, const int16 u
         #ifdef DEBUGNEWORDER
             if( undoIndex == 1 )
             {
-                cout << endl << "0" << " " << ( (indexHistory[0] / 10)) << ((indexHistory[0] % 10));
-                cout << "\t1" << " " << ( (indexHistory[1] / 10)) << ( (indexHistory[1] % 10)) << "\t";
+                std::cout << std::endl << "i[0]=" << ( (indexHistory[0] / 10)) << ((indexHistory[0] % 10));
+                std::cout << "\ti[1]=" << ( (indexHistory[1] / 10)) << ( (indexHistory[1] % 10)) << "\t";
                 DeckLocation firstcard;
                 firstcard.SetByIndex(indexHistory[0]);
-                HoldemUtil::PrintCard(cout,firstcard.Suit,firstcard.Value);
-                HoldemUtil::PrintCard(cout,cardinfo.Suit,cardinfo.Value);
-                cout << endl;
+                HoldemUtil::PrintCard(std::cout,firstcard.Suit,firstcard.Value);
+                HoldemUtil::PrintCard(std::cout,cardinfo.Suit,cardinfo.Value);
+                std::cout << std::endl;
             }
         #endif
 }
 
 void CommunityCallStats::fillMyWins(StatResult ** table)
 {
+
+        #ifdef DEBUGNEWCALLSTATS
+            float64 onlyPrintIfWrong = 0;
+            float64 onlyPrintIfWrongR = 0;
+        #endif
+
     ///Going from index 0, worst hands first.
     int32 curgroupStart;
     int32 curgroupAfter = 0;
@@ -126,7 +140,7 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
         ///be all and exactly all the hands that would split with one of them
 
 
-        StatResult now;
+
 
         int32 splitgroupStart;
         int32 splitgroupAfter = curgroupStart;
@@ -152,14 +166,18 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
                 int8 carda = tableEntry.a;
                 int8 cardb = tableEntry.b;
 
+                StatResult now;
+
 
                 now.wins = prevRepeated;
                 now.splits = curgroupRepeated;
                 now.loss = showdownMax - curgroupRepeated - prevRepeated;
-                now.repeated = tableEntry.repeated;
+                now.repeated = tableEntry.abRepeated;
 
                 ///In this situation, we can use .repeated as the number "seen so far"
 
+                const float64 thisOcc = tableEntry.repeated / tableEntry.abRepeated;
+                
                 StatResult *(&destination) = table[carda*52+cardb];
                 if( destination == 0 )
                 {
@@ -167,24 +185,30 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
                     now.loss -= myChancesEach - splitgroupRepeated;
 
                     destination = new StatResult;
-                    *destination = now;
+                    *destination = now * thisOcc;
                 }else
                 {
                     now.wins -= destination->repeated - prevsplitRepeated;
                     now.splits -= splitgroupRepeated;
                     now.loss -= myChancesEach - splitgroupRepeated - destination->repeated + prevsplitRepeated;
-                    *destination = (*destination) + now;
+                    *destination = (*destination) + ( now * thisOcc );
                 }
 
-                prevsplitRepeated += now.repeated;
+                prevsplitRepeated += tableEntry.repeated;
+
+
+                ///Sum{wins,loss,splits,pct}   Average{repeated}
+                    #ifdef DEBUGNEWCALLSTATS
+                        if( now.wins + now.splits + now.loss != onlyPrintIfWrong )
+                        {
+                            std::cout << now.wins + now.splits + now.loss << "  = Sum{wins,loss,splits,pct} = Average{repeated}" << std::endl;
+                            onlyPrintIfWrong = now.wins + now.splits + now.loss;
+                        }
+                    #endif
             }
 
         }
 
-        ///Sum{wins,loss,splits,pct}   Average{repeated}
-            #ifdef DEBUGNEWCALLSTATS
-                cout << now.wins + now.splits + now.loss << endl;
-            #endif
         prevRepeated += curgroupRepeated;
     }
 }
@@ -275,17 +299,22 @@ void CommunityCallStats::Analyze()
                     myWins[statIndex].repeated /= myChancesEach;
                     ++statIndex;
                         #ifdef DEBUGNEWCALLSTATS
-                            cout << "+" << flush;
+                            std::cout << "+" << std::flush;
                         #endif
                 }
 
                     #ifdef DEBUGNEWCALLSTATS
                         //float64 ttt = myWins[statIndex].loss+myWins[statIndex].splits+myWins[statIndex].wins;
                         //if( ttt >= myChancesEach - 2 || ttt == 0 )
-                                cout.precision(4);
-                                cout << "{" << (statIndex-1) << "}" << myWins[statIndex-1].loss << " l + " <<
+                                HandPlus uPrint;
+                                uPrint.SetUnique(oHave);
+                                uPrint.DisplayHand(std::cout);
+                                std::cout.precision(4);
+                                std::cout << "{" << (statIndex-1) << "}" << myWins[statIndex-1].loss << " l + " <<
                                 myWins[statIndex-1].splits << " s + " << myWins[statIndex-1].wins << " w = " <<
-                                (myWins[statIndex-1].wins + (myWins[statIndex-1].splits/2)) << "\t×"<< myWins[statIndex-1].repeated << endl;
+                                (myWins[statIndex-1].wins + (myWins[statIndex-1].splits/2)) << " (T:"
+                                << (myWins[statIndex-1].splits + myWins[statIndex-1].loss + myWins[statIndex-1].wins )
+                                << ")\tx;"<< myWins[statIndex-1].repeated << std::endl;
 
                     #endif
 
