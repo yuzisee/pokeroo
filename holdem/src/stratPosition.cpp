@@ -121,27 +121,19 @@ float64 PositionalStrategy::MakeBet()
                                 };
 
     const float64 myMoney = ViewPlayer().GetMoney();
-    float64 betToCall = ViewTable().GetBetToCall();
 
-    const float64 highBet = betToCall;
+
+    const float64 highBet = ViewTable().GetBetToCall();
+    float64 betToCall = highBet;
+
     const float64 myBet = ViewPlayer().GetBetSize();
 
+
+
     if( myMoney < betToCall ) betToCall = myMoney;
-
-
-
-
-
-    ///TODO: Enhance this. Maybe scale each separately depending on different factors? Ooooh.
-    ///I want you to remember that after the river is dealt and no more community cards will come, that
-    ///skew and kurtosis are undefined and other DistrShape related values are meaningless.
-
     float64 maxShowdown = ViewTable().GetMaxShowdown();
     if( maxShowdown > myMoney ) maxShowdown = myMoney;
-    float64 choiceScale = (betToCall - myBet)/(maxShowdown - myBet);
-    if( maxShowdown == myBet || maxShowdown < betToCall ) choiceScale = 1;
-    if( choiceScale > 1 ) choiceScale = 1;
-    if( choiceScale < 0 ) choiceScale = 0;
+    //float64 choiceScale = (betToCall - myBet)/(maxShowdown - myBet);
 
 
     float64 impliedFactor;
@@ -185,11 +177,10 @@ float64 PositionalStrategy::MakeBet()
 
 
 
-    const StatResult statchoice = statworse * (1-choiceScale) + statmean * (choiceScale);
-
-    const float64 ranking3 = callcumu.pctWillCall(statmean.loss); //wins+splits
-    //const float64 ranking2 = callcumu.pctWillCall(1-statmean.pct);
-    const float64 ranking = callcumu.pctWillCall(1-statmean.wins); //wins
+    //const float64 ranking3 = callcumu.pctWillCall(statmean.loss); //wins+splits
+    //const float64 ranking = callcumu.pctWillCall(1-statmean.wins); //wins
+    const float64 ranking3 = callcumu.pctWillCall_tiefactor(1 - statmean.pct, 1); //wins+splits
+    const float64 ranking = callcumu.pctWillCall_tiefactor(1 - statmean.pct, 0); //wins
 
     //std::cout << "=" << ranking << "..." << ranking2 << "..." << ranking3 << std::endl;
     //std::cout << "=" << (ranking3 - ranking) << "\tsplits " << statmean.splits << std::endl;
@@ -197,9 +188,6 @@ float64 PositionalStrategy::MakeBet()
     StatResult statranking;
     statranking.wins = ranking;
     statranking.splits = ranking3 - ranking;
-    //statranking.splits = statmean.splits;
-    //statranking.wins = ranking * (1 - statmean.splits);
-    //statranking.loss = 1 - statranking.wins - statranking.splits;
     statranking.loss = 1 - ranking3;
     statranking.genPCT();
 
@@ -219,63 +207,40 @@ float64 PositionalStrategy::MakeBet()
 
 
 
-
-
-/*
-
-    if( bGamble / 4 == 1 )
-    {
-        ///Out of: choiceScale*timing[], 1-(1-choiceScale)*(1-timing[]), (choiceScale+timing[])/2
-        ///We pick 1-(1-choiceScale)*(1-timing[]) because we need choiceScale=1 (or timing=1?) to force
-        //myExpectedCall.SetFoldScale(   1-(1-choiceScale)*(1-timing[DT])  ,  1-statmean.loss  ,  1   );
-
-        const float64 scaleToMean = choiceScale;
-        const float64 offset = 1;
-
-        ///When scaleToMean=0 we know we are using pct.worst case so we can assume people will fold, and we worst case covers our position
-        ///When scapeToMean=1 we know we are using pct.mean and we should assume everybody will call
-        const float64 enemies = myExpectedCall.handsDealt()-1 + offset;
-        const float64 oppBetSoFar = myExpectedCall.oppBet() - myExpectedCall.alreadyBet();
-        float64 called;
-        if( highBet == 0 )
-        {
-            called = 0;
-        }else
-        {
-            called = oppBetSoFar/highBet;
-        }
-        //const float64 notcalled = table->GetNumberInHand()-1 - called + offset;
-        const float64 notcalled = enemies - called ;
-        //const float64 likelyToCallPCT = callcumu.pctWillCall(1-statmean.loss);
-        const float64 likelyToCallPCT = callcumu.pctWillCall(statmean.pct);
-
-        const float64 actualcallers = called + likelyToCallPCT * notcalled;
-
-        const float64 scaledcallers = enemies*scaleToMean + actualcallers*(1-scaleToMean);
-        //return static_cast<int8>(round(scaledcallers));
-        myExpectedCall.callingPlayers(scaledcallers);
-
-
-    }
-*/
-    //GainModelReverse choicegain_rev(statchoice,&myExpectedCall);
-    //GainModelReverseNoRisk choicegain_rnr(statworse,&myExpectedCall);
     GainModel choicegain_rev(statranking,&myExpectedCall);
-    GainModelNoRisk choicegain_rnr(statranking,&myExpectedCall);
+    //GainModelNoRisk choicegain_rnr(statranking,&myExpectedCall);
 
-    GainModel choicegain_base(statchoice,&myExpectedCall);
+
+    GainModel choicegain_base(statmean,&myExpectedCall);
     GainModelNoRisk choicegain_nr(statworse,&myExpectedCall);
+
 
 	SlidingPairFunction gp(&choicegain_base,&choicegain_rev,distrScale,&myExpectedCall);
 
-	SlidingPairFunction ap(&choicegain_nr,&choicegain_rnr,distrScale,&myExpectedCall);
+	//SlidingPairFunction ap(&choicegain_nr,&choicegain_rnr,distrScale,&myExpectedCall);
 
-    SlidingPairFunction choicegain(&gp,&ap,choiceScale/2,&myExpectedCall);
+    //const float64 MAX_UPTO = 1.0/2.0;
+    const float64 MAX_UPTO = 1;
+
+    AutoScalingFunction choicegain(&gp,&choicegain_base,myBet,maxShowdown,MAX_UPTO,&myExpectedCall);
+    SlidingPairFunction choicegain_upto(&gp,&choicegain_base,MAX_UPTO,&myExpectedCall);
+
+    HoldemFunctionModel* targetModel;
+    if( maxShowdown == myBet || maxShowdown < betToCall )
+    {
+        ///TODO: THIS IS THE ONE STILL NEEDED
+        targetModel = &choicegain_upto;
+    }else
+    {
+        targetModel = &choicegain;
+    }
+
+
 
 
 
     /*
-    GainModel* targetModel = &choicegain;
+
     GainModel* targetFold = &gainmean;
     if( choiceScale == 1 )
     {
@@ -307,13 +272,13 @@ float64 PositionalStrategy::MakeBet()
             excel.close();
 
 
-
+/*
             excel.open((ViewPlayer().GetIdent() + "functionlog.anti.csv").c_str());
             if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
             choicegain_rnr.breakdown(1000,excel,betToCall,maxShowdown);
             //g.breakdownE(40,excel);
             excel.close();
-
+*/
           excel.open((ViewPlayer().GetIdent() + "functionlog.GP.csv").c_str());
 
             if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
@@ -321,13 +286,13 @@ float64 PositionalStrategy::MakeBet()
             //g.breakdownE(40,excel);
             excel.close();
 
-
+/*
             excel.open((ViewPlayer().GetIdent() + "functionlog.AP.csv").c_str());
             if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
             ap.breakdown(1000,excel,betToCall,maxShowdown);
             //g.breakdownE(40,excel);
             excel.close();
-
+*/
             excel.open((ViewPlayer().GetIdent() + "functionlog.safe.csv").c_str());
             if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
             choicegain.breakdown(1000,excel,betToCall,maxShowdown);
@@ -336,17 +301,22 @@ float64 PositionalStrategy::MakeBet()
         }
         #endif
 
+// #############################################################################
+// MATHEMATIC SOLVING HAPPENS HERE
 
 
-
-    float64 choicePoint = choicegain.FindBestBet();
-    const float64 choiceFold = choicegain.FindZero(choicePoint,myMoney);
+    float64 choicePoint = targetModel->FindBestBet();
+    const float64 choiceFold = targetModel->FindZero(choicePoint,myMoney);
 
     //const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
-    const float64 callGain = choicegain.f(betToCall);
+    const float64 callGain = targetModel->f(betToCall);
     #ifdef DEBUGASSERT
-    const float64 raiseGain = choicegain.f(choicePoint);
+    const float64 raiseGain = targetModel->f(choicePoint);
     #endif
+
+
+// MATHEMATIC SOLVING ENDS HERE
+// #############################################################################
 
         #ifdef LOGPOSITION
 
@@ -387,7 +357,7 @@ float64 PositionalStrategy::MakeBet()
             //logFile << "Safe target " << leastPoint << endl;
             //logFile << "Safe fold bet " << leastFold << endl;
             logFile << "offense/defense(" << distrScale << ")" << endl;
-            logFile << "risk/call(" << choiceScale << ")" << endl;
+            logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
             //logFile << "timing[" << (int)DT << "](" << timing[DT] << ")" << endl;
             logFile << "impliedFactor " << impliedFactor << endl;
             /*if( bGamble / 4 == 1 ){

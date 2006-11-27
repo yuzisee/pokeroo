@@ -230,7 +230,7 @@ class SlidingPairFunction : public virtual HoldemFunctionModel
 {
     protected:
         virtual void query(float64 x);
-        float64 slider;
+        const float64 slider;
         float64 last_x;
         float64 y;
         float64 dy;
@@ -245,6 +245,42 @@ class SlidingPairFunction : public virtual HoldemFunctionModel
 
 	virtual float64 f(const float64);
     virtual float64 fd(const float64, const float64);
+
+}
+;
+
+class AutoScalingFunction : public virtual HoldemFunctionModel
+{
+    private:
+        float64 inline finequantum(float64 a, float64 b)
+        {
+            if( a < b ) return a;
+            return b;
+        }
+    protected:
+        virtual void query(float64 x);
+        const float64 saturate_min, saturate_max, saturate_upto;
+        float64 last_x;
+        float64 y;
+        float64 dy;
+        ScalarFunctionModel *left;
+        ScalarFunctionModel *right;
+
+    public:
+        AutoScalingFunction(ScalarFunctionModel *f_left, ScalarFunctionModel *f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c)
+            : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left->quantum,f_right->quantum), c)
+            , saturate_min(minX), saturate_max(maxX), saturate_upto(1), left(f_left), right(f_right){
+                query(0);
+            }
+        AutoScalingFunction(ScalarFunctionModel *f_left, ScalarFunctionModel *f_right, const float64 minX, const float64 maxX, const float64 upto ,ExpectedCallD *c)
+            : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left->quantum,f_right->quantum), c)
+            , saturate_min(minX), saturate_max(maxX), saturate_upto(upto), left(f_left), right(f_right){
+                query(0);
+            }
+        virtual ~AutoScalingFunction(){}
+
+        virtual float64 f(const float64);
+        virtual float64 fd(const float64, const float64);
 
 }
 ;

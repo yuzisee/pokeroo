@@ -175,7 +175,7 @@ public:
     const CallCumulation & operator=(const CallCumulation& o);
 
 	vector<StatResult> cumulation;
-	//float64 pctWillCallDEBUG(const float64, const float64) const;
+	float64 pctWillCall_tiefactor(const float64, const float64) const;
 	virtual float64 pctWillCall(const float64) const;
 
 	#ifdef DEBUGLOGINFERENTIALS

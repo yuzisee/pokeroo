@@ -26,7 +26,7 @@
 //#define SMOOTHED_CALLCUMULATION
 #define SMOOTHED_CALLCUMULATION_D
 
-const float64 CallCumulation::tiefactor = DEFAULT_TIE_SCALE_FACTOR;
+//const float64 CallCumulation::tiefactor = DEFAULT_TIE_SCALE_FACTOR;
 
 
 void DistrShape::AddVal(float64 x, float64 occ)
@@ -92,7 +92,7 @@ CallCumulation::~CallCumulation()
 ///On a side note, if you're looking at heads up, and I bet x/3 of the pot, I'm giving him 4:1 or 0.2
 ///A quick way to figure out what to put for oddsFaced would be to say:
 ///If this is a permanently-even bet to make, what would my chance to win be?
-float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
+float64 CallCumulation::pctWillCall_tiefactor(const float64 oddsFaced, const float64 tiefactor) const
 {
 
 /*    if( (oddsFaced - .63 < 0.0001 && oddsFaced - .63 > -0.0001) || (oddsFaced - .48 < 0.0001 && oddsFaced - .48 > -0.0001) )
@@ -142,6 +142,11 @@ float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
 	#endif
 	return curPCT;
 
+}
+
+float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
+{
+    return pctWillCall_tiefactor(oddsFaced, DEFAULT_TIE_SCALE_FACTOR);
 }
 
 float64 CallCumulationD::slopeof(const size_t x1, const size_t x0) const

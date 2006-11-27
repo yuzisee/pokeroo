@@ -903,20 +903,20 @@ void debugPosition()
 
 
 //Community 3S 3H 3C KD AD
-    h2.AddToHand(HoldemConstants::SPADES, 7, HoldemConstants::CARD_EIGHT );
-    h2.AddToHand(HoldemConstants::HEARTS, 4, HoldemConstants::CARD_FIVE );
-    h2.AddToHand(HoldemConstants::CLUBS, 3, HoldemConstants::CARD_FOUR );
+//    h2.AddToHand(HoldemConstants::SPADES, 7, HoldemConstants::CARD_EIGHT );
+//    h2.AddToHand(HoldemConstants::HEARTS, 4, HoldemConstants::CARD_FIVE );
+//    h2.AddToHand(HoldemConstants::CLUBS, 3, HoldemConstants::CARD_FOUR );
     //h2.AddToHand(HoldemConstants::SPADES, 2, HoldemConstants::CARD_TREY );
     //BlindStructure.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
-    h1.SetUnique(h2);
+//    h1.SetUnique(h2);
 
 //Hole cards 8S 8H, JH JD
     //honly.AddToHand(HoldemConstants::SPADES,7, HoldemConstants::CARD_EIGHT );
     //honly.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
-    honly.AddToHand(HoldemConstants::SPADES,13, HoldemConstants::CARD_ACEHIGH );
-    honly.AddToHand(HoldemConstants::CLUBS, 12, HoldemConstants::CARD_KING );
+    honly.AddToHand(HoldemConstants::SPADES,11, HoldemConstants::CARD_QUEEN );
+    honly.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
     h1.AppendUnique(honly);
-    const uint8 dealtCommunityNumber=3;
+    const uint8 dealtCommunityNumber=0;
 
 
 #ifdef DEBUGSITUATION
@@ -938,7 +938,7 @@ void debugPosition()
 	DebugArena myTable(&b,cout, true);
     UserConsoleStrategy testDummy[5];
 
-    PositionalStrategy a(5);
+    PositionalStrategy a(2);
     //TournamentStrategy a;
 
 
@@ -947,7 +947,7 @@ void debugPosition()
     myTable.AssignHandNum(DEBUGSPECIFIC);
     #endif
     myTable.SetBlindPot(0);
-	myTable.SetDeadPot(30);
+	myTable.SetDeadPot(0);
 
 
     myTable.SetBet(  myTable.AddPlayer("testDriver.cpp",35, &a) , 0 );
@@ -957,7 +957,7 @@ void debugPosition()
     myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",74, testDummy+2) , 0 );
     myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent4",17, testDummy+4) , 0 );
     myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent5",50, testDummy+1) , 0 );
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent6",420, testDummy+3) , 0 );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent6",420, testDummy+3) , 0.05 );
     myTable.InitGame();
 
     cout << "Number in hand " << (int)(myTable.GetNumberInHand()) << endl;
@@ -1102,8 +1102,8 @@ int main(int argc, char* argv[])
 	{
 
 	    //debugPosition();
-	    //superGame(0);
-	    testPlay(0);
+	    superGame(0);
+	    //testPlay(0);
 	    //testPlay('*');
         //testNewCallStats();
 

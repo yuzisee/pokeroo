@@ -581,3 +581,50 @@ float64 SlidingPairFunction::fd(const float64 x, const float64 y_dummy)
 }
 
 
+void AutoScalingFunction::query(float64 x)
+{
+    const float64 yl = left->f(x);
+    const float64 yr = right->f(x);
+    last_x = x;
+
+    const float64 autoSlope = saturate_upto / (saturate_max - saturate_min) ;
+    const float64 slider = (x - saturate_min) * autoSlope ;
+
+
+    if( slider > 1 )
+    {
+        y = yr;
+        dy = fd(x, yr);
+    }
+    else if( slider < 0 )
+    {
+        y = yl;
+        dy = fd(x, yl);
+    }
+    else
+    {
+        y = yl*(1-slider)+yr*slider;
+        dy = left->fd(x,yl)*(1-slider) - yl*autoSlope   +   right->fd(x,yr)*slider + yr*autoSlope;
+    }
+
+}
+
+float64 AutoScalingFunction::f(const float64 x)
+{
+    if( last_x != x )
+    {
+        query(x);
+    }
+    return y;
+}
+
+float64 AutoScalingFunction::fd(const float64 x, const float64 y_dummy)
+{
+    if( last_x != x )
+    {
+        query(x);
+    }
+    return dy;
+}
+
+

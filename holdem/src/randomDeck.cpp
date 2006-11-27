@@ -21,7 +21,7 @@
 //#define DEBUGRANDOMDEAL
 //#include <iostream>
 
-//#define FORCESEED
+#define FORCESEED
 
 //#define COOLSEEDINGVIEWER
 
@@ -39,7 +39,7 @@
 void RandomDeck::ShuffleDeck()
 {
 	#ifdef FORCESEED
-	srand(5); //5
+	srand(75);
 	#else
 	srand(time(0));
 	#endif
