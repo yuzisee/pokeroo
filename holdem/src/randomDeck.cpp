@@ -21,7 +21,7 @@
 //#define DEBUGRANDOMDEAL
 //#include <iostream>
 
-#define FORCESEED
+//#define FORCESEED
 
 //#define COOLSEEDINGVIEWER
 

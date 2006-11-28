@@ -54,14 +54,14 @@ void CommunityCallStats::Compare(const float64 occ)
         #endif
 
     PocketHand & newEntry = myHands[showdownIndex];
-    
-    
+
+
     //showdownMax += occ;
     const float64 incr = groupRepeated*occ;
     showdownMax += incr;
     newEntry.repeated = incr;
     newEntry.abRepeated = groupRepeated;
-    
+
     if( newEntry.a > newEntry.b ) ///Because the 0...51 count is suit-major, we should match all pairs
     {
         newEntry.a = indexHistory[1];
@@ -71,7 +71,7 @@ void CommunityCallStats::Compare(const float64 occ)
         newEntry.a = indexHistory[0];
         newEntry.b = indexHistory[1];
     }
-    
+
     ///TODO: WTF If I use Reset(oppStrength) then it fails to SetUnique correctly the valueset field.
     newEntry.result.strength = oppStrength.strength;
     newEntry.result.valueset = oppStrength.valueset;
@@ -177,7 +177,7 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
                 ///In this situation, we can use .repeated as the number "seen so far"
 
                 const float64 thisOcc = tableEntry.repeated / tableEntry.abRepeated;
-                
+
                 StatResult *(&destination) = table[carda*52+cardb];
                 if( destination == 0 )
                 {
@@ -233,7 +233,7 @@ void CommunityCallStats::Analyze()
         }
     #endif
         #ifdef PROGRESSUPDATE
-            std::cout << "Analyzing...                    \r" << flush;
+            std::cerr << "Analyzing...                    \r" << flush;
         #endif
     if( !bSortedHands )
     {
@@ -241,7 +241,7 @@ void CommunityCallStats::Analyze()
         bSortedHands = true;
     }
         #ifdef PROGRESSUPDATE
-            std::cout << "Deciding.....                    \r" << endl;
+            std::cerr << "Deciding.....                    \r" << endl;
         #endif
 ///Strongest hands are at the higher indices.
 
@@ -340,8 +340,8 @@ void CommunityCallStats::Analyze()
 
 void CommunityCallStats::showProgressUpdate() const
 {
-    if (statGroup == 0 ) std::cout << endl << endl;
-    std::cout << "I: " << showdownIndex << "/" << showdownCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
+    if (statGroup == 0 ) std::cerr << endl << endl;
+    std::cerr << "I: " << showdownIndex << "/" << showdownCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 
 }
 

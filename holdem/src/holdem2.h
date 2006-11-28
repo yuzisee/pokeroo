@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-
+#define DEBUG_TWOPAIR
 
 
 #ifndef HOLDEM_Community
@@ -36,8 +36,15 @@ private:
     int8 flushCount[4]; //number of cards in that suit
 
 	uint8 threeOfAKind;
+
+#ifdef DEBUG_TWOPAIR
+public:
+#endif
 	uint8 bestPair;
 	uint8 nextbestPair;
+#ifdef DEBUG_TWOPAIR
+private:
+#endif
 
 	void preEvalStrength();
     void cleanLastTwo();

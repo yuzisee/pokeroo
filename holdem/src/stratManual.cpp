@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 //#define USERFEEDBACK
+//#define SELF_SPECTATE
 
 #include "stratManual.h"
 #include <iostream>
@@ -34,9 +35,11 @@ std::ofstream UserConsoleStrategy::logFile;
 
 void UserConsoleStrategy::SeeAction(const HoldemAction& e)
 {
+#ifdef SELF_SPECTATE
 	const Player& relvPlayer = *(ViewTable().ViewPlayer(e.GetPlayerID()));
 	cout << relvPlayer.GetIdent() << " " << flush;
 	HoldemArena::ToString(e,cout);
+#endif
 }
 
 void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)

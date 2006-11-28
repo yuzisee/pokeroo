@@ -268,33 +268,71 @@ void testC()
     }
     genC(h1,h2);
 }
-#ifdef DEBUG_TESTDEALINTERFACE
-void testHands()
+
+#ifdef DEBUG_TWOPAIR
+void printPairStuff(const CommunityPlus &hx, const char* strName)
 {
-    	RandomDeck rd;
-    	rd.ShuffleDeck();
-    CommunityPlus h1, h2;
-    	short cardcount=7;
-    while(cardcount > 0)
-	{
-
-		if (rd.DealCard(h1) > 0)
-		{
-			if (cardcount <= 5)	h2.AddToHand(rd.dealt);
-			--cardcount;
-		}
-		printf("%d %lu\n",rd.dealt.Suit,rd.dealt.Value);
-
-
-    }
-    DealRemainder deal;
-
-    DummyStats ds(h1, h2,5);
-    deal.OmitCards(h1);
-     deal.AnalyzeComplete(&ds);
+cout << strName << endl;
+hx.DisplayHand( cout );
+cout << (int)(hx.bestPair) << " then " << (int)(hx.nextbestPair) << endl;
 }
 
+void testHands()
+{
+
+
+
+    CommunityPlus h1, h2, honly;
+
+    h2.AddToHand(HoldemConstants::CLUBS, 7, HoldemConstants::CARD_EIGHT );
+    h2.AddToHand(HoldemConstants::HEARTS, 9, HoldemConstants::CARD_TEN );
+    h2.AddToHand(HoldemConstants::CLUBS, 9, HoldemConstants::CARD_TEN );
+
+    cout << "==Initial" << endl;
+printPairStuff(h2,"h2");
+
+    h2.AddToHand(HoldemConstants::CLUBS, 8, HoldemConstants::CARD_NINE );
+    h2.AddToHand(HoldemConstants::DIAMONDS, 11, HoldemConstants::CARD_QUEEN );
+
+    cout << "==AddToHand" << endl;
+
+    printPairStuff(h2,"h2");
+
+    h1.SetUnique(h2);
+
+    cout << "==SetUnique" << endl;
+
+    printPairStuff(h1,"h1");
+
+    h1.AddToHand(HoldemConstants::HEARTS, 13, HoldemConstants::CARD_ACEHIGH );
+    honly.AddToHand(HoldemConstants::HEARTS, 13, HoldemConstants::CARD_ACEHIGH );
+    h1.AddToHand(HoldemConstants::SPADES, 11, HoldemConstants::CARD_QUEEN );
+    honly.AddToHand(HoldemConstants::SPADES, 11, HoldemConstants::CARD_QUEEN );
+
+    cout << "==AddToHand (more)" << endl;
+    printPairStuff(h1,"h1");
+
+    cout << endl << endl << "==Initial" << endl;
+    printPairStuff(honly,"honly");
+
+    CommunityPlus h3(honly);
+
+    cout << "==Copy Constructor" << endl;
+    printPairStuff(h3,"h3");
+
+h3.AppendUnique( h2 );
+
+cout << "==Append Unique" << endl;
+printPairStuff(h3,"h3");
+
+h2.AppendUnique( honly);
+
+cout << "==Append Unique" << endl;
+printPairStuff(h2,"h2");
+
+}
 #endif
+
 
 void testDR()
 {
@@ -995,16 +1033,27 @@ Player* testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     TournamentStrategy asterisk;
     TournamentStrategy gruff(1);
 
-	//myTable.AddPlayer("Stag", &stagStrat);
-	//myTable.AddPlayer("N1", manPlay);
-	//myTable.AddPlayer("N2", manPlay+1);
-	myTable.AddPlayer("X3", &pushFold);
-	myTable.AddPlayer("A3", &tightPushFold);
-	//myTable.AddPlayer("bluff", &gruff); /* riskymode = 0 */
-	//myTable.AddPlayer("P1", &consolePlay);
+    if( headsUp == 'P' )
+    {
+        myTable.AddPlayer("P1", &consolePlay);
+    }else
+    {
+
+        //myTable.AddPlayer("Stag", &stagStrat);
+        //myTable.AddPlayer("N1", manPlay);
+        //myTable.AddPlayer("N2", manPlay+1);
+        myTable.AddPlayer("X3", &pushFold);
+        myTable.AddPlayer("A3", &tightPushFold);
+        //myTable.AddPlayer("bluff", &gruff); /* riskymode = 0 */
+        //myTable.AddPlayer("P1", &consolePlay);
+    }
 
     switch(headsUp)
     {
+        case 'P':
+            myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
+            myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
+            break;
         case 'M':
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
             break;
@@ -1025,11 +1074,11 @@ Player* testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             break;
         default:
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
-            myTable.AddPlayer("S2", &smartGambleOffence); /* riskymode = 3 */
+//            myTable.AddPlayer("S2", &smartGambleOffence); /* riskymode = 3 */
             myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
-            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
-            myTable.AddPlayer("Q2", &smartGambleLoose); /* riskymode = 5 */
-            myTable.AddPlayer("W2", &smartConserveLoose); /* riskymode = 4 */
+//            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
+//            myTable.AddPlayer("Q2", &smartGambleLoose); /* riskymode = 5 */
+//            myTable.AddPlayer("W2", &smartConserveLoose); /* riskymode = 4 */
             case '*':
             myTable.AddPlayer("_xa", &asterisk); /* riskymode = 6 */
             break;
@@ -1102,8 +1151,9 @@ int main(int argc, char* argv[])
 	{
 
 	    //debugPosition();
-	    superGame(0);
-	    //testPlay(0);
+	    //superGame(0);
+		//testHands();
+	    testPlay(0);
 	    //testPlay('*');
         //testNewCallStats();
 

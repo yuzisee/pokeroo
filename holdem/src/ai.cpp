@@ -257,8 +257,8 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 			++statGroup;
 
 				#ifdef PROGRESSUPDATE
-                if (statGroup == 0 ) std::cout << endl << endl;
-                std::cout << "\rW: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
+                if (statGroup == 0 ) std::cerr << endl << endl;
+                std::cerr << "\rW: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 				#endif
 
 				#ifdef DEBUGLEAK
@@ -631,8 +631,8 @@ void CallStats::setCurrentGroupOcc(const float64 occ)
 
 void CallStats::showProgressUpdate() const
 {
-    if (statGroup == 0 ) std::cout << endl << endl;
-    std::cout << "C: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
+    if (statGroup == 0 ) std::cerr << endl << endl;
+    std::cerr << "C: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 }
 
 float64 CallStats::pctWillCall(const float64 oddsFaced) const

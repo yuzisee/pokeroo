@@ -30,7 +30,7 @@
 #include "inferentials.h"
 
 
-//#define PROGRESSUPDATE
+#define PROGRESSUPDATE
 //#define SUPERPROGRESSUPDATE
 //#define DEBUG_TESTDEALINTERFACE
 

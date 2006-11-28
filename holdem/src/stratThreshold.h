@@ -52,7 +52,7 @@ class MultiThresholdStrategy : virtual public ThresholdStrategy
         int8 bCall;
 	public:
 
-		MultiThresholdStrategy(int8 tight = 0, int8 call, float64 thresh=.5) : ThresholdStrategy(thresh), redundancy(tight), bCall(call){}
+		MultiThresholdStrategy(int8 tight = 0, int8 call = 0, float64 thresh=.5) : ThresholdStrategy(thresh), redundancy(tight), bCall(call){}
 		//virtual ~MultiThresholdStrategy();
 
 		virtual void SeeCommunity(const Hand&, const int8);

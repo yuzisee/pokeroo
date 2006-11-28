@@ -316,8 +316,8 @@ void CommunityPlus::evaluateStrength()
     {
         valueset &= ~HoldemUtil::VALUEORDER[nextbestPair];
         valueset &= ~HoldemUtil::VALUEORDER[bestPair];
-        bestPair-=2;
-        nextbestPair-=2;
+        bestPair-=2; //A TREY becomes 0
+        nextbestPair-=2; //A DEUCE becomes -1
         strength = ((bestPair*bestPair+bestPair)>>1) + nextbestPair
                                                         + HoldemConstants::PAIRS_LOW + 1;
         cleanLastTwo();
@@ -481,7 +481,7 @@ void CommunityPlus::AppendUnique(const CommunityPlus& h)
 	{
 		threeOfAKind = h.threeOfAKind;
 	}
-	/*Note: Since quads override trips in evealuateStrength, we don't have to worry
+	/*Note: Since quads override trips in evaluateStrength, we don't have to worry
 	about incorrect trips due to achieving a quad	*/
 	unsigned long mockValueset = valueset;
     for(unsigned char i=13;i>threeOfAKind;--i)
@@ -512,7 +512,7 @@ void CommunityPlus::AppendUnique(const CommunityPlus& h)
 		bestPair = h.bestPair;
 	}
 
-
+//Note: Here "fixed" means "corrected"
 	if( threeOfAKind > 0 )
 	{///Only bestPair is fixed
 		mockValueset = valueset;
@@ -542,8 +542,10 @@ void CommunityPlus::AppendUnique(const CommunityPlus& h)
 			{
 				nextbestPair = bestPair;
 				bestPair = i;
+			}else //Leave mockValueset at bestPair
+			{
+                mockValueset <<= 2;
 			}
-			mockValueset <<= 2;
 		}
 
 		for(unsigned char i=bestPair-1;i>nextbestPair;--i)
