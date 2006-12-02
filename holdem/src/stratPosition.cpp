@@ -307,14 +307,38 @@ float64 PositionalStrategy::MakeBet()
 
 
     float64 choicePoint = targetModel->FindBestBet();
-    const float64 choiceFold = targetModel->FindZero(choicePoint,myMoney);
+
+    
+    
+    if( choicePoint < betToCall )
+    {///It's probably really close though
+            #ifdef LOGPOSITION
+                    logFile << "Choice Optimal < Bet to call" << endl;
+            #endif
+            #ifdef DEBUGASSERT
+                    if ( choicePoint + ViewTable().GetChipDenom()/2 < betToCall )
+                    {
+                        std::cerr << "Failed assertion" << endl;
+                        exit(1);
+                    }
+            #endif
+        
+        choicePoint = betToCall;
+        
+    }
+    
+    
+    const float64 choiceFold = targetModel->FindFoldBet(choicePoint);
 
     //const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
     const float64 callGain = targetModel->f(betToCall);
-    #ifdef DEBUGASSERT
-    const float64 raiseGain = targetModel->f(choicePoint);
-    #endif
 
+    
+#ifdef DEBUGASSERT
+    const float64 raiseGain = targetModel->f(choicePoint);
+#endif
+    
+    
 
 // MATHEMATIC SOLVING ENDS HERE
 // #############################################################################
@@ -373,23 +397,12 @@ float64 PositionalStrategy::MakeBet()
 
         #endif
 
-    if( choicePoint < betToCall )
-    {///It's probably really close though
-        #ifdef LOGPOSITION
-        logFile << "Choice Optimal < Bet to call" << endl;
-        #endif
-        #ifdef DEBUGASSERT
-            if ( choicePoint + ViewTable().GetChipDenom()/2 < betToCall )
-            {
-                std::cerr << "Failed assertion" << endl;
-                exit(1);
-            }
-        #endif
+                 
 
-        choicePoint = betToCall;
-
-    }
-
+//############################
+///  DECISION TIME
+//############################
+    
     //Remember, due to rounding and chipDenom, (betToCall < choiceFold) is possible
     if( choicePoint >= choiceFold && betToCall >= choiceFold && callGain <= 0 )
     {///The highest point was the point closest to zero, and the least you can bet if you call--still worse than folding

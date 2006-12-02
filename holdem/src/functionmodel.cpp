@@ -59,8 +59,51 @@ float64 HoldemFunctionModel::FindBestBet()
     const float64& betToCall = e->callBet();
 
     if( myMoney < betToCall ) return myMoney;
-    return FindMax(betToCall,myMoney);
+    float64 desiredBet = FindMax(betToCall,myMoney);
+    
+    
+    
+    ///PURIFY
+    float64 nextOptimal = desiredBet + quantum;
+    float64 prevOptimal = desiredBet - quantum;
+    if( nextOptimal > myMoney ) nextOptimal = myMoney;
+    if( prevOptimal < betToCall ) prevOptimal = betToCall;
+    
+    if( f(nextOptimal) > f(desiredBet) )
+    {
+        desiredBet = nextOptimal;
+    }
+    if( f(prevOptimal) > f(desiredBet) )
+    {
+        desiredBet = prevOptimal;
+    }
+    
+    return desiredBet;
 }
+
+float64 HoldemFunctionModel::FindFoldBet(const float64 bestBet)
+{
+    const float64& myMoney = e->maxBet();
+    float64 desiredFold = FindZero(bestBet,myMoney);
+    
+    ///PURIFY
+    float64 nextFold = desiredFold + quantum;
+    float64 prevFold = desiredFold - quantum;
+    if( nextFold > myMoney ) nextFold = myMoney;
+    if( prevFold < bestBet ) prevFold = bestBet;
+    
+    if(  fabs(f(nextFold))  <  fabs(f(desiredFold))  )
+    {
+        desiredFold = nextFold;
+    }
+    if(  fabs(f(prevFold))  <  fabs(f(desiredFold))  )
+    {
+        desiredFold = prevFold;
+    }
+    
+    return desiredFold;
+}
+
 
 float64 GainModel::f(const float64 betSize)
 {

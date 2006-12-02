@@ -42,6 +42,7 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
     HoldemFunctionModel(float64 step,ExpectedCallD *c) : ScalarFunctionModel(step),e(c){};
 
     virtual float64 FindBestBet();
+    virtual float64 FindFoldBet(const float64);
 
 
     #ifdef DEBUG_GAIN
