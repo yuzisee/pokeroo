@@ -1169,9 +1169,9 @@ int main(int argc, char* argv[])
 	else
 	{
 
-	    debugPosition();
-	    //superGame(0);
-	//testHands();
+	    //debugPosition();
+	    superGame(0);
+        //testHands();
 	    //testPlay(0);
 	    //testPlay('*');
         //testNewCallStats();

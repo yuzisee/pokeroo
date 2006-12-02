@@ -22,8 +22,8 @@
 #include "aiInformation.h"
 #include "engine.h"
 
-
-#define DEBUG_MEMFAIL
+//#define DEBUG_STATGROUP
+//#define DEBUG_MEMFAIL
 //#define DEBUGNEWCALLSTATS
 //#define DEBUGNEWORDER
 
@@ -200,7 +200,7 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
                     *destination = now * thisOcc;
 
 			#ifdef DEBUG_MEMFAIL
-				std::cout << "New table[" << (int)(carda) << "," << (int)(cardb) << "=" << carda*52+cardb << "] entry " << destination << endl;
+				std::cout << carda*52+cardb << "] entry " << "New table[" << (int)(carda) << "," << (int)(cardb) << "=" << destination << endl;
 			#endif
                 }else
                 {
@@ -276,6 +276,12 @@ void CommunityCallStats::Analyze()
     iHave.OmitCards(myStrength);
     //iHave.sortSuits();
     int32 statIndex = 0;
+    
+#ifdef DEBUG_STATGROUP
+    std::cout << "@@@@@@@@@@@ StatGroup begins at " << statGroup << endl;
+    std::cout << "@@@@@@@@@@@ StatCount set to " << statCount << endl;
+#endif
+    
     for( int16 i=0 ; i < 52*52 && statIndex < statCount ; ++i )
     {
         if( table[i] != 0 )
@@ -338,7 +344,7 @@ void CommunityCallStats::Analyze()
                 --statCount;
             }
 		#ifdef DEBUG_MEMFAIL
-			std::cout << "Free table[" << i <<  "] entry " << table[i] << endl;
+			std::cout << i <<  "] entry " << table[i] << "Free table[" << endl;
 		#endif
 
 	    delete table[i];
@@ -360,8 +366,19 @@ void CommunityCallStats::Analyze()
 
 void CommunityCallStats::showProgressUpdate() const
 {
+#ifdef DEBUG_STATGROUP
+    if( indexHistory[0] < indexHistory[1] )
+    {
+        std::cout << (int)(indexHistory[0])*52 + indexHistory[1] << std::flush;    
+    }else
+    {
+        std::cout << (int)(indexHistory[1])*52 + indexHistory[0] << std::flush;    
+    }
+    std::cout << " statGroup=" << statGroup << ", statCount=" << statCount << endl;
+#else
     if (statGroup == 0 ) std::cerr << endl << endl;
     std::cerr << "I: " << showdownIndex << "/" << showdownCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
+#endif
 
 }
 
@@ -379,7 +396,8 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
 
     int32 oppHands = cardsAvail*(cardsAvail-1)/2;
     showdownCount = oppHands * HoldemUtil::nchoosep<int32>(cardsAvail - 2,5-cardsInCommunity);
-
+	statCount = oppHands;
+    
 	#ifdef DEBUG_MEMFAIL
 		std::cout << "Requesting " << showdownCount << std::endl;
 	#endif

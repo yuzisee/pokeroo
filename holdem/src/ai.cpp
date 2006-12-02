@@ -701,10 +701,6 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
             ++statGroup;
 
-                #ifdef PROGRESSUPDATE
-                    showProgressUpdate();
-
-                #endif
 
             r.bTareOcc = true;
             r.bNewHand = true;
@@ -716,6 +712,12 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
                 statCount -= static_cast<int32>(occ) - 1;
             }
 
+            
+#ifdef PROGRESSUPDATE
+            showProgressUpdate();
+            
+#endif
+                  
         }
 	}
 
