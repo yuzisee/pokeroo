@@ -132,7 +132,11 @@ const int8 CommunityPlus::CardsInSuit(const int8 a) const
 void CommunityPlus::DisplayHand(std::ostream& targetFile) const
 {
 	HandPlus::DisplayHand(targetFile);
-	targetFile << "\t" << static_cast<int>(strength) << " : " << valueset << endl;
+	targetFile << "\t";
+	targetFile << (int)(strength);
+	targetFile << " : ";
+	targetFile << valueset;
+	targetFile << endl;
 }
 
 void CommunityPlus::DisplayHandBig(std::ostream& targetFile) const
@@ -573,6 +577,7 @@ void CommunityPlus::SetEmpty()
 	threeOfAKind = 0;
 	bestPair = 0;
 	nextbestPair = 0;
+	strength = 0;
 }
 
 void CommunityPlus::SetUnique(const Hand& h)

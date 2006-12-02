@@ -67,7 +67,7 @@ public:
         return *this;
     }
 
-	void PopulateByIndex();
+//void PopulateByIndex();
 }
 ;
 

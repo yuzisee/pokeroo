@@ -623,68 +623,70 @@ void HoldemArenaShowdown::MuckHand()
 
 void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp)
 {
-	    Player& withP = *p[curIndex];
+    Player& withP = *p[curIndex];
 
 
-        if( comp > best || comp == best ) //Better hand or tie
+    if( comp > best || comp == best ) //Better hand or tie
+    {
+        broadcastHand(PlayerHand(withP),curIndex);
+        if( bVerbose )
         {
-            broadcastHand(PlayerHand(withP),curIndex);
+            gamelog << endl << withP.GetIdent() << flush;
+            if( comp == best )
+                gamelog << " also has: " << flush;
+            else
+                gamelog << " is ahead with: " << flush;
+            HandPlus viewHand;
+            viewHand.SetUnique(PlayerHand(withP));
+            viewHand.DisplayHand(gamelog);
+            gamelog << endl << "Trying to stay alive, makes" << flush;
+            comp.DisplayHandBig(gamelog);
+        }
+        winners.push_back(comp);
+        best = comp;
+        //topAllIn = withP.allIn;
+    }
+    ///His hand was worse, but since he is all-in he MUST show his hand.
+    else
+        /*if( withP.allIn > topAllIn )
+    {///May qualify for a side pot! (maybe)
+            broadcastHand(withP.myHand);
             if( bVerbose )
             {
                 gamelog << endl << withP.GetIdent() << flush;
-                if( comp == best )
-                    gamelog << " also has: " << flush;
-                else
-                    gamelog << " is ahead with: " << flush;
+                gamelog << " is ahead with: " << flush;
                 HandPlus viewHand;
-                viewHand.SetUnique(PlayerHand(withP));
-                viewHand.DisplayHand(gamelog);
+                viewHand.SetUnique(withP.myHand);
+                viewHand.ShowHand(false);
                 gamelog << endl << "Trying to stay alive, makes" << flush;
                 comp.DisplayHandBig(gamelog);
             }
             winners.push_back(comp);
-            best = comp;
-            //topAllIn = withP.allIn;
+    }
+        else*/
+    {///Distinctly defeated
+     //  http://www.texasholdem-poker.com/holdem_rules.php
+        broadcastHand(PlayerHand(withP),curIndex);
+        if( bVerbose )
+        {
+            gamelog << endl << withP.GetIdent() << flush;
+            gamelog << " turns over " << flush;
+            HandPlus viewHand;
+            viewHand.SetUnique(PlayerHand(withP));
+            viewHand.DisplayHand(gamelog);
+            gamelog << endl << "Is eliminated after making only" << flush;
+            comp.DisplayHandBig(gamelog);
         }
-        ///His hand was worse, but since he is all-in he MUST show his hand.
-        else
-            /*if( withP.allIn > topAllIn )
-        {///May qualify for a side pot! (maybe)
-                broadcastHand(withP.myHand);
-                if( bVerbose )
-                {
-                    gamelog << endl << withP.GetIdent() << flush;
-                    gamelog << " is ahead with: " << flush;
-                    HandPlus viewHand;
-                    viewHand.SetUnique(withP.myHand);
-                    viewHand.ShowHand(false);
-                    gamelog << endl << "Trying to stay alive, makes" << flush;
-                    comp.DisplayHandBig(gamelog);
-                }
-                winners.push_back(comp);
-        }
-            else*/
-        {///Distinctly defeated
-         //  http://www.texasholdem-poker.com/holdem_rules.php
-            broadcastHand(PlayerHand(withP),curIndex);
-            if( bVerbose )
-            {
-                gamelog << endl << withP.GetIdent() << flush;
-                gamelog << " turns over " << flush;
-                HandPlus viewHand;
-                viewHand.SetUnique(PlayerHand(withP));
-                viewHand.DisplayHand(gamelog);
-                gamelog << endl << "Is eliminated after making only" << flush;
-                comp.DisplayHandBig(gamelog);
-            }
-		}
+    }
 
-		++nextReveal;
-        curIndex = nextReveal->playerIndex;
+    ++nextReveal;
 
     if(nextReveal == allInRevealOrder.end())
     {
         finishShowdown();
+    }else
+    {
+        curIndex = nextReveal->playerIndex;
     }
 
 }

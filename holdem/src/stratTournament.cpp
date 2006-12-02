@@ -142,8 +142,10 @@ float64 TournamentStrategy::MakeBet()
 
 //    const StatResult statchoice = statworse * (1-choiceScale) + statmean * (choiceScale);
 
-    const float64 ranking3 = callcumu.pctWillCall(statmean.loss); //wins+splits
-    const float64 ranking = callcumu.pctWillCall(1-statmean.wins); //wins
+   //const float64 ranking3 = callcumu.pctWillCall(statmean.loss); //wins+splits
+    //const float64 ranking = callcumu.pctWillCall(1-statmean.wins); //wins
+    const float64 ranking3 = callcumu.pctWillCall_tiefactor(1 - statmean.pct, 1); //wins+splits
+    const float64 ranking = callcumu.pctWillCall_tiefactor(1 - statmean.pct, 0); //wins
 
     StatResult statchoice;
 

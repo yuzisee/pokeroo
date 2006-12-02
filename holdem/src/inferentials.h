@@ -164,7 +164,7 @@ class CallCumulation
 {
 protected:
 	size_t searchGap(const float64) const;
-    static const float64 tiefactor;
+
 public:
     CallCumulation(const CallCumulation& o)
     {

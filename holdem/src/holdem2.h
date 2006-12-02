@@ -18,7 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#define DEBUG_TWOPAIR
+//#define DEBUG_TWOPAIR
+//#define DEBUG_SIGSEGV
 
 
 #ifndef HOLDEM_Community
@@ -158,7 +159,16 @@ class ShowdownRep
 	}
 	bool operator== (const ShowdownRep& x) const
 	{
+		#ifdef DEBUG_SIGSEGV
+		const bool bEqualStrength = (strength == x.strength);
+		std::cout << "s:" << (int)(strength) << " <=> " << (int)(x.strength) << std::endl;
+		const bool bEqualValueset = (valueset == x.valueset);
+		std::cout << "v:" << (int)(valueset) << " <=> " << (int)(x.valueset) << std::endl;
+		const bool bEqual = bEqualStrength && bEqualValueset;
+		return bEqual;
+		#else
 		return ((strength == x.strength) && (valueset == x.valueset));
+		#endif
 	}
 
     const ShowdownRep & operator=(const ShowdownRep& a)
@@ -173,12 +183,21 @@ class ShowdownRep
 
     bool bIdenticalTo (const ShowdownRep& x) const
     {
+		#ifdef DEBUG_SIGSEGV
+		const bool bEqualStrength = (strength == x.strength);
+		std::cout << "s_" << (int)(strength) << " <=> " << (int)(x.strength) << std::endl;
+		const bool bEqualValueset = (valueset == x.valueset);
+		std::cout << "v_" << (int)(valueset) << " <=> " << (int)(x.valueset) << std::endl;
+		const bool bEqual = bEqualStrength && bEqualValueset;
+		return (  bEqual && (playerIndex == x.playerIndex) && (revtiebreak == x.revtiebreak)  );
+		#else
         return (
         (strength == x.strength)
         && (valueset == x.valueset)
         && (playerIndex == x.playerIndex)
         && (revtiebreak == x.revtiebreak)
         );
+		#endif
     }
 
 	void DisplayHandBig(std::ostream& o) const { comp.DisplayHandBig(o); }

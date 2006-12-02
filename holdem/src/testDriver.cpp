@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#define REGULARINTOLOG
 #define DEBUGSITUATION
 #define SUPERINTOLOG
 
@@ -34,6 +35,8 @@
 using std::cout;
 using std::endl;
 using std::flush;
+
+
 
 //FIRST_DEAL = 6 expects 46
 //FIRST_DEAL = 5 expects 1081
@@ -940,21 +943,21 @@ void debugPosition()
 
 
 
-//Community 3S 3H 3C KD AD
-//    h2.AddToHand(HoldemConstants::SPADES, 7, HoldemConstants::CARD_EIGHT );
-//    h2.AddToHand(HoldemConstants::HEARTS, 4, HoldemConstants::CARD_FIVE );
-//    h2.AddToHand(HoldemConstants::CLUBS, 3, HoldemConstants::CARD_FOUR );
-    //h2.AddToHand(HoldemConstants::SPADES, 2, HoldemConstants::CARD_TREY );
+//Community 2C 7D KC
+    h2.AddToHand(HoldemConstants::DIAMONDS, 6, HoldemConstants::CARD_SEVEN );
+    //h2.AddToHand(HoldemConstants::SPADES, 10, HoldemConstants::CARD_JACK );
+    h2.AddToHand(HoldemConstants::CLUBS, 12, HoldemConstants::CARD_KING );
+    h2.AddToHand(HoldemConstants::CLUBS, 1, HoldemConstants::CARD_DEUCE );
     //BlindStructure.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
 //    h1.SetUnique(h2);
 
-//Hole cards 8S 8H, JH JD
-    //honly.AddToHand(HoldemConstants::SPADES,7, HoldemConstants::CARD_EIGHT );
-    //honly.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
-    honly.AddToHand(HoldemConstants::SPADES,11, HoldemConstants::CARD_QUEEN );
-    honly.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
+//Hole cards 8H tH
+    honly.AddToHand(HoldemConstants::SPADES,7, HoldemConstants::CARD_EIGHT );
+    //honly.AddToHand(HoldemConstants::HEARTS, 3, HoldemConstants::CARD_FOUR );
+    //honly.AddToHand(HoldemConstants::HEARTS,12, HoldemConstants::CARD_KING );
+    honly.AddToHand(HoldemConstants::HEARTS, 9, HoldemConstants::CARD_TEN );
     h1.AppendUnique(honly);
-    const uint8 dealtCommunityNumber=0;
+    const uint8 dealtCommunityNumber=3;
 
 
 #ifdef DEBUGSITUATION
@@ -976,7 +979,7 @@ void debugPosition()
 	DebugArena myTable(&b,cout, true);
     UserConsoleStrategy testDummy[5];
 
-    PositionalStrategy a(2);
+    PositionalStrategy a(0);
     //TournamentStrategy a;
 
 
@@ -1012,11 +1015,19 @@ void debugPosition()
 
 
 
-Player* testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
+std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
+
+
+
 	BlindStructure b(.05,.1);
 	GeomPlayerBlinds bg(b.SmallBlind()/2,b.BigBlind()/2,2,2);
+		#ifdef REGULARINTOLOG
+			std::ofstream gameOutput("game.log");
+			HoldemArena myTable(&bg, gameOutput,true, true);
+		#else
 	HoldemArena myTable(&bg, gameLog,true, true);
+		#endif
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;
 	ConsoleStrategy manPlay[3];
@@ -1053,6 +1064,7 @@ Player* testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         case 'P':
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
             myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
+            myTable.AddPlayer("_xa", &asterisk); /* riskymode = 6 */
             break;
         case 'M':
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
@@ -1084,7 +1096,20 @@ Player* testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             break;
 
     }
-	return myTable.PlayTable();
+
+    Player* iWin = (myTable.PlayTable());
+
+#ifdef REGULARINTOLOG
+gameOutput.close();
+#endif
+
+    if( iWin == 0 )
+    {
+        return "[No winner]?";
+    }else
+    {
+        return iWin->GetIdent();
+    }
 }
 
 
@@ -1094,20 +1119,14 @@ void superGame(char headsUp = 0)
     {
         #ifdef SUPERINTOLOG
         std::ofstream gameOutput("game.log");
-        Player* iWin = testPlay(headsUp, gameOutput);
+        std::string iWin = testPlay(headsUp, gameOutput);
         gameOutput.close();
         #else
-        Player* iWin = testPlay(headsUp);
+        std::string iWin = testPlay(headsUp);
         #endif
         //system("pause");
         std::ofstream tourny("batchResults.txt", std::ios::app);
-        if( iWin == 0 )
-        {
-            tourny << "[No winner]?" << endl;
-        }else
-        {
-            tourny << iWin->GetIdent().c_str() << endl;
-        }
+        tourny << iWin.c_str() << endl;
         tourny.close();
     }
 }
@@ -1150,10 +1169,10 @@ int main(int argc, char* argv[])
 	else
 	{
 
-	    //debugPosition();
+	    debugPosition();
 	    //superGame(0);
-		//testHands();
-	    testPlay(0);
+	//testHands();
+	    //testPlay(0);
 	    //testPlay('*');
         //testNewCallStats();
 

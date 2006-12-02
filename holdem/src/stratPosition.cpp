@@ -113,13 +113,14 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
 float64 PositionalStrategy::MakeBet()
 {
+/*
     const int8 DT = 2;
     const float64 timing[3] =   {
                                     static_cast<float64>(roundNumber[0])/5.0
                                     , static_cast<float64>(roundNumber[1])/7.0
                                     , static_cast<float64>(roundNumber[2])/6.0
                                 };
-
+*/
     const float64 myMoney = ViewPlayer().GetMoney();
 
 

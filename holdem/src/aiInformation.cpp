@@ -23,7 +23,7 @@
 #include "engine.h"
 
 
-
+#define DEBUG_MEMFAIL
 //#define DEBUGNEWCALLSTATS
 //#define DEBUGNEWORDER
 
@@ -62,12 +62,17 @@ void CommunityCallStats::Compare(const float64 occ)
     newEntry.repeated = incr;
     newEntry.abRepeated = groupRepeated;
 
-    if( newEntry.a > newEntry.b ) ///Because the 0...51 count is suit-major, we should match all pairs
+	
+
+    if( indexHistory[0] > indexHistory[1] ) ///Because the 0...51 count is suit-major, we should match all pairs
     {
+//std::cerr << (int)(indexHistory[0]) << "\t" << (int)(indexHistory[1]) << endl;
+	
         newEntry.a = indexHistory[1];
         newEntry.b = indexHistory[0];
-    }else
+    }else // indexHistory[0] <= indexHistory[1]
     {
+	
         newEntry.a = indexHistory[0];
         newEntry.b = indexHistory[1];
     }
@@ -129,16 +134,19 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
         curgroupStart = curgroupAfter;
         ++curgroupAfter;
         curgroupRepeated =  myHands[curgroupStart].repeated;
-        ///We group by equal hand strength.
-        while( myHands[curgroupAfter].result == myHands[curgroupStart].result )
-        {
-            curgroupRepeated += myHands[curgroupAfter].repeated;
-            ++curgroupAfter;
-            if( curgroupAfter == showdownCount ) break;
-        }
-        ///At the end of this loop, myHands[curgroupStart...(curgroupAfter-1)] would
-        ///be all and exactly all the hands that would split with one of them
-
+	
+	if( curgroupAfter != showdownCount )
+	{
+		///We group by equal hand strength.
+		while( myHands[curgroupAfter].result == myHands[curgroupStart].result )
+		{
+		curgroupRepeated += myHands[curgroupAfter].repeated;
+		++curgroupAfter;
+		if( curgroupAfter == showdownCount ) break;
+		}
+		///At the end of this loop, myHands[curgroupStart...(curgroupAfter-1)] would
+		///be all and exactly all the hands that would split with one of them
+	}
 
 
 
@@ -151,13 +159,17 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
             splitgroupStart = splitgroupAfter;
             ++splitgroupAfter;
             splitgroupRepeated = myHands[splitgroupStart].repeated;
-            ///We group by identical pockets
-            while( myHands[splitgroupAfter].result.bIdenticalTo(myHands[splitgroupStart].result) )
-            {
-                splitgroupRepeated += myHands[splitgroupAfter].repeated;
-                ++splitgroupAfter;
-                if( splitgroupAfter == curgroupAfter ) break;
-            }
+	    
+	    if( splitgroupAfter != curgroupAfter )
+	    {
+		///We group by identical pockets
+		while( myHands[splitgroupAfter].result.bIdenticalTo(myHands[splitgroupStart].result) )
+		{
+			splitgroupRepeated += myHands[splitgroupAfter].repeated;
+			++splitgroupAfter;
+			if( splitgroupAfter == curgroupAfter ) break;
+		}
+	    }
 
             float64 prevsplitRepeated = 0;
             for(int32 curgroupItr=splitgroupStart;curgroupItr<splitgroupAfter;++curgroupItr)
@@ -183,9 +195,13 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
                 {
                     now.splits -= splitgroupRepeated;
                     now.loss -= myChancesEach - splitgroupRepeated;
-
+			
                     destination = new StatResult;
                     *destination = now * thisOcc;
+
+			#ifdef DEBUG_MEMFAIL
+				std::cout << "New table[" << (int)(carda) << "," << (int)(cardb) << "=" << carda*52+cardb << "] entry " << destination << endl;
+			#endif
                 }else
                 {
                     now.wins -= destination->repeated - prevsplitRepeated;
@@ -295,7 +311,6 @@ void CommunityCallStats::Analyze()
                 }else*/
                 {
                     myWins[statIndex] = *(table[i]);
-                    delete table[i];
                     myWins[statIndex].repeated /= myChancesEach;
                     ++statIndex;
                         #ifdef DEBUGNEWCALLSTATS
@@ -322,6 +337,11 @@ void CommunityCallStats::Analyze()
             {
                 --statCount;
             }
+		#ifdef DEBUG_MEMFAIL
+			std::cout << "Free table[" << i <<  "] entry " << table[i] << endl;
+		#endif
+
+	    delete table[i];
         }
     }
     delete [] table;
@@ -359,7 +379,14 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
 
     int32 oppHands = cardsAvail*(cardsAvail-1)/2;
     showdownCount = oppHands * HoldemUtil::nchoosep<int32>(cardsAvail - 2,5-cardsInCommunity);
+
+	#ifdef DEBUG_MEMFAIL
+		std::cout << "Requesting " << showdownCount << std::endl;
+	#endif
     myHands = new PocketHand[ showdownCount ];
+	#ifdef DEBUG_MEMFAIL
+		std::cout << "Received @ " << myHands << std::endl;
+	#endif
 
     oppHands = preCardsAvail*(preCardsAvail-1)/2;
     myTotalChances = oppHands;
@@ -373,8 +400,14 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
 
 CommunityCallStats::~CommunityCallStats()
 {
+#ifdef DEBUG_MEMFAIL
+std::cout << "Releasing " << std::flush;
+#endif
     if( myHands != 0 )
     {
+		#ifdef DEBUG_MEMFAIL
+			std::cout << "@ " << myHands << std::endl;
+		#endif
         delete [] myHands;
         myHands = 0;
     }
