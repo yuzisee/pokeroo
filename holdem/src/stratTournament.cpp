@@ -243,7 +243,7 @@ float64 TournamentStrategy::MakeBet()
 
 
     float64 choicePoint = choicegain.FindBestBet();
-    const float64 choiceFold = choicegain.FindZero(choicePoint,myMoney);
+    const float64 choiceFold = choicegain.FindFoldBet(choicePoint);
 
     const float64 callGain = choicegain.f(betToCall);
     #ifdef DEBUGASSERT

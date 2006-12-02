@@ -944,20 +944,21 @@ void debugPosition()
 
 
 //Community 2C 7D KC
-    h2.AddToHand(HoldemConstants::DIAMONDS, 6, HoldemConstants::CARD_SEVEN );
-    //h2.AddToHand(HoldemConstants::SPADES, 10, HoldemConstants::CARD_JACK );
-    h2.AddToHand(HoldemConstants::CLUBS, 12, HoldemConstants::CARD_KING );
-    h2.AddToHand(HoldemConstants::CLUBS, 1, HoldemConstants::CARD_DEUCE );
+    h2.AddToHand(HoldemConstants::SPADES, 6, HoldemConstants::CARD_SEVEN );
+    h2.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
+    h2.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
+    h2.AddToHand(HoldemConstants::CLUBS, 7, HoldemConstants::CARD_EIGHT );
+    h2.AddToHand(HoldemConstants::DIAMONDS, 7, HoldemConstants::CARD_EIGHT );
     //BlindStructure.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
 //    h1.SetUnique(h2);
 
 //Hole cards 8H tH
-    honly.AddToHand(HoldemConstants::SPADES,7, HoldemConstants::CARD_EIGHT );
+    honly.AddToHand(HoldemConstants::SPADES,8, HoldemConstants::CARD_NINE );
     //honly.AddToHand(HoldemConstants::HEARTS, 3, HoldemConstants::CARD_FOUR );
     //honly.AddToHand(HoldemConstants::HEARTS,12, HoldemConstants::CARD_KING );
-    honly.AddToHand(HoldemConstants::HEARTS, 9, HoldemConstants::CARD_TEN );
+    honly.AddToHand(HoldemConstants::HEARTS, 8, HoldemConstants::CARD_NINE );
     h1.AppendUnique(honly);
-    const uint8 dealtCommunityNumber=3;
+    const uint8 dealtCommunityNumber=5;
 
 
 #ifdef DEBUGSITUATION
@@ -979,7 +980,7 @@ void debugPosition()
 	DebugArena myTable(&b,cout, true);
     UserConsoleStrategy testDummy[5];
 
-    PositionalStrategy a(0);
+    PositionalStrategy a(1);
     //TournamentStrategy a;
 
 
@@ -1169,8 +1170,8 @@ int main(int argc, char* argv[])
 	else
 	{
 
-	    //debugPosition();
-	    superGame(0);
+	    debugPosition();
+	    //superGame(0);
         //testHands();
 	    //testPlay(0);
 	    //testPlay('*');

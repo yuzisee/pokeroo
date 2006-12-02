@@ -26,7 +26,8 @@
 //#define DEBUG_MEMFAIL
 //#define DEBUGNEWCALLSTATS
 //#define DEBUGNEWORDER
-
+//#define STOPGAP_IHAVE
+//#define PERFECT_IHAVE
 
 #include <algorithm>
 
@@ -271,10 +272,11 @@ void CommunityCallStats::Analyze()
 
     fillMyWins(table);
 
-
+#ifdef STOPGAP_IHAVE
     TriviaDeck iHave;
     iHave.OmitCards(myStrength);
     //iHave.sortSuits();
+#endif
     int32 statIndex = 0;
     
 #ifdef DEBUG_STATGROUP
@@ -286,7 +288,7 @@ void CommunityCallStats::Analyze()
     {
         if( table[i] != 0 )
         {
-
+            #ifdef STOPGAP_IHAVE
             //OrderedDeck oHave;
             DeckLocation temp;
             Hand oHave;
@@ -300,6 +302,7 @@ void CommunityCallStats::Analyze()
             OrderedDeck emptyDeck;
             if( !(iHave == emptyDeck) )
             {
+            #endif
                 /*(table[i])->genPCT();
                 if( statIndex > 0 && ( myWins[statIndex-1] == *(table[i]) ) )
                 {///Combine to reduce array size, thereby speeding up the sort later on
@@ -338,11 +341,13 @@ void CommunityCallStats::Analyze()
                                 << ")\tx;"<< myWins[statIndex-1].repeated << std::endl;
 
                     #endif
-
+            #ifdef STOPGAP_IHAVE
             }else
             {
+                myTotalChances -= myWins[statIndex].repeated / myChancesEach;
                 --statCount;
             }
+            #endif
 		#ifdef DEBUG_MEMFAIL
 			std::cout << i <<  "] entry " << table[i] << "Free table[" << endl;
 		#endif
@@ -400,7 +405,9 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
 	statCount = oppHands;
     delete [] myWins;
     myWins = new StatResult[oppHands];
-    
+    #ifndef PERFECT_IHAVE
+    myTotalChances = oppHands;
+    #endif
     
 	#ifdef DEBUG_MEMFAIL
 		std::cout << "Requesting " << showdownCount << std::endl;
@@ -411,7 +418,9 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
 	#endif
 
     oppHands = preCardsAvail*(preCardsAvail-1)/2;
+#ifdef PERFECT_IHAVE
     myTotalChances = oppHands;
+#endif
     myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
     //const float64 & t_f  = myChancesEach;
     showdownIndex = 0;
