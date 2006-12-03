@@ -338,6 +338,15 @@ DealRemainder::~DealRemainder()
 {
 	CleanStats();
 }
+
+void DealRemainder::DeOmitCards(const Hand& h)
+{
+	OrderedDeck::dealtHand[0] &= ~( h.SeeCards(0) );
+	OrderedDeck::dealtHand[1] &= ~( h.SeeCards(1) );
+	OrderedDeck::dealtHand[2] &= ~( h.SeeCards(2) );
+	OrderedDeck::dealtHand[3] &= ~( h.SeeCards(3) );
+}
+
 void DealRemainder::CleanStats()
 {
 	/*

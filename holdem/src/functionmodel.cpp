@@ -37,6 +37,7 @@ float64 DummyFunctionModel::fd(const float64 x, const float64 y) const
     return -4*x+2;
 }
 */
+#ifndef NO_AWKWARD_MODELS
 GainModelReverseNoRisk::~GainModelReverseNoRisk()
 {
 }
@@ -44,6 +45,7 @@ GainModelReverseNoRisk::~GainModelReverseNoRisk()
 GainModelReverse::~GainModelReverse()
 {
 }
+#endif
 
 GainModelNoRisk::~GainModelNoRisk()
 {
@@ -364,6 +366,7 @@ float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
 
 }
 
+#ifndef NO_AWKWARD_MODELS
 
 /*
 float64 GainModelReverse::FindBestBet()
@@ -594,7 +597,7 @@ float64 GainModelReverseNoRisk::fd(const float64 betSize, const float64 y)
 
 }
 
-
+#endif
 
 void SlidingPairFunction::query(float64 x)
 {

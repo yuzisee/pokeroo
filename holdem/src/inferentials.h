@@ -27,7 +27,7 @@
 
 #define DEFAULT_TIE_SCALE_FACTOR 0.5
 
-#define DEBUGLOGINFERENTIALS
+//#define DEBUGLOGINFERENTIALS
     #ifdef DEBUGLOGINFERENTIALS
         #include <iostream>
     #endif

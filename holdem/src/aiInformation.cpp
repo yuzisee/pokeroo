@@ -303,31 +303,13 @@ void CommunityCallStats::Analyze()
             if( !(iHave == emptyDeck) )
             {
             #endif
-                /*(table[i])->genPCT();
-                if( statIndex > 0 && ( myWins[statIndex-1] == *(table[i]) ) )
-                {///Combine to reduce array size, thereby speeding up the sort later on
-                    const float64 newRepeated = myWins[statIndex-1].repeated + (table[i])->repeated / myChancesEach;
-                    myWins[statIndex-1] = myWins[statIndex-1] * myWins[statIndex-1].repeated
-                                            +
-                                          *(table[i]) * (table[i])->repeated / myChancesEach;
-                    myWins[statIndex-1] = myWins[statIndex-1] / newRepeated;
-                    myWins[statIndex-1].repeated = newRepeated;
-                    //myWins[statIndex-1].genPCT();
-                    --statCount;
-                        #ifdef DEBUGNEWCALLSTATS
-                            cout << "*" << flush;
-                        #endif
-                }else*/
-                {
+                
+                
                     myWins[statIndex] = *(table[i]);
                     myWins[statIndex].repeated /= myChancesEach;
                     ++statIndex;
                         #ifdef DEBUGNEWCALLSTATS
                             std::cout << "+" << std::flush;
-                        #endif
-                }
-
-                    #ifdef DEBUGNEWCALLSTATS
                         //float64 ttt = myWins[statIndex].loss+myWins[statIndex].splits+myWins[statIndex].wins;
                         //if( ttt >= myChancesEach - 2 || ttt == 0 )
                                 HandPlus uPrint;

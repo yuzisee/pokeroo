@@ -27,7 +27,7 @@
 #include <math.h>
 
 //#define DEBUG_GAIN
-
+#define NO_AWKWARD_MODELS
 
 
 
@@ -197,6 +197,8 @@ class GainModelNoRisk : public virtual GainModel
 }
 ;
 
+#ifndef NO_AWKWARD_MODELS
+
 class GainModelReverseNoRisk : public virtual GainModel
 {
     public:
@@ -225,7 +227,7 @@ class GainModelReverse : public virtual GainModel
 }
 ;
 
-
+#endif
 
 class SlidingPairFunction : public virtual HoldemFunctionModel
 {

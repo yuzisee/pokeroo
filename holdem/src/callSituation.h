@@ -23,7 +23,7 @@
 
 #include "arena.h"
 
-#define DEBUG_EXFDEXF
+//#define DEBUG_EXFDEXF
 #define ASSUMEFOLDS
 
 

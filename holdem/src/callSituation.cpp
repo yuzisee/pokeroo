@@ -255,6 +255,7 @@ float64 ZeroCallD::dexf(float64 betSize)
     return 0;
 }
 
+#ifdef DEBUGBETMODEL
 void DebugArena::updatePot()
 {
     highBet = 0;
@@ -277,7 +278,6 @@ void DebugArena::updatePot()
 }
 
 
-#ifdef DEBUGBETMODEL
 
 const float64 DebugArena::PeekCallBet()
 {

@@ -352,6 +352,11 @@ float64 HoldemArena::GetMaxShowdown() const
 			{
 				secondhighest = highest;
 				highest = i;
+			}else if( p[i]->GetMoney() 
+						>
+						p[secondhighest]->GetMoney() )
+			{
+				secondhighest = i;
 			}
 		}
 	}

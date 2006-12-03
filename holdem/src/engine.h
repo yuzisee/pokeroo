@@ -119,6 +119,8 @@ class DealRemainder : public OrderedDeck
 
 		PlayStats* lastStats;
 
+   		void DeOmitCards(const Hand&);
+        
 		void CleanStats();
 
 		//double deals;

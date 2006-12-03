@@ -18,12 +18,12 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#define REGULARINTOLOG
+//#define REGULARINTOLOG
 #define DEBUGSITUATION
-#define SUPERINTOLOG
+//#define SUPERINTOLOG
 
 #include "stratPosition.h"
-#include "stratTournament.h"
+//#include "stratTournament.h"
 #include "stratManual.h"
 #include "stratThreshold.h"
 #include "arena.h"
@@ -699,239 +699,8 @@ void testNewCallStats()
 
 }
 
-void testPosition()
-{
-    CommunityPlus h1, h2;
 
-
-
-
-/*
-    h2.AddToHand(HoldemConstants::HEARTS, 11, HoldemConstants::CARD_QUEEN );
-    h2.AddToHand(HoldemConstants::HEARTS, 3, HoldemConstants::CARD_FOUR );
-    h2.AddToHand(HoldemConstants::SPADES, 1, HoldemConstants::CARD_DEUCE );
-    h1.SetUnique(h2);
-
-    h1.AddToHand(HoldemConstants::CLUBS, 13, HoldemConstants::CARD_ACEHIGH );
-    h1.AddToHand(HoldemConstants::CLUBS, 1, HoldemConstants::CARD_DEUCE );
-    const uint8 dealtCommunityNumber=3;
-
-    */
-
-/*
-
-//Community
-    h2.AddToHand(HoldemConstants::DIAMONDS, 12, HoldemConstants::CARD_KING );
-    //h2.AddToHand(HoldemConstants::HEARTS, 11, HoldemConstants::CARD_QUEEN );
-    h2.AddToHand(HoldemConstants::SPADES, 8, HoldemConstants::CARD_NINE );
-    //h2.AddToHand(HoldemConstants::HEARTS, 3, HoldemConstants::CARD_FOUR );
-    h2.AddToHand(HoldemConstants::SPADES, 1, HoldemConstants::CARD_DEUCE );
-    h1.SetUnique(h2);
-*/
-//Hole cards
-    h1.AddToHand(HoldemConstants::SPADES,6, HoldemConstants::CARD_SEVEN );
-    h1.AddToHand(HoldemConstants::CLUBS, 6, HoldemConstants::CARD_SEVEN );
-    //h1.AddToHand(HoldemConstants::HEARTS, 3, HoldemConstants::CARD_FOUR );
-    //h1.AddToHand(HoldemConstants::CLUBS, 7, HoldemConstants::CARD_EIGHT );
-    const uint8 dealtCommunityNumber=0;
-
-
-
-
-
-
-
-
-
-
-
-
-#ifdef DEBUGSITUATION
-	cout << "Cards available to me" << endl;
-	h1.DisplayHand(cout);
-	cout << endl;
-#endif
-
-#ifdef DEBUGSITUATION
-	cout << "Cards with community" << endl;
-	h2.DisplayHand(cout);
-	cout << endl;
-
-	cout << endl;
-#endif
-
-    //WinStats ds(h1, h2,FIRST_DEAL-2);
-    DistrShape myDistrPCT(0);
-    DistrShape myDistrWL(0);
-	CallCumulationD o,ofd;
-    StatsManager::Query(0,&myDistrPCT,&myDistrWL,h1, h2,dealtCommunityNumber);
-    StatsManager::QueryOffense(o,h1, h2,dealtCommunityNumber);
-    StatsManager::QueryDefense(ofd,h1, h2,dealtCommunityNumber);
-	//deal.OmitCards(h1);
-    // deal.AnalyzeComplete(&ds);
-
-   /* cout << endl << "AVG "  << myWins.loss << " l + "
-            << myWins.splits << " s + " << myWins.wins << " w = " <<
-            myWins.loss+myWins.splits+myWins.wins
-            << "\tx;"<< myWins.repeated   <<endl;
-
-    cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;*/
-    cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
-    cout << endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << endl;
-    cout << "Worst:" << myDistrPCT.worst *100 << "%" << endl;
-    cout << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << endl;
-    cout << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << endl;
-    cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
-    cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
-
-
-    float64 chipDenom = .25;
-	BlindStructure b(chipDenom,chipDenom*2);
-	DebugArena myTable(&b,cout, true);
-    UserConsoleStrategy testDummy[5];
-
-	myTable.SetDeadPot(0);
-	const float64 t_chipCount = 87.5;
-	const float64 t_myBet = 0;//myTable.GetSmallBlind();
-    myTable.SetBet(  myTable.AddPlayer("TestDummy",t_chipCount, testDummy) , t_myBet );
-    //myTable.SetBet(  myTable.AddPlayer("X3",125, testDummy+1) ,  myTable.GetSmallBlind() );
-
-
-    const bool bCallAllIn = false;
-    float64 oppBet = 87.5;
-    if ( !bCallAllIn ) oppBet = myTable.GetBigBlind() ;
-
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",87.5, testDummy+2) , oppBet );
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",87.5, testDummy+4) , 0 );
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",87.5, testDummy+3) , 0 );
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",87.5, testDummy+1) , 0 );
-
-
-    ExactCallD myExpectedCall(0, &myTable, &o);
-    //ZeroCallD myExpectedCall(0, &myTable, &flat);
-
-    StatResult worstStatResult = GainModel::ComposeBreakdown(myDistrPCT.worst,myDistrWL.worst);
-    StatResult meanStatResult = GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean);
-
-
-    StatResult myChoiceStatResult = worstStatResult*.75 + meanStatResult*.25;
-    if( bCallAllIn ) myChoiceStatResult = GainModel::ComposeBreakdown(myDistrPCT.mean,myDistrWL.mean);
-
-    //myExpectedCall.SetFoldScale(0.25,meanStatResult.wins,1);
-
-    cout << "myExpectedCall.handsDealt(): " << (int)myExpectedCall.handsDealt() << endl;
-    cout << "myTable.GetNumberAtTable(): " << (int)myTable.GetNumberAtTable() << endl;
-
-///TODO compare with revision 46
-	GainModel g(myChoiceStatResult,&myExpectedCall);
-        #ifdef DEBUG_GAIN
-            std::ofstream excel("functionlog.csv");
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
-            g.breakdown((t_chipCount-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),t_chipCount);
-            //myExpectedCall.breakdown(0.005,excel);
-
-            excel.close();
-        #endif
-
-        float64 turningPoint = g.FindBestBet();
-        #ifdef DEBUG_GAIN
-            cout << endl << endl;
-
-            cout << "Goal bet " << turningPoint << endl;
-            cout << "Fold bet " << g.FindZero(turningPoint,t_chipCount) << endl;
-            cout << myTable.PeekCallBet() << " = " << g.f(myTable.PeekCallBet()) << endl;
-        #endif
-
-	GainModelReverse gr(myChoiceStatResult,&myExpectedCall);
-        #ifdef DEBUG_GAIN
-            excel.open ("functionlog.reverse.csv");
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
-            gr.breakdown((t_chipCount-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),t_chipCount);
-            //myExpectedCall.breakdown(0.005,excel);
-
-            excel.close();
-        #endif
-
-        turningPoint = gr.FindBestBet();
-        #ifdef DEBUG_GAIN
-            cout << endl << endl;
-
-            cout << "R.Goal bet " << turningPoint << endl;
-            cout << "R.Fold bet " << gr.FindZero(turningPoint,t_chipCount) << endl;
-            cout << myTable.PeekCallBet() << " = " << gr.f(myTable.PeekCallBet()) << endl;
-        #endif
-
-
-	GainModelNoRisk gno(myChoiceStatResult,&myExpectedCall);
-	GainModelReverseNoRisk grno(myChoiceStatResult,&myExpectedCall);
-	SlidingPairFunction gp(&g,&gr,0.8,&myExpectedCall);
-	SlidingPairFunction ap(&gno,&grno,0.8,&myExpectedCall);
-	SlidingPairFunction gpp(&gp,&ap,.25,&myExpectedCall);
-
-
-        #ifdef DEBUG_GAIN
-            excel.open("functionlog.norisk.csv");
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-            gno.breakdown((t_chipCount-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),t_chipCount);
-            //g.breakdownE(40,excel);
-            excel.close();
-turningPoint = gno.FindBestBet();
-            cout << "Algb target " << turningPoint << endl;
-            cout << "Algb fold bet " << gno.FindZero(turningPoint,t_chipCount) << endl;
-            cout << myTable.PeekCallBet() << " = " << gno.f(myTable.PeekCallBet()) << endl;
-
-
-            excel.open("functionlog.new.csv");
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-            grno.breakdown((t_chipCount-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),t_chipCount);
-            //g.breakdownE(40,excel);
-            excel.close();
-turningPoint = grno.FindBestBet();
-            cout << "Algb.rev target " << turningPoint << endl;
-            cout << "Algb.rev fold bet " << grno.FindZero(turningPoint,t_chipCount) << endl;
-            cout << myTable.PeekCallBet() << flush;
-            cout << " = " << flush;
-            cout << grno.f(myTable.PeekCallBet());
-            cout << endl;
-
-            cout << "GP target " << flush;
-            excel.open("functionlog.GP.csv");
-
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-            gp.breakdown((t_chipCount-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),t_chipCount);
-            //g.breakdownE(40,excel);
-            excel.close();
-turningPoint = gp.FindBestBet();
-            cout << turningPoint << endl;
-            cout << "GP fold bet " << gp.FindZero(turningPoint,t_chipCount) << endl;
-            cout << myTable.PeekCallBet() << " = " << gp.f(myTable.PeekCallBet()) << endl;
-
-
-            excel.open("functionlog.AP.csv");
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-            ap.breakdown((t_chipCount-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),t_chipCount);
-            //g.breakdownE(40,excel);
-            excel.close();
-turningPoint = ap.FindBestBet();
-            cout << "AP target " << turningPoint << endl;
-            cout << "AP fold bet " << ap.FindZero(turningPoint,t_chipCount) << endl;
-            cout << myTable.PeekCallBet() << " = " << ap.f(myTable.PeekCallBet()) << endl;
-
-
-            excel.open("functionlog.safe.csv");
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-            gpp.breakdown((t_chipCount-myTable.PeekCallBet())/myTable.GetChipDenom(),excel,myTable.PeekCallBet(),t_chipCount);
-            //g.breakdownE(40,excel);
-            excel.close();
-turningPoint = gpp.FindBestBet();
-            cout << "Call target " << turningPoint << endl;
-            cout << "Safe fold bet " << gpp.FindZero(turningPoint,t_chipCount) << endl;
-            cout << myTable.PeekCallBet() << " = " << gpp.f(myTable.PeekCallBet()) << endl;
-        #endif
-
-    cout << endl;
-}
-
+#ifdef DEBUGBETMODEL
 
 void debugPosition()
 {
@@ -944,21 +713,21 @@ void debugPosition()
 
 
 //Community 2C 7D KC
-    h2.AddToHand(HoldemConstants::SPADES, 6, HoldemConstants::CARD_SEVEN );
+    h2.AddToHand(HoldemConstants::CLUBS, 1, HoldemConstants::CARD_DEUCE );
     h2.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
-    h2.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
-    h2.AddToHand(HoldemConstants::CLUBS, 7, HoldemConstants::CARD_EIGHT );
-    h2.AddToHand(HoldemConstants::DIAMONDS, 7, HoldemConstants::CARD_EIGHT );
+    //h2.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
+    h2.AddToHand(HoldemConstants::CLUBS, 8, HoldemConstants::CARD_NINE );
+    //h2.AddToHand(HoldemConstants::CLUBS, 12, HoldemConstants::CARD_KING );
     //BlindStructure.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
 //    h1.SetUnique(h2);
 
 //Hole cards 8H tH
-    honly.AddToHand(HoldemConstants::SPADES,8, HoldemConstants::CARD_NINE );
+    honly.AddToHand(HoldemConstants::DIAMONDS,6, HoldemConstants::CARD_SEVEN );
     //honly.AddToHand(HoldemConstants::HEARTS, 3, HoldemConstants::CARD_FOUR );
     //honly.AddToHand(HoldemConstants::HEARTS,12, HoldemConstants::CARD_KING );
-    honly.AddToHand(HoldemConstants::HEARTS, 8, HoldemConstants::CARD_NINE );
+    honly.AddToHand(HoldemConstants::CLUBS, 13, HoldemConstants::CARD_ACEHIGH );
     h1.AppendUnique(honly);
-    const uint8 dealtCommunityNumber=5;
+    const uint8 dealtCommunityNumber=3;
 
 
 #ifdef DEBUGSITUATION
@@ -1012,7 +781,7 @@ void debugPosition()
 
     cout << endl << a.MakeBet() << endl;
 }
-
+#endif
 
 
 
@@ -1021,8 +790,8 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
 
 
-	BlindStructure b(.05,.1);
-	GeomPlayerBlinds bg(b.SmallBlind()/2,b.BigBlind()/2,2,2);
+	BlindStructure b(.25,.50);
+	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2,2);
 		#ifdef REGULARINTOLOG
 			std::ofstream gameOutput("game.log");
 			HoldemArena myTable(&bg, gameOutput,true, true);
@@ -1031,7 +800,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 		#endif
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;
-	ConsoleStrategy manPlay[3];
+	//ConsoleStrategy manPlay[3];
 	MultiThresholdStrategy pushFold(0,2);
 	MultiThresholdStrategy tightPushFold(1,0);
 	//ConsoleStepStrategy watchPlay;
@@ -1042,8 +811,8 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	PositionalStrategy smartConserveLoose(4);
 	PositionalStrategy smartGambleLoose(5);
 
-    TournamentStrategy asterisk;
-    TournamentStrategy gruff(1);
+    //TournamentStrategy asterisk;
+    //TournamentStrategy gruff(1);
 
     if( headsUp == 'P' )
     {
@@ -1065,7 +834,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         case 'P':
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
             myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
-            myTable.AddPlayer("_xa", &asterisk); /* riskymode = 6 */
+            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
             break;
         case 'M':
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
@@ -1075,9 +844,6 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             break;
         case 'G':
             myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
-            break;
-        case 'V':
-            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
             break;
         case 'W':
             myTable.AddPlayer("W2", &smartConserveLoose); /* riskymode = 4 */
@@ -1089,11 +855,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
 //            myTable.AddPlayer("S2", &smartGambleOffence); /* riskymode = 3 */
             myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
-//            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
 //            myTable.AddPlayer("Q2", &smartGambleLoose); /* riskymode = 5 */
 //            myTable.AddPlayer("W2", &smartConserveLoose); /* riskymode = 4 */
             case '*':
-            myTable.AddPlayer("_xa", &asterisk); /* riskymode = 6 */
+            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
             break;
 
     }
@@ -1116,17 +881,30 @@ gameOutput.close();
 
 void superGame(char headsUp = 0)
 {
-    while(true)
-    {
-        #ifdef SUPERINTOLOG
+
+    #ifdef SUPERINTOLOG
         std::ofstream gameOutput("game.log");
         std::string iWin = testPlay(headsUp, gameOutput);
         gameOutput.close();
-        #else
+    #else
         std::string iWin = testPlay(headsUp);
+    #endif
+    
+
+    std::ofstream tourny("batchResults.txt", std::ios::trunc);
+    tourny << iWin.c_str() << endl;
+    tourny.close();
+    for(;;)
+    {
+        #ifdef SUPERINTOLOG
+        gameOutput.open("game.log");
+        iWin = testPlay(headsUp, gameOutput);
+        gameOutput.close();
+        #else
+        iWin = testPlay(headsUp);
         #endif
         //system("pause");
-        std::ofstream tourny("batchResults.txt", std::ios::app);
+        tourny.open("batchResults.txt", std::ios::app);
         tourny << iWin.c_str() << endl;
         tourny.close();
     }
@@ -1170,8 +948,8 @@ int main(int argc, char* argv[])
 	else
 	{
 
-	    debugPosition();
-	    //superGame(0);
+	    //debugPosition();
+	    superGame(0);
         //testHands();
 	    //testPlay(0);
 	    //testPlay('*');
@@ -1181,7 +959,6 @@ int main(int argc, char* argv[])
 		//goCMD(2,"505");
 
 	}
-	//testPlay();
-
+	
 }
 

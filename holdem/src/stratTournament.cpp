@@ -120,26 +120,6 @@ float64 TournamentStrategy::MakeBet()
 //    if( distrScale < 0 ) distrScale = 0;
 
 
-/*
-    float64 impliedFactor;
-    const float64 improvePure = (detailPCT.improve+1)/2;
-    const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
-
-    if( detailPCT.n == 1 )
-    {
-        impliedFactor = 1;
-    }else
-    {
-        if( bGamble % 2 == 0 ) // 0,2
-        {
-            impliedFactor = 1 + improveDev*2*improvePure;
-        }else // 1,3
-        {
-            impliedFactor = 1 + improveDev*2*(1-improvePure);
-        }
-    }
-*/
-
 //    const StatResult statchoice = statworse * (1-choiceScale) + statmean * (choiceScale);
 
    //const float64 ranking3 = callcumu.pctWillCall(statmean.loss); //wins+splits
