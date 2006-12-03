@@ -137,30 +137,11 @@ float64 PositionalStrategy::MakeBet()
     //float64 choiceScale = (betToCall - myBet)/(maxShowdown - myBet);
 
 
-    float64 impliedFactor;
+    
     const float64 improvePure = (detailPCT.improve+1)/2;
-    const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
+    //const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
 
-    if( detailPCT.n == 1 )
-    {
-        impliedFactor = 1;
-        //improvePure = 0.5;
-    }else
-    {
-        if( bGamble / 2 == 0 ) // 0,1
-        {
-            impliedFactor = 1;
-        }
-        else if( bGamble / 2 == 1 ) // 2,3
-        {
-            impliedFactor = 1 + improveDev*2*improvePure;
-        }else if( bGamble / 2 == 2 )// 4,5
-        {
-            impliedFactor = 1 + improveDev*2*(1-improvePure);
-        }
-    }
-
-
+    
 
     float64 distrScale = improvePure;
     //float64 distrScale = 0.5 ;
@@ -175,7 +156,18 @@ float64 PositionalStrategy::MakeBet()
 
     if( distrScale > 1 ) distrScale = 1;
     if( distrScale < 0 ) distrScale = 0;
-
+    //const float64 tableSizeRec = 1.0 / (ViewTable().GetNumberAtTable() - 1) ;
+    
+    const float64 outstandingChips = ViewTable().GetAllChips() - ViewTable().GetPrevPotSize();
+    float64 tableSizeRec;
+    if( myMoney > outstandingChips )
+    {
+	tableSizeRec = 1;
+    }else
+    {
+	tableSizeRec = myMoney / outstandingChips ;
+	if( tableSizeRec < 0 ) tableSizeRec = 0; //Possible because of roundoff, etc.
+    }
 
 
     //const float64 ranking3 = callcumu.pctWillCall(statmean.loss); //wins+splits
@@ -201,7 +193,7 @@ float64 PositionalStrategy::MakeBet()
 
 
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
-    myExpectedCall.SetImpliedFactor(impliedFactor);
+    //myExpectedCall.SetImpliedFactor(impliedFactor);
 
 
 
@@ -218,23 +210,44 @@ float64 PositionalStrategy::MakeBet()
 
 	SlidingPairFunction gp(&choicegain_base,&choicegain_rev,distrScale,&myExpectedCall);
 
-	//SlidingPairFunction ap(&choicegain_nr,&choicegain_rnr,distrScale,&myExpectedCall);
+	SlidingPairFunction ap(&choicegain_rev,&choicegain_nr,tableSizeRec,&myExpectedCall);
 
     //const float64 MAX_UPTO = 1.0/2.0;
     const float64 MAX_UPTO = 1;
 
-    AutoScalingFunction choicegain(&gp,&choicegain_base,myBet,maxShowdown,MAX_UPTO,&myExpectedCall);
-    SlidingPairFunction choicegain_upto(&gp,&choicegain_base,MAX_UPTO,&myExpectedCall);
+    AutoScalingFunction choicegain     (&gp,&choicegain_nr,myBet,maxShowdown,MAX_UPTO,&myExpectedCall);
+    SlidingPairFunction choicegain_upto(&gp,&choicegain_nr,                  MAX_UPTO,&myExpectedCall);
+    AutoScalingFunction tournGain     (&choicegain_rev, &ap,myBet,maxShowdown,1,&myExpectedCall);
 
     HoldemFunctionModel* targetModel;
-    if( maxShowdown == myBet || maxShowdown < betToCall )
-    {
-        ///TODO: THIS IS THE ONE STILL NEEDED
-        targetModel = &choicegain_upto;
-    }else
-    {
-        targetModel = &choicegain;
-    }
+
+
+	if( maxShowdown == myBet || maxShowdown < betToCall )
+	{
+		if( bGamble >= 2 )
+		{
+			targetModel = &ap;
+		}else
+		{
+
+			if( MAX_UPTO == 1 )
+			{
+			targetModel = &choicegain_nr;
+			}else
+			{
+			targetModel = &choicegain_upto;
+			}
+		}
+	}else
+	{
+		if( bGamble >= 2 )
+		{
+		    targetModel = &tournGain;
+		}else
+		{
+		    targetModel = &choicegain;
+		}
+	}
 
 
 
@@ -303,8 +316,8 @@ float64 PositionalStrategy::MakeBet()
         #endif
 
 // #############################################################################
-// MATHEMATIC SOLVING HAPPENS HERE
-
+/// MATHEMATIC SOLVING BEGINS HERE
+// #############################################################################
 
     float64 choicePoint = targetModel->FindBestBet();
 
@@ -339,8 +352,8 @@ float64 PositionalStrategy::MakeBet()
 #endif
     
     
-
-// MATHEMATIC SOLVING ENDS HERE
+// #############################################################################
+/// MATHEMATIC SOLVING ENDS HERE
 // #############################################################################
 
         #ifdef LOGPOSITION
@@ -381,10 +394,11 @@ float64 PositionalStrategy::MakeBet()
             //logFile << "GP fold bet " << gpFold << endl;
             //logFile << "Safe target " << leastPoint << endl;
             //logFile << "Safe fold bet " << leastFold << endl;
-            logFile << "offense/defense(" << distrScale << ")" << endl;
+	    logFile << "offense/defense(" << distrScale << ")" << endl;
+	    logFile << "strike!  " << tableSizeRec << endl;
             logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
             //logFile << "timing[" << (int)DT << "](" << timing[DT] << ")" << endl;
-            logFile << "impliedFactor " << impliedFactor << endl;
+            //logFile << "impliedFactor " << impliedFactor << endl;
             /*if( bGamble / 4 == 1 ){
                 float64 alreadyCalled = 0;
                 if( betToCall != 0 ) alreadyCalled = (ViewTable().GetRoundBetsTotal() - ViewPlayer().GetBetSize())/highBet;
