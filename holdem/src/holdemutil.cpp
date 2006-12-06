@@ -59,6 +59,8 @@ STRAIGHT (OR the cardsets, then AND-SHIFT x; 5)
 
 using std::endl;
 
+const Hand HoldemUtil::EMPTY_HAND;
+
 const uint32 HoldemUtil::PRIMES[14] =
 	{1,2,3,5,7,11,13,17,19,23,29,31,37,41};
 

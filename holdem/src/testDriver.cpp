@@ -788,9 +788,15 @@ void debugPosition()
 std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
 
-
-
-	BlindStructure b(.25,.50);
+    float64 smallBlindChoice;
+    if( headsUp == 'P' )
+    {
+        smallBlindChoice=0.25;
+    }else
+    {
+        smallBlindChoice=0.025;
+    }
+	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
 	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2,2);
 		#ifdef REGULARINTOLOG
 			std::ofstream gameOutput("game.log");
@@ -816,7 +822,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
     if( headsUp == 'P' )
     {
-        myTable.AddPlayer("P1", &consolePlay);
+        myTable.AddPlayer("P1", 200, &consolePlay);
     }else
     {
 
@@ -832,9 +838,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     switch(headsUp)
     {
         case 'P':
-            myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
-            myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
-            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
+            myTable.AddPlayer("M2", 200, &smartConserveDefence); /* riskymode = 0 */
+            myTable.AddPlayer("G2", 200, &smartGambleDefence); /* riskymode = 1 */
+            myTable.AddPlayer("V2", 200, &smartConserveOffence); /* riskymode = 2 */
             break;
         case 'M':
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */

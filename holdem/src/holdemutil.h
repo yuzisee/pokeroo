@@ -30,6 +30,8 @@
 using std::endl;
 using std::flush;
 
+class Hand;
+
 class HoldemUtil
 {
 
@@ -58,6 +60,8 @@ class HoldemUtil
         //			[TIES: treat as "straight"]
     */
 public:
+    static const Hand EMPTY_HAND;
+    
 	static const uint32 PRIMES[14];
 
 	static const uint32 CARDORDER[14];

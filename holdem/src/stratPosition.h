@@ -28,6 +28,7 @@
 
 #define LOGPOSITION
 //#define DEBUGSPECIFIC
+//#define ARBITARY_DISTANCE
 
 
 ///RULE OF THUMB:
@@ -40,7 +41,9 @@ class PositionalStrategy : virtual public PlayerStrategy
 {
     protected:
         int8 bGamble;
+#ifdef ARBITARY_DISTANCE
         int8 roundNumber[3];
+#endif
         DistrShape detailPCT;
         StatResult statmean;
         StatResult statworse;

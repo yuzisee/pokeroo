@@ -35,16 +35,45 @@ PositionalStrategy::~PositionalStrategy()
 
 void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 {
-    roundNumber[0] = cardsInCommunity*cardsInCommunity; /// Round number is [0,1,2,3]=[Pre-Flop,Right After Flop,Between Turn and River,Final]<-[0,3,4,5]
-    roundNumber[0] /= 8;
+    #ifdef LOGPOSITION
+        if( !(logFile.is_open()) )
+        {
+            logFile.open((ViewPlayer().GetIdent() + ".Positional.log").c_str());
+        }
+    #endif
+    #ifdef LOGPOSITION
+        logFile << endl;
+        HandPlus convertOutput;
+        if( !(convertOutput == h) )
+        {
+            convertOutput.SetUnique(h);
+            convertOutput.DisplayHand(logFile);
+            logFile << "community" << endl;
+            
+            #ifdef GRAPHMONEY
+        }
+        
+        else
+        {
+            logFile << "==========#" << ViewTable().handnum << "==========" << endl;
+            #endif
+        }
+    #endif
+    
+    
+    #ifdef ARBITARY_DISTANCE 
+    
+        roundNumber[0] = cardsInCommunity*cardsInCommunity; /// Round number is [0,1,2,3]=[Pre-Flop,Right After Flop,Between Turn and River,Final]<-[0,3,4,5]
+        roundNumber[0] /= 8;
 
-    ///2/7 is very tight preflop.
-    /// Round number is [0,1,2,3]=[Pre-Flop,Right After Flop,Between Turn and River,Final]<-[2,5,6,7]
-    roundNumber[1] = cardsInCommunity + 2;
+        ///2/7 is very tight preflop.
+        /// Round number is [0,1,2,3]=[Pre-Flop,Right After Flop,Between Turn and River,Final]<-[2,5,6,7]
+        roundNumber[1] = cardsInCommunity + 2;
 
-    /// Round number is [0,1,2,3]=[Pre-Flop,Right After Flop,Between Turn and River,Final]<-[0,2,5,6]
-    roundNumber[2] = roundNumber[0]*2;
-    roundNumber[2] += roundNumber[2]/4 - roundNumber[2]/6;
+        /// Round number is [0,1,2,3]=[Pre-Flop,Right After Flop,Between Turn and River,Final]<-[0,2,5,6]
+        roundNumber[2] = roundNumber[0]*2;
+        roundNumber[2] += roundNumber[2]/4 - roundNumber[2]/6;
+    #endif
 
     DistrShape w_wl(0);
 
@@ -64,55 +93,23 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
     statworse = GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
 
-        #ifdef LOGPOSITION
-            if( !(logFile.is_open()) )
-            {
-                logFile.open((ViewPlayer().GetIdent() + ".Positional.log").c_str());
-            }
-            logFile << endl;
-            HandPlus convertOutput;
-            if( !(convertOutput == h) )
-            {
-                convertOutput.SetUnique(h);
-                convertOutput.DisplayHand(logFile);
-                logFile << "community" << endl;
-
-                    #ifdef GRAPHMONEY
-            }
-
-            else
-            {
-                    logFile << "==========#" << ViewTable().handnum << "==========" << endl;
-                    #endif
-            }
-/*
-            std::ofstream excel("positioninfo.txt");
-            if( !excel.is_open() ) std::cerr << "\n!positioninfo.txt file access denied" << std::endl;
-
-            excel << "Cards available to me" << endl;
-            HandPlus uhand;
-            uhand.SetUnique(ViewHand());
-            uhand.DisplayHand(excel);
-            excel << endl;
-            excel << "Cards with community" << endl;
-            uhand.SetUnique(withCommunity);
-            uhand.DisplayHand(excel);
-            excel << endl;
-
-            cout << endl;
-
-            CallCumulation::displayCallCumulation(excel, callcumu);
-            excel << endl << endl << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
-            excel << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
-            excel.close();*/
-        #endif
-
+    #ifdef LOGPOSITION
+    logFile << "*" << endl;
+    #endif
 }
 
 
 
 float64 PositionalStrategy::MakeBet()
 {
+
+#ifdef LOGPOSITION
+    
+    HandPlus convertOutput;
+    convertOutput.SetUnique(ViewHand());
+    convertOutput.DisplayHand(logFile);
+#endif
+
 /*
     const int8 DT = 2;
     const float64 timing[3] =   {
@@ -137,11 +134,11 @@ float64 PositionalStrategy::MakeBet()
     //float64 choiceScale = (betToCall - myBet)/(maxShowdown - myBet);
 
 
-    
+
     const float64 improvePure = (detailPCT.improve+1)/2;
     //const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
 
-    
+
 
     float64 distrScale = improvePure;
     //float64 distrScale = 0.5 ;
@@ -157,7 +154,7 @@ float64 PositionalStrategy::MakeBet()
     if( distrScale > 1 ) distrScale = 1;
     if( distrScale < 0 ) distrScale = 0;
     //const float64 tableSizeRec = 1.0 / (ViewTable().GetNumberAtTable() - 1) ;
-    
+
     const float64 outstandingChips = ViewTable().GetAllChips() - ViewTable().GetPrevPotSize();
     float64 tableSizeRec;
     if( myMoney > outstandingChips )
@@ -170,6 +167,18 @@ float64 PositionalStrategy::MakeBet()
     }
 
 
+    
+#ifdef LOGPOSITION
+    logFile << "Bet to call " << betToCall << " (from " << myBet << ")" << endl;
+    logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
+    logFile << "(Mean.wins) " << statmean.wins * 100 << "%"  << std::endl;
+    logFile << "(Mean.splits) " << statmean.splits * 100 << "%"  << std::endl;
+    logFile << "(Mean.loss) " << statmean.loss * 100 << "%"  << std::endl;
+    logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
+#endif
+    
+    
+    
     //const float64 ranking3 = callcumu.pctWillCall(statmean.loss); //wins+splits
     //const float64 ranking = callcumu.pctWillCall(1-statmean.wins); //wins
     const float64 ranking3 = callcumu.pctWillCall_tiefactor(1 - statmean.pct, 1); //wins+splits
@@ -185,6 +194,14 @@ float64 PositionalStrategy::MakeBet()
     statranking.genPCT();
 
 
+#ifdef LOGPOSITION
+    logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
+    logFile << "(Outright.wins) " << statranking.wins * 100 << "%"  << std::endl;
+    logFile << "(Outright.splits) " << statranking.splits * 100 << "%"  << std::endl;
+    logFile << "(Outright.loss) " << statranking.loss * 100 << "%"  << std::endl;
+#endif
+    
+    
     ///VARIABLE: the slider can move due to avgDev too, maybe....
     CallCumulationD &choicecumu = callcumu;
     //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, timing[DT]/2 );
@@ -212,12 +229,12 @@ float64 PositionalStrategy::MakeBet()
 
 	SlidingPairFunction ap(&choicegain_rev,&choicegain_nr,tableSizeRec,&myExpectedCall);
 
-    //const float64 MAX_UPTO = 1.0/2.0;
-    const float64 MAX_UPTO = 1;
+    const float64 MAX_UPTO = 1.0/2.0;
+    //const float64 MAX_UPTO = 1;
 
     AutoScalingFunction choicegain     (&gp,&choicegain_nr,myBet,maxShowdown,MAX_UPTO,&myExpectedCall);
     SlidingPairFunction choicegain_upto(&gp,&choicegain_nr,                  MAX_UPTO,&myExpectedCall);
-    AutoScalingFunction tournGain     (&choicegain_rev, &ap,myBet,maxShowdown,1,&myExpectedCall);
+    AutoScalingFunction tournGain     (&choicegain_rev,&ap,myBet,maxShowdown,1       ,&myExpectedCall);
 
     HoldemFunctionModel* targetModel;
 
@@ -286,13 +303,6 @@ float64 PositionalStrategy::MakeBet()
             excel.close();
 
 
-/*
-            excel.open((ViewPlayer().GetIdent() + "functionlog.anti.csv").c_str());
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-            choicegain_rnr.breakdown(1000,excel,betToCall,maxShowdown);
-            //g.breakdownE(40,excel);
-            excel.close();
-*/
           excel.open((ViewPlayer().GetIdent() + "functionlog.GP.csv").c_str());
 
             if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
@@ -300,13 +310,6 @@ float64 PositionalStrategy::MakeBet()
             //g.breakdownE(40,excel);
             excel.close();
 
-/*
-            excel.open((ViewPlayer().GetIdent() + "functionlog.AP.csv").c_str());
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-            ap.breakdown(1000,excel,betToCall,maxShowdown);
-            //g.breakdownE(40,excel);
-            excel.close();
-*/
             excel.open((ViewPlayer().GetIdent() + "functionlog.safe.csv").c_str());
             if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
             choicegain.breakdown(1000,excel,betToCall,maxShowdown);
@@ -315,14 +318,22 @@ float64 PositionalStrategy::MakeBet()
         }
         #endif
 
+#ifdef LOGPOSITION
+    
+    
+    logFile << "offense/defense(" << distrScale << ")" << endl;
+    logFile << "strike!  " << tableSizeRec << endl;
+    
+#endif
+    
 // #############################################################################
 /// MATHEMATIC SOLVING BEGINS HERE
 // #############################################################################
 
     float64 choicePoint = targetModel->FindBestBet();
 
-    
-    
+
+
     if( choicePoint < betToCall )
     {///It's probably really close though
             #ifdef LOGPOSITION
@@ -335,75 +346,32 @@ float64 PositionalStrategy::MakeBet()
                         exit(1);
                     }
             #endif
-        
+
         choicePoint = betToCall;
-        
+
     }
-    
-    
+
+
     const float64 choiceFold = targetModel->FindFoldBet(choicePoint);
 
     //const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
     const float64 callGain = targetModel->f(betToCall);
 
-    
+
 #ifdef DEBUGASSERT
     const float64 raiseGain = targetModel->f(choicePoint);
 #endif
-    
-    
+
+
 // #############################################################################
 /// MATHEMATIC SOLVING ENDS HERE
 // #############################################################################
 
         #ifdef LOGPOSITION
 
-            //GainModel gainmean(statmean,&myExpectedCall);
 
-            //float64 goalPoint = gainmean.FindBestBet();
-            //float64 goalFold = gainmean.FindZero(goalPoint,myMoney);
-/*
-            GainModel gainworse(statworse,&myExpectedCall);
-            float64 leastPoint = gainworse.FindBestBet();
-            float64 leastFold = gainworse.FindZero(leastPoint,myMoney);
-*/
-
-            //float64 gpPoint = gp.FindBestBet();
-            //float64 gpFold = gp.FindZero(gpPoint,myMoney);
-
-            HandPlus convertOutput;
-            convertOutput.SetUnique(ViewHand());
-            convertOutput.DisplayHand(logFile);
-
-            logFile << "Bet to call " << betToCall << " (from " << myBet << ")" << endl;
-            logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
-            logFile << "(Mean.wins) " << statmean.wins * 100 << "%"  << std::endl;
-            logFile << "(Mean.splits) " << statmean.splits * 100 << "%"  << std::endl;
-            logFile << "(Mean.loss) " << statmean.loss * 100 << "%"  << std::endl;
-            logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
-
-            logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
-            logFile << "(Outright.wins) " << statranking.wins * 100 << "%"  << std::endl;
-            logFile << "(Outright.splits) " << statranking.splits * 100 << "%"  << std::endl;
-            logFile << "(Outright.loss) " << statranking.loss * 100 << "%"  << std::endl;
-
-
-            //logFile << "Goal bet " << goalPoint << endl;
-            //logFile << "Fold bet " << goalFold << endl;
-            //logFile << "GP target " << gpPoint << endl;
-            //logFile << "GP fold bet " << gpFold << endl;
-            //logFile << "Safe target " << leastPoint << endl;
-            //logFile << "Safe fold bet " << leastFold << endl;
-	    logFile << "offense/defense(" << distrScale << ")" << endl;
-	    logFile << "strike!  " << tableSizeRec << endl;
             logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
-            //logFile << "timing[" << (int)DT << "](" << timing[DT] << ")" << endl;
-            //logFile << "impliedFactor " << impliedFactor << endl;
-            /*if( bGamble / 4 == 1 ){
-                float64 alreadyCalled = 0;
-                if( betToCall != 0 ) alreadyCalled = (ViewTable().GetRoundBetsTotal() - ViewPlayer().GetBetSize())/highBet;
-                logFile << "expected versus (" << myExpectedCall.callingPlayers() << ") from " << alreadyCalled << endl;
-            }*/
+           
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
             logFile << "f("<< betToCall <<")=" << callGain << endl;
@@ -411,12 +379,12 @@ float64 PositionalStrategy::MakeBet()
 
         #endif
 
-                 
+
 
 //############################
 ///  DECISION TIME
 //############################
-    
+
     //Remember, due to rounding and chipDenom, (betToCall < choiceFold) is possible
     if( choicePoint >= choiceFold && betToCall >= choiceFold && callGain <= 0 )
     {///The highest point was the point closest to zero, and the least you can bet if you call--still worse than folding
@@ -442,7 +410,8 @@ float64 PositionalStrategy::MakeBet()
     if( betToCall < choicePoint )
 	{
 	    #ifdef LOGPOSITION
-	    if( choicePoint - betToCall > ViewTable().GetMinRaise() ) logFile << "*MinRaise " << (ViewTable().GetMinRaise() + betToCall) << endl;
+	    /*if( choicePoint - betToCall <= ViewTable().GetMinRaise() ) */
+            logFile << "*MinRaise " << (ViewTable().GetMinRaise() + betToCall) << endl;
 	    logFile << "RAISETO " << choicePoint << endl << endl;
 	    #endif
 		return choicePoint;
