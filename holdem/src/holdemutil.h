@@ -60,8 +60,7 @@ class HoldemUtil
         //			[TIES: treat as "straight"]
     */
 public:
-    static const Hand EMPTY_HAND;
-    
+
 	static const uint32 PRIMES[14];
 
 	static const uint32 CARDORDER[14];
@@ -143,6 +142,8 @@ class Hand
 protected:
     uint32 cardset[4];
 public:
+    static const Hand EMPTY_HAND;
+
 	uint32 SeeCards(const int8 someSuit) const
 	{
 		return cardset[someSuit];

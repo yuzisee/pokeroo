@@ -28,27 +28,30 @@ class AllInShowdown : virtual public PlayStats
 
     //friend void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
 private:
-	void initS(const int8);
+	void initS(const int8, const int8);
 protected:
 
 	CommunityPlus* oppUndo;
+    int8 playersAllIn;
 
-    
 public:
         float64 pctWillCall(const float64) const;
-    
+
     //double myCallPct(double); //give pct of HIS percieved bankroll and returns chance to call
     virtual void Analyze();
     virtual void DropCard(const DeckLocation);
     virtual StatRequest NewCard(const DeckLocation, const float64 occ);
-    
-	AllInShowdown(const CommunityPlus& hP, const CommunityPlus& onlycommunity,
-              int8 cardsInCommunity) : PlayStats(hP,onlycommunity)
+
+	AllInShowdown(const CommunityPlus& community,
+              int8 cardsInCommunity, int8 playersAllIn, CommunityPlus* handAllIns, ShowdownRep* pAllIns) : PlayStats(CommunityPlus::EMPTY_COMPLUS,community)
 	{
-                  initS(cardsInCommunity);
+                  initS(cardsInCommunity, playersAllIn);
 	}
 	~AllInShowdown();
-    
+
 
 }
 ;
+
+#endif
+

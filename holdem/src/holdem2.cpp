@@ -30,6 +30,8 @@
 
 using std::endl;
 
+const CommunityPlus CommunityPlus::EMPTY_COMPLUS;
+
 void CommunityPlus::PrintInterpretHand(std::ostream& targetFile) const
 {
     unsigned long tempv = valueset;

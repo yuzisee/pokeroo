@@ -44,25 +44,25 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     #ifdef LOGPOSITION
         logFile << endl;
         HandPlus convertOutput;
-        if( !(convertOutput == h) )
+        if( !(h == Hand::EMPTY_HAND) )
         {
             convertOutput.SetUnique(h);
             convertOutput.DisplayHand(logFile);
             logFile << "community" << endl;
-            
+
             #ifdef GRAPHMONEY
         }
-        
+
         else
         {
             logFile << "==========#" << ViewTable().handnum << "==========" << endl;
             #endif
         }
     #endif
-    
-    
-    #ifdef ARBITARY_DISTANCE 
-    
+
+
+    #ifdef ARBITARY_DISTANCE
+
         roundNumber[0] = cardsInCommunity*cardsInCommunity; /// Round number is [0,1,2,3]=[Pre-Flop,Right After Flop,Between Turn and River,Final]<-[0,3,4,5]
         roundNumber[0] /= 8;
 
@@ -104,7 +104,7 @@ float64 PositionalStrategy::MakeBet()
 {
 
 #ifdef LOGPOSITION
-    
+
     HandPlus convertOutput;
     convertOutput.SetUnique(ViewHand());
     convertOutput.DisplayHand(logFile);
@@ -167,7 +167,7 @@ float64 PositionalStrategy::MakeBet()
     }
 
 
-    
+
 #ifdef LOGPOSITION
     logFile << "Bet to call " << betToCall << " (from " << myBet << ")" << endl;
     logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
@@ -176,9 +176,9 @@ float64 PositionalStrategy::MakeBet()
     logFile << "(Mean.loss) " << statmean.loss * 100 << "%"  << std::endl;
     logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
 #endif
-    
-    
-    
+
+
+
     //const float64 ranking3 = callcumu.pctWillCall(statmean.loss); //wins+splits
     //const float64 ranking = callcumu.pctWillCall(1-statmean.wins); //wins
     const float64 ranking3 = callcumu.pctWillCall_tiefactor(1 - statmean.pct, 1); //wins+splits
@@ -200,8 +200,8 @@ float64 PositionalStrategy::MakeBet()
     logFile << "(Outright.splits) " << statranking.splits * 100 << "%"  << std::endl;
     logFile << "(Outright.loss) " << statranking.loss * 100 << "%"  << std::endl;
 #endif
-    
-    
+
+
     ///VARIABLE: the slider can move due to avgDev too, maybe....
     CallCumulationD &choicecumu = callcumu;
     //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, timing[DT]/2 );
@@ -319,13 +319,13 @@ float64 PositionalStrategy::MakeBet()
         #endif
 
 #ifdef LOGPOSITION
-    
-    
+
+
     logFile << "offense/defense(" << distrScale << ")" << endl;
     logFile << "strike!  " << tableSizeRec << endl;
-    
+
 #endif
-    
+
 // #############################################################################
 /// MATHEMATIC SOLVING BEGINS HERE
 // #############################################################################
@@ -371,7 +371,7 @@ float64 PositionalStrategy::MakeBet()
 
 
             logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
-           
+
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
             logFile << "f("<< betToCall <<")=" << callGain << endl;

@@ -59,8 +59,6 @@ STRAIGHT (OR the cardsets, then AND-SHIFT x; 5)
 
 using std::endl;
 
-const Hand HoldemUtil::EMPTY_HAND;
-
 const uint32 HoldemUtil::PRIMES[14] =
 	{1,2,3,5,7,11,13,17,19,23,29,31,37,41};
 
@@ -99,6 +97,9 @@ const uint32 HoldemUtil::INCRORDER[14] =
         ,HoldemConstants::INCR_TEN,HoldemConstants::INCR_JACK,HoldemConstants::INCR_QUEEN
         ,HoldemConstants::INCR_KING,HoldemConstants::INCR_ACEHIGH
     };
+
+const Hand Hand::EMPTY_HAND;
+
 
 ///Convert single digit to character, where '-' is for 0
 const uint8 HoldemUtil::cleanz(const uint32 j)

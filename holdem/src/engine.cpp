@@ -35,6 +35,8 @@
 
 using std::endl;
 
+const OrderedDeck OrderedDeck::EMPTY_ODECK;
+
 ///Assumes sorted
 bool OrderedDeck::operator==(const OrderedDeck& o) const
 {

@@ -63,17 +63,17 @@ void CommunityCallStats::Compare(const float64 occ)
     newEntry.repeated = incr;
     newEntry.abRepeated = groupRepeated;
 
-	
+
 
     if( indexHistory[0] > indexHistory[1] ) ///Because the 0...51 count is suit-major, we should match all pairs
     {
 //std::cerr << (int)(indexHistory[0]) << "\t" << (int)(indexHistory[1]) << endl;
-	
+
         newEntry.a = indexHistory[1];
         newEntry.b = indexHistory[0];
     }else // indexHistory[0] <= indexHistory[1]
     {
-	
+
         newEntry.a = indexHistory[0];
         newEntry.b = indexHistory[1];
     }
@@ -135,7 +135,7 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
         curgroupStart = curgroupAfter;
         ++curgroupAfter;
         curgroupRepeated =  myHands[curgroupStart].repeated;
-	
+
 	if( curgroupAfter != showdownCount )
 	{
 		///We group by equal hand strength.
@@ -160,7 +160,7 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
             splitgroupStart = splitgroupAfter;
             ++splitgroupAfter;
             splitgroupRepeated = myHands[splitgroupStart].repeated;
-	    
+
 	    if( splitgroupAfter != curgroupAfter )
 	    {
 		///We group by identical pockets
@@ -196,7 +196,7 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
                 {
                     now.splits -= splitgroupRepeated;
                     now.loss -= myChancesEach - splitgroupRepeated;
-			
+
                     destination = new StatResult;
                     *destination = now * thisOcc;
 
@@ -278,12 +278,12 @@ void CommunityCallStats::Analyze()
     //iHave.sortSuits();
 #endif
     int32 statIndex = 0;
-    
+
 #ifdef DEBUG_STATGROUP
     std::cout << "@@@@@@@@@@@ StatGroup begins at " << statGroup << endl;
     std::cout << "@@@@@@@@@@@ StatCount set to " << statCount << endl;
 #endif
-    
+
     for( int16 i=0 ; i < 52*52 && statIndex < statCount ; ++i )
     {
         if( table[i] != 0 )
@@ -299,12 +299,11 @@ void CommunityCallStats::Analyze()
 
             //if( !(iHave == oHave) )
             iHave.DiffHand(oHave);
-            OrderedDeck emptyDeck;
-            if( !(iHave == emptyDeck) )
+            if( !(iHave == OrderedDeck::EMPTY_ODECK) )
             {
             #endif
-                
-                
+
+
                     myWins[statIndex] = *(table[i]);
                     myWins[statIndex].repeated /= myChancesEach;
                     ++statIndex;
@@ -356,10 +355,10 @@ void CommunityCallStats::showProgressUpdate() const
 #ifdef DEBUG_STATGROUP
     if( indexHistory[0] < indexHistory[1] )
     {
-        std::cout << (int)(indexHistory[0])*52 + indexHistory[1] << std::flush;    
+        std::cout << (int)(indexHistory[0])*52 + indexHistory[1] << std::flush;
     }else
     {
-        std::cout << (int)(indexHistory[1])*52 + indexHistory[0] << std::flush;    
+        std::cout << (int)(indexHistory[1])*52 + indexHistory[0] << std::flush;
     }
     std::cout << " statGroup=" << statGroup << ", statCount=" << statCount << endl;
 #else
@@ -390,7 +389,7 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
     #ifndef PERFECT_IHAVE
     myTotalChances = oppHands;
     #endif
-    
+
 	#ifdef DEBUG_MEMFAIL
 		std::cout << "Requesting " << showdownCount << std::endl;
 	#endif

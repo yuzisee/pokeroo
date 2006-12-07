@@ -50,6 +50,7 @@ private:
 	void preEvalStrength();
     void cleanLastTwo();
 public:
+    static const CommunityPlus EMPTY_COMPLUS;
 
 
 	void evaluateStrength();

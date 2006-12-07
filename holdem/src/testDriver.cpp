@@ -45,6 +45,8 @@ using std::flush;
 
 const int FIRST_DEAL = 5;
 
+char * myPlayerName = 0;
+
 void genW(CommunityPlus& h1, CommunityPlus& h2)
 {
     DealRemainder deal;
@@ -365,8 +367,7 @@ void testDR()
 			if (cardcount >= 2)	h2.AddToHand(deal.dealt);
 		}
 		printf("%d %lu\n",deal.dealt.Suit,deal.dealt.Value);
-        //if(HoldemConstants::CARD_ACELOW != deal.dealtValue)
-        //{h1.AddToHand(deal.dealtSuit,deal.dealtValue);}
+
 		cardcount = 0;
 		for(int gs=0;gs<4;++gs)
 			for(int g=1;g<=14;++g)
@@ -401,12 +402,6 @@ void testDR()
 #ifdef DEBUGSITUATION
 	cout << endl << "Analyze! " << cardcount << endl;
 #endif
-
-
-//for (int i=0;i<2;++i)
-//{
-//	if( i == 1 )deal.bRecursive = true;
-//	if( i == 0 )deal.bRecursive = false;
 
 	CommunityPlus m, co;
 	//h1.DisplayHandBig(cout);
@@ -465,7 +460,7 @@ cout << endl << "Finished " << deal.AnalyzeComplete(&ws) << endl;
 
 
 #endif
-//}
+
 
 
 
@@ -822,7 +817,8 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
     if( headsUp == 'P' )
     {
-        myTable.AddPlayer("P1", 200, &consolePlay);
+        if( myPlayerName == 0 ){ myTable.AddPlayer("P1", 200, &consolePlay); }
+        else{ myTable.AddPlayer(myPlayerName, 200, &consolePlay); }
     }else
     {
 
@@ -895,7 +891,7 @@ void superGame(char headsUp = 0)
     #else
         std::string iWin = testPlay(headsUp);
     #endif
-    
+
 
     std::ofstream tourny("batchResults.txt", std::ios::trunc);
     tourny << iWin.c_str() << endl;
@@ -940,7 +936,8 @@ int main(int argc, char* argv[])
 	if( argc == 2 )
 	{
         //goCMD(2,argv[1]);
-        testPlay(argv[1][0]);
+        myPlayerName = argv[1];
+        testPlay('P');
     }else if( argc == 4 )
     {
         uint16 i=675;
@@ -965,6 +962,6 @@ int main(int argc, char* argv[])
 		//goCMD(2,"505");
 
 	}
-	
+
 }
 

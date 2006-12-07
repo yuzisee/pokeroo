@@ -41,6 +41,7 @@ class OrderedDeck
 		int8 nextSuit[4];
 		int8 prevSuit[4];
 	public:
+        static const OrderedDeck EMPTY_ODECK;
 		void sortSuits();
     //static const int Occurrences(unsigned long*);
     //int lastOccurrences;
@@ -120,7 +121,7 @@ class DealRemainder : public OrderedDeck
 		PlayStats* lastStats;
 
    		void DeOmitCards(const Hand&);
-        
+
 		void CleanStats();
 
 		//double deals;
