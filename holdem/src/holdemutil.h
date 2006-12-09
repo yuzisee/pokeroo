@@ -94,7 +94,51 @@ public:
 		}
 		target << VALKEY[vn]<< SUITKEY[s] << flush;
 	}
+    const static int8 ReadCard(std::istream& charSource)
+    {
+        unsigned char nextChar[2];
+        charSource >> nextChar[0];
+        charSource >> nextChar[1];
 
+            return      
+            ParseCard(nextChar[0],nextChar[1]);
+
+        
+    }
+    const static int8 ParseCard(char valchar, char suitchar)
+    {
+        int8 valNum = -1;
+        int8 suitNum = -1;
+        for( int8 i=2;i<=14;++i )
+        {
+            if( VALKEY[i] == valchar )
+            {
+                valNum = i-2;
+                break;
+            }
+        }
+
+        for( int8 i=0;i<4;++i )
+        {
+            if( SUITKEY[i] == suitchar )
+            {
+                suitNum = i-2;
+                break;
+            }
+        }
+        
+#ifdef DEBUGASSERT
+        if( valNum == -1 || suitNum == -1 )
+        {
+            std::cout << "Wrong reverse-PrintCard" << endl;
+            exit(1);
+//            return -1;
+        }
+#endif
+        return suitNum + valNum*4;
+        
+    }
+    
 	const static uint8 cleanz(const uint32);
 
 		template<typename T>

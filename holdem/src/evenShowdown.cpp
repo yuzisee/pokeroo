@@ -9,14 +9,14 @@
 
 #include "evenShowdown.h"
 
-void AllInShowdown::initS(const int8 cardsInCommunity, const int8 playersAllIn)
+void AllInShowdown::initS(const int8 cardsInCommunity, const int8 numAllIn)
 {
 	moreCards = 5-cardsInCommunity;
 
 
 	oppUndo = new CommunityPlus[moreCards];
 
-    int8 cardsAvail = 52-cardsInCommunity-playersAllIn;
+    int8 cardsAvail = 52-cardsInCommunity-numAllIn;
 
     int32 oppHands = cardsAvail*(cardsAvail-1)/2;
     myTotalChances = static_cast<float64>(oppHands);

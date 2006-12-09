@@ -18,40 +18,44 @@
 *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
 ***************************************************************************/
 
-#ifndef HOLDEM_ShowdownAllIns
-#define HOLDEM_ShowdownAllIns
 
-#include "ai.h"
+#include "arenaSave.h"
 
-class AllInShowdown : virtual public PlayStats
+void SerializeRandomDeck::Unserialize( std::istream& inFile )
 {
+    lastDealtPos = -1;
+    firstDealtPos = DECKSIZE-1;
+    bDeckEmpty = false;
+    
+    for(uint8 i=0;i<DECKSIZE;++i)
+    {
+        deckOrder[i] = HoldemUtil::ReadCard( inFile ) ;
+    }
+}
 
-    //friend void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
-private:
-	void initS(const int8, const int8);
-protected:
+void SerializeRandomDeck::LogDeckState(std::ostream& outFile)
+{
+    for(uint8 i=0;i<DECKSIZE;++i)
+    {
+        ++lastDealtPos;
+        lastDealtPos %= DECKSIZE;
+        
+        const int8 nextCard = deckOrder[lastDealtPos];
+        HoldemUtil::PrintCard( outFile
+                               ,HoldemUtil::CardSuit(nextCard)
+                               ,HoldemUtil::CardRank(nextCard) );
+    }
+}
 
-	CommunityPlus* oppUndo;
-    int8 playersAllIn;
+void SerializeRandomDeck::LoggedShuffle(std::ostream& outFile)
+{
+    RandomDeck::ShuffleDeck( );
+    LogDeckState( outFile );    
+}
 
-public:
-        float64 pctWillCall(const float64) const;
-
-    //double myCallPct(double); //give pct of HIS percieved bankroll and returns chance to call
-    virtual void Analyze();
-    virtual void DropCard(const DeckLocation);
-    virtual StatRequest NewCard(const DeckLocation, const float64 occ);
-
-	AllInShowdown(const CommunityPlus& community,
-              int8 cardsInCommunity, int8 numAllIn, CommunityPlus* handAllIns, ShowdownRep* pAllIns) : PlayStats(CommunityPlus::EMPTY_COMPLUS,community)
-	{
-                  initS(cardsInCommunity, numAllIn);
-	}
-	~AllInShowdown();
-
+void SerializeRandomDeck::LoggedShuffle(std::ostream& outFile, float64 seedShift)
+{
+    RandomDeck::ShuffleDeck( seedShift );
+    LogDeckState( outFile );
 
 }
-;
-
-#endif
-

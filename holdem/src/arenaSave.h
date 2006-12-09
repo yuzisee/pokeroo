@@ -18,40 +18,25 @@
 *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
 ***************************************************************************/
 
-#ifndef HOLDEM_ShowdownAllIns
-#define HOLDEM_ShowdownAllIns
+#ifndef HOLDEM_Arena
+#define HOLDEM_Arena
 
-#include "ai.h"
+#include <iostream>
+#include "randomDeck.h"
 
-class AllInShowdown : virtual public PlayStats
+class SerializeRandomDeck : public RandomDeck
 {
-
-    //friend void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
 private:
-	void initS(const int8, const int8);
-protected:
-
-	CommunityPlus* oppUndo;
-    int8 playersAllIn;
-
+    virtual void LogDeckState(std::ostream&);
 public:
-        float64 pctWillCall(const float64) const;
-
-    //double myCallPct(double); //give pct of HIS percieved bankroll and returns chance to call
-    virtual void Analyze();
-    virtual void DropCard(const DeckLocation);
-    virtual StatRequest NewCard(const DeckLocation, const float64 occ);
-
-	AllInShowdown(const CommunityPlus& community,
-              int8 cardsInCommunity, int8 numAllIn, CommunityPlus* handAllIns, ShowdownRep* pAllIns) : PlayStats(CommunityPlus::EMPTY_COMPLUS,community)
-	{
-                  initS(cardsInCommunity, numAllIn);
-	}
-	~AllInShowdown();
-
-
+    SerializeRandomDeck(bool autoshuffle = false) : RandomDeck(autoshuffle) {}
+    void Unserialize( std::istream& inFile );
+    
+    virtual void LoggedShuffle(std::ostream&);
+    virtual void LoggedShuffle(std::ostream&,float64);
 }
 ;
+
 
 #endif
 
