@@ -69,7 +69,6 @@ class UserConsoleStrategy : virtual public ConsoleStrategy
         static std::ofstream logFile;
         #endif
 	public:
-
         virtual ~UserConsoleStrategy();
 		virtual float64 MakeBet();
 		virtual void SeeAction(const HoldemAction&);

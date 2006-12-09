@@ -18,6 +18,12 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+
+
+#ifndef HOLDEM_Arena
+#define HOLDEM_Arena
+
+
 //#define DEBUGSPECIFIC 0
 #define GRAPHMONEY "chipcount.csv"
 #define REPRODUCIBLE
@@ -26,10 +32,6 @@
 #define DEBUGBETMODEL
 #define DEBUGSAVEGAME "savegame.log"
 
-#ifndef HOLDEM_Arena
-#define HOLDEM_Arena
-
-//#include "player.h"
 
 
 

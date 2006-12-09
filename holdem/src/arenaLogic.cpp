@@ -733,6 +733,8 @@ Player* HoldemArena::PlayTable()
         killfile.close();
     #endif
 
+
+
 	while(livePlayers > 1)
 	{
         DealHands();

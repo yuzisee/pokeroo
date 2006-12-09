@@ -18,12 +18,14 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#ifndef HOLDEM_Community
+#define HOLDEM_Community
+
+
 //#define DEBUG_TWOPAIR
 //#define DEBUG_SIGSEGV
 
 
-#ifndef HOLDEM_Community
-#define HOLDEM_Community
 
 #include "holdemutil.h"
 #include <iostream>

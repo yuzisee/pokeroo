@@ -408,6 +408,13 @@ float64 UserConsoleStrategy::queryAction()
 	cout << "Command accepted" << endl;
 #endif
 
+    #ifdef DEBUGSAVEGAME
+        if( logFile.is_open() )
+        {
+            logFile.close();
+        }
+    #endif
+
 
 	return returnMe;
 }
