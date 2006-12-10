@@ -754,8 +754,18 @@ void debugPosition()
 
 std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
-
-    std::ifstream testSaveGame(DEBUGSAVEGAME);
+    #ifdef DEBUGSAVE_EXTRATOKEN
+    char ExtraTokenNameBuffer[DEBUGSAVE_EXTRATOKEN] = "P";
+#endif
+    bool bLoadGame = false;
+    if( headsUp == 'L' )
+    {
+        bLoadGame = true;
+        headsUp = 'P';
+#ifdef DEBUGSAVE_EXTRATOKEN
+        myPlayerName = ExtraTokenNameBuffer;
+#endif
+    }
     
     float64 smallBlindChoice;
     if( headsUp == 'P' )
@@ -776,6 +786,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;
 	//ConsoleStrategy manPlay[3];
+    MultiThresholdStrategy drainFold(3,3);
 	MultiThresholdStrategy pushFold(0,2);
 	MultiThresholdStrategy tightPushFold(1,0);
 	//ConsoleStepStrategy watchPlay;
@@ -792,20 +803,22 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     if( headsUp == 'P' )
     {
         
-        consolePlay.myFifo = &testSaveGame;
+
         
         if( myPlayerName == 0 ){ myTable.AddPlayer("P1", 200, &consolePlay); }
-        else{ myTable.AddPlayer(myPlayerName, 200, &consolePlay); }
+        else{
+            myTable.AddPlayer(myPlayerName, 200, &consolePlay);
+#ifdef DEBUGSAVE_EXTRATOKEN
+            myTable.EXTRATOKEN = myPlayerName;
+#endif
+        }
     }else
     {
 
-        //myTable.AddPlayer("Stag", &stagStrat);
-        //myTable.AddPlayer("N1", manPlay);
-        //myTable.AddPlayer("N2", manPlay+1);
+        myTable.AddPlayer("i4", &drainFold);
         myTable.AddPlayer("X3", &pushFold);
         myTable.AddPlayer("A3", &tightPushFold);
-        //myTable.AddPlayer("bluff", &gruff); /* riskymode = 0 */
-        //myTable.AddPlayer("P1", &consolePlay);
+        
     }
 
     switch(headsUp)
@@ -841,6 +854,17 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             break;
 
     }
+
+#ifdef DEBUGSAVEGAME
+
+
+#ifdef DEBUGSAVE_EXTRATOKEN
+    myTable.EXTRATOKEN = ExtraTokenNameBuffer;
+#endif
+std::istream *saveLoc = myTable.LoadState();
+if( saveLoc != 0 ) consolePlay.myFifo = saveLoc;
+
+#endif
 
     Player* iWin = (myTable.PlayTable());
 
@@ -931,8 +955,8 @@ int main(int argc, char* argv[])
 	    //debugPosition();
 	    //superGame(0);
         
-	    //testPlay(0);
-	    testDeal();
+	    testPlay('L');
+	    //testDeal();
         //testNewCallStats();
 
 	    //testC();

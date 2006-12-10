@@ -117,6 +117,73 @@ void HoldemArena::broadcastHand(const Hand& h, const int8 broadcaster)
 	}
 }
 
+#ifdef DEBUGSAVEGAME
+std::istream * HoldemArena::LoadState()
+{
+    loadFile.open(DEBUGSAVEGAME);
+    if( ! (loadFile.is_open()) )
+    {
+        return 0;
+    }
+    bLoadGame = true;
+   
+
+#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+            loadFile >> handnum ;
+            loadFile.ignore(1,'n');
+#endif
+            int16 numericValue;
+            
+            loadFile >> blinds->mySmallBlind; 
+            loadFile.ignore(1,'=');
+            loadFile >> blinds->myBigBlind; 
+            loadFile.ignore(1,'@');
+            loadFile >> numericValue; 
+            curDealer = numericValue;
+            loadFile.ignore(1,'@');
+
+            for( int i=0;i<nextNewPlayer;++i )
+            {
+                float64 pMoney;
+                uint32 *pMoneyU = reinterpret_cast< uint32* >( &pMoney );
+                loadFile >> *pMoneyU;
+                loadFile.ignore(1,'x');
+                loadFile >> *(pMoneyU+1);
+                loadFile.ignore(1,':');
+                p[i]->myMoney = pMoney;
+                if( pMoney == 0 ) --livePlayers;
+            }
+            loadFile.getline(EXTRATOKEN, DEBUGSAVE_EXTRATOKEN);
+            
+            dealer.Unserialize( loadFile );
+            
+            return &loadFile;
+}
+
+
+void HoldemArena::saveState()
+{
+    if( loadFile.is_open() ) loadFile.close();
+
+    
+    std::ofstream newSaveState(DEBUGSAVEGAME);    
+    #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+    newSaveState << handnum << "n";
+    #endif
+    newSaveState << blinds->SmallBlind() << "=" << blinds->BigBlind() << "@" << (int)curDealer << "@" << flush;
+    for( int i=0;i<nextNewPlayer;++i )
+    {
+        float64 pMoney =  p[i]->myMoney;
+        uint32 *pMoneyU = reinterpret_cast< uint32* >( &pMoney );
+        newSaveState << *pMoneyU << "x" << *(pMoneyU+1) << ":" << flush;
+    }
+#ifdef DEBUGSAVE_EXTRATOKEN
+    newSaveState << EXTRATOKEN << endl;
+#endif
+    newSaveState.close();
+}
+#endif
+
 int8 HoldemArena::AddPlayer(const char* id, PlayerStrategy* newStrat)
 {
 	return AddPlayer(id, BASE_CHIP_COUNT, newStrat);

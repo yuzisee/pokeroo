@@ -106,6 +106,8 @@ float64 ThresholdStrategy::MakeBet()
 
 float64 MultiThresholdStrategy::MakeBet()
 {
+    if( bCall == 3 ) return ViewTable().GetBigBlind()*2;
+    
     float64 multiThreshhold = pow(w->mean,ViewTable().GetNumberAtTable()-1+redundancy); //subtract yourself
         #ifdef LOGTHRESHOLD
 
@@ -122,6 +124,7 @@ float64 MultiThresholdStrategy::MakeBet()
 
             logFile << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberAtTable()-1+redundancy) << endl;
         #endif
+            
 	if (multiThreshhold > aiThreshold)
 	{
 		return ViewPlayer().GetMoney();
@@ -129,8 +132,7 @@ float64 MultiThresholdStrategy::MakeBet()
 	else
 	{
 	    logFile << "call" << endl;
-	    if( bCall == 3 ) return ViewTable().GetBigBlind()*2;
-	    if( bCall == 2 )
+        if( bCall == 2 )
 	    {
 	        if( ThresholdStrategy::MakeBet() > ViewPlayer().GetBetSize() ) return ViewTable().GetBigBlind()*2;
         }

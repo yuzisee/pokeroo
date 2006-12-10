@@ -577,10 +577,7 @@ void HoldemArena::PlayGame()
 
 void HoldemArena::DealHands()
 {
-    do{
-        ++curDealer;
-        curDealer %= nextNewPlayer;
-    }while(!IsAlive(curDealer));
+
 
     myPot = 0;
     prevRoundPot = 0;
@@ -596,19 +593,30 @@ void HoldemArena::DealHands()
 
 
 	int8 dealtEach = 0;
-	dealer.UndealAll();
-	if(randRem != 0)
-	{
-		dealer.ShuffleDeck(randRem);
-		randRem = 1;
-#ifdef DEBUGASSERT
-	}
-	else
-	{
-        std::cerr << "YOU DIDN'T SHUFFLE" << endl;
-        gamelog << "YOU DIDN'T SHUFFLE" << endl;
-        exit(1);
-#endif
+    if( bLoadGame )
+    {
+        bLoadGame = false;
+    }else
+    {
+        dealer.UndealAll();
+        if(randRem != 0)
+        {
+            #ifdef DEBUGSAVEGAME
+            std::ofstream shuffleData( DEBUGSAVEGAME, std::ios::app );
+            dealer.LoggedShuffle(shuffleData, randRem);
+            shuffleData.close();
+            #endif
+
+            randRem = 1;
+    #ifdef DEBUGASSERT
+        }
+        else
+        {
+            std::cerr << "YOU DIDN'T SHUFFLE" << endl;
+            gamelog << "YOU DIDN'T SHUFFLE" << endl;
+            exit(1);
+    #endif
+        }
     }
 
 	while(dealtEach < 2)
@@ -693,46 +701,64 @@ void HoldemArena::RefreshPlayers()
 #endif
 #endif
 
+    do{
+        ++curDealer;
+        curDealer %= nextNewPlayer;
+    }while(!IsAlive(curDealer));
+    
 }
 
 
 Player* HoldemArena::PlayTable()
 {
 	if( p.empty() ) return 0;
-
-	dealer.ShuffleDeck(static_cast<float64>(livePlayers));
-	curIndex = 0;
+    
+    curIndex = 0;
 	curDealer = 0;
 
+    if( !bLoadGame )
+    {
+        dealer.ShuffleDeck(static_cast<float64>(livePlayers));
+        #ifdef DEBUGSPECIFIC
 
-	#ifdef DEBUGSPECIFIC
-
-        randRem = 1;
-        handnum = 1;
-    #else
-
-        #ifdef GRAPHMONEY
-
+            randRem = 1;
             handnum = 1;
-            scoreboard.open(GRAPHMONEY);
-            scoreboard << "Hand #";
-            for(int8 i=0;i<nextNewPlayer;++i)
-            {
-                scoreboard << "," << (p[i])->GetIdent();
-            }
-            scoreboard << endl;
-        #endif
-    #endif
+        #else
 
-    #ifdef REPRODUCIBLE
-        randRem = 1;
-    #endif
-/*
-    #ifdef DEBUGSAVEGAME
-        std::ofstream killfile(DEBUGSAVEGAME,std::ios::out | std::ios::trunc);
-        killfile.close();
-    #endif
-*/
+            #ifdef GRAPHMONEY
+
+                handnum = 1;
+                scoreboard.open(GRAPHMONEY);
+                scoreboard << "Hand #";
+                for(int8 i=0;i<nextNewPlayer;++i)
+                {
+                    scoreboard << "," << (p[i])->GetIdent();
+                }
+                scoreboard << endl;
+            #endif
+        #endif
+
+        #ifdef REPRODUCIBLE
+            randRem = 1;
+        #endif
+            
+            /*
+#ifdef DEBUGSAVEGAME
+             std::ofstream killfile(DEBUGSAVEGAME,std::ios::out | std::ios::trunc);
+             killfile.close();
+#endif
+             */
+#ifdef DEBUGSAVEGAME
+            saveState();
+#endif
+    }
+#ifdef GRAPHMONEY
+    else
+    {
+        scoreboard.open(GRAPHMONEY , std::ios::app);
+    }
+#endif
+
 
 
 	while(livePlayers > 1)
@@ -740,6 +766,9 @@ Player* HoldemArena::PlayTable()
         DealHands();
 		PlayGame();
         RefreshPlayers(); ///New Hand
+#ifdef DEBUGSAVEGAME
+        saveState();
+#endif
 	}
 
 #ifdef GRAPHMONEY

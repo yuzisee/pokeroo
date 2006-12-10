@@ -26,10 +26,10 @@
 
 class BlindStructure
 {
-	protected:
-		float64 myBigBlind;
-		float64 mySmallBlind;
 	public:
+        float64 myBigBlind;
+        float64 mySmallBlind;
+    
             BlindStructure(float64 small, float64 big)
     : myBigBlind(big), mySmallBlind(small) {};
             virtual ~BlindStructure();

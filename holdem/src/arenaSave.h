@@ -40,3 +40,18 @@ public:
 
 #endif
 
+/*
+ Arena must save:
+ #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+ uint32 handnum
+ #endif
+ float64 smallestChip;
+
+
+ blinds big and small. Raising level will be preserved
+ player money,
+ Can be derived >> livePlayers
+ Can be derived >> float64 allChips;
+ curDealer
+ 
+ */

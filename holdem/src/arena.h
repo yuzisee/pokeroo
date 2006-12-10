@@ -31,7 +31,7 @@
 
 #define DEBUGBETMODEL
 #define DEBUGSAVEGAME "savegame.log"
-
+#define DEBUGSAVE_EXTRATOKEN 32
 
 
 
@@ -211,7 +211,14 @@ class HoldemArena
 		float64 & PlayerHandBetTotal(Player& target){ return target.handBetTotal; }
 		float64 & PlayerMoney(Player& target){ return target.myMoney; }
 		CommunityPlus & PlayerHand(Player& target){ return target.myHand; }
-	protected:
+
+#ifdef DEBUGSAVEGAME
+        std::ifstream loadFile;
+        bool bLoadGame;
+        void saveState();
+#endif
+
+protected:
 
         std::ostream& gamelog;
         #ifdef GRAPHMONEY
@@ -266,9 +273,17 @@ class HoldemArena
 
 	public:
 
+#ifdef DEBUGSAVEGAME
+            std::istream* LoadState();
+#endif
+            
 	#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
         uint32 handnum;
     #endif
+        
+#ifdef DEBUGSAVE_EXTRATOKEN
+        char * EXTRATOKEN;
+#endif
     #ifdef GLOBAL_AICACHE_SPEEDUP
         void CachedQueryOffense(CallCumulation& q, const CommunityPlus& withCommunity) const;
     #endif
@@ -283,7 +298,10 @@ class HoldemArena
 
 		HoldemArena(BlindStructure* b, std::ostream& targetout, bool illustrate, bool spectate)
 		: curIndex(-1),  nextNewPlayer(0)
-		,gamelog(targetout)
+#ifdef DEBUGSAVEGAME
+        ,bLoadGame(false)
+#endif        
+        ,gamelog(targetout)
         ,bVerbose(illustrate),bSpectate(spectate),livePlayers(0), blinds(b),allChips(0)
 		,lastRaise(0),highBet(0), myPot(0), myBetSum(0), prevRoundPot(0),blindBetSum(0)
 		#ifdef GLOBAL_AICACHE_SPEEDUP
