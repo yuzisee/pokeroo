@@ -31,7 +31,7 @@
 
 #define DEBUGBETMODEL
 #define DEBUGSAVEGAME "savegame.log"
-#define DEBUGSAVE_EXTRATOKEN 32
+//#define DEBUGSAVE_EXTRATOKEN 32
 
 
 
@@ -276,11 +276,11 @@ protected:
 #ifdef DEBUGSAVEGAME
             std::istream* LoadState();
 #endif
-            
+
 	#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
         uint32 handnum;
     #endif
-        
+
 #ifdef DEBUGSAVE_EXTRATOKEN
         char * EXTRATOKEN;
 #endif
@@ -300,7 +300,7 @@ protected:
 		: curIndex(-1),  nextNewPlayer(0)
 #ifdef DEBUGSAVEGAME
         ,bLoadGame(false)
-#endif        
+#endif
         ,gamelog(targetout)
         ,bVerbose(illustrate),bSpectate(spectate),livePlayers(0), blinds(b),allChips(0)
 		,lastRaise(0),highBet(0), myPot(0), myBetSum(0), prevRoundPot(0),blindBetSum(0)

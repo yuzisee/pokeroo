@@ -26,7 +26,7 @@ void SerializeRandomDeck::Unserialize( std::istream& inFile )
     lastDealtPos = -1;
     firstDealtPos = DECKSIZE-1;
     bDeckEmpty = false;
-    
+
     for(uint8 i=0;i<DECKSIZE;++i)
     {
         //std::cout << "i=" << (int)i << endl;
@@ -40,7 +40,7 @@ void SerializeRandomDeck::LogDeckState(std::ostream& outFile)
     {
         ++lastDealtPos;
         lastDealtPos %= DECKSIZE;
-        
+
         const int8 nextCard = deckOrder[lastDealtPos];
         HoldemUtil::PrintCard( outFile, nextCard );
     }
@@ -49,7 +49,7 @@ void SerializeRandomDeck::LogDeckState(std::ostream& outFile)
 void SerializeRandomDeck::LoggedShuffle(std::ostream& outFile)
 {
     RandomDeck::ShuffleDeck( );
-    LogDeckState( outFile );    
+    LogDeckState( outFile );
 }
 
 void SerializeRandomDeck::LoggedShuffle(std::ostream& outFile, float64 seedShift)
@@ -58,3 +58,4 @@ void SerializeRandomDeck::LoggedShuffle(std::ostream& outFile, float64 seedShift
     LogDeckState( outFile );
 
 }
+

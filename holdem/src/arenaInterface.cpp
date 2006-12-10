@@ -126,19 +126,19 @@ std::istream * HoldemArena::LoadState()
         return 0;
     }
     bLoadGame = true;
-   
+
 
 #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
             loadFile >> handnum ;
             loadFile.ignore(1,'n');
 #endif
             int16 numericValue;
-            
-            loadFile >> blinds->mySmallBlind; 
+
+            loadFile >> blinds->mySmallBlind;
             loadFile.ignore(1,'=');
-            loadFile >> blinds->myBigBlind; 
+            loadFile >> blinds->myBigBlind;
             loadFile.ignore(1,'@');
-            loadFile >> numericValue; 
+            loadFile >> numericValue;
             curDealer = numericValue;
             loadFile.ignore(1,'@');
 
@@ -153,10 +153,12 @@ std::istream * HoldemArena::LoadState()
                 p[i]->myMoney = pMoney;
                 if( pMoney == 0 ) --livePlayers;
             }
+            #ifdef DEBUGSAVE_EXTRATOKEN
             loadFile.getline(EXTRATOKEN, DEBUGSAVE_EXTRATOKEN);
-            
+            #endif
+
             dealer.Unserialize( loadFile );
-            
+
             return &loadFile;
 }
 
@@ -165,8 +167,8 @@ void HoldemArena::saveState()
 {
     if( loadFile.is_open() ) loadFile.close();
 
-    
-    std::ofstream newSaveState(DEBUGSAVEGAME);    
+
+    std::ofstream newSaveState(DEBUGSAVEGAME);
     #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
     newSaveState << handnum << "n";
     #endif
@@ -419,7 +421,7 @@ float64 HoldemArena::GetMaxShowdown() const
 			{
 				secondhighest = highest;
 				highest = i;
-			}else if( p[i]->GetMoney() 
+			}else if( p[i]->GetMoney()
 						>
 						p[secondhighest]->GetMoney() )
 			{

@@ -476,7 +476,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 
                         if( bVerbose )
                         {
-                            gamelog << "The minimum raise bet is " << highBet + myTable->GetMinRaise() << endl;
+                            gamelog << "The minimum raise bet is by " << myTable->GetMinRaise() << " to " << highBet + myTable->GetMinRaise() << endl;
                         }
 
 					PlayerBet(withP) = highBet;

@@ -18,6 +18,11 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+
+#define WINRELEASE
+#define AUTOEXTRATOKEN "restore.txt"
+
+
 //#define REGULARINTOLOG
 #define DEBUGSITUATION
 //#define SUPERINTOLOG
@@ -286,8 +291,8 @@ cout << (int)(hx.bestPair) << " then " << (int)(hx.nextbestPair) << endl;
 #endif
 void testDeal()
 {
-    
-    
+
+
     SerializeRandomDeck rd;
     CommunityPlus h1;
     std::ofstream shufTest("shufTest.txt");
@@ -297,7 +302,7 @@ void testDeal()
     rd.DealCard(h1);
     h1.DisplayHand(cout);
     shufTest.close();
-    
+
     SerializeRandomDeck rd2;
     rd2.ShuffleDeck();
     rd2.ShuffleDeck(4.3);
@@ -757,16 +762,26 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     #ifdef DEBUGSAVE_EXTRATOKEN
     char ExtraTokenNameBuffer[DEBUGSAVE_EXTRATOKEN] = "P";
 #endif
+    #ifdef AUTOEXTRATOKEN
+    char ExtraTokenNameBuffer[32] = "P1";
+    #endif
+
     bool bLoadGame = false;
     if( headsUp == 'L' )
     {
+        #ifdef AUTOEXTRATOKEN
+        std::ifstream fRestoreName(AUTOEXTRATOKEN);
+        fRestoreName.getline(ExtraTokenNameBuffer, 32, '\n');
+        fRestoreName.close();
+        #endif
+
         bLoadGame = true;
         headsUp = 'P';
-#ifdef DEBUGSAVE_EXTRATOKEN
+#if defined(DEBUGSAVE_EXTRATOKEN) || defined(AUTOEXTRATOKEN)
         myPlayerName = ExtraTokenNameBuffer;
 #endif
     }
-    
+
     float64 smallBlindChoice;
     if( headsUp == 'P' )
     {
@@ -802,9 +817,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
     if( headsUp == 'P' )
     {
-        
 
-        
+
+
         if( myPlayerName == 0 ){ myTable.AddPlayer("P1", 200, &consolePlay); }
         else{
             myTable.AddPlayer(myPlayerName, 200, &consolePlay);
@@ -818,15 +833,15 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         myTable.AddPlayer("i4", &drainFold);
         myTable.AddPlayer("X3", &pushFold);
         myTable.AddPlayer("A3", &tightPushFold);
-        
+
     }
 
     switch(headsUp)
     {
         case 'P':
             myTable.AddPlayer("TrapBot", 200, &smartConserveDefence); /* riskymode = 0 */
-            myTable.AddPlayer("TimingBot", 200, &smartGambleDefence); /* riskymode = 1 */
-            myTable.AddPlayer("TradeBot", 200, &smartConserveOffence); /* riskymode = 2 */
+            myTable.AddPlayer("ComBot", 200, &smartGambleDefence); /* riskymode = 1 */
+            myTable.AddPlayer("SpaceBot", 200, &smartConserveOffence); /* riskymode = 2 */
             break;
         case 'M':
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
@@ -849,7 +864,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
 //            myTable.AddPlayer("Q2", &smartGambleLoose); /* riskymode = 5 */
 //            myTable.AddPlayer("W2", &smartConserveLoose); /* riskymode = 4 */
-            case '*':
+        case '*':
             myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
             break;
 
@@ -857,13 +872,14 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
 #ifdef DEBUGSAVEGAME
 
-
+if( bLoadGame )
+{
 #ifdef DEBUGSAVE_EXTRATOKEN
     myTable.EXTRATOKEN = ExtraTokenNameBuffer;
 #endif
 std::istream *saveLoc = myTable.LoadState();
 if( saveLoc != 0 ) consolePlay.myFifo = saveLoc;
-
+}
 #endif
 
     Player* iWin = (myTable.PlayTable());
@@ -933,13 +949,21 @@ int main(int argc, char* argv[])
 	//
 	//testHands();
 
-
+#ifdef WINRELEASE
 	if( argc == 2 )
 	{
         //goCMD(2,argv[1]);
         myPlayerName = argv[1];
+        #ifdef AUTOEXTRATOKEN
+        std::ofstream storePlayerName(AUTOEXTRATOKEN);
+        storePlayerName << argv[1] << endl;
+        storePlayerName.close();
+        #endif
+
         testPlay('P');
-    }else if( argc == 4 )
+    }else
+#endif
+        if( argc == 4 )
     {
         uint16 i=675;
 		while(1)
@@ -952,10 +976,14 @@ int main(int argc, char* argv[])
 	else
 	{
 
-	    //debugPosition();
-	    //superGame(0);
-        
+
+#ifdef WINRELEASE
 	    testPlay('L');
+#else
+        //debugPosition();
+	    //superGame(0);
+   	    testPlay(0);
+#endif
 	    //testDeal();
         //testNewCallStats();
 

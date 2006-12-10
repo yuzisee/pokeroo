@@ -80,9 +80,11 @@ float64 ConsoleStepStrategy::MakeBet()
 
 float64 UserConsoleStrategy::MakeBet()
 {
+    #ifdef SELF_SPECTATE
 	if( !bNoPrint ) {
 		printActions();
 	}
+	#endif
 
 	return queryAction();
 }
@@ -190,7 +192,7 @@ void ConsoleStrategy::showSituation()
 
 	++tempIndex;
 	tempIndex %= totalPlayers;
-	cout << "You are betting " << ViewPlayer().GetBetSize() << " and have " << (ViewPlayer().GetMoney() - ViewPlayer().GetBetSize()) << " remaining." << endl;
+	cout << endl << "You are betting " << ViewPlayer().GetBetSize() << " and have " << (ViewPlayer().GetMoney() - ViewPlayer().GetBetSize()) << " remaining." << endl;
 	cout << "OPPONENT CHIPS LEFT" << endl;
 	while( tempIndex != myIndex )
 	{
@@ -234,6 +236,7 @@ float64 UserConsoleStrategy::queryAction()
 	const int16 INPUTLEN = 10;
 	int8 bExtraTry = 1;
 	char inputBuf[INPUTLEN];
+	char defaultAction = 0;
 	inputBuf[0] = 0;
 	float64 returnMe;
 
@@ -261,10 +264,12 @@ float64 UserConsoleStrategy::queryAction()
             if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
             {
                 cout << "*check" << endl;
+                defaultAction = 'c';
             }
             else
             {
                 cout << "*fold" << endl;
+                defaultAction = 'f';
                 cout << "call (" << ViewTable().GetBetToCall() << flush;
                 if( ViewPlayer().GetBetSize() > 0 )
                 {
@@ -277,7 +282,7 @@ float64 UserConsoleStrategy::queryAction()
 
 		if( myFifo->getline( inputBuf, INPUTLEN ) != 0 )
         {
-            
+
 			if( strncmp(inputBuf,"fold",4) == 0 )
 			{
 				if( bExtraTry == 2 || ViewTable().GetBetToCall() > ViewPlayer().GetBetSize())
@@ -333,7 +338,7 @@ float64 UserConsoleStrategy::queryAction()
 				cout << "By how much?" << endl;
 				while( bExtraTry != 0)
 				{
-                    
+
 					if( (*myFifo) >> returnMe )
 					{
 						if( returnMe > 0 )
@@ -342,7 +347,7 @@ float64 UserConsoleStrategy::queryAction()
                                     if( myFifo == &cin )
                                     {
                                         logFile.write("raiseby\n",8);
-                                        logFile << returnMe << flush;
+                                        logFile << returnMe << endl;
                                     }
                                 #endif
 							returnMe += ViewTable().GetBetToCall();
@@ -350,7 +355,10 @@ float64 UserConsoleStrategy::queryAction()
 						}
 
 //                        cin.sync();
-                        myFifo->ignore( 1 , '\n');
+                        while( myFifo->peek() == '\n' || myFifo->peek() == '\r' )
+                        {
+                            myFifo->ignore( 1 , '\n');
+                        }
 
 					}
 					else
@@ -366,25 +374,27 @@ float64 UserConsoleStrategy::queryAction()
                 cout << "To how much?" << endl;
 				while( bExtraTry != 0)
 				{
-                    
+
                     if( (*myFifo) >> returnMe )
 					{
 						if( returnMe > ViewTable().GetBetToCall() )
 						{
                                 #ifdef DEBUGSAVEGAME
-                                    
+
                                     if( myFifo == &cin )
                                     {
                                         logFile.write("raiseto\n",8);
-                                        logFile << returnMe << flush;
+                                        logFile << returnMe << endl;
                                     }
                                 #endif
 							bExtraTry = 0;
 						}
 
 						//cin.sync();
-                        myFifo->ignore( 1 , '\n');
-
+                        while( myFifo->peek() == '\n' || myFifo->peek() == '\r' )
+                        {
+                            myFifo->ignore( 1 , '\n');
+                        }
 					}
 					else
 					{
@@ -407,7 +417,26 @@ float64 UserConsoleStrategy::queryAction()
 				bExtraTry = 0;
                 //cout << "(default)" << endl;
                     #ifdef DEBUGSAVEGAME
-                        if( myFifo == &cin ) logFile << endl;
+                        if( myFifo == &cin )
+                        {
+                            switch( defaultAction )
+                            {
+                                case 'c':
+                                    logFile << "check" << endl;
+                                    break;
+                                case 'f':
+                                    logFile << "fold" << endl;
+                                    break;
+                                default:
+                                    logFile << endl;
+                                    #ifdef DEBUGASSERT
+                                    cout << "No default action found!" << endl;
+                                    exit(1);
+                                    #endif
+                                    break;
+                            }
+                        }
+
                     #endif
 			}
 			else
@@ -417,14 +446,14 @@ float64 UserConsoleStrategy::queryAction()
 		}
 		else //error on input
 		{
-            #ifdef DEBUGSAVEGAME        
+            #ifdef DEBUGSAVEGAME
                 if( !(myFifo->eof()) )
                 {
             #endif
             cout << "Error on input." << endl;
             cin.sync();
             cin.clear();
-            #ifdef DEBUGSAVEGAME        
+            #ifdef DEBUGSAVEGAME
                 }
 /*            else
                 {
