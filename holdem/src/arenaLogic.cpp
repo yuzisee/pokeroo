@@ -727,12 +727,12 @@ Player* HoldemArena::PlayTable()
     #ifdef REPRODUCIBLE
         randRem = 1;
     #endif
-
+/*
     #ifdef DEBUGSAVEGAME
         std::ofstream killfile(DEBUGSAVEGAME,std::ios::out | std::ios::trunc);
         killfile.close();
     #endif
-
+*/
 
 
 	while(livePlayers > 1)

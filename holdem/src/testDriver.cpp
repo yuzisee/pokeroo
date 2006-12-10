@@ -282,62 +282,34 @@ hx.DisplayHand( cout );
 cout << (int)(hx.bestPair) << " then " << (int)(hx.nextbestPair) << endl;
 }
 
-void testHands()
-{
 
-
-
-    CommunityPlus h1, h2, honly;
-
-    h2.AddToHand(HoldemConstants::CLUBS, 7, HoldemConstants::CARD_EIGHT );
-    h2.AddToHand(HoldemConstants::HEARTS, 9, HoldemConstants::CARD_TEN );
-    h2.AddToHand(HoldemConstants::CLUBS, 9, HoldemConstants::CARD_TEN );
-
-    cout << "==Initial" << endl;
-printPairStuff(h2,"h2");
-
-    h2.AddToHand(HoldemConstants::CLUBS, 8, HoldemConstants::CARD_NINE );
-    h2.AddToHand(HoldemConstants::DIAMONDS, 11, HoldemConstants::CARD_QUEEN );
-
-    cout << "==AddToHand" << endl;
-
-    printPairStuff(h2,"h2");
-
-    h1.SetUnique(h2);
-
-    cout << "==SetUnique" << endl;
-
-    printPairStuff(h1,"h1");
-
-    h1.AddToHand(HoldemConstants::HEARTS, 13, HoldemConstants::CARD_ACEHIGH );
-    honly.AddToHand(HoldemConstants::HEARTS, 13, HoldemConstants::CARD_ACEHIGH );
-    h1.AddToHand(HoldemConstants::SPADES, 11, HoldemConstants::CARD_QUEEN );
-    honly.AddToHand(HoldemConstants::SPADES, 11, HoldemConstants::CARD_QUEEN );
-
-    cout << "==AddToHand (more)" << endl;
-    printPairStuff(h1,"h1");
-
-    cout << endl << endl << "==Initial" << endl;
-    printPairStuff(honly,"honly");
-
-    CommunityPlus h3(honly);
-
-    cout << "==Copy Constructor" << endl;
-    printPairStuff(h3,"h3");
-
-h3.AppendUnique( h2 );
-
-cout << "==Append Unique" << endl;
-printPairStuff(h3,"h3");
-
-h2.AppendUnique( honly);
-
-cout << "==Append Unique" << endl;
-printPairStuff(h2,"h2");
-
-}
 #endif
-
+void testDeal()
+{
+    
+    
+    SerializeRandomDeck rd;
+    CommunityPlus h1;
+    std::ofstream shufTest("shufTest.txt");
+    rd.LoggedShuffle(shufTest);
+    rd.DealCard(h1);
+    rd.DealCard(h1);
+    rd.DealCard(h1);
+    h1.DisplayHand(cout);
+    shufTest.close();
+    
+    SerializeRandomDeck rd2;
+    rd2.ShuffleDeck();
+    rd2.ShuffleDeck(4.3);
+    std::ifstream shufTestRead("shufTest.txt");
+    rd2.Unserialize( shufTestRead );
+        shufTestRead.close();
+        h1.SetEmpty();
+        rd2.DealCard(h1);
+        rd2.DealCard(h1);
+        rd2.DealCard(h1);
+        h1.DisplayHand(cout);
+}
 
 void testDR()
 {
@@ -783,6 +755,8 @@ void debugPosition()
 std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
 
+    std::ifstream testSaveGame(DEBUGSAVEGAME);
+    
     float64 smallBlindChoice;
     if( headsUp == 'P' )
     {
@@ -817,6 +791,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
     if( headsUp == 'P' )
     {
+        
+        consolePlay.myFifo = &testSaveGame;
+        
         if( myPlayerName == 0 ){ myTable.AddPlayer("P1", 200, &consolePlay); }
         else{ myTable.AddPlayer(myPlayerName, 200, &consolePlay); }
     }else
@@ -834,9 +811,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     switch(headsUp)
     {
         case 'P':
-            myTable.AddPlayer("M2", 200, &smartConserveDefence); /* riskymode = 0 */
-            myTable.AddPlayer("G2", 200, &smartGambleDefence); /* riskymode = 1 */
-            myTable.AddPlayer("V2", 200, &smartConserveOffence); /* riskymode = 2 */
+            myTable.AddPlayer("TrapBot", 200, &smartConserveDefence); /* riskymode = 0 */
+            myTable.AddPlayer("TimingBot", 200, &smartGambleDefence); /* riskymode = 1 */
+            myTable.AddPlayer("TradeBot", 200, &smartConserveOffence); /* riskymode = 2 */
             break;
         case 'M':
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
@@ -952,10 +929,10 @@ int main(int argc, char* argv[])
 	{
 
 	    //debugPosition();
-	    superGame(0);
-        //testHands();
+	    //superGame(0);
+        
 	    //testPlay(0);
-	    //testPlay('*');
+	    testDeal();
         //testNewCallStats();
 
 	    //testC();

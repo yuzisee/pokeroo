@@ -18,8 +18,8 @@
 *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
 ***************************************************************************/
 
-#ifndef HOLDEM_Arena
-#define HOLDEM_Arena
+#ifndef HOLDEM_SaveGameDeck
+#define HOLDEM_SaveGameDeck
 
 #include <iostream>
 #include "randomDeck.h"

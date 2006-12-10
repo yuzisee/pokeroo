@@ -74,7 +74,7 @@ public:
     ///it's not 23456789tJQKA.
     const static uint8 CardSuit(const uint8 d)
     {
-		return (d & 3); //That's a 11 mask
+		return (d & 3); //That's a 0b11 mask
     }
     const static uint8 CardRank(const uint8 d) //returns 0 for two
     {
@@ -94,6 +94,11 @@ public:
 		}
 		target << VALKEY[vn]<< SUITKEY[s] << flush;
 	}
+    const static void PrintCard(std::ostream& target, const int8 n)
+	{
+        target << (HoldemUtil::VALKEY[CardRank(n)+2])  << (HoldemUtil::SUITKEY[CardSuit(n)]) << flush;
+    }
+
     const static int8 ReadCard(std::istream& charSource)
     {
         unsigned char nextChar[2];
@@ -122,7 +127,7 @@ public:
         {
             if( SUITKEY[i] == suitchar )
             {
-                suitNum = i-2;
+                suitNum = i;
                 break;
             }
         }
@@ -130,7 +135,7 @@ public:
 #ifdef DEBUGASSERT
         if( valNum == -1 || suitNum == -1 )
         {
-            std::cout << "Wrong reverse-PrintCard" << endl;
+            std::cout << "Wrong reverse-PrintCard, v=" << valchar << " s=" << suitchar << endl;
             exit(1);
 //            return -1;
         }

@@ -36,7 +36,7 @@
 
 
 #include "engine.h"
-#include "randomDeck.h"
+#include "arenaSave.h"
 #include "blinds.h"
 #include <vector>
 #include <iostream>
@@ -217,7 +217,7 @@ class HoldemArena
         #ifdef GRAPHMONEY
             std::ofstream scoreboard;
         #endif
-		RandomDeck dealer;
+		SerializeRandomDeck dealer;
 		float64 randRem;
 
         int8 cardsInCommunity;

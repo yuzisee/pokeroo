@@ -29,6 +29,7 @@ void SerializeRandomDeck::Unserialize( std::istream& inFile )
     
     for(uint8 i=0;i<DECKSIZE;++i)
     {
+        //std::cout << "i=" << (int)i << endl;
         deckOrder[i] = HoldemUtil::ReadCard( inFile ) ;
     }
 }
@@ -41,9 +42,7 @@ void SerializeRandomDeck::LogDeckState(std::ostream& outFile)
         lastDealtPos %= DECKSIZE;
         
         const int8 nextCard = deckOrder[lastDealtPos];
-        HoldemUtil::PrintCard( outFile
-                               ,HoldemUtil::CardSuit(nextCard)
-                               ,HoldemUtil::CardRank(nextCard) );
+        HoldemUtil::PrintCard( outFile, nextCard );
     }
 }
 

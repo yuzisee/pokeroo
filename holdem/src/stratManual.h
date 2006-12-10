@@ -41,8 +41,16 @@ class ConsoleStrategy : public PlayerStrategy
 		void printActions();
 		void showSituation();
 	public:
-
-		ConsoleStrategy() : PlayerStrategy(), bNoPrint(false) {}
+        
+        #ifdef DEBUGSAVEGAME
+            std::istream *myFifo;
+        #endif
+            
+		ConsoleStrategy() : PlayerStrategy(), bNoPrint(false)
+        #ifdef DEBUGSAVEGAME
+            ,myFifo(&(std::cin))
+        #endif
+        {}
 
 		virtual void SeeCommunity(const Hand&, const int8);
 
