@@ -246,9 +246,6 @@ void CommunityPlus::evaluateStrength()
         return;
     }
 
-    ///EVALUATE MATCHES, FLUSH
-///TODO: CONFIRM THIS IS HERE ^^^
-
 
     if (threeOfAKind != 0 && bestPair != 0)
     {
@@ -475,7 +472,7 @@ void CommunityPlus::AppendUnique(const HandPlus& h)
 void CommunityPlus::AppendUnique(const CommunityPlus& h)
 {
 	HandPlus::AppendUnique(h);
-	for(int cd=0;cd<4;++cd)
+	for(int8 cd=0;cd<4;++cd)
 	{
 		flushCount[cd] += h.flushCount[cd] + 5;
 	}
@@ -595,7 +592,6 @@ void CommunityPlus::preEvalStrength()
     for(int8 i=0;i<4;++i)
     {
         flushCount[i] = -5;
-        ///TODO: Confirm if the flush needs: cardset[] (>> 1)
         tempforflush[i] = cardset[i];
     }
 

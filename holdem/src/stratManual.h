@@ -24,6 +24,8 @@
 #ifndef HOLDEM_ConsoleStrat
 #define HOLDEM_ConsoleStrat
 
+#define INFOASSIST
+
 
 #include "arena.h"
 #ifdef DEBUGSAVEGAME
@@ -33,7 +35,10 @@
 
 class ConsoleStrategy : public PlayerStrategy
 {
-
+    private:
+        #ifdef INFOASSIST
+            StatResult winMean;
+        #endif
 	protected:
 		Hand comBuf;
 		bool bNoPrint;
@@ -41,11 +46,11 @@ class ConsoleStrategy : public PlayerStrategy
 		void printActions();
 		void showSituation();
 	public:
-        
+
         #ifdef DEBUGSAVEGAME
             std::istream *myFifo;
         #endif
-            
+
 		ConsoleStrategy() : PlayerStrategy(), bNoPrint(false)
         #ifdef DEBUGSAVEGAME
             ,myFifo(&(std::cin))

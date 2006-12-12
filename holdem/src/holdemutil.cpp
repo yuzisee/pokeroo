@@ -268,7 +268,7 @@ void HandPlus::AddToHand(
 ///NO ERROR PREVENTION
 void Hand::AppendUnique(const Hand& h)
 {
-	for(int i=0;i<4;++i)
+	for(int8 i=0;i<4;++i)
 	{
 		*(cardset+i) |= h.cardset[i];;
 	}
@@ -294,7 +294,7 @@ void HandPlus::populateValueset()
 	valueset = 0;
     //The ACE_LOW is always zero in valueset.
 
-	for(int i=13;i>=1;--i)
+	for(int8 i=13;i>=1;--i)
 	{
 		valueset += (cardset[0] & HoldemUtil::CARDORDER[i]);
 		valueset += (cardset[1] & HoldemUtil::CARDORDER[i]);

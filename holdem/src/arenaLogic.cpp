@@ -21,7 +21,7 @@
 //#define EXTRAMONEYUPDATE
 //#define DEBUGALLINS
 //#define FORCEPAUSE
-
+#define DELAYHANDS
 
 #include "arena.h"
 #include <fstream>
@@ -586,10 +586,12 @@ void HoldemArena::DealHands()
 
     if( bVerbose && bSpectate )
     {
-        gamelog << "Next Dealer is " << p[curDealer]->GetIdent() << endl;
+        gamelog << endl << "Next Dealer is " << p[curDealer]->GetIdent() << endl;
     }
 
-
+    #ifdef DELAYHANDS
+    system("pause");
+    #endif
 
 
 	int8 dealtEach = 0;
@@ -604,6 +606,7 @@ void HoldemArena::DealHands()
             #ifdef DEBUGSAVEGAME
             std::ofstream shuffleData( DEBUGSAVEGAME, std::ios::app );
             dealer.LoggedShuffle(shuffleData, randRem);
+            shuffleData << endl;
             shuffleData.close();
             #endif
 
@@ -657,7 +660,6 @@ void HoldemArena::RefreshPlayers()
             --livePlayers;
             withP.myMoney = -1;
             withP.myBetSize = INVALID;
-            ///TODO: THAT LINE
             blinds->PlayerEliminated();
 #ifdef GRAPHMONEY
             scoreboard << ",0";
@@ -705,19 +707,20 @@ void HoldemArena::RefreshPlayers()
         ++curDealer;
         curDealer %= nextNewPlayer;
     }while(!IsAlive(curDealer));
-    
+
 }
 
 
 Player* HoldemArena::PlayTable()
 {
 	if( p.empty() ) return 0;
-    
-    curIndex = 0;
-	curDealer = 0;
+
 
     if( !bLoadGame )
     {
+        curIndex = 0;
+        curDealer = 0;
+
         dealer.ShuffleDeck(static_cast<float64>(livePlayers));
         #ifdef DEBUGSPECIFIC
 
@@ -741,7 +744,7 @@ Player* HoldemArena::PlayTable()
         #ifdef REPRODUCIBLE
             randRem = 1;
         #endif
-            
+
             /*
 #ifdef DEBUGSAVEGAME
              std::ofstream killfile(DEBUGSAVEGAME,std::ios::out | std::ios::trunc);

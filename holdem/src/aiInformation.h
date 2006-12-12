@@ -109,7 +109,7 @@ public:
         showdownIndex = covered.showdownIndex;
         showdownCount = covered.showdownCount;
         showdownMax = covered.showdownMax;
-        for( int i=0;i<showdownCount;++i )
+        for( int32 i=0;i<showdownCount;++i )
         {
             myHands[i].a = covered.myHands[i].a;
             myHands[i].b = covered.myHands[i].b;

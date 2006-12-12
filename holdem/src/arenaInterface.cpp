@@ -139,10 +139,11 @@ std::istream * HoldemArena::LoadState()
             loadFile >> blinds->myBigBlind;
             loadFile.ignore(1,'@');
             loadFile >> numericValue;
-            curDealer = numericValue;
+
+            curDealer = static_cast<int8>(numericValue);
             loadFile.ignore(1,'@');
 
-            for( int i=0;i<nextNewPlayer;++i )
+            for( int8 i=0;i<nextNewPlayer;++i )
             {
                 float64 pMoney;
                 uint32 *pMoneyU = reinterpret_cast< uint32* >( &pMoney );
@@ -173,7 +174,7 @@ void HoldemArena::saveState()
     newSaveState << handnum << "n";
     #endif
     newSaveState << blinds->SmallBlind() << "=" << blinds->BigBlind() << "@" << (int)curDealer << "@" << flush;
-    for( int i=0;i<nextNewPlayer;++i )
+    for( int8 i=0;i<nextNewPlayer;++i )
     {
         float64 pMoney =  p[i]->myMoney;
         uint32 *pMoneyU = reinterpret_cast< uint32* >( &pMoney );

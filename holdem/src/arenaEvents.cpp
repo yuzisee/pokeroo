@@ -285,7 +285,7 @@ void HoldemArenaBetting::startBettingRound()
 
         if( bVerbose )
         {
-            gamelog << "(Blinds posted)" << endl;
+            gamelog << "(Blinds posted)" << endl << endl;
         }
 
 	}

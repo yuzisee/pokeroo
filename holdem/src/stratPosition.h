@@ -36,7 +36,7 @@
 ///However, you add aggressiveness by modifying exf?
 
 
-///TODO: Modularize this class so as to try other combinations
+
 class PositionalStrategy : virtual public PlayerStrategy
 {
     protected:
