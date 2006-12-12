@@ -473,6 +473,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
 
     float64 yb;
     float64 xb,xn;
+
     xb = bisectionStep(x1,x2);
     yb = f(xb);
 
@@ -481,7 +482,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
 
         xn = newtonStep(xb,yb);
 
-        if(xn < x2 && xn > x1)
+        if(xn < x2 - quantum/2 && xn > x1 + quantum/2)
         {
             xb = xn;
         }///Otherwise we stay with xb which is bisection
