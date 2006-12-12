@@ -62,15 +62,15 @@ float64 HoldemFunctionModel::FindBestBet()
 
     if( myMoney < betToCall ) return myMoney;
     float64 desiredBet = FindMax(betToCall,myMoney);
-    
-    
-    
+
+
+
     ///PURIFY
     float64 nextOptimal = desiredBet + quantum;
     float64 prevOptimal = desiredBet - quantum;
     if( nextOptimal > myMoney ) nextOptimal = myMoney;
     if( prevOptimal < betToCall ) prevOptimal = betToCall;
-    
+
     if( f(nextOptimal) > f(desiredBet) )
     {
         desiredBet = nextOptimal;
@@ -79,21 +79,21 @@ float64 HoldemFunctionModel::FindBestBet()
     {
         desiredBet = prevOptimal;
     }
-    
+
     return desiredBet;
 }
 
 float64 HoldemFunctionModel::FindFoldBet(const float64 bestBet)
 {
+
     const float64& myMoney = e->maxBet();
     float64 desiredFold = FindZero(bestBet,myMoney);
-    
     ///PURIFY
     float64 nextFold = desiredFold + quantum;
     float64 prevFold = desiredFold - quantum;
     if( nextFold > myMoney ) nextFold = myMoney;
     if( prevFold < bestBet ) prevFold = bestBet;
-    
+
     if(  fabs(f(nextFold))  <  fabs(f(desiredFold))  )
     {
         desiredFold = nextFold;
@@ -102,7 +102,7 @@ float64 HoldemFunctionModel::FindFoldBet(const float64 bestBet)
     {
         desiredFold = prevFold;
     }
-    
+
     return desiredFold;
 }
 
@@ -112,7 +112,7 @@ float64 GainModel::f(const float64 betSize)
 
 	const float64 x = e->betFraction(betSize);
 	float64 exf = e->betFraction(e->exf(betSize));
-	if( exf > 1 ) exf = 1; //This is necessary because of impliedFactor
+
     const float64 f_pot = e->betFraction( e->prevpotChips() );
     const float64 exf_live = exf - f_pot;
 
@@ -180,7 +180,7 @@ float64 GainModel::fd(const float64 betSize, const float64 y)
 
     //const float64 qdenom = (2*x+f_pot);
 	float64 exf = e->betFraction(e->exf(betSize));
-	if( exf > 1 ) exf = 1; //This is necessary because of impliedFactor
+
 		//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B
 	const float64 dexf = e->dexf(betSize);
     const float64 f_pot = e->betFraction(e->prevpotChips());
@@ -260,7 +260,7 @@ float64 GainModelNoRisk::f(const float64 betSize)
 
 	const float64 x = e->betFraction(betSize);
 	float64 exf = e->betFraction(e->exf(betSize));
-	if( exf > 1 ) exf = 1; //This is necessary because of impliedFactor
+
     const float64 f_pot = e->betFraction(e->prevpotChips());
     const float64 exf_live = exf - f_pot;
 

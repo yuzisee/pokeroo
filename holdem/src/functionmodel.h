@@ -110,12 +110,12 @@ class GainModel : public virtual HoldemFunctionModel
 
             //std::cout << "Old <p_cl,p_cw>: " <<  1 - pow(1 - shape.loss,e_battle) << "," << pow(shape.wins,e_battle) << endl;
             //std::cout << "e_battle is " << (int)e_battle << "\tf_battle is " << f_battle << endl;
-
+        ///Use f_battle instead of e_battle
             p_cl =  1 - pow(1 - shape.loss,f_battle);
             p_cw = pow(shape.wins,f_battle);
 
             float64 newTotal = p_cl + p_cw;
-
+        ///Since the ratios are different, make the adjustment to normalize
             p_cl *= oldTotal/newTotal;
             p_cw *= oldTotal/newTotal;
 

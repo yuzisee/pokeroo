@@ -27,6 +27,7 @@
 #define ASSUMEFOLDS
 
 
+
 /*
 class ExpectedCall
 {
@@ -46,7 +47,7 @@ protected:
     const HoldemArena* table;
     const CallCumulationD* e;
 
-    #ifdef ASSUMEFOLDS
+    #if defined(ASSUMEFOLDS)
     float64 eFold;
 /*
     float64 wPct;
@@ -58,7 +59,7 @@ protected:
 public:
     ExpectedCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data)
     : playerID(id), table(base), e(data)
-    #ifdef ASSUMEFOLDS
+    #if defined(ASSUMEFOLDS)
     ,eFold(base->GetNumberAtTable()-1)
     #endif
     {}

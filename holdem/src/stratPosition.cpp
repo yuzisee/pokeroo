@@ -134,8 +134,8 @@ float64 PositionalStrategy::MakeBet()
     //float64 choiceScale = (betToCall - myBet)/(maxShowdown - myBet);
 
 
-
-    const float64 improvePure = (detailPCT.improve+1)/2;
+    const float64 improveMod = detailPCT.improve * ( bGamble / 3 == 0 ? 2 : 1 );
+    const float64 improvePure = (improveMod+1)/2;
     //const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
 
 
@@ -145,10 +145,10 @@ float64 PositionalStrategy::MakeBet()
     //float64 distrScale = myMoney / ViewTable().GetAllChips() ;
 
 
-    if( bGamble % 2 == 0 ) // 0,2,4
+    if( bGamble % 3 == 0 ) // 0,3
     {///Protecting against the drop
         distrScale = 1 - distrScale;
-    }// else 1,3,5
+    }// else 1,4
     ///Banking on the upswing
 
     if( distrScale > 1 ) distrScale = 1;
@@ -210,6 +210,8 @@ float64 PositionalStrategy::MakeBet()
 
 
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    myLimitCall.callingPlayers(   myExpectedCall.betFraction( myExpectedCall.exf(betToCall) )   );
     //myExpectedCall.SetImpliedFactor(impliedFactor);
 
 
@@ -222,26 +224,40 @@ float64 PositionalStrategy::MakeBet()
 
 
     GainModel choicegain_base(statmean,&myExpectedCall);
-    GainModelNoRisk choicegain_nr(statworse,&myExpectedCall);
+    GainModelNoRisk choicegain_nr(statworse,&myLimitCall);
 
 
 	SlidingPairFunction gp(&choicegain_base,&choicegain_rev,distrScale,&myExpectedCall);
 
 	SlidingPairFunction ap(&choicegain_rev,&choicegain_nr,tableSizeRec,&myExpectedCall);
 
-    const float64 MAX_UPTO = 1.0/2.0;
-    //const float64 MAX_UPTO = 1;
+    //const float64 MAX_UPTO = 1.0/2.0;
+    const float64 MAX_UPTO = (bGamble / 3 == 1) ? 1 : 1.0/2.0;
 
-    AutoScalingFunction choicegain     (&gp,&choicegain_nr,myBet,maxShowdown,MAX_UPTO,&myExpectedCall);
-    SlidingPairFunction choicegain_upto(&gp,&choicegain_nr,                  MAX_UPTO,&myExpectedCall);
-    AutoScalingFunction tournGain     (&choicegain_rev,&ap,myBet,maxShowdown,1       ,&myExpectedCall);
+    HoldemFunctionModel *cLeft = &gp;
+    HoldemFunctionModel *cRight = &choicegain_nr;
+    HoldemFunctionModel *aLeft = &choicegain_rev;
+    HoldemFunctionModel *aRight = &ap;
+
+    if( bGamble / 3 == 1 )
+    {
+        cLeft = &choicegain_nr;
+        cRight = &gp;
+
+        aLeft = &ap;
+        aRight = &choicegain_rev;
+    }
+
+    AutoScalingFunction choicegain     (cLeft,cRight,myBet,maxShowdown,MAX_UPTO,&myExpectedCall);
+    SlidingPairFunction choicegain_upto(cLeft,cRight,                  MAX_UPTO,&myExpectedCall);
+    AutoScalingFunction tournGain      (aLeft,aRight,myBet,maxShowdown,1       ,&myExpectedCall);
 
     HoldemFunctionModel* targetModel;
 
 
 	if( maxShowdown == myBet || maxShowdown < betToCall )
 	{
-		if( bGamble >= 2 )
+		if( bGamble % 3 == 2 )
 		{
 			targetModel = &ap;
 		}else
@@ -257,7 +273,7 @@ float64 PositionalStrategy::MakeBet()
 		}
 	}else
 	{
-		if( bGamble >= 2 )
+		if( bGamble % 3 == 2 )
 		{
 		    targetModel = &tournGain;
 		}else
@@ -351,8 +367,8 @@ float64 PositionalStrategy::MakeBet()
 
     }
 
-
     const float64 choiceFold = targetModel->FindFoldBet(choicePoint);
+
 
     //const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
     const float64 callGain = targetModel->f(betToCall);
