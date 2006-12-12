@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#define ALLBET 25
+
 #include <math.h>
 #include "stratThreshold.h"
 ThresholdStrategy::~ThresholdStrategy()
@@ -106,8 +108,8 @@ float64 ThresholdStrategy::MakeBet()
 
 float64 MultiThresholdStrategy::MakeBet()
 {
-    if( bCall == 3 ) return ViewTable().GetBigBlind()*2;
-    
+    if( bCall == 3 ) return ALLBET; // ViewTable().GetBigBlind()*2;
+
     float64 multiThreshhold = pow(w->mean,ViewTable().GetNumberAtTable()-1+redundancy); //subtract yourself
         #ifdef LOGTHRESHOLD
 
@@ -124,7 +126,7 @@ float64 MultiThresholdStrategy::MakeBet()
 
             logFile << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().GetNumberAtTable()-1+redundancy) << endl;
         #endif
-            
+
 	if (multiThreshhold > aiThreshold)
 	{
 		return ViewPlayer().GetMoney();

@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 
-#define WINRELEASE
+//#define WINRELEASE
 #define AUTOEXTRATOKEN "restore.txt"
 
 
@@ -767,6 +767,12 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     #endif
 
     bool bLoadGame = false;
+
+    if( headsUp == 1 )
+    {
+        bLoadGame = true;
+    }
+
     if( headsUp == 'L' )
     {
         #ifdef AUTOEXTRATOKEN
@@ -805,12 +811,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	MultiThresholdStrategy pushFold(0,2);
 	MultiThresholdStrategy tightPushFold(1,0);
 	//ConsoleStepStrategy watchPlay;
-	PositionalStrategy smartConserveDefence(0);
-	PositionalStrategy smartGambleDefence(1);
-	PositionalStrategy smartConserveOffence(2);
-	PositionalStrategy smartGambleOffence(3);
-	PositionalStrategy smartConserveLoose(4);
-	PositionalStrategy smartGambleLoose(5);
+	PositionalStrategy smartConserveDefence(3);
+	PositionalStrategy smartGambleDefence(4);
+	PositionalStrategy smartConserveOffence(5);
 
     //TournamentStrategy asterisk;
     //TournamentStrategy gruff(1);
@@ -830,7 +833,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }else
     {
 
-        myTable.AddPlayer("i4", &drainFold);
+        //myTable.AddPlayer("i4", &drainFold);
         myTable.AddPlayer("X3", &pushFold);
         myTable.AddPlayer("A3", &tightPushFold);
 
@@ -839,33 +842,21 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     switch(headsUp)
     {
         case 'P':
-            myTable.AddPlayer("TrapBot", 200, &smartConserveDefence); /* riskymode = 0 */
-            myTable.AddPlayer("ComBot", 200, &smartGambleDefence); /* riskymode = 1 */
-            myTable.AddPlayer("SpaceBot", 200, &smartConserveOffence); /* riskymode = 2 */
+            myTable.AddPlayer("TrapBotII", 200, &smartConserveDefence); /* riskymode = 0 */
+            myTable.AddPlayer("ComBotII", 200, &smartGambleDefence); /* riskymode = 1 */
+            //myTable.AddPlayer("SpaceBotII", 200, &smartConserveOffence); /* riskymode = 2 */
             break;
         case 'M':
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
             break;
-        case 'S':
-            myTable.AddPlayer("S2", &smartGambleOffence); /* riskymode = 3 */
-            break;
         case 'G':
             myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
             break;
-        case 'W':
-            myTable.AddPlayer("W2", &smartConserveLoose); /* riskymode = 4 */
-            break;
-        case 'Q':
-            myTable.AddPlayer("Q2", &smartGambleLoose); /* riskymode = 5 */
-            break;
         default:
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
-//            myTable.AddPlayer("S2", &smartGambleOffence); /* riskymode = 3 */
             myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
-//            myTable.AddPlayer("Q2", &smartGambleLoose); /* riskymode = 5 */
-//            myTable.AddPlayer("W2", &smartConserveLoose); /* riskymode = 4 */
-        case '*':
-            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
+        //case '*':
+            //myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
             break;
 
     }

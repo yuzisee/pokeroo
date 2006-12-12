@@ -21,7 +21,7 @@
 //#define EXTRAMONEYUPDATE
 //#define DEBUGALLINS
 //#define FORCEPAUSE
-#define DELAYHANDS
+//#define DELAYHANDS
 
 #include "arena.h"
 #include <fstream>
