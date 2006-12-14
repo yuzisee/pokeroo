@@ -197,38 +197,6 @@ class GainModelNoRisk : public virtual GainModel
 }
 ;
 
-#ifndef NO_AWKWARD_MODELS
-
-class GainModelReverseNoRisk : public virtual GainModel
-{
-    public:
-
-    //virtual float64 FindBestBet();
-
-	GainModelReverseNoRisk(const StatResult s,ExpectedCallD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c){}
-	virtual ~GainModelReverseNoRisk();
-
-	virtual float64 f(const float64);
-    virtual float64 fd(const float64, const float64);
-}
-;
-
-class GainModelReverse : public virtual GainModel
-{
-    public:
-
-    //virtual float64 FindBestBet();
-
-	GainModelReverse(const StatResult s,ExpectedCallD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c){}
-	virtual ~GainModelReverse();
-
-	virtual float64 f(const float64);
-    virtual float64 fd(const float64, const float64);
-}
-;
-
-#endif
-
 class SlidingPairFunction : public virtual HoldemFunctionModel
 {
     protected:

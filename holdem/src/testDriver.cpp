@@ -973,7 +973,7 @@ int main(int argc, char* argv[])
 #else
         //debugPosition();
 	    //superGame(0);
-   	    testPlay(0);
+   	    testPlay(1);
 #endif
 	    //testDeal();
         //testNewCallStats();

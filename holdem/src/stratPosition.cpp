@@ -211,7 +211,9 @@ float64 PositionalStrategy::MakeBet()
 
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
-    myLimitCall.callingPlayers(   myExpectedCall.betFraction( myExpectedCall.exf(betToCall) )   );
+
+    const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
+    myLimitCall.callingPlayers(  myExpectedCall.exf(raiseBattle)/raiseBattle  );
     //myExpectedCall.SetImpliedFactor(impliedFactor);
 
 
