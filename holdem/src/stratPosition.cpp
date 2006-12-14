@@ -213,7 +213,7 @@ float64 PositionalStrategy::MakeBet()
     ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
 
     const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
-    myLimitCall.callingPlayers(  myExpectedCall.exf(raiseBattle)/raiseBattle  );
+    myLimitCall.callingPlayers(  ( ViewTable().GetRoundBetsTotal() - ViewTable().GetPotSize() + myExpectedCall.exf(raiseBattle) ) /raiseBattle  );
     //myExpectedCall.SetImpliedFactor(impliedFactor);
 
 
@@ -341,6 +341,7 @@ float64 PositionalStrategy::MakeBet()
 
     logFile << "offense/defense(" << distrScale << ")" << endl;
     logFile << "strike!  " << tableSizeRec << endl;
+    logFile << "Worst case primed " << myLimitCall.callingPlayers() << endl;
 
 #endif
 
