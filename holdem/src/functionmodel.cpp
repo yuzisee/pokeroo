@@ -116,6 +116,8 @@ float64 GainModel::f(const float64 betSize)
     const float64 f_pot = e->betFraction( e->prevpotChips() );
     const float64 exf_live = exf - f_pot;
 
+    const float64 base = e->handBetBase();
+
     #ifdef DEBUGVIEWINTERMEDIARIES
         const float64& t_w = shape.wins;
         const float64& t_s = shape.splits;
@@ -144,7 +146,7 @@ float64 GainModel::f(const float64 betSize)
         dragCalls = dragCalls * dragCalls - dragCalls + 1;
 
 		sav *=  pow(
-                    1+( f_pot+exf_live*dragCalls )/(i+1)
+                    base+( f_pot+exf_live*dragCalls )/(i+1)
                         ,
                         HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
                 );
@@ -155,9 +157,9 @@ float64 GainModel::f(const float64 betSize)
 	return
 
         (
-        pow(1+exf , p_cw)
+        pow(base+exf , p_cw)
         *
-        pow(1-x , p_cl)
+        pow(base-x , p_cl)
         *sav)
 	-
 		e->foldGain()

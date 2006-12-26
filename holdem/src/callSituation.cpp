@@ -48,7 +48,7 @@ float64 ExpectedCallD::foldGain() const
         #ifdef DEBUGWATCHPARMS
             const float64 a = 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
         #endif
-    return 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
+    return 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
 }
 
 float64 ExpectedCallD::oppBet() const
@@ -95,8 +95,18 @@ float64 ExpectedCallD::prevpotChips() const
 
 float64 ExpectedCallD::betFraction(const float64 betSize) const
 {
-    return (  betSize / table->ViewPlayer(playerID)->GetMoney()  );
+    return (
+                betSize
+                /
+                ( table->ViewPlayer(playerID)->GetMoney() + potCommitted )
+            );
 }
+
+float64 ExpectedCallD::handBetBase() const
+{
+    return 1-betFraction(potCommitted);
+}
+
 
 
 #ifdef ASSUMEFOLDS

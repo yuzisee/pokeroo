@@ -659,7 +659,7 @@ void testNewCallStats()
     myStatBuilder.UndealAll();
     myStatBuilder.OmitCards(h2); ///Omit h2 NOT h1, because the opponent can think you have the cards you have
 */
-    CommunityCallStats *pds = 0; //this holds the cache
+//    CommunityCallStats *pds = 0; //this holds the cache
 //    CallCumulation dsCopyCCa;
 //    CallCumulation ds2CC;
 //    StatsManager::QueryOffense(ds2CC,h1,h2,dealtCommunityNumber,&pds);

@@ -47,6 +47,8 @@ protected:
     const HoldemArena* table;
     const CallCumulationD* e;
 
+    const float64 potCommitted;
+
     #if defined(ASSUMEFOLDS)
     float64 eFold;
 /*
@@ -57,8 +59,8 @@ protected:
     #endif
 
 public:
-    ExpectedCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data)
-    : playerID(id), table(base), e(data)
+    ExpectedCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data, const float64 commit = 0)
+    : playerID(id), table(base), e(data), potCommitted(0)
     #if defined(ASSUMEFOLDS)
     ,eFold(base->GetNumberAtTable()-1)
     #endif
@@ -77,6 +79,8 @@ public:
     virtual int8 handsDealt() const;
     virtual float64 prevpotChips() const;
     virtual float64 betFraction(const float64 betSize) const;
+    virtual float64 handBetBase() const;
+
     virtual float64 exf(const float64 betSize) = 0;
     virtual float64 dexf(const float64 betSize) = 0;
 
