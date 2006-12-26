@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include <math.h>
-#include "functionmodel.h"
 #include "stratPosition.h"
 
 PositionalStrategy::~PositionalStrategy()
@@ -96,86 +95,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     #ifdef LOGPOSITION
     logFile << "*" << endl;
     #endif
-}
 
-
-
-float64 PositionalStrategy::MakeBet()
-{
-
-#ifdef LOGPOSITION
-
-    HandPlus convertOutput;
-    convertOutput.SetUnique(ViewHand());
-    convertOutput.DisplayHand(logFile);
-#endif
-
-/*
-    const int8 DT = 2;
-    const float64 timing[3] =   {
-                                    static_cast<float64>(roundNumber[0])/5.0
-                                    , static_cast<float64>(roundNumber[1])/7.0
-                                    , static_cast<float64>(roundNumber[2])/6.0
-                                };
-*/
-    const float64 myMoney = ViewPlayer().GetMoney();
-
-
-    const float64 highBet = ViewTable().GetBetToCall();
-    float64 betToCall = highBet;
-
-    const float64 myBet = ViewPlayer().GetBetSize();
-
-
-
-    if( myMoney < betToCall ) betToCall = myMoney;
-    float64 maxShowdown = ViewTable().GetMaxShowdown();
-    if( maxShowdown > myMoney ) maxShowdown = myMoney;
-    //float64 choiceScale = (betToCall - myBet)/(maxShowdown - myBet);
-
-
-    const float64 improveMod = detailPCT.improve * ( bGamble / 3 == 0 ? 2 : 1 );
-    const float64 improvePure = (improveMod+1)/2;
-    //const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
-
-
-
-    float64 distrScale = improvePure;
-    //float64 distrScale = 0.5 ;
-    //float64 distrScale = myMoney / ViewTable().GetAllChips() ;
-
-
-    if( bGamble % 3 == 0 ) // 0,3
-    {///Protecting against the drop
-        distrScale = 1 - distrScale;
-    }// else 1,4
-    ///Banking on the upswing
-
-    if( distrScale > 1 ) distrScale = 1;
-    if( distrScale < 0 ) distrScale = 0;
-    //const float64 tableSizeRec = 1.0 / (ViewTable().GetNumberAtTable() - 1) ;
-
-    const float64 outstandingChips = ViewTable().GetAllChips() - ViewTable().GetPrevPotSize();
-    float64 tableSizeRec;
-    if( myMoney > outstandingChips )
-    {
-	tableSizeRec = 1;
-    }else
-    {
-	tableSizeRec = myMoney / outstandingChips ;
-	if( tableSizeRec < 0 ) tableSizeRec = 0; //Possible because of roundoff, etc.
-    }
-
-
-
-#ifdef LOGPOSITION
-    logFile << "Bet to call " << betToCall << " (from " << myBet << ")" << endl;
-    logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
-    logFile << "(Mean.wins) " << statmean.wins * 100 << "%"  << std::endl;
-    logFile << "(Mean.splits) " << statmean.splits * 100 << "%"  << std::endl;
-    logFile << "(Mean.loss) " << statmean.loss * 100 << "%"  << std::endl;
-    logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
-#endif
 
 
 
@@ -187,11 +107,19 @@ float64 PositionalStrategy::MakeBet()
     //std::cout << "=" << ranking << "..." << ranking2 << "..." << ranking3 << std::endl;
     //std::cout << "=" << (ranking3 - ranking) << "\tsplits " << statmean.splits << std::endl;
 
-    StatResult statranking;
     statranking.wins = ranking;
     statranking.splits = ranking3 - ranking;
     statranking.loss = 1 - ranking3;
     statranking.genPCT();
+
+
+#ifdef LOGPOSITION
+    logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
+    logFile << "(Mean.wins) " << statmean.wins * 100 << "%"  << std::endl;
+    logFile << "(Mean.splits) " << statmean.splits * 100 << "%"  << std::endl;
+    logFile << "(Mean.loss) " << statmean.loss * 100 << "%"  << std::endl;
+    logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
+#endif
 
 
 #ifdef LOGPOSITION
@@ -201,102 +129,47 @@ float64 PositionalStrategy::MakeBet()
     logFile << "(Outright.loss) " << statranking.loss * 100 << "%"  << std::endl;
 #endif
 
+}
 
-    ///VARIABLE: the slider can move due to avgDev too, maybe....
-    CallCumulationD &choicecumu = callcumu;
-    //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, timing[DT]/2 );
-    //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, detailPct.avgDev*2 );
+void PositionalStrategy::setupPosition()
+{
 
+#ifdef LOGPOSITION
 
+    HandPlus convertOutput;
+    convertOutput.SetUnique(ViewHand());
+    convertOutput.DisplayHand(logFile);
 
-    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
-    ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    logFile << "Bet to call " << betToCall << " (from " << myBet << ")" << endl;
+#endif
 
-    const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
-    myLimitCall.callingPlayers(  ( ViewTable().GetRoundBetsTotal() - ViewTable().GetPotSize() + myExpectedCall.exf(raiseBattle) ) /raiseBattle  );
-    //myExpectedCall.SetImpliedFactor(impliedFactor);
-
-
-
-
-
-
-    GainModel choicegain_rev(statranking,&myExpectedCall);
-    //GainModelNoRisk choicegain_rnr(statranking,&myExpectedCall);
-
-
-    GainModel choicegain_base(statmean,&myExpectedCall);
-    GainModelNoRisk choicegain_nr(statworse,&myLimitCall);
-
-
-	SlidingPairFunction gp(&choicegain_base,&choicegain_rev,distrScale,&myExpectedCall);
-
-	SlidingPairFunction ap(&choicegain_rev,&choicegain_nr,tableSizeRec,&myExpectedCall);
-
-    //const float64 MAX_UPTO = 1.0/2.0;
-    const float64 MAX_UPTO = (bGamble / 3 == 1) ? 1 : 1.0/2.0;
-
-    HoldemFunctionModel *cLeft = &gp;
-    HoldemFunctionModel *cRight = &choicegain_nr;
-    HoldemFunctionModel *aLeft = &choicegain_rev;
-    HoldemFunctionModel *aRight = &ap;
-
-    if( bGamble / 3 == 1 )
-    {
-        cLeft = &choicegain_nr;
-        cRight = &gp;
-
-        aLeft = &ap;
-        aRight = &choicegain_rev;
-    }
-
-    AutoScalingFunction choicegain     (cLeft,cRight,myBet,maxShowdown,MAX_UPTO,&myExpectedCall);
-    SlidingPairFunction choicegain_upto(cLeft,cRight,                  MAX_UPTO,&myExpectedCall);
-    AutoScalingFunction tournGain      (aLeft,aRight,myBet,maxShowdown,1       ,&myExpectedCall);
-
-    HoldemFunctionModel* targetModel;
-
-
-	if( maxShowdown == myBet || maxShowdown < betToCall )
-	{
-		if( bGamble % 3 == 2 )
-		{
-			targetModel = &ap;
-		}else
-		{
-
-			if( MAX_UPTO == 1 )
-			{
-			targetModel = &choicegain_nr;
-			}else
-			{
-			targetModel = &choicegain_upto;
-			}
-		}
-	}else
-	{
-		if( bGamble % 3 == 2 )
-		{
-		    targetModel = &tournGain;
-		}else
-		{
-		    targetModel = &choicegain;
-		}
-	}
-
-
-
-
-
-    /*
-
-    GainModel* targetFold = &gainmean;
-    if( choiceScale == 1 )
-    {
-        targetModel = &choicegain_nr;
-        targetFold = &gainmean_nr;
-    }
+/*
+    const int8 DT = 2;
+    const float64 timing[3] =   {
+                                    static_cast<float64>(roundNumber[0])/5.0
+                                    , static_cast<float64>(roundNumber[1])/7.0
+                                    , static_cast<float64>(roundNumber[2])/6.0
+                                };
 */
+    myMoney = ViewPlayer().GetMoney();
+
+
+    highBet = ViewTable().GetBetToCall();
+    betToCall = highBet;
+
+    myBet = ViewPlayer().GetBetSize();
+
+
+
+    if( myMoney < betToCall ) betToCall = myMoney;
+    maxShowdown = ViewTable().GetMaxShowdown();
+    if( maxShowdown > myMoney ) maxShowdown = myMoney;
+    //float64 choiceScale = (betToCall - myBet)/(maxShowdown - myBet);
+
+}
+
+float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
+{
 
         #ifdef DEBUGSPECIFIC
         if( ViewTable().handnum == DEBUGSPECIFIC )
@@ -336,14 +209,7 @@ float64 PositionalStrategy::MakeBet()
         }
         #endif
 
-#ifdef LOGPOSITION
 
-
-    logFile << "offense/defense(" << distrScale << ")" << endl;
-    logFile << "strike!  " << tableSizeRec << endl;
-    logFile << "Worst case primed " << myLimitCall.callingPlayers() << endl;
-
-#endif
 
 // #############################################################################
 /// MATHEMATIC SOLVING BEGINS HERE
@@ -453,6 +319,143 @@ float64 PositionalStrategy::MakeBet()
     logFile << "CALL " << choicePoint << endl;
     #endif
     return betToCall;
+
+}
+
+
+float64 GainStrategy::MakeBet()
+{
+    setupPosition();
+
+    const float64 improveMod = detailPCT.improve * ( bGamble / 3 == 0 ? 2 : 1 );
+    const float64 improvePure = (improveMod+1)/2;
+    //const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
+
+
+
+    float64 distrScale = improvePure;
+    //float64 distrScale = 0.5 ;
+    //float64 distrScale = myMoney / ViewTable().GetAllChips() ;
+
+    if( bGamble % 3 == 0 ) // 0,3
+    {///Protecting against the drop
+        distrScale = 1 - distrScale;
+    }// else 1,4
+    ///Banking on the upswing
+
+    if( distrScale > 1 ) distrScale = 1;
+    if( distrScale < 0 ) distrScale = 0;
+    //const float64 tableSizeRec = 1.0 / (ViewTable().GetNumberAtTable() - 1) ;
+
+    const float64 outstandingChips = ViewTable().GetAllChips() - ViewTable().GetPrevPotSize();
+    float64 tableSizeRec;
+    if( myMoney > outstandingChips )
+    {
+	tableSizeRec = 1;
+    }else
+    {
+	tableSizeRec = myMoney / outstandingChips ;
+	if( tableSizeRec < 0 ) tableSizeRec = 0; //Possible because of roundoff, etc.
+    }
+
+
+
+
+    ///VARIABLE: the slider can move due to avgDev too, maybe....
+    CallCumulationD &choicecumu = callcumu;
+    //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, timing[DT]/2 );
+    //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, detailPct.avgDev*2 );
+
+
+
+    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
+
+    const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
+    myLimitCall.callingPlayers(  ( ViewTable().GetRoundBetsTotal() - ViewTable().GetPotSize() + myExpectedCall.exf(raiseBattle) ) /raiseBattle  );
+    //myExpectedCall.SetImpliedFactor(impliedFactor);
+
+
+
+
+
+
+    GainModel choicegain_rev(statranking,&myExpectedCall);
+    //GainModelNoRisk choicegain_rnr(statranking,&myExpectedCall);
+
+
+    GainModel choicegain_base(statmean,&myExpectedCall);
+    GainModelNoRisk choicegain_nr(statworse,&myLimitCall);
+
+
+	SlidingPairFunction gp(&choicegain_base,&choicegain_rev,distrScale,&myExpectedCall);
+
+	SlidingPairFunction ap(&choicegain_rev,&choicegain_nr,tableSizeRec,&myExpectedCall);
+
+    //const float64 MAX_UPTO = 1.0/2.0;
+    const float64 MAX_UPTO = (bGamble / 3 == 1) ? 1 : 1.0/2.0;
+
+    HoldemFunctionModel *cLeft = &gp;
+    HoldemFunctionModel *cRight = &choicegain_nr;
+    HoldemFunctionModel *aLeft = &choicegain_rev;
+    HoldemFunctionModel *aRight = &ap;
+
+    if( bGamble / 3 == 1 )
+    {
+        cLeft = &choicegain_nr;
+        cRight = &gp;
+
+        aLeft = &ap;
+        aRight = &choicegain_rev;
+    }
+
+    AutoScalingFunction choicegain     (cLeft,cRight,myBet,maxShowdown,MAX_UPTO,&myExpectedCall);
+    SlidingPairFunction choicegain_upto(cLeft,cRight,                  MAX_UPTO,&myExpectedCall);
+    AutoScalingFunction tournGain      (aLeft,aRight,myBet,maxShowdown,1       ,&myExpectedCall);
+
+    HoldemFunctionModel* targetModel;
+
+
+	if( maxShowdown == myBet || maxShowdown < betToCall )
+	{
+		if( bGamble % 3 == 2 )
+		{
+			targetModel = &ap;
+		}else
+		{
+
+			if( MAX_UPTO == 1 )
+			{
+			targetModel = &choicegain_nr;
+			}else
+			{
+			targetModel = &choicegain_upto;
+			}
+		}
+	}else
+	{
+		if( bGamble % 3 == 2 )
+		{
+		    targetModel = &tournGain;
+		}else
+		{
+		    targetModel = &choicegain;
+		}
+	}
+
+
+#ifdef LOGPOSITION
+
+
+    logFile << "offense/defense(" << distrScale << ")" << endl;
+    logFile << "strike!  " << tableSizeRec << endl;
+    logFile << "Worst case primed " << myLimitCall.callingPlayers() << endl;
+
+#endif
+
+    const float64 bestBet = solveGainModel(targetModel);
+
+    return bestBet;
 
 
 }

@@ -21,6 +21,7 @@
 #ifndef HOLDEM_PositionalStrat
 #define HOLDEM_PositionalStrat
 
+#include "functionmodel.h"
 #include "stratSearch.h"
 #include "ai.h"
 
@@ -31,7 +32,7 @@
 //#define ARBITARY_DISTANCE
 
 
-///RULE OF THUMB:
+///RULE OF THUMB?
 ///It looks like increasing winPCT loosens up the player
 ///However, you add aggressiveness by modifying exf?
 
@@ -40,28 +41,56 @@
 class PositionalStrategy : virtual public PlayerStrategy
 {
     protected:
-        int8 bGamble;
+
 #ifdef ARBITARY_DISTANCE
         int8 roundNumber[3];
 #endif
         DistrShape detailPCT;
         StatResult statmean;
         StatResult statworse;
+        StatResult statranking;
         CallCumulationD foldcumu;
         CallCumulationD callcumu;
+
+        float64 myMoney;
+
+
+        float64 highBet;
+        float64 betToCall;
+
+        float64 myBet;
+        float64 maxShowdown;
+
+
         #ifdef LOGPOSITION
         ofstream logFile;
         #endif
+
+        void setupPosition();
+        float64 solveGainModel(HoldemFunctionModel*);
 	public:
 
-		PositionalStrategy(int8 riskymode) : PlayerStrategy(), bGamble(riskymode), detailPCT(0) {}
+		PositionalStrategy() : PlayerStrategy(), detailPCT(0) {}
 		virtual ~PositionalStrategy();
 
 		virtual void SeeCommunity(const Hand&, const int8);
-		virtual float64 MakeBet();
+		virtual float64 MakeBet() = 0;
 		virtual void SeeOppHand(const int8, const Hand&){};
         virtual void SeeAction(const HoldemAction&) {};
 }
 ;
+
+
+class GainStrategy : public PositionalStrategy
+{
+    protected:
+    int8 bGamble;
+    public:
+    GainStrategy(int8 riskymode) : bGamble(riskymode) {}
+
+    virtual float64 MakeBet();
+}
+;
+
 
 #endif
