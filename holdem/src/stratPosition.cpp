@@ -86,12 +86,12 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     withCommunity.AppendUnique(onlyCommunity);
 
 
-    //StatsManager::QueryDefense(foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
+    StatsManager::QueryDefense(foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
     ViewTable().CachedQueryOffense(callcumu,withCommunity);
     //StatsManager::QueryOffense(callcumu,withCommunity,onlyCommunity,cardsInCommunity );
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
     statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
-    statworse = GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
+    statworse = foldcumu.strongestOpponent(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
 
     #ifdef LOGPOSITION
     logFile << "*" << endl;

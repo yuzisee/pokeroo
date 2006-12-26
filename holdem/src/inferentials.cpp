@@ -149,6 +149,38 @@ float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
     return pctWillCall_tiefactor(oddsFaced, DEFAULT_TIE_SCALE_FACTOR);
 }
 
+StatResult CallCumulation::strongestOpponent() const
+{
+    #ifdef DEBUGASSERT
+        if( cumulation.size() == 0 )
+        {
+            std::cout << "EMPTY CALLCUMULATION!";
+            exit(1);
+        }
+    #endif
+
+    StatResult retVal;
+    retVal = cumulation[0];
+    retVal.pct = 1 - retVal.pct;
+    return retVal;
+}
+
+StatResult CallCumulation::weakestOpponent() const
+{
+    #ifdef DEBUGASSERT
+        if( cumulation.size() == 0 )
+        {
+            std::cout << "EMPTY CALLCUMULATION!";
+            exit(1);
+        }
+    #endif
+    StatResult retVal;
+    retVal = cumulation[cumulation.size()-1];
+    retVal.pct = 1 - retVal.pct;
+    return retVal;
+}
+
+
 float64 CallCumulationD::slopeof(const size_t x1, const size_t x0) const
 {
     const float64& y0 = cumulation[x0].repeated;

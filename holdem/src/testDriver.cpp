@@ -617,8 +617,8 @@ void testNewCallStats()
 
 //Community
 
-    h2.AddToHand(HoldemConstants::HEARTS, 6, HoldemConstants::CARD_SEVEN );
-    h2.AddToHand(HoldemConstants::HEARTS, 3, HoldemConstants::CARD_FOUR );
+    h2.AddToHand(HoldemConstants::HEARTS, 13, HoldemConstants::CARD_ACEHIGH );
+    h2.AddToHand(HoldemConstants::SPADES, 13, HoldemConstants::CARD_ACEHIGH );
     h2.AddToHand(HoldemConstants::SPADES, 4, HoldemConstants::CARD_FIVE );
 
     //h2.AddToHand(HoldemConstants::CLUBS, 9, HoldemConstants::CARD_TEN );
@@ -626,8 +626,8 @@ void testNewCallStats()
     h1.SetUnique(h2);
 
 //Hole cards
-    h1.AddToHand(HoldemConstants::SPADES, 13, HoldemConstants::CARD_ACEHIGH );
-    h1.AddToHand(HoldemConstants::CLUBS, 13, HoldemConstants::CARD_ACEHIGH );
+    h1.AddToHand(HoldemConstants::DIAMONDS, 13, HoldemConstants::CARD_ACEHIGH );
+    h1.AddToHand(HoldemConstants::CLUBS, 4, HoldemConstants::CARD_FIVE );
     const uint8 dealtCommunityNumber=3;
 
 
@@ -638,17 +638,18 @@ void testNewCallStats()
     pfcs.AutoPopulate();
     pfcs.Analyze();*/
 
+   /*
     DealRemainder myStatBuilder;
     myStatBuilder.UndealAll();
     myStatBuilder.OmitCards(h2); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
-
+*/
     CommunityCallStats ds(h1, h2,dealtCommunityNumber);
     //myStatBuilder.AnalyzeComplete(&ds);
 
 
     cout << endl << endl << "Next part" << endl;
 
-
+/*
     h1.SetUnique(h2);
 
     //Hole cards
@@ -656,13 +657,33 @@ void testNewCallStats()
     h1.AddToHand(HoldemConstants::DIAMONDS, 5, HoldemConstants::CARD_SIX );
 
     myStatBuilder.UndealAll();
-    myStatBuilder.OmitCards(h2); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
+    myStatBuilder.OmitCards(h2); ///Omit h2 NOT h1, because the opponent can think you have the cards you have
+*/
+    CommunityCallStats *pds = 0; //this holds the cache
+//    CallCumulation dsCopyCCa;
+//    CallCumulation ds2CC;
+//    StatsManager::QueryOffense(ds2CC,h1,h2,dealtCommunityNumber,&pds);
+//    StatsManager::QueryOffense(dsCopyCCa,h1,h2,dealtCommunityNumber,&pds);
 
-    CommunityCallStats *pds = 0;
     CallCumulation dsCopyCC;
-    CallCumulation ds2CC;
-    StatsManager::QueryOffense(ds2CC,h1,h2,dealtCommunityNumber,&pds);
-    StatsManager::QueryOffense(dsCopyCC,h1,h2,dealtCommunityNumber,&pds);
+
+    StatsManager::QueryDefense(dsCopyCC,h1,h2,dealtCommunityNumber);
+
+cout << "STRONGEST:" << endl;
+    StatResult z = dsCopyCC.strongestOpponent();
+    cout << "w " << z.wins << endl;
+    cout << "s " << z.splits << endl;
+    cout << "l " << z.loss << endl;
+    cout << "= " << z.pct << endl;
+
+cout << endl;
+cout << endl;
+cout << "WEAKEST:" << endl;
+    z = dsCopyCC.weakestOpponent();
+    cout << "w " << z.wins << endl;
+    cout << "s " << z.splits << endl;
+    cout << "l " << z.loss << endl;
+    cout << "= " << z.pct << endl;
 
     //CommunityCallStats dsCOPY(ds,h1,h2);
     //CommunityCallStats ds2(h1, h2,dealtCommunityNumber);
@@ -844,7 +865,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         case 'P':
             myTable.AddPlayer("TrapBotII", 200, &smartConserveDefence); /* riskymode = 0 */
             myTable.AddPlayer("ComBotII", 200, &smartGambleDefence); /* riskymode = 1 */
-            //myTable.AddPlayer("SpaceBotII", 200, &smartConserveOffence); /* riskymode = 2 */
+            myTable.AddPlayer("SpaceBotII", 200, &smartConserveOffence); /* riskymode = 2 */
             break;
         case 'M':
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
@@ -856,7 +877,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
             myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
         //case '*':
-            //myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
+            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
             break;
 
     }
@@ -973,10 +994,11 @@ int main(int argc, char* argv[])
 #else
         //debugPosition();
 	    //superGame(0);
-   	    testPlay(1);
+   	    testPlay(0);
+   	    //testNewCallStats();
 #endif
 	    //testDeal();
-        //testNewCallStats();
+
 
 	    //testC();
 		//goCMD(2,"505");

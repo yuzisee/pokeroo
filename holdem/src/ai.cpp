@@ -642,6 +642,27 @@ float64 CallStats::pctWillCall(const float64 oddsFaced) const
 
 void CallStats::DropCard(const DeckLocation deck)
 {
+
+
+        #ifdef DEBUGCALLPCT
+            if( currentCard == 2 )
+            {
+                myStrength.DisplayHand(std::cout);
+                oppStrength.DisplayHand(std::cout);
+
+                const int32 & i = statGroup;
+                std::cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
+                        << myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
+                myWins[i].loss+myWins[i].splits+myWins[i].wins << "(" << myWins[i].pct << ")"
+                        << "\tx;"<< myWins[i].repeated <<flush;
+
+                std::cout << endl << ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,," ;
+                std::cout << endl;
+                std::cout << endl;
+                std::cout << endl;
+            }
+        #endif
+
 	///TODO: Confirm
 	//oppStrength.RemoveFromHand(deck);
 	oppStrength.SetUnique(oppUndo[currentCard-1]);
@@ -652,6 +673,7 @@ void CallStats::DropCard(const DeckLocation deck)
 		myRevert(currentCard-3);
 		//myStrength.RemoveFromHand(deck);
 	}
+
 
 
 
@@ -712,12 +734,12 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
                 statCount -= static_cast<int32>(occ) - 1;
             }
 
-            
+
 #ifdef PROGRESSUPDATE
             showProgressUpdate();
-            
+
 #endif
-                  
+
         }
 	}
 

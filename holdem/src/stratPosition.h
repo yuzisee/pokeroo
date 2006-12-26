@@ -47,7 +47,7 @@ class PositionalStrategy : virtual public PlayerStrategy
         DistrShape detailPCT;
         StatResult statmean;
         StatResult statworse;
-        //CallCumulationD foldcumu;
+        CallCumulationD foldcumu;
         CallCumulationD callcumu;
         #ifdef LOGPOSITION
         ofstream logFile;
