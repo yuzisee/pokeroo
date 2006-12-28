@@ -93,4 +93,29 @@ class GainStrategy : public PositionalStrategy
 ;
 
 
+class CorePositionalStrategy : public PositionalStrategy
+{
+    protected:
+    int8 bGamble;
+    public:
+    CorePositionalStrategy(int8 riskymode) : bGamble(riskymode) {}
+
+    virtual float64 MakeBet();
+}
+;
+/*
+0   statranking, Geom <-- needs to prevent pot comittal
+1   statmean, Geom
+2   statworst, Algb
+3   statmean, Algb
+4   statranking, Geom, potCommit
+5   statmean, Algb potCommit
+6
+
+
+*/
+
+
+
+
 #endif

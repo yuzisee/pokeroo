@@ -25,7 +25,7 @@
 
 //#define REGULARINTOLOG
 #define DEBUGSITUATION
-//#define SUPERINTOLOG
+#define SUPERINTOLOG
 
 #include "stratPosition.h"
 //#include "stratTournament.h"
@@ -742,7 +742,7 @@ void debugPosition()
 	DebugArena myTable(&b,cout, true);
     UserConsoleStrategy testDummy[5];
 
-    PositionalStrategy a(1);
+    CorePositionalStrategy a(1);
     //TournamentStrategy a;
 
 
@@ -832,9 +832,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	MultiThresholdStrategy pushFold(0,2);
 	MultiThresholdStrategy tightPushFold(1,0);
 	//ConsoleStepStrategy watchPlay;
-	PositionalStrategy smartConserveDefence(3);
-	PositionalStrategy smartGambleDefence(4);
-	PositionalStrategy smartConserveOffence(5);
+	CorePositionalStrategy smartConserveDefence(0);
+	CorePositionalStrategy smartGambleDefence(1);
+	CorePositionalStrategy smartConserveOffence(2);
 
     //TournamentStrategy asterisk;
     //TournamentStrategy gruff(1);
@@ -854,7 +854,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }else
     {
 
-        //myTable.AddPlayer("i4", &drainFold);
+        myTable.AddPlayer("i4", &drainFold);
         myTable.AddPlayer("X3", &pushFold);
         myTable.AddPlayer("A3", &tightPushFold);
 
@@ -874,10 +874,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
             break;
         default:
-            myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
-            myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
-        //case '*':
-            myTable.AddPlayer("V2", &smartConserveOffence); /* riskymode = 2 */
+            //myTable.AddPlayer("RankGeom", &smartConserveDefence); /* riskymode = 0 */
+            //myTable.AddPlayer("MeanGeom", &smartGambleDefence); /* riskymode = 1 */
+
+            myTable.AddPlayer("WorseAlgb", &smartConserveOffence); /* riskymode = 2 */
             break;
 
     }

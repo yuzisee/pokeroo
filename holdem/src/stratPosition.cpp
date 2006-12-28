@@ -119,10 +119,9 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     logFile << "(Mean.splits) " << statmean.splits * 100 << "%"  << std::endl;
     logFile << "(Mean.loss) " << statmean.loss * 100 << "%"  << std::endl;
     logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
-#endif
-
-
-#ifdef LOGPOSITION
+    logFile << "(Worst.wins) " << statworse.wins * 100 << "%"  << std::endl;
+    logFile << "(Worst.splits) " << statworse.splits * 100 << "%"  << std::endl;
+    logFile << "(Worst.loss) " << statworse.loss * 100 << "%"  << std::endl;
     logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
     logFile << "(Outright.wins) " << statranking.wins * 100 << "%"  << std::endl;
     logFile << "(Outright.splits) " << statranking.splits * 100 << "%"  << std::endl;
@@ -176,35 +175,9 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
         {
             std::ofstream excel( (ViewPlayer().GetIdent() + "functionlog.csv").c_str() );
             if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
-            choicegain_base.breakdown(1000,excel,betToCall,maxShowdown);
+            targetModel->breakdown(1000,excel,betToCall,maxShowdown);
             //myExpectedCall.breakdown(0.005,excel);
 
-            excel.close();
-            excel.open ((ViewPlayer().GetIdent() + "functionlog.reverse.csv").c_str());
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
-            choicegain_rev.breakdown(1000,excel,betToCall,maxShowdown);
-            //myExpectedCall.breakdown(0.005,excel);
-
-            excel.close();
-
-            excel.open((ViewPlayer().GetIdent() + "functionlog.norisk.csv").c_str());
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-            choicegain_nr.breakdown(1000,excel,betToCall,maxShowdown);
-            //g.breakdownE(40,excel);
-            excel.close();
-
-
-          excel.open((ViewPlayer().GetIdent() + "functionlog.GP.csv").c_str());
-
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-            gp.breakdown(1000,excel,betToCall,maxShowdown);
-            //g.breakdownE(40,excel);
-            excel.close();
-
-            excel.open((ViewPlayer().GetIdent() + "functionlog.safe.csv").c_str());
-            if( !excel.is_open() ) std::cerr << "\n!functionlog.safe.cvs file access denied" << std::endl;
-            choicegain.breakdown(1000,excel,betToCall,maxShowdown);
-            //g.breakdownE(40,excel);
             excel.close();
         }
         #endif
@@ -372,7 +345,8 @@ float64 GainStrategy::MakeBet()
     ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
 
     const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
-    myLimitCall.callingPlayers(  ( ViewTable().GetRoundBetsTotal() - ViewTable().GetPotSize() + myExpectedCall.exf(raiseBattle) ) /raiseBattle  );
+    const float64 expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() - myBet ) /raiseBattle;
+    myLimitCall.callingPlayers(  expectedVS  );
     //myExpectedCall.SetImpliedFactor(impliedFactor);
 
 
@@ -454,6 +428,80 @@ float64 GainStrategy::MakeBet()
 #endif
 
     const float64 bestBet = solveGainModel(targetModel);
+
+    return bestBet;
+
+
+}
+
+
+
+float64 CorePositionalStrategy::MakeBet()
+{
+    setupPosition();
+
+
+
+
+
+    ///VARIABLE: the slider can move due to avgDev too, maybe....
+    CallCumulationD &choicecumu = callcumu;
+    //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, timing[DT]/2 );
+    //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, detailPct.avgDev*2 );
+
+
+
+    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
+
+    const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
+    const float64 expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() - myBet ) /raiseBattle;
+
+    #ifdef DEBUGASSERT
+    if( expectedVS < 0 )
+    {
+        std::cout << "Expecting GUARANTEED fold!" << endl;
+        exit(1);
+    }
+    #endif
+
+    myLimitCall.callingPlayers(  expectedVS  );
+
+
+    GainModel rankGeom(statranking,&myExpectedCall);
+    //GainModelNoRisk choicegain_rnr(statranking,&myExpectedCall);
+
+
+    GainModel meanGeom(statmean,&myExpectedCall);
+
+
+    if( bGamble == 2 )
+    {
+        const float64 relevantPot = ViewTable().GetRoundBetsTotal() + ViewTable().GetUnbetBlindsTotal();
+        const float64 irrelevantPot = (  ViewTable().GetPotSize() - relevantPot );
+        const float64 expectedPot =  myExpectedCall.exf(raiseBattle) - myBet;
+        std::cout << "Breakpoint" << endl;
+    }
+
+
+    GainModelNoRisk worstAlgb(statworse,&myLimitCall);
+
+    #ifdef DEBUGASSERT
+        if( bGamble >= 3 )
+        {
+                std::cout << "Incorrect bGAMBLE" << endl;
+                exit(1);
+        }
+    #endif
+
+    HoldemFunctionModel* (lookup[3]) = { &rankGeom, &meanGeom, &worstAlgb };
+
+    #ifdef LOGPOSITION
+        logFile << "doublePlay(" << expectedVS << ")" << endl;
+    #endif
+
+    const float64 bestBet = solveGainModel(lookup[bGamble]);
+
 
     return bestBet;
 
