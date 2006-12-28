@@ -24,12 +24,12 @@
 #define HOLDEM_Arena
 
 
-//#define DEBUGSPECIFIC 0
+#define DEBUGSPECIFIC 2
 #define GRAPHMONEY "chipcount.csv"
 #define REPRODUCIBLE
 ///COMMENT OUT DEBUGSPECIFIC IF YOU WISH TO GRAPHMONEY
 
-#define DEBUGBETMODEL
+//#define DEBUGBETMODEL
 #define DEBUGSAVEGAME "savegame.log"
 //#define DEBUGSAVE_EXTRATOKEN 32
 
@@ -247,7 +247,8 @@ protected:
         float64 myPot; //incl. betSum
 		float64 myBetSum; //Just the current round.
 		float64 prevRoundPot;
-		float64 blindBetSum; //Bets that have been made blind before the player has had a chance to make another bet.
+		float64 forcedBetSum; //Folded bets this round and bets that have been made blind before the player has had a chance to make another bet
+		float64 blindOnlySum; //Bets that have been made blind before the player has had a chance to make another bet
         vector<Player*> p;
 
 
@@ -303,7 +304,7 @@ protected:
 #endif
         ,gamelog(targetout)
         ,bVerbose(illustrate),bSpectate(spectate),livePlayers(0), blinds(b),allChips(0)
-		,lastRaise(0),highBet(0), myPot(0), myBetSum(0), prevRoundPot(0),blindBetSum(0)
+		,lastRaise(0),highBet(0), myPot(0), myBetSum(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)
 		#ifdef GLOBAL_AICACHE_SPEEDUP
 		,communityBuffer(0)
         #endif
@@ -334,7 +335,8 @@ protected:
 		virtual float64 GetLivePotSize() const;
 		virtual float64 GetRoundPotSize() const; //ThisRound pot size
 		virtual float64 GetPrevPotSize() const; //Pot size from previous rounds
-   		virtual float64 GetRoundBetsTotal() const; //ThisRound pot size
+   		virtual float64 GetRoundBetsTotal() const; //Bets made this round by players still in hand, excludes blind bets
+   		virtual float64 GetUnbetBlindsTotal() const; //blindOnlySum
 		virtual float64 GetPotSize() const;
 		virtual float64 GetBetToCall() const; //since ROUND start
 		virtual float64 GetMaxShowdown() const;
@@ -354,7 +356,8 @@ class HoldemArenaEventBase
 
     float64 & highBet;
     float64 & lastRaise;
-    float64 & blindBetSum;
+    float64 & forcedBetSum;
+    float64 & blindOnlySum;
     int8 & playersInHand;
     int8 & playersAllIn;
     int8 & curIndex;
@@ -398,7 +401,7 @@ class HoldemArenaEventBase
 
     HoldemArenaEventBase(HoldemArena * table) : myTable(table)
     , gamelog(myTable->gamelog)
-    , highBet(table->highBet), lastRaise(table->lastRaise), blindBetSum(myTable->blindBetSum)
+    , highBet(table->highBet), lastRaise(table->lastRaise), forcedBetSum(myTable->forcedBetSum), blindOnlySum(myTable->blindOnlySum)
     , playersInHand(table->playersInHand),playersAllIn(table->playersAllIn)
     , curIndex(table->curIndex), curDealer(table->curDealer)
     , myPot(table->myPot), myBetSum(table->myBetSum), p(table->p)

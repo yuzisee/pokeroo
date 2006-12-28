@@ -301,7 +301,7 @@ void DebugArena::InitGame()
 
 void DebugArena::SetBlindPot(float64 amount)
 {
-    blindBetSum = amount;
+    forcedBetSum = amount;
 }
 
 void DebugArena::SetDeadPot(float64 amount)

@@ -316,7 +316,12 @@ float64 HoldemArena::GetPrevPotSize() const
 ///This is the sum of bets made this round by people still in the round
 float64 HoldemArena::GetRoundBetsTotal() const
 {
-    return GetRoundPotSize() - blindBetSum;
+    return GetRoundPotSize() - forcedBetSum;
+}
+
+float64 HoldemArena::GetUnbetBlindsTotal() const
+{
+    return blindOnlySum;
 }
 
 

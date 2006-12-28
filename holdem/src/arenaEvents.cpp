@@ -170,7 +170,8 @@ void HoldemArenaBetting::startBettingRound()
     prepareRound(comSize);
     ///----------
 
-    blindBetSum = 0;
+    forcedBetSum = 0;
+    blindOnlySum = 0;
 	bBlinds = curDealer;	//Used to account for soft-bets:
 								//ie, if called, you can still reraise.
 								//BUT, it also handles the check-check-check
@@ -272,8 +273,9 @@ void HoldemArenaBetting::startBettingRound()
 
 		bBlinds = curIndex;
 
-        blindBetSum = PlayerBet(withP1)+PlayerBet(withP2);
-		addBets(blindBetSum);
+        forcedBetSum = PlayerBet(withP1)+PlayerBet(withP2);
+        blindOnlySum = forcedBetSum;
+		addBets(forcedBetSum);
 
 		highestBetter = curIndex;
 		highBet = PlayerBet(withP2);
@@ -381,10 +383,12 @@ gamelog << p[curIndex]->GetIdent() << " up next... same as before?" << endl;
 
         if( PlayerBet(nextPlayer) > 0 )
         {
-            blindBetSum -= PlayerBet(nextPlayer);
+            forcedBetSum -= PlayerBet(nextPlayer);
+            blindOnlySum -= PlayerBet(nextPlayer);
         }
 
-        if( blindBetSum < 0 ) blindBetSum = 0;
+        if( forcedBetSum < 0 ) forcedBetSum = 0;
+        if( blindOnlySum < 0 ) blindOnlySum = 0;
     }
 }
 
@@ -467,7 +471,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 					PlayerHandBetTotal( withP )= PlayerLastBet(withP);
 							//CAUTION: TRICKY USE OF handBetTotal
 					PlayerMoney(withP) -= PlayerLastBet(withP);
-                    blindBetSum += PlayerLastBet(withP);
+                    forcedBetSum += PlayerLastBet(withP);
 
 					PlayerBet(withP) = HoldemArena::FOLDED;
 					--playersInHand;
