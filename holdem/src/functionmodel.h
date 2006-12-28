@@ -26,7 +26,9 @@
 #include "callSituation.h"
 #include <math.h>
 
-//#define DEBUG_GAIN
+#ifdef DEBUGSPECIFIC
+#define DEBUG_GAIN
+#endif
 #define NO_AWKWARD_MODELS
 
 
@@ -48,12 +50,13 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
     #ifdef DEBUG_GAIN
         void breakdown(float64 points, std::ostream& target, float64 start=0, float64 end=1)
         {
+            target.precision(17);
 
             float64 dist;
             if( points > 0 ) dist = (end-start)/points;
 
 
-            target << "x,gain,dgain" << std::endl;
+            target << "x,gain,dgain,wch,dwch" << std::endl;
             if( points > 0 && dist > 0 )
             {
                 for( float64 i=start;i<=end;i+=dist)
@@ -62,13 +65,15 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
                     float64 y = f(i);
 
 
-                    target << i << "," << y << "," << fd(i,y) << "," << std::endl;
+                    target << i << "," << y << "," << fd(i,y) << "," << e->betFraction(e->exf(i))  << "," <<  e->dexf(i) << std::endl;
 
                 }
             }else
             {
-                target << end << "," << f(end) << "," << fd(end,f(end)) << std::endl;
+                target << end << "," << f(end) << "," << fd(end,f(end)) << "," << e->betFraction(e->exf(end))  << "," <<  e->dexf(end) << std::endl;
             }
+
+            target.precision(6);
 
 
         }
@@ -99,8 +104,9 @@ class GainModel : public virtual HoldemFunctionModel
 	public:
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 	GainModel(const StatResult s,ExpectedCallD *c)
-		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s),f_battle(c->callingPlayers())
+		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s)
 		{
+		    f_battle = (c->callingPlayers());
 		    //e_battle = static_cast<int8>(f_battle); //Truncate
 		    e_battle = c->handsDealt()-1;
 //		    const float64 t = c->chipDenom();
