@@ -37,6 +37,7 @@ float64 DummyFunctionModel::fd(const float64 x, const float64 y) const
     return -4*x+2;
 }
 */
+
 #ifndef NO_AWKWARD_MODELS
 GainModelReverseNoRisk::~GainModelReverseNoRisk()
 {
@@ -266,6 +267,8 @@ float64 GainModelNoRisk::f(const float64 betSize)
     const float64 f_pot = e->betFraction(e->prevpotChips());
     const float64 exf_live = exf - f_pot;
 
+    const float64 base = e->handBetBase();
+
         #ifdef DEBUGVIEWINTERMEDIARIES
 
             const float64& t_w = shape.wins;
@@ -296,7 +299,7 @@ float64 GainModelNoRisk::f(const float64 betSize)
         dragCalls = dragCalls * dragCalls - dragCalls + 1;
 
 		sav +=
-                (    1+( f_pot+exf_live*dragCalls )/(i+1)    )
+                (    base+( f_pot+exf_live*dragCalls )/(i+1)    )
                         *
                 (        HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)    )
                 ;
@@ -306,9 +309,9 @@ float64 GainModelNoRisk::f(const float64 betSize)
 
 	return
 
-		   (1+exf) * p_cw
+		   (base+exf) * p_cw
         +
-           (1-x) * p_cl
+           (base-x) * p_cl
         +
 		   sav
 	-
@@ -329,8 +332,6 @@ float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
 
 	//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B
 	const float64 dexf = e->dexf(betSize);
-
-
 
     if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
