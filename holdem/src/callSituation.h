@@ -137,8 +137,8 @@ protected:
 
     void query(const float64 betSize);
 public:
-    ExactCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data)
-    : ExpectedCallD(id,base,data), impliedFactor(1)
+    ExactCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data, const float64 commit = 0)
+    : ExpectedCallD(id,base,data,commit), impliedFactor(1)
     {
         queryinput = UNITIALIZED_QUERY;
     }

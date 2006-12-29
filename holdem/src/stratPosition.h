@@ -80,18 +80,29 @@ class PositionalStrategy : virtual public PlayerStrategy
 }
 ;
 
-
-class GainStrategy : public PositionalStrategy
+//Scaled ImprovePure
+class ImproveStrategy : public PositionalStrategy
 {
     protected:
     int8 bGamble;
     public:
-    GainStrategy(int8 riskymode) : bGamble(riskymode) {}
+    ImproveStrategy(int8 riskymode =0) : bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }
 ;
 
+//Deterrent
+class DeterredGainStrategy : public PositionalStrategy
+{
+    protected:
+    int8 bGamble;
+    public:
+    DeterredGainStrategy(int8 riskymode =0) : bGamble(riskymode) {}
+
+    virtual float64 MakeBet();
+}
+;
 
 class CorePositionalStrategy : public PositionalStrategy
 {
@@ -104,13 +115,14 @@ class CorePositionalStrategy : public PositionalStrategy
 }
 ;
 /*
-0   statranking, Geom <-- needs to prevent pot comittal
-1   statmean, Geom
-2   statworst, Algb
-3   statmean, Algb
-4   statranking, Geom, potCommit
-5   statmean, Algb potCommit
-6
+0   statranking, Geom <-- needs to prevent pot committal: {Use this when high chance to improve}
+1   statmean, Geom <-- needs to prevent pot committal: {Use this when high chance to improve}
+2   statworst, Algb <-- needs to play more hands
+3   statranking, Algb <-- Callstation-ish, needs to play tighter
+4   statmean, Algb <-- Callstation-ish, needs to play tighter
+5   statranking, Geom, potCommit <-- PotCommit doesn't help when all in, and you need 100% anyways
+6   statmean, Geom, potCommit
+
 
 
 */

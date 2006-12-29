@@ -60,20 +60,6 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     #endif
 
 
-    #ifdef ARBITARY_DISTANCE
-
-        roundNumber[0] = cardsInCommunity*cardsInCommunity; /// Round number is [0,1,2,3]=[Pre-Flop,Right After Flop,Between Turn and River,Final]<-[0,3,4,5]
-        roundNumber[0] /= 8;
-
-        ///2/7 is very tight preflop.
-        /// Round number is [0,1,2,3]=[Pre-Flop,Right After Flop,Between Turn and River,Final]<-[2,5,6,7]
-        roundNumber[1] = cardsInCommunity + 2;
-
-        /// Round number is [0,1,2,3]=[Pre-Flop,Right After Flop,Between Turn and River,Final]<-[0,2,5,6]
-        roundNumber[2] = roundNumber[0]*2;
-        roundNumber[2] += roundNumber[2]/4 - roundNumber[2]/6;
-    #endif
-
     DistrShape w_wl(0);
 
 
@@ -132,24 +118,14 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
 void PositionalStrategy::setupPosition()
 {
+        #ifdef LOGPOSITION
+            logFile << endl;
+            HandPlus convertOutput;
+            convertOutput.SetUnique(ViewHand());
+            convertOutput.DisplayHand(logFile);
+        #endif
 
-#ifdef LOGPOSITION
 
-    HandPlus convertOutput;
-    convertOutput.SetUnique(ViewHand());
-    convertOutput.DisplayHand(logFile);
-
-    logFile << "Bet to call " << betToCall << " (from " << myBet << ")" << endl;
-#endif
-
-/*
-    const int8 DT = 2;
-    const float64 timing[3] =   {
-                                    static_cast<float64>(roundNumber[0])/5.0
-                                    , static_cast<float64>(roundNumber[1])/7.0
-                                    , static_cast<float64>(roundNumber[2])/6.0
-                                };
-*/
     myMoney = ViewPlayer().GetMoney();
 
 
@@ -164,6 +140,11 @@ void PositionalStrategy::setupPosition()
     maxShowdown = ViewTable().GetMaxShowdown();
     if( maxShowdown > myMoney ) maxShowdown = myMoney;
     //float64 choiceScale = (betToCall - myBet)/(maxShowdown - myBet);
+
+
+        #ifdef LOGPOSITION
+            logFile << "Bet to call " << betToCall << " (from " << myBet << ")" << endl;
+        #endif
 
 }
 
@@ -296,28 +277,65 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 }
 
 
-float64 GainStrategy::MakeBet()
+float64 ImproveStrategy::MakeBet()
 {
     setupPosition();
 
-    const float64 improveMod = detailPCT.improve * ( bGamble / 3 == 0 ? 2 : 1 );
+    //bGamble reduces the scaling
+    const float64 improveMod = detailPCT.improve; //Generally preflop is negative here, so you probably don't want to accentuate that
     const float64 improvePure = (improveMod+1)/2;
     //const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
-
-
 
     float64 distrScale = improvePure;
     //float64 distrScale = 0.5 ;
     //float64 distrScale = myMoney / ViewTable().GetAllChips() ;
 
-    if( bGamble % 3 == 0 ) // 0,3
+    if( bGamble % 2 == 1 )
     {///Protecting against the drop
         distrScale = 1 - distrScale;
-    }// else 1,4
+    }
     ///Banking on the upswing
 
     if( distrScale > 1 ) distrScale = 1;
     if( distrScale < 0 ) distrScale = 0;
+
+    CallCumulationD &choicecumu = callcumu;
+
+    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
+
+    const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
+    const float64 expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
+    myLimitCall.callingPlayers(  expectedVS  );
+    if( expectedVS < 0 ) //You have no money
+    {
+        myLimitCall.callingPlayers( myExpectedCall.betFraction(ViewTable().GetChipDenom()) ) ;
+    }
+
+    GainModel rankGeom(statranking,&myExpectedCall);
+    GainModelNoRisk worstAlgb(statworse,&myLimitCall);
+
+
+    SlidingPairFunction gp(&worstAlgb,&rankGeom,distrScale,&myExpectedCall);
+
+    #ifdef LOGPOSITION
+        logFile << "offense/defense =" << distrScale << endl;
+    #endif
+
+    const float64 bestBet = solveGainModel(&gp);
+    return bestBet;
+
+}
+
+float64 DeterredGainStrategy::MakeBet()
+{
+    setupPosition();
+
+
+
+
+
+
     //const float64 tableSizeRec = 1.0 / (ViewTable().GetNumberAtTable() - 1) ;
 
     const float64 outstandingChips = ViewTable().GetAllChips() - ViewTable().GetPrevPotSize();
@@ -342,12 +360,8 @@ float64 GainStrategy::MakeBet()
 
 
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
-    ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
-
-    const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
-    const float64 expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() - myBet ) /raiseBattle;
-    myLimitCall.callingPlayers(  expectedVS  );
     //myExpectedCall.SetImpliedFactor(impliedFactor);
+
 
 
 
@@ -359,25 +373,23 @@ float64 GainStrategy::MakeBet()
 
 
     GainModel choicegain_base(statmean,&myExpectedCall);
-    GainModelNoRisk choicegain_nr(statworse,&myLimitCall);
 
 
-	SlidingPairFunction gp(&choicegain_base,&choicegain_rev,distrScale,&myExpectedCall);
 
-	SlidingPairFunction ap(&choicegain_rev,&choicegain_nr,tableSizeRec,&myExpectedCall);
+	SlidingPairFunction ap(&choicegain_rev,&choicegain_base,tableSizeRec,&myExpectedCall);
 
     //const float64 MAX_UPTO = 1.0/2.0;
     const float64 MAX_UPTO = (bGamble / 3 == 1) ? 1 : 1.0/2.0;
 
-    HoldemFunctionModel *cLeft = &gp;
-    HoldemFunctionModel *cRight = &choicegain_nr;
+    HoldemFunctionModel *cLeft = &ap;
+    HoldemFunctionModel *cRight = &choicegain_base;
     HoldemFunctionModel *aLeft = &choicegain_rev;
     HoldemFunctionModel *aRight = &ap;
 
     if( bGamble / 3 == 1 )
     {
-        cLeft = &choicegain_nr;
-        cRight = &gp;
+        cLeft = &choicegain_base;
+        cRight = &ap;
 
         aLeft = &ap;
         aRight = &choicegain_rev;
@@ -400,7 +412,7 @@ float64 GainStrategy::MakeBet()
 
 			if( MAX_UPTO == 1 )
 			{
-			targetModel = &choicegain_nr;
+			targetModel = &choicegain_base;
 			}else
 			{
 			targetModel = &choicegain_upto;
@@ -420,10 +432,7 @@ float64 GainStrategy::MakeBet()
 
 #ifdef LOGPOSITION
 
-
-    logFile << "offense/defense(" << distrScale << ")" << endl;
     logFile << "strike!  " << tableSizeRec << endl;
-    logFile << "Worst case primed " << myLimitCall.callingPlayers() << endl;
 
 #endif
 
@@ -453,17 +462,21 @@ float64 CorePositionalStrategy::MakeBet()
 
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    const float64 committed = ViewPlayer().GetContribution() + myBet;
+    ExactCallD myCommittalCall(myPositionIndex, &(ViewTable()), &choicecumu, committed );
 
-    const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
-    const float64 expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() - myBet ) /raiseBattle;
-
-    #ifdef DEBUGASSERT
-    if( expectedVS < 0 )
+    float64 raiseBattle = ViewTable().GetChipDenom();
+    if( betToCall > raiseBattle )
     {
-        std::cout << "Expecting GUARANTEED fold!" << endl;
-        exit(1);
+        raiseBattle = betToCall;
     }
-    #endif
+    const float64 expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
+    if( expectedVS < 0 ) //You have no money
+    {
+        myLimitCall.callingPlayers( myExpectedCall.betFraction(ViewTable().GetChipDenom()) ) ;
+    }
+
+
 
     myLimitCall.callingPlayers(  expectedVS  );
 
@@ -475,31 +488,40 @@ float64 CorePositionalStrategy::MakeBet()
     GainModel meanGeom(statmean,&myExpectedCall);
 
 
-    if( bGamble == 2 )
-    {
-        const float64 relevantPot = ViewTable().GetRoundBetsTotal() + ViewTable().GetUnbetBlindsTotal();
-        const float64 irrelevantPot = (  ViewTable().GetPotSize() - relevantPot );
-        const float64 expectedPot =  myExpectedCall.exf(raiseBattle) - myBet;
-        std::cout << "Breakpoint" << endl;
-    }
-
-
     GainModelNoRisk worstAlgb(statworse,&myLimitCall);
+    GainModelNoRisk rankAlgb(statranking,&myExpectedCall);
+    GainModelNoRisk meanAlgb(statmean,&myExpectedCall);
+    GainModel rankGeomPC(statranking,&myCommittalCall);
+    GainModel meanGeomPC(statmean,&myCommittalCall);
+
 
     #ifdef DEBUGASSERT
-        if( bGamble >= 3 )
+        if( bGamble >= 7 )
         {
                 std::cout << "Incorrect bGAMBLE" << endl;
                 exit(1);
         }
     #endif
 
-    HoldemFunctionModel* (lookup[3]) = { &rankGeom, &meanGeom, &worstAlgb };
+    HoldemFunctionModel* (lookup[7]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC };
 
     #ifdef LOGPOSITION
+        const float64 improveMod = detailPCT.improve * 2;
+        const float64 improvePure = (improveMod+1)/2;
+
+        logFile << "raw improval " << improvePure << endl;
         logFile << "doublePlay(" << expectedVS << ")" << endl;
     #endif
 
+    #ifdef LOGPOSITION
+        if( bGamble == 0 || bGamble == 1 || bGamble == 5 || bGamble == 6 )
+        {
+            const int8 otherGamble = (bGamble + 5) % 10;
+            logFile << "Other {" << (int)(otherGamble) << "}" << endl;
+            solveGainModel(lookup[otherGamble]);
+            logFile << "Main {" << (int)(bGamble) << "}" << endl;
+        }
+    #endif
     const float64 bestBet = solveGainModel(lookup[bGamble]);
 
 
