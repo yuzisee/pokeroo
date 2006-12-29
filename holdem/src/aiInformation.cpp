@@ -382,6 +382,7 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
 
     int32 oppHands = cardsAvail*(cardsAvail-1)/2;
     showdownCount = oppHands * HoldemUtil::nchoosep<int32>(cardsAvail - 2,5-cardsInCommunity);
+    //This variable will overload if you try to calculate preflop
 
 	statCount = oppHands;
     delete [] myWins;

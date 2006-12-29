@@ -610,13 +610,13 @@ void testNewCallStats()
 
 
 
-
+///TODO: Preflop AA doesn't get 50% in strongestOpponent, WHY?
 
 
 
 
 //Community
-
+/*
     h2.AddToHand(HoldemConstants::HEARTS, 13, HoldemConstants::CARD_ACEHIGH );
     h2.AddToHand(HoldemConstants::SPADES, 13, HoldemConstants::CARD_ACEHIGH );
     h2.AddToHand(HoldemConstants::SPADES, 4, HoldemConstants::CARD_FIVE );
@@ -624,11 +624,11 @@ void testNewCallStats()
     //h2.AddToHand(HoldemConstants::CLUBS, 9, HoldemConstants::CARD_TEN );
     //h2.AddToHand(HoldemConstants::CLUBS, 1, HoldemConstants::CARD_DEUCE );
     h1.SetUnique(h2);
-
+*/
 //Hole cards
     h1.AddToHand(HoldemConstants::DIAMONDS, 13, HoldemConstants::CARD_ACEHIGH );
-    h1.AddToHand(HoldemConstants::CLUBS, 4, HoldemConstants::CARD_FIVE );
-    const uint8 dealtCommunityNumber=3;
+    h1.AddToHand(HoldemConstants::CLUBS, 13, HoldemConstants::CARD_ACEHIGH );
+    const uint8 dealtCommunityNumber=0;
 
 
 
@@ -643,7 +643,7 @@ void testNewCallStats()
     myStatBuilder.UndealAll();
     myStatBuilder.OmitCards(h2); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
 */
-    CommunityCallStats ds(h1, h2,dealtCommunityNumber);
+    //CommunityCallStats ds(h1, h2,dealtCommunityNumber);
     //myStatBuilder.AnalyzeComplete(&ds);
 
 
@@ -832,9 +832,14 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	MultiThresholdStrategy pushFold(0,2);
 	MultiThresholdStrategy tightPushFold(1,0);
 	//ConsoleStepStrategy watchPlay;
-	CorePositionalStrategy smartConserveDefence(0);
-	CorePositionalStrategy smartGambleDefence(1);
-	CorePositionalStrategy smartConserveOffence(2);
+	CorePositionalStrategy RankGeom(0);
+	CorePositionalStrategy MeanGeom(1);
+	CorePositionalStrategy WorseAlgb(2);
+	CorePositionalStrategy RankAlgb(3);
+	CorePositionalStrategy MeanAlgb(4);
+	CorePositionalStrategy PotCommittalRankGeom(5);
+	CorePositionalStrategy PotCommittalMeanGeom(6);
+	ImproveStrategy DistrScaleP;
 
     //TournamentStrategy asterisk;
     //TournamentStrategy gruff(1);
@@ -863,21 +868,27 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     switch(headsUp)
     {
         case 'P':
-            myTable.AddPlayer("TrapBotII", 200, &smartConserveDefence); /* riskymode = 0 */
-            myTable.AddPlayer("ComBotII", 200, &smartGambleDefence); /* riskymode = 1 */
-            myTable.AddPlayer("SpaceBotII", 200, &smartConserveOffence); /* riskymode = 2 */
+            myTable.AddPlayer("TrapBotII", 200, &RankGeom); /* riskymode = 0 */
+            myTable.AddPlayer("ComBotII", 200, &MeanGeom); /* riskymode = 1 */
+            myTable.AddPlayer("SpaceBotII", 200, &DistrScaleP); /* riskymode = 2 */
             break;
         case 'M':
-            myTable.AddPlayer("M2", &smartConserveDefence); /* riskymode = 0 */
+            myTable.AddPlayer("M2", &RankGeom); /* riskymode = 0 */
             break;
         case 'G':
-            myTable.AddPlayer("G2", &smartGambleDefence); /* riskymode = 1 */
+            myTable.AddPlayer("G2", &MeanGeom); /* riskymode = 1 */
             break;
         default:
-            //myTable.AddPlayer("RankGeom", &smartConserveDefence); /* riskymode = 0 */
-            //myTable.AddPlayer("MeanGeom", &smartGambleDefence); /* riskymode = 1 */
+            //myTable.AddPlayer("RankGeom", &RankGeom); /* riskymode = 0 */
+            //myTable.AddPlayer("MeanGeom", &MeanGeom); /* riskymode = 1 */
+            //myTable.AddPlayer("WorseAlgb", &WorseAlgb); /* riskymode = 2 */
+            //myTable.AddPlayer("RankAlgb", &RankAlgb); /* riskymode = 3 */
+            //myTable.AddPlayer("MeanAlgb", &MeanAlgb); /* riskymode = 4 */
+            //myTable.AddPlayer("RankGeomPC", &PotCommittalRankGeom); /* riskymode = 5 */
+            //myTable.AddPlayer("MeanGeomPC", &PotCommittalMeanGeom); /* riskymode = 6 */
+            myTable.AddPlayer("SpaceBotII", &DistrScaleP);
 
-            myTable.AddPlayer("WorseAlgb", &smartConserveOffence); /* riskymode = 2 */
+
             break;
 
     }
