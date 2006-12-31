@@ -21,6 +21,14 @@
 #include <math.h>
 #include "stratPosition.h"
 
+
+const bool CorePositionalStrategy::lkupLogMean[BGAMBLE_MAX] = {false,true,false,false,true,false,true,true};
+const bool CorePositionalStrategy::lkupLogRanking[BGAMBLE_MAX] = {true,false,false,true,false,true,false,true};
+const bool CorePositionalStrategy::lkupLogWorse[BGAMBLE_MAX] = {false,false,true,false,false,false,true,false};
+const bool CorePositionalStrategy::lkupLogHybrid[BGAMBLE_MAX] = {false,false,false,false,false,false,false,true};
+
+// &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom
+
 PositionalStrategy::~PositionalStrategy()
 {
     #ifdef LOGPOSITION
@@ -98,6 +106,13 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     statranking.loss = 1 - ranking3;
     statranking.genPCT();
 
+    hybridMagnified.wins = sqrt(statmean.wins*statranking.wins);
+    hybridMagnified.splits = sqrt(statmean.splits*statranking.splits);
+    hybridMagnified.loss = sqrt(statmean.loss*statranking.loss);
+    hybridMagnified.genPCT();
+    const float64 adjust = hybridMagnified.wins + hybridMagnified.splits + hybridMagnified.loss;
+    hybridMagnified = hybridMagnified * ( 1.0 / adjust );
+    hybridMagnified.repeated = 0; ///.repeated WILL otherwise ACCUMULATE!
 
 #ifdef LOGPOSITION
     logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
@@ -112,6 +127,10 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     logFile << "(Outright.wins) " << statranking.wins * 100 << "%"  << std::endl;
     logFile << "(Outright.splits) " << statranking.splits * 100 << "%"  << std::endl;
     logFile << "(Outright.loss) " << statranking.loss * 100 << "%"  << std::endl;
+    logFile << "(Hybrid) " << hybridMagnified.pct * 100 << "%"  << std::endl;
+    logFile << "(Hybrid.wins) " << hybridMagnified.wins * 100 << "%"  << std::endl;
+    logFile << "(Hybrid.splits) " << hybridMagnified.splits * 100 << "%"  << std::endl;
+    logFile << "(Hybrid.loss) " << hybridMagnified.loss * 100 << "%"  << std::endl;
 #endif
 
 }
@@ -146,6 +165,9 @@ void PositionalStrategy::setupPosition()
             logFile << "Bet to call " << betToCall << " (from " << myBet << ")" << endl;
         #endif
 
+    const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
+    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
+    expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
 }
 
 float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
@@ -209,7 +231,7 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
         #ifdef LOGPOSITION
 
 
-            logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
+            //logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
 
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
@@ -304,8 +326,6 @@ float64 ImproveStrategy::MakeBet()
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
 
-    const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
-    const float64 expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
     myLimitCall.callingPlayers(  expectedVS  );
     if( expectedVS < 0 ) //You have no money
     {
@@ -331,112 +351,32 @@ float64 DeterredGainStrategy::MakeBet()
 {
     setupPosition();
 
+    //const float64 certainty = betToCall / maxShowdown;
+    const float64 uncertainty = fabs( statranking.pct - statmean.pct );
+    const float64 futureFold = 1 - sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
 
 
-
-
-
-    //const float64 tableSizeRec = 1.0 / (ViewTable().GetNumberAtTable() - 1) ;
-
-    const float64 outstandingChips = ViewTable().GetAllChips() - ViewTable().GetPrevPotSize();
-    float64 tableSizeRec;
-    if( myMoney > outstandingChips )
-    {
-	tableSizeRec = 1;
-    }else
-    {
-	tableSizeRec = myMoney / outstandingChips ;
-	if( tableSizeRec < 0 ) tableSizeRec = 0; //Possible because of roundoff, etc.
-    }
-
-
-
-
-    ///VARIABLE: the slider can move due to avgDev too, maybe....
     CallCumulationD &choicecumu = callcumu;
-    //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, timing[DT]/2 );
-    //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, detailPct.avgDev*2 );
-
-
 
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
-    //myExpectedCall.SetImpliedFactor(impliedFactor);
+    ExactCallD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    myDeterredCall.SetImpliedFactor(futureFold);
 
 
+    GainModel hybridgain(statranking,&myExpectedCall);
+    GainModel hybridgainDeterred(statranking,&myDeterredCall);
 
-
-
-
-
-    GainModel choicegain_rev(statranking,&myExpectedCall);
-    //GainModelNoRisk choicegain_rnr(statranking,&myExpectedCall);
-
-
-    GainModel choicegain_base(statmean,&myExpectedCall);
-
-
-
-	SlidingPairFunction ap(&choicegain_rev,&choicegain_base,tableSizeRec,&myExpectedCall);
-
-    //const float64 MAX_UPTO = 1.0/2.0;
-    const float64 MAX_UPTO = (bGamble / 3 == 1) ? 1 : 1.0/2.0;
-
-    HoldemFunctionModel *cLeft = &ap;
-    HoldemFunctionModel *cRight = &choicegain_base;
-    HoldemFunctionModel *aLeft = &choicegain_rev;
-    HoldemFunctionModel *aRight = &ap;
-
-    if( bGamble / 3 == 1 )
-    {
-        cLeft = &choicegain_base;
-        cRight = &ap;
-
-        aLeft = &ap;
-        aRight = &choicegain_rev;
-    }
-
-    AutoScalingFunction choicegain     (cLeft,cRight,myBet,maxShowdown,MAX_UPTO,&myExpectedCall);
-    SlidingPairFunction choicegain_upto(cLeft,cRight,                  MAX_UPTO,&myExpectedCall);
-    AutoScalingFunction tournGain      (aLeft,aRight,myBet,maxShowdown,1       ,&myExpectedCall);
-
-    HoldemFunctionModel* targetModel;
-
-
-	if( maxShowdown == myBet || maxShowdown < betToCall )
-	{
-		if( bGamble % 3 == 2 )
-		{
-			targetModel = &ap;
-		}else
-		{
-
-			if( MAX_UPTO == 1 )
-			{
-			targetModel = &choicegain_base;
-			}else
-			{
-			targetModel = &choicegain_upto;
-			}
-		}
-	}else
-	{
-		if( bGamble % 3 == 2 )
-		{
-		    targetModel = &tournGain;
-		}else
-		{
-		    targetModel = &choicegain;
-		}
-	}
-
+    AutoScalingFunction choicemodel(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,&myExpectedCall);
 
 #ifdef LOGPOSITION
-
-    logFile << "strike!  " << tableSizeRec << endl;
-
+    logFile << "uncertainty      " << uncertainty << endl;
+    logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
+    //logFile << "V Factor         " << volatilityFactor << endl;
+    //logFile << "BetToCall PCT    " << certainty << endl;
+    logFile << "impliedFactor... " << futureFold << endl;
 #endif
 
-    const float64 bestBet = solveGainModel(targetModel);
+    const float64 bestBet = solveGainModel(&hybridgain);
 
     return bestBet;
 
@@ -448,9 +388,6 @@ float64 DeterredGainStrategy::MakeBet()
 float64 CorePositionalStrategy::MakeBet()
 {
     setupPosition();
-
-
-
 
 
     ///VARIABLE: the slider can move due to avgDev too, maybe....
@@ -482,6 +419,7 @@ float64 CorePositionalStrategy::MakeBet()
 
 
     GainModel rankGeom(statranking,&myExpectedCall);
+    GainModel hybridGeom(hybridMagnified,&myExpectedCall);
     //GainModelNoRisk choicegain_rnr(statranking,&myExpectedCall);
 
 
@@ -496,14 +434,14 @@ float64 CorePositionalStrategy::MakeBet()
 
 
     #ifdef DEBUGASSERT
-        if( bGamble >= 7 )
+        if( bGamble >= BGAMBLE_MAX )
         {
                 std::cout << "Incorrect bGAMBLE" << endl;
                 exit(1);
         }
     #endif
 
-    HoldemFunctionModel* (lookup[7]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC };
+    HoldemFunctionModel* (lookup[BGAMBLE_MAX]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom };
 
     #ifdef LOGPOSITION
         const float64 improveMod = detailPCT.improve * 2;

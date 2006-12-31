@@ -32,6 +32,8 @@
 //#define ARBITARY_DISTANCE
 
 
+#define BGAMBLE_MAX 8
+
 ///RULE OF THUMB?
 ///It looks like increasing winPCT loosens up the player
 ///However, you add aggressiveness by modifying exf?
@@ -49,6 +51,7 @@ class PositionalStrategy : virtual public PlayerStrategy
         StatResult statmean;
         StatResult statworse;
         StatResult statranking;
+        StatResult hybridMagnified;
         CallCumulationD foldcumu;
         CallCumulationD callcumu;
 
@@ -60,9 +63,13 @@ class PositionalStrategy : virtual public PlayerStrategy
 
         float64 myBet;
         float64 maxShowdown;
-
+        float64 expectedVS;
 
         #ifdef LOGPOSITION
+        bool bLogMean;
+        bool bLogRanking;
+        bool bLogWorse;
+        bool bLogHybrid;
         ofstream logFile;
         #endif
 
@@ -70,7 +77,7 @@ class PositionalStrategy : virtual public PlayerStrategy
         float64 solveGainModel(HoldemFunctionModel*);
 	public:
 
-		PositionalStrategy() : PlayerStrategy(), detailPCT(0) {}
+		PositionalStrategy( bool bMean=false,bool bRanking=false,bool bWorse=false,bool bHybrid=false ) : PlayerStrategy(), detailPCT(0), bLogMean(bMean), bLogRanking(bRanking), bLogWorse(bWorse), bLogHybrid(bHybrid) {}
 		virtual ~PositionalStrategy();
 
 		virtual void SeeCommunity(const Hand&, const int8);
@@ -86,7 +93,7 @@ class ImproveStrategy : public PositionalStrategy
     protected:
     int8 bGamble;
     public:
-    ImproveStrategy(int8 riskymode =0) : bGamble(riskymode) {}
+    ImproveStrategy(int8 riskymode =0) : PositionalStrategy(false,true,true,false), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }
@@ -98,7 +105,18 @@ class DeterredGainStrategy : public PositionalStrategy
     protected:
     int8 bGamble;
     public:
-    DeterredGainStrategy(int8 riskymode =0) : bGamble(riskymode) {}
+    DeterredGainStrategy(int8 riskymode =0) : PositionalStrategy(false,false,false,true), bGamble(riskymode) {}
+
+    virtual float64 MakeBet();
+}
+;
+
+class HybridScalingStrategy : public PositionalStrategy
+{
+    protected:
+    int8 bGamble;
+    public:
+    HybridScalingStrategy(int8 riskymode =0) : PositionalStrategy(true,true,false,false), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }
@@ -106,6 +124,11 @@ class DeterredGainStrategy : public PositionalStrategy
 
 class CorePositionalStrategy : public PositionalStrategy
 {
+    private:
+    const static bool lkupLogMean[BGAMBLE_MAX];
+    const static bool lkupLogRanking[BGAMBLE_MAX];
+    const static bool lkupLogWorse[BGAMBLE_MAX];
+    const static bool lkupLogHybrid[BGAMBLE_MAX];
     protected:
     int8 bGamble;
     public:
