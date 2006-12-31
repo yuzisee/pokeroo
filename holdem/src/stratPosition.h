@@ -32,7 +32,7 @@
 //#define ARBITARY_DISTANCE
 
 
-#define BGAMBLE_MAX 8
+#define BGAMBLE_MAX 9
 
 ///RULE OF THUMB?
 ///It looks like increasing winPCT loosens up the player
@@ -132,7 +132,7 @@ class CorePositionalStrategy : public PositionalStrategy
     protected:
     int8 bGamble;
     public:
-    CorePositionalStrategy(int8 riskymode) : bGamble(riskymode) {}
+    CorePositionalStrategy(int8 riskymode) : PositionalStrategy(lkupLogMean[riskymode],lkupLogRanking[riskymode],lkupLogWorse[riskymode],lkupLogHybrid[riskymode]), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }
@@ -145,6 +145,8 @@ class CorePositionalStrategy : public PositionalStrategy
 4   statmean, Algb <-- Callstation-ish, needs to play tighter
 5   statranking, Geom, potCommit <-- PotCommit doesn't help when all in, and you need 100% anyways
 6   statmean, Geom, potCommit
+7   hybridMagnified, Geom
+8   hybridMagnified, Algb
 
 
 

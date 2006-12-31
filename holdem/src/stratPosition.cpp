@@ -22,10 +22,10 @@
 #include "stratPosition.h"
 
 
-const bool CorePositionalStrategy::lkupLogMean[BGAMBLE_MAX] = {false,true,false,false,true,false,true,true};
-const bool CorePositionalStrategy::lkupLogRanking[BGAMBLE_MAX] = {true,false,false,true,false,true,false,true};
-const bool CorePositionalStrategy::lkupLogWorse[BGAMBLE_MAX] = {false,false,true,false,false,false,true,false};
-const bool CorePositionalStrategy::lkupLogHybrid[BGAMBLE_MAX] = {false,false,false,false,false,false,false,true};
+const bool CorePositionalStrategy::lkupLogMean[BGAMBLE_MAX] = {false,true,false,false,true,false,true,true,false};
+const bool CorePositionalStrategy::lkupLogRanking[BGAMBLE_MAX] = {true,false,false,true,false,true,false,true,false};
+const bool CorePositionalStrategy::lkupLogWorse[BGAMBLE_MAX] = {false,false,true,false,false,false,true,false,false};
+const bool CorePositionalStrategy::lkupLogHybrid[BGAMBLE_MAX] = {false,false,false,false,false,false,false,true,true};
 
 // &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom
 
@@ -420,6 +420,7 @@ float64 CorePositionalStrategy::MakeBet()
 
     GainModel rankGeom(statranking,&myExpectedCall);
     GainModel hybridGeom(hybridMagnified,&myExpectedCall);
+    GainModelNoRisk hybridAlgb(hybridMagnified,&myExpectedCall);
     //GainModelNoRisk choicegain_rnr(statranking,&myExpectedCall);
 
 
@@ -441,7 +442,7 @@ float64 CorePositionalStrategy::MakeBet()
         }
     #endif
 
-    HoldemFunctionModel* (lookup[BGAMBLE_MAX]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom };
+    HoldemFunctionModel* (lookup[BGAMBLE_MAX]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom, &hybridAlgb };
 
     #ifdef LOGPOSITION
         const float64 improveMod = detailPCT.improve * 2;

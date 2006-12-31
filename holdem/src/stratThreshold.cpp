@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#define ALLBET 25
+#define ALLBET 30
 
 #include <math.h>
 #include "stratThreshold.h"
@@ -108,6 +108,7 @@ float64 ThresholdStrategy::MakeBet()
 
 float64 MultiThresholdStrategy::MakeBet()
 {
+    if( bCall == 4 ) return ViewTable().GetBetToCall() + ALLBET;
     if( bCall == 3 ) return ALLBET; // ViewTable().GetBigBlind()*2;
 
     float64 multiThreshhold = pow(w->mean,ViewTable().GetNumberAtTable()-1+redundancy); //subtract yourself

@@ -829,6 +829,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	UserConsoleStrategy consolePlay;
 	//ConsoleStrategy manPlay[3];
     MultiThresholdStrategy drainFold(3,3);
+    MultiThresholdStrategy pushAll(4,4);
 	MultiThresholdStrategy pushFold(0,2);
 	MultiThresholdStrategy tightPushFold(1,0);
 	//ConsoleStepStrategy watchPlay;
@@ -839,7 +840,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	CorePositionalStrategy MeanAlgb(4);
 	CorePositionalStrategy PotCommittalRankGeom(5);
 	CorePositionalStrategy PotCommittalMeanGeom(6);
+	CorePositionalStrategy HybridGeom(7);
+	CorePositionalStrategy HybridAlgb(8);
 	ImproveStrategy DistrScaleP;
+	DeterredGainStrategy FutureFoldP;
 
     //TournamentStrategy asterisk;
     //TournamentStrategy gruff(1);
@@ -858,18 +862,18 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         }
     }else
     {
-
-        myTable.AddPlayer("i4", &drainFold);
-        myTable.AddPlayer("X3", &pushFold);
-        myTable.AddPlayer("A3", &tightPushFold);
+        //myTable.AddPlayer("q4", &pushAll);
+        //myTable.AddPlayer("i4", &drainFold);
+        //myTable.AddPlayer("X3", &pushFold);
+        //myTable.AddPlayer("A3", &tightPushFold);
 
     }
 
     switch(headsUp)
     {
         case 'P':
-            myTable.AddPlayer("TrapBotII", 200, &RankGeom); /* riskymode = 0 */
-            myTable.AddPlayer("ComBotII", 200, &MeanGeom); /* riskymode = 1 */
+            myTable.AddPlayer("TrapBotII", 200, &FutureFoldP); /* riskymode = 0 */
+            myTable.AddPlayer("ComBotII", 200, &HybridGeom); /* riskymode = 1 */
             myTable.AddPlayer("SpaceBotII", 200, &DistrScaleP); /* riskymode = 2 */
             break;
         case 'M':
@@ -882,11 +886,15 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             //myTable.AddPlayer("RankGeom", &RankGeom); /* riskymode = 0 */
             //myTable.AddPlayer("MeanGeom", &MeanGeom); /* riskymode = 1 */
             //myTable.AddPlayer("WorseAlgb", &WorseAlgb); /* riskymode = 2 */
-            //myTable.AddPlayer("RankAlgb", &RankAlgb); /* riskymode = 3 */
-            //myTable.AddPlayer("MeanAlgb", &MeanAlgb); /* riskymode = 4 */
+            myTable.AddPlayer("RankAlgb", &RankAlgb); /* riskymode = 3 */
+            myTable.AddPlayer("MeanAlgb", &MeanAlgb); /* riskymode = 4 */
             //myTable.AddPlayer("RankGeomPC", &PotCommittalRankGeom); /* riskymode = 5 */
             //myTable.AddPlayer("MeanGeomPC", &PotCommittalMeanGeom); /* riskymode = 6 */
-            myTable.AddPlayer("SpaceBotII", &DistrScaleP);
+            //myTable.AddPlayer("HybridGeom", &HybridGeom); /* riskymode = 7 */
+            myTable.AddPlayer("HybridAlgb", &HybridAlgb); /* riskymode = 8 */
+            //myTable.AddPlayer("SpaceBotII", &DistrScaleP);
+            //myTable.AddPlayer("TrapBotII", &FutureFoldP);
+
 
 
             break;
@@ -1004,8 +1012,8 @@ int main(int argc, char* argv[])
 	    testPlay('L');
 #else
         //debugPosition();
-	    //superGame(0);
-   	    testPlay(0);
+	    superGame(0);
+   	    //testPlay(0);
    	    //testNewCallStats();
 #endif
 	    //testDeal();
