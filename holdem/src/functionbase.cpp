@@ -484,10 +484,34 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
 
         if(xn < x2 - quantum/2 && xn > x1 + quantum/2)
         {
-            xb = xn;
-        }///Otherwise we stay with xb which is bisection
 
-        yb = f(xb);
+            const float64 yn = f(xn);
+            ///Possible shortcut
+            if( yb*yn < 0 ) //different signs
+            {
+                if( xb < xn )
+                {
+                    x1 = xb;
+                    y1 = yb;
+                    x2 = xn;
+                    y2 = yn;
+                }else{
+                    x1 = xn;
+                    y1 = yn;
+                    x2 = xb;
+                    y2 = yb;
+                }
+
+                xb = bisectionStep(x1,x2);
+                yb = f(xb);
+            }else
+            {//No shortcut
+                xb = xn;
+                yb = yn;
+            }
+        }///Otherwise we stay with xb and yb which is bisection
+
+
 
         if( yb == 0 ) return xb;
 
