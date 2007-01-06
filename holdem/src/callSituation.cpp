@@ -149,6 +149,9 @@ void ExactCallD::query(const float64 betSize)
     const float64 myexf = betSize;
     const float64 mydexf = 1;
 
+	float64 overexf = 0;
+	float64 overdexf = 0;
+
     totalexf = table->GetPotSize() - table->ViewPlayer(playerID)->GetBetSize()  +  myexf;
     //float64 lastexf = totalexf;
 
@@ -160,22 +163,21 @@ void ExactCallD::query(const float64 betSize)
     table->incrIndex(pIndex);
     while( pIndex != playerID )
     {
+		float64 nextexf = 0;
+        float64 nextdexf = 0;
+		const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
 
         if( table->CanStillBet(pIndex) )
         {///Predict how much the bet will be
-            float64 oppBankRoll = table->ViewPlayer(pIndex)->GetMoney();
-            float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
-            float64 nextexf;
-            float64 nextdexf;
-
+            const float64 oppBankRoll = table->ViewPlayer(pIndex)->GetMoney();
 
             if( betSize < oppBankRoll )
             {
 
-                float64 oppBetMake = betSize - oppBetAlready;
+                const float64 oppBetMake = betSize - oppBetAlready;
                 //To understand the above, consider that totalexf includes already made bets
 
-                if( oppBetMake == 0 )
+                if( oppBetMake <= 0 )
                 {
                     nextexf = 0;
                     nextdexf = 1;
@@ -205,26 +207,38 @@ void ExactCallD::query(const float64 betSize)
                 }
             }else
             {///Opponent would be all-in to call this bet
-                float64 oldpot = table->GetPrevPotSize();
-                float64 effroundpot = (totalexf - oldpot) * oppBankRoll / betSize;
-                float64 oppBetMake = oppBankRoll - oppBetAlready;
+                const float64 oldpot = table->GetPrevPotSize();
+                const float64 effroundpot = (totalexf - oldpot) * oppBankRoll / betSize;
+                const float64 oppBetMake = oppBankRoll - oppBetAlready;
                 nextexf = oppBetMake * e->pctWillCall( pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significance) );
 
                 nextdexf = 0;
             }
+
+            
             //lastexf = nextexf;
             totalexf += nextexf;
 
             //lastdexf = nextdexf;
             totaldexf += nextdexf;
+
         }
+
+		const float64 oppInPot = oppBetAlready + nextexf;
+		if( oppInPot > betSize )
+		{
+			overexf += oppInPot - betSize;
+			overdexf += nextdexf;
+		}
 
         table->incrIndex(pIndex);
     }
 
-    totalexf = totalexf - myexf;
-    totaldexf = totaldexf - mydexf;
+    totalexf = totalexf - myexf - overexf;
+    totaldexf = totaldexf - mydexf - overdexf;
 
+	if( totalexf < 0 ) totalexf = 0; //Due to rounding error in overexf?
+	if( totaldexf < 0 ) totaldexf = 0; //Due to rounding error in overexf?
 
 }
 
