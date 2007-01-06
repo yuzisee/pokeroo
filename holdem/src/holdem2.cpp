@@ -349,12 +349,13 @@ void CommunityPlus::RemoveFromHand(
 #ifdef DEBUGASSERT
 	std::cerr << "HEAVILY INEFFICIENT. Avoid Use" << endl;
 	exit(1);
-#endif
+#else
 
 	HandPlus::RemoveFromHand(aSuit,aIndex,aCard);
 	--flushCount[aSuit];
 	populateValueset();
 	preEvalStrength();
+#endif
 }
 
 ///aIndex is NOT RANK

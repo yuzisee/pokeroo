@@ -24,12 +24,12 @@
 #define HOLDEM_Arena
 
 
-//#define DEBUGSPECIFIC 2
+#define DEBUGSPECIFIC 45
 #define GRAPHMONEY "chipcount.csv"
 #define REPRODUCIBLE
 ///COMMENT OUT DEBUGSPECIFIC IF YOU WISH TO GRAPHMONEY
 
-//#define DEBUGBETMODEL
+#define DEBUGBETMODEL
 #define DEBUGSAVEGAME "savegame.log"
 //#define DEBUGSAVE_EXTRATOKEN 32
 
@@ -79,7 +79,7 @@ class Player
 
 
 
-		Player( float64 money, const std::string name, PlayerStrategy* strat, float64 init_play, float64 syncHuman = false)
+		Player( float64 money, const std::string name, PlayerStrategy* strat, float64 init_play, bool syncHuman = false)
 		: myStrat(strat),  allIn(init_play), myMoney(money),
 		 handBetTotal(0), myBetSize(0), lastBetSize(init_play), bSync(syncHuman)
 		{

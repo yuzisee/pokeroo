@@ -20,6 +20,9 @@
 
 #include "arena.h"
 
+#include <algorithm>
+using std::sort;
+
 void HoldemArenaBetting::finishBettingRound()
 {
 /*

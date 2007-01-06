@@ -115,22 +115,34 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     hybridMagnified.repeated = 0; ///.repeated WILL otherwise ACCUMULATE!
 
 #ifdef LOGPOSITION
-    logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
-    logFile << "(Mean.wins) " << statmean.wins * 100 << "%"  << std::endl;
-    logFile << "(Mean.splits) " << statmean.splits * 100 << "%"  << std::endl;
-    logFile << "(Mean.loss) " << statmean.loss * 100 << "%"  << std::endl;
-    logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
-    logFile << "(Worst.wins) " << statworse.wins * 100 << "%"  << std::endl;
-    logFile << "(Worst.splits) " << statworse.splits * 100 << "%"  << std::endl;
-    logFile << "(Worst.loss) " << statworse.loss * 100 << "%"  << std::endl;
-    logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
-    logFile << "(Outright.wins) " << statranking.wins * 100 << "%"  << std::endl;
-    logFile << "(Outright.splits) " << statranking.splits * 100 << "%"  << std::endl;
-    logFile << "(Outright.loss) " << statranking.loss * 100 << "%"  << std::endl;
-    logFile << "(Hybrid) " << hybridMagnified.pct * 100 << "%"  << std::endl;
-    logFile << "(Hybrid.wins) " << hybridMagnified.wins * 100 << "%"  << std::endl;
-    logFile << "(Hybrid.splits) " << hybridMagnified.splits * 100 << "%"  << std::endl;
-    logFile << "(Hybrid.loss) " << hybridMagnified.loss * 100 << "%"  << std::endl;
+    if(bLogMean)
+    {
+        logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
+        logFile << "(Mean.wins) " << statmean.wins * 100 << "%"  << std::endl;
+        logFile << "(Mean.splits) " << statmean.splits * 100 << "%"  << std::endl;
+        logFile << "(Mean.loss) " << statmean.loss * 100 << "%"  << std::endl;
+    }
+    if(bLogWorse)
+    {
+        logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
+        logFile << "(Worst.wins) " << statworse.wins * 100 << "%"  << std::endl;
+        logFile << "(Worst.splits) " << statworse.splits * 100 << "%"  << std::endl;
+        logFile << "(Worst.loss) " << statworse.loss * 100 << "%"  << std::endl;
+    }
+    if(bLogRanking)
+    {
+        logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
+        logFile << "(Outright.wins) " << statranking.wins * 100 << "%"  << std::endl;
+        logFile << "(Outright.splits) " << statranking.splits * 100 << "%"  << std::endl;
+        logFile << "(Outright.loss) " << statranking.loss * 100 << "%"  << std::endl;
+    }
+    if(bLogHybrid)
+    {
+        logFile << "(Hybrid) " << hybridMagnified.pct * 100 << "%"  << std::endl;
+        logFile << "(Hybrid.wins) " << hybridMagnified.wins * 100 << "%"  << std::endl;
+        logFile << "(Hybrid.splits) " << hybridMagnified.splits * 100 << "%"  << std::endl;
+        logFile << "(Hybrid.loss) " << hybridMagnified.loss * 100 << "%"  << std::endl;
+    }
 #endif
 
 }
@@ -356,18 +368,7 @@ float64 DeterredGainStrategy::MakeBet()
     const float64 futureFold = 1 - sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
 
 
-    CallCumulationD &choicecumu = callcumu;
-
-    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
-    ExactCallD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu);
-    myDeterredCall.SetImpliedFactor(futureFold);
-
-
-    GainModel hybridgain(statranking,&myExpectedCall);
-    GainModel hybridgainDeterred(statranking,&myDeterredCall);
-
-    AutoScalingFunction choicemodel(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,&myExpectedCall);
-
+    
 #ifdef LOGPOSITION
     logFile << "uncertainty      " << uncertainty << endl;
     logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
@@ -375,8 +376,22 @@ float64 DeterredGainStrategy::MakeBet()
     //logFile << "BetToCall PCT    " << certainty << endl;
     logFile << "impliedFactor... " << futureFold << endl;
 #endif
+    
+    
+    CallCumulationD &choicecumu = callcumu;
 
-    const float64 bestBet = solveGainModel(&hybridgain);
+    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    ExactCallD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    myDeterredCall.SetImpliedFactor(futureFold);
+
+
+    GainModelNoRisk hybridgain(hybridMagnified,&myExpectedCall);
+    GainModel hybridgainDeterred(hybridMagnified,&myDeterredCall);
+
+    AutoScalingFunction submodel(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,hybridMagnified.pct,&myExpectedCall);
+    //AutoScalingFunction choicemodel(&hybridgainDeterred,&submodel,0.0,maxShowdown,&myExpectedCall);
+    
+    const float64 bestBet = solveGainModel(&submodel);
 
     return bestBet;
 
@@ -407,7 +422,8 @@ float64 CorePositionalStrategy::MakeBet()
     {
         raiseBattle = betToCall;
     }
-    const float64 expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
+    
+    myLimitCall.callingPlayers(  expectedVS  );
     if( expectedVS < 0 ) //You have no money
     {
         myLimitCall.callingPlayers( myExpectedCall.betFraction(ViewTable().GetChipDenom()) ) ;

@@ -321,7 +321,7 @@ void testDR()
 
 	DealRemainder deal;
 	HandPlus h1, h2, dum;
-	short cardcount=0;
+	int8 cardcount=0;
 	int unsigned lastCardCount=0;
 
 	//OrderedDeck rd;
@@ -706,19 +706,19 @@ void debugPosition()
 
 
 //Community 2C 7D KC
-    h2.AddToHand(HoldemConstants::CLUBS, 1, HoldemConstants::CARD_DEUCE );
-    h2.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
+    h2.AddToHand(HoldemConstants::SPADES, 4, HoldemConstants::CARD_FIVE );
+    h2.AddToHand(HoldemConstants::HEARTS, 10, HoldemConstants::CARD_JACK );
     //h2.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
-    h2.AddToHand(HoldemConstants::CLUBS, 8, HoldemConstants::CARD_NINE );
+    h2.AddToHand(HoldemConstants::SPADES, 13, HoldemConstants::CARD_ACEHIGH );
     //h2.AddToHand(HoldemConstants::CLUBS, 12, HoldemConstants::CARD_KING );
     //BlindStructure.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
 //    h1.SetUnique(h2);
 
 //Hole cards 8H tH
-    honly.AddToHand(HoldemConstants::DIAMONDS,6, HoldemConstants::CARD_SEVEN );
-    //honly.AddToHand(HoldemConstants::HEARTS, 3, HoldemConstants::CARD_FOUR );
-    //honly.AddToHand(HoldemConstants::HEARTS,12, HoldemConstants::CARD_KING );
-    honly.AddToHand(HoldemConstants::CLUBS, 13, HoldemConstants::CARD_ACEHIGH );
+    honly.AddToHand(HoldemConstants::SPADES,1, HoldemConstants::CARD_DEUCE );
+    //honly.AddToHand(HoldemConstants::DIAMONDS, 3, HoldemConstants::CARD_FOUR );
+    //honly.AddToHand(HoldemConstants::SPADES,12, HoldemConstants::CARD_KING );
+    honly.AddToHand(HoldemConstants::CLUBS, 11, HoldemConstants::CARD_QUEEN);
     h1.AppendUnique(honly);
     const uint8 dealtCommunityNumber=3;
 
@@ -742,7 +742,7 @@ void debugPosition()
 	DebugArena myTable(&b,cout, true);
     UserConsoleStrategy testDummy[5];
 
-    CorePositionalStrategy a(1);
+    DeterredGainStrategy a(1);
     //TournamentStrategy a;
 
 
@@ -754,14 +754,14 @@ void debugPosition()
 	myTable.SetDeadPot(0);
 
 
-    myTable.SetBet(  myTable.AddPlayer("testDriver.cpp",35, &a) , 0 );
+    myTable.SetBet(  myTable.AddPlayer("testDriver.cpp",106.55, &a) , 0 );
     //myTable.SetBet(  myTable.AddPlayer("X3",125, testDummy+1) ,  myTable.GetSmallBlind() );
 
 
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",74, testDummy+2) , 0 );
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent4",17, testDummy+4) , 0 );
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent5",50, testDummy+1) , 0 );
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent6",420, testDummy+3) , 0.05 );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",193.45, testDummy+2) , 193.45 );
+    //myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent4",17, testDummy+4) , 0 );
+//    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent5",50, testDummy+1) , 0 );
+  //  myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent6",420, testDummy+3) , 0.05 );
     myTable.InitGame();
 
     cout << "Number in hand " << (int)(myTable.GetNumberInHand()) << endl;
@@ -865,7 +865,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         //myTable.AddPlayer("q4", &pushAll);
         //myTable.AddPlayer("i4", &drainFold);
         //myTable.AddPlayer("X3", &pushFold);
-        //myTable.AddPlayer("A3", &tightPushFold);
+        myTable.AddPlayer("A3", &tightPushFold);
 
     }
 
@@ -886,14 +886,14 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             //myTable.AddPlayer("RankGeom", &RankGeom); /* riskymode = 0 */
             //myTable.AddPlayer("MeanGeom", &MeanGeom); /* riskymode = 1 */
             //myTable.AddPlayer("WorseAlgb", &WorseAlgb); /* riskymode = 2 */
-            myTable.AddPlayer("RankAlgb", &RankAlgb); /* riskymode = 3 */
-            myTable.AddPlayer("MeanAlgb", &MeanAlgb); /* riskymode = 4 */
+            //myTable.AddPlayer("RankAlgb", &RankAlgb); /* riskymode = 3 */
+            //myTable.AddPlayer("MeanAlgb", &MeanAlgb); /* riskymode = 4 */
             //myTable.AddPlayer("RankGeomPC", &PotCommittalRankGeom); /* riskymode = 5 */
             //myTable.AddPlayer("MeanGeomPC", &PotCommittalMeanGeom); /* riskymode = 6 */
             //myTable.AddPlayer("HybridGeom", &HybridGeom); /* riskymode = 7 */
-            myTable.AddPlayer("HybridAlgb", &HybridAlgb); /* riskymode = 8 */
+            //myTable.AddPlayer("HybridAlgb", &HybridAlgb); /* riskymode = 8 */
             //myTable.AddPlayer("SpaceBotII", &DistrScaleP);
-            //myTable.AddPlayer("TrapBotII", &FutureFoldP);
+            myTable.AddPlayer("TrapBotII", &FutureFoldP);
 
 
 
@@ -1012,8 +1012,8 @@ int main(int argc, char* argv[])
 	    testPlay('L');
 #else
         //debugPosition();
-	    superGame(0);
-   	    //testPlay(0);
+	    //superGame(0);
+   	    testPlay(1);
    	    //testNewCallStats();
 #endif
 	    //testDeal();

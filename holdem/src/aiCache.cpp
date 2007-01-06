@@ -81,7 +81,7 @@ string StatsManager::dbFileName(const Hand& withCommunity, const Hand& onlyCommu
 
 bool StatsManager::unserializeDistrShape(ifstream& dataf, DistrShape* d)
 {
-    size_t cachebufSize= sizeof(DistrShape);
+    long cachebufSize= sizeof(DistrShape);
     if( 0 == d )
     {
         dataf.seekg(cachebufSize,std::ios::cur);
@@ -94,7 +94,7 @@ bool StatsManager::unserializeDistrShape(ifstream& dataf, DistrShape* d)
 }
 bool StatsManager::unserializeStatResult(ifstream& dataf, StatResult* d)
 {
-    size_t cachebufSize= sizeof(StatResult);
+    long cachebufSize= sizeof(StatResult);
     if( 0 == d )
     {
         dataf.seekg(cachebufSize,std::ios::cur);
@@ -110,14 +110,14 @@ bool StatsManager::unserializeStatResult(ifstream& dataf, StatResult* d)
 void StatsManager::serializeDistrShape(ofstream& dataf, const DistrShape& d)
 {
     const char *cachebuf = reinterpret_cast<const char*>(&d);
-    size_t cachebufSize = sizeof(DistrShape);
+	std::streamsize cachebufSize = sizeof(DistrShape);
     dataf.write(cachebuf,cachebufSize);
 }
 
 void StatsManager::serializeStatResult(ofstream& dataf, const StatResult& d)
 {
     const char *cachebuf = reinterpret_cast<const char*>(&d);
-    size_t cachebufSize = sizeof(StatResult);
+    std::streamsize cachebufSize = sizeof(StatResult);
     dataf.write(cachebuf,cachebufSize);
 }
 

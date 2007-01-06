@@ -22,6 +22,7 @@
 //#define DEBUGALLINS
 //#define FORCEPAUSE
 //#define DELAYHANDS
+#define RELOAD_LAST_HAND
 
 #include "arena.h"
 #include <fstream>
@@ -770,7 +771,10 @@ Player* HoldemArena::PlayTable()
 		PlayGame();
         RefreshPlayers(); ///New Hand
 #ifdef DEBUGSAVEGAME
-        saveState();
+    #ifdef RELOAD_LAST_HAND        
+        if( livePlayers > 1 )
+    #endif
+        {  saveState();  }
 #endif
 	}
 
