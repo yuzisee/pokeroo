@@ -394,8 +394,12 @@ float64 DeterredGainStrategy::MakeBet()
     myDeterredCall.SetImpliedFactor(futureFold);
 
 
-    GainModelNoRisk hybridgain(hybridMagnified,&myExpectedCall);
-    GainModel hybridgainDeterred(hybridMagnified,&myDeterredCall);
+    //GainModelNoRisk hybridgain(hybridMagnified,&myExpectedCall);
+    //GainModel hybridgainDeterred(hybridMagnified,&myDeterredCall);
+
+	//GainModelNoRisk hybridgain(statmean,&myExpectedCall);
+	GainModel hybridgain(statranking,&myExpectedCall);
+    GainModel hybridgainDeterred(statranking,&myDeterredCall);
 
     AutoScalingFunction submodel(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,hybridMagnified.pct,&myExpectedCall);
     AutoScalingFunction choicemodel(&hybridgainDeterred,&submodel,0.0,maxShowdown,&myExpectedCall);
