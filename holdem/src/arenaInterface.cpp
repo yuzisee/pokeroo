@@ -353,7 +353,7 @@ bool HoldemArena::HasFolded(int8 n) const
 
 bool HoldemArena::CanStillBet(int8 n) const
 {
-    return IsInHand(n) && p[n]->allIn == INVALID;
+    return IsInHand(n) && p[n]->allIn == INVALID && p[n]->GetMoney() > 0;
 }
 
 float64 HoldemArena::GetBetToCall() const

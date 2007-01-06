@@ -198,6 +198,13 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
         #endif
 
 
+	if( maxShowdown <= 0 )
+	{	//This probably shouldn't happen unless two people are left in the hand and one of them has zero.
+		//At the time there was a bug in arenaEvents where it would still let the person with money, bet.
+		return maxShowdown;
+	}
+
+
 
 // #############################################################################
 /// MATHEMATIC SOLVING BEGINS HERE
@@ -269,16 +276,16 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
     ///Else you play wherever choicePoint is.
 
 
-    #ifdef DEBUGASSERT
-        if( raiseGain < 0 )
-        {
-            #ifdef LOGPOSITION
-            logFile << "raiseGain: f("<< choicePoint <<")=" << raiseGain << endl;
-            logFile << "Redundant CHECK/FOLD detect required" << endl;
-            #endif
-            return myBet;
-        }
-    #endif
+
+    if( raiseGain < 0 )
+    {
+        #ifdef LOGPOSITION
+        logFile << "raiseGain: f("<< choicePoint <<")=" << raiseGain << endl;
+		logFile << "CHECK/FOLD" << endl;
+        #endif
+        return myBet;
+    }
+
 
     if( betToCall < choicePoint )
 	{
@@ -361,7 +368,9 @@ float64 ImproveStrategy::MakeBet()
 
 float64 DeterredGainStrategy::MakeBet()
 {
-    setupPosition();
+	setupPosition();
+
+
 
     //const float64 certainty = betToCall / maxShowdown;
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
@@ -389,9 +398,9 @@ float64 DeterredGainStrategy::MakeBet()
     GainModel hybridgainDeterred(hybridMagnified,&myDeterredCall);
 
     AutoScalingFunction submodel(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,hybridMagnified.pct,&myExpectedCall);
-    //AutoScalingFunction choicemodel(&hybridgainDeterred,&submodel,0.0,maxShowdown,&myExpectedCall);
+    AutoScalingFunction choicemodel(&hybridgainDeterred,&submodel,0.0,maxShowdown,&myExpectedCall);
     
-    const float64 bestBet = solveGainModel(&submodel);
+    const float64 bestBet = solveGainModel(&choicemodel);
 
     return bestBet;
 
