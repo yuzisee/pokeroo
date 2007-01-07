@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 
-//#define WINRELEASE
+#define WINRELEASE
 #define AUTOEXTRATOKEN "restore.txt"
 
 
@@ -751,14 +751,14 @@ void debugPosition()
     myTable.AssignHandNum(DEBUGSPECIFIC);
     #endif
     myTable.SetBlindPot(0);
-	myTable.SetDeadPot(0);
+	myTable.SetDeadPot(2);
 
 
-    myTable.SetBet(  myTable.AddPlayer("testDriver.cpp",106.55, &a) , 0 );
+    myTable.SetBet(  myTable.AddPlayer("testDriver.cpp",199, &a) , 0 );
     //myTable.SetBet(  myTable.AddPlayer("X3",125, testDummy+1) ,  myTable.GetSmallBlind() );
 
 
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",193.45, testDummy+2) , 193.45 );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",0, testDummy+2) , 0 );
     //myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent4",17, testDummy+4) , 0 );
 //    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent5",50, testDummy+1) , 0 );
   //  myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent6",420, testDummy+3) , 0.05 );
@@ -844,6 +844,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	CorePositionalStrategy HybridAlgb(8);
 	ImproveStrategy DistrScaleP;
 	DeterredGainStrategy FutureFoldP;
+	HybridScalingStrategy AutoSetP;
 
     //TournamentStrategy asterisk;
     //TournamentStrategy gruff(1);
@@ -862,9 +863,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         }
     }else
     {
-        //myTable.AddPlayer("q4", &pushAll);
-        //myTable.AddPlayer("i4", &drainFold);
-        //myTable.AddPlayer("X3", &pushFold);
+        myTable.AddPlayer("q4", &pushAll);
+        myTable.AddPlayer("i4", &drainFold);
+        myTable.AddPlayer("X3", &pushFold);
         myTable.AddPlayer("A3", &tightPushFold);
 
     }
@@ -872,9 +873,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     switch(headsUp)
     {
         case 'P':
-            myTable.AddPlayer("TrapBotII", 200, &FutureFoldP); /* riskymode = 0 */
-            myTable.AddPlayer("ComBotII", 200, &HybridGeom); /* riskymode = 1 */
-            myTable.AddPlayer("SpaceBotII", 200, &DistrScaleP); /* riskymode = 2 */
+            myTable.AddPlayer("SpaceBotII", 200, &AutoSetP);
+            myTable.AddPlayer("ComBotII", 200, &FutureFoldP);
+            myTable.AddPlayer("TrapBotII", 200, &DistrScaleP);
             break;
         case 'M':
             myTable.AddPlayer("M2", &RankGeom); /* riskymode = 0 */
@@ -892,8 +893,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             //myTable.AddPlayer("MeanGeomPC", &PotCommittalMeanGeom); /* riskymode = 6 */
             //myTable.AddPlayer("HybridGeom", &HybridGeom); /* riskymode = 7 */
             //myTable.AddPlayer("HybridAlgb", &HybridAlgb); /* riskymode = 8 */
-            //myTable.AddPlayer("SpaceBotII", &DistrScaleP);
-            myTable.AddPlayer("TrapBotII", &FutureFoldP);
+            myTable.AddPlayer("TrapBotII", &DistrScaleP);
+            myTable.AddPlayer("ComBotII", &FutureFoldP);
+			myTable.AddPlayer("SpaceBotII", &AutoSetP);
 
 
 
@@ -994,7 +996,7 @@ int main(int argc, char* argv[])
         testPlay('P');
     }else
 #endif
-        if( argc == 4 )
+    if( argc == 4 )
     {
         uint16 i=675;
 		while(1)
@@ -1011,9 +1013,9 @@ int main(int argc, char* argv[])
 #ifdef WINRELEASE
 	    testPlay('L');
 #else
-        //debugPosition();
+//        debugPosition();
 	    //superGame(0);
-   	    testPlay(1);
+   	    testPlay(0);
    	    //testNewCallStats();
 #endif
 	    //testDeal();

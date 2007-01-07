@@ -22,6 +22,7 @@
 //#define DEBUGALLINS
 //#define FORCEPAUSE
 //#define DELAYHANDS
+#define NO_REDUNDANT_SEECOMMUNITY
 #define RELOAD_LAST_HAND
 
 #include "arena.h"
@@ -336,7 +337,11 @@ void HoldemArena::prepareRound(const int8 comSize)
 	///React to community cards (each player gets to do that first)
 	do{
 		incrIndex();
+#ifdef NO_REDUNDANT_SEECOMMUNITY
+		if( CanStillBet(curIndex) )
+#else
 		if( IsInHand(curIndex) )
+#endif
 		{
 			Player& withP = *(p[curIndex]);
 			withP.myStrat->SeeCommunity(community, comSize);

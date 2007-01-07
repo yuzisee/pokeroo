@@ -326,8 +326,8 @@ float64 UserConsoleStrategy::queryAction()
         }else
         {
             cout << endl << endl;
-            cout << "Press only [Enter] for check/fold" << endl;
-            cout << "==ENTER ACTION==" << endl;
+            cout << "==ENTER ACTION==";
+            cout << "      (press only [Enter] for check/fold)" << endl;
             if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
             {
                 cout << "check" << endl;

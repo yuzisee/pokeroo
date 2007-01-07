@@ -117,31 +117,33 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 #ifdef LOGPOSITION
     if(bLogMean)
     {
-        logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
-        logFile << "(Mean.wins) " << statmean.wins * 100 << "%"  << std::endl;
-        logFile << "(Mean.splits) " << statmean.splits * 100 << "%"  << std::endl;
-        logFile << "(Mean.loss) " << statmean.loss * 100 << "%"  << std::endl;
+        logFile << "(M) " << statmean.pct * 100 << "%"  << std::endl;
+        logFile << "(M.w) " << statmean.wins * 100 << "%"  << std::endl;
+        logFile << "(M.s) " << statmean.splits * 100 << "%"  << std::endl;
+        logFile << "(M.l) " << statmean.loss * 100 << "%"  << std::endl;
     }
     if(bLogWorse)
     {
         logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
-        logFile << "(Worst.wins) " << statworse.wins * 100 << "%"  << std::endl;
-        logFile << "(Worst.splits) " << statworse.splits * 100 << "%"  << std::endl;
-        logFile << "(Worst.loss) " << statworse.loss * 100 << "%"  << std::endl;
+        logFile << "(W.w) " << statworse.wins * 100 << "%"  << std::endl;
+        logFile << "(W.s) " << statworse.splits * 100 << "%"  << std::endl;
+        logFile << "(W.l) " << statworse.loss * 100 << "%"  << std::endl;
     }
     if(bLogRanking)
     {
         logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
-        logFile << "(Outright.wins) " << statranking.wins * 100 << "%"  << std::endl;
-        logFile << "(Outright.splits) " << statranking.splits * 100 << "%"  << std::endl;
-        logFile << "(Outright.loss) " << statranking.loss * 100 << "%"  << std::endl;
+        logFile << "(O.w) " << statranking.wins * 100 << "%"  << std::endl;
+        logFile << "(O.s) " << statranking.splits * 100 << "%"  << std::endl;
+        logFile << "(O.l) " << statranking.loss * 100 << "%"  << std::endl;
     }
     if(bLogHybrid)
     {
+		if( !bLogMean ) logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
+		if( !bLogRanking ) logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
         logFile << "(Hybrid) " << hybridMagnified.pct * 100 << "%"  << std::endl;
-        logFile << "(Hybrid.wins) " << hybridMagnified.wins * 100 << "%"  << std::endl;
-        logFile << "(Hybrid.splits) " << hybridMagnified.splits * 100 << "%"  << std::endl;
-        logFile << "(Hybrid.loss) " << hybridMagnified.loss * 100 << "%"  << std::endl;
+        logFile << "(H.w) " << hybridMagnified.wins * 100 << "%"  << std::endl;
+        logFile << "(H.s) " << hybridMagnified.splits * 100 << "%"  << std::endl;
+        logFile << "(H.l) " << hybridMagnified.loss * 100 << "%"  << std::endl;
     }
 #endif
 
@@ -366,50 +368,123 @@ float64 ImproveStrategy::MakeBet()
 
 }
 
+
 float64 DeterredGainStrategy::MakeBet()
 {
 	setupPosition();
 
+	if( maxShowdown <= 0 ) return 0;
 
 
-    //const float64 certainty = betToCall / maxShowdown;
+    const float64 certainty = betToCall / maxShowdown;
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
-    const float64 futureFold = 1 - sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
+    const float64 volatilityFactor = 1 - sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
 
-
+	const float64 futureFold = volatilityFactor*(1-certainty) + certainty;
     
 #ifdef LOGPOSITION
     logFile << "uncertainty      " << uncertainty << endl;
     logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
-    //logFile << "V Factor         " << volatilityFactor << endl;
-    //logFile << "BetToCall PCT    " << certainty << endl;
+    logFile << "V Factor         " << volatilityFactor << endl;
+    logFile << "BetToCall PCT    " << certainty << endl;
     logFile << "impliedFactor... " << futureFold << endl;
 #endif
     
     
     CallCumulationD &choicecumu = callcumu;
 
-    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu);
     myDeterredCall.SetImpliedFactor(futureFold);
 
 
-    //GainModelNoRisk hybridgain(hybridMagnified,&myExpectedCall);
-    //GainModel hybridgainDeterred(hybridMagnified,&myDeterredCall);
+	GainModel hybridgainDeterred(hybridMagnified,&myDeterredCall);
+	GainModelNoRisk hybridgain(statmean,&myDeterredCall);
 
-	//GainModelNoRisk hybridgain(statmean,&myExpectedCall);
-	GainModel hybridgain(statranking,&myExpectedCall);
-    GainModel hybridgainDeterred(statranking,&myDeterredCall);
+	AutoScalingFunction choicemodel(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,hybridMagnified.pct*statmean.pct,&myDeterredCall);
 
-    AutoScalingFunction submodel(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,hybridMagnified.pct,&myExpectedCall);
-    AutoScalingFunction choicemodel(&hybridgainDeterred,&submodel,0.0,maxShowdown,&myExpectedCall);
-    
     const float64 bestBet = solveGainModel(&choicemodel);
+
+#ifdef LOGPOSITION
+	logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
+	logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred.f(bestBet) << endl;
+	logFile << "Algb("<< bestBet <<")=" << hybridgain.f(bestBet) << endl;
+#endif
 
     return bestBet;
 
 
 }
+
+
+
+
+
+
+
+float64 HybridScalingStrategy::MakeBet()
+{
+	setupPosition();
+
+	const float64 oppGift = (ViewTable().GetPotSize() - betToCall) / (ViewTable().GetNumberInHand()-1) ;
+	const float64 oppGiftMax = ViewTable().GetAllChips()/(ViewTable().GetNumberInHand()-1);
+
+	const float64 shiftscale2 = myMoney / ( myMoney + oppGift ) - myMoney / ( myMoney + oppGiftMax );
+	
+
+	const float64 eVSshift = expectedVS / (ViewTable().GetNumberAtTable()-1) ;
+
+#ifdef LOGPOSITION
+	logFile << "difficulty of field : " << eVSshift << endl;
+	logFile << "oppGift   { " << oppGift << " }" << endl;
+	logFile << "shiftscale{ " << shiftscale2 << " }," << shiftscale2*shiftscale2 << endl;
+#endif
+    
+    
+    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
+    
+
+	GainModel highPlayers(statmean,&myExpectedCall);
+	GainModel lowPlayers(statranking,&myExpectedCall);
+
+	GainModelNoRisk highPlayersN(statmean,&myExpectedCall);
+	GainModelNoRisk lowPlayersN(statranking,&myExpectedCall);
+
+	SlidingPairFunction choicemodelP(&lowPlayers,&highPlayers,eVSshift,&myExpectedCall);
+	SlidingPairFunction choicemodelN(&lowPlayersN,&highPlayersN,eVSshift,&myExpectedCall);
+
+	AutoScalingFunction allModel(&choicemodelP,&choicemodelN,0.0,maxShowdown,&myExpectedCall);
+
+    const float64 bestBet = solveGainModel(&allModel);
+
+
+	const float64 ssunits = myExpectedCall.betFraction(  myExpectedCall.exf(bestBet)  );
+	const float64 gainPC = allModel.f(bestBet) - shiftscale2*shiftscale2*ssunits ;
+
+#ifdef LOGPOSITION
+	logFile << "choicemodel("<< bestBet <<")=" << allModel.f(bestBet) << "  -->  " << gainPC << endl;
+	logFile << "                   (* " << ssunits << ")²" << endl;
+#endif
+/*
+	if( bestBet == betToCall )
+	{
+		logFile << "ALTERNATE?" << endl;
+*/
+		if( gainPC < 0 )
+		{
+			#ifdef LOGPOSITION
+				logFile << "A-CHECK/FOLD " << myBet << endl;
+			#endif
+			return myBet;
+		}
+//	}
+
+    return bestBet;
+
+
+}
+
+
 
 
 

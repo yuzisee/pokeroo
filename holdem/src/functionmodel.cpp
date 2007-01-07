@@ -69,6 +69,7 @@ float64 HoldemFunctionModel::FindBestBet()
     ///PURIFY
     float64 nextOptimal = desiredBet + quantum;
     float64 prevOptimal = desiredBet - quantum;
+	if( desiredBet > myMoney ) desiredBet = myMoney; //due to rounding of desiredBet
     if( nextOptimal > myMoney ) nextOptimal = myMoney;
     if( prevOptimal < betToCall ) prevOptimal = betToCall;
 
