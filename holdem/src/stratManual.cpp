@@ -22,6 +22,9 @@
 //#define SELF_SPECTATE
 //#define USERINPUT
 //#define FANCYUNDERLINE
+#define SPACE_UI
+
+#define UI_DESCRIPTOR std::cerr
 
 #include "stratManual.h"
 #include <iostream>
@@ -46,8 +49,8 @@ void UserConsoleStrategy::SeeAction(const HoldemAction& e)
 {
 #ifdef SELF_SPECTATE
 	const Player& relvPlayer = *(ViewTable().ViewPlayer(e.GetPlayerID()));
-	cout << relvPlayer.GetIdent() << " " << flush;
-	HoldemArena::ToString(e,cout);
+	UI_DESCRIPTOR << relvPlayer.GetIdent() << " " << flush;
+	HoldemArena::ToString(e,UI_DESCRIPTOR);
 #endif
 }
 
@@ -74,7 +77,12 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 void UserConsoleStrategy::SeeCommunity(const Hand& h, const int8 n)
 {
 	ConsoleStrategy::SeeCommunity(h,n);
-	if ( !bNoPrint ) printCommunity();
+	if ( !bNoPrint ){ printCommunity(); }
+	#ifdef SPACE_UI
+	UI_DESCRIPTOR << endl;
+	UI_DESCRIPTOR << endl;
+	UI_DESCRIPTOR << endl;
+	#endif
 }
 
 float64 ConsoleStrategy::MakeBet()
@@ -111,15 +119,15 @@ float64 UserConsoleStrategy::MakeBet()
 void ConsoleStrategy::printCommunity()
 {
 	HandPlus u;
-		cout << "The community now shows:" << endl;
-		u.SetUnique(comBuf);
-		u.DisplayHandBig(cout);
+	UI_DESCRIPTOR << "The community now shows:" << endl;
+	u.SetUnique(comBuf);
+	u.DisplayHandBig(UI_DESCRIPTOR);
 }
 
 void ConsoleStrategy::printActions()
 {
 
-	cout << endl;
+	UI_DESCRIPTOR << endl;
 
 	const HoldemArena & myTable = ViewTable();
 	const int8 myIndex = myTable.GetCurPlayer();
@@ -140,14 +148,14 @@ void ConsoleStrategy::printActions()
 		{
 			if (withP.GetLastBet() != HoldemArena::INVALID)
 			{
-				cout << withP.GetIdent() << " " << flush;
+				UI_DESCRIPTOR << withP.GetIdent() << " " << flush;
 
 
 				if( myTable.HasFolded(tempIndex) )
 				{
 					if( withP.GetLastBet() == HoldemArena::FOLDED )
 					{
-						cout << "has folded." << endl;
+						UI_DESCRIPTOR << "has folded." << endl;
 					}
 				}
 				else
@@ -159,11 +167,11 @@ void ConsoleStrategy::printActions()
 					{
 						if( lastBet == 0 )
 						{
-							cout << "bets " << otherBets << endl;
+							UI_DESCRIPTOR << "bets " << otherBets << endl;
 						}
 						else
 						{
-							cout << "raises " << (wrtBets - lastBet) <<
+							UI_DESCRIPTOR << "raises " << (wrtBets - lastBet) <<
 									" to " << otherBets << endl;
 						}
 
@@ -172,11 +180,11 @@ void ConsoleStrategy::printActions()
 					{
 						if ( otherBets == 0 )
 						{
-							cout << "checks" << endl;
+							UI_DESCRIPTOR << "checks" << endl;
 						}
 						else
 						{
-							cout << "calls" << endl;
+							UI_DESCRIPTOR << "calls" << endl;
 						}
 					}
 
@@ -212,30 +220,30 @@ void ConsoleStrategy::showSituation()
 
 	++tempIndex;
 	tempIndex %= totalPlayers;
-	cout << endl << "You are betting " << ViewPlayer().GetBetSize() << " and have " << (ViewPlayer().GetMoney() - ViewPlayer().GetBetSize()) << " remaining." << endl;
-	cout << "OPPONENT CHIPS LEFT" << endl;
+	UI_DESCRIPTOR << endl << "You are betting " << ViewPlayer().GetBetSize() << " and have " << (ViewPlayer().GetMoney() - ViewPlayer().GetBetSize()) << " remaining." << endl;
+	UI_DESCRIPTOR << "OPPONENT CHIPS LEFT" << endl;
 	while( tempIndex != myIndex )
 	{
 		if( ViewTable().IsInHand(tempIndex) )
 		{
 			const Player& withP = *(myTable.ViewPlayer(tempIndex));
-			cout << "\t" << withP.GetIdent();
+			UI_DESCRIPTOR << "\t" << withP.GetIdent();
 			if( withP.GetBetSize() > 0 )
 			{
-				cout << " bet " << withP.GetBetSize() << " of";
+				UI_DESCRIPTOR << " bet " << withP.GetBetSize() << " of";
 			}
 			else
 			{
-				cout << " has";
+				UI_DESCRIPTOR << " has";
 			}
 
-			cout << " " << withP.GetMoney() << endl;
+			UI_DESCRIPTOR << " " << withP.GetMoney() << endl;
 		}
 		++tempIndex;
 		tempIndex %= totalPlayers;
 	}
 
-	cout << endl << "The pot contains " << ViewTable().GetPrevPotSize() << " from previous rounds and "
+	UI_DESCRIPTOR << endl << "The pot contains " << ViewTable().GetPrevPotSize() << " from previous rounds and "
 			<< ViewTable().GetRoundPotSize() << " from this round" << endl;
 
     #ifdef INFOASSIST
@@ -243,18 +251,18 @@ void ConsoleStrategy::showSituation()
         if( xBet > 0 )
         {
             const float64 winAmount = ViewTable().GetPrevPotSize() + ViewTable().GetRoundPotSize() +  xBet;
-            cout << "\tYou can bet " << xBet << " more to win " << winAmount - xBet << " plus your " << xBet << endl;
-            cout << "\tThis works out to be " << winAmount/xBet << " : 1 odds (" << 100*xBet/winAmount << "%)" << endl;
+            UI_DESCRIPTOR << "\tYou can bet " << xBet << " more to win " << winAmount - xBet << " plus your " << xBet << endl;
+            UI_DESCRIPTOR << "\tThis works out to be " << winAmount/xBet << " : 1 odds (" << 100*xBet/winAmount << "%)" << endl;
         }
     #endif
 
-	cout << endl << "You ("<< ViewPlayer().GetIdent() <<") have:" << flush;
+	UI_DESCRIPTOR << endl << "You ("<< ViewPlayer().GetIdent() <<") have:" << flush;
 
 
 	HandPlus u;
 	u.SetUnique(ViewHand());
-	u.DisplayHand(cout);
-	cout << endl;
+	u.DisplayHand(UI_DESCRIPTOR);
+	UI_DESCRIPTOR << endl;
 
 
     #ifdef INFOASSIST
@@ -264,11 +272,11 @@ void ConsoleStrategy::showSituation()
         {
             wsplitChance += pow(winMean.wins,i) * pow(winMean.splits,opphandsDealt-i);
         }
-        cout << endl << "\t(" << pow(winMean.wins,opphandsDealt) * 100 << "% chance to win outright)" << endl;
-        cout << "\t(" << wsplitChance * 100 << "% chance to split or win)" << flush;
-        //cout << winMean.wins << endl;
-        //cout << winMean.splits << endl;
-        //cout << winMean.loss << endl;
+        UI_DESCRIPTOR << endl << "\t(" << pow(winMean.wins,opphandsDealt) * 100 << "% chance to win outright)" << endl;
+        UI_DESCRIPTOR << "\t(" << wsplitChance * 100 << "% chance to split or win)" << flush;
+        //UI_DESCRIPTOR << winMean.wins << endl;
+        //UI_DESCRIPTOR << winMean.splits << endl;
+        //UI_DESCRIPTOR << winMean.loss << endl;
     #endif
 
 
@@ -276,6 +284,7 @@ void ConsoleStrategy::showSituation()
 
 
 //Only ^Z will cause cin.eof()
+///Aha!
 float64 UserConsoleStrategy::queryAction()
 {
 	const int16 INPUTLEN = 10;
@@ -294,19 +303,19 @@ float64 UserConsoleStrategy::queryAction()
 	    if( myFifo != &cin )
         {
             #ifdef USERINPUT
-            cout << "Mark fileinput" << endl;
+            UI_DESCRIPTOR << "Mark fileinput" << endl;
             #endif
             while( myFifo->peek() == '\n' || myFifo->peek() == '\r' )
             {
                 #ifdef USERINPUT
-                cout << "ExtraE" << endl;
+                UI_DESCRIPTOR << "ExtraE" << endl;
                 #endif
                 myFifo->ignore( 1 , '\n');
             }
             if( myFifo->eof() )
             {
                 #ifdef USERINPUT
-                cout << "StreamClear" << endl;
+                UI_DESCRIPTOR << "StreamClear" << endl;
                 #endif
                 myFifo = &(cin);
                 cin.sync();
@@ -318,33 +327,33 @@ float64 UserConsoleStrategy::queryAction()
         if( myFifo->eof() )
         {
             #ifdef USERINPUT
-            cout << "EOF" << endl;
+            UI_DESCRIPTOR << "EOF" << endl;
             #endif
             myFifo = &(cin);
             cin.sync();
             cin.clear();
         }else
         {
-            cout << endl << endl;
-            cout << "==ENTER ACTION==";
-            cout << "      (press only [Enter] for check/fold)" << endl;
+            UI_DESCRIPTOR << endl << endl;
+            UI_DESCRIPTOR << "==ENTER ACTION==";
+            UI_DESCRIPTOR << "      (press only [Enter] for check/fold)" << endl;
             if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
             {
-                cout << "check" << endl;
+                UI_DESCRIPTOR << "check" << endl;
                 defaultAction = 'c';
             }
             else
             {
-                cout << "fold" << endl;
+                UI_DESCRIPTOR << "fold" << endl;
                 defaultAction = 'f';
-                cout << "call (" << ViewTable().GetBetToCall() << flush;
+                UI_DESCRIPTOR << "call (" << ViewTable().GetBetToCall() << flush;
                 if( ViewPlayer().GetBetSize() > 0 )
                 {
-                    cout << " = +" << (ViewTable().GetBetToCall() - ViewPlayer().GetBetSize());
+                    UI_DESCRIPTOR << " = +" << (ViewTable().GetBetToCall() - ViewPlayer().GetBetSize());
                 }
-                cout << ")" << endl;
+                UI_DESCRIPTOR << ")" << endl;
             }
-            cout << "raiseto" << endl << "raiseby" << endl << "-->" << flush;
+            UI_DESCRIPTOR << "raiseto" << endl << "raiseby" << endl << "-->" << flush;
             #ifdef FANCYUNDERLINE
             std::cerr << "____\b\b\b\b" << flush;
             #endif
@@ -373,7 +382,7 @@ float64 UserConsoleStrategy::queryAction()
 				else
 				{
 					bExtraTry = 2;
-					cout << "You can still check..." << endl;
+					UI_DESCRIPTOR << "You can still check..." << endl;
 				}
 
 			}
@@ -397,7 +406,7 @@ float64 UserConsoleStrategy::queryAction()
 				}
 				else
 				{
-					cout << "Can't check here" << endl;
+					UI_DESCRIPTOR << "Can't check here" << endl;
 				}
 			}
 			else if ( strncmp(inputBuf, "call", 4) == 0 )
@@ -417,7 +426,7 @@ float64 UserConsoleStrategy::queryAction()
 			}
 			else if ( strncmp(inputBuf, "raiseby", 7) == 0 )
 			{
-				cout << "By how much?  (Minimum by " << ViewTable().GetMinRaise() << ")" << endl;
+				UI_DESCRIPTOR << "By how much?  (Minimum by " << ViewTable().GetMinRaise() << ")" << endl;
 				while( bExtraTry != 0)
 				{
 
@@ -446,14 +455,14 @@ float64 UserConsoleStrategy::queryAction()
                             {
                                 #ifdef USERINPUT
                                 int numericPeek = myFifo->peek();
-                                cout << "avail:" << myFifo->rdbuf()->in_avail() << endl;
-                                cout << "SkipE" << numericPeek << endl;
+                                UI_DESCRIPTOR << "avail:" << myFifo->rdbuf()->in_avail() << endl;
+                                UI_DESCRIPTOR << "SkipE" << numericPeek << endl;
                                 #endif
                                 myFifo->ignore(1);
                                 //myFifo->rdbuf()->sbumpc();
                             }
                             #ifdef USERINPUT
-                            cout << ".seComplete" << endl;
+                            UI_DESCRIPTOR << ".seComplete" << endl;
                             #endif
                         }
                         cin.sync();
@@ -461,7 +470,7 @@ float64 UserConsoleStrategy::queryAction()
 					else
 					{
 					    #ifdef USERINPUT
-					    cout << "ApE" << endl;
+					    UI_DESCRIPTOR << "ApE" << endl;
 					    #endif
                         cin.sync();
                         //cin.ignore( cin.rdbuf()->in_avail() ,'\n');
@@ -471,7 +480,7 @@ float64 UserConsoleStrategy::queryAction()
 			}
 			else if ( strncmp(inputBuf, "raiseto", 7) == 0 )
 			{
-                cout << "To how much?  (Minimum is " << ViewTable().GetMinRaise() + ViewTable().GetBetToCall() << ")" << endl;
+                UI_DESCRIPTOR << "To how much?  (Minimum is " << ViewTable().GetMinRaise() + ViewTable().GetBetToCall() << ")" << endl;
 				while( bExtraTry != 0)
 				{
 
@@ -501,14 +510,14 @@ float64 UserConsoleStrategy::queryAction()
                             {
                                 #ifdef USERINPUT
                                 int numericPeek = myFifo->peek();
-                                cout << "avail:" << myFifo->rdbuf()->in_avail() << endl;
-                                cout << "SkipE" << numericPeek << endl;
+                                UI_DESCRIPTOR << "avail:" << myFifo->rdbuf()->in_avail() << endl;
+                                UI_DESCRIPTOR << "SkipE" << numericPeek << endl;
                                 #endif
                                 myFifo->ignore(1);
                                 //myFifo->rdbuf()->sbumpc();
                             }
                             #ifdef USERINPUT
-                            cout << ".seComplete" << endl;
+                            UI_DESCRIPTOR << ".seComplete" << endl;
                             #endif
                         }
                         cin.sync();
@@ -517,7 +526,7 @@ float64 UserConsoleStrategy::queryAction()
 					else
 					{
 					    #ifdef USERINPUT
-					    cout << "ApE" << endl;
+					    UI_DESCRIPTOR << "ApE" << endl;
 					    #endif
 						cin.sync();
 						//cin.ignore( cin.rdbuf()->in_avail() ,'\n');
@@ -532,7 +541,7 @@ float64 UserConsoleStrategy::queryAction()
 			    //This can't occur if reading from a file though
 			    if( myFifo != &cin )
 			    {
-			        cout << "Blank lines in file got caught" << endl;
+			        UI_DESCRIPTOR << "Blank lines in file got caught" << endl;
 			        exit(1);
 			    }
 			    #endif
@@ -546,7 +555,7 @@ float64 UserConsoleStrategy::queryAction()
 				    returnMe = -1;
 				}
 				bExtraTry = 0;
-                //cout << "(default)" << endl;
+                //UI_DESCRIPTOR << "(default)" << endl;
                     #ifdef DEBUGSAVEGAME
                         if( myFifo == &cin )
                         {
@@ -565,7 +574,7 @@ float64 UserConsoleStrategy::queryAction()
                                 default:
                                     logFile << endl;
                                     #ifdef DEBUGASSERT
-                                    cout << "No default action found!" << endl;
+                                    UI_DESCRIPTOR << "No default action found!" << endl;
                                     exit(1);
                                     #endif
                                     break;
@@ -576,7 +585,7 @@ float64 UserConsoleStrategy::queryAction()
 			}
 			else
 			{
-				cout << inputBuf << " is not a correct choice." << endl;
+				UI_DESCRIPTOR << inputBuf << " is not a correct choice." << endl;
 			}
 		}
 		else //error on input
@@ -585,11 +594,11 @@ float64 UserConsoleStrategy::queryAction()
                 if( !(myFifo->eof()) )
                 {
             #endif
-            cout << "Error on input." << endl;
+            UI_DESCRIPTOR << "Error on input." << endl;
             while(myFifo->gcount() == INPUTLEN)
             {
                 #ifdef USERINPUT
-                cout << "Clearing" << endl;
+                UI_DESCRIPTOR << "Clearing" << endl;
                 #endif
                  myFifo->getline( inputBuf, INPUTLEN );
             }
@@ -601,7 +610,7 @@ float64 UserConsoleStrategy::queryAction()
                 #ifdef USERINPUT
                     else
                         {
-                        cout << "eof start" << endl;
+                        UI_DESCRIPTOR << "eof start" << endl;
                         }
                 #endif
             #endif
@@ -610,11 +619,11 @@ float64 UserConsoleStrategy::queryAction()
 	//End of loop
 	}
 #ifdef USERFEEDBACK
-	cout << "To bet " << returnMe << endl;
+	UI_DESCRIPTOR << "To bet " << returnMe << endl;
 
 
 
-	cout << "Command accepted" << endl;
+	UI_DESCRIPTOR << "Command accepted" << endl;
 #endif
 
     #ifdef DEBUGSAVEGAME
