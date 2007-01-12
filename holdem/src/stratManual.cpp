@@ -23,6 +23,7 @@
 //#define USERINPUT
 //#define FANCYUNDERLINE
 #define SPACE_UI
+#define USER_DELAY_HANDS
 
 #define UI_DESCRIPTOR std::cerr
 
@@ -76,9 +77,22 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
 void UserConsoleStrategy::SeeCommunity(const Hand& h, const int8 n)
 {
+    if( n == 0 )
+    {
+        #ifdef USER_DELAY_HANDS
+            UI_DESCRIPTOR << endl << "Press [Enter] to begin hand" << endl;
+            std::cin.get();
+			std::cin.sync();
+			std::cin.clear();
+            #ifdef SPACE_UI
+            UI_DESCRIPTOR << endl;
+            #endif
+        #endif
+    }
+
 	ConsoleStrategy::SeeCommunity(h,n);
 	if ( !bNoPrint ){ printCommunity(); }
-	#ifdef SPACE_UI
+	#if defined(SPACE_UI) && !defined(USER_DELAY_HANDS)
 	UI_DESCRIPTOR << endl;
 	UI_DESCRIPTOR << endl;
 	UI_DESCRIPTOR << endl;

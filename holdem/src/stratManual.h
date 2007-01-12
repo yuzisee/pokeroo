@@ -26,7 +26,6 @@
 
 #define INFOASSIST
 
-
 #include "arena.h"
 #ifdef DEBUGSAVEGAME
 #include <fstream>
