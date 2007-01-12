@@ -1013,7 +1013,7 @@ int main(int argc, char* argv[])
 #ifdef WINRELEASE
 	    testPlay('L');
 #else
-//        debugPosition();
+        //debugPosition();
 	    //superGame(0);
    	    testPlay(0);
    	    //testNewCallStats();
