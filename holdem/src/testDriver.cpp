@@ -22,7 +22,7 @@
 #define WINRELEASE
 #define AUTOEXTRATOKEN "restore.txt"
 
-
+#define REQUEST_USER_BLINDSIZE
 //#define REGULARINTOLOG
 #define DEBUGSITUATION
 #define SUPERINTOLOG
@@ -812,7 +812,17 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     float64 smallBlindChoice;
     if( headsUp == 'P' )
     {
-        smallBlindChoice=0.25;
+        #ifdef REQUEST_USER_BLINDSIZE
+            smallBlindChoice=1;
+            if( !bLoadGame )
+            {
+                std::cerr << "You will start with 200 chips. Enter the initial big blind." << std::endl;
+                std::cin >> smallBlindChoice;
+                smallBlindChoice /= 2;
+            }
+        #else
+            smallBlindChoice=0.25;
+        #endif
     }else
     {
         smallBlindChoice=0.025;

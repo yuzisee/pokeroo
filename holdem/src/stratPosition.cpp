@@ -21,6 +21,7 @@
 #include <math.h>
 #include "stratPosition.h"
 
+#define BLIND_ADJUSTED_FOLD
 
 const bool CorePositionalStrategy::lkupLogMean[BGAMBLE_MAX] = {false,true,false,false,true,false,true,true,false};
 const bool CorePositionalStrategy::lkupLogRanking[BGAMBLE_MAX] = {true,false,false,true,false,true,false,true,false};
@@ -206,8 +207,9 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 		return maxShowdown;
 	}
 
-
-
+    #ifdef BLIND_ADJUSTED_FOLD
+    const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
+    #endif
 // #############################################################################
 /// MATHEMATIC SOLVING BEGINS HERE
 // #############################################################################
@@ -237,11 +239,19 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 
 
     //const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
-    const float64 callGain = targetModel->f(betToCall);
+    const float64 callGain = targetModel->f(betToCall)
+    #ifdef BLIND_ADJUSTED_FOLD
+    +blindPerHandGain
+    #endif
+    ;
 
 
 #ifdef DEBUGASSERT
-    const float64 raiseGain = targetModel->f(choicePoint);
+    const float64 raiseGain = targetModel->f(choicePoint)
+    #ifdef BLIND_ADJUSTED_FOLD
+    +blindPerHandGain
+    #endif
+    ;
 #endif
 
 
@@ -256,6 +266,7 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
+            logFile << "Relative BPHG " << blindPerHandGain << " ." << endl;
             logFile << "f("<< betToCall <<")=" << callGain << endl;
 
 
@@ -381,7 +392,7 @@ float64 DeterredGainStrategy::MakeBet()
     const float64 volatilityFactor = 1 - sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
 
 	const float64 futureFold = volatilityFactor*(1-certainty) + certainty;
-    
+
 #ifdef LOGPOSITION
     logFile << "uncertainty      " << uncertainty << endl;
     logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
@@ -389,8 +400,8 @@ float64 DeterredGainStrategy::MakeBet()
     logFile << "BetToCall PCT    " << certainty << endl;
     logFile << "impliedFactor... " << futureFold << endl;
 #endif
-    
-    
+
+
     CallCumulationD &choicecumu = callcumu;
 
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
@@ -430,7 +441,7 @@ float64 HybridScalingStrategy::MakeBet()
 	const float64 oppGiftMax = ViewTable().GetAllChips()/(ViewTable().GetNumberInHand()-1);
 
 	const float64 shiftscale2 = myMoney / ( myMoney + oppGift ) - myMoney / ( myMoney + oppGiftMax );
-	
+
 
 	const float64 eVSshift = expectedVS / (ViewTable().GetNumberAtTable()-1) ;
 
@@ -439,10 +450,10 @@ float64 HybridScalingStrategy::MakeBet()
 	logFile << "oppGift   { " << oppGift << " }" << endl;
 	logFile << "shiftscale{ " << shiftscale2 << " }," << shiftscale2*shiftscale2 << endl;
 #endif
-    
-    
+
+
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
-    
+
 
 	GainModel highPlayers(statmean,&myExpectedCall);
 	GainModel lowPlayers(statranking,&myExpectedCall);
@@ -510,7 +521,7 @@ float64 CorePositionalStrategy::MakeBet()
     {
         raiseBattle = betToCall;
     }
-    
+
     myLimitCall.callingPlayers(  expectedVS  );
     if( expectedVS < 0 ) //You have no money
     {

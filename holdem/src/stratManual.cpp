@@ -81,7 +81,11 @@ void UserConsoleStrategy::SeeCommunity(const Hand& h, const int8 n)
     {
         #ifdef USER_DELAY_HANDS
             UI_DESCRIPTOR << endl << "Press [Enter] to begin hand" << endl;
+            std::cin.sync();
+			std::cin.clear();
+
             std::cin.get();
+
 			std::cin.sync();
 			std::cin.clear();
             #ifdef SPACE_UI
@@ -235,7 +239,7 @@ void ConsoleStrategy::showSituation()
 	++tempIndex;
 	tempIndex %= totalPlayers;
 	UI_DESCRIPTOR << endl << "You are betting " << ViewPlayer().GetBetSize() << " and have " << (ViewPlayer().GetMoney() - ViewPlayer().GetBetSize()) << " remaining." << endl;
-	UI_DESCRIPTOR << "OPPONENT CHIPS LEFT" << endl;
+	UI_DESCRIPTOR << "OPPONENTS IN HAND" << endl;
 	while( tempIndex != myIndex )
 	{
 		if( ViewTable().IsInHand(tempIndex) )
