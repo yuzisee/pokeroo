@@ -21,6 +21,11 @@
 #include "callSituation.h"
 #include <math.h>
 
+
+#define BLIND_ADJUSTED_FOLD
+
+
+
 //#define DEBUGWATCHPARMS
 #ifdef DEBUGWATCHPARAMS
 #include <iostream>
@@ -45,10 +50,30 @@ float64 ExpectedCallD::forfeitChips() const
 float64 ExpectedCallD::foldGain() const
 {
 
+    
         #ifdef DEBUGWATCHPARMS
             const float64 a = 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
         #endif
-    return 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
+    const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );        
+    
+#ifdef BLIND_ADJUSTED_FOLD
+    //const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
+    const float64 bigBlindFraction = betFraction( table->GetBigBlind() );
+    const float64 smallBlindFraction = betFraction( table->GetSmallBlind() );
+
+    const float64 blindsGain = (1 - baseFraction - bigBlindFraction)*(1 - baseFraction - smallBlindFraction);
+    const float64 rawLoseFreq = 1 - (1.0 / table->GetNumberAtTable()) ;
+    const float64 blindsPow = rawLoseFreq / table->GetNumberAtTable();
+    
+    const float64 totalFG = pow(1-baseFraction,1-2*blindsPow)*pow(blindsGain,blindsPow);
+    
+    if( totalFG < 0 ) return 0;
+    return totalFG;
+    
+#else
+    
+    return 1 - baseFraction;
+#endif
 }
 
 float64 ExpectedCallD::oppBet() const

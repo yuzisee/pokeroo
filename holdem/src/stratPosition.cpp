@@ -21,7 +21,6 @@
 #include <math.h>
 #include "stratPosition.h"
 
-#define BLIND_ADJUSTED_FOLD
 
 const bool CorePositionalStrategy::lkupLogMean[BGAMBLE_MAX] = {false,true,false,false,true,false,true,true,false};
 const bool CorePositionalStrategy::lkupLogRanking[BGAMBLE_MAX] = {true,false,false,true,false,true,false,true,false};
@@ -207,9 +206,6 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 		return maxShowdown;
 	}
 
-    #ifdef BLIND_ADJUSTED_FOLD
-    const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
-    #endif
 // #############################################################################
 /// MATHEMATIC SOLVING BEGINS HERE
 // #############################################################################
@@ -240,17 +236,11 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 
     //const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
     const float64 callGain = targetModel->f(betToCall)
-    #ifdef BLIND_ADJUSTED_FOLD
-    +blindPerHandGain
-    #endif
     ;
 
 
 #ifdef DEBUGASSERT
     const float64 raiseGain = targetModel->f(choicePoint)
-    #ifdef BLIND_ADJUSTED_FOLD
-    +blindPerHandGain
-    #endif
     ;
 #endif
 
@@ -266,7 +256,7 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
-            logFile << "Relative BPHG " << blindPerHandGain << " ." << endl;
+            logFile << "relBPHG()=" << (1-targetModel->GetFoldGain()) << " ." << endl;
             logFile << "f("<< betToCall <<")=" << callGain << endl;
 
 

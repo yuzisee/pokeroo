@@ -108,6 +108,10 @@ float64 HoldemFunctionModel::FindFoldBet(const float64 bestBet)
     return desiredFold;
 }
 
+const float64 HoldemFunctionModel::GetFoldGain() const
+{
+    return e->foldGain();
+}
 
 float64 GainModel::f(const float64 betSize)
 {
