@@ -444,7 +444,8 @@ float64 UserConsoleStrategy::queryAction()
 			}
 			else if ( strncmp(inputBuf, "raiseby", 7) == 0 )
 			{
-				UI_DESCRIPTOR << "By how much?  (Minimum by " << ViewTable().GetMinRaise() << ")" << endl;
+			    const float64 minRaiseBy = ViewTable().GetMinRaise();
+				UI_DESCRIPTOR << "By how much?  (Minimum by " << minRaiseBy << ")" << endl;
 				while( bExtraTry != 0)
 				{
 
@@ -452,6 +453,11 @@ float64 UserConsoleStrategy::queryAction()
 					{
 						if( returnMe > 0 )
 						{
+						    if( returnMe < minRaiseBy )
+						    {
+						        UI_DESCRIPTOR << "Minimum raise was by " << minRaiseBy << ". You call." << endl;
+						    }
+
                                 #ifdef DEBUGSAVEGAME
                                     if( myFifo == &cin )
                                     {
@@ -498,14 +504,21 @@ float64 UserConsoleStrategy::queryAction()
 			}
 			else if ( strncmp(inputBuf, "raiseto", 7) == 0 )
 			{
-                UI_DESCRIPTOR << "To how much?  (Minimum is " << ViewTable().GetMinRaise() + ViewTable().GetBetToCall() << ")" << endl;
+			    const float64 minRaiseTo  = ViewTable().GetMinRaise() + ViewTable().GetBetToCall();
+                UI_DESCRIPTOR << "To how much?  (Minimum is " << minRaiseTo << ")" << endl;
 				while( bExtraTry != 0)
 				{
 
                     if( (*myFifo) >> returnMe )
 					{
-						if( returnMe > ViewTable().GetBetToCall() )
+						if( returnMe > 0 )
 						{
+						    if( returnMe < minRaiseTo )
+						    {
+						        UI_DESCRIPTOR << "Minimum raise was to " << minRaiseTo << ". You call." << endl;
+						        returnMe = ViewTable().GetBetToCall();
+						    }
+
                                 #ifdef DEBUGSAVEGAME
 
                                     if( myFifo == &cin )
