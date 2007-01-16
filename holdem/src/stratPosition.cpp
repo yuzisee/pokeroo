@@ -22,10 +22,10 @@
 #include "stratPosition.h"
 
 
-const bool CorePositionalStrategy::lkupLogMean[BGAMBLE_MAX] = {false,true,false,false,true,false,true,true,false};
-const bool CorePositionalStrategy::lkupLogRanking[BGAMBLE_MAX] = {true,false,false,true,false,true,false,true,false};
-const bool CorePositionalStrategy::lkupLogWorse[BGAMBLE_MAX] = {false,false,true,false,false,false,true,false,false};
-const bool CorePositionalStrategy::lkupLogHybrid[BGAMBLE_MAX] = {false,false,false,false,false,false,false,true,true};
+const bool CorePositionalStrategy::lkupLogMean[BGAMBLE_MAX] = {false,true,false,false,true,false,true,true,false ,false,true,false,false,true,true,false};
+const bool CorePositionalStrategy::lkupLogRanking[BGAMBLE_MAX] = {true,false,false,true,false,true,false,true,false ,true,false,false,true,false,true,false};
+const bool CorePositionalStrategy::lkupLogWorse[BGAMBLE_MAX] = {false,false,true,false,false,false,true,false,false ,false,false,true,false,false,false,false};
+const bool CorePositionalStrategy::lkupLogHybrid[BGAMBLE_MAX] = {false,false,false,false,false,false,false,true,true ,false,false,false,false,false,true,true};
 
 // &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom
 
@@ -190,7 +190,7 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
         #ifdef DEBUGSPECIFIC
         if( ViewTable().handnum == DEBUGSPECIFIC )
         {
-            std::ofstream excel( (ViewPlayer().GetIdent() + "functionlog.csv").c_str() );
+            std::ofstream excel( (ViewPlayer().GetIdent() + ".functionlog.csv").c_str() );
             if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
             targetModel->breakdown(1000,excel,betToCall,maxShowdown);
             //myExpectedCall.breakdown(0.005,excel);
@@ -502,6 +502,7 @@ float64 CorePositionalStrategy::MakeBet()
 
 
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
+	ExactCallBluffD myBluffFoldCall(myPositionIndex, &(ViewTable()), &choicecumu, &foldcumu);
     ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
     const float64 committed = ViewPlayer().GetContribution() + myBet;
     ExactCallD myCommittalCall(myPositionIndex, &(ViewTable()), &choicecumu, committed );
@@ -539,6 +540,10 @@ float64 CorePositionalStrategy::MakeBet()
     GainModel meanGeomPC(statmean,&myCommittalCall);
 
 
+	GainModelBluff rankGeomBluff(statranking,&myBluffFoldCall);
+	GainModelBluff meanGeomBluff(statmean,&myBluffFoldCall);
+    GainModelBluff hybridGeomBluff(hybridMagnified,&myBluffFoldCall);
+
     #ifdef DEBUGASSERT
         if( bGamble >= BGAMBLE_MAX )
         {
@@ -547,7 +552,8 @@ float64 CorePositionalStrategy::MakeBet()
         }
     #endif
 
-    HoldemFunctionModel* (lookup[BGAMBLE_MAX]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom, &hybridAlgb };
+    HoldemFunctionModel* (lookup[BGAMBLE_MAX]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom, &hybridAlgb
+		,&rankGeomBluff ,&meanGeomBluff,0,0,0,&hybridGeomBluff	};
 
     #ifdef LOGPOSITION
         const float64 improveMod = detailPCT.improve * 2;
@@ -565,9 +571,17 @@ float64 CorePositionalStrategy::MakeBet()
             solveGainModel(lookup[otherGamble]);
             logFile << "Main {" << (int)(bGamble) << "}" << endl;
         }
+
     #endif
     const float64 bestBet = solveGainModel(lookup[bGamble]);
 
+	#ifdef LOGPOSITION
+		if( bGamble >= 9 && bGamble <= 15 )
+		{
+			logFile << "OppFoldChance% ... " << myBluffFoldCall.pWin(bestBet) << "   d\\" << myBluffFoldCall.pWinD(bestBet) << endl;
+			logFile << "confirm " << lookup[bGamble]->f(bestBet) << endl;
+		}
+	#endif
 
     return bestBet;
 

@@ -105,10 +105,10 @@ public:
         charSource >> nextChar[0];
         charSource >> nextChar[1];
 
-            return      
+            return
             ParseCard(nextChar[0],nextChar[1]);
 
-        
+
     }
     const static int8 ParseCard(char valchar, char suitchar)
     {
@@ -131,7 +131,7 @@ public:
                 break;
             }
         }
-        
+
 #ifdef DEBUGASSERT
         if( valNum == -1 || suitNum == -1 )
         {
@@ -141,9 +141,9 @@ public:
         }
 #endif
         return suitNum + valNum*4;
-        
+
     }
-    
+
 	const static uint8 cleanz(const uint32);
 
 		template<typename T>

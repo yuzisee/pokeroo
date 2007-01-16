@@ -80,6 +80,7 @@ public:
     virtual float64 prevpotChips() const;
     virtual float64 betFraction(const float64 betSize) const;
     virtual float64 handBetBase() const;
+	virtual float64 minRaiseTo() const;
 
     virtual float64 exf(const float64 betSize) = 0;
     virtual float64 dexf(const float64 betSize) = 0;
@@ -127,15 +128,17 @@ public:
 
 class ExactCallD : public virtual ExpectedCallD
 {
+private:
+    float64 totalexf;
+    float64 totaldexf;
 protected:
     static const float64 UNITIALIZED_QUERY;
     float64 queryinput;
-    float64 totalexf;
-    float64 totaldexf;
+
 
     float64 impliedFactor;
 
-    void query(const float64 betSize);
+	void query(const float64 betSize);
 public:
     ExactCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data, const float64 commit = 0)
     : ExpectedCallD(id,base,data,commit), impliedFactor(1)
@@ -147,6 +150,29 @@ public:
     virtual float64 dexf(const float64 betSize);
 
     virtual void SetImpliedFactor(const float64 bonus);
+}
+;
+
+class ExactCallBluffD : public virtual ExactCallD
+{
+	protected:
+		const CallCumulationD* ea;
+		float64 allFoldChance;
+		float64 allFoldChanceD;
+
+	void query(const float64 betSize);
+	public:
+	ExactCallBluffD(const int8 id, const HoldemArena* base, const CallCumulationD* data, const CallCumulationD* foldData, const float64 commit = 0)
+	: ExpectedCallD(id,base,data,commit),ExactCallD(id,base,data,commit), ea(foldData)
+	{
+        queryinput = UNITIALIZED_QUERY;
+    }
+
+
+	float64 PushGain();
+
+	virtual float64 pWin(const float64 betSize);
+	virtual float64 pWinD(const float64 betSize);
 }
 ;
 

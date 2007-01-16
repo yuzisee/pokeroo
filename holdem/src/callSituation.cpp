@@ -132,7 +132,10 @@ float64 ExpectedCallD::handBetBase() const
     return 1-betFraction(potCommitted);
 }
 
-
+float64 ExpectedCallD::minRaiseTo() const
+{
+	return table->GetMinRaise() + callBet();
+}
 
 #ifdef ASSUMEFOLDS
 void ExpectedCallD::callingPlayers(float64 n)
@@ -170,7 +173,7 @@ void ExactCallD::SetImpliedFactor(const float64 bonus)
 
 void ExactCallD::query(const float64 betSize)
 {
-	const float64 significance = 1/static_cast<double>( handsDealt()-1 );
+	const float64 significance = 1/static_cast<float64>( handsDealt()-1 );
     const float64 myexf = betSize;
     const float64 mydexf = 1;
 
@@ -178,11 +181,12 @@ void ExactCallD::query(const float64 betSize)
 	float64 overdexf = 0;
 
     totalexf = table->GetPotSize() - table->ViewPlayer(playerID)->GetBetSize()  +  myexf;
+
     //float64 lastexf = totalexf;
+
 
     totaldexf = mydexf;
     //float64 lastdexf = totaldexf;
-
 
     int8 pIndex = playerID;
     table->incrIndex(pIndex);
@@ -222,6 +226,8 @@ void ExactCallD::query(const float64 betSize)
                             std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
 */
                         #endif
+					
+
                     nextexf = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
                     nextdexf = nextexf + oppBetMake * e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  )
 													*  pow(  oppBetMake / (oppBetMake + totalexf)  , significance - 1 ) * significance
@@ -235,12 +241,15 @@ void ExactCallD::query(const float64 betSize)
                 const float64 oldpot = table->GetPrevPotSize();
                 const float64 effroundpot = (totalexf - oldpot) * oppBankRoll / betSize;
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
-                nextexf = oppBetMake * e->pctWillCall( pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significance) );
 
-                nextdexf = 0;
+
+				nextexf = oppBetMake * e->pctWillCall( pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significance) );
+		            
+				nextdexf = 0;
+
             }
 
-            
+			
             //lastexf = nextexf;
             totalexf += nextexf;
 
@@ -266,6 +275,143 @@ void ExactCallD::query(const float64 betSize)
 	if( totaldexf < 0 ) totaldexf = 0; //Due to rounding error in overexf?
 
 }
+
+void ExactCallBluffD::query(const float64 betSize)
+{
+	ExactCallD::query(betSize);
+
+	//const float64 significance = 1/static_cast<float64>( handsDealt()-1 );
+    const float64 myexf = betSize;
+    const float64 mydexf = 1;
+
+
+	float64 nextFold;
+	float64 nextFoldPartial;
+	allFoldChance = 1;
+	allFoldChanceD = 0;
+	const float64 origPot = table->GetPotSize() - table->ViewPlayer(playerID)->GetBetSize()  +  myexf;
+	const float64 origPotD = mydexf;
+
+    int8 pIndex = playerID;
+    table->incrIndex(pIndex);
+    while( pIndex != playerID )
+    {
+
+		const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
+
+        if( table->CanStillBet(pIndex) )
+        {///Predict how much the bet will be
+            const float64 oppBankRoll = table->ViewPlayer(pIndex)->GetMoney();
+
+            if( betSize < oppBankRoll )
+            {
+
+                const float64 oppBetMake = betSize - oppBetAlready;
+                //To understand the above, consider that totalexf includes already made bets
+
+				if( oppBetMake <= table->GetMinRaise() )
+                {
+					allFoldChance = 0;
+					allFoldChanceD = 0;
+					nextFold = 0;
+					nextFoldPartial = 0;
+
+                }else
+                {
+                        #ifdef DEBUGWATCHPARMS
+                            const float64 vodd = pow(  oppBetMake / (oppBetMake + totalexf), significance);
+                            const float64 willCall = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
+                            const float64 willCallD = e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  );
+
+/*
+                            std::cout << willCall << " ... " << willCallD << std::endl;
+                            std::cout << "significance " << significance << std::endl;
+                            std::cout << "(oppBetMake + totalexf) " << (oppBetMake + totalexf) << std::endl;
+                            std::cout << "(oppBetMake ) " << (oppBetMake ) << std::endl;
+                            std::cout << "(betSize) " << (oppBetMake) << std::endl;
+                            std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
+*/
+                        #endif
+					
+					/*
+					nextFold = 1-ea->pctWillCall( pow(  oppBetMake / (oppBetMake + origPot)  , significance  ) );
+					nextFoldPartial = -ea->pctWillCallD(   pow(  oppBetMake / (oppBetMake + origPot)  , significance  )  )
+													*  pow(  oppBetMake / (oppBetMake + origPot)  , significance - 1 ) * significance
+                                                    * (origPot - oppBetMake * origPotD)
+                                                     /(oppBetMake + origPot) /(oppBetMake + origPot);
+					*/
+					nextFold = 1-ea->pctWillCall( oppBetMake / (oppBetMake + origPot) );
+					nextFoldPartial = -ea->pctWillCallD(   oppBetMake / (oppBetMake + origPot)  )
+                                                    * (origPot - oppBetMake * origPotD)
+                                                     /(oppBetMake + origPot) /(oppBetMake + origPot);
+                }
+            }else
+            {///Opponent would be all-in to call this bet
+                const float64 oldpot = table->GetPrevPotSize();
+                const float64 effroundpot = (origPot - oldpot) * oppBankRoll / betSize;
+                const float64 oppBetMake = oppBankRoll - oppBetAlready;
+
+				if( oppBetMake <= table->GetMinRaise() ) //Just if (== 0) but for completeness include the < case which is impossible
+                {
+					allFoldChance = 0;
+					allFoldChanceD = 0;
+					nextFold = 0;
+				}else
+				{
+					nextFold = 1-ea->pctWillCall( oppBetMake / (oppBetMake + oldpot + effroundpot) );
+				}
+				nextFoldPartial = 0;
+            }
+
+			if(
+				(allFoldChance == 0 && allFoldChanceD == 0) || (nextFold == 0 && nextFoldPartial == 0)
+				)
+			{
+				allFoldChance = 0;
+				allFoldChanceD = 0;
+			}else
+			{
+				allFoldChance *= nextFold;
+				allFoldChanceD += nextFoldPartial / nextFold;
+			}
+
+
+        }
+
+
+        table->incrIndex(pIndex);
+    }
+
+	allFoldChanceD *= allFoldChance;
+
+}
+
+float64 ExactCallBluffD::PushGain()
+{
+	return 1 + betFraction(table->GetPotSize() - alreadyBet());
+}
+
+float64 ExactCallBluffD::pWin(const float64 betSize)
+{
+	if( queryinput != betSize )
+    {
+        query(betSize);
+        queryinput = betSize;
+    }
+	return allFoldChance/impliedFactor;
+}
+
+float64 ExactCallBluffD::pWinD(const float64 betSize)
+{
+	if( queryinput != betSize )
+    {
+        query(betSize);
+        queryinput = betSize;
+    }
+	return allFoldChanceD/impliedFactor;
+}
+
+
 
 float64 ExactCallD::exf(const float64 betSize)
 {

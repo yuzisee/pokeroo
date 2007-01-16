@@ -19,11 +19,14 @@
  ***************************************************************************/
 
 
-#define WINRELEASE
+//#define WINRELEASE
 #define AUTOEXTRATOKEN "restore.txt"
 
 #define REQUEST_USER_BLINDSIZE
-//#define REGULARINTOLOG
+
+#ifndef WINRELEASE
+//	#define REGULARINTOLOG
+#endif
 #define DEBUGSITUATION
 #define SUPERINTOLOG
 
@@ -852,6 +855,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	CorePositionalStrategy PotCommittalMeanGeom(6);
 	CorePositionalStrategy HybridGeom(7);
 	CorePositionalStrategy HybridAlgb(8);
+	CorePositionalStrategy RankGeomBluff(9);
+	CorePositionalStrategy MeanGeomBluff(10);
+	CorePositionalStrategy HybridGeomBluff(14);
+
 	ImproveStrategy DistrScaleP;
 	DeterredGainStrategy FutureFoldP;
 	HybridScalingStrategy AutoSetP;
@@ -873,10 +880,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         }
     }else
     {
-        myTable.AddPlayer("q4", &pushAll);
-        myTable.AddPlayer("i4", &drainFold);
-        myTable.AddPlayer("X3", &pushFold);
-        myTable.AddPlayer("A3", &tightPushFold);
+        //myTable.AddPlayer("q4", &pushAll);
+        //myTable.AddPlayer("i4", &drainFold);
+        //myTable.AddPlayer("X3", &pushFold);
+        //myTable.AddPlayer("A3", &tightPushFold);
 
     }
 
@@ -903,6 +910,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             //myTable.AddPlayer("MeanGeomPC", &PotCommittalMeanGeom); /* riskymode = 6 */
             //myTable.AddPlayer("HybridGeom", &HybridGeom); /* riskymode = 7 */
             //myTable.AddPlayer("HybridAlgb", &HybridAlgb); /* riskymode = 8 */
+			myTable.AddPlayer("RankGeomBluff", &RankGeomBluff); /* riskymode = 9 */
+			myTable.AddPlayer("MeanGeomBluff", &MeanGeomBluff); /* riskymode = 10 */
+			myTable.AddPlayer("HybridGeomBluff", &HybridGeomBluff); /* riskymode = 14 */
             myTable.AddPlayer("TrapBotII", &DistrScaleP);
             myTable.AddPlayer("ComBotII", &FutureFoldP);
 			myTable.AddPlayer("SpaceBotII", &AutoSetP);
@@ -1025,7 +1035,7 @@ int main(int argc, char* argv[])
 #else
         //debugPosition();
 	    //superGame(0);
-   	    testPlay(0);
+   	    testPlay(1);
    	    //testNewCallStats();
 #endif
 	    //testDeal();

@@ -102,6 +102,10 @@ class GainModel : public virtual HoldemFunctionModel
 	uint8 e_battle;
 	float64 p_cl;
 	float64 p_cw;
+
+    virtual float64 g(float64);
+    virtual float64 gd(float64, const float64);
+
 	public:
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 	GainModel(const StatResult s,ExpectedCallD *c)
@@ -195,9 +199,26 @@ class GainModel : public virtual HoldemFunctionModel
 
 class GainModelNoRisk : public virtual GainModel
 {
+    protected:
+        virtual float64 g(float64);
+        virtual float64 gd(float64,const float64);
     public:
 	GainModelNoRisk(const StatResult s,ExpectedCallD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c){}
 	virtual ~GainModelNoRisk();
+
+	virtual float64 f(const float64);
+    virtual float64 fd(const float64, const float64);
+}
+;
+
+class GainModelBluff : public virtual GainModel
+{
+	ExactCallBluffD * ea;
+    public:
+	GainModelBluff(const StatResult s,ExactCallBluffD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c)
+	,ea(c)
+	{}
+	virtual ~GainModelBluff();
 
 	virtual float64 f(const float64);
     virtual float64 fd(const float64, const float64);

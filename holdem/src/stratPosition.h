@@ -32,7 +32,7 @@
 //#define ARBITARY_DISTANCE
 
 
-#define BGAMBLE_MAX 9
+#define BGAMBLE_MAX 16
 
 ///RULE OF THUMB?
 ///It looks like increasing winPCT loosens up the player
@@ -147,7 +147,13 @@ class CorePositionalStrategy : public PositionalStrategy
 6   statmean, Geom, potCommit
 7   hybridMagnified, Geom
 8   hybridMagnified, Algb
-
+9   statranking, GeomBluff
+10  statmean, GeomBluff
+//11  statworst, AlgbBluff
+//12  statranking, AlgbBluff
+//13  statmean, AlgbBluff
+14  hybridMagnified, GeomBluff
+//15  hybridMagnified, AlgbBluff
 
 
 */

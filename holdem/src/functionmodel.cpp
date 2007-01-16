@@ -47,6 +47,9 @@ GainModelReverse::~GainModelReverse()
 {
 }
 #endif
+GainModelBluff::~GainModelBluff()
+{
+}
 
 GainModelNoRisk::~GainModelNoRisk()
 {
@@ -58,29 +61,34 @@ GainModel::~GainModel()
 
 float64 HoldemFunctionModel::FindBestBet()
 {
-    const float64& myMoney = e->maxBet();
-    const float64& betToCall = e->callBet();
+    const float64 myMoney = e->maxBet();
+    const float64 betToCall = e->callBet();
 
     if( myMoney < betToCall ) return myMoney;
-    float64 desiredBet = FindMax(betToCall,myMoney);
+	float64 desiredBet = FindMax(e->minRaiseTo(),myMoney);
+	
+	const float64 callGain = f(betToCall);
+	if( callGain > f(desiredBet) )
+	{
+		desiredBet = betToCall;
+	}else
+	{
+		///PURIFY
+		float64 nextOptimal = desiredBet + quantum;
+		float64 prevOptimal = desiredBet - quantum;
+		if( desiredBet > myMoney ) desiredBet = myMoney; //due to rounding of desiredBet
+		if( nextOptimal > myMoney ) nextOptimal = myMoney;
+		if( prevOptimal < betToCall ) prevOptimal = betToCall;
 
-
-
-    ///PURIFY
-    float64 nextOptimal = desiredBet + quantum;
-    float64 prevOptimal = desiredBet - quantum;
-	if( desiredBet > myMoney ) desiredBet = myMoney; //due to rounding of desiredBet
-    if( nextOptimal > myMoney ) nextOptimal = myMoney;
-    if( prevOptimal < betToCall ) prevOptimal = betToCall;
-
-    if( f(nextOptimal) > f(desiredBet) )
-    {
-        desiredBet = nextOptimal;
-    }
-    if( f(prevOptimal) > f(desiredBet) )
-    {
-        desiredBet = prevOptimal;
-    }
+		if( f(nextOptimal) > f(desiredBet) )
+		{
+			desiredBet = nextOptimal;
+		}
+		if( f(prevOptimal) > f(desiredBet) )
+		{
+			desiredBet = prevOptimal;
+		}
+	}
 
     return desiredBet;
 }
@@ -113,10 +121,15 @@ const float64 HoldemFunctionModel::GetFoldGain() const
     return e->foldGain();
 }
 
-float64 GainModel::f(const float64 betSize)
+float64 GainModel::g(float64 betSize)
 {
+	
+	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
+	{
+		betSize = e->callBet();
+	}
 
-	const float64 x = e->betFraction(betSize);
+	float64 x = e->betFraction(betSize);
 	float64 exf = e->betFraction(e->exf(betSize));
 
     const float64 f_pot = e->betFraction( e->prevpotChips() );
@@ -136,7 +149,7 @@ float64 GainModel::f(const float64 betSize)
         const float64 t_1lp = pow(t_1l, t_cl);
     #endif
 
-    if( betSize < e->callBet() && betSize < e->maxBet() ) return 0; ///"Negative raise" means betting less than the minimum call = FOLD
+    if( betSize < e->callBet() && betSize < e->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
 
@@ -167,8 +180,6 @@ float64 GainModel::f(const float64 betSize)
         *
         pow(base-x , p_cl)
         *sav)
-	-
-		e->foldGain()
 	;
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix));  plays more cautiously to account for most people playing better cards only
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix*e->pctWillCall()));
@@ -177,20 +188,30 @@ float64 GainModel::f(const float64 betSize)
 	//floor()
 }
 
-
-float64 GainModel::fd(const float64 betSize, const float64 y)
+float64 GainModel::f(const float64 betSize)
 {
+    return g(betSize) - e->foldGain();
+}
 
+
+float64 GainModel::gd(const float64 betSize, const float64 y)
+{
 	//const float64 exf = e->pctWillCall(x/qdenom);
 	//const float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
-    float64 x = e->betFraction(betSize);
-    if( x == 1 ) x -= quantum/4; //Approximate extremes to avoide division by zero
+    
+	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
+	{
+		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
+		return splitDist/(e->minRaiseTo() - e->callBet());
+	}
+	float64 x = e->betFraction(betSize);
+ 	if( x == 1 ) x -= quantum/4; //Approximate extremes to avoide division by zero
 
     //const float64 qdenom = (2*x+f_pot);
 	float64 exf = e->betFraction(e->exf(betSize));
 
-		//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B
-	const float64 dexf = e->dexf(betSize);
+		//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B  //Note: B is determined by betSize/x
+	const float64 dexf = e->dexf(betSize); ///This is actually e->betFraction( e->dexf(betSize)*betSize/x ) = e->dexf(betSize)
     const float64 f_pot = e->betFraction(e->prevpotChips());
     const float64 exf_live = exf - f_pot;
 	//const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;n
@@ -227,8 +248,9 @@ float64 GainModel::fd(const float64 betSize, const float64 y)
         }///Else you'd just {savd+=0;} anyways
 	}
 
+    //y is passed in as (y+e->foldGain())
  	return
-	(y+e->foldGain())*
+ 	(y)*
 	(
 	p_cw*dexf/(1+exf)
 
@@ -239,6 +261,10 @@ float64 GainModel::fd(const float64 betSize, const float64 y)
 
 }
 
+float64 GainModel::fd(const float64 betSize, const float64 y)
+{
+    return gd(betSize, y+e->foldGain());
+}
 
 
 StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
@@ -263,10 +289,67 @@ StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 
 
 
-float64 GainModelNoRisk::f(const float64 betSize)
-{
 
-	const float64 x = e->betFraction(betSize);
+float64 GainModelBluff::f(const float64 betSize)
+{
+	const float64 potFoldWin = ea->PushGain();
+	const float64 playChance = 1 - ea->pWin(betSize);
+	const float64 oppFoldChance = ea->pWin(betSize);
+#ifdef DEBUGASSERT
+	if( potFoldWin < 0 || oppFoldChance <= 0 ){
+		return g(betSize)  - e->foldGain();
+	}
+#endif
+	
+	const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
+	const float64 gainNormal = pow( g(betSize),playChance );
+
+    return gainWithFold*gainNormal - e->foldGain();
+}
+float64 GainModelBluff::fd(const float64 betSize, const float64 y)
+{
+	const float64 potFoldWin = ea->PushGain();
+	const float64 playChance = 1 - ea->pWin(betSize);
+	const float64 oppFoldChance = ea->pWin(betSize);
+#ifdef DEBUGASSERT
+	if( potFoldWin <= 0 || oppFoldChance <= 0 )
+	{
+		return gd(betSize,y+e->foldGain());
+	}
+#endif
+
+	const float64 dFoldChance = ea->pWinD(betSize);
+	
+	const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
+	
+	///Reverse to deduce basey
+	const float64 fy = y+e->foldGain();
+	const float64 gainNormal = (fy) / gainWithFold;
+	const float64 basey = pow(  gainNormal  ,  1/playChance );
+
+    const float64 gainDNormal = gd(betSize, basey);
+
+	return (
+				dFoldChance * log( potFoldWin )
+					+
+				playChance * gainDNormal / gainNormal 
+					-
+				oppFoldChance * log(gainNormal)
+			)
+			*fy;
+}
+
+
+
+float64 GainModelNoRisk::g(float64 betSize)
+{
+	
+	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
+	{
+		betSize = e->callBet();
+	}
+	
+	float64 x = e->betFraction(betSize);
 	float64 exf = e->betFraction(e->exf(betSize));
 
     const float64 f_pot = e->betFraction(e->prevpotChips());
@@ -288,7 +371,7 @@ float64 GainModelNoRisk::f(const float64 betSize)
 
         #endif
 
-    if( betSize < e->callBet() && betSize < e->maxBet() ) return 0; ///"Negative raise" means betting less than the minimum call = FOLD
+    if( betSize < e->callBet() && betSize < e->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
 
@@ -319,17 +402,26 @@ float64 GainModelNoRisk::f(const float64 betSize)
            (base-x) * p_cl
         +
 		   sav
-	-
-		e->foldGain()
+
 	;
 
 	//let's round e_fix downward on input
 	//floor()
 }
 
-
-float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
+float64 GainModelNoRisk::f(const float64 betSize)
 {
+    return g(betSize) - e->foldGain();
+}
+
+
+float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
+{
+	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
+	{
+		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
+		return splitDist/(e->minRaiseTo() - e->callBet());
+	}
 
 //    const float64 x = e->betFraction(betSize);
 
@@ -372,6 +464,11 @@ float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
 	savd
 	);
 
+}
+
+float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
+{
+    return gd(betSize, y+e->foldGain());
 }
 
 

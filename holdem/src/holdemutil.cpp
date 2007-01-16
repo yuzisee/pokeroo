@@ -225,13 +225,13 @@ const bool HandPlus::IsEmpty() const
     return (valueset == 0);
 }
 
-void inline HandPlus::SetUnique(const HandPlus& h)
+void HandPlus::SetUnique(const HandPlus& h)
 {
 	Hand::SetUnique(h);
 	valueset = h.valueset;
 }
 
-void inline HandPlus::SetUnique(const Hand& h)
+void HandPlus::SetUnique(const Hand& h)
 {
 	Hand::SetUnique(h);
 	populateValueset();
@@ -275,7 +275,7 @@ void Hand::AppendUnique(const Hand& h)
 }
 
 
-void inline Hand::SetUnique(const Hand& h)
+void Hand::SetUnique(const Hand& h)
 {
 
 	cardset[0] = h.cardset[0];
