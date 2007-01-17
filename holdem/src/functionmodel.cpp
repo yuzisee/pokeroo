@@ -55,6 +55,10 @@ GainModelNoRisk::~GainModelNoRisk()
 {
 }
 
+GainModelNoRiskBluff::~GainModelNoRiskBluff()
+{
+}
+
 GainModel::~GainModel()
 {
 }
@@ -65,8 +69,17 @@ float64 HoldemFunctionModel::FindBestBet()
     const float64 betToCall = e->callBet();
 
     if( myMoney < betToCall ) return myMoney;
+
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << "\t\tFindMax(" << e->minRaiseTo() << "," << myMoney << ")" << endl;
+        #endif
+
 	float64 desiredBet = FindMax(e->minRaiseTo(),myMoney);
-	
+
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << "\t\t" << desiredBet << " FoundMax" << endl;
+        #endif
+
 	const float64 callGain = f(betToCall);
 	if( callGain > f(desiredBet) )
 	{
@@ -123,7 +136,7 @@ const float64 HoldemFunctionModel::GetFoldGain() const
 
 float64 GainModel::g(float64 betSize)
 {
-	
+
 	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
 	{
 		betSize = e->callBet();
@@ -198,14 +211,24 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 {
 	//const float64 exf = e->pctWillCall(x/qdenom);
 	//const float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
-    
+
+
+    const float64 adjQuantum = quantum/4;
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << std::endl << "\t\t\t\t\tconstraints: " << e->callBet() << " to " << e->minRaiseTo() << " and " << adjQuantum << endl;
+        #endif
+    const float64 fracQuantum = e->betFraction(adjQuantum);
+
 	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
 	{
-		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
-		return splitDist/(e->minRaiseTo() - e->callBet());
+            #ifdef DEBUG_FUNCTIONCORE
+                std::cout << std::endl << "\t\t\t\t\tsplitDist " << betSize << endl;
+            #endif
+		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()+adjQuantum-betSize)+gd(e->minRaiseTo()+adjQuantum,y)*(e->callBet()-betSize);
+		return splitDist/(e->minRaiseTo()+adjQuantum - e->callBet());
 	}
 	float64 x = e->betFraction(betSize);
- 	if( x == 1 ) x -= quantum/4; //Approximate extremes to avoide division by zero
+ 	if( x == 1 ) x -= fracQuantum; //Approximate extremes to avoide division by zero
 
     //const float64 qdenom = (2*x+f_pot);
 	float64 exf = e->betFraction(e->exf(betSize));
@@ -222,7 +245,9 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
             const float64 & t_cl = p_cl;
             const float64 & t_cw = p_cw;
         #endif
-
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << std::endl << "\t\t\t\t\tPrepared gd" << std::endl;
+        #endif
 
     if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
@@ -263,6 +288,9 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 
 float64 GainModel::fd(const float64 betSize, const float64 y)
 {
+    #ifdef DEBUG_FUNCTIONCORE
+        std::cout << std::endl << "\t\t\t\t\tfd(" << betSize <<","<< y << " to " << y+e->foldGain() << ")" << endl;
+    #endif
     return gd(betSize, y+e->foldGain());
 }
 
@@ -300,7 +328,7 @@ float64 GainModelBluff::f(const float64 betSize)
 		return g(betSize)  - e->foldGain();
 	}
 #endif
-	
+
 	const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
 	const float64 gainNormal = pow( g(betSize),playChance );
 
@@ -319,9 +347,9 @@ float64 GainModelBluff::fd(const float64 betSize, const float64 y)
 #endif
 
 	const float64 dFoldChance = ea->pWinD(betSize);
-	
+
 	const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
-	
+
 	///Reverse to deduce basey
 	const float64 fy = y+e->foldGain();
 	const float64 gainNormal = (fy) / gainWithFold;
@@ -332,7 +360,7 @@ float64 GainModelBluff::fd(const float64 betSize, const float64 y)
 	return (
 				dFoldChance * log( potFoldWin )
 					+
-				playChance * gainDNormal / gainNormal 
+				playChance * gainDNormal / gainNormal
 					-
 				oppFoldChance * log(gainNormal)
 			)
@@ -343,12 +371,12 @@ float64 GainModelBluff::fd(const float64 betSize, const float64 y)
 
 float64 GainModelNoRisk::g(float64 betSize)
 {
-	
+
 	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
 	{
 		betSize = e->callBet();
 	}
-	
+
 	float64 x = e->betFraction(betSize);
 	float64 exf = e->betFraction(e->exf(betSize));
 
@@ -417,9 +445,12 @@ float64 GainModelNoRisk::f(const float64 betSize)
 
 float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 {
+
+    const float64 adjQuantum = quantum/4;
+
 	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
 	{
-		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
+		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()+adjQuantum-betSize)+gd(e->minRaiseTo()+adjQuantum,y)*(e->callBet()-betSize);
 		return splitDist/(e->minRaiseTo() - e->callBet());
 	}
 
@@ -472,6 +503,58 @@ float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
 }
 
 
+float64 GainModelNoRiskBluff::f(const float64 betSize)
+{
+	const float64 potFoldWin = ea->PushGain();
+	const float64 playChance = 1 - ea->pWin(betSize);
+	const float64 oppFoldChance = ea->pWin(betSize);
+#ifdef DEBUGASSERT
+	if( potFoldWin < 0 || oppFoldChance <= 0 ){
+		return g(betSize)  - e->foldGain();
+	}
+#endif
+
+	const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
+	const float64 gainNormal = pow( g(betSize),playChance );
+
+    return gainWithFold*gainNormal - e->foldGain();
+}
+float64 GainModelNoRiskBluff::fd(const float64 betSize, const float64 y)
+{
+	const float64 potFoldWin = ea->PushGain();
+	const float64 playChance = 1 - ea->pWin(betSize);
+	const float64 oppFoldChance = ea->pWin(betSize);
+#ifdef DEBUGASSERT
+	if( potFoldWin <= 0 || oppFoldChance <= 0 )
+	{
+		return gd(betSize,y+e->foldGain());
+	}
+#endif
+
+	const float64 dFoldChance = ea->pWinD(betSize);
+
+	const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
+
+	///Reverse to deduce basey
+	const float64 fy = y+e->foldGain();
+	const float64 gainNormal = (fy) / gainWithFold;
+	const float64 basey = pow(  gainNormal  ,  1/playChance );
+
+    const float64 gainDNormal = gd(betSize, basey);
+
+	return (
+				dFoldChance * log( potFoldWin )
+					+
+				playChance * gainDNormal / gainNormal
+					-
+				oppFoldChance * log(gainNormal)
+			)
+			*fy;
+}
+
+
+
+
 void SlidingPairFunction::query(float64 x)
 {
     const float64 yl = left->f(x);
@@ -502,12 +585,29 @@ float64 SlidingPairFunction::fd(const float64 x, const float64 y_dummy)
 
 void AutoScalingFunction::query(float64 x)
 {
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << std::endl<< "\t\t\t\tleft(" << x << ")=" << std::flush;
+        #endif
     const float64 yl = left->f(x);
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << yl << std::endl ;
+            std::cout << "\t\t\t\tright(" << x << ")=" << std::flush;
+        #endif
     const float64 yr = right->f(x);
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << yr << std::endl;
+        #endif
+
     last_x = x;
 
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << std::endl << "\t\t\t\t" << saturate_max << "  ~~  " << saturate_min << "!" << std::flush;
+        #endif
     const float64 autoSlope = saturate_upto / (saturate_max - saturate_min) ;
     const float64 slider = (x - saturate_min) * autoSlope ;
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << slider << std::endl;
+        #endif
 
 
     if( slider > 1 )
@@ -523,7 +623,19 @@ void AutoScalingFunction::query(float64 x)
     else
     {
         y = yl*(1-slider)+yr*slider;
-        dy = left->fd(x,yl)*(1-slider) - yl*autoSlope   +   right->fd(x,yr)*slider + yr*autoSlope;
+            #ifdef DEBUG_FUNCTIONCORE
+                std::cout << "\t\t\t\tfd_yl=" << std::flush;
+            #endif
+        const float64 fd_yl = left->fd(x,yl);
+            #ifdef DEBUG_FUNCTIONCORE
+                std::cout <<fd_yl << std::endl ;
+                std::cout << "\t\t\t\tfd_yr=" << std::flush;
+            #endif
+        const float64 fd_yr = right->fd(x,yr);
+            #ifdef DEBUG_FUNCTIONCORE
+                std::cout <<fd_yr << std::endl ;
+            #endif
+        dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
     }
 
 }

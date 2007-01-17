@@ -103,11 +103,26 @@ float64 ScalarFunctionModel::searchStep(float64 x1, float64 y1, float64 x2, floa
 
 float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 {
-    float64 y1 = f(x1);
-    float64 y2 = f(x2);
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << "\t\t\t(x1,y1)=" << x1 << std::flush;
+        #endif
+    const float64 y1 = f(x1);
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout <<","<< y1 << endl;
+            std::cout << "\t\t\t(x2,y2)=" << x2 << std::flush;
+        #endif
+    const float64 y2 = f(x2);
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout <<","<< y2 << endl;
+        #endif
 
-    float64 xb = bisectionStep(x1,x2);
-    float64 yb = f(xb);
+    const float64 xb = bisectionStep(x1,x2);
+    const float64 yb = f(xb);
+
+
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << "\t\t\t(xb,yb)=" << xb <<","<< yb << endl;
+        #endif
 
 	if( yb <= y1 && yb <= y2)
 	{
@@ -129,7 +144,9 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 
         return round(xb/quantum)*quantum;
     }
-
+        #ifdef DEBUG_FUNCTIONCORE
+            std::cout << "\t\t  FindTurningPoint" << endl;
+        #endif
 	return FindTurningPoint(x1, y1, xb, yb, x2, y2, 1);
 }
 

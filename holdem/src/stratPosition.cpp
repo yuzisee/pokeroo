@@ -212,8 +212,6 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 
     float64 choicePoint = targetModel->FindBestBet();
 
-
-
     if( choicePoint < betToCall )
     {///It's probably really close though
             #ifdef LOGPOSITION
@@ -504,6 +502,7 @@ float64 CorePositionalStrategy::MakeBet()
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
 	ExactCallBluffD myBluffFoldCall(myPositionIndex, &(ViewTable()), &choicecumu, &foldcumu);
     ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    ExactCallBluffD myLimitFoldCall(myPositionIndex, &(ViewTable()), &choicecumu, &foldcumu);
     const float64 committed = ViewPlayer().GetContribution() + myBet;
     ExactCallD myCommittalCall(myPositionIndex, &(ViewTable()), &choicecumu, committed );
 
@@ -514,14 +513,12 @@ float64 CorePositionalStrategy::MakeBet()
     }
 
     myLimitCall.callingPlayers(  expectedVS  );
+    myLimitFoldCall.callingPlayers(  expectedVS  );
     if( expectedVS < 0 ) //You have no money
     {
         myLimitCall.callingPlayers( myExpectedCall.betFraction(ViewTable().GetChipDenom()) ) ;
+        myLimitFoldCall.callingPlayers( myExpectedCall.betFraction(ViewTable().GetChipDenom()) ) ;
     }
-
-
-
-    myLimitCall.callingPlayers(  expectedVS  );
 
 
     GainModel rankGeom(statranking,&myExpectedCall);
@@ -542,6 +539,9 @@ float64 CorePositionalStrategy::MakeBet()
 
 	GainModelBluff rankGeomBluff(statranking,&myBluffFoldCall);
 	GainModelBluff meanGeomBluff(statmean,&myBluffFoldCall);
+    GainModelNoRiskBluff worstAlgbBluff(statworse,&myLimitFoldCall);
+    GainModelNoRiskBluff rankAlgbBluff(statranking,&myBluffFoldCall);
+    GainModelNoRiskBluff meanAlgbBluff(statmean,&myBluffFoldCall);
     GainModelBluff hybridGeomBluff(hybridMagnified,&myBluffFoldCall);
 
     #ifdef DEBUGASSERT
@@ -553,7 +553,7 @@ float64 CorePositionalStrategy::MakeBet()
     #endif
 
     HoldemFunctionModel* (lookup[BGAMBLE_MAX]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom, &hybridAlgb
-		,&rankGeomBluff ,&meanGeomBluff,0,0,0,&hybridGeomBluff	};
+		,&rankGeomBluff ,&meanGeomBluff,&worstAlgbBluff,&rankAlgbBluff,&meanAlgbBluff,&hybridGeomBluff	};
 
     #ifdef LOGPOSITION
         const float64 improveMod = detailPCT.improve * 2;
@@ -579,7 +579,10 @@ float64 CorePositionalStrategy::MakeBet()
 		if( bGamble >= 9 && bGamble <= 15 )
 		{
 			logFile << "OppFoldChance% ... " << myBluffFoldCall.pWin(bestBet) << "   d\\" << myBluffFoldCall.pWinD(bestBet) << endl;
-			logFile << "confirm " << lookup[bGamble]->f(bestBet) << endl;
+			if( myBluffFoldCall.pWin(bestBet) > 0 )
+			{
+				logFile << "confirm " << lookup[bGamble]->f(bestBet) << endl;
+			}
 		}
 	#endif
 

@@ -225,6 +225,20 @@ class GainModelBluff : public virtual GainModel
 }
 ;
 
+class GainModelNoRiskBluff : public virtual GainModelNoRisk
+{
+	ExactCallBluffD * ea;
+    public:
+	GainModelNoRiskBluff(const StatResult s,ExactCallBluffD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c),GainModelNoRisk(s,c)
+	,ea(c)
+	{}
+	virtual ~GainModelNoRiskBluff();
+
+	virtual float64 f(const float64);
+    virtual float64 fd(const float64, const float64);
+}
+;
+
 class SlidingPairFunction : public virtual HoldemFunctionModel
 {
     protected:

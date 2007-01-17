@@ -24,8 +24,10 @@
 #include "portability.h"
 
 
+
 //#define SINGLETURNINGPOINT
 #define BYPASS_ANOMALIES
+//#define DEBUG_FUNCTIONCORE
 
 class ScalarFunctionModel
 {

@@ -84,6 +84,7 @@ class PositionalStrategy : virtual public PlayerStrategy
 		virtual float64 MakeBet() = 0;
 		virtual void SeeOppHand(const int8, const Hand&){};
         virtual void SeeAction(const HoldemAction&) {};
+        virtual void FinishHand(){};
 }
 ;
 
@@ -149,9 +150,9 @@ class CorePositionalStrategy : public PositionalStrategy
 8   hybridMagnified, Algb
 9   statranking, GeomBluff
 10  statmean, GeomBluff
-//11  statworst, AlgbBluff
-//12  statranking, AlgbBluff
-//13  statmean, AlgbBluff
+11  statworst, AlgbBluff
+12  statranking, AlgbBluff
+13  statmean, AlgbBluff
 14  hybridMagnified, GeomBluff
 //15  hybridMagnified, AlgbBluff
 

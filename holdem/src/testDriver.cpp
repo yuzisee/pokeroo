@@ -25,7 +25,7 @@
 #define REQUEST_USER_BLINDSIZE
 
 #ifndef WINRELEASE
-//	#define REGULARINTOLOG
+	#define REGULARINTOLOG
 #endif
 #define DEBUGSITUATION
 #define SUPERINTOLOG
@@ -833,7 +833,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
 	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2,2);
 		#ifdef REGULARINTOLOG
-			std::ofstream gameOutput("game.log");
+            std::ios::openmode gamelogMode = std::ios::trunc;
+            if( bLoadGame ) gamelogMode = std::ios::app;
+			std::ofstream gameOutput("game.log",gamelogMode);
 			HoldemArena myTable(&bg, gameOutput,true, true);
 		#else
 	HoldemArena myTable(&bg, gameLog,true, true);
@@ -857,6 +859,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	CorePositionalStrategy HybridAlgb(8);
 	CorePositionalStrategy RankGeomBluff(9);
 	CorePositionalStrategy MeanGeomBluff(10);
+	CorePositionalStrategy WorseAlgbBluff(11);
 	CorePositionalStrategy HybridGeomBluff(14);
 
 	ImproveStrategy DistrScaleP;
@@ -910,9 +913,11 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             //myTable.AddPlayer("MeanGeomPC", &PotCommittalMeanGeom); /* riskymode = 6 */
             //myTable.AddPlayer("HybridGeom", &HybridGeom); /* riskymode = 7 */
             //myTable.AddPlayer("HybridAlgb", &HybridAlgb); /* riskymode = 8 */
-			myTable.AddPlayer("RankGeomBluff", &RankGeomBluff); /* riskymode = 9 */
-			myTable.AddPlayer("MeanGeomBluff", &MeanGeomBluff); /* riskymode = 10 */
-			myTable.AddPlayer("HybridGeomBluff", &HybridGeomBluff); /* riskymode = 14 */
+			//myTable.AddPlayer("RankGeomBluff", &RankGeomBluff); /* riskymode = 9 */
+			//myTable.AddPlayer("MeanGeomBluff", &MeanGeomBluff); /* riskymode = 10 */
+			myTable.AddPlayer("WorseAlgbBluff", &WorseAlgbBluff); /* riskymode = 11 */
+			//myTable.AddPlayer("HybridGeomBluff", &HybridGeomBluff); /* riskymode = 14 */
+
             myTable.AddPlayer("TrapBotII", &DistrScaleP);
             myTable.AddPlayer("ComBotII", &FutureFoldP);
 			myTable.AddPlayer("SpaceBotII", &AutoSetP);

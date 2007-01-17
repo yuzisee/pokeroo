@@ -59,6 +59,7 @@ class MultiThresholdStrategy : virtual public ThresholdStrategy
 
 		virtual void SeeCommunity(const Hand&, const int8);
 		virtual float64 MakeBet();
+		virtual void FinishHand(){}
 		//virtual void SeeOppHand(const int8, const Hand&);
         //virtual void SeeAction(const HoldemAction&);
 }

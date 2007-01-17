@@ -151,6 +151,8 @@ class PlayerStrategy
 		virtual void SeeOppHand(const int8, const Hand&) = 0;
 
 		virtual void SeeAction(const HoldemAction&) = 0;
+
+		virtual void FinishHand() = 0;
 }
 ;
 
