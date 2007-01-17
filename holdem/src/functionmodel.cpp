@@ -219,7 +219,7 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
         #endif
     const float64 fracQuantum = e->betFraction(adjQuantum);
 
-	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
+	if( betSize > e->callBet() && betSize < e->minRaiseTo()-adjQuantum )
 	{
             #ifdef DEBUG_FUNCTIONCORE
                 std::cout << std::endl << "\t\t\t\t\tsplitDist " << betSize << endl;
@@ -448,7 +448,7 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 
     const float64 adjQuantum = quantum/4;
 
-	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
+	if( betSize > e->callBet() && betSize < e->minRaiseTo()-adjQuantum )
 	{
 		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()+adjQuantum-betSize)+gd(e->minRaiseTo()+adjQuantum,y)*(e->callBet()-betSize);
 		return splitDist/(e->minRaiseTo() - e->callBet());
