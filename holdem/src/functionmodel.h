@@ -117,20 +117,29 @@ class GainModel : public virtual HoldemFunctionModel
 //		    const float64 t = c->chipDenom();
 		    if( quantum == 0 ) quantum = 1;
 
-		    float64 oldTotal = 1 - pow(1 - shape.loss,e_battle) + pow(shape.wins,e_battle);
+			if( shape.splits == 1 || (shape.loss + shape.wins == 0) )
+			{
+				p_cl = 0;
+				p_cw = 0;
+			}else
+			{
+				float64 oldTotal = 1 - pow(1 - shape.loss,e_battle) + pow(shape.wins,e_battle);
 
-            //std::cout << "Old <p_cl,p_cw>: " <<  1 - pow(1 - shape.loss,e_battle) << "," << pow(shape.wins,e_battle) << endl;
-            //std::cout << "e_battle is " << (int)e_battle << "\tf_battle is " << f_battle << endl;
-        ///Use f_battle instead of e_battle
-            p_cl =  1 - pow(1 - shape.loss,f_battle);
-            p_cw = pow(shape.wins,f_battle);
+				//std::cout << "Old <p_cl,p_cw>: " <<  1 - pow(1 - shape.loss,e_battle) << "," << pow(shape.wins,e_battle) << endl;
+				//std::cout << "e_battle is " << (int)e_battle << "\tf_battle is " << f_battle << endl;
+			///Use f_battle instead of e_battle
+				p_cl =  1 - pow(1 - shape.loss,f_battle);
+				p_cw = pow(shape.wins,f_battle);
 
-            float64 newTotal = p_cl + p_cw;
-        ///Since the ratios are different, make the adjustment to normalize
-            p_cl *= oldTotal/newTotal;
-            p_cw *= oldTotal/newTotal;
+				float64 newTotal = p_cl + p_cw;
+			///Since the ratios are different, make the adjustment to normalize
+				p_cl *= oldTotal/newTotal;
+				p_cw *= oldTotal/newTotal;
 
-            //std::cout << "New <p_cl,p_cw>: " << p_cl << "," << p_cw << endl;
+				
+
+				//std::cout << "New <p_cl,p_cw>: " << p_cl << "," << p_cw << endl;
+			}
 		}
 
     virtual ~GainModel();
