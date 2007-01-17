@@ -219,13 +219,13 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
         #endif
     const float64 fracQuantum = e->betFraction(adjQuantum);
 
-	if( betSize > e->callBet() && betSize < e->minRaiseTo()-adjQuantum )
+	if( betSize > e->callBet()+adjQuantum && betSize < e->minRaiseTo()-adjQuantum )
 	{
             #ifdef DEBUG_FUNCTIONCORE
                 std::cout << std::endl << "\t\t\t\t\tsplitDist " << betSize << endl;
             #endif
-		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()+adjQuantum-betSize)+gd(e->minRaiseTo()+adjQuantum,y)*(e->callBet()-betSize);
-		return splitDist/(e->minRaiseTo()+adjQuantum - e->callBet());
+		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
+		return splitDist/(e->minRaiseTo() - e->callBet());
 	}
 	float64 x = e->betFraction(betSize);
  	if( x == 1 ) x -= fracQuantum; //Approximate extremes to avoide division by zero
@@ -448,9 +448,9 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 
     const float64 adjQuantum = quantum/4;
 
-	if( betSize > e->callBet() && betSize < e->minRaiseTo()-adjQuantum )
+	if( betSize > e->callBet()+adjQuantum && betSize < e->minRaiseTo()-adjQuantum )
 	{
-		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()+adjQuantum-betSize)+gd(e->minRaiseTo()+adjQuantum,y)*(e->callBet()-betSize);
+		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
 		return splitDist/(e->minRaiseTo() - e->callBet());
 	}
 
