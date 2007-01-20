@@ -370,6 +370,26 @@ float64 ImproveStrategy::MakeBet()
     #endif
 
     const float64 bestBet = solveGainModel(&gp);
+
+    #ifdef LOGPOSITION
+    if( bGamble == 1 )
+    {
+        const float64 pWinWorst = myLimitCall.pWin(bestBet);
+        const float64 pWinRank = myExpectedCall.pWin(bestBet);
+
+        const float64 pWinWorstD = myLimitCall.pWinD(bestBet);
+        const float64 pWinRankD = myExpectedCall.pWinD(bestBet);
+
+
+        const float64 pWinSlider = pWinWorst*(1-distrScale) + pWinRank*distrScale;
+
+        logFile << "OppFoldChance% ... " << pWinSlider << "   d\\" << pWinWorstD*(1-distrScale) + pWinRankD*distrScale << endl;
+        if( pWinSlider > 0 )
+        {
+            logFile << "confirm " << gp.f(bestBet) << endl;
+        }
+    }
+    #endif
     return bestBet;
 
 }
@@ -421,6 +441,15 @@ float64 DeterredGainStrategy::MakeBet()
 	logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
 	logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred_agressiveness[bGamble]->f(bestBet) << endl;
 	logFile << "Algb("<< bestBet <<")=" << hybridgain_agressiveness[bGamble]->f(bestBet) << endl;
+
+    if( bGamble == 1 )
+    {
+        logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
+        if( myDeterredCall.pWin(bestBet) > 0 )
+        {
+            logFile << "confirm " << choicemodel.f(bestBet) << endl;
+        }
+    }
 #endif
 
     return bestBet;
@@ -491,6 +520,12 @@ float64 HybridScalingStrategy::MakeBet()
 	const float64 gainPC = allModel.f(bestBet) - shiftscale2*shiftscale2*ssunits ;
 
 #ifdef LOGPOSITION
+    if( bGamble == 1 )
+    {
+        logFile << "OppFoldChance% ... " << myExpectedCall.pWin(bestBet) << "   d\\" << myExpectedCall.pWinD(bestBet) << endl;
+    }
+
+
 	logFile << "choicemodel("<< bestBet <<")=" << allModel.f(bestBet) << "  -->  " << gainPC << endl;
 	logFile << "                   (* " << ssunits << ")²" << endl;
 #endif
