@@ -297,7 +297,7 @@ void ExactCallBluffD::query(const float64 betSize)
     while( pIndex != playerID )
     {
 
-		const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
+	const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
 
         if( table->CanStillBet(pIndex) )
         {///Predict how much the bet will be
@@ -309,12 +309,12 @@ void ExactCallBluffD::query(const float64 betSize)
                 const float64 oppBetMake = betSize - oppBetAlready;
                 //To understand the above, consider that totalexf includes already made bets
 
-				if( oppBetMake <= table->GetMinRaise() )
+		if( betSize < minRaiseTo() - chipDenom()/4  )
                 {
-					allFoldChance = 0;
-					allFoldChanceD = 0;
-					nextFold = 0;
-					nextFoldPartial = 0;
+			allFoldChance = 0;
+			allFoldChanceD = 0;
+			nextFold = 0;
+			nextFoldPartial = 0;
 
                 }else
                 {
@@ -351,29 +351,29 @@ void ExactCallBluffD::query(const float64 betSize)
                 const float64 effroundpot = (origPot - oldpot) * oppBankRoll / betSize;
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
 
-				if( oppBetMake <= table->GetMinRaise() ) //Just if (== 0) but for completeness include the < case which is impossible
+		if( oppBankRoll < minRaiseTo() - chipDenom()/4 )
                 {
-					allFoldChance = 0;
-					allFoldChanceD = 0;
-					nextFold = 0;
-				}else
-				{
-					nextFold = 1-ea->pctWillCall( oppBetMake / (oppBetMake + oldpot + effroundpot) );
-				}
-				nextFoldPartial = 0;
+			allFoldChance = 0;
+			allFoldChanceD = 0;
+			nextFold = 0;
+		}else
+		{
+			nextFold = 1-ea->pctWillCall( oppBetMake / (oppBetMake + oldpot + effroundpot) );
+		}
+		nextFoldPartial = 0;
             }
 
-			if(
-				(allFoldChance == 0 && allFoldChanceD == 0) || (nextFold == 0 && nextFoldPartial == 0)
-				)
-			{
-				allFoldChance = 0;
-				allFoldChanceD = 0;
-			}else
-			{
-				allFoldChance *= nextFold;
-				allFoldChanceD += nextFoldPartial / nextFold;
-			}
+		if(
+			(allFoldChance == 0 && allFoldChanceD == 0) || (nextFold == 0 && nextFoldPartial == 0)
+			)
+		{
+			allFoldChance = 0;
+			allFoldChanceD = 0;
+		}else
+		{
+			allFoldChance *= nextFold;
+			allFoldChanceD += nextFoldPartial / nextFold;
+		}
 
 
         }
