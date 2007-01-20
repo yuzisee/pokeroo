@@ -85,7 +85,7 @@ class UserConsoleStrategy : virtual public ConsoleStrategy
 		virtual float64 MakeBet();
 		virtual void SeeAction(const HoldemAction&);
 		virtual void SeeCommunity(const Hand&, const int8);
-		virtual void FinishHand(){}
+		virtual void FinishHand();
 
 }
 ;

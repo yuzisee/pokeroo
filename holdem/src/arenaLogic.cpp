@@ -663,6 +663,15 @@ void HoldemArena::RefreshPlayers()
         Player& withP = *(p[i]);
         if( withP.myMoney == 0 )
         {
+            withP.myStrat->FinishHand();
+        }
+    }
+
+    for(int8 i=0;i<nextNewPlayer;++i)
+    {
+        Player& withP = *(p[i]);
+        if( withP.myMoney == 0 )
+        {
             --livePlayers;
             withP.myMoney = -1;
             withP.myBetSize = INVALID;
@@ -700,6 +709,16 @@ void HoldemArena::RefreshPlayers()
 
 
     }
+    
+    for(int8 i=0;i<nextNewPlayer;++i)
+    {
+        Player& withP = *(p[i]);
+        if( withP.myMoney > 0 )
+        {
+            withP.myStrat->FinishHand();
+        }
+    }
+    
 #ifdef DEBUGSPECIFIC
     ++handnum;
 #else
@@ -772,9 +791,9 @@ Player* HoldemArena::PlayTable()
 
 	while(livePlayers > 1)
 	{
-        DealHands();
+        	DealHands();
 		PlayGame();
-        RefreshPlayers(); ///New Hand
+        	RefreshPlayers(); ///New Hand
 #ifdef DEBUGSAVEGAME
     #ifdef RELOAD_LAST_HAND        
         if( livePlayers > 1 )
