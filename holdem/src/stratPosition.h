@@ -77,7 +77,7 @@ class PositionalStrategy : virtual public PlayerStrategy
         float64 solveGainModel(HoldemFunctionModel*);
 	public:
 
-		PositionalStrategy( bool bMean=false,bool bRanking=false,bool bWorse=false,bool bHybrid=false ) : PlayerStrategy(), detailPCT(0), bLogMean(bMean), bLogRanking(bRanking), bLogWorse(bWorse), bLogHybrid(bHybrid) {}
+		PositionalStrategy( bool bMean=false,bool bRanking=false,bool bWorse=true,bool bHybrid=false ) : PlayerStrategy(), detailPCT(0), bLogMean(bMean), bLogRanking(bRanking), bLogWorse(bWorse), bLogHybrid(bHybrid) {}
 		virtual ~PositionalStrategy();
 
 		virtual void SeeCommunity(const Hand&, const int8);

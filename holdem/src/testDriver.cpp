@@ -711,19 +711,19 @@ void debugPosition()
 //Community 2C 7D KC
     h2.AddToHand(HoldemConstants::SPADES, 4, HoldemConstants::CARD_FIVE );
     h2.AddToHand(HoldemConstants::HEARTS, 10, HoldemConstants::CARD_JACK );
-    //h2.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
+    h2.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
     h2.AddToHand(HoldemConstants::SPADES, 13, HoldemConstants::CARD_ACEHIGH );
-    //h2.AddToHand(HoldemConstants::CLUBS, 12, HoldemConstants::CARD_KING );
+    h2.AddToHand(HoldemConstants::CLUBS, 12, HoldemConstants::CARD_KING );
     //BlindStructure.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
 //    h1.SetUnique(h2);
 
 //Hole cards 8H tH
-    honly.AddToHand(HoldemConstants::SPADES,1, HoldemConstants::CARD_DEUCE );
+    honly.AddToHand(HoldemConstants::SPADES,9, HoldemConstants::CARD_TEN );
     //honly.AddToHand(HoldemConstants::DIAMONDS, 3, HoldemConstants::CARD_FOUR );
     //honly.AddToHand(HoldemConstants::SPADES,12, HoldemConstants::CARD_KING );
     honly.AddToHand(HoldemConstants::CLUBS, 11, HoldemConstants::CARD_QUEEN);
     h1.AppendUnique(honly);
-    const uint8 dealtCommunityNumber=3;
+    const uint8 dealtCommunityNumber=5;
 
 
 #ifdef DEBUGSITUATION
@@ -745,8 +745,8 @@ void debugPosition()
 	DebugArena myTable(&b,cout, true);
     UserConsoleStrategy testDummy[5];
 
-    DeterredGainStrategy a(1);
-    //TournamentStrategy a;
+    CorePositionalStrategy a(2);
+
 
 
 
@@ -761,10 +761,10 @@ void debugPosition()
     //myTable.SetBet(  myTable.AddPlayer("X3",125, testDummy+1) ,  myTable.GetSmallBlind() );
 
 
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",0, testDummy+2) , 0 );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",150, testDummy+2) , 0 );
     //myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent4",17, testDummy+4) , 0 );
 //    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent5",50, testDummy+1) , 0 );
-  //  myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent6",420, testDummy+3) , 0.05 );
+    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent6",420, testDummy+3) , 0.05 );
     myTable.InitGame();
 
     cout << "Number in hand " << (int)(myTable.GetNumberInHand()) << endl;
@@ -865,6 +865,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	ImproveStrategy DistrScaleP;
 	DeterredGainStrategy FutureFoldP;
 	HybridScalingStrategy AutoSetP;
+	ImproveStrategy DistrScaleA(1);
+	DeterredGainStrategy FutureFoldA(1);
+	HybridScalingStrategy AutoSetA(1);
 
     //TournamentStrategy asterisk;
     //TournamentStrategy gruff(1);
@@ -885,7 +888,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     {
         //myTable.AddPlayer("q4", &pushAll);
         //myTable.AddPlayer("i4", &drainFold);
-        //myTable.AddPlayer("X3", &pushFold);
+        myTable.AddPlayer("X3", &pushFold);
         //myTable.AddPlayer("A3", &tightPushFold);
 
     }
@@ -915,12 +918,15 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             //myTable.AddPlayer("HybridAlgb", &HybridAlgb); /* riskymode = 8 */
 			//myTable.AddPlayer("RankGeomBluff", &RankGeomBluff); /* riskymode = 9 */
 			//myTable.AddPlayer("MeanGeomBluff", &MeanGeomBluff); /* riskymode = 10 */
-			myTable.AddPlayer("WorseAlgbBluff", &WorseAlgbBluff); /* riskymode = 11 */
+			//myTable.AddPlayer("WorseAlgbBluff", &WorseAlgbBluff); /* riskymode = 11 */
 			//myTable.AddPlayer("HybridGeomBluff", &HybridGeomBluff); /* riskymode = 14 */
 
-            myTable.AddPlayer("TrapBotII", &DistrScaleP);
+            //myTable.AddPlayer("TrapBotII", &DistrScaleP);
             myTable.AddPlayer("ComBotII", &FutureFoldP);
-			myTable.AddPlayer("SpaceBotII", &AutoSetP);
+		//myTable.AddPlayer("SpaceBotII", &AutoSetP);
+		//myTable.AddPlayer("TrapIII", &DistrScaleA);
+            myTable.AddPlayer("ComIII", &FutureFoldA);
+		//myTable.AddPlayer("SpaceIII", &AutoSetA);
 
 
 
@@ -1038,9 +1044,9 @@ int main(int argc, char* argv[])
 #ifdef WINRELEASE
 	    testPlay('L');
 #else
-        //debugPosition();
+//        debugPosition();
 	    //superGame(0);
-   	    testPlay(1);
+   	    testPlay(0);
    	    //testNewCallStats();
 #endif
 	    //testDeal();
