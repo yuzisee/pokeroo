@@ -67,19 +67,49 @@ float64 HoldemFunctionModel::FindBestBet()
 {
     const float64 myMoney = e->maxBet();
     const float64 betToCall = e->callBet();
+    const float64 minRaiseBetTo = e->minRaiseTo();
 
     if( myMoney < betToCall ) return myMoney;
+    
+    float64 desiredBet;
+    
+    if( myMoney < minRaiseBetTo )
+    {//Won't have enough to raise, your raise will be all-in
+        desiredBet = myMoney;
+    }else
+    {
 
         #ifdef DEBUG_FUNCTIONCORE
-            std::cout << "\t\tFindMax(" << e->minRaiseTo() << "," << myMoney << ")" << endl;
+    		std::cout << "\t\tFindMax(" << minRaiseBetTo << "," << myMoney << ")" << endl;
         #endif
 
-	float64 desiredBet = FindMax(e->minRaiseTo(),myMoney);
+    	desiredBet = FindMax(minRaiseBetTo,myMoney);
 
         #ifdef DEBUG_FUNCTIONCORE
             std::cout << "\t\t" << desiredBet << " FoundMax" << endl;
         #endif
 
+        if( desiredBet < minRaiseBetTo )
+        {
+		#ifdef DEBUG_FUNCTIONCORE
+            		std::cout << "ASSERT desiredBet rounding " << desiredBet << " against minRaise of " << minRaiseBetTo << endl;
+		#endif
+		#ifdef DEBUGASSERT
+                        if( desiredBet < minRaiseBetTo - e->chipDenom()/4 )
+                        {
+				#ifndef DEBUG_FUNCTIONCORE
+                            	std::cout << "ASSERT desiredBet rounding " << desiredBet << " against minRaise,myMoney of " << minRaiseBetTo << "," << myMoney << endl;
+				#endif
+                            std::cout << "Way too far from assertion minraise." << endl;
+                            exit(1);
+                        }
+		#endif
+            desiredBet = minRaiseBetTo;
+        }
+    }
+    
+    ///desiredBet has been established, one way or another
+            
 	const float64 callGain = f(betToCall);
 	if( callGain > f(desiredBet) )
 	{
@@ -514,10 +544,10 @@ float64 GainModelNoRiskBluff::f(const float64 betSize)
 	}
 #endif
 
-	const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
-	const float64 gainNormal = pow( g(betSize),playChance );
+	const float64 gainWithFold = potFoldWin*oppFoldChance;
+	const float64 gainNormal = g(betSize)*playChance;
 
-    return gainWithFold*gainNormal - e->foldGain();
+    return gainWithFold+gainNormal - e->foldGain();
 }
 float64 GainModelNoRiskBluff::fd(const float64 betSize, const float64 y)
 {
@@ -533,23 +563,20 @@ float64 GainModelNoRiskBluff::fd(const float64 betSize, const float64 y)
 
 	const float64 dFoldChance = ea->pWinD(betSize);
 
-	const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
+	const float64 gainWithFold = potFoldWin*oppFoldChance;
 
 	///Reverse to deduce basey
 	const float64 fy = y+e->foldGain();
-	const float64 gainNormal = (fy) / gainWithFold;
-	const float64 basey = pow(  gainNormal  ,  1/playChance );
+	const float64 gainNormal = (fy) - gainWithFold;
+	const float64 basey = gainNormal /playChance ;
 
-    const float64 gainDNormal = gd(betSize, basey);
+    	const float64 gainDNormal = gd(betSize, basey);
 
-	return (
-				dFoldChance * log( potFoldWin )
-					+
-				playChance * gainDNormal / gainNormal
-					-
-				oppFoldChance * log(gainNormal)
-			)
-			*fy;
+	return 		( potFoldWin - gainNormal ) * dFoldChance
+				+
+			playChance * gainDNormal
+
+			;
 }
 
 
