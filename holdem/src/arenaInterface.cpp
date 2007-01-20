@@ -46,12 +46,20 @@ void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
     {
         if ( e.IsRaise() )
         {
-            o << "raises by " << e.GetRaiseBy()
+            o << "raises " << flush;
+            if( e.IsAllIn() ) o << "all-in " << flush;
+            o << "by " << e.GetRaiseBy()
                 << " to " << flush;
         }
         else
         {
-            o << "bets " << flush;
+            if( e.IsAllIn() )
+            {
+                o << "pushes all-in, " << flush;
+            }else
+            {
+            	o << "bets " << flush;
+            }
         }
         o << e.GetAmount() << "." << endl;
     }

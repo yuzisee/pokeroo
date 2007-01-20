@@ -188,6 +188,7 @@ class HoldemAction
 		bool IsCheck() const {return (bet == 0) || (bCheckBlind && bet == callAmount);}
 		bool IsCall() const {return (bet == callAmount || (bet < callAmount && bAllIn)) && callAmount > 0;}
 		bool IsRaise() const {return bet > callAmount && callAmount > 0;}
+                bool IsAllIn() const {return bAllIn;}
 
 }
 ;
