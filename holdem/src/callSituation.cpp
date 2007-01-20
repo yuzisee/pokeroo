@@ -292,9 +292,18 @@ void ExactCallBluffD::query(const float64 betSize)
 	const float64 origPot = table->GetPotSize() - table->ViewPlayer(playerID)->GetBetSize()  +  myexf;
 	const float64 origPotD = mydexf;
 
+
+	if( betSize < minRaiseTo() - chipDenom()/4  )
+    {
+		allFoldChance = 0;
+		allFoldChanceD = 0;
+		nextFold = 0;
+		nextFoldPartial = 0;
+    }
+
     int8 pIndex = playerID;
     table->incrIndex(pIndex);
-    while( pIndex != playerID )
+    while( pIndex != playerID && allFoldChance > 0)
     {
 
 	const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
@@ -309,71 +318,66 @@ void ExactCallBluffD::query(const float64 betSize)
                 const float64 oppBetMake = betSize - oppBetAlready;
                 //To understand the above, consider that totalexf includes already made bets
 
-		if( betSize < minRaiseTo() - chipDenom()/4  )
-                {
-			allFoldChance = 0;
-			allFoldChanceD = 0;
-			nextFold = 0;
-			nextFoldPartial = 0;
 
-                }else
-                {
-                        #ifdef DEBUGWATCHPARMS
-                            const float64 vodd = pow(  oppBetMake / (oppBetMake + totalexf), significance);
-                            const float64 willCall = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
-                            const float64 willCallD = e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  );
+           
+                    #ifdef DEBUGWATCHPARMS
+                        const float64 vodd = pow(  oppBetMake / (oppBetMake + totalexf), significance);
+                        const float64 willCall = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
+                        const float64 willCallD = e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  );
 
 /*
-                            std::cout << willCall << " ... " << willCallD << std::endl;
-                            std::cout << "significance " << significance << std::endl;
-                            std::cout << "(oppBetMake + totalexf) " << (oppBetMake + totalexf) << std::endl;
-                            std::cout << "(oppBetMake ) " << (oppBetMake ) << std::endl;
-                            std::cout << "(betSize) " << (oppBetMake) << std::endl;
-                            std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
+                        std::cout << willCall << " ... " << willCallD << std::endl;
+                        std::cout << "significance " << significance << std::endl;
+                        std::cout << "(oppBetMake + totalexf) " << (oppBetMake + totalexf) << std::endl;
+                        std::cout << "(oppBetMake ) " << (oppBetMake ) << std::endl;
+                        std::cout << "(betSize) " << (oppBetMake) << std::endl;
+                        std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
 */
-                        #endif
-					
-					/*
-					nextFold = 1-ea->pctWillCall( pow(  oppBetMake / (oppBetMake + origPot)  , significance  ) );
-					nextFoldPartial = -ea->pctWillCallD(   pow(  oppBetMake / (oppBetMake + origPot)  , significance  )  )
-													*  pow(  oppBetMake / (oppBetMake + origPot)  , significance - 1 ) * significance
-                                                    * (origPot - oppBetMake * origPotD)
-                                                     /(oppBetMake + origPot) /(oppBetMake + origPot);
-					*/
-					nextFold = 1-ea->pctWillCall( oppBetMake / (oppBetMake + origPot) );
-					nextFoldPartial = -ea->pctWillCallD(   oppBetMake / (oppBetMake + origPot)  )
-                                                    * (origPot - oppBetMake * origPotD)
-                                                     /(oppBetMake + origPot) /(oppBetMake + origPot);
-                }
+                    #endif
+				
+				/*
+				nextFold = 1-ea->pctWillCall( pow(  oppBetMake / (oppBetMake + origPot)  , significance  ) );
+				nextFoldPartial = -ea->pctWillCallD(   pow(  oppBetMake / (oppBetMake + origPot)  , significance  )  )
+												*  pow(  oppBetMake / (oppBetMake + origPot)  , significance - 1 ) * significance
+                                                * (origPot - oppBetMake * origPotD)
+                                                 /(oppBetMake + origPot) /(oppBetMake + origPot);
+				*/
+				nextFold = 1-ea->pctWillCall( oppBetMake / (oppBetMake + origPot) );
+				nextFoldPartial = -ea->pctWillCallD(   oppBetMake / (oppBetMake + origPot)  )
+                                                * (origPot - oppBetMake * origPotD)
+                                                 /(oppBetMake + origPot) /(oppBetMake + origPot);
+            
+
             }else
             {///Opponent would be all-in to call this bet
                 const float64 oldpot = table->GetPrevPotSize();
                 const float64 effroundpot = (origPot - oldpot) * oppBankRoll / betSize;
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
 
-		if( oppBankRoll < minRaiseTo() - chipDenom()/4 )
-                {
-			allFoldChance = 0;
-			allFoldChanceD = 0;
-			nextFold = 0;
-		}else
-		{
-			nextFold = 1-ea->pctWillCall( oppBetMake / (oppBetMake + oldpot + effroundpot) );
-		}
-		nextFoldPartial = 0;
-            }
+				if( oppBankRoll < minRaiseTo() - chipDenom()/4 )
+				{
+					allFoldChance = 0;
+					allFoldChanceD = 0;
+					nextFold = 0;
+				}else
+				{
+					nextFold = 1-ea->pctWillCall( oppBetMake / (oppBetMake + oldpot + effroundpot) );
+				}
+				nextFoldPartial = 0;
+			}
 
-		if(
-			(allFoldChance == 0 && allFoldChanceD == 0) || (nextFold == 0 && nextFoldPartial == 0)
-			)
-		{
-			allFoldChance = 0;
-			allFoldChanceD = 0;
-		}else
-		{
-			allFoldChance *= nextFold;
-			allFoldChanceD += nextFoldPartial / nextFold;
-		}
+
+			if(
+				(allFoldChance == 0 && allFoldChanceD == 0) || (nextFold == 0 && nextFoldPartial == 0)
+				)
+			{
+				allFoldChance = 0;
+				allFoldChanceD = 0;
+			}else
+			{
+				allFoldChance *= nextFold;
+				allFoldChanceD += nextFoldPartial / nextFold;
+			}
 
 
         }
