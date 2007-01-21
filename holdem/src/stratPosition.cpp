@@ -484,7 +484,7 @@ float64 HybridScalingStrategy::MakeBet()
 
 
 #ifdef LOGPOSITION
-    logFile << "suggested strength of field : " << 1/(1-estimateRevealed) << "x" << myExpectedCall.callingPlayers() << endl;
+    logFile << "suggested strength of field : " << 1/(1-estimateRevealed) << endl;
 	logFile << "difficulty of field : " << eVSshift << endl;
 	logFile << "oppGift   { " << oppGift << " }" << endl;
 	logFile << "shiftscale{ " << shiftscale2 << " }," << shiftscale2*shiftscale2 << endl;
@@ -530,6 +530,10 @@ float64 HybridScalingStrategy::MakeBet()
     if( bGamble == 1 )
     {
         logFile << "OppFoldChance% ... " << myExpectedCall.pWin(bestBet) << "   d\\" << myExpectedCall.pWinD(bestBet) << endl;
+		if( myExpectedCall.pWin(bestBet) >= 1 )
+		{
+			std::cout << "Examine myExpectedCall.pWin(bestBet)" << endl;
+		}
     }
 
 

@@ -293,7 +293,7 @@ void ExactCallBluffD::query(const float64 betSize)
 	const float64 origPotD = mydexf;
 
 
-	if( betSize < minRaiseTo() - chipDenom()/4  )
+	if( betSize < minRaiseTo() - chipDenom()/4 || callBet() >= table->GetMaxShowdown() )
     {
 		allFoldChance = 0;
 		allFoldChanceD = 0;
@@ -380,7 +380,14 @@ void ExactCallBluffD::query(const float64 betSize)
 			}
 
 
-        }
+        }else
+		{//Player can't bet anymore
+			if( oppBetAlready > 0 )
+			{//Must have gone all-in just now, or at least this round
+				allFoldChance = 0;
+				allFoldChanceD = 0;
+			}
+		}
 
 
         table->incrIndex(pIndex);

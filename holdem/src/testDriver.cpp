@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 
-//#define WINRELEASE
+#define WINRELEASE
 #define AUTOEXTRATOKEN "restore.txt"
 
 #define REQUEST_USER_BLINDSIZE
@@ -923,9 +923,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
             //myTable.AddPlayer("TrapBotII", &DistrScaleP);
             //myTable.AddPlayer("ComBotII", &FutureFoldP);
-		myTable.AddPlayer("SpaceBotII", &AutoSetP);
-		//myTable.AddPlayer("TrapIII", &DistrScaleA);
-            //myTable.AddPlayer("ComIII", &FutureFoldA);
+		//myTable.AddPlayer("SpaceBotII", &AutoSetP);
+		myTable.AddPlayer("TrapIII", &DistrScaleA);
+            myTable.AddPlayer("ComIII", &FutureFoldA);
 		myTable.AddPlayer("SpaceIII", &AutoSetA);
 
 

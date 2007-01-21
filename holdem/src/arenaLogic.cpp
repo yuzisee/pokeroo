@@ -123,7 +123,7 @@ gamelog << "Moneywon " << potDistrSize << endl;
 	{
 		gamelog << endl << p[potDistr[0].playerIndex]->GetIdent() << " can win " <<
 		(potDistr[0].revtiebreak - p[potDistr[0].playerIndex]->handBetTotal) <<
-		"\t(controls " << moneyWon[0] << " of " << myPot << ")" << endl;
+		" or less\t(controls " << moneyWon[0] << " of " << myPot << ")" << endl;
 	}
 
 	while(i<potDistrSize)
@@ -134,7 +134,7 @@ gamelog << "Moneywon " << potDistrSize << endl;
 		{
 			gamelog << p[potDistr[i].playerIndex]->GetIdent() << " can win " <<
 			(potDistr[i].revtiebreak - p[potDistr[i].playerIndex]->handBetTotal) <<
-			"\t(controls " << moneyWon[i] << " of " << myPot << ")" << endl;
+			" or less\t(controls " << moneyWon[i] << " of " << myPot << ")" << endl;
 		}
 
 		++i;++j;
@@ -216,7 +216,7 @@ if (winners.size() > 1)
 	double* moneyWon = organizeWinnings(potDistrSize, potDistr, winners);
 	///-------------------------------------------------------
 	if(bVerbose)
-	{gamelog << "Comparing hands..." << endl;}
+	{gamelog << "* * *Comparing hands* * *" << endl;}
 
 	int8 j = potDistrSize - 1;
 	int8 i = j-1;
