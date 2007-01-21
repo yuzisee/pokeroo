@@ -301,6 +301,16 @@ float64 HoldemArena::GetPotSize() const
 	return myPot;
 }
 
+float64 HoldemArena::GetFoldedPotSize() const
+{
+	return myFoldedPot;
+}
+
+float64 HoldemArena::GetUnfoldedPotSize() const
+{
+	return myPot - myFoldedPot;
+}
+
 float64 HoldemArena::GetDeadPotSize() const
 {
 	return myPot - myBetSum;

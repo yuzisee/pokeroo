@@ -585,8 +585,9 @@ void HoldemArena::DealHands()
 {
 
 
-    myPot = 0;
+    myPot        = 0;
     prevRoundPot = 0;
+    myFoldedPot  = 0;
 
     curIndex = curDealer;
 
@@ -709,7 +710,7 @@ void HoldemArena::RefreshPlayers()
 
 
     }
-    
+
     for(int8 i=0;i<nextNewPlayer;++i)
     {
         Player& withP = *(p[i]);
@@ -718,7 +719,7 @@ void HoldemArena::RefreshPlayers()
             withP.myStrat->FinishHand();
         }
     }
-    
+
 #ifdef DEBUGSPECIFIC
     ++handnum;
 #else
@@ -795,7 +796,7 @@ Player* HoldemArena::PlayTable()
 		PlayGame();
         	RefreshPlayers(); ///New Hand
 #ifdef DEBUGSAVEGAME
-    #ifdef RELOAD_LAST_HAND        
+    #ifdef RELOAD_LAST_HAND
         if( livePlayers > 1 )
     #endif
         {  saveState();  }

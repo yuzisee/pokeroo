@@ -173,9 +173,10 @@ void HoldemArenaBetting::startBettingRound()
     prepareRound(comSize);
     ///----------
 
+
     forcedBetSum = 0;
     blindOnlySum = 0;
-	bBlinds = curDealer;	//Used to account for soft-bets:
+	bBlinds      = curDealer;	//Used to account for soft-bets:
 								//ie, if called, you can still reraise.
 								//BUT, it also handles the check-check-check
 
@@ -469,6 +470,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 				{///Player folds.
 					randRem /= myBetSum + GetNumberInHand();
 
+                    myFoldedPot += PlayerHandBetTotal( withP ) + PlayerLastBet(withP);
 
 					///You're taking money away here. addBets happenned a while ago
 					PlayerHandBetTotal( withP )= PlayerLastBet(withP);
@@ -489,7 +491,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 					PlayerBet(withP) = highBet;
 				}
 			}
-///Reraises need to say RERAISE.
+///TODO Reraises need to say RERAISE.
 			broadcastCurrentMove(curIndex, PlayerBet(withP), highBet
 					, curIndex == bBlinds && comSize == 0 && curIndex == highestBetter,PlayerAllIn(withP) > 0);
 

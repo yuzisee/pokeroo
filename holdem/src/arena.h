@@ -248,6 +248,7 @@ protected:
 		float64 highBet;
 
         float64 myPot; //incl. betSum
+        float64 myFoldedPot;
 		float64 myBetSum; //Just the current round.
 		float64 prevRoundPot;
 		float64 forcedBetSum; //Folded bets this round and bets that have been made blind before the player has had a chance to make another bet
@@ -307,7 +308,7 @@ protected:
 #endif
         ,gamelog(targetout)
         ,bVerbose(illustrate),bSpectate(spectate),livePlayers(0), blinds(b),allChips(0)
-		,lastRaise(0),highBet(0), myPot(0), myBetSum(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)
+		,lastRaise(0),highBet(0), myPot(0), myFoldedPot(0), myBetSum(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)
 		#ifdef GLOBAL_AICACHE_SPEEDUP
 		,communityBuffer(0)
         #endif
@@ -334,6 +335,8 @@ protected:
 		virtual bool CanStillBet(int8) const; //This will not include players who have pushed all in
 
         virtual float64 GetAllChips() const;
+        virtual float64 GetFoldedPotSize() const;
+        virtual float64 GetUnfoldedPotSize() const;
 		virtual float64 GetDeadPotSize() const; //That's pot - betSum;
 		virtual float64 GetLivePotSize() const;
 		virtual float64 GetRoundPotSize() const; //ThisRound pot size
@@ -366,6 +369,7 @@ class HoldemArenaEventBase
     int8 & curIndex;
     int8 & curDealer;
     float64 & myPot;
+    float64 & myFoldedPot;
     float64 & myBetSum;
     const vector<Player*> &p;
     const bool & bVerbose;
@@ -407,7 +411,7 @@ class HoldemArenaEventBase
     , highBet(table->highBet), lastRaise(table->lastRaise), forcedBetSum(myTable->forcedBetSum), blindOnlySum(myTable->blindOnlySum)
     , playersInHand(table->playersInHand),playersAllIn(table->playersAllIn)
     , curIndex(table->curIndex), curDealer(table->curDealer)
-    , myPot(table->myPot), myBetSum(table->myBetSum), p(table->p)
+    , myPot(table->myPot), myFoldedPot(table->myFoldedPot), myBetSum(table->myBetSum), p(table->p)
     , bVerbose(table->bVerbose), randRem(table->randRem)
     , community(table->community)
     {
