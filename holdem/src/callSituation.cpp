@@ -50,12 +50,12 @@ float64 ExpectedCallD::forfeitChips() const
 float64 ExpectedCallD::foldGain() const
 {
 
-    
+
         #ifdef DEBUGWATCHPARMS
             const float64 a = 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
         #endif
-    const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );        
-    
+    const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
+
 #ifdef BLIND_ADJUSTED_FOLD
     //const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
     const float64 bigBlindFraction = betFraction( table->GetBigBlind() );
@@ -64,14 +64,14 @@ float64 ExpectedCallD::foldGain() const
     const float64 blindsGain = (1 - baseFraction - bigBlindFraction)*(1 - baseFraction - smallBlindFraction);
     const float64 rawLoseFreq = 1 - (1.0 / table->GetNumberAtTable()) ;
     const float64 blindsPow = rawLoseFreq / table->GetNumberAtTable();
-    
+
     const float64 totalFG = pow(1-baseFraction,1-2*blindsPow)*pow(blindsGain,blindsPow);
-    
+
     if( totalFG < 0 ) return 0;
     return totalFG;
-    
+
 #else
-    
+
     return 1 - baseFraction;
 #endif
 }
@@ -226,7 +226,7 @@ void ExactCallD::query(const float64 betSize)
                             std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
 */
                         #endif
-					
+
 
                     nextexf = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
                     nextdexf = nextexf + oppBetMake * e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  )
@@ -244,12 +244,12 @@ void ExactCallD::query(const float64 betSize)
 
 
 				nextexf = oppBetMake * e->pctWillCall( pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significance) );
-		            
+
 				nextdexf = 0;
 
             }
 
-			
+
             //lastexf = nextexf;
             totalexf += nextexf;
 
@@ -319,7 +319,7 @@ void ExactCallBluffD::query(const float64 betSize)
                 //To understand the above, consider that totalexf includes already made bets
 
 
-           
+
                     #ifdef DEBUGWATCHPARMS
                         const float64 vodd = pow(  oppBetMake / (oppBetMake + totalexf), significance);
                         const float64 willCall = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
@@ -334,7 +334,7 @@ void ExactCallBluffD::query(const float64 betSize)
                         std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
 */
                     #endif
-				
+
 				/*
 				nextFold = 1-ea->pctWillCall( pow(  oppBetMake / (oppBetMake + origPot)  , significance  ) );
 				nextFoldPartial = -ea->pctWillCallD(   pow(  oppBetMake / (oppBetMake + origPot)  , significance  )  )
@@ -346,7 +346,7 @@ void ExactCallBluffD::query(const float64 betSize)
 				nextFoldPartial = -ea->pctWillCallD(   oppBetMake / (oppBetMake + origPot)  )
                                                 * (origPot - oppBetMake * origPotD)
                                                  /(oppBetMake + origPot) /(oppBetMake + origPot);
-            
+
 
             }else
             {///Opponent would be all-in to call this bet
@@ -402,7 +402,8 @@ float64 ExactCallBluffD::pWin(const float64 betSize)
         query(betSize);
         queryinput = betSize;
     }
-	return allFoldChance/impliedFactor;
+    ///Try pow(,impliedFactor) maybe
+	return allFoldChance;//*impliedFactor;
 }
 
 float64 ExactCallBluffD::pWinD(const float64 betSize)
@@ -412,7 +413,7 @@ float64 ExactCallBluffD::pWinD(const float64 betSize)
         query(betSize);
         queryinput = betSize;
     }
-	return allFoldChanceD/impliedFactor;
+	return allFoldChanceD;//*impliedFactor;
 }
 
 

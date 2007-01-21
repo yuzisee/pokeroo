@@ -922,11 +922,11 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 			//myTable.AddPlayer("HybridGeomBluff", &HybridGeomBluff); /* riskymode = 14 */
 
             //myTable.AddPlayer("TrapBotII", &DistrScaleP);
-            myTable.AddPlayer("ComBotII", &FutureFoldP);
-		//myTable.AddPlayer("SpaceBotII", &AutoSetP);
+            //myTable.AddPlayer("ComBotII", &FutureFoldP);
+		myTable.AddPlayer("SpaceBotII", &AutoSetP);
 		//myTable.AddPlayer("TrapIII", &DistrScaleA);
-            myTable.AddPlayer("ComIII", &FutureFoldA);
-		//myTable.AddPlayer("SpaceIII", &AutoSetA);
+            //myTable.AddPlayer("ComIII", &FutureFoldA);
+		myTable.AddPlayer("SpaceIII", &AutoSetA);
 
 
 

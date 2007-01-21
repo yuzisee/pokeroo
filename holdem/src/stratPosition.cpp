@@ -188,6 +188,10 @@ void PositionalStrategy::setupPosition()
     const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
     expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
+    if( expectedVS <= 0 ) //You have no money
+    {
+        expectedVS = ( myExpectedCall.betFraction(ViewTable().GetChipDenom()) ) ;
+    }
 }
 
 float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
@@ -348,10 +352,7 @@ float64 ImproveStrategy::MakeBet()
     ExactCallBluffD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu,&choicecumu);
 
     myLimitCall.callingPlayers(  expectedVS  );
-    if( expectedVS < 0 ) //You have no money
-    {
-        myLimitCall.callingPlayers( myExpectedCall.betFraction(ViewTable().GetChipDenom()) ) ;
-    }
+
 
     GainModel rankGeom_passive(statranking,&myExpectedCall);
     GainModelNoRisk worstAlgb_passive(statworse,&myLimitCall);
@@ -472,17 +473,23 @@ float64 HybridScalingStrategy::MakeBet()
 
 	const float64 shiftscale2 = myMoney / ( myMoney + oppGift ) - myMoney / ( myMoney + oppGiftMax );
 
+    const float64 eVSshift = expectedVS / (ViewTable().GetNumberAtTable()-1) ;
 
-	const float64 eVSshift = expectedVS / (ViewTable().GetNumberAtTable()-1) ;
+    const float64 myRevealed =  ViewPlayer().GetContribution() + myBet;
+	const float64 estimateRevealed = (ViewTable().GetUnfoldedPotSize() - myRevealed) / ViewTable().GetAllChips() ;
+
+
+    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu, &callcumu);
+    myExpectedCall.callingPlayers( (ViewTable().GetNumberAtTable()-1) / (1-estimateRevealed) );
+
 
 #ifdef LOGPOSITION
+    logFile << "suggested strength of field : " << 1/(1-estimateRevealed) << "x" << myExpectedCall.callingPlayers() << endl;
 	logFile << "difficulty of field : " << eVSshift << endl;
 	logFile << "oppGift   { " << oppGift << " }" << endl;
 	logFile << "shiftscale{ " << shiftscale2 << " }," << shiftscale2*shiftscale2 << endl;
 #endif
 
-
-    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu, &callcumu);
 
 
 	GainModel highPlayers_passive(statmean,&myExpectedCall);
@@ -529,11 +536,11 @@ float64 HybridScalingStrategy::MakeBet()
 	logFile << "choicemodel("<< bestBet <<")=" << allModel.f(bestBet) << "  -->  " << gainPC << endl;
 	logFile << "                   (* " << ssunits << ")²" << endl;
 #endif
-/*
-	if( bestBet == betToCall )
+
+	if( bestBet > 0 )
 	{
 		logFile << "ALTERNATE?" << endl;
-*/
+
 		if( gainPC < 0 )
 		{
 			#ifdef LOGPOSITION
@@ -541,7 +548,7 @@ float64 HybridScalingStrategy::MakeBet()
 			#endif
 			return myBet;
 		}
-//	}
+	}
 
     return bestBet;
 
@@ -579,11 +586,6 @@ float64 CorePositionalStrategy::MakeBet()
 
     myLimitCall.callingPlayers(  expectedVS  );
     myLimitFoldCall.callingPlayers(  expectedVS  );
-    if( expectedVS < 0 ) //You have no money
-    {
-        myLimitCall.callingPlayers( myExpectedCall.betFraction(ViewTable().GetChipDenom()) ) ;
-        myLimitFoldCall.callingPlayers( myExpectedCall.betFraction(ViewTable().GetChipDenom()) ) ;
-    }
 
 
     GainModel rankGeom(statranking,&myExpectedCall);
