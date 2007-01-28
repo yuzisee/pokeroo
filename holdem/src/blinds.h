@@ -33,8 +33,8 @@ class BlindStructure
             BlindStructure(float64 small, float64 big)
     : myBigBlind(big), mySmallBlind(small) {};
             virtual ~BlindStructure();
-            virtual void PlayerEliminated(){};
-            virtual void HandPlayed(float64 timepassed=0){}; //support time-based blinds
+            virtual bool PlayerEliminated(){return false;};
+            virtual bool HandPlayed(float64 timepassed=0){return false;}; //support time-based blinds
             virtual const float64 BigBlind();
             virtual const float64 SmallBlind();
 
@@ -50,7 +50,7 @@ class GeomPlayerBlinds : virtual public BlindStructure
 		GeomPlayerBlinds(float64 small, float64 big, float64 smallIncr, float64 bigIncr)
 	: BlindStructure(small, big), bigRatio(bigIncr), smallRatio(smallIncr) {}
 
-		virtual void PlayerEliminated();
+		virtual bool PlayerEliminated();
 
 }
 ;
@@ -65,8 +65,32 @@ class AlgbHandBlinds : virtual public BlindStructure
 		AlgbHandBlinds(float64 small, float64 big, float64 smallIncr, float64 bigIncr, int16 afterHands)
 	: BlindStructure(small, big), bigPlus(bigIncr), smallPlus(smallIncr), freq(afterHands),since(0) {}
 
-		virtual void HandPlayed(float64 timepassed=0); //support time-based blinds
+		virtual bool HandPlayed(float64 timepassed=0); //support time-based blinds
 
+}
+;
+
+class SitAndGoBlinds : virtual public BlindStructure
+{
+    private:
+    static float64 fibIncr(float64 a, float64 b);
+    
+    protected:
+    float64 hist[3];
+    int16 handPeriod;
+    int16 handCount;
+    
+    public:
+    SitAndGoBlinds(float64 small, float64 big, int16 afterHands)
+	: BlindStructure(small, big), handPeriod(afterHands), handCount(afterHands)
+    {
+        const float64 rat = small/big;
+        hist[0] = small*rat*rat;
+        hist[1] = small*rat;
+        hist[2] = hist[0]+hist[1];
+    }
+    
+    virtual bool HandPlayed(float64 timepassed=0);
 }
 ;
 

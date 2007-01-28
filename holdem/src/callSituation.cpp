@@ -23,7 +23,8 @@
 
 
 #define BLIND_ADJUSTED_FOLD
-
+#define SAME_WILL_LOSE_BLIND
+//#define GEOM_COMBO_FOLDPCT
 
 
 //#define DEBUGWATCHPARMS
@@ -62,8 +63,12 @@ float64 ExpectedCallD::foldGain() const
     const float64 smallBlindFraction = betFraction( table->GetSmallBlind() );
 
     const float64 blindsGain = (1 - baseFraction - bigBlindFraction)*(1 - baseFraction - smallBlindFraction);
+    #ifdef SAME_WILL_LOSE_BLIND
+    const float64 blindsPow = 1 / table->GetNumberAtTable();
+    #else
     const float64 rawLoseFreq = 1 - (1.0 / table->GetNumberAtTable()) ;
     const float64 blindsPow = rawLoseFreq / table->GetNumberAtTable();
+    #endif
 
     const float64 totalFG = pow(1-baseFraction,1-2*blindsPow)*pow(blindsGain,blindsPow);
 
@@ -280,7 +285,10 @@ void ExactCallBluffD::query(const float64 betSize)
 {
 	ExactCallD::query(betSize);
 
-	//const float64 significance = 1/static_cast<float64>( handsDealt()-1 );
+	float64 countMayFold = table->GetNumberInHand() - 1 ;
+//    const float64 countToBeat = table->GetNumberAtTable() - 1 ;
+//    float64 countToBeat = table->GetNumberAtTable() - table->GetNumberInHand() + 1 ;
+//	float64 countMayFold = 1 ;
     const float64 myexf = betSize;
     const float64 mydexf = 1;
 
@@ -308,6 +316,9 @@ void ExactCallBluffD::query(const float64 betSize)
 
 	const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
 
+    const float64 significanceLinear =/* 1/countToBeat ;
+	const float64 significance =*/ 1/countMayFold;
+
         if( table->CanStillBet(pIndex) )
         {///Predict how much the bet will be
             const float64 oppBankRoll = table->ViewPlayer(pIndex)->GetMoney();
@@ -320,33 +331,46 @@ void ExactCallBluffD::query(const float64 betSize)
 
 
 
-                    #ifdef DEBUGWATCHPARMS
-                        const float64 vodd = pow(  oppBetMake / (oppBetMake + totalexf), significance);
-                        const float64 willCall = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
-                        const float64 willCallD = e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  );
-
 /*
-                        std::cout << willCall << " ... " << willCallD << std::endl;
-                        std::cout << "significance " << significance << std::endl;
-                        std::cout << "(oppBetMake + totalexf) " << (oppBetMake + totalexf) << std::endl;
-                        std::cout << "(oppBetMake ) " << (oppBetMake ) << std::endl;
-                        std::cout << "(betSize) " << (oppBetMake) << std::endl;
-                        std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
-*/
-                    #endif
 
-				/*
-				nextFold = 1-ea->pctWillCall( pow(  oppBetMake / (oppBetMake + origPot)  , significance  ) );
-				nextFoldPartial = -ea->pctWillCallD(   pow(  oppBetMake / (oppBetMake + origPot)  , significance  )  )
+				const float64 nextFoldB = ea->pctWillCall( pow(  oppBetMake / (oppBetMake + origPot)  , significance  ) );
+				const float64 nextFoldPartialB = ea->pctWillCallD(   pow(  oppBetMake / (oppBetMake + origPot)  , significance  )  )
 												*  pow(  oppBetMake / (oppBetMake + origPot)  , significance - 1 ) * significance
                                                 * (origPot - oppBetMake * origPotD)
                                                  /(oppBetMake + origPot) /(oppBetMake + origPot);
-				*/
-				nextFold = 1-ea->pctWillCall( oppBetMake / (oppBetMake + origPot) );
-				nextFoldPartial = -ea->pctWillCallD(   oppBetMake / (oppBetMake + origPot)  )
-                                                * (origPot - oppBetMake * origPotD)
-                                                 /(oppBetMake + origPot) /(oppBetMake + origPot);
+*/
+//                const float64 nextFoldF = 1 -
+				nextFold =
+						pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear  );
+//				const float64 nextFoldPartialF = -
+				nextFoldPartial =
+						pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear - 1 ) * significanceLinear
+                    * (origPot - oppBetMake * origPotD)
+                    /(oppBetMake + origPot) /(oppBetMake + origPot);
 
+
+/*
+				#ifndef GEOM_COMBO_FOLDPCT
+
+					nextFold = 1 - (nextFoldB + nextFoldF)/2;
+					nextFoldPartial = -(nextFoldPartialB + nextFoldPartialF)/2;
+
+				#else
+
+					if( nextFoldB <= 0 || nextFoldF <= 0 )
+					{//If they are not going to call no matter what
+						nextFold = 1; //So they will fold no matter what
+						nextFoldPartial = 0;
+						//Betting more won't improve this player's chance of folding, which is already 100%
+					}else
+					{
+						nextFold = sqrt(nextFoldB*nextFoldF);
+						nextFoldPartial = -nextFold*(nextFoldPartialB/nextFoldB + nextFoldPartialF/nextFoldF)/2;
+						nextFold = 1 - nextFold;
+					}
+
+				#endif
+*/
 
             }else
             {///Opponent would be all-in to call this bet
@@ -361,11 +385,26 @@ void ExactCallBluffD::query(const float64 betSize)
 					nextFold = 0;
 				}else
 				{
-					nextFold = 1-ea->pctWillCall( oppBetMake / (oppBetMake + oldpot + effroundpot) );
+/*
+					const float64 nextFoldB = e->pctWillCall( pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significance) );
+*/
+//					const float64 nextFoldF = 1 -
+					nextFold =
+						pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significanceLinear );
+/*
+					#ifndef GEOM_COMBO_FOLDPCT
+					nextFold = 1 - (nextFoldB + nextFoldF)/2;
+					#else
+					nextFold = 1-sqrt(nextFoldB*nextFoldF);
+					#endif
+*/
 				}
 				nextFoldPartial = 0;
 			}
 
+
+            countMayFold -= 1;
+//            countToBeat  += 1;
 
 			if(
 				(allFoldChance == 0 && allFoldChanceD == 0) || (nextFold == 0 && nextFoldPartial == 0)
@@ -399,7 +438,24 @@ void ExactCallBluffD::query(const float64 betSize)
 
 float64 ExactCallBluffD::PushGain()
 {
-	return 1 + betFraction(table->GetPotSize() - alreadyBet());
+    const float64 baseFraction = betFraction(table->GetPotSize() - alreadyBet());
+
+#ifdef BLIND_ADJUSTED_FOLD
+        //const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
+        const float64 bigBlindFraction = betFraction( table->GetBigBlind() );
+        const float64 smallBlindFraction = betFraction( table->GetSmallBlind() );
+
+        const float64 blindsGain = (1 + baseFraction + bigBlindFraction)*(1 + baseFraction + smallBlindFraction);
+        const float64 rawWinFreq = (1.0 / table->GetNumberAtTable()) ;
+        const float64 blindsPow = rawWinFreq*(1.0 - 1.0 / table->GetNumberAtTable());
+
+
+        const float64 totalFG = pow(1+baseFraction,1-2*blindsPow)*pow(blindsGain,blindsPow);
+
+        return totalFG;
+    #else
+        return 1 + baseFraction;
+	#endif
 }
 
 float64 ExactCallBluffD::pWin(const float64 betSize)

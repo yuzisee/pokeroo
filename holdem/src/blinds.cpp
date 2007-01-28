@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "blinds.h"
+#include <math.h>
 
 BlindStructure::~BlindStructure()
 {
@@ -34,13 +35,14 @@ const double BlindStructure::BigBlind()
 	return myBigBlind;
 }
 
-void GeomPlayerBlinds::PlayerEliminated()
+bool GeomPlayerBlinds::PlayerEliminated()
 {
 	myBigBlind *= bigRatio;
 	mySmallBlind *= smallRatio;
+    return true;
 }
 
-void AlgbHandBlinds::HandPlayed(float64 timepassed)
+bool AlgbHandBlinds::HandPlayed(float64 timepassed)
 {
 	++since;
 	if( since >= freq )
@@ -48,6 +50,36 @@ void AlgbHandBlinds::HandPlayed(float64 timepassed)
 		since = 0;
 		myBigBlind += bigPlus;
 		mySmallBlind += smallPlus;
-	}
+        return true;
+	}else
+    {
+        return false;
+    }
 }
+
+float64 SitAndGoBlinds::fibIncr(float64 a, float64 b)
+{
+    const float64 roundBy = b-a;
+    return floor((a+b)/roundBy)*roundBy;
+}
+
+bool SitAndGoBlinds::HandPlayed(float64 timepassed)
+{
+	--handCount;
+    if( handCount == 0 )
+    {
+        handCount = handPeriod;
+        mySmallBlind = hist[0] + hist[1] + hist[2];
+        myBigBlind = mySmallBlind*2;
+        const float64 newHist = fibIncr(hist[2],hist[1]);
+        hist[0] = hist[1];
+        hist[1] = hist[2];
+        hist[2] = newHist;
+        return true;
+    }else
+    {
+        return false;
+    }
+}
+
 

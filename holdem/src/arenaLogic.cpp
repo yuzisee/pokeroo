@@ -477,7 +477,7 @@ void HoldemArena::resolveActions(Player& withP)
 
 
 
-///This was a three part function. (LECAGY COMMENT)
+///This was a three part function. (LEGACY COMMENT)
 /// 1. Prepare the round for play
 ///			Round pot, round bets set to 0
 
@@ -526,7 +526,13 @@ void HoldemArena::PlayGame()
 
 	}
 
-	blinds->HandPlayed(0);
+	if( blinds->HandPlayed(0) )
+    {
+        if( bVerbose )
+        {
+            gamelog << "Blinds increased to " << blinds->mySmallBlind << "/" << blinds->myBigBlind << endl;
+        }
+    }
 
 	playersInHand = livePlayers;
 	playersAllIn = 0;
@@ -629,6 +635,16 @@ void HoldemArena::DealHands()
         }
     }
 
+    #ifdef DEBUGHOLECARDS
+        std::ofstream holecardsData( DEBUGHOLECARDS, std::ios::app );
+        holecardsData <<
+        		#if defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE)
+                "Hand " << handnum << " " <<
+                #endif
+        "########################" << endl;
+
+    #endif
+
 	while(dealtEach < 2)
 	{
 		incrIndex();
@@ -645,8 +661,21 @@ void HoldemArena::DealHands()
 			withP.myBetSize = INVALID;
 		}
 
+        #ifdef DEBUGHOLECARDS
+            if( dealtEach == 1 )
+            {
+                holecardsData << withP.GetIdent().c_str() << endl;
+                (withP.myHand).DisplayHand(holecardsData);
+                holecardsData << endl;
+            }
+        #endif
+
 		if(curDealer == curIndex) ++dealtEach;
 	}
+
+	#ifdef DEBUGHOLECARDS
+        holecardsData.close();
+    #endif
 }
 
 void HoldemArena::RefreshPlayers()
@@ -668,6 +697,8 @@ void HoldemArena::RefreshPlayers()
         }
     }
 
+    bool bPlayerElimBlindUp = false;
+
     for(int8 i=0;i<nextNewPlayer;++i)
     {
         Player& withP = *(p[i]);
@@ -676,7 +707,8 @@ void HoldemArena::RefreshPlayers()
             --livePlayers;
             withP.myMoney = -1;
             withP.myBetSize = INVALID;
-            blinds->PlayerEliminated();
+            bPlayerElimBlindUp |= blinds->PlayerEliminated();
+
 #ifdef GRAPHMONEY
             scoreboard << ",0";
 #endif
@@ -728,6 +760,12 @@ void HoldemArena::RefreshPlayers()
     ++handnum;
 #endif
 #endif
+
+    if( bPlayerElimBlindUp && bVerbose )
+    {
+        gamelog << "Blinds increased to " << blinds->mySmallBlind << "/" << blinds->myBigBlind << endl;
+    }
+
 
     do{
         ++curDealer;

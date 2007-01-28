@@ -69,7 +69,7 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
         withCommunity.SetUnique(ViewHand());
         withCommunity.AppendUnique(onlyCommunity);
 
-        DistrShape w_wl(0), detailPCT(0);
+        DistrShape w_wl(0);
 	    StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
         winMean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 	#endif
@@ -79,6 +79,11 @@ void UserConsoleStrategy::SeeCommunity(const Hand& h, const int8 n)
 {
 	ConsoleStrategy::SeeCommunity(h,n);
 	if ( !bNoPrint ){ printCommunity(); }
+
+	#ifdef INFOASSIST
+        bComSize = n;
+	#endif
+
 	#if defined(SPACE_UI) && !defined(USER_DELAY_HANDS)
 	UI_DESCRIPTOR << endl;
 	UI_DESCRIPTOR << endl;
@@ -237,6 +242,21 @@ void ConsoleStrategy::showSituation()
 	const int8 totalPlayers = myTable.GetTotalPlayers();
 
 
+
+	UI_DESCRIPTOR << endl << "The pot contains " << ViewTable().GetPrevPotSize() << " from previous rounds and "
+			<< ViewTable().GetRoundPotSize() << " from this round" << endl;
+
+    #ifdef INFOASSIST
+        const float64 xBet = ViewTable().GetBetToCall() - ViewPlayer().GetBetSize();
+        if( xBet > 0 )
+        {
+            const float64 winAmount = ViewTable().GetPrevPotSize() + ViewTable().GetRoundPotSize() +  xBet;
+            UI_DESCRIPTOR << "\tYou can bet " << xBet << " more to win " << winAmount - xBet << " plus your " << xBet << endl;
+            UI_DESCRIPTOR << "\tThis works out to be " << winAmount/xBet << " : 1 odds (" << 100*xBet/winAmount << "%)" << endl;
+        }
+    #endif
+
+
 	++tempIndex;
 	tempIndex %= totalPlayers;
 	UI_DESCRIPTOR << endl << "You are betting " << ViewPlayer().GetBetSize() << " and have " << (ViewPlayer().GetMoney() - ViewPlayer().GetBetSize()) << " remaining." << endl;
@@ -262,19 +282,6 @@ void ConsoleStrategy::showSituation()
 		tempIndex %= totalPlayers;
 	}
 
-	UI_DESCRIPTOR << endl << "The pot contains " << ViewTable().GetPrevPotSize() << " from previous rounds and "
-			<< ViewTable().GetRoundPotSize() << " from this round" << endl;
-
-    #ifdef INFOASSIST
-        const float64 xBet = ViewTable().GetBetToCall() - ViewPlayer().GetBetSize();
-        if( xBet > 0 )
-        {
-            const float64 winAmount = ViewTable().GetPrevPotSize() + ViewTable().GetRoundPotSize() +  xBet;
-            UI_DESCRIPTOR << "\tYou can bet " << xBet << " more to win " << winAmount - xBet << " plus your " << xBet << endl;
-            UI_DESCRIPTOR << "\tThis works out to be " << winAmount/xBet << " : 1 odds (" << 100*xBet/winAmount << "%)" << endl;
-        }
-    #endif
-
 	UI_DESCRIPTOR << endl << "You ("<< ViewPlayer().GetIdent() <<") have:" << flush;
 
 
@@ -296,6 +303,26 @@ void ConsoleStrategy::showSituation()
         //UI_DESCRIPTOR << winMean.wins << endl;
         //UI_DESCRIPTOR << winMean.splits << endl;
         //UI_DESCRIPTOR << winMean.loss << endl;
+        if( bComSize < 5 )
+        {
+            UI_DESCRIPTOR << endl << endl << (detailPCT.improve + 1) * 50 << "% of the time, you will be more likely to win after the " << flush;
+            switch( bComSize )
+            {
+                case 0:
+                    UI_DESCRIPTOR << "flop" << flush;
+                    break;
+                case 3:
+                    UI_DESCRIPTOR << "turn" << flush;
+                    break;
+                case 4:
+                    UI_DESCRIPTOR << "river" << flush;
+                    break;
+                default:
+                    UI_DESCRIPTOR << "next community cards" << flush;
+                    break;
+            }
+            UI_DESCRIPTOR << "." << endl << 50 * (1 - detailPCT.improve) << "% of the time, you are more likely to win now." << flush;
+        }
     #endif
 
 

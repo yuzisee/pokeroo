@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 
-#define WINRELEASE
+//#define WINRELEASE
 #define AUTOEXTRATOKEN "restore.txt"
 
 #define REQUEST_USER_BLINDSIZE
@@ -819,12 +819,14 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             smallBlindChoice=1;
             if( !bLoadGame )
             {
-                std::cerr << "You will start with 200 chips. Enter the initial big blind." << std::endl;
+                std::cerr << "You will start with 1500 chips.\nBlinds increase every 10 hands\nPlease enter the initial big blind:" << std::endl;
                 std::cin >> smallBlindChoice;
+                std::cin.sync();
+                std::cin.clear();
                 smallBlindChoice /= 2;
             }
         #else
-            smallBlindChoice=0.25;
+            smallBlindChoice=2;
         #endif
     }else
     {
@@ -832,13 +834,14 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
 	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2,2);
+    SitAndGoBlinds sg(b.SmallBlind(),b.BigBlind(),10);
 		#ifdef REGULARINTOLOG
             std::ios::openmode gamelogMode = std::ios::trunc;
             if( bLoadGame ) gamelogMode = std::ios::app;
 			std::ofstream gameOutput("game.log",gamelogMode);
-			HoldemArena myTable(&bg, gameOutput,true, true);
+			HoldemArena myTable(&sg, gameOutput,true, true);
 		#else
-	HoldemArena myTable(&bg, gameLog,true, true);
+	HoldemArena myTable(&sg, gameLog,true, true);
 		#endif
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;
@@ -877,9 +880,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
 
 
-        if( myPlayerName == 0 ){ myTable.AddPlayer("P1", 200, &consolePlay); }
+        if( myPlayerName == 0 ){ myTable.AddPlayer("P1", 1500, &consolePlay); }
         else{
-            myTable.AddPlayer(myPlayerName, 200, &consolePlay);
+            myTable.AddPlayer(myPlayerName, 1500, &consolePlay);
 #ifdef DEBUGSAVE_EXTRATOKEN
             myTable.EXTRATOKEN = myPlayerName;
 #endif
@@ -896,9 +899,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     switch(headsUp)
     {
         case 'P':
-            myTable.AddPlayer("SpaceBotII", 200, &AutoSetP);
-            myTable.AddPlayer("ComBotII", 200, &FutureFoldP);
-            myTable.AddPlayer("TrapBotII", 200, &DistrScaleP);
+            myTable.AddPlayer("TrapBotIII", 1500, &DistrScaleA);
+            myTable.AddPlayer("ComBotIII", 1500, &FutureFoldA);
+            myTable.AddPlayer("SpaceBotIII", 1500, &AutoSetA);
             break;
         case 'M':
             myTable.AddPlayer("M2", &RankGeom); /* riskymode = 0 */
@@ -917,7 +920,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             //myTable.AddPlayer("HybridGeom", &HybridGeom); /* riskymode = 7 */
             //myTable.AddPlayer("HybridAlgb", &HybridAlgb); /* riskymode = 8 */
 			//myTable.AddPlayer("RankGeomBluff", &RankGeomBluff); /* riskymode = 9 */
-			//myTable.AddPlayer("MeanGeomBluff", &MeanGeomBluff); /* riskymode = 10 */
+			myTable.AddPlayer("MeanGeomBluff", &MeanGeomBluff); /* riskymode = 10 */
 			//myTable.AddPlayer("WorseAlgbBluff", &WorseAlgbBluff); /* riskymode = 11 */
 			//myTable.AddPlayer("HybridGeomBluff", &HybridGeomBluff); /* riskymode = 14 */
 

@@ -303,27 +303,28 @@ void HoldemArenaBetting::startBettingRound()
 
 	incrIndex();
 
-
-
-    while (!( myTable->CanStillBet(curIndex) ))
+    //if( playersAllIn > 0 ) gamelog << "<GetNumberInHand(),playersAllIn,allInsNowCount>=<" << (int)(GetNumberInHand()) << "," << (int)playersAllIn << "," << (int)allInsNowCount << ">" << endl;
+    if( !(GetNumberInHand() - playersAllIn + allInsNowCount > 1) )
     {
+        finishBettingRound();
+    }else{
 
-        incrPlayerNumber(*(p[curIndex]));
-
-        if(!(
-             (curIndex != highestBetter || bBlinds == highestBetter)
-             &&
-             (GetNumberInHand() - playersAllIn + allInsNowCount > 1)
-             )
-           )
+        while (!( myTable->CanStillBet(curIndex) ))
         {
-            finishBettingRound();
-            return;
+            incrPlayerNumber(*(p[curIndex]));
+
+            if(!(
+                 (curIndex != highestBetter || bBlinds == highestBetter)
+                 &&
+                 (GetNumberInHand() - playersAllIn + allInsNowCount > 1)
+                 )
+               )
+            {
+                finishBettingRound();
+                return;
+            }
         }
     }
-
-
-
 
 }
 
@@ -488,7 +489,16 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
                             gamelog << "The minimum raise bet is by " << myTable->GetMinRaise() << " to " << highBet + myTable->GetMinRaise() << endl;
                         }
 
-					PlayerBet(withP) = highBet;
+                    const float64 distFromCall = PlayerBet(withP) - highBet;
+                    const float64 distFromMinRaise = myTable->GetMinRaise() - distFromCall;
+
+                    if( distFromCall > distFromMinRaise )
+                    {
+                        PlayerBet(withP) = highBet + myTable->GetMinRaise();
+                    }else
+                    {
+                        PlayerBet(withP) = highBet;
+                    }
 				}
 			}
 ///TODO Reraises need to say RERAISE.

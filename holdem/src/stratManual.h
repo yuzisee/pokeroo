@@ -37,10 +37,14 @@ class ConsoleStrategy : public PlayerStrategy
     private:
         #ifdef INFOASSIST
             StatResult winMean;
+            DistrShape detailPCT;
         #endif
 	protected:
-		Hand comBuf;
+        Hand comBuf;
 		bool bNoPrint;
+		#ifdef INFOASSIST
+            int8 bComSize;
+		#endif
 		void printCommunity();
 		void printActions();
 		void showSituation();
@@ -50,7 +54,11 @@ class ConsoleStrategy : public PlayerStrategy
             std::istream *myFifo;
         #endif
 
-		ConsoleStrategy() : PlayerStrategy(), bNoPrint(false)
+		ConsoleStrategy() : PlayerStrategy()
+		#ifdef INFOASSIST
+            , detailPCT(0)
+		#endif
+            , bNoPrint(false)
         #ifdef DEBUGSAVEGAME
             ,myFifo(&(std::cin))
         #endif

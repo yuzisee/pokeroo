@@ -32,7 +32,7 @@
 //#define DEBUGBETMODEL
 #define DEBUGSAVEGAME "savegame.log"
 //#define DEBUGSAVE_EXTRATOKEN 32
-
+#define DEBUGHOLECARDS "holecards.txt"
 
 
 #include "engine.h"
