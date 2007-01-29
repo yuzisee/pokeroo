@@ -636,7 +636,6 @@ void HoldemArena::DealHands()
     }
 
     #ifdef DEBUGHOLECARDS
-        std::ofstream holecardsData( DEBUGHOLECARDS, std::ios::app );
         holecardsData <<
         		#if defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE)
                 "Hand " << handnum << " " <<
@@ -809,6 +808,9 @@ Player* HoldemArena::PlayTable()
             randRem = 1;
         #endif
 
+        #ifdef DEBUGHOLECARDS
+        holecardsData.open( DEBUGHOLECARDS );
+        #endif
             /*
 #ifdef DEBUGSAVEGAME
              std::ofstream killfile(DEBUGSAVEGAME,std::ios::out | std::ios::trunc);
@@ -823,6 +825,9 @@ Player* HoldemArena::PlayTable()
     else
     {
         scoreboard.open(GRAPHMONEY , std::ios::app);
+        #ifdef DEBUGHOLECARDS
+        holecardsData.open( DEBUGHOLECARDS, std::ios::app );
+        #endif
     }
 #endif
 

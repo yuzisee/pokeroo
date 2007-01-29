@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 
-//#define WINRELEASE
+
 #define AUTOEXTRATOKEN "restore.txt"
 
 #define REQUEST_USER_BLINDSIZE
@@ -830,7 +830,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         #endif
     }else
     {
-        smallBlindChoice=1;//0.025;
+        smallBlindChoice=.1;//0.025;
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
 	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2,2);
@@ -889,9 +889,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         }
     }else
     {
-        //myTable.AddPlayer("q4", &pushAll);
+        myTable.AddPlayer("q4", &pushAll);
         //myTable.AddPlayer("i4", &drainFold);
-        myTable.AddPlayer("X3", &pushFold);
+        //myTable.AddPlayer("X3", &pushFold);
         //myTable.AddPlayer("A3", &tightPushFold);
 
     }

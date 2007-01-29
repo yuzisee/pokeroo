@@ -221,6 +221,10 @@ class HoldemArena
         void saveState();
 #endif
 
+#ifdef DEBUGHOLECARDS
+        std::ofstream holecardsData;
+#endif
+
 protected:
 
         std::ostream& gamelog;

@@ -25,8 +25,6 @@
 //#define DEBUG_TWOPAIR
 //#define DEBUG_SIGSEGV
 
-
-
 #include "holdemutil.h"
 #include <iostream>
 

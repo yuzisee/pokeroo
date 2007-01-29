@@ -45,7 +45,11 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     #ifdef LOGPOSITION
         if( !(logFile.is_open()) )
         {
-            logFile.open((ViewPlayer().GetIdent() + ".Positional.log").c_str());
+            logFile.open((ViewPlayer().GetIdent() + ".Positional.log").c_str()
+            #ifdef WINRELEASE
+            , std::ios::app
+            #endif
+            );
         }
     #endif
     #ifdef LOGPOSITION
@@ -333,7 +337,6 @@ float64 ImproveStrategy::MakeBet()
 {
     setupPosition();
 
-
     const float64 improveMod = detailPCT.improve; //Generally preflop is negative here, so you probably don't want to accentuate that
     const float64 improvePure = (improveMod+1)/2;
     //const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
@@ -342,9 +345,10 @@ float64 ImproveStrategy::MakeBet()
     //float64 distrScale = 0.5 ;
     //float64 distrScale = myMoney / ViewTable().GetAllChips() ;
 
-
     if( distrScale > 1 ) distrScale = 1;
     if( distrScale < 0 ) distrScale = 0;
+
+    const StatResult statchoice = statmean * distrScale + statworse * (1-distrScale);
 
     CallCumulationD &choicecumu = callcumu;
 
