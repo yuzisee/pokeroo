@@ -363,11 +363,11 @@ float64 ImproveStrategy::MakeBet()
     HoldemFunctionModel *(rankGeom_aggressiveness[2]) = {&rankGeom_passive, &rankGeom_aggressive };
     HoldemFunctionModel *(worstAlgb_aggressiveness[2]) = {&worstAlgb_passive, &worstAlgb_aggressive };
 
-    SlidingPairFunction gp(worstAlgb_aggressiveness[bGamble],rankGeom_aggressiveness[bGamble],distrScale,&myExpectedCall);
+    SlidingPairFunction gp(worstAlgb_aggressiveness[bGamble],rankGeom_aggressiveness[bGamble],sqrt(distrScale),&myExpectedCall);
 
 
     #ifdef LOGPOSITION
-        logFile << "offense/defense =" << distrScale << endl;
+        logFile << "0(worstAlgb) ... 1(rankGeom) =" << distrScale << endl;
     #endif
 
     const float64 bestBet = solveGainModel(&gp);
@@ -473,21 +473,28 @@ float64 HybridScalingStrategy::MakeBet()
 
 	const float64 shiftscale2 = myMoney / ( myMoney + oppGift ) - myMoney / ( myMoney + oppGiftMax );
 
-    const float64 eVSshift = expectedVS / (ViewTable().GetNumberAtTable()-1) ;
-
     const float64 myRevealed =  ViewPlayer().GetContribution() + myBet;
 	const float64 estimateRevealed = (ViewTable().GetUnfoldedPotSize() - myRevealed) / ViewTable().GetAllChips() ;
 
+    float64 eVSshift;
+
+    if( ViewTable().GetNumberAtTable() == 2 )
+    {
+        eVSshift = 0.5;
+    }else
+    {
+        eVSshift = (expectedVS - 1) / (ViewTable().GetNumberAtTable()-2);
+    }
 
     ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu, &callcumu);
     myExpectedCall.callingPlayers( (ViewTable().GetNumberAtTable()-1) / (1-estimateRevealed) );
 
 
 #ifdef LOGPOSITION
-    logFile << "suggested strength of field : " << 1/(1-estimateRevealed) << endl;
-	logFile << "difficulty of field : " << eVSshift << endl;
-	logFile << "oppGift   { " << oppGift << " }" << endl;
-	logFile << "shiftscale{ " << shiftscale2 << " }," << shiftscale2*shiftscale2 << endl;
+    logFile << "suggested strength of field : " << 1/(1-estimateRevealed) << endl; //Actually scales difficulty
+	logFile << "difficulty of field : " << eVSshift << endl; //The higher this is, the more it leans toward mean rather than rank
+	logFile << "oppGift   { " << oppGift << " }" << endl; //Measures how much is winnable
+	logFile << "shiftscale{ " << shiftscale2 << " }," << shiftscale2*shiftscale2 << endl; //If not much is winnable, discourage betting
 #endif
 
 

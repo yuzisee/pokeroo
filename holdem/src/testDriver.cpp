@@ -830,7 +830,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         #endif
     }else
     {
-        smallBlindChoice=0.025;
+        smallBlindChoice=1;//0.025;
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
 	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2,2);
@@ -839,7 +839,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             std::ios::openmode gamelogMode = std::ios::trunc;
             if( bLoadGame ) gamelogMode = std::ios::app;
 			std::ofstream gameOutput("game.log",gamelogMode);
-			HoldemArena myTable(&sg, gameOutput,true, true);
+			HoldemArena myTable(&bg, gameOutput,true, true);
 		#else
 	HoldemArena myTable(&sg, gameLog,true, true);
 		#endif

@@ -455,7 +455,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 						randRem += PlayerLastBet(withP) / PlayerBet(withP) ;
 
 				///ALL-IN. Notice that allIn combines handBet with myBet
-				///However, myBetSize is now the WHOLE HAND.
+				//? //However, myBetSize is now the WHOLE HAND.
 				PlayerBet(withP) = PlayerMoney(withP) ;
 				PlayerAllIn(withP)  = PlayerHandBetTotal(withP) + PlayerBet(withP);
 					//we must remember allIn as above: it's what we can win/person
