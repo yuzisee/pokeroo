@@ -246,7 +246,7 @@ void ConsoleStrategy::showSituation()
 	UI_DESCRIPTOR << endl << "The pot contains " << ViewTable().GetPrevPotSize() << " from previous rounds and "
 			<< ViewTable().GetRoundPotSize() << " from this round" << endl;
     #else
-    UI_DESCRIPTOR << endl << "The pot contains " << ViewTable().GetPrevPotSize() + ViewTable().GetRoundPotSize() << endl;
+    UI_DESCRIPTOR << endl << "The pot contains $" << ViewTable().GetPrevPotSize() + ViewTable().GetRoundPotSize() << endl;
     #endif
 
     #ifdef INFOASSIST
@@ -254,7 +254,7 @@ void ConsoleStrategy::showSituation()
         if( xBet > 0 )
         {
             const float64 winAmount = ViewTable().GetPrevPotSize() + ViewTable().GetRoundPotSize() +  xBet;
-            UI_DESCRIPTOR << "\tYou can bet " << xBet << " more to win " << winAmount - xBet << " plus your " << xBet << endl;
+            UI_DESCRIPTOR << "\tYou can bet $" << xBet << " more to win $" << winAmount - xBet << " plus your $" << xBet << endl;
             UI_DESCRIPTOR << "\tThis works out to be " << winAmount/xBet << " : 1 odds (" << 100*xBet/winAmount << "%)" << endl;
         }
     #endif

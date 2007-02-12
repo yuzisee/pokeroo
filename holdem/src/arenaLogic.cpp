@@ -562,6 +562,7 @@ void HoldemArena::PlayGame()
 
     if( bSpectate )
     {
+        gamelog << endl;
         gamelog << "Previously\t" << flush;
         community.HandPlus::DisplayHand(gamelog);
         gamelog << endl;
@@ -577,6 +578,7 @@ void HoldemArena::PlayGame()
 
     if( bSpectate )
     {
+        gamelog << endl;
         gamelog << "Previously\t" << flush;
         community.HandPlus::DisplayHand(gamelog);
         gamelog << endl;
@@ -609,6 +611,28 @@ void HoldemArena::DealHands()
     {
         gamelog << endl << "Next Dealer is " << p[curDealer]->GetIdent() << endl;
     }
+
+
+	if( bVerbose )
+	{
+		gamelog << "================================================================" << endl;
+		gamelog << "============================New Hand" <<
+		#if defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE)
+		" #"<< handnum <<
+		#else
+		"==" <<
+		#endif
+		"========================" << endl;
+
+		#ifdef DEBUGSPECIFIC
+		if (handnum == DEBUGSPECIFIC)
+		{
+		    gamelog << "Monitor situation" << endl;
+		}
+		#endif
+
+	}
+
 
     #ifdef DELAYHANDS
     system("pause");
@@ -689,26 +713,6 @@ void HoldemArena::DealHands()
 void HoldemArena::RefreshPlayers()
 {
 
-
-	if( bVerbose )
-	{
-		gamelog << "================================================================" << endl;
-		gamelog << "============================New Hand" <<
-		#if defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE)
-		" #"<< handnum <<
-		#else
-		"==" <<
-		#endif
-		"========================" << endl;
-
-		#ifdef DEBUGSPECIFIC
-		if (handnum == DEBUGSPECIFIC)
-		{
-		    gamelog << "Monitor situation" << endl;
-		}
-		#endif
-
-	}
 
     if( bSpectate )
     {

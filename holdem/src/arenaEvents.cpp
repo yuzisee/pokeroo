@@ -145,8 +145,9 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 			//What if you fold to an all-in? I think it will work just fine.
 			if( bVerbose )
 			{
+			    gamelog << endl;
 				gamelog << "All fold! " << p[highestBetter]->GetIdent() <<
-				" wins " << (   myPot - highContribution   ) << endl;
+				" wins $" << (   myPot - highContribution   ) << endl;
 			}
 			float64 rh = static_cast<float64>(highestBetter)+2;
 			randRem /= myPot*highContribution+rh;
