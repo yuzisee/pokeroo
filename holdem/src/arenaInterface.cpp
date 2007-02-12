@@ -110,12 +110,11 @@ void HoldemArena::incrIndex()
 	curIndex %= nextNewPlayer;
 }
 
-void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theBet
+void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theBet, const float64 theIncrBet
 	, const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn)
 {
-    const float64 betIncr = theBet - p[playerID]->GetLastBet();
     const float64 moneyRemain = p[playerID]->GetMoney() - theBet;
-	const HoldemAction currentMove(myPot + betIncr, moneyRemain ,  playerID, theBet, toCall, bBlind , isBlindCheck, isAllIn);
+	const HoldemAction currentMove(myPot + theIncrBet, moneyRemain ,  playerID, theBet, toCall, bBlind , isBlindCheck, isAllIn);
 
 	//ASSERT ( playerID == curIndex )
 	int8 cycleIndex = curIndex;
@@ -173,6 +172,7 @@ std::istream * HoldemArena::LoadState()
             loadFile >> blinds->mySmallBlind;
             loadFile.ignore(1,'=');
             loadFile >> blinds->myBigBlind;
+            blinds->Reload(blinds->mySmallBlind,blinds->myBigBlind);
             loadFile.ignore(1,'@');
             loadFile >> numericValue;
 

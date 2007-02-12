@@ -272,7 +272,7 @@ protected:
 
         void PrintPositions(std::ostream& o);
 		void broadcastHand(const Hand&,const int8 broadcaster);
-		void broadcastCurrentMove(const int8& playerID, const float64& theBet
+		void broadcastCurrentMove(const int8& playerID, const float64& theBet, const float64 theIncrBet
                                 , const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn);
             void RefreshPlayers();
         void PlayGame();
@@ -404,10 +404,10 @@ class HoldemArenaEventBase
     void defineSidePotsFor(Player& allInP, const int8 id){myTable->defineSidePotsFor(allInP,id);}
     void resolveActions(Player& withP){myTable->resolveActions(withP);}
     void broadcastHand(const Hand& h,const int8 broadcaster){ myTable->broadcastHand(h,broadcaster); }
-    void broadcastCurrentMove(const int8& playerID, const float64& theBet
+    void broadcastCurrentMove(const int8& playerID, const float64& theBet, const float64 theIncrBet
                                 , const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn)
                                 {
-                                    myTable->broadcastCurrentMove(playerID,theBet,toCall,bBlind,isBlindCheck,isAllIn);
+                                    myTable->broadcastCurrentMove(playerID,theBet,theIncrBet,toCall,bBlind,isBlindCheck,isAllIn);
                                 }
     void prepareRound(const int8 comSize){ myTable->prepareRound(comSize); };
 

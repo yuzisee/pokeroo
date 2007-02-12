@@ -247,7 +247,7 @@ void HoldemArenaBetting::startBettingRound()
 
             if( bVerbose )
             {
-                broadcastCurrentMove(curIndex, PlayerBet(withP1), 0, 1, false, PlayerAllIn(withP1) > 0);
+                broadcastCurrentMove(curIndex, PlayerBet(withP1), PlayerBet(withP1), 0, 1, false, PlayerAllIn(withP1) > 0);
             }
 
 		do
@@ -272,7 +272,7 @@ void HoldemArenaBetting::startBettingRound()
 
             if( bVerbose )
             {
-                broadcastCurrentMove(curIndex, PlayerBet(withP2), 0, 2, false, PlayerAllIn(withP2) > 0);
+                broadcastCurrentMove(curIndex, PlayerBet(withP2),PlayerBet(withP2), 0, 2, false, PlayerAllIn(withP2) > 0);
             }
 
 		bBlinds = curIndex;
@@ -504,7 +504,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 				}
 			}
 ///TODO Reraises need to say RERAISE.
-			broadcastCurrentMove(curIndex, PlayerBet(withP), highBet, 0
+			broadcastCurrentMove(curIndex, PlayerBet(withP), PlayerBet(withP) - PlayerLastBet(withP), highBet, 0
 					, curIndex == bBlinds && comSize == 0 && curIndex == highestBetter,PlayerAllIn(withP) > 0);
 
 			if( PlayerBet(withP) >= highBet )
@@ -660,12 +660,12 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp)
             HandPlus viewHand;
             viewHand.SetUnique(PlayerHand(withP));
             viewHand.DisplayHand(gamelog);
-            gamelog << endl << "Trying to stay alive, makes" << flush;
-            #ifdef OLD_DISPLAY_STYLE
+            gamelog << endl << "Trying to stay alive, makes " << flush;
+            //#ifdef OLD_DISPLAY_STYLE
             comp.DisplayHandBig(gamelog);
-            #else
-            comp.DisplayHandText(gamelog);
-            #endif
+            //#else
+            //comp.DisplayHandText(gamelog);
+            //#endif
         }
         winners.push_back(comp);
         best = comp;
@@ -700,11 +700,11 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp)
             viewHand.SetUnique(PlayerHand(withP));
             viewHand.DisplayHand(gamelog);
             gamelog << endl << "Is eliminated after making only" << flush;
-            #ifdef OLD_DISPLAY_STYLE
+            //#ifdef OLD_DISPLAY_STYLE
             comp.DisplayHandBig(gamelog);
-            #elser
-            comp.DisplayHandText(gamelog);
-            #endif
+            //#else
+            //comp.DisplayHandText(gamelog);
+            //#endif
         }
     }
 
@@ -748,11 +748,11 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
 					viewHand.SetUnique(PlayerHand(withP));
 					viewHand.DisplayHand(gamelog);
 					gamelog << endl << "Making," << flush;
-					#ifdef OLD_DISPLAY_STYLE
+					//#ifdef OLD_DISPLAY_STYLE
 					comp.DisplayHandBig(gamelog);
-					#else
-					comp.DisplayHandText(gamelog);
-					#endif
+					//#else
+					//comp.DisplayHandText(gamelog);
+					//#endif
 				}
 
 				//winnerCount = 1;
@@ -778,11 +778,11 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
 					viewHand.DisplayHand(gamelog);
 					#endif
 					gamelog << "Split... " << flush;
-					#ifdef OLD_DISPLAY_STYLE
+					//#ifdef OLD_DISPLAY_STYLE
 					comp.DisplayHand(gamelog);
-					#else
-					comp.DisplayHandText(gamelog);
-					#endif
+					//#else
+					//comp.DisplayHandText(gamelog);
+					//#endif
 					gamelog << endl;
 				}
 

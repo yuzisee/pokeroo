@@ -35,6 +35,12 @@ const double BlindStructure::BigBlind()
 	return myBigBlind;
 }
 
+void BlindStructure::Reload(const float64 small,const float64 big)
+{
+    mySmallBlind = small;
+    myBigBlind = big;
+}
+
 bool GeomPlayerBlinds::PlayerEliminated()
 {
 	myBigBlind *= bigRatio;
@@ -55,6 +61,14 @@ bool AlgbHandBlinds::HandPlayed(float64 timepassed)
     {
         return false;
     }
+}
+
+void SitAndGoBlinds::Reload(const float64 small,const float64 big)
+{
+    const float64 rat = small/big;
+        hist[0] = small*rat*rat;
+        hist[1] = small*rat;
+        hist[2] = hist[0]+hist[1];
 }
 
 float64 SitAndGoBlinds::fibIncr(float64 a, float64 b)
