@@ -30,7 +30,7 @@
 ///COMMENT OUT DEBUGSPECIFIC IF YOU WISH TO GRAPHMONEY
 
 //#define DEBUGBETMODEL
-#define DEBUGSAVEGAME "savegame.log"
+#define DEBUGSAVEGAME "savegame"
 //#define DEBUGSAVE_EXTRATOKEN 32
 #define DEBUGHOLECARDS "holecards.txt"
 

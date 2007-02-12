@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#define ALLBET 52
+#define ALLBET 21
 
 #include <math.h>
 #include "stratThreshold.h"
@@ -37,7 +37,7 @@ void MultiThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommu
     #ifdef LOGTHRESHOLD
         if( !(logFile.is_open()) )
         {
-            logFile.open((ViewPlayer().GetIdent() + ".MultiThresh.log").c_str());
+            logFile.open((ViewPlayer().GetIdent() + ".MultiThresh.txt").c_str());
         }
     #endif
     ThresholdStrategy::SeeCommunity(h, cardsInCommunity);
@@ -64,7 +64,7 @@ void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
         #ifdef LOGTHRESHOLD
             if( !(logFile.is_open()) )
             {
-                logFile.open((ViewPlayer().GetIdent() + ".Thresh.log").c_str());
+                logFile.open((ViewPlayer().GetIdent() + ".Thresh.txt").c_str());
             }
             logFile << endl;
             HandPlus convertOutput;
@@ -91,7 +91,7 @@ float64 ThresholdStrategy::MakeBet()
         #ifdef LOGTHRESHOLD
             if( !(logFile.is_open()) )
             {
-                logFile.open((ViewPlayer().GetIdent() + ".Thresh.log").c_str());
+                logFile.open((ViewPlayer().GetIdent() + ".Thresh.txt").c_str());
             }
 
             logFile << w->mean << " > " << aiThreshold << "?" << endl;
@@ -116,7 +116,7 @@ float64 MultiThresholdStrategy::MakeBet()
 
             if( !(logFile.is_open()) )
             {
-                logFile.open((ViewPlayer().GetIdent() + ".MultiThresh.log").c_str());
+                logFile.open((ViewPlayer().GetIdent() + ".MultiThresh.txt").c_str());
             }
 
 
