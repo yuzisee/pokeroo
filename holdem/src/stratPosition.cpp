@@ -45,7 +45,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     #ifdef LOGPOSITION
         if( !(logFile.is_open()) )
         {
-            logFile.open((ViewPlayer().GetIdent() + ".Positional.log").c_str()
+            logFile.open((ViewPlayer().GetIdent() + ".Thoughts.txt").c_str()
             #ifdef WINRELEASE
             , std::ios::app
             #endif
@@ -348,7 +348,6 @@ float64 ImproveStrategy::MakeBet()
     if( distrScale > 1 ) distrScale = 1;
     if( distrScale < 0 ) distrScale = 0;
 
-    const StatResult statchoice = statmean * distrScale + statworse * (1-distrScale);
 
     CallCumulationD &choicecumu = callcumu;
 
@@ -400,6 +399,82 @@ float64 ImproveStrategy::MakeBet()
 }
 
 
+float64 ImproveGainStrategy::MakeBet()
+{
+	setupPosition();
+
+	if( maxShowdown <= 0 ) return 0;
+
+    const float64 improveMod = detailPCT.improve; //Generally preflop is negative here, so you probably don't want to accentuate that
+    const float64 improvePure= (improveMod+1)/2;
+    const float64 minWin = pow(statworse.pct,expectedVS);
+    const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
+
+    float64 distrScale = improveMod+minWin+1 ;
+    if( bGamble >= 2 )
+    {
+        distrScale = (-improveMod/2)+minWin+1 ;
+    }
+
+    if( bGamble >= 1 )
+    {
+        #ifdef LOGPOSITION
+            logFile << minWin <<" ... "<< minWin+2 <<" =" << distrScale << endl;
+        #endif
+    }
+
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &callcumu, &callcumu);
+    const float64 fullVersus = myDeterredCall.callingPlayers();
+    if( bGamble >= 2 )
+    {
+        const float64 improveLevel = (improveMod*sqrt(improveDev*2)*2+1)/2;
+        const float64 rVersus = expectedVS*improveLevel*improveLevel + fullVersus*(1-improveLevel*improveLevel);
+        myDeterredCall.callingPlayers( rVersus );
+        #ifdef LOGPOSITION
+            logFile << expectedVS <<" ... "<< fullVersus <<" =" << rVersus << endl;
+        #endif
+	}
+
+    StatResult left = hybridMagnified;
+    StatResult right = statmean;
+    if( bGamble >= 1 )
+    {
+        myDeterredCall.SetImpliedFactor(distrScale);
+        left = statranking;
+        right = statranking;
+    }
+
+	GainModelBluff hybridgainDeterred_aggressive(left,&myDeterredCall);
+	GainModelNoRiskBluff hybridgain_aggressive(right,&myDeterredCall);
+
+	AutoScalingFunction choicemodel(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,maxShowdown,left.pct*right.pct,&myDeterredCall);
+
+
+    const float64 bestBet = solveGainModel(&choicemodel);
+
+#ifdef LOGPOSITION
+    if( bestBet < betToCall + ViewTable().GetChipDenom() )
+    {
+        logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
+        logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
+        logFile << "Algb("<< bestBet <<")=" << hybridgain_aggressive.f(bestBet) << endl;
+    }
+
+
+        logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
+        if( myDeterredCall.pWin(bestBet) > 0 )
+        {
+            logFile << "confirm " << choicemodel.f(bestBet) << endl;
+        }
+
+#endif
+
+    return bestBet;
+
+
+}
+
+
 float64 DeterredGainStrategy::MakeBet()
 {
 	setupPosition();
@@ -443,9 +518,12 @@ float64 DeterredGainStrategy::MakeBet()
     const float64 bestBet = solveGainModel(&choicemodel);
 
 #ifdef LOGPOSITION
-	logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
-	logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred_agressiveness[bGamble]->f(bestBet) << endl;
-	logFile << "Algb("<< bestBet <<")=" << hybridgain_agressiveness[bGamble]->f(bestBet) << endl;
+    if( bestBet < betToCall + ViewTable().GetChipDenom() )
+    {
+        logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
+        logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred_agressiveness[bGamble]->f(bestBet) << endl;
+        logFile << "Algb("<< bestBet <<")=" << hybridgain_agressiveness[bGamble]->f(bestBet) << endl;
+    }
 
     if( bGamble == 1 )
     {
@@ -461,7 +539,6 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 }
-
 
 
 

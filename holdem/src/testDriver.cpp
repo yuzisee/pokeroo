@@ -20,16 +20,6 @@
 
 
 
-#define AUTOEXTRATOKEN "restore.txt"
-
-#define REQUEST_USER_BLINDSIZE
-
-#ifndef WINRELEASE
-	#define REGULARINTOLOG
-#endif
-#define DEBUGSITUATION
-#define SUPERINTOLOG
-
 #include "stratPosition.h"
 //#include "stratTournament.h"
 #include "stratManual.h"
@@ -39,6 +29,17 @@
 #include "functionmodel.h"
 #include "aiInformation.h"
 #include <algorithm>
+
+
+#define AUTOEXTRATOKEN "restore.txt"
+
+#define REQUEST_USER_BLINDSIZE
+
+#ifndef WINRELEASE
+	#define REGULARINTOLOG
+#endif
+#define DEBUGSITUATION
+#define SUPERINTOLOG
 
 using std::cout;
 using std::endl;
@@ -833,12 +834,12 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         smallBlindChoice=.1;//0.025;
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
-	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2,2);
+	GeomPlayerBlinds bg(b.SmallBlind()*80,b.BigBlind()*80,2,2);
     SitAndGoBlinds sg(b.SmallBlind(),b.BigBlind(),10);
 		#ifdef REGULARINTOLOG
             std::ios::openmode gamelogMode = std::ios::trunc;
             if( bLoadGame ) gamelogMode = std::ios::app;
-			std::ofstream gameOutput("game.log",gamelogMode);
+			std::ofstream gameOutput("gamelog.txt",gamelogMode);
 			HoldemArena myTable(&bg, gameOutput,true, true);
 		#else
 	HoldemArena myTable(&sg, gameLog,true, true);
@@ -870,6 +871,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	HybridScalingStrategy AutoSetP;
 	ImproveStrategy DistrScaleA(1);
 	DeterredGainStrategy FutureFoldA(1);
+  	ImproveGainStrategy XFoldA(0);
+  	ImproveGainStrategy ImproveA(1);
+	ImproveGainStrategy ReallyImproveA(2);
 	HybridScalingStrategy AutoSetA(1);
 
     //TournamentStrategy asterisk;
@@ -889,19 +893,23 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         }
     }else
     {
-        myTable.AddPlayer("q4", &pushAll);
+        //myTable.AddPlayer("q4", &pushAll);
         //myTable.AddPlayer("i4", &drainFold);
-        //myTable.AddPlayer("X3", &pushFold);
-        //myTable.AddPlayer("A3", &tightPushFold);
+        myTable.AddPlayer("X3", &pushFold);
+        myTable.AddPlayer("A3", &tightPushFold);
 
     }
 
     switch(headsUp)
     {
         case 'P':
-            myTable.AddPlayer("TrapBotIII", 1500, &DistrScaleA);
-            myTable.AddPlayer("ComBotIII", 1500, &FutureFoldA);
-            myTable.AddPlayer("SpaceBotIII", 1500, &AutoSetA);
+            myTable.AddPlayer("TrapBotIV", 1500, &ImproveA);
+            myTable.AddPlayer("ConservativeBotIV", 1500, &FutureFoldA);
+            myTable.AddPlayer("NormalBotIV",1500, &XFoldA);
+            myTable.AddPlayer("SpaceBotIV", 1500, &AutoSetA);
+            myTable.AddPlayer("AceBotIV",1500, &ReallyImproveA);
+            //myTable.AddPlayer("NormalBotIV", &MeanGeomBluff); /* riskymode = 10 */
+            //myTable.AddPlayer("NormalBotIV", &RankGeomBluff); /* riskymode = 9 */
             break;
         case 'M':
             myTable.AddPlayer("M2", &RankGeom); /* riskymode = 0 */
@@ -920,15 +928,19 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             //myTable.AddPlayer("HybridGeom", &HybridGeom); /* riskymode = 7 */
             //myTable.AddPlayer("HybridAlgb", &HybridAlgb); /* riskymode = 8 */
 			//myTable.AddPlayer("RankGeomBluff", &RankGeomBluff); /* riskymode = 9 */
-			myTable.AddPlayer("MeanGeomBluff", &MeanGeomBluff); /* riskymode = 10 */
+			//myTable.AddPlayer("MeanGeomBluff", &MeanGeomBluff); /* riskymode = 10 */
 			//myTable.AddPlayer("WorseAlgbBluff", &WorseAlgbBluff); /* riskymode = 11 */
 			//myTable.AddPlayer("HybridGeomBluff", &HybridGeomBluff); /* riskymode = 14 */
 
             //myTable.AddPlayer("TrapBotII", &DistrScaleP);
             //myTable.AddPlayer("ComBotII", &FutureFoldP);
 		//myTable.AddPlayer("SpaceBotII", &AutoSetP);
-		myTable.AddPlayer("TrapIII", &DistrScaleA);
-            myTable.AddPlayer("ComIII", &FutureFoldA);
+		//myTable.AddPlayer("TrapIII", &DistrScaleA);
+        myTable.AddPlayer("ComIV", &FutureFoldA);
+        myTable.AddPlayer("NormIV", &XFoldA);
+        myTable.AddPlayer("TrapIV", &ImproveA);
+		myTable.AddPlayer("AceIV", &ReallyImproveA);
+
 		myTable.AddPlayer("SpaceIII", &AutoSetA);
 
 
@@ -969,7 +981,7 @@ void superGame(char headsUp = 0)
 {
 
     #ifdef SUPERINTOLOG
-        std::ofstream gameOutput("game.log");
+        std::ofstream gameOutput("gamelog.txt");
         std::string iWin = testPlay(headsUp, gameOutput);
         gameOutput.close();
     #else
@@ -983,7 +995,7 @@ void superGame(char headsUp = 0)
     for(;;)
     {
         #ifdef SUPERINTOLOG
-        gameOutput.open("game.log");
+        gameOutput.open("gamelog.txt");
         iWin = testPlay(headsUp, gameOutput);
         gameOutput.close();
         #else

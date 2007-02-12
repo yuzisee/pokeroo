@@ -105,6 +105,18 @@ class ImproveStrategy : public PositionalStrategy
 }
 ;
 
+
+class ImproveGainStrategy : public PositionalStrategy
+{
+protected:
+    int8 bGamble;
+public:
+    ImproveGainStrategy(int8 riskymode =0) : PositionalStrategy(riskymode ? false : true,riskymode ? true : false,riskymode ? true : false,riskymode? false : true), bGamble(riskymode) {}
+
+    virtual float64 MakeBet();
+}
+;
+
 //Deterrent
 class DeterredGainStrategy : public PositionalStrategy
 {
