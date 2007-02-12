@@ -172,8 +172,8 @@ void HoldemArena::PlayShowdown(const int8 called)
 
         HandPlus displayCom;
         displayCom.SetUnique(community);
-        displayCom.DisplayHand(gamelog);
-        gamelog << endl << endl;
+        displayCom.HandPlus::DisplayHand(gamelog);
+        gamelog << endl << endl << endl;
 	}
 
 	vector<ShowdownRep> winners;
@@ -548,7 +548,8 @@ void HoldemArena::PlayGame()
     {
 
         gamelog << "Dealer deals\t" << flush;
-        community.DisplayHand(gamelog);
+        community.HandPlus::DisplayHand(gamelog);
+        gamelog << endl;
     }
 
 
@@ -557,7 +558,8 @@ void HoldemArena::PlayGame()
     if( bSpectate )
     {
         gamelog << "Previously\t" << flush;
-        community.DisplayHand(gamelog);
+        community.HandPlus::DisplayHand(gamelog);
+        gamelog << endl;
         gamelog << "Dealer deals\t" << flush;
     }
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
@@ -571,7 +573,8 @@ void HoldemArena::PlayGame()
     if( bSpectate )
     {
         gamelog << "Previously\t" << flush;
-        community.DisplayHand(gamelog);
+        community.HandPlus::DisplayHand(gamelog);
+        gamelog << endl;
         gamelog << "Dealer deals\t" << flush;
     }
 	dealer.DealCard(community);
@@ -638,9 +641,9 @@ void HoldemArena::DealHands()
     #ifdef DEBUGHOLECARDS
         holecardsData <<
         		#if defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE)
-                "Hand " << handnum << " " <<
+                "############ Hand " << handnum << " " <<
                 #endif
-        "########################" << endl;
+        "############" << endl;
 
     #endif
 
@@ -663,18 +666,19 @@ void HoldemArena::DealHands()
         #ifdef DEBUGHOLECARDS
             if( dealtEach == 1 )
             {
+                (withP.myHand).HandPlus::DisplayHand(holecardsData);
                 holecardsData << withP.GetIdent().c_str() << endl;
-                (withP.myHand).DisplayHand(holecardsData);
-                holecardsData << endl;
+//                holecardsData << endl << endl;
             }
         #endif
 
 		if(curDealer == curIndex) ++dealtEach;
 	}
-
+/*
 	#ifdef DEBUGHOLECARDS
         holecardsData.close();
     #endif
+*/
 }
 
 void HoldemArena::RefreshPlayers()
