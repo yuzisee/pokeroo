@@ -160,7 +160,7 @@ std::istream * HoldemArena::LoadState()
                 loadFile >> *(pMoneyU+1);
                 loadFile.ignore(1,':');
                 p[i]->myMoney = pMoney;
-                if( pMoney == 0 ) --livePlayers;
+                if( pMoney <= 0 ) --livePlayers;
             }
             #ifdef DEBUGSAVE_EXTRATOKEN
             loadFile.getline(EXTRATOKEN, DEBUGSAVE_EXTRATOKEN);
@@ -185,6 +185,7 @@ void HoldemArena::saveState()
     for( int8 i=0;i<nextNewPlayer;++i )
     {
         float64 pMoney =  p[i]->myMoney;
+		if( pMoney < 0 ) pMoney = 0;
         uint32 *pMoneyU = reinterpret_cast< uint32* >( &pMoney );
         newSaveState << *pMoneyU << "x" << *(pMoneyU+1) << ":" << flush;
     }
