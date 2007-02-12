@@ -907,7 +907,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             myTable.AddPlayer("ConservativeBotIV", 1500, &FutureFoldA);
             myTable.AddPlayer("NormalBotIV",1500, &XFoldA);
             myTable.AddPlayer("SpaceBotIV", 1500, &AutoSetA);
-            myTable.AddPlayer("AceBotIV",1500, &ReallyImproveA);
+            myTable.AddPlayer("ActionBotIV",1500, &ReallyImproveA);
             //myTable.AddPlayer("NormalBotIV", &MeanGeomBluff); /* riskymode = 10 */
             //myTable.AddPlayer("NormalBotIV", &RankGeomBluff); /* riskymode = 9 */
             break;
@@ -1010,7 +1010,7 @@ void superGame(char headsUp = 0)
 
 int main(int argc, char* argv[])
 {
-	cout << "test" << endl;
+	cout << "BEGIN" << endl;
 	/*testHT(91, 1);
 	testHT(62, 1);
 	testHT(33, 1);

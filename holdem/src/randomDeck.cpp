@@ -86,14 +86,14 @@ void RandomDeck::ShuffleDeck(float64 seedShift)
 
 	viewSeed = psychoRandom;
 	int8 bitsSeen = 0;
-	cout << "Randomizer seed " << seedShift << " produces {" << flush;
+	std::cout << "Randomizer seed " << seedShift << " produces {" << flush;
 	while(viewSeed != 0)
 	{
-		cout << ((viewSeed & viewMask) >> 31) << flush;
+		std::cout << ((viewSeed & viewMask) >> 31) << flush;
 		++bitsSeen;
 		viewSeed <<= 1;
 	}
-	cout << "...&"<< (32-bitsSeen) <<"}" << endl;
+	std::cout << "...&"<< (32-bitsSeen) <<"}" << endl;
 /*
 	viewSeed = *(warp);
 	cout << "\t" << flush;

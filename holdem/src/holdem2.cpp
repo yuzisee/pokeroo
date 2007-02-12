@@ -141,6 +141,14 @@ void CommunityPlus::DisplayHand(std::ostream& targetFile) const
 	targetFile << endl;
 }
 
+void CommunityPlus::DisplayHandText(std::ostream& targetFile) const
+{
+	HandPlus::DisplayHand(targetFile);
+	targetFile << "\t";
+    PrintInterpretHand(targetFile);
+	targetFile << endl;
+}
+
 void CommunityPlus::DisplayHandBig(std::ostream& targetFile) const
 {
 	targetFile << endl;

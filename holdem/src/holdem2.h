@@ -79,6 +79,7 @@ public:
 
 	const int8 CardsInSuit(const int8) const;
 	virtual void DisplayHand(std::ostream&) const;
+	virtual void DisplayHandText(std::ostream&) const;
     virtual void DisplayHandBig(std::ostream&) const;
     void PrintInterpretHand(std::ostream&) const;
 }
@@ -202,6 +203,7 @@ class ShowdownRep
     }
 
 	void DisplayHandBig(std::ostream& o) const { comp.DisplayHandBig(o); }
+	void DisplayHandText(std::ostream& o) const { comp.DisplayHandText(o); }
 	void DisplayHand(std::ostream& o) const { comp.DisplayHand(o); }
 
 

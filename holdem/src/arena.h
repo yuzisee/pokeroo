@@ -166,9 +166,15 @@ class HoldemAction
 		bool bCheckBlind;
 		bool bAllIn;
 	public:
+        static const int8 SMALLBLIND = 1;
+        static const int8 BIGBLIND = 2;
 
-		HoldemAction(const int8 i, const float64 b, const float64 c, const bool checked = false, const bool allin = false)
-	: myPlayerIndex(i), bet(b), callAmount(c), bCheckBlind(checked), bAllIn(allin) {} ;
+        const float64 newPotSize;
+        const float64 chipsLeft;
+        const int8 bBlind;
+
+		HoldemAction(const float64 newpot, const float64 newchips, const int8 i, const float64 b, const float64 c, const int8 blind=0, const bool checked = false, const bool allin = false)
+	: myPlayerIndex(i), bet(b), callAmount(c), bCheckBlind(checked), bAllIn(allin), newPotSize(newpot), chipsLeft(newchips), bBlind(blind) {} ;
 
 		int8 GetPlayerID() const {return myPlayerIndex;}
 		float64 GetAmount() const {return bet;}
@@ -188,7 +194,7 @@ class HoldemAction
 		bool IsCheck() const {return (bet == 0) || (bCheckBlind && bet == callAmount);}
 		bool IsCall() const {return (bet == callAmount || (bet < callAmount && bAllIn)) && callAmount > 0;}
 		bool IsRaise() const {return bet > callAmount && callAmount > 0;}
-                bool IsAllIn() const {return bAllIn;}
+        bool IsAllIn() const {return bAllIn;}
 
 }
 ;
@@ -264,10 +270,10 @@ protected:
         mutable CommunityCallStats *communityBuffer;
     #endif
 
-
+        void PrintPositions(std::ostream& o);
 		void broadcastHand(const Hand&,const int8 broadcaster);
 		void broadcastCurrentMove(const int8& playerID, const float64& theBet
-                                , const float64& toCall, const bool& isBlindCheck, const bool& isAllIn);
+                                , const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn);
             void RefreshPlayers();
         void PlayGame();
 			void defineSidePotsFor(Player&, const int8);
@@ -330,6 +336,7 @@ protected:
 		virtual int8 GetTotalPlayers() const;
 
 		virtual int8 GetCurPlayer() const;
+		virtual int8 GetDealer() const;
 
 		virtual const Player* ViewPlayer(int8) const;
 
@@ -398,9 +405,9 @@ class HoldemArenaEventBase
     void resolveActions(Player& withP){myTable->resolveActions(withP);}
     void broadcastHand(const Hand& h,const int8 broadcaster){ myTable->broadcastHand(h,broadcaster); }
     void broadcastCurrentMove(const int8& playerID, const float64& theBet
-                                , const float64& toCall, const bool& isBlindCheck, const bool& isAllIn)
+                                , const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn)
                                 {
-                                    myTable->broadcastCurrentMove(playerID,theBet,toCall,isBlindCheck,isAllIn);
+                                    myTable->broadcastCurrentMove(playerID,theBet,toCall,bBlind,isBlindCheck,isAllIn);
                                 }
     void prepareRound(const int8 comSize){ myTable->prepareRound(comSize); };
 

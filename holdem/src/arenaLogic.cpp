@@ -164,9 +164,9 @@ void HoldemArena::PlayShowdown(const int8 called)
 	if( bVerbose )
 	{
 		gamelog << endl;
-		gamelog << "\t!!!!!!!!!!" <<
-		endl << "\t!Showdown!" << endl;
-		gamelog << "\t!!!!!!!!!!" << endl;
+		gamelog << "\t----------" <<
+		endl << "\t|Showdown|" << endl;
+		gamelog << "\t----------" << endl;
 
 		gamelog << "Final Community Cards:" << endl;
 
@@ -227,7 +227,7 @@ gamelog << p[potDistr[j].playerIndex]->GetIdent() << "\t"
 << 1 << endl;
 #endif
 
-	randRem *= myPot*potDistrSize*p[potDistr[j].playerIndex]->handBetTotal;
+	randRem *= myPot+potDistrSize*p[potDistr[j].playerIndex]->handBetTotal;
 	randRem -= potDistr[j].playerIndex;
 
 
@@ -241,7 +241,7 @@ gamelog << p[potDistr[j].playerIndex]->GetIdent() << "\t"
 		{
 			++splitCount;
 			float64 splitFactor = static_cast<float64>(splitCount);
-			randRem *= splitFactor;
+			randRem *= splitFactor+1.5;
 			moneyWon[i] /= splitFactor;
 
 			if( bVerbose )
@@ -310,26 +310,51 @@ void HoldemArena::prepareRound(const int8 comSize)
 
 	if( bVerbose )
 	{
+	    #ifdef OLD_DISPLAY_STYLE
 		gamelog <<endl<<endl<<endl;
+		#else
+		if( comSize == 0 )
+		{
+		    gamelog << endl << endl << "Preflop" << endl;
+		}
+		#endif
 		if( comSize == 3 )
 		{
+		    #ifdef OLD_DISPLAY_STYLE
 			gamelog << "\t------" << endl;
 			gamelog << "\t|FLOP|" << endl;
 			gamelog << "\t------" << endl;
+			#else
+			gamelog << endl << endl << "Flop" << endl;
+			#endif
 		}
 		else if (comSize == 4)
 		{
+		    #ifdef OLD_DISPLAY_STYLE
 			gamelog << "\t------" <<
 			endl << "\t|TURN|" << endl;
 			gamelog << "\t------" << endl;
+			#else
+			gamelog << endl << endl << "Turn" << endl;
+			#endif
 		}
 		else if (comSize == 5)
 		{
+		    #ifdef OLD_DISPLAY_STYLE
 			gamelog << "\t-------" <<
 			endl << "\t|RIVER|" << endl;
 			gamelog << "\t-------" << endl;
+			#else
+			gamelog << endl << endl << "River" << endl;
+			#endif
 		}
+		#ifdef OLD_DISPLAY_STYLE
 		gamelog <<endl<<endl;
+		#else
+		gamelog << "(Pot: $" << myPot << ")" << endl;
+		PrintPositions(gamelog);
+		gamelog <<endl;
+		#endif
 	}
 
 	curIndex = curDealer;
@@ -506,26 +531,6 @@ int8 HoldemArena::PlayRound(const int8 comSize)
 void HoldemArena::PlayGame()
 {
 
-	if( bVerbose )
-	{
-		gamelog << "================================================================" << endl;
-		gamelog << "============================New Hand" <<
-		#if defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE)
-		" #"<< handnum <<
-		#else
-		"==" <<
-		#endif
-		"========================" << endl;
-
-		#ifdef DEBUGSPECIFIC
-		if (handnum == DEBUGSPECIFIC)
-		{
-		    gamelog << "Monitor situation" << endl;
-		}
-		#endif
-
-	}
-
 	if( blinds->HandPlayed(0) )
     {
         if( bVerbose )
@@ -546,10 +551,10 @@ void HoldemArena::PlayGame()
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
     if( bSpectate )
     {
-
+        gamelog << endl;
         gamelog << "Dealer deals\t" << flush;
         community.HandPlus::DisplayHand(gamelog);
-        gamelog << endl;
+
     }
 
 
@@ -683,6 +688,28 @@ void HoldemArena::DealHands()
 
 void HoldemArena::RefreshPlayers()
 {
+
+
+	if( bVerbose )
+	{
+		gamelog << "================================================================" << endl;
+		gamelog << "============================New Hand" <<
+		#if defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE)
+		" #"<< handnum <<
+		#else
+		"==" <<
+		#endif
+		"========================" << endl;
+
+		#ifdef DEBUGSPECIFIC
+		if (handnum == DEBUGSPECIFIC)
+		{
+		    gamelog << "Monitor situation" << endl;
+		}
+		#endif
+
+	}
+
     if( bSpectate )
     {
         gamelog << "\n\n==========\nCHIP COUNT" << endl;

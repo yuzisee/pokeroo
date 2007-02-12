@@ -32,39 +32,65 @@ void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
 {
     if ( e.IsFold() )
     {
-        o << "folds." << endl;
+        o << "folds" << endl;
     }
     else if ( e.IsCheck() )
     {
-        o << "checks." << endl;
-    }
-    else if ( e.IsCall() )
+        o << "checks" << endl;
+    }else
     {
-        o << "calls." << endl;
-    }
-    else
-    {
-        if ( e.IsRaise() )
         {
-            o << "raises " << flush;
-            if( e.IsAllIn() ) o << "all-in " << flush;
-            o << "by " << e.GetRaiseBy()
-                << " to " << flush;
-        }
-        else
-        {
-            if( e.IsAllIn() )
+            if ( e.IsCall() )
             {
-                o << "pushes all-in, " << flush;
-            }else
-            {
-            	o << "bets " << flush;
+                o << "calls $" ;
             }
+            else if ( e.bBlind == HoldemAction::BIGBLIND )
+            {
+                o << "posts BB of $" << flush;
+                //SpaceBot posts SB of $0.50
+            }
+            else if ( e.bBlind == HoldemAction::SMALLBLIND )
+            {
+                o << "posts SB of $" << flush;
+            }
+            else if ( e.IsRaise() )
+            {
+                o << "raises " << flush;
+                if( e.IsAllIn() ) o << "all-in " << flush;
+                //o << "by " << e.GetRaiseBy() << flush;
+                    o << " to $" << flush;
+            }
+            else
+            {
+                if( e.IsAllIn() )
+                {
+                    o << "pushes all-in, $" << flush;
+                }else
+                {
+                    o << "bets $" << flush;
+                }
+            }
+            o << e.GetAmount() ;
         }
-        o << e.GetAmount() << "." << endl;
+        o << " ($" << e.newPotSize << ")" << endl;// Chips left: " << e.chipsLeft << ")" << endl;
     }
 }
 
+void HoldemArena::PrintPositions(std::ostream& o)
+{
+    o << "(" << (int)(GetNumberInHand()) << " players" << flush;
+    int8 tempIndex = curDealer;
+    do
+    {
+        incrIndex(tempIndex);
+        if( CanStillBet(tempIndex) )
+        {
+            o << ", " << p[tempIndex]->GetIdent() << " $" << p[tempIndex]->GetMoney() << flush;
+        }
+    }while( tempIndex != curDealer );
+
+    o << ")" << endl;
+}
 
 void HoldemArena::addBets(float64 b)
 {
@@ -85,9 +111,11 @@ void HoldemArena::incrIndex()
 }
 
 void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theBet
-	, const float64& toCall, const bool& isBlindCheck, const bool& isAllIn)
+	, const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn)
 {
-	const HoldemAction currentMove(playerID, theBet, toCall, isBlindCheck, isAllIn);
+    const float64 betIncr = theBet - p[playerID]->GetLastBet();
+    const float64 moneyRemain = p[playerID]->GetMoney() - theBet;
+	const HoldemAction currentMove(myPot + betIncr, moneyRemain ,  playerID, theBet, toCall, bBlind , isBlindCheck, isAllIn);
 
 	//ASSERT ( playerID == curIndex )
 	int8 cycleIndex = curIndex;
@@ -246,6 +274,11 @@ HoldemArena::~HoldemArena()
 int8 HoldemArena::GetCurPlayer() const
 {
 	return curIndex;
+}
+
+int8 HoldemArena::GetDealer() const
+{
+    return curDealer;
 }
 
 float64 HoldemArena::GetAllChips() const

@@ -242,9 +242,12 @@ void ConsoleStrategy::showSituation()
 	const int8 totalPlayers = myTable.GetTotalPlayers();
 
 
-
+    #ifdef OLD_DISPLAY_STYLE
 	UI_DESCRIPTOR << endl << "The pot contains " << ViewTable().GetPrevPotSize() << " from previous rounds and "
 			<< ViewTable().GetRoundPotSize() << " from this round" << endl;
+    #else
+    UI_DESCRIPTOR << endl << "The pot contains " << ViewTable().GetPrevPotSize() + ViewTable().GetRoundPotSize() << endl;
+    #endif
 
     #ifdef INFOASSIST
         const float64 xBet = ViewTable().GetBetToCall() - ViewPlayer().GetBetSize();
@@ -259,8 +262,10 @@ void ConsoleStrategy::showSituation()
 
 	++tempIndex;
 	tempIndex %= totalPlayers;
+	#ifdef OLD_DISPLAY_STYLE
 	UI_DESCRIPTOR << endl << "You are betting " << ViewPlayer().GetBetSize() << " and have " << (ViewPlayer().GetMoney() - ViewPlayer().GetBetSize()) << " remaining." << endl;
 	UI_DESCRIPTOR << "OPPONENTS IN HAND" << endl;
+
 	while( tempIndex != myIndex )
 	{
 		if( ViewTable().IsInHand(tempIndex) )
@@ -281,6 +286,58 @@ void ConsoleStrategy::showSituation()
 		++tempIndex;
 		tempIndex %= totalPlayers;
 	}
+	#else
+	UI_DESCRIPTOR << endl ;
+	UI_DESCRIPTOR << "PLAYER SUMMARY" << endl;
+
+	int8 iPos = 0;
+    tempIndex = ViewTable().GetDealer();
+    do
+    {
+        ViewTable().incrIndex(tempIndex);
+
+        if( ViewTable().IsAlive(tempIndex) )
+		{
+		    ++iPos;
+			const Player& withP = *(myTable.ViewPlayer(tempIndex));
+			if( iPos == 1 )
+			{
+			    UI_DESCRIPTOR << "SB" << flush;
+			}else if( iPos == 2 )
+			{
+                UI_DESCRIPTOR << "BB" << flush;
+			}else if( tempIndex == ViewTable().GetDealer() )
+			{
+			    UI_DESCRIPTOR << "D" << flush;
+			}
+
+			if( tempIndex == myIndex )
+			{
+			    UI_DESCRIPTOR << "*" << flush;
+			}
+
+			UI_DESCRIPTOR << "\t" << withP.GetIdent() << flush;
+
+			if( ViewTable().IsInHand(tempIndex) )
+			{
+                if( ViewTable().CanStillBet(tempIndex) )
+                {
+                    UI_DESCRIPTOR << " has $" << withP.GetMoney() - withP.GetBetSize() << " left";
+                }else
+                {
+                    UI_DESCRIPTOR << " is all-in" ;
+                }
+			}else
+            {
+                UI_DESCRIPTOR << " folded" << flush;
+            }
+
+            UI_DESCRIPTOR << endl;
+		}
+    }while( tempIndex != ViewTable().GetDealer() );
+
+	#endif
+    UI_DESCRIPTOR << endl ;
 
 	UI_DESCRIPTOR << endl << "You ("<< ViewPlayer().GetIdent() <<") have:" << flush;
 

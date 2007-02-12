@@ -148,7 +148,7 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 				gamelog << "All fold! " << p[highestBetter]->GetIdent() <<
 				" wins " << (   myPot - highContribution   ) << endl;
 			}
-			float64 rh = static_cast<float64>(highestBetter)+1;
+			float64 rh = static_cast<float64>(highestBetter)+2;
 			randRem /= myPot*highContribution+rh;
 			randRem *= rh;
 			PlayerMoney(*(p[highestBetter]))+= myPot;
@@ -247,7 +247,7 @@ void HoldemArenaBetting::startBettingRound()
 
             if( bVerbose )
             {
-                broadcastCurrentMove(curIndex, PlayerBet(withP1), 0, false, PlayerAllIn(withP1) > 0);
+                broadcastCurrentMove(curIndex, PlayerBet(withP1), 0, 1, false, PlayerAllIn(withP1) > 0);
             }
 
 		do
@@ -272,7 +272,7 @@ void HoldemArenaBetting::startBettingRound()
 
             if( bVerbose )
             {
-                broadcastCurrentMove(curIndex, PlayerBet(withP2), 0, false, PlayerAllIn(withP2) > 0);
+                broadcastCurrentMove(curIndex, PlayerBet(withP2), 0, 2, false, PlayerAllIn(withP2) > 0);
             }
 
 		bBlinds = curIndex;
@@ -289,10 +289,12 @@ void HoldemArenaBetting::startBettingRound()
             highBet = PlayerBet(withP1);
 		}
 
+        #ifdef OLD_DISPLAY_STYLE
         if( bVerbose )
         {
             gamelog << "(Blinds posted)" << endl << endl;
         }
+        #endif
 
 	}
 /*	else
@@ -452,7 +454,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 			///Decide what to do with the bet
 			if( PlayerBet(withP) >= PlayerMoney(withP) )
 			{
-						randRem += PlayerLastBet(withP) / PlayerBet(withP) ;
+						randRem += (PlayerLastBet(withP)+1.0) / PlayerBet(withP) ;
 
 				///ALL-IN. Notice that allIn combines handBet with myBet
 				//? //However, myBetSize is now the WHOLE HAND.
@@ -502,7 +504,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 				}
 			}
 ///TODO Reraises need to say RERAISE.
-			broadcastCurrentMove(curIndex, PlayerBet(withP), highBet
+			broadcastCurrentMove(curIndex, PlayerBet(withP), highBet, 0
 					, curIndex == bBlinds && comSize == 0 && curIndex == highestBetter,PlayerAllIn(withP) > 0);
 
 			if( PlayerBet(withP) >= highBet )
@@ -518,7 +520,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 					highBet = PlayerBet(withP);
 					highestBetter = curIndex;
 
-                        randRem *= (myBetSum)*(myPot);
+                        randRem *= -1- (myBetSum)*(myPot);
 				}
                     randRem /= myPot + curIndex;
 
@@ -530,7 +532,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
                 ///Without this section, it wouldn't happen
 			    addBets(PlayerBet(withP) - PlayerLastBet(withP));
 
-                    randRem += (myBetSum)/curIndex;
+                    randRem += (myBetSum)/(curIndex+2.5);
 			}
 
 #ifdef DEBUGALLINS
@@ -659,7 +661,11 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp)
             viewHand.SetUnique(PlayerHand(withP));
             viewHand.DisplayHand(gamelog);
             gamelog << endl << "Trying to stay alive, makes" << flush;
+            #ifdef OLD_DISPLAY_STYLE
             comp.DisplayHandBig(gamelog);
+            #else
+            comp.DisplayHandText(gamelog);
+            #endif
         }
         winners.push_back(comp);
         best = comp;
@@ -694,7 +700,11 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp)
             viewHand.SetUnique(PlayerHand(withP));
             viewHand.DisplayHand(gamelog);
             gamelog << endl << "Is eliminated after making only" << flush;
+            #ifdef OLD_DISPLAY_STYLE
             comp.DisplayHandBig(gamelog);
+            #elser
+            comp.DisplayHandText(gamelog);
+            #endif
         }
     }
 
@@ -734,11 +744,15 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
 
 					gamelog << endl << withP.GetIdent() << flush;
 					gamelog << " reveals: " << flush;
-					HandPlus viewHand;
+                    HandPlus viewHand;
 					viewHand.SetUnique(PlayerHand(withP));
 					viewHand.DisplayHand(gamelog);
 					gamelog << endl << "Making," << flush;
+					#ifdef OLD_DISPLAY_STYLE
 					comp.DisplayHandBig(gamelog);
+					#else
+					comp.DisplayHandText(gamelog);
+					#endif
 				}
 
 				//winnerCount = 1;
@@ -758,10 +772,17 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
 					gamelog << endl << withP.GetIdent() << flush;
 					gamelog << " turns up: " << endl;
 					viewHand.SetUnique(PlayerHand(withP));
+					#ifdef OLD_DISPLAY_STYLE
 					viewHand.DisplayHandBig(gamelog);
-
-					gamelog << "Split..." << flush;
+					#else
+					viewHand.DisplayHand(gamelog);
+					#endif
+					gamelog << "Split... " << flush;
+					#ifdef OLD_DISPLAY_STYLE
 					comp.DisplayHand(gamelog);
+					#else
+					comp.DisplayHandText(gamelog);
+					#endif
 					gamelog << endl;
 				}
 
