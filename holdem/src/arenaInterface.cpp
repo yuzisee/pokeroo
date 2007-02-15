@@ -39,18 +39,22 @@ void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
         o << "checks" << endl;
     }else
     {
+        if ( e.IsCall() )
         {
-            if ( e.IsCall() )
+            o << "calls $"  << e.incrBet << flush;
+        }
+        else
+        {
+
+            if ( e.bBlind == HoldemAction::BIGBLIND )
             {
-                o << "calls $" ;
-            }
-            else if ( e.bBlind == HoldemAction::BIGBLIND )
-            {
+                if( e.IsAllIn() ) o << "all-in, " << flush;
                 o << "posts BB of $" << flush;
                 //SpaceBot posts SB of $0.50
             }
             else if ( e.bBlind == HoldemAction::SMALLBLIND )
             {
+                if( e.IsAllIn() ) o << "all-in, " << flush;
                 o << "posts SB of $" << flush;
             }
             else if ( e.IsRaise() )
@@ -87,6 +91,10 @@ void HoldemArena::PrintPositions(std::ostream& o)
         {
             o << ", " << p[tempIndex]->GetIdent() << " $" << p[tempIndex]->GetMoney() << flush;
         }
+        else if( IsInHand(tempIndex) && !HasFolded(tempIndex) )
+        {
+            o << ", " << p[tempIndex]->GetIdent() << " all-in" << flush;
+        }
     }while( tempIndex != curDealer );
 
     o << ")" << endl;
@@ -114,7 +122,7 @@ void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theB
 	, const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn)
 {
     const float64 moneyRemain = p[playerID]->GetMoney() - theBet;
-	const HoldemAction currentMove(myPot + theIncrBet, moneyRemain ,  playerID, theBet, toCall, bBlind , isBlindCheck, isAllIn);
+	const HoldemAction currentMove(myPot + theIncrBet,theIncrBet, moneyRemain ,  playerID, theBet, toCall, bBlind , isBlindCheck, isAllIn);
 
 	//ASSERT ( playerID == curIndex )
 	int8 cycleIndex = curIndex;

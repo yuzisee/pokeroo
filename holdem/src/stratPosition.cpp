@@ -85,7 +85,8 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     //if(bLogWorse)
     {
         StatsManager::QueryDefense(foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
-    }//else{
+    }
+    //else{
 
     //}
     ViewTable().CachedQueryOffense(callcumu,withCommunity);
@@ -557,14 +558,11 @@ float64 HybridScalingStrategy::MakeBet()
     const float64 myRevealed =  ViewPlayer().GetContribution() + myBet;
 	const float64 estimateRevealed = (ViewTable().GetUnfoldedPotSize() - myRevealed) / ViewTable().GetAllChips() ;
 
-    float64 eVSshift;
+    float64 eVSshift = (expectedVS - 1) / (ViewTable().GetNumberAtTable()-2);
 
-    if( ViewTable().GetNumberAtTable() == 2 )
+    if( ViewTable().GetNumberAtTable() == 2 || eVSshift < 0.5)
     {
         eVSshift = 0.5;
-    }else
-    {
-        eVSshift = (expectedVS - 1) / (ViewTable().GetNumberAtTable()-2);
     }
 
     ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu, &callcumu);
@@ -572,10 +570,10 @@ float64 HybridScalingStrategy::MakeBet()
 
 
 #ifdef LOGPOSITION
-    logFile << "suggested strength of field : " << 1/(1-estimateRevealed) << endl; //Actually scales difficulty
-	logFile << "difficulty of field : " << eVSshift << endl; //The higher this is, the more it leans toward mean rather than rank
+    logFile << "suggested difficulty of field# " << (ViewTable().GetNumberAtTable()-1) / (1-estimateRevealed) << endl; //Actually scales difficulty
+	logFile << "expected difficulty of field% " << eVSshift << endl; //The higher this is, the more it leans toward mean rather than rank
 	logFile << "oppGift   { " << oppGift << " }" << endl; //Measures how much is winnable
-	logFile << "shiftscale{ " << shiftscale2 << " }," << shiftscale2*shiftscale2 << endl; //If not much is winnable, discourage betting
+	logFile << "shiftscale{ " << shiftscale2 << "² = " << shiftscale2*shiftscale2  << "}" << endl; //If not much is winnable, discourage betting
 #endif
 
 

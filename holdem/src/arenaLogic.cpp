@@ -755,7 +755,7 @@ void HoldemArena::RefreshPlayers()
 
             if( bSpectate )
             {
-                if( withP.GetMoney() > 0 ) gamelog << withP.GetIdent() << " now has " << withP.GetMoney() << endl;
+                if( withP.GetMoney() > 0 ) gamelog << withP.GetIdent() << " now has $" << withP.GetMoney() << endl;
             }
 #ifdef GRAPHMONEY
             if( withP.GetMoney() < 0 )

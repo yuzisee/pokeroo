@@ -171,10 +171,11 @@ class HoldemAction
 
         const float64 newPotSize;
         const float64 chipsLeft;
+        const float64 incrBet;
         const int8 bBlind;
 
-		HoldemAction(const float64 newpot, const float64 newchips, const int8 i, const float64 b, const float64 c, const int8 blind=0, const bool checked = false, const bool allin = false)
-	: myPlayerIndex(i), bet(b), callAmount(c), bCheckBlind(checked), bAllIn(allin), newPotSize(newpot), chipsLeft(newchips), bBlind(blind) {} ;
+		HoldemAction(const float64 newpot, const float64 incr, const float64 newchips, const int8 i, const float64 b, const float64 c, const int8 blind=0, const bool checked = false, const bool allin = false)
+	: myPlayerIndex(i), bet(b), callAmount(c), bCheckBlind(checked), bAllIn(allin), newPotSize(newpot), chipsLeft(newchips), incrBet(incr), bBlind(blind) {} ;
 
 		int8 GetPlayerID() const {return myPlayerIndex;}
 		float64 GetAmount() const {return bet;}
