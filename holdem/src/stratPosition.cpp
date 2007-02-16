@@ -560,7 +560,7 @@ float64 HybridScalingStrategy::MakeBet()
 
     float64 eVSshift = (expectedVS - 1) / (ViewTable().GetNumberAtTable()-2);
 
-    if( ViewTable().GetNumberAtTable() == 2 || eVSshift < 0.5)
+    if( ViewTable().GetNumberAtTable() == 2 )//|| eVSshift < 0.5)
     {
         eVSshift = 0.5;
     }
@@ -622,9 +622,11 @@ float64 HybridScalingStrategy::MakeBet()
 		}
     }
 
-
-	logFile << "choicemodel("<< bestBet <<")=" << allModel.f(bestBet) << "  -->  " << gainPC << endl;
-	logFile << "                   (* " << ssunits << ")²" << endl;
+    if( bestBet >= betToCall )
+    {
+        logFile << "choicemodel("<< bestBet <<")=" << allModel.f(bestBet) << "  -->  " << gainPC << endl;
+        logFile << "                   (* " << ssunits << ")²" << endl;
+    }
 #endif
 
 	if( bestBet > 0 )
