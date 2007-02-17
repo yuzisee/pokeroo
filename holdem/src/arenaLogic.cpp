@@ -685,21 +685,22 @@ void HoldemArena::DealHands()
 		if(withP.myMoney > 0)
 		{
 			if (!dealer.DealCard(withP.myHand)) gamelog << "OUT OF CARDS ERROR" << endl;
+
+                #ifdef DEBUGHOLECARDS
+                    if( dealtEach == 1 )
+                    {
+                        (withP.myHand).HandPlus::DisplayHand(holecardsData);
+                        holecardsData << withP.GetIdent().c_str() << endl;
+        //                holecardsData << endl << endl;
+                    }
+                #endif
+
 		}
 		else
 		{
 			withP.lastBetSize = INVALID;
 			withP.myBetSize = INVALID;
 		}
-
-        #ifdef DEBUGHOLECARDS
-            if( dealtEach == 1 )
-            {
-                (withP.myHand).HandPlus::DisplayHand(holecardsData);
-                holecardsData << withP.GetIdent().c_str() << endl;
-//                holecardsData << endl << endl;
-            }
-        #endif
 
 		if(curDealer == curIndex) ++dealtEach;
 	}

@@ -540,7 +540,7 @@ float64 UserConsoleStrategy::queryAction()
 						{
 						    if( returnMe < minRaiseBy )
 						    {
-						        UI_DESCRIPTOR << "Minimum raise was by " << minRaiseBy << ". You call." << endl;
+						        UI_DESCRIPTOR << "Minimum raise was by " << minRaiseBy << ". Please try again." << endl;
 						    }
 
                                 #ifdef DEBUGSAVEGAME
@@ -555,7 +555,7 @@ float64 UserConsoleStrategy::queryAction()
                                     }
                                 #endif
 							returnMe += ViewTable().GetBetToCall();
-							bExtraTry = 0;
+							if( returnMe >= minRaiseBy ) bExtraTry = 0;
 						}
 
                         if( myFifo->rdbuf()->in_avail() > 0 )
@@ -600,8 +600,8 @@ float64 UserConsoleStrategy::queryAction()
 						{
 						    if( returnMe < minRaiseTo )
 						    {
-						        UI_DESCRIPTOR << "Minimum raise was to " << minRaiseTo << ". You call." << endl;
-						        returnMe = ViewTable().GetBetToCall();
+						        UI_DESCRIPTOR << "Minimum raise was to " << minRaiseTo << ". Please try again." << endl;
+						        //returnMe = ViewTable().GetBetToCall();
 						    }
 
                                 #ifdef DEBUGSAVEGAME
@@ -616,7 +616,7 @@ float64 UserConsoleStrategy::queryAction()
                                         logFile << returnMe << endl;
                                     }
                                 #endif
-							bExtraTry = 0;
+                            if( returnMe >= minRaiseTo ) bExtraTry = 0;
 						}
 
 
