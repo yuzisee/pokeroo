@@ -212,23 +212,44 @@ void HoldemArena::saveState()
 {
     if( loadFile.is_open() ) loadFile.close();
 
+#if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE))
+            char handnumtxt/*[12] = "";
+            char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
+            sprintf(handnumtxt + strlen(handnumtxt) ,"%lu",handnum);
+
+            std::ofstream allSaveState( handnumtxt );
+#endif
 
     std::ofstream newSaveState(DEBUGSAVEGAME);
     #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
     newSaveState << handnum << "n";
+        #ifdef DEBUGSAVEGAME_ALL
+    allSaveState << handnum << "n";
+    allSaveState << blinds->SmallBlind() << "=" << blinds->BigBlind() << "@" << (int)curDealer << "@" << flush;
+        #endif
     #endif
     newSaveState << blinds->SmallBlind() << "=" << blinds->BigBlind() << "@" << (int)curDealer << "@" << flush;
+
     for( int8 i=0;i<nextNewPlayer;++i )
     {
         float64 pMoney =  p[i]->myMoney;
 		if( pMoney < 0 ) pMoney = 0;
         uint32 *pMoneyU = reinterpret_cast< uint32* >( &pMoney );
         newSaveState << *pMoneyU << "x" << *(pMoneyU+1) << ":" << flush;
+        #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE))
+        allSaveState << *pMoneyU << "x" << *(pMoneyU+1) << ":" << flush;
+        #endif
     }
 #ifdef DEBUGSAVE_EXTRATOKEN
     newSaveState << EXTRATOKEN << endl;
+    #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE))
+    allSaveState << EXTRATOKEN << endl;
+    #endif
 #endif
     newSaveState.close();
+    #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE))
+    allSaveState.close();
+    #endif
 }
 #endif
 

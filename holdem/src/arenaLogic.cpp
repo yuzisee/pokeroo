@@ -653,6 +653,16 @@ void HoldemArena::DealHands()
             dealer.LoggedShuffle(shuffleData, randRem);
             shuffleData << endl;
             shuffleData.close();
+                #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE))
+            char handnumtxt/*[12] = "";
+            char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
+            sprintf(handnumtxt + strlen(handnumtxt) ,"%lu",handnum);
+
+            shuffleData.open( handnumtxt , std::ios::app );
+            dealer.LogDeckState( shuffleData );
+            shuffleData << endl;
+            shuffleData.close();
+                #endif
             #endif
 
             randRem = 1;

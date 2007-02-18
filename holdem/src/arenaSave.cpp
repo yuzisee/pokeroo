@@ -56,6 +56,5 @@ void SerializeRandomDeck::LoggedShuffle(std::ostream& outFile, float64 seedShift
 {
     RandomDeck::ShuffleDeck( seedShift );
     LogDeckState( outFile );
-
 }
 

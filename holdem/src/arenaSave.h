@@ -26,14 +26,14 @@
 
 class SerializeRandomDeck : public RandomDeck
 {
-private:
-    virtual void LogDeckState(std::ostream&);
+
 public:
     SerializeRandomDeck(bool autoshuffle = false) : RandomDeck(autoshuffle) {}
     void Unserialize( std::istream& inFile );
-    
+
     virtual void LoggedShuffle(std::ostream&);
     virtual void LoggedShuffle(std::ostream&,float64);
+    virtual void LogDeckState(std::ostream&);
 }
 ;
 
@@ -53,5 +53,5 @@ public:
  Can be derived >> livePlayers
  Can be derived >> float64 allChips;
  curDealer
- 
+
  */

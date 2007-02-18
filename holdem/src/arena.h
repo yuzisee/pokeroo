@@ -31,6 +31,7 @@
 
 //#define DEBUGBETMODEL
 #define DEBUGSAVEGAME "savegame"
+#define DEBUGSAVEGAME_ALL "saves"
 //#define DEBUGSAVE_EXTRATOKEN 32
 #define DEBUGHOLECARDS "holecards.txt"
 
