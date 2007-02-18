@@ -297,43 +297,45 @@ void ConsoleStrategy::showSituation()
         ViewTable().incrIndex(tempIndex);
 
         if( ViewTable().IsAlive(tempIndex) )
+	{
+		++iPos;
+		const Player& withP = *(myTable.ViewPlayer(tempIndex));
+		if( iPos == 1 )
 		{
-		    ++iPos;
-			const Player& withP = *(myTable.ViewPlayer(tempIndex));
-			if( iPos == 1 )
-			{
-			    UI_DESCRIPTOR << "SB" << flush;
-			}else if( iPos == 2 )
-			{
-                UI_DESCRIPTOR << "BB" << flush;
-			}else if( tempIndex == ViewTable().GetDealer() )
-			{
-			    UI_DESCRIPTOR << "D" << flush;
-			}
-
-			if( tempIndex == myIndex )
-			{
-			    UI_DESCRIPTOR << "*" << flush;
-			}
-
-			UI_DESCRIPTOR << "\t" << withP.GetIdent() << flush;
-
-			if( ViewTable().IsInHand(tempIndex) )
-			{
-                if( ViewTable().CanStillBet(tempIndex) )
-                {
-                    UI_DESCRIPTOR << " has $" << withP.GetMoney() - withP.GetBetSize() << " left";
-                }else
-                {
-                    UI_DESCRIPTOR << " is all-in" ;
-                }
-			}else
-            {
-                UI_DESCRIPTOR << " folded" << flush;
-            }
-
-            UI_DESCRIPTOR << endl;
+		    UI_DESCRIPTOR << "SB" << flush;
+		}else if( iPos == 2 )
+		{
+			UI_DESCRIPTOR << "BB" << flush;
+		}else if( tempIndex == ViewTable().GetDealer() )
+		{
+		    UI_DESCRIPTOR << "D" << flush;
 		}
+	
+		if( tempIndex == myIndex )
+		{
+		    UI_DESCRIPTOR << "*" << flush;
+		}
+	
+		
+		if( ViewTable().IsInHand(tempIndex) )
+		{
+			UI_DESCRIPTOR << "\t" << withP.GetIdent() << flush;
+			if( ViewTable().CanStillBet(tempIndex) )
+			{
+				UI_DESCRIPTOR << " has $" << withP.GetMoney() - withP.GetBetSize() << " left";
+			}else
+			{
+				UI_DESCRIPTOR << " is all-in" ;
+			}
+		}else
+		{
+			UI_DESCRIPTOR << "\t(" << withP.GetIdent() << flush;
+			UI_DESCRIPTOR << " folded)" << flush;
+		}
+		
+		UI_DESCRIPTOR << endl;
+		
+	}
     }while( tempIndex != ViewTable().GetDealer() );
 
 	#endif
