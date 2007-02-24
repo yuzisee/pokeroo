@@ -58,19 +58,19 @@ float64 ExpectedCallD::foldGain() const
 	
 #ifdef ANTI_PRESSURE_FOLDGAIN
 	const float64 handFreq = 1/handRarity;
-        const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
 #else
-        const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
+        const float64 handFreq = 1;
 #endif
+        const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
 
 #ifdef BLIND_ADJUSTED_FOLD
     //const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
     const float64 bigBlindFraction = betFraction( table->GetBigBlind() );
     const float64 smallBlindFraction = betFraction( table->GetSmallBlind() );
 
-    const float64 blindsGain = (1 - baseFraction - bigBlindFraction)*(1 - baseFraction - smallBlindFraction);
+    const float64 blindsGain = (1 - baseFraction - bigBlindFraction*handFreq)*(1 - baseFraction - smallBlindFraction*handFreq);
     #ifdef SAME_WILL_LOSE_BLIND
-    const float64 blindsPow = 1 / table->GetNumberAtTable();
+    const float64 blindsPow = 1.0 / table->GetNumberAtTable();
     #else
     const float64 rawLoseFreq = 1 - (1.0 / table->GetNumberAtTable()) ;
     const float64 blindsPow = rawLoseFreq / table->GetNumberAtTable();
