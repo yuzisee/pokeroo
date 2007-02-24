@@ -191,7 +191,11 @@ void PositionalStrategy::setupPosition()
         #endif
 
     const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
+#ifdef ANTI_PRESSURE_FOLDGAIN    
+    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &callcumu);
+#else
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
+#endif
     expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
     if( expectedVS <= 0 ) //You have no money
     {
@@ -352,8 +356,13 @@ float64 ImproveStrategy::MakeBet()
 
     CallCumulationD &choicecumu = callcumu;
 
+#ifdef ANTI_PRESSURE_FOLDGAIN
+    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu,&choicecumu);
+    ExactCallBluffD myLimitCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu,&choicecumu);
+#else
     ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu,&choicecumu);
     ExactCallBluffD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu,&choicecumu);
+#endif
 
     myLimitCall.callingPlayers(  expectedVS  );
 
@@ -424,7 +433,11 @@ float64 ImproveGainStrategy::MakeBet()
         #endif
     }
 
+#ifdef ANTI_PRESSURE_FOLDGAIN
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &callcumu, &callcumu);
+#else
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &callcumu, &callcumu);
+#endif
     const float64 fullVersus = myDeterredCall.callingPlayers();
     if( bGamble >= 2 )
     {
@@ -500,8 +513,13 @@ float64 DeterredGainStrategy::MakeBet()
 
     CallCumulationD &choicecumu = callcumu;
 
+#ifdef ANTI_PRESSURE_FOLDGAIN
+    //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &choicecumu);
+#else
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &choicecumu);
+#endif
     myDeterredCall.SetImpliedFactor(futureFold);
 
 
@@ -565,7 +583,11 @@ float64 HybridScalingStrategy::MakeBet()
         eVSshift = 0.5;
     }
 
+#ifdef ANTI_PRESSURE_FOLDGAIN
+    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &callcumu, &callcumu);
+#else
     ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu, &callcumu);
+#endif
     myExpectedCall.callingPlayers( (ViewTable().GetNumberAtTable()-1) / (1-estimateRevealed) );
 
 
@@ -662,14 +684,18 @@ float64 CorePositionalStrategy::MakeBet()
     //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, detailPct.avgDev*2 );
 
 
-
-    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
-	ExactCallBluffD myBluffFoldCall(myPositionIndex, &(ViewTable()), &choicecumu, &choicecumu);//foldcumu);
-    ExactCallD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu);
-    ExactCallBluffD myLimitFoldCall(myPositionIndex, &(ViewTable()), &choicecumu, &choicecumu);//foldcumu);
+#ifdef ANTI_PRESSURE_FOLDGAIN
+#define HANDRANK_MACRO  statranking.pct,
+#endif
+    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu);
+    ExactCallBluffD myBluffFoldCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, &choicecumu);//foldcumu);
+    ExactCallD myLimitCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu);
+    ExactCallBluffD myLimitFoldCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, &choicecumu);//foldcumu);
     const float64 committed = ViewPlayer().GetContribution() + myBet;
-    ExactCallD myCommittalCall(myPositionIndex, &(ViewTable()), &choicecumu, committed );
-
+    ExactCallD myCommittalCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, committed );
+#ifdef ANTI_PRESSURE_FOLDGAIN
+#undef HANDRANK_MACRO
+#endif
     float64 raiseBattle = ViewTable().GetChipDenom();
     if( betToCall > raiseBattle )
     {

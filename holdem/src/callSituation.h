@@ -25,7 +25,7 @@
 
 //#define DEBUG_EXFDEXF
 #define ASSUMEFOLDS
-
+#define ANTI_PRESSURE_FOLDGAIN
 
 
 /*
@@ -49,6 +49,10 @@ protected:
 
     const float64 potCommitted;
 
+#ifdef ANTI_PRESSURE_FOLDGAIN
+    const float64 handRarity;
+#endif
+    
     #if defined(ASSUMEFOLDS)
     float64 eFold;
 /*
@@ -59,8 +63,15 @@ protected:
     #endif
 
 public:
-    ExpectedCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data, const float64 commit = 0)
+    ExpectedCallD(const int8 id, const HoldemArena* base
+#ifdef ANTI_PRESSURE_FOLDGAIN
+            , const float64 rankPCT
+#endif
+                    , const CallCumulationD* data, const float64 commit = 0)
     : playerID(id), table(base), e(data), potCommitted(0)
+    #ifdef ANTI_PRESSURE_FOLDGAIN
+    ,handRarity(1-rankPCT)
+    #endif
     #if defined(ASSUMEFOLDS)
     ,eFold(base->GetNumberAtTable()-1)
     #endif
@@ -140,8 +151,16 @@ protected:
 
 	void query(const float64 betSize);
 public:
-    ExactCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data, const float64 commit = 0)
-    : ExpectedCallD(id,base,data,commit), impliedFactor(1)
+    ExactCallD(const int8 id, const HoldemArena* base
+#ifdef ANTI_PRESSURE_FOLDGAIN
+            , const float64 rankPCT
+#endif
+                    , const CallCumulationD* data, const float64 commit = 0)
+    : ExpectedCallD(id,base
+#ifdef ANTI_PRESSURE_FOLDGAIN
+            ,rankPCT
+#endif
+                    ,data,commit), impliedFactor(1)
     {
         queryinput = UNITIALIZED_QUERY;
     }
@@ -162,8 +181,20 @@ class ExactCallBluffD : public virtual ExactCallD
 
 	void query(const float64 betSize);
 	public:
-	ExactCallBluffD(const int8 id, const HoldemArena* base, const CallCumulationD* data, const CallCumulationD* foldData, const float64 commit = 0)
-	: ExpectedCallD(id,base,data,commit),ExactCallD(id,base,data,commit), ea(foldData)
+	ExactCallBluffD(const int8 id, const HoldemArena* base
+#ifdef ANTI_PRESSURE_FOLDGAIN
+                , const float64 rankPCT
+#endif
+                        , const CallCumulationD* data, const CallCumulationD* foldData, const float64 commit = 0)
+	: ExpectedCallD(id,base
+#ifdef ANTI_PRESSURE_FOLDGAIN
+                ,rankPCT
+#endif
+                        ,data,commit),ExactCallD(id,base
+#ifdef ANTI_PRESSURE_FOLDGAIN
+                        ,rankPCT
+#endif
+                        ,data,commit), ea(foldData)
 	{
         queryinput = UNITIALIZED_QUERY;
     }
@@ -179,8 +210,16 @@ class ExactCallBluffD : public virtual ExactCallD
 class ZeroCallD : public virtual ExpectedCallD
 {
 public:
-    ZeroCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data)
-    : ExpectedCallD(id,base,data)
+    ZeroCallD(const int8 id, const HoldemArena* base
+#ifdef ANTI_PRESSURE_FOLDGAIN
+            , const float64 rankPCT
+#endif
+                    , const CallCumulationD* data)
+    : ExpectedCallD(id,base
+#ifdef ANTI_PRESSURE_FOLDGAIN
+            ,rankPCT
+#endif
+                    ,data)
     {}
 
     virtual float64 exf(const float64 betSize);

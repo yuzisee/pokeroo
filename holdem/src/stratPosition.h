@@ -26,7 +26,7 @@
 #include "ai.h"
 
 
-#define WINRELEASE
+//#define WINRELEASE
 
 
 

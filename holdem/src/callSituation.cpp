@@ -55,7 +55,13 @@ float64 ExpectedCallD::foldGain() const
         #ifdef DEBUGWATCHPARMS
             const float64 a = 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
         #endif
-    const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
+	
+#ifdef ANTI_PRESSURE_FOLDGAIN
+	const float64 handFreq = 1/handRarity;
+        const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
+#else
+        const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
+#endif
 
 #ifdef BLIND_ADJUSTED_FOLD
     //const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();

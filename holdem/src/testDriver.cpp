@@ -834,7 +834,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         smallBlindChoice=.1;//0.025;
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
-	GeomPlayerBlinds bg(b.SmallBlind()*80,b.BigBlind()*80,2,2);
+	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2,2);
     SitAndGoBlinds sg(b.SmallBlind(),b.BigBlind(),10);
 		#ifdef REGULARINTOLOG
             std::ios::openmode gamelogMode = std::ios::trunc;
@@ -941,7 +941,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         myTable.AddPlayer("TrapIV", &ImproveA);
 		myTable.AddPlayer("AceIV", &ReallyImproveA);
 
-		myTable.AddPlayer("SpaceIII", &AutoSetA);
+		//myTable.AddPlayer("SpaceIV", &AutoSetA);
 
 
 
@@ -1060,8 +1060,8 @@ int main(int argc, char* argv[])
 	    testPlay('L');
 #else
 //        debugPosition();
-	    //superGame(0);
-   	    testPlay(0);
+	    superGame(0);
+   	    //testPlay(0);
    	    //testNewCallStats();
 #endif
 	    //testDeal();
