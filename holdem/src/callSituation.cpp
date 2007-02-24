@@ -23,7 +23,7 @@
 
 
 #define BLIND_ADJUSTED_FOLD
-#define SAME_WILL_LOSE_BLIND
+//#define SAME_WILL_LOSE_BLIND
 //#define GEOM_COMBO_FOLDPCT
 
 
@@ -55,31 +55,44 @@ float64 ExpectedCallD::foldGain() const
         #ifdef DEBUGWATCHPARMS
             const float64 a = 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
         #endif
-	
+
+	const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
 #ifdef ANTI_PRESSURE_FOLDGAIN
 	const float64 handFreq = 1/handRarity;
+	if( handRarity <= 0 )
+	{
+	    return 0;
+	}
 #else
-        const float64 handFreq = 1;
+    const float64 handFreq = 1;
 #endif
-        const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
 
 #ifdef BLIND_ADJUSTED_FOLD
     //const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
     const float64 bigBlindFraction = betFraction( table->GetBigBlind() );
     const float64 smallBlindFraction = betFraction( table->GetSmallBlind() );
+            #ifdef SAME_WILL_LOSE_BLIND
+            const float64 blindsPow = 1.0 / table->GetNumberAtTable();
+            #else
+            const float64 rawLoseFreq = 1 - (1.0 / table->GetNumberAtTable()) ;
+            const float64 blindsPow = rawLoseFreq / table->GetNumberAtTable();
+            #endif
 
-    const float64 blindsGain = (1 - baseFraction - bigBlindFraction*handFreq)*(1 - baseFraction - smallBlindFraction*handFreq);
-    #ifdef SAME_WILL_LOSE_BLIND
-    const float64 blindsPow = 1.0 / table->GetNumberAtTable();
+    #ifdef ANTI_PRESSURE_FOLDGAIN
+        const float64 totalFG = (1 - baseFraction - (bigBlindFraction+smallBlindFraction)*handFreq*blindsPow);
     #else
-    const float64 rawLoseFreq = 1 - (1.0 / table->GetNumberAtTable()) ;
-    const float64 blindsPow = rawLoseFreq / table->GetNumberAtTable();
+        if( 1 < baseFraction + bigBlindFraction*handFreq )
+        {
+            return 0;
+        }else
+        {
+            const float64 blindsGain = (1 - baseFraction - bigBlindFraction*handFreq)*(1 - baseFraction - smallBlindFraction*handFreq);
+
+            const float64 totalFG = pow(1-baseFraction,1-2*blindsPow)*pow(blindsGain,blindsPow);
+        }
     #endif
-
-    const float64 totalFG = pow(1-baseFraction,1-2*blindsPow)*pow(blindsGain,blindsPow);
-
-    if( totalFG < 0 ) return 0;
-    return totalFG;
+            if( totalFG < 0 ) return 0;
+            return totalFG;
 
 #else
 
