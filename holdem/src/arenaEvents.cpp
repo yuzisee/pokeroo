@@ -455,7 +455,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 			///Decide what to do with the bet
 			if( PlayerBet(withP) >= PlayerMoney(withP) )
 			{
-						randRem += (PlayerLastBet(withP)+1.0) / PlayerBet(withP) ;
+						randRem *= (PlayerLastBet(withP)+1.0) / PlayerBet(withP) ;
 
 				///ALL-IN. Notice that allIn combines handBet with myBet
 				//? //However, myBetSize is now the WHOLE HAND.
@@ -523,7 +523,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 
                         randRem *= -1- (myBetSum)*(myPot);
 				}
-                    randRem /= myPot + curIndex;
+                    randRem /= curIndex - myPot;
 
 
 			}
@@ -533,7 +533,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
                 ///Without this section, it wouldn't happen
 			    addBets(PlayerBet(withP) - PlayerLastBet(withP));
 
-                    randRem += (myBetSum)/(curIndex+2.5);
+                    randRem *= (myBetSum)/(curIndex+2.5);
 			}
 
 #ifdef DEBUGALLINS

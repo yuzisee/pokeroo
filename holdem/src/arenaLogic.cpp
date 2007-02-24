@@ -228,7 +228,7 @@ gamelog << p[potDistr[j].playerIndex]->GetIdent() << "\t"
 #endif
 
 	randRem *= myPot+potDistrSize*p[potDistr[j].playerIndex]->handBetTotal;
-	randRem -= potDistr[j].playerIndex;
+	randRem /= -potDistr[j].playerIndex;
 
 
 
@@ -271,7 +271,7 @@ gamelog << p[potDistr[i].playerIndex]->GetIdent() << "\t"
 #endif
 
 
-		randRem -= p[potDistr[i].playerIndex]->handBetTotal;
+		randRem /= p[potDistr[i].playerIndex]->handBetTotal;
 		--i;--j;
 	}
 
@@ -665,7 +665,7 @@ void HoldemArena::DealHands()
                 #endif
             #endif
 
-            randRem = 1;
+            
     #ifdef DEBUGASSERT
         }
         else
@@ -676,6 +676,7 @@ void HoldemArena::DealHands()
     #endif
         }
     }
+	randRem = 1;
 
     #ifdef DEBUGHOLECARDS
         holecardsData <<
