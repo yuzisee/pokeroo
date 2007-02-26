@@ -771,14 +771,14 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
 					HandPlus viewHand;
 
 					gamelog << endl << withP.GetIdent() << flush;
-					gamelog << " turns up: " << endl;
+					gamelog << " turns up: ";
 					viewHand.SetUnique(PlayerHand(withP));
 					#ifdef OLD_DISPLAY_STYLE
 					viewHand.DisplayHandBig(gamelog);
 					#else
 					viewHand.DisplayHand(gamelog);
 					#endif
-					gamelog << "Split... " << flush;
+					gamelog << endl << "Split... " << flush;
 					//#ifdef OLD_DISPLAY_STYLE
 					comp.DisplayHand(gamelog);
 					//#else
