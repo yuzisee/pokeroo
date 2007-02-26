@@ -460,16 +460,28 @@ float64 ExactCallBluffD::PushGain()
     const float64 baseFraction = betFraction(table->GetPotSize() - alreadyBet());
 
 #ifdef BLIND_ADJUSTED_FOLD
-        //const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
+        const float64 rawWinFreq = (1.0 / table->GetNumberAtTable()) ;
+    	const float64 blindsPow = rawWinFreq*(1.0 - 1.0 / table->GetNumberAtTable());
+
         const float64 bigBlindFraction = betFraction( table->GetBigBlind() );
         const float64 smallBlindFraction = betFraction( table->GetSmallBlind() );
+#ifdef CONSISTENT_AGG
+       const float64 handFreq = 1/(1-handRarity);
+       if( handRarity >= 1 ) //all hands are better than this one
+       {
+           //1326 is the number of hands possible
+           return (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*1326);
+       }
+       const float64 totalFG = (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*handFreq);
 
+#else
         const float64 blindsGain = (1 + baseFraction + bigBlindFraction)*(1 + baseFraction + smallBlindFraction);
-        const float64 rawWinFreq = (1.0 / table->GetNumberAtTable()) ;
-        const float64 blindsPow = rawWinFreq*(1.0 - 1.0 / table->GetNumberAtTable());
-
-
+        //const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
         const float64 totalFG = pow(1+baseFraction,1-2*blindsPow)*pow(blindsGain,blindsPow);
+
+#endif
+
+
 
         return totalFG;
     #else

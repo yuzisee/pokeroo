@@ -26,6 +26,7 @@
 //#define DEBUG_EXFDEXF
 #define ASSUMEFOLDS
 #define ANTI_PRESSURE_FOLDGAIN
+#define CONSISTENT_AGG
 
 
 /*
