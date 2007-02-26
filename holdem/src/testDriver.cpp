@@ -798,11 +798,13 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         bLoadGame = true;
     }
 
+    uint32 blindIncrFreq = 10;
     if( headsUp == 'L' )
     {
         #ifdef AUTOEXTRATOKEN
         std::ifstream fRestoreName(AUTOEXTRATOKEN);
         fRestoreName.getline(ExtraTokenNameBuffer, 32, '\n');
+        fRestoreName >> blindIncrFreq;
         fRestoreName.close();
         #endif
 
@@ -820,11 +822,20 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             smallBlindChoice=1;
             if( !bLoadGame )
             {
-                std::cerr << "You will start with 1500 chips.\nBlinds increase every 10 hands\nPlease enter the initial big blind:" << std::endl;
+                std::cerr << "You will start with 1500 chips.\nPlease enter the initial big blind:" << std::endl;
                 std::cin >> smallBlindChoice;
                 std::cin.sync();
                 std::cin.clear();
                 smallBlindChoice /= 2;
+
+                std::cerr << endl << "Blinds will start at " << smallBlindChoice << "/" << smallBlindChoice*2 << ".\nPlease enter how many hands before blinds increase:" << std::endl;
+                std::cin >> blindIncrFreq;
+                std::cin.sync();
+                std::cin.clear();
+
+                std::ofstream storePlayerName(AUTOEXTRATOKEN,std::ios::app);
+                storePlayerName << blindIncrFreq << endl;
+                storePlayerName.close();
             }
         #else
             smallBlindChoice=2;
@@ -835,7 +846,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
 	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2,2);
-    SitAndGoBlinds sg(b.SmallBlind(),b.BigBlind(),10);
+    SitAndGoBlinds sg(b.SmallBlind(),b.BigBlind(),blindIncrFreq);
 		#ifdef REGULARINTOLOG
             std::ios::openmode gamelogMode = std::ios::trunc;
             if( bLoadGame ) gamelogMode = std::ios::app;
