@@ -26,13 +26,16 @@
 #include "ai.h"
 
 
-#define WINRELEASE
 
-
-
-
-
+#ifndef NO_LOG_FILES
+//#define WINRELEASE
 #define LOGPOSITION
+#endif
+
+
+
+
+
 //#define DEBUGSPECIFIC
 //#define ARBITARY_DISTANCE
 
@@ -70,11 +73,12 @@ class PositionalStrategy : virtual public PlayerStrategy
         float64 maxShowdown;
         float64 expectedVS;
 
-        #ifdef LOGPOSITION
+
         bool bLogMean;
         bool bLogRanking;
         bool bLogWorse;
         bool bLogHybrid;
+        #ifdef LOGPOSITION
         ofstream logFile;
         #endif
 

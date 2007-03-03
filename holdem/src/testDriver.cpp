@@ -39,7 +39,9 @@
 	#define REGULARINTOLOG
 #endif
 #define DEBUGSITUATION
-#define SUPERINTOLOG
+//#define SUPERINTOLOG
+
+
 
 using std::cout;
 using std::endl;
@@ -905,7 +907,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }else
     {
         //myTable.AddPlayer("q4", &pushAll);
-        //myTable.AddPlayer("i4", &drainFold);
+        myTable.AddPlayer("i4", &drainFold);
         myTable.AddPlayer("X3", &pushFold);
         myTable.AddPlayer("A3", &tightPushFold);
 

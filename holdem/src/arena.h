@@ -23,18 +23,20 @@
 #ifndef HOLDEM_Arena
 #define HOLDEM_Arena
 
+#define NO_LOG_FILES
 
 //#define DEBUGSPECIFIC 1
 #define GRAPHMONEY "chipcount.csv"
 #define REPRODUCIBLE
 ///COMMENT OUT DEBUGSPECIFIC IF YOU WISH TO GRAPHMONEY
 
+#ifndef NO_LOG_FILES
 //#define DEBUGBETMODEL
 #define DEBUGSAVEGAME "savegame"
 #define DEBUGSAVEGAME_ALL "saves"
 //#define DEBUGSAVE_EXTRATOKEN 32
 #define DEBUGHOLECARDS "holecards.txt"
-
+#endif
 
 #include "engine.h"
 #include "arenaSave.h"

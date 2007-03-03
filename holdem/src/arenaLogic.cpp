@@ -640,10 +640,12 @@ void HoldemArena::DealHands()
 
 
 	int8 dealtEach = 0;
+	#ifdef DEBUGSAVEGAME
     if( bLoadGame )
     {
         bLoadGame = false;
     }else
+    #endif
     {
         dealer.UndealAll();
         if(randRem != 0)
@@ -665,7 +667,7 @@ void HoldemArena::DealHands()
                 #endif
             #endif
 
-            
+
     #ifdef DEBUGASSERT
         }
         else
@@ -825,8 +827,9 @@ Player* HoldemArena::PlayTable()
 {
 	if( p.empty() ) return 0;
 
-
+#ifdef DEBUGSAVEGAME
     if( !bLoadGame )
+#endif
     {
         curIndex = 0;
         curDealer = 0;
@@ -868,7 +871,8 @@ Player* HoldemArena::PlayTable()
             saveState();
 #endif
     }
-#ifdef GRAPHMONEY
+
+#if defined(GRAPHMONEY) && defined(DEBUGSAVEGAME)
     else
     {
         scoreboard.open(GRAPHMONEY , std::ios::app);
@@ -877,7 +881,6 @@ Player* HoldemArena::PlayTable()
         #endif
     }
 #endif
-
 
 
 	while(livePlayers > 1)

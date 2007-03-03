@@ -191,7 +191,7 @@ void PositionalStrategy::setupPosition()
         #endif
 
     const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
-#ifdef ANTI_PRESSURE_FOLDGAIN    
+#ifdef ANTI_PRESSURE_FOLDGAIN
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &callcumu);
 #else
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
@@ -653,7 +653,9 @@ float64 HybridScalingStrategy::MakeBet()
 
 	if( bestBet > 0 )
 	{
+	    #ifdef LOGPOSITION
 		logFile << "ALTERNATE?" << endl;
+		#endif
 
 		if( gainPC < 0 )
 		{

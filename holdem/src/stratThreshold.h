@@ -21,8 +21,9 @@
 #ifndef HOLDEM_ThresholdStrat
 #define HOLDEM_ThresholdStrat
 
-
+#ifndef NO_LOG_FILES
 #define LOGTHRESHOLD
+#endif
 
 
 #include "stratSearch.h"

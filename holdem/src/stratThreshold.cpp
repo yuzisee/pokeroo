@@ -134,7 +134,9 @@ float64 MultiThresholdStrategy::MakeBet()
 	}
 	else
 	{
+	    #ifdef LOGTHRESHOLD
 	    logFile << "call" << endl;
+	    #endif
         if( bCall == 2 )
 	    {
 	        if( ThresholdStrategy::MakeBet() > ViewPlayer().GetBetSize() ) return ViewTable().GetBigBlind()*2;

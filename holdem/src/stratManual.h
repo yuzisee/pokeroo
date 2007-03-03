@@ -50,18 +50,18 @@ class ConsoleStrategy : public PlayerStrategy
 		void showSituation();
 	public:
 
-        #ifdef DEBUGSAVEGAME
+
             std::istream *myFifo;
-        #endif
+
 
 		ConsoleStrategy() : PlayerStrategy()
 		#ifdef INFOASSIST
             , detailPCT(0)
 		#endif
             , bNoPrint(false)
-        #ifdef DEBUGSAVEGAME
+
             ,myFifo(&(std::cin))
-        #endif
+
         {}
 
 		virtual void SeeCommunity(const Hand&, const int8);
