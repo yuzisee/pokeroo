@@ -36,7 +36,9 @@
 #define REQUEST_USER_BLINDSIZE
 
 #ifndef WINRELEASE
-	#define REGULARINTOLOG
+	#ifndef NO_LOG_FILES
+		#define REGULARINTOLOG
+	#endif
 #endif
 #define DEBUGSITUATION
 //#define SUPERINTOLOG

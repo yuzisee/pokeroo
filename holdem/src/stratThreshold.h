@@ -21,13 +21,13 @@
 #ifndef HOLDEM_ThresholdStrat
 #define HOLDEM_ThresholdStrat
 
+#include "stratSearch.h"
+#include "ai.h"
+
+
 #ifndef NO_LOG_FILES
 #define LOGTHRESHOLD
 #endif
-
-
-#include "stratSearch.h"
-#include "ai.h"
 
 class ThresholdStrategy : virtual public SearchStrategy
 {

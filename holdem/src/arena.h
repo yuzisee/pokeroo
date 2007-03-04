@@ -25,12 +25,13 @@
 
 #define NO_LOG_FILES
 
+#ifndef NO_LOG_FILES
+
 //#define DEBUGSPECIFIC 1
 #define GRAPHMONEY "chipcount.csv"
 #define REPRODUCIBLE
 ///COMMENT OUT DEBUGSPECIFIC IF YOU WISH TO GRAPHMONEY
 
-#ifndef NO_LOG_FILES
 //#define DEBUGBETMODEL
 #define DEBUGSAVEGAME "savegame"
 #define DEBUGSAVEGAME_ALL "saves"

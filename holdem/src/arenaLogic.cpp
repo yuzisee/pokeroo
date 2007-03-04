@@ -665,6 +665,8 @@ void HoldemArena::DealHands()
             shuffleData << endl;
             shuffleData.close();
                 #endif
+			#else
+			dealer.ShuffleDeck( randRem );
             #endif
 
 
