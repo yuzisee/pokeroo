@@ -803,12 +803,17 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }
 
     uint32 blindIncrFreq = 40;
+    uint32 tokenRandomizer;
+    const float64 startingMoney= 1500;
     if( headsUp == 'L' )
     {
         #ifdef AUTOEXTRATOKEN
         std::ifstream fRestoreName(AUTOEXTRATOKEN);
         fRestoreName.getline(ExtraTokenNameBuffer, 32, '\n');
         fRestoreName >> blindIncrFreq;
+        fRestoreName >> tokenRandomizer;
+        //By default, leading whitespace (carriage returns, tabs, spaces) is ignored by cin.
+        //http://www.augustcouncil.com/~tgibson/tutorial/iotips.html
         fRestoreName.close();
         #endif
 
@@ -826,7 +831,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             smallBlindChoice=1;
             if( !bLoadGame )
             {
-                std::cerr << "You will start with 1500 chips.\nPlease enter the initial big blind:" << std::endl;
+                std::cerr << "You will start with "<< startingMoney <<" chips.\nPlease enter the initial big blind:" << std::endl;
                 std::cin >> smallBlindChoice;
                 std::cin.sync();
                 std::cin.clear();
@@ -839,11 +844,15 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
                 std::ofstream storePlayerName(AUTOEXTRATOKEN,std::ios::app);
                 storePlayerName << blindIncrFreq << endl;
+                tokenRandomizer = ((uint32)(startingMoney/tokenRandomizer));
+                storePlayerName << tokenRandomizer << endl;
                 storePlayerName.close();
             }
         #else
             smallBlindChoice=2;
         #endif
+
+
     }else
     {
         smallBlindChoice=.1;//0.025;
@@ -899,9 +908,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
 
 
-        if( myPlayerName == 0 ){ myTable.AddPlayer("P1", 1500, &consolePlay); }
+        if( myPlayerName == 0 ){ myTable.AddPlayer("P1", startingMoney, &consolePlay); }
         else{
-            myTable.AddPlayer(myPlayerName, 1500, &consolePlay);
+            myTable.AddPlayer(myPlayerName, startingMoney, &consolePlay);
 #ifdef DEBUGSAVE_EXTRATOKEN
             myTable.EXTRATOKEN = myPlayerName;
 #endif
@@ -918,13 +927,36 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     switch(headsUp)
     {
         case 'P':
-            myTable.AddPlayer("TrapBotIV", 1500, &ImproveA);
-            myTable.AddPlayer("ConservativeBotIV", 1500, &FutureFoldA);
-            myTable.AddPlayer("NormalBotIV",1500, &XFoldA);
-            myTable.AddPlayer("SpaceBotIV", 1500, &AutoSetA);
-            myTable.AddPlayer("ActionBotIV",1500, &ReallyImproveA);
-            //myTable.AddPlayer("NormalBotIV", &MeanGeomBluff); /* riskymode = 10 */
-            //myTable.AddPlayer("NormalBotIV", &RankGeomBluff); /* riskymode = 9 */
+            const uint32 randNum = ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % 5;
+            const uint32 randStep = ((abs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % 4)+1;
+            cout << randNum << "+" << randStep << "i" << endl;
+            uint32 i=randNum;
+            while(i<5)
+            {
+                cout << i << endl;
+                switch(i)
+                {
+                    case 0:
+                        myTable.AddPlayer("TrapBotIV", startingMoney, &ImproveA);
+                        break;
+                    case 1:
+                        myTable.AddPlayer("ConservativeBotIV", startingMoney, &FutureFoldA);
+                        break;
+                    case 2:
+                        myTable.AddPlayer("NormalBotIV",startingMoney, &XFoldA);
+                        break;
+                    case 3:
+                        myTable.AddPlayer("SpaceBotIV", startingMoney, &AutoSetA);
+                        break;
+                    case 4:
+                        myTable.AddPlayer("ActionBotIV",startingMoney, &ReallyImproveA);
+                        break;
+                }
+                i=(i+randStep)%5;
+                i = (i == randNum) ? 5:i;
+            }
+                //myTable.AddPlayer("NormalBotIV", &MeanGeomBluff); /* riskymode = 10 */
+                //myTable.AddPlayer("NormalBotIV", &RankGeomBluff); /* riskymode = 9 */
             break;
         case 'M':
             myTable.AddPlayer("M2", &RankGeom); /* riskymode = 0 */

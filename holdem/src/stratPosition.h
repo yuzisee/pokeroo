@@ -28,7 +28,7 @@
 
 
 #ifndef NO_LOG_FILES
-//#define WINRELEASE
+#define WINRELEASE
 #define LOGPOSITION
 #endif
 
