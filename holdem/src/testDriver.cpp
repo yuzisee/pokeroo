@@ -802,7 +802,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         bLoadGame = true;
     }
 
-    uint32 blindIncrFreq = 10;
+    uint32 blindIncrFreq = 40;
     if( headsUp == 'L' )
     {
         #ifdef AUTOEXTRATOKEN

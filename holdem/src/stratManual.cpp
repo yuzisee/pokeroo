@@ -310,13 +310,13 @@ void ConsoleStrategy::showSituation()
 		{
 		    UI_DESCRIPTOR << "D" << flush;
 		}
-	
+
 		if( tempIndex == myIndex )
 		{
 		    UI_DESCRIPTOR << "*" << flush;
 		}
-	
-		
+
+
 		if( ViewTable().IsInHand(tempIndex) )
 		{
 			UI_DESCRIPTOR << "\t" << withP.GetIdent() << flush;
@@ -332,9 +332,9 @@ void ConsoleStrategy::showSituation()
 			UI_DESCRIPTOR << "\t(" << withP.GetIdent() << flush;
 			UI_DESCRIPTOR << " folded)" << flush;
 		}
-		
+
 		UI_DESCRIPTOR << endl;
-		
+
 	}
     }while( tempIndex != ViewTable().GetDealer() );
 
@@ -543,7 +543,8 @@ float64 UserConsoleStrategy::queryAction()
 						    if( returnMe < minRaiseBy )
 						    {
 						        UI_DESCRIPTOR << "Minimum raise was by " << minRaiseBy << ". Please try again." << endl;
-						    }
+						    }else
+						    {
 
                                 #ifdef DEBUGSAVEGAME
                                     if( myFifo == &cin )
@@ -556,8 +557,10 @@ float64 UserConsoleStrategy::queryAction()
                                         logFile << returnMe << endl;
                                     }
                                 #endif
+                                bExtraTry = 0;
+						    }
+
 							returnMe += ViewTable().GetBetToCall();
-							if( returnMe >= minRaiseBy ) bExtraTry = 0;
 						}
 
                         if( myFifo->rdbuf()->in_avail() > 0 )
@@ -605,7 +608,8 @@ float64 UserConsoleStrategy::queryAction()
 						        UI_DESCRIPTOR << "Minimum raise was to " << minRaiseTo << ". Please try again." << endl;
 						        //returnMe = ViewTable().GetBetToCall();
 						    }
-
+                            else
+                            {
                                 #ifdef DEBUGSAVEGAME
 
                                     if( myFifo == &cin )
@@ -618,7 +622,10 @@ float64 UserConsoleStrategy::queryAction()
                                         logFile << returnMe << endl;
                                     }
                                 #endif
-                            if( returnMe >= minRaiseTo ) bExtraTry = 0;
+
+                                bExtraTry = 0;
+                            }
+
 						}
 
 
