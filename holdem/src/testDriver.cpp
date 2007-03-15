@@ -844,7 +844,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
                 std::ofstream storePlayerName(AUTOEXTRATOKEN,std::ios::app);
                 storePlayerName << blindIncrFreq << endl;
-                tokenRandomizer = ((uint32)(startingMoney/tokenRandomizer));
+                tokenRandomizer = ((uint32)(startingMoney/smallBlindChoice));
                 storePlayerName << tokenRandomizer << endl;
                 storePlayerName.close();
             }
@@ -923,14 +923,16 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         myTable.AddPlayer("A3", &tightPushFold);
 
     }
-
-    switch(headsUp)
+	
+	uint32 i;
+	const uint32 NUM_OPPONENTS = 5;
+    const uint32 randNum = ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % NUM_OPPONENTS;
+    const uint32 randStep = ((labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % (NUM_OPPONENTS-1))+1;
+	switch(headsUp)
     {
         case 'P':
-            const uint32 randNum = ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % 5;
-            const uint32 randStep = ((abs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % 4)+1;
             cout << randNum << "+" << randStep << "i" << endl;
-            uint32 i=randNum;
+            i = randNum;
             while(i<5)
             {
                 cout << i << endl;
@@ -952,8 +954,8 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                         myTable.AddPlayer("ActionBotIV",startingMoney, &ReallyImproveA);
                         break;
                 }
-                i=(i+randStep)%5;
-                i = (i == randNum) ? 5:i;
+                i=(i+randStep)%NUM_OPPONENTS;
+                i = (i == randNum) ? NUM_OPPONENTS:i;
             }
                 //myTable.AddPlayer("NormalBotIV", &MeanGeomBluff); /* riskymode = 10 */
                 //myTable.AddPlayer("NormalBotIV", &RankGeomBluff); /* riskymode = 9 */
