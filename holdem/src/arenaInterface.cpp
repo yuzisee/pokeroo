@@ -196,7 +196,13 @@ std::istream * HoldemArena::LoadState()
                 loadFile >> *(pMoneyU+1);
                 loadFile.ignore(1,':');
                 p[i]->myMoney = pMoney;
-                if( pMoney <= 0 ) --livePlayers;
+				if( pMoney <= 0 ){
+					--livePlayers;
+					p[i]->myMoney = -1;
+				}else
+				{
+					p[i]->myMoney = pMoney;
+				}
             }
             #ifdef DEBUGSAVE_EXTRATOKEN
             loadFile.getline(EXTRATOKEN, DEBUGSAVE_EXTRATOKEN);
