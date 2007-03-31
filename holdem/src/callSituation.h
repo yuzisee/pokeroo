@@ -29,6 +29,15 @@
 #define CONSISTENT_AGG
 
 
+
+#define BLIND_ADJUSTED_FOLD
+//#define SAME_WILL_LOSE_BLIND
+//#define GEOM_COMBO_FOLDPCT
+
+
+
+
+
 /*
 class ExpectedCall
 {
@@ -91,7 +100,7 @@ public:
     virtual int8 handsDealt() const;
     virtual float64 prevpotChips() const;
     virtual float64 betFraction(const float64 betSize) const;
-    virtual float64 handBetBase() const;
+    virtual float64 handBetBase() const; //The B (bankroll) in calculations
 	virtual float64 minRaiseTo() const;
 
     virtual float64 exf(const float64 betSize) = 0;
@@ -138,75 +147,6 @@ public:
 ;
 */
 
-class ExactCallD : public virtual ExpectedCallD
-{
-private:
-    float64 totalexf;
-    float64 totaldexf;
-protected:
-    static const float64 UNITIALIZED_QUERY;
-    float64 queryinput;
-
-
-    float64 impliedFactor;
-
-	void query(const float64 betSize);
-public:
-    ExactCallD(const int8 id, const HoldemArena* base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-            , const float64 rankPCT
-#endif
-                    , const CallCumulationD* data, const float64 commit = 0)
-    : ExpectedCallD(id,base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-            ,rankPCT
-#endif
-                    ,data,commit), impliedFactor(1)
-    {
-        queryinput = UNITIALIZED_QUERY;
-    }
-
-    virtual float64 exf(const float64 betSize);
-    virtual float64 dexf(const float64 betSize);
-
-    virtual void SetImpliedFactor(const float64 bonus);
-}
-;
-
-class ExactCallBluffD : public virtual ExactCallD
-{
-	protected:
-		const CallCumulationD* ea;
-		float64 allFoldChance;
-		float64 allFoldChanceD;
-
-	void query(const float64 betSize);
-	public:
-	ExactCallBluffD(const int8 id, const HoldemArena* base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-                , const float64 rankPCT
-#endif
-                        , const CallCumulationD* data, const CallCumulationD* foldData, const float64 commit = 0)
-	: ExpectedCallD(id,base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-                ,rankPCT
-#endif
-                        ,data,commit),ExactCallD(id,base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-                        ,rankPCT
-#endif
-                        ,data,commit), ea(foldData)
-	{
-        queryinput = UNITIALIZED_QUERY;
-    }
-
-
-	float64 PushGain();
-
-	virtual float64 pWin(const float64 betSize);
-	virtual float64 pWinD(const float64 betSize);
-}
-;
 
 class ZeroCallD : public virtual ExpectedCallD
 {
