@@ -35,7 +35,7 @@
 
 
 
-
+#define RANK_CALL_CUMULATION
 //#define DEBUGSPECIFIC
 //#define ARBITARY_DISTANCE
 
@@ -62,7 +62,7 @@ class PositionalStrategy : virtual public PlayerStrategy
         StatResult hybridMagnified;
         CallCumulationD foldcumu;
         CallCumulationD callcumu;
-
+		CallCumulationFlat rankcumu;
         float64 myMoney;
 
 
@@ -132,6 +132,32 @@ class DeterredGainStrategy : public PositionalStrategy
     virtual float64 MakeBet();
 }
 ;
+
+
+
+class ImproveGainRankStrategy : public PositionalStrategy
+{
+protected:
+    int8 bGamble;
+public:
+    ImproveGainRankStrategy(int8 riskymode =0) : PositionalStrategy(riskymode ? false : true,riskymode ? true : false,riskymode ? true : false,riskymode? false : true), bGamble(riskymode) {}
+
+    virtual float64 MakeBet();
+}
+;
+
+//Deterrent
+class DeterredGainRankStrategy : public PositionalStrategy
+{
+    protected:
+    int8 bGamble;
+    public:
+    DeterredGainRankStrategy(int8 riskymode =0) : PositionalStrategy(false,false,false,true), bGamble(riskymode) {}
+
+    virtual float64 MakeBet();
+}
+;
+
 
 class HybridScalingStrategy : public PositionalStrategy
 {

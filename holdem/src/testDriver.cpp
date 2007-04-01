@@ -894,11 +894,19 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	DeterredGainStrategy FutureFoldP;
 	HybridScalingStrategy AutoSetP;
 	ImproveStrategy DistrScaleA(1);
+
+    //Set 1
 	DeterredGainStrategy FutureFoldA(1);
   	ImproveGainStrategy XFoldA(0);
   	ImproveGainStrategy ImproveA(1);
 	ImproveGainStrategy ReallyImproveA(2);
 	HybridScalingStrategy AutoSetA(1);
+
+    //Set 2
+    DeterredGainRankStrategy FutureFoldA_R(1);
+  	ImproveGainRankStrategy XFoldA_R(0);
+  	ImproveGainRankStrategy ImproveA_R(1);
+	ImproveGainRankStrategy ReallyImproveA_R(2);
 
     //TournamentStrategy asterisk;
     //TournamentStrategy gruff(1);
@@ -923,7 +931,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         myTable.AddPlayer("A3", &tightPushFold);
 
     }
-	
+
 	uint32 i;
 	const uint32 NUM_OPPONENTS = 5;
     const uint32 randNum = ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % NUM_OPPONENTS;
@@ -992,6 +1000,11 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
 		//myTable.AddPlayer("SpaceIV", &AutoSetA);
 
+
+        myTable.AddPlayer("ComV", &FutureFoldA_R);
+        myTable.AddPlayer("NormV", &XFoldA_R);
+        myTable.AddPlayer("TrapV", &ImproveA_R);
+		myTable.AddPlayer("AceV", &ReallyImproveA_R);
 
 
             break;

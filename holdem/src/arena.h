@@ -23,7 +23,7 @@
 #ifndef HOLDEM_Arena
 #define HOLDEM_Arena
 
-//#define NO_LOG_FILES
+#define NO_LOG_FILES
 
 
 

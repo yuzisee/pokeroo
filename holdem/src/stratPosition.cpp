@@ -22,6 +22,8 @@
 #include "stratPosition.h"
 
 
+
+
 const bool CorePositionalStrategy::lkupLogMean[BGAMBLE_MAX] = {false,true,false,false,true,false,true,true,false ,false,true,false,false,true,true,false};
 const bool CorePositionalStrategy::lkupLogRanking[BGAMBLE_MAX] = {true,false,false,true,false,true,false,true,false ,true,false,false,true,false,true,false};
 const bool CorePositionalStrategy::lkupLogWorse[BGAMBLE_MAX] = {false,false,true,false,false,false,true,false,false ,false,false,true,false,false,false,false};
@@ -192,9 +194,10 @@ void PositionalStrategy::setupPosition()
 
     const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &callcumu);
+	ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &callcumu);
+
 #else
-    ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
+	ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
 #endif
     expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
     if( expectedVS <= 0 ) //You have no money
@@ -353,8 +356,8 @@ float64 ImproveStrategy::MakeBet()
     if( distrScale > 1 ) distrScale = 1;
     if( distrScale < 0 ) distrScale = 0;
 
-
     CallCumulationD &choicecumu = callcumu;
+
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
     ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu,&choicecumu);
@@ -433,10 +436,15 @@ float64 ImproveGainStrategy::MakeBet()
         #endif
     }
 
+
+    CallCumulationD &choicecumu = callcumu;
+
+
+
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &callcumu, &callcumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &callcumu);
 #else
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &callcumu, &callcumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &callcumu);
 #endif
     const float64 fullVersus = myDeterredCall.callingPlayers();
     if( bGamble >= 2 )
@@ -511,7 +519,10 @@ float64 DeterredGainStrategy::MakeBet()
 #endif
 
 
+
     CallCumulationD &choicecumu = callcumu;
+
+
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu);
@@ -561,6 +572,163 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 
+float64 ImproveGainRankStrategy::MakeBet()
+{
+	setupPosition();
+
+	if( maxShowdown <= 0 ) return 0;
+
+    const float64 improveMod = detailPCT.improve; //Generally preflop is negative here, so you probably don't want to accentuate that
+    const float64 improvePure= (improveMod+1)/2;
+    const float64 minWin = pow(statworse.pct,expectedVS);
+    const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
+
+    float64 distrScale = improveMod+minWin+1 ;
+    if( bGamble >= 2 )
+    {
+        distrScale = (-improveMod/2)+minWin+1 ;
+    }
+
+    if( bGamble >= 1 )
+    {
+        #ifdef LOGPOSITION
+            logFile << minWin <<" ... "<< minWin+2 <<" =" << distrScale << endl;
+        #endif
+    }
+
+
+    CallCumulationD &choicecumu = rankcumu;
+
+
+
+#ifdef ANTI_PRESSURE_FOLDGAIN
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &callcumu);
+#else
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &callcumu);
+#endif
+    const float64 fullVersus = myDeterredCall.callingPlayers();
+    if( bGamble >= 2 )
+    {
+        const float64 improveLevel = (improveMod*sqrt(improveDev*2)*2+1)/2;
+        const float64 rVersus = expectedVS*improveLevel*improveLevel + fullVersus*(1-improveLevel*improveLevel);
+        myDeterredCall.callingPlayers( rVersus );
+        #ifdef LOGPOSITION
+            logFile << expectedVS <<" ... "<< fullVersus <<" =" << rVersus << endl;
+        #endif
+	}
+
+    StatResult left = hybridMagnified;
+    StatResult right = statmean;
+    if( bGamble >= 1 )
+    {
+        myDeterredCall.SetImpliedFactor(distrScale);
+        left = statranking;
+        right = statranking;
+    }
+
+	GainModelBluff hybridgainDeterred_aggressive(left,&myDeterredCall);
+
+
+
+    const float64 bestBet = solveGainModel(&hybridgainDeterred_aggressive);
+
+#ifdef LOGPOSITION
+    if( bestBet < betToCall + ViewTable().GetChipDenom() )
+    {
+        logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
+        logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
+
+    }
+
+
+        logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
+        if( myDeterredCall.pWin(bestBet) > 0 )
+        {
+            logFile << "confirm " << hybridgainDeterred_aggressive.f(bestBet) << endl;
+        }
+
+#endif
+
+    return bestBet;
+
+
+}
+
+
+float64 DeterredGainRankStrategy::MakeBet()
+{
+	setupPosition();
+
+	if( maxShowdown <= 0 ) return 0;
+
+
+    const float64 certainty = betToCall / maxShowdown;
+    const float64 uncertainty = fabs( statranking.pct - statmean.pct );
+    const float64 volatilityFactor = 1 - sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
+
+	const float64 futureFold = volatilityFactor*(1-certainty) + certainty;
+
+#ifdef LOGPOSITION
+    logFile << "uncertainty      " << uncertainty << endl;
+    logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
+    logFile << "V Factor         " << volatilityFactor << endl;
+    logFile << "BetToCall PCT    " << certainty << endl;
+    logFile << "impliedFactor... " << futureFold << endl;
+#endif
+
+
+
+    CallCumulationD &choicecumu = rankcumu;
+
+
+
+#ifdef ANTI_PRESSURE_FOLDGAIN
+    //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &choicecumu);
+#else
+    //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &choicecumu);
+#endif
+    myDeterredCall.SetImpliedFactor(futureFold);
+
+
+	GainModel hybridgainDeterred_passive(hybridMagnified,&myDeterredCall);
+	//GainModelNoRisk hybridgain_passive(statmean,&myDeterredCall);
+	GainModelBluff hybridgainDeterred_aggressive(hybridMagnified,&myDeterredCall);
+	//GainModelNoRiskBluff hybridgain_aggressive(statmean,&myDeterredCall);
+
+    HoldemFunctionModel *(hybridgainDeterred_agressiveness[2]) = {&hybridgainDeterred_passive, &hybridgainDeterred_aggressive };
+    //HoldemFunctionModel *(hybridgain_agressiveness[2]) = {&hybridgain_passive, &hybridgain_aggressive };
+
+	//AutoScalingFunction choicemodel(hybridgainDeterred_agressiveness[bGamble],hybridgain_agressiveness[bGamble],0.0,maxShowdown,hybridMagnified.pct*statmean.pct,&myDeterredCall);
+
+
+    const float64 bestBet = solveGainModel(hybridgainDeterred_agressiveness[bGamble]);
+
+#ifdef LOGPOSITION
+    if( bestBet < betToCall + ViewTable().GetChipDenom() )
+    {
+        logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
+        logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred_agressiveness[bGamble]->f(bestBet) << endl;
+
+    }
+
+    if( bGamble == 1 )
+    {
+        logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
+        if( myDeterredCall.pWin(bestBet) > 0 )
+        {
+            logFile << "confirm " << hybridgainDeterred_agressiveness[bGamble]->f(bestBet) << endl;
+        }
+    }
+#endif
+
+    return bestBet;
+
+
+}
+
+
 
 
 
@@ -583,10 +751,15 @@ float64 HybridScalingStrategy::MakeBet()
         eVSshift = 0.5;
     }
 
+
+    CallCumulationD &choicecumu = callcumu;
+
+
+
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &callcumu, &callcumu);
+    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &callcumu);
 #else
-    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu, &callcumu);
+    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu, &callcumu);
 #endif
     myExpectedCall.callingPlayers( (ViewTable().GetNumberAtTable()-1) / (1-estimateRevealed) );
 
@@ -681,7 +854,15 @@ float64 CorePositionalStrategy::MakeBet()
 
 
     ///VARIABLE: the slider can move due to avgDev too, maybe....
+
+#ifdef RANK_CALL_CUMULATION
+	CallCumulationD &choicecumu = foldcumu;
+#else
     CallCumulationD &choicecumu = callcumu;
+#endif
+
+
+
     //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, timing[DT]/2 );
     //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, detailPct.avgDev*2 );
 
