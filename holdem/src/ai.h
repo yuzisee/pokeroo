@@ -21,6 +21,7 @@
 #ifndef HOLDEM_AI
 #define HOLDEM_AI
 
+#include "debug_flags.h"
 
 
 //#define DEBUGCALLPART
@@ -33,9 +34,6 @@
 #include "inferentials.h"
 
 
-//#define PROGRESSUPDATE
-//#define SUPERPROGRESSUPDATE
-//#define DEBUG_TESTDEALINTERFACE
 
 struct StatRequest
 {

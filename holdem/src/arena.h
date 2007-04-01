@@ -23,11 +23,9 @@
 #ifndef HOLDEM_Arena
 #define HOLDEM_Arena
 
-#define NO_LOG_FILES
 
 
-
-
+#include "debug_flags.h"
 
 
 #ifndef NO_LOG_FILES

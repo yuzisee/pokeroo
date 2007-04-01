@@ -20,10 +20,7 @@
 
 //#define DEBUGRANDOMDEAL
 //#include <iostream>
-
-//#define FORCESEED
-
-//#define COOLSEEDINGVIEWER
+#include "debug_flags.h"
 
 #include "randomDeck.h"
 #include <cstdlib>

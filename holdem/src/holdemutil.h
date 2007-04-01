@@ -21,8 +21,7 @@
 #ifndef HOLDEM_BaseClasses
 #define HOLDEM_BaseClasses
 
-#define DEBUGASSERT
-
+#include "debug_flags.h"
 #include "portability.h"
 
 #include <iostream>

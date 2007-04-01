@@ -25,14 +25,7 @@
 #include "stratSearch.h"
 #include "ai.h"
 
-
-
-#ifndef NO_LOG_FILES
-#define WINRELEASE
-#define LOGPOSITION
-#endif
-
-
+#include "debug_flags.h"
 
 
 #define RANK_CALL_CUMULATION
