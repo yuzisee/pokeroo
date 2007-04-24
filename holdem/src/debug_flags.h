@@ -19,30 +19,34 @@
  ***************************************************************************/
 
 /* Dev Testing Flags */
-#define NO_LOG_FILES
+#undef NO_LOG_FILES
 #define DEBUGASSERT
 
 /******************/
 
 #ifndef NO_LOG_FILES
 /* Mode Flags (Depends on NO_LOG_FILES) */
-#define WINRELEASE
+#undef WINRELEASE
 #define LOGPOSITION
 /**********************************/
+#define DEBUGSPECIFIC 24
+//#define GRAPHMONEY "chipcount.csv"
+#define REPRODUCIBLE
+///COMMENT OUT DEBUGSPECIFIC IF YOU WISH TO GRAPHMONEY
 #endif
 
 
 /* AI Processing Interface */
 
-//#define PROGRESSUPDATE
-//#define SUPERPROGRESSUPDATE
-//#define DEBUG_TESTDEALINTERFACE
+#undef PROGRESSUPDATE
+#undef SUPERPROGRESSUPDATE
+#undef DEBUG_TESTDEALINTERFACE
 
 /***********************/
 
 /* Randomizer Flags */
 
-//#define FORCESEED
-//#define COOLSEEDINGVIEWER
+#undef FORCESEED
+#undef COOLSEEDINGVIEWER
 
 /*****************/

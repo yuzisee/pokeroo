@@ -998,7 +998,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         myTable.AddPlayer("TrapIV", &ImproveA);
 		myTable.AddPlayer("AceIV", &ReallyImproveA);
 
-		//myTable.AddPlayer("SpaceIV", &AutoSetA);
+		myTable.AddPlayer("SpaceIV", &AutoSetA);
 
 
         myTable.AddPlayer("ComV", &FutureFoldA_R);
@@ -1122,8 +1122,11 @@ int main(int argc, char* argv[])
 	    testPlay('L');
 #else
 //        debugPosition();
+#ifdef NO_LOG_FILES
 	    superGame(0);
-   	    //testPlay(0);
+#else
+   	    testPlay(1);
+#endif
    	    //testNewCallStats();
 #endif
 	    //testDeal();

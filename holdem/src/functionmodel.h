@@ -57,7 +57,7 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
             if( points > 0 ) dist = (end-start)/points;
 
 
-            target << "x,gain,dgain,wch,dwch" << std::endl;
+            target << "x,gain,dgain,wch%,dwch%" << std::endl;
             if( points > 0 && dist > 0 )
             {
                 for( float64 i=start;i<=end;i+=dist)
@@ -136,7 +136,7 @@ class GainModel : public virtual HoldemFunctionModel
 				p_cl *= oldTotal/newTotal;
 				p_cw *= oldTotal/newTotal;
 
-				
+
 
 				//std::cout << "New <p_cl,p_cw>: " << p_cl << "," << p_cw << endl;
 			}

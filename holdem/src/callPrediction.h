@@ -19,9 +19,39 @@
  ***************************************************************************/
 
 #include "callSituation.h"
+#include "functionbase.h"
+
+//For calculating geometric betting expectation
+class ExactCallFunctionModel : public virtual ScalarFunctionModel
+{
+    protected:
+        
+        const CallCumulationD* e;
+        
+    public:
+       
+        float64 Bankroll;
+        
+        float64 n;
+        
+        float64 pot;
+        
+        float64 alreadyBet;
+        float64 bet;
+        
+        float64 avgBlind;
+        
+        ExactCallFunctionModel(float64 step, const CallCumulationD* e) : ScalarFunctionModel(step){};
+        
+        virtual ~ExactCallFunctionModel();
+
+        virtual float64 f(const float64);
+        virtual float64 fd(const float64, const float64);
+        
 
 
-
+}
+;
 
 class ExactCallD : public virtual ExpectedCallD
 {
@@ -35,9 +65,16 @@ class ExactCallD : public virtual ExpectedCallD
 
         float64 impliedFactor;
 
+        ExactCallFunctionModel geomFunction;
         
-        float64 facedOdds(float64 pot, float64 bet, float64 wGuess = 0.75);
-        float64 facedOddsND(float64 pot, float64 bet, float64 dpot, float64 w, float64 fw, float64 dfw);
+        
+        float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, float64 wGuess = 0.75);
+        float64 facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);
+		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 wGuess = 0.75);
+        float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 fw, float64 dfw);
+        
+        
+        
         void query(const float64 betSize);
     public:
         ExactCallD(const int8 id, const HoldemArena* base
@@ -49,7 +86,7 @@ class ExactCallD : public virtual ExpectedCallD
 #ifdef ANTI_PRESSURE_FOLDGAIN
             ,rankPCT
 #endif
-                    ,data,commit), impliedFactor(1)
+                    ,data,commit), impliedFactor(1), geomFunction(1.0/1326.0,data) 
             {
                 queryinput = UNITIALIZED_QUERY;
             }
@@ -95,4 +132,5 @@ class ExactCallBluffD : public virtual ExactCallD
                             virtual float64 pWinD(const float64 betSize);
 }
 ;
+
 

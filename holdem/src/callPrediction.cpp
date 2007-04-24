@@ -22,8 +22,6 @@
 #include <math.h>
 
 
-
-
 //#define DEBUGWATCHPARMS
 #ifdef DEBUGWATCHPARAMS
 #include <iostream>
@@ -31,27 +29,141 @@
 
 const float64 ExactCallD::UNITIALIZED_QUERY = -1;
 
-
+ExactCallFunctionModel::~ExactCallFunctionModel(){};
+        
 void ExactCallD::SetImpliedFactor(const float64 bonus)
 {
     impliedFactor = bonus;
 }
 
-float64 ExactCallD::facedOdds(float64 pot, float64 bet, float64 wGuess)
+
+
+/*
+    //oppBetMake / (oppBetMake + totalexf)
+    const int8 N = handsDealt();
+    const float64 fNRank = (wGuess >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - wGuess));
+    const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
+                                        * ( N - 2 )/ N ;
+
+    return (
+            log((1 - avgBlind / fNRank ) / (1 - bet))
+            /
+            log((1+pot) / (1 - bet))
+           );
+*/
+
+float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, float64 wGuess)
+{
+    
+    const int8 N = handsDealt();
+    const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
+            * ( N - 2 )/ N ;
+    
+    geomFunction.quantum = bankroll / 1326.0 / 2.0;
+    geomFunction.Bankroll = bankroll - alreadyBet; //TODO: Confirm {- alreadyBet}
+    geomFunction.pot = pot;
+    geomFunction.bet = bet;
+    geomFunction.alreadyBet = alreadyBet;
+    geomFunction.avgBlind = avgBlind;
+    geomFunction.n = n;
+    
+    
+    const float64 g = geomFunction.FindZero( 0,1 );
+    
+    return g;
+
+}
+//1. If Geom all-in, return based on alreadyBet?
+//2. If k is stretched larger than B because of wGuess, so that w would be negative? Return w=0;
+//3. Is bankroll supposed to be passed in as (oppBankRoll - alreadyBet) or not? (Is betSize passed in as oppBetMake or not?)
+//Is Algb different than Geom for point #3?
+float64 ExactCallFunctionModel::f( const float64 w )
+{
+    const float64 fw = pow(w,n);
+    
+    const float64 fNRank = (w >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - w));
+    
+    const float64 gainFactor = pow( Bankroll+pot , fw ) * pow( Bankroll-bet , 1-fw ) - Bankroll;
+    
+    const float64 stackFactor = avgBlind / fNRank;
+    
+    return gainFactor + stackFactor;
+}
+
+float64 ExactCallFunctionModel::fd( const float64 w, const float64 y )
+{
+    const float64 fw = pow(w,n);
+    const float64 dfw = (n<=1) ? (0) : (n * pow(w,n-1));
+    
+    const float64 fNRank = (w >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - w));
+    
+    const float64 stackFactor = avgBlind * e->pctWillCallD(1-w) / fNRank / fNRank;
+
+    const float64 gainFactor = (Bankroll - bet)
+                                * pow(  (Bankroll+pot)/(Bankroll-bet)  ,  fw  )
+                                * log1p( (Bankroll+pot)/(Bankroll-bet) - 1)
+                                * dfw;
+    
+    
+
+    return gainFactor - stackFactor;
+}
+
+float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n)
+{
+    const int8 N = handsDealt();
+    const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
+            * ( N - 2 )/ N ;
+    
+    const float64 fNRank = (w >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - w));
+    
+    const float64 fw = pow(w,n);
+    const float64 dfw = (n<=1) ? (0) : (n * pow(w,n-1));
+    
+    
+    const float64 A = dfw * log1p( (bankroll+pot) / (bankroll - bet) - 1 );
+    const float64 C = (dpot/(bankroll+pot) + 1/(bankroll-bet))
+                        *
+                        fw
+                       ;
+    
+    
+    const float64 h = pow( (bankroll+pot) / (bankroll - bet) , fw );
+    
+    const float64 dwdbet = (C * (1-bet) - 1)
+                            /
+                           (
+                                (avgBlind/h)*( avgBlind * e->pctWillCallD(1-w) ) / fNRank / fNRank
+                                -
+                                A * (1-bet)
+                           )
+                         ;
+    
+    return dwdbet;
+   
+}
+
+
+float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 wGuess)
 {
     //oppBetMake / (oppBetMake + totalexf)
     const int8 N = handsDealt();
-    const float64 fNRank = e->pctWillCall(1 - wGuess);
+    const float64 fNRank = (wGuess >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - wGuess));
     const float64 avgBlind = (table->GetBigBlind() + table->GetBigBlind()) * ( N - 2 )/ N / N;
-    return (
-            (bet -  avgBlind / fNRank ) / (bet + pot)
+    
+    const float64 ret = 
+           (
+            (bet - alreadyBet - avgBlind / fNRank ) / (bet + pot)
            );
+    
+    if (ret < 0) return 0;
+    return ret;
 }
 
-float64 ExactCallD::facedOddsND(float64 pot, float64 bet, float64 dpot, float64 w, float64 fw, float64 dfw)
+float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 fw, float64 dfw)
 {
     const int8 N = handsDealt();
-    const float64 fNRank = 1 - e->pctWillCall(1 - w);
+    const float64 fNRank = (w >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - w));
     const float64 avgBlind = (table->GetBigBlind() + table->GetBigBlind()) * ( N - 2 )/ N / N;    
 
     //    (pot - bet * dpot)
@@ -73,9 +185,7 @@ float64 ExactCallD::facedOddsND(float64 pot, float64 bet, float64 dpot, float64 
     */
 
     
-    //Not
-    //           ( pot - dpot * (bet - avgBlind / (1 - fRank) ) ) / (bet + pot) / (bet + pot)
-    
+        
     return (
                 (1 - fw*(dpot + 1))
                 /
@@ -85,6 +195,7 @@ float64 ExactCallD::facedOddsND(float64 pot, float64 bet, float64 dpot, float64 
                 )
            );
 }
+
 
 
 void ExactCallD::query(const float64 betSize)
@@ -143,13 +254,14 @@ void ExactCallD::query(const float64 betSize)
 */
 #endif
 
-                    const float64 wn = facedOdds(totalexf,oppBetMake); //f(w) = w^n
-                    const float64 w = pow( wn, significance );         //f-1(w) = w
+                    //const float64 wn = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppBetMake, 1/significance); //f(w) = w^n
+                    //const float64 w = pow( wn, significance );         //f-1(w) = w
+                    const float64 w = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppBetMake, 1/significance); 
                     nextexf = e->pctWillCall( w );
                     
                     
                     nextdexf = nextexf + oppBetMake * e->pctWillCallD(  w  )  
-                            * facedOddsND( totalexf,oppBetMake,totaldexf,w, wn, wn/w / significance );
+                            * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppBetMake,totaldexf,w, 1/significance );//wn, wn/w / significance );
                     //              *  pow(  oppBetMake / (oppBetMake + totalexf)  , significance - 1 ) * significance
 //                                * (totalexf - oppBetMake * totaldexf)
 //                                 /(oppBetMake + totalexf) /(oppBetMake + totalexf);
@@ -163,7 +275,7 @@ void ExactCallD::query(const float64 betSize)
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
 
 
-                nextexf = oppBetMake * e->pctWillCall( pow( facedOdds(oldpot + effroundpot,oppBetMake),significance) );
+                nextexf = oppBetMake * e->pctWillCall( pow( facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significance),significance) );
 
                 nextdexf = 0;
 
@@ -255,7 +367,7 @@ void ExactCallBluffD::query(const float64 betSize)
                                                  /(oppBetMake + origPot) /(oppBetMake + origPot);
 */
                 
-                const float64 wn = facedOdds(origPot,oppBetMake);
+                const float64 wn = facedOdds_Algb(oppBankRoll,origPot,oppBetAlready,oppBetMake);
                 const float64 w = pow( wn, significanceLinear );
                 
                 
@@ -264,7 +376,7 @@ void ExactCallBluffD::query(const float64 betSize)
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear  );
 //				const float64 nextFoldPartialF = -
                 nextFoldPartial =
-                        facedOddsND( origPot,oppBetMake,origPotD,w, wn, wn/w / significanceLinear );
+                        facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, wn, wn/w / significanceLinear );
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear - 1 ) * significanceLinear
 //                        * (origPot - oppBetMake * origPotD)
 //                    /(oppBetMake + origPot) /(oppBetMake + origPot);
@@ -311,7 +423,7 @@ void ExactCallBluffD::query(const float64 betSize)
 */
 //					const float64 nextFoldF = 1 -
                     
-                    nextFold = pow( facedOdds(oldpot + effroundpot,oppBetMake),significanceLinear) ;
+                    nextFold = pow( facedOdds_Algb(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppBetMake),significanceLinear) ;
 //                            pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significanceLinear );
 /*
 #ifndef GEOM_COMBO_FOLDPCT
