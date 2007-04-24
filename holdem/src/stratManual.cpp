@@ -291,7 +291,7 @@ void ConsoleStrategy::showSituation()
 	UI_DESCRIPTOR << "PLAYER SUMMARY" << endl;
 
 	int8 iPos = 0;
-    tempIndex = ViewTable().GetDealer();
+    tempIndex = myIndex;//ViewTable().GetDealer();
     do
     {
         ViewTable().incrIndex(tempIndex);
@@ -336,7 +336,7 @@ void ConsoleStrategy::showSituation()
 		UI_DESCRIPTOR << endl;
 
 	}
-    }while( tempIndex != ViewTable().GetDealer() );
+    }while( tempIndex !=  myIndex);//ViewTable().GetDealer() );
 
 	#endif
     UI_DESCRIPTOR << endl ;
