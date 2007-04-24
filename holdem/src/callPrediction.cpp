@@ -184,12 +184,22 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
     return ret;
 }
 
-float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 fw, float64 dfw)
+float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n)
 {
+	//TODO: Really?
+	//Approximate at the limit. It should be about linear in this region anyways, and we probably only
+	//hit this case when there is no zero in the range [0..1].
+	//if( w <= 1.0/1326.0 / 4 ) w = 1.0/1326.0 / 4;
+	if( w <= 0 ) return 0;
+
     const int8 N = handsDealt();
     const float64 frank = e->pctWillCall(1 - w);
+	const float64 dfrank = e->pctWillCallD(1-w);
     const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
     const float64 avgBlind = (table->GetBigBlind() + table->GetBigBlind()) * ( N - 2 )/ N / N;    
+
+    const float64 fw = pow(w,n);
+    const float64 dfw = (n<=1) ? (0) : (n * pow(w,n-1));
 
     //    (pot - bet * dpot)
     //    /(bet + pot) /(bet + pot);
@@ -216,7 +226,7 @@ float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alre
                 /
                 (   (pot+bet)*dfw
                     +
-                    ( avgBlind * e->pctWillCallD(1-w) ) / fNRank / fNRank
+                    ( avgBlind * dfrank ) / fNRank / fNRank
                 )
            );
 }
@@ -394,14 +404,14 @@ void ExactCallBluffD::query(const float64 betSize)
                 
                 const float64 wn = facedOdds_Algb(oppBankRoll,origPot,oppBetAlready,oppBetMake);
                 const float64 w = pow( wn, significanceLinear );
-                
+				//const float64 dfwdbetSize = (w <= 0) ? 0 : (wn/w / significanceLinear);
                 
 //                const float64 nextFoldF = 1 -
                 nextFold = w;
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear  );
 //				const float64 nextFoldPartialF = -
                 nextFoldPartial =
-                        facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, wn, wn/w / significanceLinear );
+                        facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, 1/significanceLinear);
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear - 1 ) * significanceLinear
 //                        * (origPot - oppBetMake * origPotD)
 //                    /(oppBetMake + origPot) /(oppBetMake + origPot);
