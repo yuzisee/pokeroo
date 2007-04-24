@@ -847,7 +847,7 @@ Player* HoldemArena::PlayTable()
 
                 handnum = 1;
                 scoreboard.open(GRAPHMONEY);
-                scoreboard << "Hand #";
+                scoreboard << "#Hand";
                 for(int8 i=0;i<nextNewPlayer;++i)
                 {
                     scoreboard << "," << (p[i])->GetIdent();

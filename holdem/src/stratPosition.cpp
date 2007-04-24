@@ -613,7 +613,7 @@ float64 ImproveGainRankStrategy::MakeBet()
         const float64 rVersus = expectedVS*improveLevel*improveLevel + fullVersus*(1-improveLevel*improveLevel);
         myDeterredCall.callingPlayers( rVersus );
         #ifdef LOGPOSITION
-            logFile << expectedVS <<" ... "<< fullVersus <<" =" << rVersus << endl;
+            logFile << expectedVS <<" ... "<< fullVersus <<" =" << rVersus  << "\t --expectedVersus ... fullVersus" << endl;
         #endif
 	}
 
