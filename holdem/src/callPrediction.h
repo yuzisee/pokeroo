@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+//#define DEBUG_CALLPRED_FUNCTION
+
 #include "callSituation.h"
 #include "functionbase.h"
 
@@ -25,30 +27,68 @@
 class ExactCallFunctionModel : public virtual ScalarFunctionModel
 {
     protected:
-        
+
         const CallCumulationD* e;
-        
+
     public:
-       
+
         float64 Bankroll;
-        
+
         float64 n;
-        
+
         float64 pot;
-        
+
         float64 alreadyBet;
         float64 bet;
-        
+
         float64 avgBlind;
-        
-        ExactCallFunctionModel(float64 step, const CallCumulationD* e) : ScalarFunctionModel(step){};
-        
+
+        ExactCallFunctionModel(float64 step, const CallCumulationD* e) : ScalarFunctionModel(step), e(e){};
+
         virtual ~ExactCallFunctionModel();
 
         virtual float64 f(const float64);
         virtual float64 fd(const float64, const float64);
-        
 
+
+    #ifdef DEBUG_CALLPRED_FUNCTION
+        void breakdown(float64 points, std::ostream& target, float64 start=0, float64 end=1)
+        {
+            target.precision(17);
+
+            float64 dist;
+            if( points > 0 ) dist = (end-start)/points;
+
+
+            target << "w,p(w),dp/dw,avgBlind/fNRank" << std::endl;
+            if( points > 0 && dist > 0 )
+            {
+                for( float64 i=start;i<=end;i+=dist)
+                {
+
+                    const float64 y = f(i);
+					const float64 frank = e->pctWillCall(1 - i);
+					const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+
+
+
+                    target << i << "," << y << "," << fd(i,y) << "," << y - avgBlind/fNRank << std::endl;
+
+                }
+            }else
+            {
+				const float64 frank = e->pctWillCall(1 - end);
+				const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+
+
+                target << end << "," << f(end) << "," << fd(end,f(end)) << "," << f(end) - avgBlind/fNRank << std::endl;
+            }
+
+            target.precision(6);
+
+
+        }
+    #endif
 
 }
 ;
@@ -66,15 +106,15 @@ class ExactCallD : public virtual ExpectedCallD
         float64 impliedFactor;
 
         ExactCallFunctionModel geomFunction;
-        
-        
+
+
         float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, float64 wGuess = 0.75);
         float64 facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);
 		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 wGuess = 0.75);
         float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 fw, float64 dfw);
-        
-        
-        
+
+
+
         void query(const float64 betSize);
     public:
         ExactCallD(const int8 id, const HoldemArena* base
@@ -86,7 +126,7 @@ class ExactCallD : public virtual ExpectedCallD
 #ifdef ANTI_PRESSURE_FOLDGAIN
             ,rankPCT
 #endif
-                    ,data,commit), impliedFactor(1), geomFunction(1.0/1326.0,data) 
+                    ,data,commit), impliedFactor(1), geomFunction(0.5/1326.0,data)
             {
                 queryinput = UNITIALIZED_QUERY;
             }

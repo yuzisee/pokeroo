@@ -22,6 +22,10 @@
 #include <math.h>
 
 
+#ifndef log1p
+#define log1p( _X_ ) log( (_X_) + 1 )
+#endif
+
 //#define DEBUGWATCHPARMS
 #ifdef DEBUGWATCHPARAMS
 #include <iostream>
@@ -59,7 +63,7 @@ float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alread
     const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
             * ( N - 2 )/ N ;
     
-    geomFunction.quantum = bankroll / 1326.0 / 2.0;
+    //geomFunction.quantum = 1 / 1326.0 / 2.0;
     geomFunction.Bankroll = bankroll - alreadyBet; //TODO: Confirm {- alreadyBet}
     geomFunction.pot = pot;
     geomFunction.bet = bet;
@@ -67,6 +71,17 @@ float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alread
     geomFunction.avgBlind = avgBlind;
     geomFunction.n = n;
     
+	 #ifdef DEBUG_CALLPRED_FUNCTION
+	if(bet < 0)
+	{
+            std::ofstream excel( "callmodel.csv" );
+            if( !excel.is_open() ) std::cerr << "\n!callmodel.cvs file access denied" << std::endl;
+            geomFunction.breakdown(1000,excel,0,1);
+            //myExpectedCall.breakdown(0.005,excel);
+
+            excel.close();
+	}
+        #endif
     
     const float64 g = geomFunction.FindZero( 0,1 );
     
@@ -81,8 +96,11 @@ float64 ExactCallFunctionModel::f( const float64 w )
 {
     const float64 fw = pow(w,n);
     
-    const float64 fNRank = (w >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - w));
-    
+	const float64 frank = e->pctWillCall(1 - w);
+    const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+    //fNRank == 0 and frank == 1? That means if you had this w pct, you would have the nuts or better. 
+	
+
     const float64 gainFactor = pow( Bankroll+pot , fw ) * pow( Bankroll-bet , 1-fw ) - Bankroll;
     
     const float64 stackFactor = avgBlind / fNRank;
@@ -95,7 +113,8 @@ float64 ExactCallFunctionModel::fd( const float64 w, const float64 y )
     const float64 fw = pow(w,n);
     const float64 dfw = (n<=1) ? (0) : (n * pow(w,n-1));
     
-    const float64 fNRank = (w >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - w));
+    const float64 frank = e->pctWillCall(1 - w);
+    const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
     
     const float64 stackFactor = avgBlind * e->pctWillCallD(1-w) / fNRank / fNRank;
 
@@ -115,7 +134,9 @@ float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alre
     const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
             * ( N - 2 )/ N ;
     
-    const float64 fNRank = (w >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - w));
+    const float64 frank = e->pctWillCall(1 - w);
+    const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+
     
     const float64 fw = pow(w,n);
     const float64 dfw = (n<=1) ? (0) : (n * pow(w,n-1));
@@ -148,7 +169,10 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
 {
     //oppBetMake / (oppBetMake + totalexf)
     const int8 N = handsDealt();
-    const float64 fNRank = (wGuess >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - wGuess));
+
+    const float64 frank = e->pctWillCall(1 - wGuess);
+    const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+
     const float64 avgBlind = (table->GetBigBlind() + table->GetBigBlind()) * ( N - 2 )/ N / N;
     
     const float64 ret = 
@@ -163,7 +187,8 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
 float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 fw, float64 dfw)
 {
     const int8 N = handsDealt();
-    const float64 fNRank = (w >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - w));
+    const float64 frank = e->pctWillCall(1 - w);
+    const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
     const float64 avgBlind = (table->GetBigBlind() + table->GetBigBlind()) * ( N - 2 )/ N / N;    
 
     //    (pot - bet * dpot)
