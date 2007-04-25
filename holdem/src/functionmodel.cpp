@@ -374,66 +374,26 @@ float64 GainModelBluff::fd(const float64 betSize, const float64 y)
 
 void GainModelBluff::query( const float64 betSize )
 {
-///Establish [PushGain] values
 
-	float64 potFoldWin = ea->PushGain();
-	const float64 potFoldWinD = 0;
-    float64 oppFoldChance = ea->pWin(betSize);
-    float64 oppFoldChanceD = ea->pWinD(betSize);
-#ifdef DEBUGASSERT
-	if( potFoldWin < 0 || oppFoldChance <= 0 ){
-		potFoldWin =  1;
-		oppFoldChance = 0;
-		oppFoldChanceD = 0;
-	}
-#endif
-
-///Establish [Raised] values
-
-#ifdef RAISED_PWIN
-    float64 raiseAmount;
-    float64 minRaiseDirect = ea->minRaiseTo();
-    float64 minRaiseBy = minRaiseDirect - ea->callBet();
-    float64 minRaiseBet = betSize - ea->callBet();
-    if( minRaiseBet < minRaiseDirect )
-    {
-        //Two minraises above bet to call
-        raiseAmount = minRaiseDirect + minRaiseBy;
-    }else{
-        raiseAmount = betSize + minRaiseBet;
-    }
-
-    if( raiseAmount > ea->maxBet() )
-    {
-        raiseAmount = ea->maxBet();
-    }
-
-    const float64 oppRaisedChance = ea->pWin(raiseAmount);
-    const float64 oppRaisedChanceD = ea->pWinD(raiseAmount);
-    const float64 potRaisedWin = g(raiseAmount);
-    const float64 potRaisedWinD = gd(raiseAmount,potRaisedWin);
-#else
-    const float64 oppRaisedChance = 0;
-    const float64 oppRaisedChanceD = 0;
-    const float64 potRaisedWin = 1;
-    const float64 potRaisedWinD = 0;
-#endif
-
-///Establish [Play] values
-	const float64 playChance = 1 - oppFoldChance - oppRaisedChance;
-	const float64 playChanceD = - oppFoldChanceD - oppRaisedChanceD;
-    const float64 potNormalWin = g(betSize);
-    const float64 potNormalWinD = gd(betSize,potNormalWin);
-
-
+#include "BluffGainInc.h"
 ///Calculate factors
 	const float64 gainWithFold = pow(potFoldWin , oppFoldChance);
 	const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
 	const float64 gainNormal =  pow( potNormalWin,playChance );
-	const float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
+	float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
     const float64 gainRaised =  pow( potRaisedWin,oppRaisedChance);
-    const float64 gainRaisedlnD = oppRaisedChance*potRaisedWinD/potRaisedWin + oppRaisedChanceD*log(potRaisedWin);
+    float64 gainRaisedlnD = oppRaisedChance*potRaisedWinD/potRaisedWin + oppRaisedChanceD*log(potRaisedWin);
 
+
+	if( raiseAmount >= ea->maxBet() )
+	{
+		gainRaisedlnD = oppRaisedChance*potRaisedWinD/ g(raiseAmount-quantum/2) + oppRaisedChanceD*log( g(raiseAmount-quantum/2) );
+	}
+
+	if( betSize >= ea->maxBet() )
+	{
+		gainNormallnD = playChance*potNormalWinD/g(betSize-quantum/2) + playChanceD*log(g(betSize-quantum/2));
+	}
 
 ///Store results
     y = gainWithFold*gainNormal*gainRaised;
@@ -610,109 +570,74 @@ float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
     return gd(betSize, y+e->foldGain());
 }
 
+float64 GainModelNoRiskBluff::f(const float64 betSize)
+{
+    if( last_x != betSize )
+    {
+        query(betSize);
+    }
+    return y;
+}
+
+float64 GainModelNoRiskBluff::fd(const float64 betSize, const float64 y)
+{
+    if( last_x != betSize )
+    {
+        query(betSize);
+    }
+    return dy;
+}
+
+void GainModelNoRiskBluff::query(const float64 betSize)
+{
+
+#include "BluffGainInc.h"
+
 #ifdef FOLD_EQUITY_STINGE
 
-    float64 GainModelNoRiskBluff::f(const float64 betSize)
-    {
-        const float64 potFoldWin = ea->PushGain();
-        const float64 playChance = 1 - ea->pWin(betSize);
-        const float64 oppFoldChance = ea->pWin(betSize);
-    #ifdef DEBUGASSERT
-        if( potFoldWin < 0 || oppFoldChance <= 0 ){
-            return g(betSize)  - e->foldGain();
-        }
-    #endif
+    ///Calculate factors
+    const float64 gainWithFold = pow(potFoldWin , oppFoldChance);
+    const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
+    const float64 gainNormal =  pow( potNormalWin,playChance );
+    float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
+    const float64 gainRaised =  pow( potRaisedWin,oppRaisedChance);
+    float64 gainRaisedlnD = oppRaisedChance*potRaisedWinD/potRaisedWin + oppRaisedChanceD*log(potRaisedWin);
 
-        const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
-        const float64 gainNormal = pow( g(betSize),playChance );
+	if( raiseAmount >= ea->maxBet() )
+	{
+		gainRaisedlnD = oppRaisedChance*potRaisedWinD/ g(raiseAmount-quantum/2) + oppRaisedChanceD*log( g(raiseAmount-quantum/2) );
+	}
 
-        return gainWithFold*gainNormal - e->foldGain();
-    }
+	if( betSize >= ea->maxBet() )
+	{
+		gainNormallnD = playChance*potNormalWinD/g(betSize-quantum/2) + playChanceD*log(g(betSize-quantum/2));
+	}
 
-    float64 GainModelNoRiskBluff::fd(const float64 betSize, const float64 y)
-    {
-        const float64 potFoldWin = ea->PushGain();
-        const float64 playChance = 1 - ea->pWin(betSize);
-        const float64 oppFoldChance = ea->pWin(betSize);
-    #ifdef DEBUGASSERT
-        if( potFoldWin <= 0 || oppFoldChance <= 0 )
-        {
-            return gd(betSize,y+e->foldGain());
-        }
-    #endif
-
-        const float64 dFoldChance = ea->pWinD(betSize);
-
-        const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
-
-        ///Reverse to deduce basey
-        const float64 fy = y+e->foldGain();
-        const float64 gainNormal = (fy) / gainWithFold;
-        const float64 basey = pow(  gainNormal  ,  1/playChance );
-
-        const float64 gainDNormal = gd(betSize, basey);
-
-        return (
-                dFoldChance * log( potFoldWin )
-                +
-                playChance * gainDNormal / gainNormal
-                -
-                oppFoldChance * log(gainNormal)
-                )
-            *fy;
-    }
-
+    ///Store results
+    y = gainWithFold*gainNormal*gainRaised;
+    dy = (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
+    y -= e->foldGain();
 
 #else
 
-    float64 GainModelNoRiskBluff::f(const float64 betSize)
-    {
-        const float64 potFoldWin = ea->PushGain();
-        const float64 playChance = 1 - ea->pWin(betSize);
-        const float64 oppFoldChance = ea->pWin(betSize);
-    #ifdef DEBUGASSERT
-        if( potFoldWin < 0 || oppFoldChance <= 0 ){
-            return g(betSize)  - e->foldGain();
-        }
-    #endif
+///Calculate factors
+    const float64 gainWithFold = potFoldWin * oppFoldChance;
+    const float64 gainWithFoldD = oppFoldChance*potFoldWinD + oppFoldChanceD*potFoldWin;
+    const float64 gainNormal =  potNormalWin*playChance;
+    const float64 gainNormalD = playChance*potNormalWinD + playChanceD*potNormalWin;
+    const float64 gainRaised =  potRaisedWin*oppRaisedChance;
+    const float64 gainRaisedD = oppRaisedChance*potRaisedWinD + oppRaisedChanceD*potRaisedWin;
 
-        const float64 gainWithFold = potFoldWin*oppFoldChance;
-        const float64 gainNormal = g(betSize)*playChance;
-
-        return gainWithFold+gainNormal - e->foldGain();
-    }
-
-    float64 GainModelNoRiskBluff::fd(const float64 betSize, const float64 y)
-    {
-        const float64 potFoldWin = ea->PushGain();
-        const float64 playChance = 1 - ea->pWin(betSize);
-        const float64 oppFoldChance = ea->pWin(betSize);
-    #ifdef DEBUGASSERT
-        if( potFoldWin <= 0 || oppFoldChance <= 0 )
-        {
-            return gd(betSize,y+e->foldGain());
-        }
-    #endif
-
-        const float64 dFoldChance = ea->pWinD(betSize);
-
-        const float64 gainWithFold = potFoldWin*oppFoldChance;
-
-        ///Reverse to deduce basey
-        const float64 fy = y+e->foldGain();
-        const float64 gainNormal = (fy) - gainWithFold;
-        const float64 basey = gainNormal /playChance ;
-
-            const float64 gainDNormal = gd(betSize, basey);
-
-        return 		( potFoldWin - gainNormal ) * dFoldChance
-                    +
-                playChance * gainDNormal
-
-                ;
-    }
+    ///Store results
+    y  = gainWithFold + gainNormal + gainRaised - e->foldGain();
+    dy = gainWithFoldD+ gainNormalD+ gainRaisedD;
 
 #endif
+
+
+
+}
+
 
 
 

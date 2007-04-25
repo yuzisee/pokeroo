@@ -19,17 +19,17 @@
  ***************************************************************************/
 
 /* Dev Testing Flags */
-#undef NO_LOG_FILES
+#define NO_LOG_FILES
 #define DEBUGASSERT
 
 /******************/
 
 #ifndef NO_LOG_FILES
 /* Mode Flags (Depends on NO_LOG_FILES) */
-#define WINRELEASE
+#undef WINRELEASE
 #define LOGPOSITION
 /**********************************/
-//#define DEBUGSPECIFIC 24
+//#define DEBUGSPECIFIC 1
 #define GRAPHMONEY "chipcount.csv"
 #define REPRODUCIBLE
 ///COMMENT OUT DEBUGSPECIFIC IF YOU WISH TO GRAPHMONEY
