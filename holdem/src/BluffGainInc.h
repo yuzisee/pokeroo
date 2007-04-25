@@ -48,7 +48,7 @@ last_x = betSize;
     float64 potRaisedWin = g(raiseAmount);
     float64 potRaisedWinD = gd(raiseAmount,potRaisedWin);
 
-	float64 oppRaisedFoldGain = e->foldGain() - e->betFraction(raiseAmount - ea->alreadyBet() );
+	float64 oppRaisedFoldGain = e->foldGain() - e->betFraction(betSize - ea->alreadyBet() ); //You would fold the additional (betSize - ea->alreadyBet() )
 	if( potRaisedWin < oppRaisedFoldGain )
 	{
 		potRaisedWin = oppRaisedFoldGain;
