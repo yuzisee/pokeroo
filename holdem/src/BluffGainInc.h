@@ -59,8 +59,16 @@ last_x = betSize;
 
     const float64 oppRaisedChance = ea->pWin(raiseAmount);
     const float64 oppRaisedChanceD = ea->pWinD(raiseAmount);
-    const float64 potRaisedWin = g(raiseAmount);
-    const float64 potRaisedWinD = gd(raiseAmount,potRaisedWin);
+    float64 potRaisedWin = g(raiseAmount);
+    float64 potRaisedWinD = gd(raiseAmount,potRaisedWin);
+
+	if( potRaisedWin < e->foldGain() )
+	{
+		float64 oppRaisedFoldGain = e->foldGain() - (raiseAmount - betSize);
+		if( oppRaisedFoldGain > 0 ) potRaisedWin = oppRaisedFoldGain;
+		potRaisedWinD = 0;
+	}
+
 #else
 	float64 raiseAmount = 0;
     const float64 oppRaisedChance = 0;
