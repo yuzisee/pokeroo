@@ -26,7 +26,7 @@
 
 #ifndef NO_LOG_FILES
 /* Mode Flags (Depends on NO_LOG_FILES) */
-#define WINRELEASE
+#undef WINRELEASE
 #define LOGPOSITION
 /**********************************/
 //#define DEBUGSPECIFIC 1
