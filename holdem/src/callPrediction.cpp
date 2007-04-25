@@ -131,6 +131,7 @@ float64 ExactCallFunctionModel::fd( const float64 w, const float64 y )
 float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n)
 {
 	if( w <= 0 ) return 0;
+	if( bet >= bankroll ) return 0;
 
     const int8 N = handsDealt();
     const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
@@ -235,8 +236,34 @@ float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alre
 
 
 
+
+
+float64 ExactCallD::RaiseAmount(const float64 betSize)
+{
+
+	float64 raiseAmount;
+    float64 minRaiseDirect = minRaiseTo();
+    float64 minRaiseBy = minRaiseDirect - callBet();
+    float64 minRaiseBet = betSize - callBet();
+    if( minRaiseBet < minRaiseDirect )
+    {
+        //Two minraises above bet to call
+        raiseAmount = minRaiseDirect + minRaiseBy;
+    }else{
+        raiseAmount = betSize + minRaiseBet;
+    }
+
+    if( raiseAmount > maxBet() )
+    {
+        raiseAmount = maxBet();
+    }
+
+	return raiseAmount ;
+}
+
 void ExactCallD::query(const float64 betSize)
 {
+	
     const float64 significance = 1/static_cast<float64>( handsDealt()-1 );
     const float64 myexf = betSize;
     const float64 mydexf = 1;
@@ -252,12 +279,29 @@ void ExactCallD::query(const float64 betSize)
     totaldexf = mydexf;
     //float64 lastdexf = totaldexf;
 
+
+
+	noRaiseChance = 1;
+	noRaiseChanceD = 0;
+	const float64 raise = RaiseAmount(betSize);
+	/*if( raise <= betSize )
+	{
+		noRaiseChance = 1;
+		noRaiseChanceD = 0;
+	}*/
+
+
+
     int8 pIndex = playerID;
     table->incrIndex(pIndex);
     while( pIndex != playerID )
     {
         float64 nextexf = 0;
         float64 nextdexf = 0;
+        
+		float64 nextNoRaise = 1; //Won't raise (by default) 
+        float64 nextNoRaiseD = 0;
+
         const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
 
         if( table->CanStillBet(pIndex) )
@@ -268,7 +312,8 @@ void ExactCallD::query(const float64 betSize)
             {
 
                 const float64 oppBetMake = betSize - oppBetAlready;
-                //To understand the above, consider that totalexf includes already made bets
+				//To understand the above, consider that totalexf includes already made bets
+				const float64 oppRaiseMake = raise - oppBetAlready;
 
                 if( oppBetMake <= 0 )
                 {
@@ -290,6 +335,13 @@ void ExactCallD::query(const float64 betSize)
                     std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
 */
 #endif
+
+					if( oppRaiseMake > 0 )
+					{
+						const float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance); 
+						nextNoRaise = 1 - e->pctWillCall( w_r );
+						nextNoRaiseD = - e->pctWillCallD(  w_r  )  * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance );
+					}
 
                     //const float64 wn = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppBetMake, 1/significance); //f(w) = w^n
                     //const float64 w = pow( wn, significance );         //f-1(w) = w
@@ -315,7 +367,9 @@ void ExactCallD::query(const float64 betSize)
                 nextexf = oppBetMake * e->pctWillCall( pow( facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significance),significance) );
 
                 nextdexf = 0;
-
+	
+				//Obviously the opponent won't raise...  ie. NoRaise = 100%
+				// (nextNoRaise , nextNoRaiseD ) is already (1,0)
             }
 
 
@@ -326,6 +380,17 @@ void ExactCallD::query(const float64 betSize)
             totaldexf += nextdexf;
 
         }
+
+		//At this point, nextNoRaise is 100% unless otherwise adjusted.
+		noRaiseChance *= nextNoRaise;
+		if( noRaiseChance == 0 ) //and nextNoRaiseD == 0
+		{
+			noRaiseChanceD = 0;
+		}else
+		{	
+			noRaiseChanceD += nextNoRaiseD/nextNoRaise; //Logairthmic differentiation
+		}
+
 
         const float64 oppInPot = oppBetAlready + nextexf;
         if( oppInPot > betSize )
@@ -343,6 +408,7 @@ void ExactCallD::query(const float64 betSize)
     if( totalexf < 0 ) totalexf = 0; //Due to rounding error in overexf?
     if( totaldexf < 0 ) totaldexf = 0; //Due to rounding error in overexf?
 
+	noRaiseChanceD *= noRaiseChance;
 }
 
 void ExactCallBluffD::query(const float64 betSize)
@@ -561,6 +627,29 @@ float64 ExactCallBluffD::pWinD(const float64 betSize)
     }
     return allFoldChanceD;//*impliedFactor;
 }
+
+
+float64 ExactCallD::pRaise(const float64 betSize)
+{
+    if( queryinput != betSize )
+    {
+        query(betSize);
+        queryinput = betSize;
+    }
+    ///Try pow(,impliedFactor) maybe
+    return 1-noRaiseChance;//*impliedFactor;
+}
+
+float64 ExactCallD::pRaiseD(const float64 betSize)
+{
+    if( queryinput != betSize )
+    {
+        query(betSize);
+        queryinput = betSize;
+    }
+    return -noRaiseChanceD;//*impliedFactor;
+}
+
 
 
 

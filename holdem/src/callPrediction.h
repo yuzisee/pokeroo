@@ -107,6 +107,9 @@ class ExactCallD : public virtual ExpectedCallD
 
         ExactCallFunctionModel geomFunction;
 
+        float64 noRaiseChance;
+        float64 noRaiseChanceD;
+
 
         float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, float64 wGuess = 0.75);
         float64 facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);
@@ -134,6 +137,10 @@ class ExactCallD : public virtual ExpectedCallD
             virtual float64 exf(const float64 betSize);
             virtual float64 dexf(const float64 betSize);
 
+			virtual float64 RaiseAmount(const float64 betSize);
+			virtual float64 pRaise(const float64 betSize);
+			virtual float64 pRaiseD(const float64 betSize);
+
             virtual void SetImpliedFactor(const float64 bonus);
 }
 ;
@@ -144,6 +151,7 @@ class ExactCallBluffD : public virtual ExactCallD
         const CallCumulationD* ea;
         float64 allFoldChance;
         float64 allFoldChanceD;
+
 
         void query(const float64 betSize);
     public:
@@ -170,6 +178,8 @@ class ExactCallBluffD : public virtual ExactCallD
 
                             virtual float64 pWin(const float64 betSize);
                             virtual float64 pWinD(const float64 betSize);
+							
+
 }
 ;
 

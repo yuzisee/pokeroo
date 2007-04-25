@@ -38,34 +38,20 @@ last_x = betSize;
 #endif
 
 ///Establish [Raised] values
-
+	float64 raiseAmount = ea->RaiseAmount(betSize);
 #ifdef RAISED_PWIN
-    float64 raiseAmount;
-    float64 minRaiseDirect = ea->minRaiseTo();
-    float64 minRaiseBy = minRaiseDirect - ea->callBet();
-    float64 minRaiseBet = betSize - ea->callBet();
-    if( minRaiseBet < minRaiseDirect )
-    {
-        //Two minraises above bet to call
-        raiseAmount = minRaiseDirect + minRaiseBy;
-    }else{
-        raiseAmount = betSize + minRaiseBet;
-    }
 
-    if( raiseAmount > ea->maxBet() )
-    {
-        raiseAmount = ea->maxBet();
-    }
+    float64 oppRaisedChance = ea->pRaise(betSize);
+    float64 oppRaisedChanceD = ea->pRaiseD(betSize);
 
-    const float64 oppRaisedChance = ea->pWin(raiseAmount);
-    const float64 oppRaisedChanceD = ea->pWinD(raiseAmount);
+
     float64 potRaisedWin = g(raiseAmount);
     float64 potRaisedWinD = gd(raiseAmount,potRaisedWin);
 
-	if( potRaisedWin < e->foldGain() )
+	float64 oppRaisedFoldGain = e->foldGain() - e->betFraction(raiseAmount - ea->alreadyBet() );
+	if( potRaisedWin < oppRaisedFoldGain )
 	{
-		float64 oppRaisedFoldGain = e->foldGain() - (raiseAmount - betSize);
-		if( oppRaisedFoldGain > 0 ) potRaisedWin = oppRaisedFoldGain;
+		potRaisedWin = oppRaisedFoldGain;
 		potRaisedWinD = 0;
 	}
 
