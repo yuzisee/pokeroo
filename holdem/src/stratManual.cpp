@@ -290,30 +290,43 @@ void ConsoleStrategy::showSituation()
 	UI_DESCRIPTOR << endl ;
 	UI_DESCRIPTOR << "PLAYER SUMMARY" << endl;
 
-	int8 iPos = 0;
-    tempIndex = myIndex;//ViewTable().GetDealer();
+
+	int8 dealPos;
+	int8 sbPos = -1;
+	int8 bbPos = -1;
+
+
+    ///Find Dealer, SB, BB
+    tempIndex = ViewTable().GetDealer();
+    dealPos = tempIndex;
+    do
+    {
+        ViewTable().incrIndex(tempIndex);
+        if( ViewTable().IsAlive(tempIndex) )
+        {
+            if( sbPos == -1 ) sbPos = tempIndex;
+            else if( bbPos == -1 ) bbPos = tempIndex;
+        }
+    }while( bbPos == -1 );
+
+    tempIndex = myIndex;
     do
     {
         ViewTable().incrIndex(tempIndex);
 
         if( ViewTable().IsAlive(tempIndex) )
 	{
-		++iPos;
-		const Player& withP = *(myTable.ViewPlayer(tempIndex));
-		if( iPos == 1 )
+
+        const Player& withP = *(myTable.ViewPlayer(tempIndex));
+		if( tempIndex == sbPos )
 		{
 		    UI_DESCRIPTOR << "SB" << flush;
-		}else if( iPos == 2 )
+		}else if( tempIndex == bbPos )
 		{
 			UI_DESCRIPTOR << "BB" << flush;
-		}else if( tempIndex == ViewTable().GetDealer() )
+		}else if( tempIndex == dealPos )
 		{
 		    UI_DESCRIPTOR << "D" << flush;
-		}
-
-		if( tempIndex == myIndex )
-		{
-		    UI_DESCRIPTOR << "*" << flush;
 		}
 
 
