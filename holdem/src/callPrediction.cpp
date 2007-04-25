@@ -111,7 +111,7 @@ float64 ExactCallFunctionModel::f( const float64 w )
 float64 ExactCallFunctionModel::fd( const float64 w, const float64 y )
 {
     const float64 fw = pow(w,n);
-    const float64 dfw = (n<=1) ? (0) : (n * pow(w,n-1));
+    const float64 dfw = (n<0.5) ? (0) : (n * pow(w,n-1));
     
     const float64 frank = e->pctWillCall(1 - w);
     const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
@@ -130,6 +130,8 @@ float64 ExactCallFunctionModel::fd( const float64 w, const float64 y )
 
 float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n)
 {
+	if( w <= 0 ) return 0;
+
     const int8 N = handsDealt();
     const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
             * ( N - 2 )/ N ;
@@ -139,7 +141,7 @@ float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alre
 
     
     const float64 fw = pow(w,n);
-    const float64 dfw = (n<=1) ? (0) : (n * pow(w,n-1));
+    const float64 dfw = (n<0.5) ? (0) : (n * pow(w,n-1));
     
     
     const float64 A = dfw * log1p( (bankroll+pot) / (bankroll - bet) - 1 );
@@ -199,7 +201,7 @@ float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alre
     const float64 avgBlind = (table->GetBigBlind() + table->GetBigBlind()) * ( N - 2 )/ N / N;    
 
     const float64 fw = pow(w,n);
-    const float64 dfw = (n<=1) ? (0) : (n * pow(w,n-1));
+    const float64 dfw = (n<0.5) ? (0) : (n * pow(w,n-1));
 
     //    (pot - bet * dpot)
     //    /(bet + pot) /(bet + pot);

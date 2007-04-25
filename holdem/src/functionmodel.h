@@ -64,9 +64,11 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
                 {
 
                     float64 y = f(i);
+					float64 dy = fd(i,y);
+					float64 wch = e->exf(i);
+					float64 dwchp =  e->dexf(i);
 
-
-                    target << i << "," << y << "," << fd(i,y) << "," << e->betFraction(e->exf(i))  << "," <<  e->dexf(i) << std::endl;
+                    target << i << "," << y << "," << dy << "," << e->betFraction(wch)  << "," <<  dwchp << std::endl;
 
                 }
             }else
