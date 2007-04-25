@@ -38,34 +38,74 @@ last_x = betSize;
 #endif
 
 ///Establish [Raised] values
-	float64 raiseAmount = ea->RaiseAmount(betSize);
+
+    //Count needed array size
+    int32 arraySize = 0;
+    while( ea->RaiseAmount(betSize,arraySize) < ea->maxBet() )
+    {
+        ++arraySize;
+    }
+    //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
+    ++arraySize; //Now it's the size of the array
+
+
+    //Create arrays
+    float64 * raiseAmount_A = new float64[arraySize];
+
+    float64 * oppRaisedChance_A = new float64[arraySize];
+    float64 * oppRaisedChanceD_A = new float64[arraySize];
+
+
+    float64 * potRaisedWin_A = new float64[arraySize];
+    float64 * potRaisedWinD_A = new float64[arraySize];
+
+	float64 * oppRaisedFoldGain_A = new float64[arraySize];
+
+
+    float64 lastuptoRaisedChance = 0;
+    float64 lastuptoRaisedChanceD = 0;
+    float64 newRaisedChance = 0;
+    float64 newRaisedChanceD = 0;
+    for( int32 i=0;i<arraySize; ++i)
+    {
+        raiseAmount_A[i] = ea->RaiseAmount(betSize,i);
 #ifdef RAISED_PWIN
 
-    float64 oppRaisedChance = ea->pRaise(betSize);
-    float64 oppRaisedChanceD = ea->pRaiseD(betSize);
+        newRaisedChance = ea->pRaise(betSize,i);
+        newRaisedChanceD = ea->pRaiseD(betSize,i);
+        oppRaisedChance_A[i] = newRaisedChance - lastuptoRaisedChance;
+        oppRaisedChanceD_A[i] = newRaisedChanceD - lastuptoRaisedChanceD;
+        lastuptoRaisedChance = newRaisedChance;
+        lastuptoRaisedChanceD = newRaisedChanceD;
 
+        potRaisedWin_A[i] = g(raiseAmount_A[i]);
+        potRaisedWinD_A[i] = gd(raiseAmount_A[i],potRaisedWin_A[i]);
 
-    float64 potRaisedWin = g(raiseAmount);
-    float64 potRaisedWinD = gd(raiseAmount,potRaisedWin);
-
-	float64 oppRaisedFoldGain = e->foldGain() - e->betFraction(betSize - ea->alreadyBet() ); //You would fold the additional (betSize - ea->alreadyBet() )
-	if( potRaisedWin < oppRaisedFoldGain )
-	{
-		potRaisedWin = oppRaisedFoldGain;
-		potRaisedWinD = 0;
-	}
+        oppRaisedFoldGain_A[i] = e->foldGain() - e->betFraction(betSize - ea->alreadyBet() ); //You would fold the additional (betSize - ea->alreadyBet() )
+        if( potRaisedWin_A[i] < oppRaisedFoldGain_A[i] )
+        {
+            potRaisedWin_A[i] = oppRaisedFoldGain_A[i];
+            potRaisedWinD_A[i] = 0;
+        }
 
 #else
-	float64 raiseAmount = 0;
-    const float64 oppRaisedChance = 0;
-    const float64 oppRaisedChanceD = 0;
-    const float64 potRaisedWin = 1;
-    const float64 potRaisedWinD = 0;
+	raiseAmount_A[i] = 0;
+    oppRaisedChance_A[i] = 0;
+    oppRaisedChanceD_A[i] = 0;
+    potRaisedWin_A[i] = 1;
+    potRaisedWinD_A[i] = 0;
 #endif
+    }
 
 ///Establish [Play] values
-	const float64 playChance = 1 - oppFoldChance - oppRaisedChance;
-	const float64 playChanceD = - oppFoldChanceD - oppRaisedChanceD;
+	float64 playChance = 1 - oppFoldChance;
+	float64 playChanceD = - oppFoldChanceD;
+	for( int32 i=0;i<arraySize;++i )
+	{
+        playChance -= oppRaisedChance_A[i];
+        playChanceD -= oppRaisedChanceD_A[i];
+	}
+
     const float64 potNormalWin = g(betSize);
     const float64 potNormalWinD = gd(betSize,potNormalWin);
 

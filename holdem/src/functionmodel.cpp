@@ -381,14 +381,23 @@ void GainModelBluff::query( const float64 betSize )
 	const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
 	const float64 gainNormal =  pow( potNormalWin,playChance );
 	float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
-    const float64 gainRaised =  pow( potRaisedWin,oppRaisedChance);
-    float64 gainRaisedlnD = oppRaisedChance*potRaisedWinD/potRaisedWin + oppRaisedChanceD*log(potRaisedWin);
+    float64 gainRaised = 1;
+    float64 gainRaisedlnD = 0;
+    for( int32 i=0;i<arraySize;++i )
+    {
+        gainRaised *= pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
+
+        if( raiseAmount_A[i] >= ea->maxBet() )
+        {
+            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g(raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g(raiseAmount_A[i]-quantum/2) );
+        }else
+        {
+            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
+        }
+    }
 
 
-	if( raiseAmount >= ea->maxBet() )
-	{
-		gainRaisedlnD = oppRaisedChance*potRaisedWinD/ g(raiseAmount-quantum/2) + oppRaisedChanceD*log( g(raiseAmount-quantum/2) );
-	}
+
 
 	if( betSize >= ea->maxBet() )
 	{
@@ -399,6 +408,18 @@ void GainModelBluff::query( const float64 betSize )
     y = gainWithFold*gainNormal*gainRaised;
     dy = (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
     y -= e->foldGain();
+
+
+    delete [] raiseAmount_A;
+
+    delete [] oppRaisedChance_A;
+    delete [] oppRaisedChanceD_A;
+
+
+    delete [] potRaisedWin_A;
+    delete [] potRaisedWinD_A;
+
+	delete [] oppRaisedFoldGain_A;
 }
 
 /*
@@ -600,13 +621,20 @@ void GainModelNoRiskBluff::query(const float64 betSize)
     const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
     const float64 gainNormal =  pow( potNormalWin,playChance );
     float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
-    const float64 gainRaised =  pow( potRaisedWin,oppRaisedChance);
-    float64 gainRaisedlnD = oppRaisedChance*potRaisedWinD/potRaisedWin + oppRaisedChanceD*log(potRaisedWin);
+    float64 gainRaised = 1;
+    float64 gainRaisedlnD = 0;
+    for( int32 i=0;i<arraySize;++i )
+    {
+        gainRaised *= pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
 
-	if( raiseAmount >= ea->maxBet() )
-	{
-		gainRaisedlnD = oppRaisedChance*potRaisedWinD/ g(raiseAmount-quantum/2) + oppRaisedChanceD*log( g(raiseAmount-quantum/2) );
-	}
+        if( raiseAmount_A[i] >= ea->maxBet() )
+        {
+            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g(raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g(raiseAmount_A[i]-quantum/2) );
+        }else
+        {
+            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
+        }
+    }
 
 	if( betSize >= ea->maxBet() )
 	{
@@ -625,8 +653,14 @@ void GainModelNoRiskBluff::query(const float64 betSize)
     const float64 gainWithFoldD = oppFoldChance*potFoldWinD + oppFoldChanceD*potFoldWin;
     const float64 gainNormal =  potNormalWin*playChance;
     const float64 gainNormalD = playChance*potNormalWinD + playChanceD*potNormalWin;
-    const float64 gainRaised =  potRaisedWin*oppRaisedChance;
-    const float64 gainRaisedD = oppRaisedChance*potRaisedWinD + oppRaisedChanceD*potRaisedWin;
+    float64 gainRaised = 0;
+    float64 gainRaisedD = 0;
+
+    for( int32 i=0;i<arraySize;++i )
+    {
+        gainRaised += potRaisedWin_A[i]*oppRaisedChance_A[i];
+        gainRaisedD += oppRaisedChance_A[i]*potRaisedWinD_A[i] + oppRaisedChanceD_A[i]*potRaisedWin_A[i];
+    }
 
     ///Store results
     y  = gainWithFold + gainNormal + gainRaised - e->foldGain();
@@ -635,6 +669,16 @@ void GainModelNoRiskBluff::query(const float64 betSize)
 #endif
 
 
+    delete [] raiseAmount_A;
+
+    delete [] oppRaisedChance_A;
+    delete [] oppRaisedChanceD_A;
+
+
+    delete [] potRaisedWin_A;
+    delete [] potRaisedWinD_A;
+
+	delete [] oppRaisedFoldGain_A;
 
 }
 

@@ -37,7 +37,8 @@
 
 #ifndef WINRELEASE
 	#ifndef NO_LOG_FILES
-		#undef REGULARINTOLOG
+        ///Toggle the define below depending on debugging
+		#define REGULARINTOLOG
 	#endif
 #endif
 #define DEBUGSITUATION

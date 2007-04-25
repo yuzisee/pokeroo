@@ -490,6 +490,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
+        logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,0) << "   d\\" << myDeterredCall.pRaiseD(bestBet,0) << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
             logFile << "confirm " << choicemodel.f(bestBet) << endl;
@@ -564,6 +565,7 @@ float64 DeterredGainStrategy::MakeBet()
     if( bGamble == 1 )
     {
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
+        logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,0) << "   d\\" << myDeterredCall.pRaiseD(bestBet,0) << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
             logFile << "confirm " << choicemodel.f(bestBet) << endl;
@@ -647,7 +649,8 @@ float64 ImproveGainRankStrategy::MakeBet()
     }
 
 
-        logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
+        logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;\
+        logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,0) << "   d\\" << myDeterredCall.pRaiseD(bestBet,0) << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
             logFile << "confirm " << hybridgainDeterred_aggressive.f(bestBet) << endl;
@@ -722,6 +725,7 @@ float64 DeterredGainRankStrategy::MakeBet()
     if( bGamble == 1 )
     {
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
+        logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,0) << "   d\\" << myDeterredCall.pRaiseD(bestBet,0) << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
             logFile << "confirm " << hybridgainDeterred_agressiveness[bGamble]->f(bestBet) << endl;
@@ -817,6 +821,7 @@ float64 HybridScalingStrategy::MakeBet()
     if( bGamble == 1 )
     {
         logFile << "OppFoldChance% ... " << myExpectedCall.pWin(bestBet) << "   d\\" << myExpectedCall.pWinD(bestBet) << endl;
+        logFile << "OppRAISEChance% ... " << myExpectedCall.pRaise(bestBet,0) << "   d\\" << myExpectedCall.pRaiseD(bestBet,0) << endl;
 		if( myExpectedCall.pWin(bestBet) >= 1 )
 		{
 			std::cout << "Examine myExpectedCall.pWin(bestBet)" << endl;
@@ -953,6 +958,7 @@ float64 CorePositionalStrategy::MakeBet()
 		if( bGamble >= 9 && bGamble <= 15 )
 		{
 			logFile << "OppFoldChance% ... " << myBluffFoldCall.pWin(bestBet) << "   d\\" << myBluffFoldCall.pWinD(bestBet) << endl;
+			logFile << "OppRAISEChance% ... " << myBluffFoldCall.pRaise(bestBet,0) << "   d\\" << myBluffFoldCall.pRaiseD(bestBet,0) << endl;
 			if( myBluffFoldCall.pWin(bestBet) > 0 )
 			{
 				logFile << "confirm " << lookup[bGamble]->f(bestBet) << endl;

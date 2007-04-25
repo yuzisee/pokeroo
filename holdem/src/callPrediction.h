@@ -107,8 +107,9 @@ class ExactCallD : public virtual ExpectedCallD
 
         ExactCallFunctionModel geomFunction;
 
-        float64 noRaiseChance;
-        float64 noRaiseChanceD;
+        int8 noRaiseArraySize;
+        float64 *noRaiseChance_A;
+        float64 *noRaiseChanceD_A;
 
 
         float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, float64 wGuess = 0.75);
@@ -129,17 +130,19 @@ class ExactCallD : public virtual ExpectedCallD
 #ifdef ANTI_PRESSURE_FOLDGAIN
             ,rankPCT
 #endif
-                    ,data,commit), impliedFactor(1), geomFunction(0.5/1326.0,data)
+                    ,data,commit), impliedFactor(1), geomFunction(0.5/1326.0,data),noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
             {
                 queryinput = UNITIALIZED_QUERY;
             }
 
+            ~ExactCallD();
+
             virtual float64 exf(const float64 betSize);
             virtual float64 dexf(const float64 betSize);
 
-			virtual float64 RaiseAmount(const float64 betSize);
-			virtual float64 pRaise(const float64 betSize);
-			virtual float64 pRaiseD(const float64 betSize);
+			virtual float64 RaiseAmount(const float64 betSize, int32 step);
+			virtual float64 pRaise(const float64 betSize, const int32 step );
+			virtual float64 pRaiseD(const float64 betSize, const int32 step );
 
             virtual void SetImpliedFactor(const float64 bonus);
 }
@@ -178,7 +181,7 @@ class ExactCallBluffD : public virtual ExactCallD
 
                             virtual float64 pWin(const float64 betSize);
                             virtual float64 pWinD(const float64 betSize);
-							
+
 
 }
 ;
