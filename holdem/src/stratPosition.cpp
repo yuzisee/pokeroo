@@ -22,7 +22,13 @@
 #include "stratPosition.h"
 
 
+/// Summary of contained strategies:
+/// 1. ImproveStrategy (This is the old fashioned Geom<-->Algb vs. Rank<-->WorseNextCard)
+/// 2. ImproveGainStrategy (This is Norm/Trap/Ace using empirical data)
+/// 3. DeterredGainStrategy (ComBot: volatility/certainty/uncertainty avoids committals)
+/// 4. HybridScalingStrategy (SpaceBot, experimental stuff)
 
+/// *RANK variants replace Geom<->Linear(NoRisk) AutoScaling with a Geom ONLY.
 
 const bool CorePositionalStrategy::lkupLogMean[BGAMBLE_MAX] = {false,true,false,false,true,false,true,true,false ,false,true,false,false,true,true,false};
 const bool CorePositionalStrategy::lkupLogRanking[BGAMBLE_MAX] = {true,false,false,true,false,true,false,true,false ,true,false,false,true,false,true,false};
