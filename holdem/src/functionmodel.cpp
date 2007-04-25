@@ -22,6 +22,8 @@
 #include "functionmodel.h"
 #include "ai.h"
 
+#define RAISED_PWIN
+
 #define FOLD_EQUITY_STINGE
 
 //#define DEBUGVIEWINTERMEDIARIES
@@ -354,20 +356,92 @@ StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 
 float64 GainModelBluff::f(const float64 betSize)
 {
-	const float64 potFoldWin = ea->PushGain();
-	const float64 playChance = 1 - ea->pWin(betSize);
-	const float64 oppFoldChance = ea->pWin(betSize);
+    if( last_x != betSize )
+    {
+        query(betSize);
+    }
+    return y;
+}
+
+float64 GainModelBluff::fd(const float64 betSize, const float64 y)
+{
+    if( last_x != betSize )
+    {
+        query(betSize);
+    }
+    return dy;
+}
+
+void GainModelBluff::query( const float64 betSize )
+{
+///Establish [PushGain] values
+
+	float64 potFoldWin = ea->PushGain();
+	const float64 potFoldWinD = 0;
+    float64 oppFoldChance = ea->pWin(betSize);
+    float64 oppFoldChanceD = ea->pWinD(betSize);
 #ifdef DEBUGASSERT
 	if( potFoldWin < 0 || oppFoldChance <= 0 ){
-		return g(betSize)  - e->foldGain();
+		potFoldWin =  1;
+		oppFoldChance = 0;
+		oppFoldChanceD = 0;
 	}
 #endif
 
-	const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
-	const float64 gainNormal = pow( g(betSize),playChance );
+///Establish [Raised] values
 
-    return gainWithFold*gainNormal - e->foldGain();
+#ifdef RAISED_PWIN
+    float64 raiseAmount;
+    float64 minRaiseDirect = ea->minRaiseTo();
+    float64 minRaiseBy = minRaiseDirect - ea->callBet();
+    float64 minRaiseBet = betSize - ea->callBet();
+    if( minRaiseBet < minRaiseDirect )
+    {
+        //Two minraises above bet to call
+        raiseAmount = minRaiseDirect + minRaiseBy;
+    }else{
+        raiseAmount = betSize + minRaiseBet;
+    }
+
+    if( raiseAmount > ea->maxBet() )
+    {
+        raiseAmount = ea->maxBet();
+    }
+
+    const float64 oppRaisedChance = ea->pWin(raiseAmount);
+    const float64 oppRaisedChanceD = ea->pWinD(raiseAmount);
+    const float64 potRaisedWin = g(raiseAmount);
+    const float64 potRaisedWinD = gd(raiseAmount,potRaisedWin);
+#else
+    const float64 oppRaisedChance = 0;
+    const float64 oppRaisedChanceD = 0;
+    const float64 potRaisedWin = 1;
+    const float64 potRaisedWinD = 0;
+#endif
+
+///Establish [Play] values
+	const float64 playChance = 1 - oppFoldChance - oppRaisedChance;
+	const float64 playChanceD = - oppFoldChanceD - oppRaisedChanceD;
+    const float64 potNormalWin = g(betSize);
+    const float64 potNormalWinD = gd(betSize,potNormalWin);
+
+
+///Calculate factors
+	const float64 gainWithFold = pow(potFoldWin , oppFoldChance);
+	const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
+	const float64 gainNormal =  pow( potNormalWin,playChance );
+	const float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
+    const float64 gainRaised =  pow( potRaisedWin,oppRaisedChance);
+    const float64 gainRaisedlnD = oppRaisedChance*potRaisedWinD/potRaisedWin + oppRaisedChanceD*log(potRaisedWin);
+
+
+///Store results
+    y = gainWithFold*gainNormal*gainRaised;
+    dy = (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
+    y -= e->foldGain();
 }
+
+/*
 float64 GainModelBluff::fd(const float64 betSize, const float64 y)
 {
 	const float64 potFoldWin = ea->PushGain();
@@ -400,7 +474,7 @@ float64 GainModelBluff::fd(const float64 betSize, const float64 y)
 			)
 			*fy;
 }
-
+*/
 
 
 float64 GainModelNoRisk::g(float64 betSize)

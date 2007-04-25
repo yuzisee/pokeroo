@@ -222,11 +222,21 @@ class GainModelNoRisk : public virtual GainModel
 
 class GainModelBluff : public virtual GainModel
 {
-	ExactCallBluffD * ea;
+    private:
+    float64 last_x;
+    float64 y;
+    float64 dy;
+
+    void query( const float64 );
+
+    protected:
+    ExactCallBluffD * ea;
     public:
 	GainModelBluff(const StatResult s,ExactCallBluffD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c)
-	,ea(c)
-	{}
+	,last_x(-1),ea(c)
+	{
+	    query(0);
+    }
 	virtual ~GainModelBluff();
 
 	virtual float64 f(const float64);
@@ -236,6 +246,14 @@ class GainModelBluff : public virtual GainModel
 
 class GainModelNoRiskBluff : public virtual GainModelNoRisk
 {
+    private:
+    float64 last_x;
+    float64 y;
+    float64 dy;
+
+    void query( const float64 );
+
+    protected:
 	ExactCallBluffD * ea;
     public:
 	GainModelNoRiskBluff(const StatResult s,ExactCallBluffD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c),GainModelNoRisk(s,c)
