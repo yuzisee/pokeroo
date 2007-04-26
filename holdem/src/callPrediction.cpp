@@ -268,7 +268,7 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 	if( step > 0 )
 	{
 		raiseAmount = raiseAmount + (raiseAmount - callBet());
-		
+
 		if( raiseAmount < betSize + minRaiseDirect )
 		{
 			//Two minraises above bet to call
@@ -362,16 +362,20 @@ void ExactCallD::query(const float64 betSize)
             {	//Can still call, at least
 
 
-				///Check for each raise percentage
-				for( int32 i=0;i<noRaiseArraySize;++i)
-                {
-					const float64 thisRaise = RaiseAmount(betSize,i);
-                    const float64 oppRaiseMake = thisRaise - oppBetAlready;
-                    if( oppRaiseMake > 0 && thisRaise <= oppBankRoll )
+                if( oppBetAlready < callBet() || betSize > callBet() )
+                { //The player can raise you if he hasn't called yet, OR you're raising
+
+                    ///Check for each raise percentage
+                    for( int32 i=0;i<noRaiseArraySize;++i)
                     {
-                        const float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance);
-                        nextNoRaise_A[i] = 1 - e->pctWillCall( w_r );
-                        nextNoRaiseD_A[i] = - e->pctWillCallD(  w_r  )  * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance );
+                        const float64 thisRaise = RaiseAmount(betSize,i);
+                        const float64 oppRaiseMake = thisRaise - oppBetAlready;
+                        if( oppRaiseMake > 0 && thisRaise <= oppBankRoll )
+                        {
+                            const float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance);
+                            nextNoRaise_A[i] = 1 - e->pctWillCall( w_r );
+                            nextNoRaiseD_A[i] = - e->pctWillCallD(  w_r  )  * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance );
+                        }
                     }
                 }
 
