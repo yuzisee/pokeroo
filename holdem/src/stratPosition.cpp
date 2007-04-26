@@ -490,9 +490,14 @@ float64 ImproveGainStrategy::MakeBet()
 
 
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
-        logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,0) << " @ $" << myDeterredCall.RaiseAmount(bestBet,0) << endl;
-		logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,1) << " @ $" << myDeterredCall.RaiseAmount(bestBet,1) << endl;
-		logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,2) << " @ $" << myDeterredCall.RaiseAmount(bestBet,2) << endl;
+        int32 raiseStep = 0;
+        float64 rAmount = 0;
+        while( rAmount < maxShowdown )
+        {
+            rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
+            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << myDeterredCall.RaiseAmount(bestBet,raiseStep) << endl;
+            ++raiseStep;
+        }
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
             logFile << "confirm " << choicemodel.f(bestBet) << endl;
@@ -653,10 +658,15 @@ float64 ImproveGainRankStrategy::MakeBet()
     }
 
 
-        logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;\
-        logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,0) << " @ $" << myDeterredCall.RaiseAmount(bestBet,0) << endl;
-		logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,1) << " @ $" << myDeterredCall.RaiseAmount(bestBet,1) << endl;
-		logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,2) << " @ $" << myDeterredCall.RaiseAmount(bestBet,2) << endl;
+        logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
+        int32 raiseStep = 0;
+        float64 rAmount = 0;
+        while( rAmount < maxShowdown )
+        {
+            rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
+            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << myDeterredCall.RaiseAmount(bestBet,raiseStep) << endl;
+            ++raiseStep;
+        }
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
             logFile << "confirm " << hybridgainDeterred_aggressive.f(bestBet) << endl;
