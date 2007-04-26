@@ -38,7 +38,7 @@
 #ifndef WINRELEASE
 	#ifndef NO_LOG_FILES
         ///Toggle the define below depending on debugging
-		#define REGULARINTOLOG
+		#undef REGULARINTOLOG
 	#endif
 #endif
 #define DEBUGSITUATION
@@ -1126,7 +1126,7 @@ int main(int argc, char* argv[])
 #ifdef NO_LOG_FILES
 	    superGame(0);
 #else
-   	    testPlay(0);
+   	    testPlay(1);
 #endif
    	    //testNewCallStats();
 #endif

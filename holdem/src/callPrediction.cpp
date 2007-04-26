@@ -259,20 +259,29 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 
     if( minRaiseBet < minRaiseDirect )
     {
-        //Two minraises above bet to call
-        raiseAmount = minRaiseDirect + minRaiseBy;
+        raiseAmount = betSize + minRaiseBy;
 
     }else{
         raiseAmount = betSize + minRaiseBet;
     }
 
-
-    while(step > 0)
-    {
-        //You would be raising by {raiseAmount - callBet()};
-        raiseAmount = raiseAmount + (raiseAmount - callBet());
-        --step;
-    }
+	if( step > 0 )
+	{
+		raiseAmount = raiseAmount + (raiseAmount - callBet());
+		
+		if( raiseAmount < betSize + minRaiseDirect )
+		{
+			//Two minraises above bet to call
+			raiseAmount = betSize + minRaiseDirect;
+		}
+		--step;
+		while(step > 0)
+		{
+			//You would be raising by {raiseAmount - callBet()};
+			raiseAmount = raiseAmount + (raiseAmount - callBet());
+			--step;
+		}
+	}
 
     if( raiseAmount > maxBet() )
     {
@@ -378,8 +387,9 @@ void ExactCallD::query(const float64 betSize)
 #endif
                     for( int32 i=0;i<noRaiseArraySize;++i)
                     {
-                        const float64 oppRaiseMake = RaiseAmount(betSize,i) - oppBetAlready;
-                        if( oppRaiseMake > 0 )
+						const float64 thisRaise = RaiseAmount(betSize,i);
+                        const float64 oppRaiseMake = thisRaise - oppBetAlready;
+                        if( oppRaiseMake > 0 && thisRaise >= oppBankRoll )
                         {
                             const float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance);
                             nextNoRaise_A[i] = 1 - e->pctWillCall( w_r );

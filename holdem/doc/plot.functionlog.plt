@@ -1,6 +1,6 @@
 # Call Prediction Model
 
-filename = 'F:\X\Fross_G\Yuzisee\holdem\vs2005\holdem\ComV.functionlog.csv' 
+filename = 'F:\X\Fross_G\Yuzisee\holdem\vs2005\holdem\TrapV.functionlog.csv' 
 
 reset
 plot      filename using 1:2 '%lf,%lf' with lines linewidth 2 title "gain"

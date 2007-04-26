@@ -87,7 +87,7 @@ last_x = betSize;
             potRaisedWin_A[i] = oppRaisedFoldGain_A[i];
             potRaisedWinD_A[i] = 0;
         }
-
+		
 #else
 	raiseAmount_A[i] = 0;
     oppRaisedChance_A[i] = 0;
