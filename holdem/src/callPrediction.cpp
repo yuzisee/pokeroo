@@ -661,9 +661,17 @@ float64 ExactCallBluffD::PushGain()
     if( handRarity >= 1 ) //all hands are better than this one
     {
            //1326 is the number of hands possible
-        return (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*1326);
+		#ifdef PURE_BLUFF
+			return (1 + (baseFraction+bigBlindFraction+smallBlindFraction)*blindsPow*1326);
+		#else
+			return (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*1326);
+		#endif
     }
-    const float64 totalFG = (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*handFreq);
+	#ifdef PURE_BLUFF
+		const float64 totalFG = (1 + (baseFraction+bigBlindFraction+smallBlindFraction)*blindsPow*handFreq);
+	#else
+		const float64 totalFG = (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*handFreq);
+	#endif
 
 #else
     const float64 blindsGain = (1 + baseFraction + bigBlindFraction)*(1 + baseFraction + smallBlindFraction);
