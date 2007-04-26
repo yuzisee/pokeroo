@@ -66,7 +66,7 @@ last_x = betSize;
     float64 lastuptoRaisedChanceD = 0;
     float64 newRaisedChance = 0;
     float64 newRaisedChanceD = 0;
-    for( int32 i=0;i<arraySize; ++i)
+    for( int32 i=arraySize-1;i>=0; --i)
     {
         raiseAmount_A[i] = ea->RaiseAmount(betSize,i);
 #ifdef RAISED_PWIN
