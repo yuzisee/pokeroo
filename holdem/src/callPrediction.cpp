@@ -359,14 +359,30 @@ void ExactCallD::query(const float64 betSize)
             const float64 oppBankRoll = table->ViewPlayer(pIndex)->GetMoney();
 
             if( betSize < oppBankRoll )
-            {
+            {	//Can still call, at least
 
+
+				///Check for each raise percentage
+				for( int32 i=0;i<noRaiseArraySize;++i)
+                {
+					const float64 thisRaise = RaiseAmount(betSize,i);
+                    const float64 oppRaiseMake = thisRaise - oppBetAlready;
+                    if( oppRaiseMake > 0 && thisRaise <= oppBankRoll )
+                    {
+                        const float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance);
+                        nextNoRaise_A[i] = 1 - e->pctWillCall( w_r );
+                        nextNoRaiseD_A[i] = - e->pctWillCallD(  w_r  )  * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance );
+                    }
+                }
+
+
+
+				///Check for most likely call amount
                 const float64 oppBetMake = betSize - oppBetAlready;
 				//To understand the above, consider that totalexf includes already made bets
 
-
                 if( oppBetMake <= 0 )
-                {
+                { //Definitely call
                     nextexf = 0;
                     nextdexf = 1;
                 }else
@@ -385,18 +401,6 @@ void ExactCallD::query(const float64 betSize)
                     std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
 */
 #endif
-                    for( int32 i=0;i<noRaiseArraySize;++i)
-                    {
-						const float64 thisRaise = RaiseAmount(betSize,i);
-                        const float64 oppRaiseMake = thisRaise - oppBetAlready;
-                        if( oppRaiseMake > 0 && thisRaise <= oppBankRoll )
-                        {
-                            const float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance);
-                            nextNoRaise_A[i] = 1 - e->pctWillCall( w_r );
-                            nextNoRaiseD_A[i] = - e->pctWillCallD(  w_r  )  * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance );
-                        }
-                    }
-
                     //const float64 wn = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppBetMake, 1/significance); //f(w) = w^n
                     //const float64 w = pow( wn, significance );         //f-1(w) = w
                     const float64 w = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppBetMake, 1/significance);
@@ -411,6 +415,8 @@ void ExactCallD::query(const float64 betSize)
                     nextexf *= oppBetMake;
 
                 }
+				//End of else, blocked executed UNLESS oppBetMake <= 0
+
             }else
             {///Opponent would be all-in to call this bet
                 const float64 oldpot = table->GetPrevPotSize();
