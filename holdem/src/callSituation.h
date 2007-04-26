@@ -62,7 +62,7 @@ protected:
 #ifdef ANTI_PRESSURE_FOLDGAIN
     const float64 handRarity;
 #endif
-    
+
     #if defined(ASSUMEFOLDS)
     float64 eFold;
 /*
@@ -90,7 +90,7 @@ public:
     virtual ~ExpectedCallD();
 
     virtual float64 forfeitChips() const;
-    virtual float64 foldGain() const;
+    virtual float64 foldGain(const float64 extra=0) const;
     virtual float64 oppBet() const;
     virtual float64 alreadyBet() const;
     virtual float64 callBet() const;
@@ -102,6 +102,7 @@ public:
     virtual float64 betFraction(const float64 betSize) const;
     virtual float64 handBetBase() const; //The B (bankroll) in calculations
 	virtual float64 minRaiseTo() const;
+	virtual bool inBlinds() const;
 
     virtual float64 exf(const float64 betSize) = 0;
     virtual float64 dexf(const float64 betSize) = 0;

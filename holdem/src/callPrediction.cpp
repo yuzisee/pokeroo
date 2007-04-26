@@ -335,7 +335,7 @@ void ExactCallD::query(const float64 betSize)
     float64 * nextNoRaise_A = new float64[noRaiseArraySize];
     float64 * nextNoRaiseD_A = new float64[noRaiseArraySize];
 
-
+    bool bInBlinds = inBlinds();
 
 
     int8 pIndex = playerID;
@@ -362,8 +362,10 @@ void ExactCallD::query(const float64 betSize)
             {	//Can still call, at least
 
 
-                if( oppBetAlready < callBet() || betSize > callBet() )
+                if( oppBetAlready < callBet() || betSize > callBet() || callBet() <= 0 || bInBlinds)
                 { //The player can raise you if he hasn't called yet, OR you're raising
+
+                    if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
 
                     ///Check for each raise percentage
                     for( int32 i=0;i<noRaiseArraySize;++i)
@@ -662,7 +664,8 @@ float64 ExactCallBluffD::PushGain()
     {
            //1326 is the number of hands possible
 		#ifdef PURE_BLUFF
-			return (1 + (baseFraction+bigBlindFraction+smallBlindFraction)*blindsPow*1326);
+            return 1;
+			//return (1 + (baseFraction+bigBlindFraction+smallBlindFraction)*blindsPow*1326);
 		#else
 			return (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*1326);
 		#endif

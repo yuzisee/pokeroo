@@ -35,7 +35,7 @@ float64 ExpectedCallD::forfeitChips() const
     return ( alreadyBet() + prevpotChips() - table->ViewPlayer(playerID)->GetContribution() );
 }
 
-float64 ExpectedCallD::foldGain() const
+float64 ExpectedCallD::foldGain(const float64 extra) const
 {
 
 
@@ -43,7 +43,7 @@ float64 ExpectedCallD::foldGain() const
     const float64 a = 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
 #endif
 
-    const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted );
+    const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted + extra);
 #ifdef ANTI_PRESSURE_FOLDGAIN
     const float64 handFreq = 1/handRarity;
     if( handRarity <= 0 )
@@ -66,7 +66,11 @@ float64 ExpectedCallD::foldGain() const
 #endif
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
+    #ifdef PURE_BLUFF
+    const float64 totalFG = (1 - (baseFraction+bigBlindFraction+smallBlindFraction)*handFreq*blindsPow);
+    #else
     const float64 totalFG = (1 - baseFraction - (bigBlindFraction+smallBlindFraction)*handFreq*blindsPow);
+    #endif
 #else
     if( 1 < baseFraction + bigBlindFraction*handFreq )
     {
@@ -146,6 +150,12 @@ float64 ExpectedCallD::handBetBase() const
 float64 ExpectedCallD::minRaiseTo() const
 {
     return table->GetMinRaise() + callBet();
+}
+
+
+bool ExpectedCallD::inBlinds() const
+{
+    return ( table->GetUnbetBlindsTotal() > 0 );
 }
 
 #ifdef ASSUMEFOLDS

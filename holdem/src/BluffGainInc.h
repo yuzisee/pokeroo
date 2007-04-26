@@ -81,13 +81,13 @@ last_x = betSize;
         potRaisedWin_A[i] = g(raiseAmount_A[i]);
         potRaisedWinD_A[i] = gd(raiseAmount_A[i],potRaisedWin_A[i]);
 
-        oppRaisedFoldGain_A[i] = e->foldGain() - e->betFraction(betSize - ea->alreadyBet() ); //You would fold the additional (betSize - ea->alreadyBet() )
+        oppRaisedFoldGain_A[i] = e->foldGain(betSize - ea->alreadyBet()); //You would fold the additional (betSize - ea->alreadyBet() )
         if( potRaisedWin_A[i] < oppRaisedFoldGain_A[i] )
         {
             potRaisedWin_A[i] = oppRaisedFoldGain_A[i];
             potRaisedWinD_A[i] = 0;
         }
-		
+
 #else
 	raiseAmount_A[i] = 0;
     oppRaisedChance_A[i] = 0;
