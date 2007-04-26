@@ -389,7 +389,7 @@ void ExactCallD::query(const float64 betSize)
                     {
 						const float64 thisRaise = RaiseAmount(betSize,i);
                         const float64 oppRaiseMake = thisRaise - oppBetAlready;
-                        if( oppRaiseMake > 0 && thisRaise >= oppBankRoll )
+                        if( oppRaiseMake > 0 && thisRaise <= oppBankRoll )
                         {
                             const float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance);
                             nextNoRaise_A[i] = 1 - e->pctWillCall( w_r );
