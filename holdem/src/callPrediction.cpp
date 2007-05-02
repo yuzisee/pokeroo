@@ -335,8 +335,6 @@ void ExactCallD::query(const float64 betSize)
     float64 * nextNoRaise_A = new float64[noRaiseArraySize];
     float64 * nextNoRaiseD_A = new float64[noRaiseArraySize];
 
-    bool bInBlinds = inBlinds();
-
 
     int8 pIndex = playerID;
     table->incrIndex(pIndex);
@@ -362,10 +360,10 @@ void ExactCallD::query(const float64 betSize)
             {	//Can still call, at least
 
 
-                if( oppBetAlready < callBet() || betSize > callBet() || callBet() <= 0 || bInBlinds)
+                if( oppBetAlready < callBet() || table->CanRaise(pIndex) )
                 { //The player can raise you if he hasn't called yet, OR you're raising
 
-                    if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
+                    //if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
 
                     ///Check for each raise percentage
                     for( int32 i=0;i<noRaiseArraySize;++i)

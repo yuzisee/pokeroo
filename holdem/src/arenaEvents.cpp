@@ -180,6 +180,7 @@ void HoldemArenaBetting::startBettingRound()
 	bBlinds      = curDealer;	//Used to account for soft-bets:
 								//ie, if called, you can still reraise.
 								//BUT, it also handles the check-check-check
+    curHighBlind = -1;
 
     if( comSize == 0 && myTable->GetNumberInHand() == 2)
     {
@@ -290,6 +291,9 @@ void HoldemArenaBetting::startBettingRound()
             highBet = PlayerBet(withP1);
 		}
 
+
+        curHighBlind = highestBetter;
+
         #ifdef OLD_DISPLAY_STYLE
         if( bVerbose )
         {
@@ -383,6 +387,7 @@ gamelog << p[curIndex]->GetIdent() << " up next... same as before?" << endl;
         }
         incrIndex();
     }
+    ///INVARIANT: curIndex is the next player to bet
 
     //If this player's last bet was a blind, it wasn't counted in RoundBetsTotal. Now his entire bet should count.
     if( bBlinds != -1 )
@@ -393,6 +398,7 @@ gamelog << p[curIndex]->GetIdent() << " up next... same as before?" << endl;
         {
             forcedBetSum -= PlayerBet(nextPlayer);
             blindOnlySum -= PlayerBet(nextPlayer);
+            if( curIndex == curHighBlind ) curHighBlind = -1; //Reset curHighBlind. Nobody is left who "seems to have called" but hasn't.
         }
 
         if( forcedBetSum < 0 ) forcedBetSum = 0;

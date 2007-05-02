@@ -252,6 +252,7 @@ protected:
 		int8 playersInHand;
 		int8 playersAllIn;
 
+        int8 curHighBlind;
 		BlindStructure* blinds;
 		float64 smallestChip;
 		float64 allChips;
@@ -320,7 +321,7 @@ protected:
         ,bLoadGame(false)
 #endif
         ,gamelog(targetout)
-        ,bVerbose(illustrate),bSpectate(spectate),livePlayers(0), blinds(b),allChips(0)
+        ,bVerbose(illustrate),bSpectate(spectate),livePlayers(0),curHighBlind(-1),blinds(b),allChips(0)
 		,lastRaise(0),highBet(0), myPot(0), myFoldedPot(0), myBetSum(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)
 		#ifdef GLOBAL_AICACHE_SPEEDUP
 		,communityBuffer(0)
@@ -347,6 +348,7 @@ protected:
 		virtual bool IsInHand(int8) const;
 		virtual bool HasFolded(int8) const;
 		virtual bool CanStillBet(int8) const; //This will not include players who have pushed all in
+		virtual bool CanRaise(int8) const;
 
         virtual float64 GetAllChips() const;
         virtual float64 GetFoldedPotSize() const;
@@ -373,7 +375,7 @@ class HoldemArenaEventBase
     HoldemArena * myTable;
     std::ostream& gamelog;
 
-
+    int8 & curHighBlind;
     float64 & highBet;
     float64 & lastRaise;
     float64 & forcedBetSum;
@@ -422,6 +424,7 @@ class HoldemArenaEventBase
 
     HoldemArenaEventBase(HoldemArena * table) : myTable(table)
     , gamelog(myTable->gamelog)
+    , curHighBlind(table->curHighBlind)
     , highBet(table->highBet), lastRaise(table->lastRaise), forcedBetSum(myTable->forcedBetSum), blindOnlySum(myTable->blindOnlySum)
     , playersInHand(table->playersInHand),playersAllIn(table->playersAllIn)
     , curIndex(table->curIndex), curDealer(table->curDealer)

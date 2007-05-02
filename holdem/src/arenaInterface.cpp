@@ -443,6 +443,11 @@ bool HoldemArena::CanStillBet(int8 n) const
     return IsInHand(n) && p[n]->allIn == INVALID && p[n]->GetMoney() > 0;
 }
 
+bool HoldemArena::CanRaise(int8 n) const
+{
+    return ( (curHighBlind == n) || (highBet > p[n]->myBetSize) || (highBet <= 0) ) && (CanStillBet(n));
+}
+
 float64 HoldemArena::GetBetToCall() const
 {
 	return highBet;
