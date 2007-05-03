@@ -359,8 +359,7 @@ void ExactCallD::query(const float64 betSize)
             if( betSize < oppBankRoll )
             {	//Can still call, at least
 
-
-                if( oppBetAlready < callBet() || table->CanRaise(pIndex) )
+                if( betSize > callBet() || table->CanRaise(pIndex) )
                 { //The player can raise you if he hasn't called yet, OR you're raising
 
                     //if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
