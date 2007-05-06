@@ -106,6 +106,15 @@ float64 ExpectedCallD::callBet() const
     return table->GetBetToCall();
 }
 
+float64 ExpectedCallD::minCallFraction(const float64 betSize)
+{
+    const float64 maxShowdown = table->GetMaxShowdown();
+    //Most of the time, (betSize < maxShowdown), so minCall is betSize;
+    //Obviously you can't have someone call less than betSize unless everybody else folds.
+    const float64 minCall = (betSize < maxShowdown) ? betSize : maxShowdown;
+    return betFraction(minCall);
+}
+
 float64 ExpectedCallD::maxBet() const
 {
     return table->ViewPlayer(playerID)->GetMoney();

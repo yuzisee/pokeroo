@@ -94,6 +94,7 @@ public:
     virtual float64 oppBet() const;
     virtual float64 alreadyBet() const;
     virtual float64 callBet() const;
+    virtual float64 minCallFraction(const float64 betSize);
     virtual float64 chipDenom() const;
     virtual float64 allChips() const;
     virtual float64 maxBet() const;
