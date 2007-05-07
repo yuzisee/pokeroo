@@ -181,6 +181,12 @@ float64 GainModel::g(float64 betSize)
 	float64 x = e->betFraction(betSize);
 	float64 exf = e->betFraction(e->exf(betSize));
 
+    const float64 minexf = e->minCallFraction(betSize);
+    if( exf < minexf )
+    {
+        exf = minexf;
+    }
+
     const float64 f_pot = e->betFraction( e->prevpotChips() );
     const float64 exf_live = exf - f_pot;
 
@@ -266,8 +272,19 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 	float64 x = e->betFraction(betSize);
  	if( x == 1 ) x -= fracQuantum; //Approximate extremes to avoide division by zero
 
+
+
+
     //const float64 qdenom = (2*x+f_pot);
 	float64 exf = e->betFraction(e->exf(betSize));
+
+
+    const float64 minexf = e->minCallFraction(betSize);
+    if( exf < minexf )
+    {
+        return 0; //Incremental decrease is zero, so incremental increase must be zero at the limit
+    }
+
 
 		//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B  //Note: B is determined by betSize/x
 	const float64 dexf = e->dexf(betSize); ///This is actually e->betFraction( e->dexf(betSize)*betSize/x ) = e->dexf(betSize)

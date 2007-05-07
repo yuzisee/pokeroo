@@ -26,6 +26,13 @@
 #define log1p( _X_ ) log( (_X_) + 1 )
 #endif
 
+//#define GEOM_FOLD_PCT
+#define CALL_SCALE_FOLD_PCT
+
+#if defined(GEOM_FOLD_PCT) && defined(CALL_SCALE_FOLD_PCT)
+Don't define BOTH FOLD_PCT types
+#endif
+
 //#define DEBUGWATCHPARMS
 #ifdef DEBUGWATCHPARAMS
 #include <iostream>
@@ -487,12 +494,22 @@ void ExactCallBluffD::query(const float64 betSize)
 {
     ExactCallD::query(betSize);
 
+#if defined( GEOM_FOLD_PCT )
+    //const float64 countToBeat = table->GetNumberAtTable() - 1 ;
+    //const float64 significance = 1.0 / countToBeat;
+#elif defined( CALL_SCALE_FOLD_PCT )
     float64 countMayFold = table->GetNumberInHand() - 1 ;
-//    const float64 countToBeat = table->GetNumberAtTable() - 1 ;
+    const float64 significanceCall = 1.0/countMayFold;
+#else
 //    float64 countToBeat = table->GetNumberAtTable() - table->GetNumberInHand() + 1 ;
 //	float64 countMayFold = 1 ;
+#endif
+
+
     const float64 myexf = betSize;
     const float64 mydexf = 1;
+
+
 
 
     float64 nextFold;
@@ -518,8 +535,7 @@ void ExactCallBluffD::query(const float64 betSize)
 
         const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
 
-        const float64 significanceLinear =/* 1/countToBeat ;
-                const float64 significance =*/ 1/countMayFold;
+        //const float64 significanceLinear =/* 1/countToBeat ;*/ 1/countMayFold;
 
         if( table->CanStillBet(pIndex) )
         {///Predict how much the bet will be
@@ -542,6 +558,21 @@ void ExactCallBluffD::query(const float64 betSize)
                                                  /(oppBetMake + origPot) /(oppBetMake + origPot);
 */
 
+#if defined( GEOM_FOLD_PCT )
+                const float64 w = facedOdds_Geom(oppBankRoll,origPot,oppBetAlready,oppBetMake, 1/significance);
+                nextFold = w;
+                nextFoldPartial =
+                        facedOddsND_Geom( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, 1/significance );
+
+#elif defined( CALL_SCALE_FOLD_PCT )
+                const float64 w = facedOdds_Geom(oppBankRoll,origPot,oppBetAlready,oppBetMake, 1/significanceCall);
+                nextFold = 1 - ea->pctWillCall( w );
+                nextFoldPartial = -ea->pctWillCallD( w ) *
+                        facedOddsND_Geom( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, 1/significanceCall );
+
+
+
+#else
                 const float64 wn = facedOdds_Algb(oppBankRoll,origPot,oppBetAlready,oppBetMake);
                 const float64 w = pow( wn, significanceLinear );
 				//const float64 dfwdbetSize = (w <= 0) ? 0 : (wn/w / significanceLinear);
@@ -556,7 +587,7 @@ void ExactCallBluffD::query(const float64 betSize)
 //                        * (origPot - oppBetMake * origPotD)
 //                    /(oppBetMake + origPot) /(oppBetMake + origPot);
 
-
+#endif
 /*
 #ifndef GEOM_COMBO_FOLDPCT
 
@@ -598,8 +629,17 @@ void ExactCallBluffD::query(const float64 betSize)
 */
 //					const float64 nextFoldF = 1 -
 
+#if defined( GEOM_FOLD_PCT )
+
+                    nextFold = facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significance);
+#elif defined( CALL_SCALE_FOLD_PCT )
+                    nextFold = 1 - ea->pctWillCall(
+                            facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significanceCall)
+                        );
+#else
                     nextFold = pow( facedOdds_Algb(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppBetMake),significanceLinear) ;
 //                            pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significanceLinear );
+#endif
 /*
 #ifndef GEOM_COMBO_FOLDPCT
                     nextFold = 1 - (nextFoldB + nextFoldF)/2;
@@ -612,7 +652,7 @@ void ExactCallBluffD::query(const float64 betSize)
             }
 
 
-            countMayFold -= 1;
+//            countMayFold -= 1;
 //            countToBeat  += 1;
 
             if(

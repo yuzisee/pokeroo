@@ -363,14 +363,15 @@ float64 ImproveStrategy::MakeBet()
     if( distrScale < 0 ) distrScale = 0;
 
     CallCumulationD &choicecumu = callcumu;
+    CallCumulationD &raisecumu = foldcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu,&choicecumu);
-    ExactCallBluffD myLimitCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu,&choicecumu);
+    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu,&raisecumu);
+    ExactCallBluffD myLimitCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu,&raisecumu);
 #else
-    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu,&choicecumu);
-    ExactCallBluffD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu,&choicecumu);
+    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu,&raisecumu);
+    ExactCallBluffD myLimitCall(myPositionIndex, &(ViewTable()), &choicecumu,&raisecumu);
 #endif
 
     myLimitCall.callingPlayers(  expectedVS  );
@@ -444,13 +445,13 @@ float64 ImproveGainStrategy::MakeBet()
 
 
     CallCumulationD &choicecumu = callcumu;
-
+    CallCumulationD &raisecumu = foldcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &callcumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
 #else
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &callcumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
     const float64 fullVersus = myDeterredCall.callingPlayers();
     if( bGamble >= 2 )
@@ -489,7 +490,7 @@ float64 ImproveGainStrategy::MakeBet()
 
     }
 
-	
+
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
 		int32 raiseStep = 0;
@@ -540,15 +541,15 @@ float64 DeterredGainStrategy::MakeBet()
 
 
     CallCumulationD &choicecumu = callcumu;
-
+    CallCumulationD &raisecumu = foldcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu);
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &choicecumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
 #else
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &choicecumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
     myDeterredCall.SetImpliedFactor(futureFold);
 
@@ -630,13 +631,13 @@ float64 ImproveGainRankStrategy::MakeBet()
 
 
     CallCumulationD &choicecumu = rankcumu;
-
+    CallCumulationD &raisecumu = rankcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &callcumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
 #else
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &callcumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
     const float64 fullVersus = myDeterredCall.callingPlayers();
     if( bGamble >= 2 )
@@ -650,12 +651,12 @@ float64 ImproveGainRankStrategy::MakeBet()
 	}
 
     StatResult left = hybridMagnified;
-    StatResult right = statmean;
+    //StatResult right = statmean;
     if( bGamble >= 1 )
     {
         myDeterredCall.SetImpliedFactor(distrScale);
         left = statranking;
-        right = statranking;
+    //    right = statranking;
     }
 
 	GainModelBluff hybridgainDeterred_aggressive(left,&myDeterredCall);
@@ -669,7 +670,7 @@ float64 ImproveGainRankStrategy::MakeBet()
     {
         logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
         logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
-		
+
     }
 
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
@@ -685,7 +686,7 @@ float64 ImproveGainRankStrategy::MakeBet()
 	}
 
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
-        
+
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
             logFile << "confirm " << hybridgainDeterred_aggressive.f(bestBet) << endl;
@@ -723,15 +724,15 @@ float64 DeterredGainRankStrategy::MakeBet()
 
 
     CallCumulationD &choicecumu = rankcumu;
-
+    CallCumulationD &raisecumu = rankcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu);
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &choicecumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
 #else
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &choicecumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
     myDeterredCall.SetImpliedFactor(futureFold);
 
@@ -755,7 +756,7 @@ float64 DeterredGainRankStrategy::MakeBet()
         logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
         logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred_agressiveness[bGamble]->f(bestBet) << endl;
 
-		
+
     }
 
 
@@ -774,7 +775,7 @@ float64 DeterredGainRankStrategy::MakeBet()
     if( bGamble == 1 )
     {
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
-        
+
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
             logFile << "confirm " << hybridgainDeterred_agressiveness[bGamble]->f(bestBet) << endl;
@@ -812,13 +813,14 @@ float64 HybridScalingStrategy::MakeBet()
 
 
     CallCumulationD &choicecumu = callcumu;
+    CallCumulationD &raisecumu = foldcumu;
 
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &callcumu);
+    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
 #else
-    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu, &callcumu);
+    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
     myExpectedCall.callingPlayers( (ViewTable().GetNumberAtTable()-1) / (1-estimateRevealed) );
 
@@ -827,7 +829,7 @@ float64 HybridScalingStrategy::MakeBet()
     logFile << "suggested difficulty of field# " << (ViewTable().GetNumberAtTable()-1) / (1-estimateRevealed) << endl; //Actually scales difficulty
 	logFile << "expected difficulty of field% " << eVSshift << endl; //The higher this is, the more it leans toward mean rather than rank
 	logFile << "oppGift   { " << oppGift << " }" << endl; //Measures how much is winnable
-	logFile << "shiftscale{ " << shiftscale2 << "² = " << shiftscale2*shiftscale2  << "}" << endl; //If not much is winnable, discourage betting
+	logFile << "shiftscale{ " << shiftscale2 << "Â² = " << shiftscale2*shiftscale2  << "}" << endl; //If not much is winnable, discourage betting
 #endif
 
 
@@ -879,7 +881,7 @@ float64 HybridScalingStrategy::MakeBet()
     if( bestBet >= betToCall )
     {
         logFile << "choicemodel("<< bestBet <<")=" << allModel.f(bestBet) << "  -->  " << gainPC << endl;
-        logFile << "                   (* " << ssunits << ")²" << endl;
+        logFile << "                   (* " << ssunits << ")Â²" << endl;
 
 		logFile << "OppRAISEChance% ... " << myExpectedCall.pRaise(bestBet,0) << " @ $" << myExpectedCall.RaiseAmount(bestBet,0) << endl;
 		logFile << "OppRAISEChance% ... " << myExpectedCall.pRaise(bestBet,1) << " @ $" << myExpectedCall.RaiseAmount(bestBet,1) << endl;
@@ -918,11 +920,12 @@ float64 CorePositionalStrategy::MakeBet()
 
     ///VARIABLE: the slider can move due to avgDev too, maybe....
 
-#ifdef RANK_CALL_CUMULATION
-	CallCumulationD &choicecumu = foldcumu;
-#else
+//#ifdef RANK_CALL_CUMULATION
+//	CallCumulationD &choicecumu = foldcumu;
+//#else
     CallCumulationD &choicecumu = callcumu;
-#endif
+    CallCumulationD &raisecumu = foldcumu;
+//#endif
 
 
 
@@ -934,9 +937,9 @@ float64 CorePositionalStrategy::MakeBet()
 #define HANDRANK_MACRO  statranking.pct,
 #endif
     ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu);
-    ExactCallBluffD myBluffFoldCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, &choicecumu);//foldcumu);
+    ExactCallBluffD myBluffFoldCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, &raisecumu);//foldcumu);
     ExactCallD myLimitCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu);
-    ExactCallBluffD myLimitFoldCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, &choicecumu);//foldcumu);
+    ExactCallBluffD myLimitFoldCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, &raisecumu);//foldcumu);
     const float64 committed = ViewPlayer().GetContribution() + myBet;
     ExactCallD myCommittalCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, committed );
 #ifdef ANTI_PRESSURE_FOLDGAIN
@@ -1009,6 +1012,15 @@ float64 CorePositionalStrategy::MakeBet()
 	#ifdef LOGPOSITION
 		if( bGamble >= 9 && bGamble <= 15 )
 		{
+		    int32 raiseStep = 0;
+            float64 rAmount = 0;
+            while( rAmount < maxShowdown )
+            {
+                rAmount =  myBluffFoldCall.RaiseAmount(bestBet,raiseStep);
+                logFile << "OppRAISEChance% ... " << myBluffFoldCall.pRaise(bestBet,raiseStep) << " @ $" << myBluffFoldCall.RaiseAmount(bestBet,raiseStep) << endl;
+                ++raiseStep;
+            }
+
 			logFile << "OppFoldChance% ... " << myBluffFoldCall.pWin(bestBet) << "   d\\" << myBluffFoldCall.pWinD(bestBet) << endl;
 
 			if( myBluffFoldCall.pWin(bestBet) > 0 )

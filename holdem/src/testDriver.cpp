@@ -948,19 +948,19 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                 switch(i)
                 {
                     case 0:
-                        myTable.AddPlayer("TrapBotIV", startingMoney, &ImproveA);
+                        myTable.AddPlayer("TrapBotV", startingMoney, &ImproveA_R);
                         break;
                     case 1:
-                        myTable.AddPlayer("ConservativeBotIV", startingMoney, &FutureFoldA);
+                        myTable.AddPlayer("ConservativeBotV", startingMoney, &FutureFoldA_R);
                         break;
                     case 2:
-                        myTable.AddPlayer("NormalBotIV",startingMoney, &XFoldA);
+                        myTable.AddPlayer("NormalBotV",startingMoney, &XFoldA_R);
                         break;
                     case 3:
-                        myTable.AddPlayer("SpaceBotIV", startingMoney, &AutoSetA);
+                        myTable.AddPlayer("SpaceBotV", startingMoney, &MeanGeomBluff);
                         break;
                     case 4:
-                        myTable.AddPlayer("ActionBotIV",startingMoney, &ReallyImproveA);
+                        myTable.AddPlayer("ActionBotV",startingMoney, &ReallyImproveA_R);
                         break;
                 }
                 i=(i+randStep)%NUM_OPPONENTS;
@@ -999,13 +999,14 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         myTable.AddPlayer("TrapIV", &ImproveA);
 		myTable.AddPlayer("AceIV", &ReallyImproveA);
 
-		myTable.AddPlayer("SpaceIV", &AutoSetA);
+		//myTable.AddPlayer("SpaceIV", &AutoSetA);
 
 
         myTable.AddPlayer("ComV", &FutureFoldA_R);
         myTable.AddPlayer("NormV", &XFoldA_R);
         myTable.AddPlayer("TrapV", &ImproveA_R);
 		myTable.AddPlayer("AceV", &ReallyImproveA_R);
+		myTable.AddPlayer("SpaceV", &MeanGeomBluff);
 
 
             break;
