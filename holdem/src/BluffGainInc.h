@@ -106,8 +106,27 @@ last_x = betSize;
         playChanceD -= oppRaisedChanceD_A[i];
 	}
 
-    const float64 potNormalWin = g(betSize);
-    const float64 potNormalWinD = gd(betSize,potNormalWin);
+    float64 potNormalWin = g(betSize);
+    float64 potNormalWinD = gd(betSize,potNormalWin);
+
+    if( playChance <= 0 ) //roundoff, but {playChance == 0} is push-fold for the opponent
+    {
+        //Correct other odds
+        const float64 totalChance = 1 - playChance;
+        for( int32 i=arraySize-1;i>=0; --i)
+        {
+            potRaisedWin_A[i] /= totalChance;
+            potRaisedWinD_A[i] /= totalChance;
+        }
+        oppFoldChance /= totalChance;
+        oppFoldChanceD /= totalChance;
+
+        //Remove call odds
+        playChance = 0;
+        playChanceD = 0;
+        potNormalWin = 1;
+        potNormalWinD = 0;
+    }
 
 
 
