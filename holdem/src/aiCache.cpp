@@ -62,6 +62,7 @@ void StatsManager::initPath()
                 }
 	}else
 	{
+	    std::cerr << "Using default data path of ./ (Use a holdemdb.ini to specify your own path)" << std::endl;
 		baseDataPath = "./";
 	}
 }
