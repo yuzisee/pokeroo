@@ -26,8 +26,11 @@
 #define log1p( _X_ ) log( (_X_) + 1 )
 #endif
 
+
+///In the end, we had to stick with Algb for foldgain. (At low blinds, oppfold is guaranteed in Geom)
 //#define GEOM_FOLD_PCT
-#define CALL_SCALE_FOLD_PCT
+//#define CALL_SCALE_FOLD_PCT
+#define CALL_ALGB_PCT
 
 #if defined(GEOM_FOLD_PCT) && defined(CALL_SCALE_FOLD_PCT)
 Don't define BOTH FOLD_PCT types
@@ -63,7 +66,7 @@ void ExactCallD::SetImpliedFactor(const float64 bonus)
 /*
     //oppBetMake / (oppBetMake + totalexf)
     const int8 N = handsDealt();
-    const float64 fNRank = (wGuess >= 1) ? 1.0/1326.0 : (1 - e->pctWillCall(1 - wGuess));
+    const float64 fNRank = (wGuess >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - e->pctWillCall(1 - wGuess));
     const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
                                         * ( N - 2 )/ N ;
 
@@ -81,7 +84,7 @@ float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alread
     const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
             * ( N - 2 )/ N ;
 
-    //geomFunction.quantum = 1 / 1326.0 / 2.0;
+    //geomFunction.quantum = 1 / RAREST_HAND_CHANCE / 2.0;
     geomFunction.Bankroll = bankroll - alreadyBet; //TODO: Confirm {- alreadyBet}
     geomFunction.pot = pot;
     geomFunction.bet = bet;
@@ -115,7 +118,7 @@ float64 ExactCallFunctionModel::f( const float64 w )
     const float64 fw = pow(w,n);
 
 	const float64 frank = e->pctWillCall(1 - w);
-    const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
     //fNRank == 0 and frank == 1? That means if you had this w pct, you would have the nuts or better.
 
 
@@ -132,7 +135,7 @@ float64 ExactCallFunctionModel::fd( const float64 w, const float64 y )
     const float64 dfw = (n<0.5) ? (0) : (n * pow(w,n-1));
 
     const float64 frank = e->pctWillCall(1 - w);
-    const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
 
     const float64 stackFactor = avgBlind * e->pctWillCallD(1-w) / fNRank / fNRank;
 
@@ -156,7 +159,7 @@ float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alre
             * ( N - 2 )/ N ;
 
     const float64 frank = e->pctWillCall(1 - w);
-    const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
 
 
     const float64 fw = pow(w,n);
@@ -186,13 +189,13 @@ float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alre
 }
 
 
-float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 wGuess)
+float64 ExactCallD::facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 wGuess)
 {
     //oppBetMake / (oppBetMake + totalexf)
     const int8 N = handsDealt();
 
     const float64 frank = e->pctWillCall(1 - wGuess);
-    const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
 
     const float64 avgBlind = (table->GetBigBlind() + table->GetBigBlind()) * ( N - 2 )/ N / N;
 
@@ -205,18 +208,30 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
     return ret;
 }
 
+float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet)
+{
+    float64 newOdds = facedOdds_Algb_step(bankroll,pot,alreadyBet,bet);
+    float64 lastOdds;
+    do
+    {
+        lastOdds = newOdds;
+        newOdds = facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,lastOdds);
+    }while( fabs(lastOdds - newOdds) > 0.25/RAREST_HAND_CHANCE );
+    return newOdds;
+}
+
 float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n)
 {
 	//TODO: Really?
 	//Approximate at the limit. It should be about linear in this region anyways, and we probably only
 	//hit this case when there is no zero in the range [0..1].
-	//if( w <= 1.0/1326.0 / 4 ) w = 1.0/1326.0 / 4;
+	//if( w <= 1.0/RAREST_HAND_CHANCE / 4 ) w = 1.0/RAREST_HAND_CHANCE / 4;
 	if( w <= 0 ) return 0;
 
     const int8 N = handsDealt();
     const float64 frank = e->pctWillCall(1 - w);
 	const float64 dfrank = e->pctWillCallD(1-w);
-    const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
     const float64 avgBlind = (table->GetBigBlind() + table->GetBigBlind()) * ( N - 2 )/ N / N;
 
     const float64 fw = pow(w,n);
@@ -494,13 +509,15 @@ void ExactCallBluffD::query(const float64 betSize)
 {
     ExactCallD::query(betSize);
 
+    float64 countMayFold = table->GetNumberInHand() - 1 ;
 #if defined( GEOM_FOLD_PCT )
     //const float64 countToBeat = table->GetNumberAtTable() - 1 ;
     //const float64 significance = 1.0 / countToBeat;
 #elif defined( CALL_SCALE_FOLD_PCT )
-    float64 countMayFold = table->GetNumberInHand() - 1 ;
-    const float64 significanceCall = 1.0/countMayFold;
+
+    const float64 significanceCall = 1;//1.0/countMayFold;
 #else
+    //const float64 significanceLinear = 1/countToBeat;
 //    float64 countToBeat = table->GetNumberAtTable() - table->GetNumberInHand() + 1 ;
 //	float64 countMayFold = 1 ;
 #endif
@@ -521,7 +538,7 @@ void ExactCallBluffD::query(const float64 betSize)
 
 
     if( betSize < minRaiseTo() - chipDenom()/4 || callBet() >= table->GetMaxShowdown() )
-    {
+    { //Bet is a call, no chance of oppFold
         allFoldChance = 0;
         allFoldChanceD = 0;
         nextFold = 0;
@@ -535,7 +552,7 @@ void ExactCallBluffD::query(const float64 betSize)
 
         const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
 
-        //const float64 significanceLinear =/* 1/countToBeat ;*/ 1/countMayFold;
+        const float64 significanceLinear =/* 1/countToBeat ;*/ 1/countMayFold;
 
         if( table->CanStillBet(pIndex) )
         {///Predict how much the bet will be
@@ -577,15 +594,26 @@ void ExactCallBluffD::query(const float64 betSize)
                 const float64 w = pow( wn, significanceLinear );
 				//const float64 dfwdbetSize = (w <= 0) ? 0 : (wn/w / significanceLinear);
 
-//                const float64 nextFoldF = 1 -
-                nextFold = w;
+
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear  );
+
+    #ifdef CALL_ALGB_PCT
+                    nextFold = 1 - ea->pctWillCall( w );
+
+                    nextFoldPartial = -ea->pctWillCallD( w ) *
+                        facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, 1/significanceLinear);
+
+    #else
+                    nextFold = w;
+
 //				const float64 nextFoldPartialF = -
                 nextFoldPartial =
                         facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, 1/significanceLinear);
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear - 1 ) * significanceLinear
 //                        * (origPot - oppBetMake * origPotD)
 //                    /(oppBetMake + origPot) /(oppBetMake + origPot);
+
+    #endif
 
 #endif
 /*
@@ -618,7 +646,7 @@ void ExactCallBluffD::query(const float64 betSize)
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
 
                 if( oppBankRoll < minRaiseTo() - chipDenom()/4 )
-                {
+                { //Guaranteed call
                     allFoldChance = 0;
                     allFoldChanceD = 0;
                     nextFold = 0;
@@ -637,8 +665,13 @@ void ExactCallBluffD::query(const float64 betSize)
                             facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significanceCall)
                         );
 #else
-                    nextFold = pow( facedOdds_Algb(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppBetMake),significanceLinear) ;
+                    const float64 w = pow( facedOdds_Algb(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppBetMake),significanceLinear) ;
 //                            pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significanceLinear );
+    #ifdef CALL_ALGB_PCT
+                    nextFold = 1 - ea->pctWillCall( w );
+    #else
+                    nextFold = w;
+    #endif
 #endif
 /*
 #ifndef GEOM_COMBO_FOLDPCT
@@ -652,7 +685,7 @@ void ExactCallBluffD::query(const float64 betSize)
             }
 
 
-//            countMayFold -= 1;
+            countMayFold -= 1;
 //            countToBeat  += 1;
 
             if(
@@ -702,9 +735,9 @@ float64 ExactCallBluffD::PushGain()
            //1326 is the number of hands possible
 		#ifdef PURE_BLUFF
             return 1;
-			//return (1 + (baseFraction+bigBlindFraction+smallBlindFraction)*blindsPow*1326);
+			//return (1 + (baseFraction+bigBlindFraction+smallBlindFraction)*blindsPow*RAREST_HAND_CHANCE);
 		#else
-			return (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*1326);
+			return (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*RAREST_HAND_CHANCE);
 		#endif
     }
 	#ifdef PURE_BLUFF

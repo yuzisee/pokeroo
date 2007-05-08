@@ -631,7 +631,7 @@ float64 ImproveGainRankStrategy::MakeBet()
 
 
     CallCumulationD &choicecumu = rankcumu;
-    CallCumulationD &raisecumu = rankcumu;
+    CallCumulationD &raisecumu = foldcumu;//rankcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
@@ -724,7 +724,7 @@ float64 DeterredGainRankStrategy::MakeBet()
 
 
     CallCumulationD &choicecumu = rankcumu;
-    CallCumulationD &raisecumu = rankcumu;
+    CallCumulationD &raisecumu = foldcumu;//rankcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN

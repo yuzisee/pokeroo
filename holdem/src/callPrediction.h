@@ -23,6 +23,10 @@
 #include "callSituation.h"
 #include "functionbase.h"
 
+
+#define RAREST_HAND_CHANCE 332.0
+
+
 //For calculating geometric betting expectation
 class ExactCallFunctionModel : public virtual ScalarFunctionModel
 {
@@ -68,7 +72,7 @@ class ExactCallFunctionModel : public virtual ScalarFunctionModel
 
                     const float64 y = f(i);
 					const float64 frank = e->pctWillCall(1 - i);
-					const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+					const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
 
 
 
@@ -78,7 +82,7 @@ class ExactCallFunctionModel : public virtual ScalarFunctionModel
             }else
             {
 				const float64 frank = e->pctWillCall(1 - end);
-				const float64 fNRank = (frank >= 1) ? 1.0/1326.0 : (1 - frank);
+				const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
 
 
                 target << end << "," << f(end) << "," << fd(end,f(end)) << "," << f(end) - avgBlind/fNRank << std::endl;
@@ -114,7 +118,8 @@ class ExactCallD : public virtual ExpectedCallD
 
         float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, float64 wGuess = 0.75);
         float64 facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);
-		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 wGuess = 0.75);
+		float64 facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 wGuess = 0.75);
+		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet);
         float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);
 
 
@@ -130,7 +135,7 @@ class ExactCallD : public virtual ExpectedCallD
 #ifdef ANTI_PRESSURE_FOLDGAIN
             ,rankPCT
 #endif
-                    ,data,commit), impliedFactor(1), geomFunction(0.5/1326.0,data),noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
+                    ,data,commit), impliedFactor(1), geomFunction(0.5/RAREST_HAND_CHANCE,data),noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
             {
                 queryinput = UNITIALIZED_QUERY;
             }
