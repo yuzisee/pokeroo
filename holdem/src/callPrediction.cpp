@@ -211,12 +211,22 @@ float64 ExactCallD::facedOdds_Algb_step(float64 bankroll, float64 pot, float64 a
 float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet)
 {
     float64 newOdds = facedOdds_Algb_step(bankroll,pot,alreadyBet,bet);
-    float64 lastOdds;
+    float64 curOdds = newOdds;
+    float64 prevOdds = newOdds;
     do
     {
-        lastOdds = newOdds;
-        newOdds = facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,lastOdds);
-    }while( fabs(lastOdds - newOdds) > 0.25/RAREST_HAND_CHANCE );
+        if( (newOdds-curOdds)*(curOdds-prevOdds) < 0 )
+        {   //new terms are converging in alternate directions
+            prevOdds = curOdds;
+            curOdds = newOdds;
+            newOdds = facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,(curOdds+prevOdds)/2);
+        }else
+        {
+            prevOdds = curOdds;
+            curOdds = newOdds;
+            newOdds = facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,curOdds);
+        }
+    }while( fabs(curOdds - newOdds) > 0.25/RAREST_HAND_CHANCE );
     return newOdds;
 }
 
