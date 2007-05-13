@@ -51,15 +51,11 @@ GainModelReverse::~GainModelReverse()
 {
 }
 #endif
-GainModelBluff::~GainModelBluff()
+StateModel::~StateModel()
 {
 }
 
 GainModelNoRisk::~GainModelNoRisk()
-{
-}
-
-GainModelNoRiskBluff::~GainModelNoRiskBluff()
 {
 }
 
@@ -370,8 +366,19 @@ StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 
 
 
+float64 StateModel::g(const float64 betSize)
+{
+    return fp->f(betSize) + e->foldGain();
+}
 
-float64 GainModelBluff::f(const float64 betSize)
+
+float64 StateModel::gd(const float64 betSize, const float64 y)
+{
+    return fp->fd(betSize, y-e->foldGain());
+}
+
+
+float64 StateModel::f(const float64 betSize)
 {
     if( last_x != betSize )
     {
@@ -380,7 +387,7 @@ float64 GainModelBluff::f(const float64 betSize)
     return y;
 }
 
-float64 GainModelBluff::fd(const float64 betSize, const float64 y)
+float64 StateModel::fd(const float64 betSize, const float64 y)
 {
     if( last_x != betSize )
     {
@@ -389,7 +396,7 @@ float64 GainModelBluff::fd(const float64 betSize, const float64 y)
     return dy;
 }
 
-void GainModelBluff::query( const float64 betSize )
+void StateModel::query( const float64 betSize )
 {
 
 #include "BluffGainInc.h"
@@ -438,42 +445,6 @@ void GainModelBluff::query( const float64 betSize )
 
 	delete [] oppRaisedFoldGain_A;
 }
-
-/*
-float64 GainModelBluff::fd(const float64 betSize, const float64 y)
-{
-	const float64 potFoldWin = ea->PushGain();
-	const float64 playChance = 1 - ea->pWin(betSize);
-	const float64 oppFoldChance = ea->pWin(betSize);
-#ifdef DEBUGASSERT
-	if( potFoldWin <= 0 || oppFoldChance <= 0 )
-	{
-		return gd(betSize,y+e->foldGain());
-	}
-#endif
-
-	const float64 dFoldChance = ea->pWinD(betSize);
-
-	const float64 gainWithFold = pow(potFoldWin,oppFoldChance);
-
-	///Reverse to deduce basey
-	const float64 fy = y+e->foldGain();
-	const float64 gainNormal = (fy) / gainWithFold;
-	const float64 basey = pow(  gainNormal  ,  1/playChance );
-
-    const float64 gainDNormal = gd(betSize, basey);
-
-	return (
-				dFoldChance * log( potFoldWin )
-					+
-				playChance * gainDNormal / gainNormal
-					-
-				oppFoldChance * log(gainNormal)
-			)
-			*fy;
-}
-*/
-
 
 float64 GainModelNoRisk::g(float64 betSize)
 {
@@ -607,99 +578,6 @@ float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
 {
     return gd(betSize, y+e->foldGain());
 }
-
-float64 GainModelNoRiskBluff::f(const float64 betSize)
-{
-    if( last_x != betSize )
-    {
-        query(betSize);
-    }
-    return y;
-}
-
-float64 GainModelNoRiskBluff::fd(const float64 betSize, const float64 y)
-{
-    if( last_x != betSize )
-    {
-        query(betSize);
-    }
-    return dy;
-}
-
-void GainModelNoRiskBluff::query(const float64 betSize)
-{
-
-#include "BluffGainInc.h"
-
-#ifdef FOLD_EQUITY_STINGE
-
-    ///Calculate factors
-    const float64 gainWithFold = pow(potFoldWin , oppFoldChance);
-    const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
-    const float64 gainNormal =  pow( potNormalWin,playChance );
-    float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
-    float64 gainRaised = 1;
-    float64 gainRaisedlnD = 0;
-    for( int32 i=0;i<arraySize;++i )
-    {
-        gainRaised *= pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
-
-        if( raiseAmount_A[i] >= ea->maxBet() )
-        {
-            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g(raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g(raiseAmount_A[i]-quantum/2) );
-        }else
-        {
-            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
-        }
-    }
-
-	if( betSize >= ea->maxBet() )
-	{
-		gainNormallnD = playChance*potNormalWinD/g(betSize-quantum/2) + playChanceD*log(g(betSize-quantum/2));
-	}
-
-    ///Store results
-    y = gainWithFold*gainNormal*gainRaised;
-    dy = (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
-    y -= e->foldGain();
-
-#else
-
-///Calculate factors
-    const float64 gainWithFold = potFoldWin * oppFoldChance;
-    const float64 gainWithFoldD = oppFoldChance*potFoldWinD + oppFoldChanceD*potFoldWin;
-    const float64 gainNormal =  potNormalWin*playChance;
-    const float64 gainNormalD = playChance*potNormalWinD + playChanceD*potNormalWin;
-    float64 gainRaised = 0;
-    float64 gainRaisedD = 0;
-
-    for( int32 i=0;i<arraySize;++i )
-    {
-        gainRaised += potRaisedWin_A[i]*oppRaisedChance_A[i];
-        gainRaisedD += oppRaisedChance_A[i]*potRaisedWinD_A[i] + oppRaisedChanceD_A[i]*potRaisedWin_A[i];
-    }
-
-    ///Store results
-    y  = gainWithFold + gainNormal + gainRaised - e->foldGain();
-    dy = gainWithFoldD+ gainNormalD+ gainRaisedD;
-
-#endif
-
-
-    delete [] raiseAmount_A;
-
-    delete [] oppRaisedChance_A;
-    delete [] oppRaisedChanceD_A;
-
-
-    delete [] potRaisedWin_A;
-    delete [] potRaisedWinD_A;
-
-	delete [] oppRaisedFoldGain_A;
-
-}
-
-
 
 
 void SlidingPairFunction::query(float64 x)

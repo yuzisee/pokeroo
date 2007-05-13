@@ -234,7 +234,7 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
         }
 
         cycleDetection = prevOdds;
-    }while( fabs(curOdds - newOdds) > 0.25/RAREST_HAND_CHANCE );
+    }while( fabs(curOdds - newOdds) > cycleQuantum );
     return newOdds;
 }
 
@@ -628,16 +628,23 @@ void ExactCallBluffD::query(const float64 betSize)
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear  );
 
     #ifdef CALL_ALGB_PCT
-                    nextFold = 1 - ea->pctWillCall( w );
+                    const float64 eaFold = 1 - ea->pctWillCall( w );
+                    const float64 rankFold = w;
 
-                    nextFoldPartial = -ea->pctWillCallD( w ) *
-                        facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, nLinear);
+//(nLinear <= 0 && wn > 1) ? 0 :
+
+                    const float64 rankFoldPartial = facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, nLinear);
+                    const float64 eaFoldPartial = -ea->pctWillCallD( w ) * rankFoldPartial;
+
+
+                    nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
+                    nextFoldPartial = (eaFold*eaFoldPartial+rankFold*rankFoldPartial)*sqrt(2)/nextFold ;
 
     #else
                     nextFold = w;
 
 //				const float64 nextFoldPartialF = -
-                nextFoldPartial = (nLinear <= 0 && wn > 1) ? 0 :
+                nextFoldPartial =
                         facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, 1/significanceLinear)/(1-minimaxAdjustment);
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear - 1 ) * significanceLinear
 //                        * (origPot - oppBetMake * origPotD)
@@ -713,7 +720,11 @@ void ExactCallBluffD::query(const float64 betSize)
                     }
 
     #ifdef CALL_ALGB_PCT
-                    nextFold = 1 - ea->pctWillCall( w );
+                    const float64 eaFold = 1 - ea->pctWillCall( w );
+                    const float64 rankFold = w;
+
+                    nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
+
     #else
                     nextFold = w;
     #endif

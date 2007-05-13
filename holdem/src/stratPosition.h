@@ -90,18 +90,6 @@ class PositionalStrategy : virtual public PlayerStrategy
 }
 ;
 
-//Scaled ImprovePure
-class ImproveStrategy : public PositionalStrategy
-{
-    protected:
-    int8 bGamble;
-    public:
-    ImproveStrategy(int8 riskymode =0) : PositionalStrategy(false,true,true,false), bGamble(riskymode) {}
-
-    virtual float64 MakeBet();
-}
-;
-
 
 class ImproveGainStrategy : public PositionalStrategy
 {
@@ -151,17 +139,6 @@ class DeterredGainRankStrategy : public PositionalStrategy
 }
 ;
 
-
-class HybridScalingStrategy : public PositionalStrategy
-{
-    protected:
-    int8 bGamble;
-    public:
-    HybridScalingStrategy(int8 riskymode =0) : PositionalStrategy(true,true,false,false), bGamble(riskymode) {}
-
-    virtual float64 MakeBet();
-}
-;
 
 class CorePositionalStrategy : public PositionalStrategy
 {

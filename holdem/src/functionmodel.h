@@ -96,6 +96,7 @@ class DummyFunctionModel : public virtual ScalarFunctionModel
 ;
 */
 
+
 class GainModel : public virtual HoldemFunctionModel
 {
 	protected:
@@ -105,8 +106,9 @@ class GainModel : public virtual HoldemFunctionModel
 	float64 p_cl;
 	float64 p_cw;
 
-    virtual float64 g(float64);
-    virtual float64 gd(float64, const float64);
+
+        virtual float64 g(float64);
+        virtual float64 gd(float64, const float64);
 
 	public:
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
@@ -222,7 +224,8 @@ class GainModelNoRisk : public virtual GainModel
 }
 ;
 
-class GainModelBluff : public virtual GainModel
+
+class StateModel : public virtual HoldemFunctionModel
 {
     private:
     float64 last_x;
@@ -232,39 +235,24 @@ class GainModelBluff : public virtual GainModel
     void query( const float64 );
 
     protected:
-    ExactCallBluffD * ea;
+        ExactCallBluffD * ea;
+        HoldemFunctionModel *fp;
+
+        virtual float64 g(float64);
+        virtual float64 gd(float64, const float64);
+
     public:
-	GainModelBluff(const StatResult s,ExactCallBluffD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c)
-	,last_x(-1),ea(c)
-	{
-	    query(0);
+    StateModel(ExactCallBluffD *c, HoldemFunctionModel *function) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
+    ,last_x(-1),ea(c),fp(function)
+    {
+        query(0);
     }
-	virtual ~GainModelBluff();
+
+    virtual ~StateModel();
 
 	virtual float64 f(const float64);
     virtual float64 fd(const float64, const float64);
-}
-;
 
-class GainModelNoRiskBluff : public virtual GainModelNoRisk
-{
-    private:
-    float64 last_x;
-    float64 y;
-    float64 dy;
-
-    void query( const float64 );
-
-    protected:
-	ExactCallBluffD * ea;
-    public:
-	GainModelNoRiskBluff(const StatResult s,ExactCallBluffD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c),GainModelNoRisk(s,c)
-	,ea(c)
-	{}
-	virtual ~GainModelNoRiskBluff();
-
-	virtual float64 f(const float64);
-    virtual float64 fd(const float64, const float64);
 }
 ;
 

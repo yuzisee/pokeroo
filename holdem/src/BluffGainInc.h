@@ -46,7 +46,7 @@ last_x = betSize;
         ++arraySize;
     }
     //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
-    ++arraySize; //Now it's the size of the array
+    if(betSize < ea->maxBet()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
 
 
     //Create arrays

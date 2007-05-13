@@ -891,17 +891,13 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	CorePositionalStrategy WorseAlgbBluff(11);
 	CorePositionalStrategy HybridGeomBluff(14);
 
-	ImproveStrategy DistrScaleP;
 	DeterredGainStrategy FutureFoldP;
-	HybridScalingStrategy AutoSetP;
-	ImproveStrategy DistrScaleA(1);
 
     //Set 1
 	DeterredGainStrategy FutureFoldA(1);
   	ImproveGainStrategy XFoldA(0);
   	ImproveGainStrategy ImproveA(1);
 	ImproveGainStrategy ReallyImproveA(2);
-	HybridScalingStrategy AutoSetA(1);
 
     //Set 2
     DeterredGainRankStrategy FutureFoldA_R(1);
