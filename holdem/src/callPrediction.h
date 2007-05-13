@@ -163,6 +163,9 @@ class ExactCallBluffD : public virtual ExactCallD
 
         void query(const float64 betSize);
     public:
+        float64 insuranceDeterrent;
+        float64 minimaxAdjustment;
+
         ExactCallBluffD(const int8 id, const HoldemArena* base
 #ifdef ANTI_PRESSURE_FOLDGAIN
                 , const float64 rankPCT
@@ -176,7 +179,7 @@ class ExactCallBluffD : public virtual ExactCallD
 #ifdef ANTI_PRESSURE_FOLDGAIN
                             ,rankPCT
 #endif
-                                    ,data,commit), ea(foldData)
+                                    ,data,commit), ea(foldData), insuranceDeterrent(0), minimaxAdjustment(0)
                             {
                                 queryinput = UNITIALIZED_QUERY;
                             }

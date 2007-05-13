@@ -856,10 +856,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
     }else
     {
-        smallBlindChoice=.1;//0.025;
+        smallBlindChoice=.05;//0.025;
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
-	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2,2);
+	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2.2,2.2);
     SitAndGoBlinds sg(b.SmallBlind(),b.BigBlind(),blindIncrFreq);
 		#ifdef REGULARINTOLOG
             std::ios::openmode gamelogMode = std::ios::trunc;
@@ -948,19 +948,19 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                 switch(i)
                 {
                     case 0:
-                        myTable.AddPlayer("TrapBotV", startingMoney, &ImproveA_R);
+                        myTable.AddPlayer("TrapBotV", startingMoney, &ImproveA);
                         break;
                     case 1:
-                        myTable.AddPlayer("ConservativeBotV", startingMoney, &FutureFoldA_R);
+                        myTable.AddPlayer("ConservativeBotV", startingMoney, &FutureFoldA);
                         break;
                     case 2:
-                        myTable.AddPlayer("NormalBotV",startingMoney, &XFoldA_R);
+                        myTable.AddPlayer("NormalBotV",startingMoney, &XFoldA);
                         break;
                     case 3:
                         myTable.AddPlayer("SpaceBotV", startingMoney, &MeanGeomBluff);
                         break;
                     case 4:
-                        myTable.AddPlayer("ActionBotV",startingMoney, &ReallyImproveA_R);
+                        myTable.AddPlayer("ActionBotV",startingMoney, &ReallyImproveA);
                         break;
                 }
                 i=(i+randStep)%NUM_OPPONENTS;
@@ -1001,14 +1001,14 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
 		//myTable.AddPlayer("SpaceIV", &AutoSetA);
 
+/*
+        myTable.AddPlayer("ComR", &FutureFoldA_R);
+        myTable.AddPlayer("NormR", &XFoldA_R);
+        myTable.AddPlayer("TrapR", &ImproveA_R);
+		myTable.AddPlayer("AceR", &ReallyImproveA_R);
 
-        myTable.AddPlayer("ComV", &FutureFoldA_R);
-        myTable.AddPlayer("NormV", &XFoldA_R);
-        myTable.AddPlayer("TrapV", &ImproveA_R);
-		myTable.AddPlayer("AceV", &ReallyImproveA_R);
-		myTable.AddPlayer("SpaceV", &MeanGeomBluff);
-
-
+*/
+        myTable.AddPlayer("SpaceV", &MeanGeomBluff);
             break;
 
     }

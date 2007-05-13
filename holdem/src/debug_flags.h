@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 /* Dev Testing Flags */
-#undef NO_LOG_FILES
+#define NO_LOG_FILES
 #define DEBUGASSERT
 
 /******************/

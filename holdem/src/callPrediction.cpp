@@ -237,6 +237,7 @@ float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alre
 	//hit this case when there is no zero in the range [0..1].
 	//if( w <= 1.0/RAREST_HAND_CHANCE / 4 ) w = 1.0/RAREST_HAND_CHANCE / 4;
 	if( w <= 0 ) return 0;
+	if( n < 0.5 ) return 0;
 
     const int8 N = handsDealt();
     const float64 frank = e->pctWillCall(1 - w);
@@ -562,7 +563,7 @@ void ExactCallBluffD::query(const float64 betSize)
 
         const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
 
-        const float64 significanceLinear =/* 1/countToBeat ;*/ 1/countMayFold;
+        const float64 nLinear =/* 1/countToBeat ;*/ (countMayFold + insuranceDeterrent);
 
         if( table->CanStillBet(pIndex) )
         {///Predict how much the bet will be
@@ -600,25 +601,36 @@ void ExactCallBluffD::query(const float64 betSize)
 
 
 #else
-                const float64 wn = facedOdds_Algb(oppBankRoll,origPot,oppBetAlready,oppBetMake);
-                const float64 w = pow( wn, significanceLinear );
+                const float64 wn = facedOdds_Algb(oppBankRoll,origPot,oppBetAlready,oppBetMake)/(1-minimaxAdjustment);
+
+                float64 w = pow( wn, 1.0/nLinear );
 				//const float64 dfwdbetSize = (w <= 0) ? 0 : (wn/w / significanceLinear);
+                if( nLinear <= 0 )
+                {
+                    if( wn > 1 )
+                    {
+                        w = minimaxAdjustment;
+                    }else{
+                        w = 1;
+                    }
 
+                }
 
+                if( w > 1 ) w = 1;
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear  );
 
     #ifdef CALL_ALGB_PCT
                     nextFold = 1 - ea->pctWillCall( w );
 
                     nextFoldPartial = -ea->pctWillCallD( w ) *
-                        facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, 1/significanceLinear);
+                        facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, nLinear);
 
     #else
                     nextFold = w;
 
 //				const float64 nextFoldPartialF = -
-                nextFoldPartial =
-                        facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, 1/significanceLinear);
+                nextFoldPartial = (nLinear <= 0 && wn > 1) ? 0 :
+                        facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, 1/significanceLinear)/(1-minimaxAdjustment);
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear - 1 ) * significanceLinear
 //                        * (origPot - oppBetMake * origPotD)
 //                    /(oppBetMake + origPot) /(oppBetMake + origPot);
@@ -675,13 +687,29 @@ void ExactCallBluffD::query(const float64 betSize)
                             facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significanceCall)
                         );
 #else
-                    const float64 w = pow( facedOdds_Algb(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppBetMake),significanceLinear) ;
+                    const float64 wn = facedOdds_Algb(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppBetMake)/(1-minimaxAdjustment);
+                    float64 w =
+                                        pow( wn,1.0/nLinear) ;
 //                            pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significanceLinear );
+
+
+                    if( nLinear <= 0 )
+                    {
+                        if( wn > 1 )
+                        {
+                            w = minimaxAdjustment;
+                        }else{
+                            w = 1;
+                        }
+
+                    }
+
     #ifdef CALL_ALGB_PCT
                     nextFold = 1 - ea->pctWillCall( w );
     #else
                     nextFold = w;
     #endif
+                    if( nextFold > 1 ) nextFold = 1;
 #endif
 /*
 #ifndef GEOM_COMBO_FOLDPCT

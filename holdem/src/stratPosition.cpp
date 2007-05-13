@@ -115,6 +115,8 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     const float64 ranking3 = callcumu.pctWillCall_tiefactor(1 - statmean.pct, 1); //wins+splits
     const float64 ranking = callcumu.pctWillCall_tiefactor(1 - statmean.pct, 0); //wins
 
+
+
     //std::cout << "=" << ranking << "..." << ranking2 << "..." << ranking3 << std::endl;
     //std::cout << "=" << (ranking3 - ranking) << "\tsplits " << statmean.splits << std::endl;
 
@@ -195,7 +197,7 @@ void PositionalStrategy::setupPosition()
 
 
         #ifdef LOGPOSITION
-            logFile << "Bet to call " << betToCall << " (from " << myBet << ")" << endl;
+            logFile << "Bet to call " << betToCall << " (from " << myBet << ") at " << ViewTable().GetPotSize() << " pot" << endl;
         #endif
 
     const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
@@ -494,11 +496,12 @@ float64 ImproveGainStrategy::MakeBet()
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
 		int32 raiseStep = 0;
-        float64 rAmount = 0;
+        float64 rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
         while( rAmount < maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << myDeterredCall.RaiseAmount(bestBet,raiseStep) << endl;
+            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
+            logFile << "\tBetWouldFold%" << myDeterredCall.pWin(rAmount) << endl;
             ++raiseStep;
         }
 	}
@@ -579,11 +582,12 @@ float64 DeterredGainStrategy::MakeBet()
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
 		int32 raiseStep = 0;
-        float64 rAmount = 0;
+        float64 rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
         while( rAmount < maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << myDeterredCall.RaiseAmount(bestBet,raiseStep) << endl;
+            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
+            logFile << "\tBetWouldFold%" << myDeterredCall.pWin(rAmount) << endl;
             ++raiseStep;
         }
 	}
@@ -631,7 +635,7 @@ float64 ImproveGainRankStrategy::MakeBet()
 
 
     CallCumulationD &choicecumu = rankcumu;
-    CallCumulationD &raisecumu = foldcumu;//rankcumu;
+    CallCumulationD &raisecumu = rankcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
@@ -639,6 +643,9 @@ float64 ImproveGainRankStrategy::MakeBet()
 #else
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
+
+    myDeterredCall.insuranceDeterrent = statranking.pct;
+
     const float64 fullVersus = myDeterredCall.callingPlayers();
     if( bGamble >= 2 )
     {
@@ -676,11 +683,12 @@ float64 ImproveGainRankStrategy::MakeBet()
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
 		int32 raiseStep = 0;
-        float64 rAmount = 0;
+        float64 rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
         while( rAmount < maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << myDeterredCall.RaiseAmount(bestBet,raiseStep) << endl;
+            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << myDeterredCall.RaiseAmount(bestBet,raiseStep);
+            logFile << "\tBetWouldFold%" << myDeterredCall.pWin(rAmount) << endl;
             ++raiseStep;
         }
 	}
@@ -724,7 +732,7 @@ float64 DeterredGainRankStrategy::MakeBet()
 
 
     CallCumulationD &choicecumu = rankcumu;
-    CallCumulationD &raisecumu = foldcumu;//rankcumu;
+    CallCumulationD &raisecumu = rankcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
@@ -734,6 +742,9 @@ float64 DeterredGainRankStrategy::MakeBet()
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
+
+    myDeterredCall.insuranceDeterrent = statranking.pct;
+
     myDeterredCall.SetImpliedFactor(futureFold);
 
 
@@ -763,11 +774,12 @@ float64 DeterredGainRankStrategy::MakeBet()
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
 		int32 raiseStep = 0;
-        float64 rAmount = 0;
+        float64 rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
         while( rAmount < maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << myDeterredCall.RaiseAmount(bestBet,raiseStep) << endl;
+            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << myDeterredCall.RaiseAmount(bestBet,raiseStep);
+            logFile << "\tBetWouldFold%" << myDeterredCall.pWin(rAmount) << endl;
             ++raiseStep;
         }
 	}
@@ -871,7 +883,8 @@ float64 HybridScalingStrategy::MakeBet()
 #ifdef LOGPOSITION
     if( bGamble == 1 )
     {
-        logFile << "OppFoldChance% ... " << myExpectedCall.pWin(bestBet) << "   d\\" << myExpectedCall.pWinD(bestBet) << endl;
+        logFile << "OppFoldChance% ... " << myExpectedCall.pWin(bestBet) << "   d\\" << myExpectedCall.pWinD(bestBet);
+        logFile << "\tBetWouldFold%" << myExpectedCall.pWin(bestBet) << endl;
 		if( myExpectedCall.pWin(bestBet) >= 1 )
 		{
 			std::cout << "Examine myExpectedCall.pWin(bestBet)" << endl;
@@ -1013,11 +1026,12 @@ float64 CorePositionalStrategy::MakeBet()
 		if( bGamble >= 9 && bGamble <= 15 )
 		{
 		    int32 raiseStep = 0;
-            float64 rAmount = 0;
+            float64 rAmount =  myBluffFoldCall.RaiseAmount(bestBet,raiseStep);
             while( rAmount < maxShowdown )
             {
                 rAmount =  myBluffFoldCall.RaiseAmount(bestBet,raiseStep);
-                logFile << "OppRAISEChance% ... " << myBluffFoldCall.pRaise(bestBet,raiseStep) << " @ $" << myBluffFoldCall.RaiseAmount(bestBet,raiseStep) << endl;
+                logFile << "OppRAISEChance% ... " << myBluffFoldCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
+                logFile << "\tBetWouldFold%" << myBluffFoldCall.pWin(rAmount) << endl;
                 ++raiseStep;
             }
 
