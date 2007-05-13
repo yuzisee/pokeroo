@@ -213,6 +213,8 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
     float64 newOdds = facedOdds_Algb_step(bankroll,pot,alreadyBet,bet);
     float64 curOdds = newOdds;
     float64 prevOdds = newOdds;
+    float64 cycleDetection = -1;
+    float64 cycleQuantum = 0.5 * chipDenom() / allChips();
     do
     {
         if( (newOdds-curOdds)*(curOdds-prevOdds) < 0 )
@@ -220,12 +222,18 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
             prevOdds = curOdds;
             curOdds = newOdds;
             newOdds = facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,(curOdds+prevOdds)/2);
+            if( fabs(cycleDetection - newOdds) < cycleQuantum )
+            {
+                return (newOdds+prevOdds+curOdds)/3;
+            }
         }else
         {
             prevOdds = curOdds;
             curOdds = newOdds;
             newOdds = facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,curOdds);
         }
+
+        cycleDetection = prevOdds;
     }while( fabs(curOdds - newOdds) > 0.25/RAREST_HAND_CHANCE );
     return newOdds;
 }
