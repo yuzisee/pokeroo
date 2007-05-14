@@ -394,6 +394,10 @@ float64 HoldemArena::GetRoundPotSize() const
 {
 	return myPot - prevRoundPot;
 }
+float64 HoldemArena::GetPrevFoldedRetroactive() const
+{
+    return prevRoundFoldedPot;
+}
 
 float64 HoldemArena::GetPrevPotSize() const
 {

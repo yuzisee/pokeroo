@@ -32,7 +32,7 @@ float64 ExpectedCallD::forfeitChips() const
     const float64 r = prevpotChips();
     const float64 hc = table->ViewPlayer(playerID)->GetContribution();
 #endif
-    return ( alreadyBet() + prevpotChips() - table->ViewPlayer(playerID)->GetContribution() );
+    return ( alreadyBet() + stagnantPot() - table->ViewPlayer(playerID)->GetContribution() );
 }
 
 float64 ExpectedCallD::foldGain(const float64 extra) const
@@ -106,13 +106,19 @@ float64 ExpectedCallD::callBet() const
     return table->GetBetToCall();
 }
 
+float64 ExpectedCallD::stagnantPot() const
+{
+    const float64 roundFolds = table->GetFoldedPotSize() - table->GetPrevFoldedRetroactive();
+    return (roundFolds + prevpotChips());
+}
+
 float64 ExpectedCallD::minCallFraction(const float64 betSize)
 {
     const float64 maxShowdown = table->GetMaxShowdown();
     //Most of the time, (betSize < maxShowdown), so minCall is betSize;
     //Obviously you can't have someone call less than betSize unless everybody else folds.
     const float64 minCall = (betSize < maxShowdown) ? betSize : maxShowdown;
-    return betFraction(minCall);
+    return betFraction(minCall + stagnantPot());
 }
 
 float64 ExpectedCallD::maxBet() const

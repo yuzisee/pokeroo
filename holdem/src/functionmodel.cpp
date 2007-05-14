@@ -183,7 +183,7 @@ float64 GainModel::g(float64 betSize)
         exf = minexf;
     }
 
-    const float64 f_pot = e->betFraction( e->prevpotChips() );
+    const float64 f_pot = e->betFraction( e->stagnantPot() );
     const float64 exf_live = exf - f_pot;
 
     const float64 base = e->handBetBase();
@@ -284,7 +284,7 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 
 		//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B  //Note: B is determined by betSize/x
 	const float64 dexf = e->dexf(betSize); ///This is actually e->betFraction( e->dexf(betSize)*betSize/x ) = e->dexf(betSize)
-    const float64 f_pot = e->betFraction(e->prevpotChips());
+    const float64 f_pot = e->betFraction(e->stagnantPot());
     const float64 exf_live = exf - f_pot;
 	//const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;n
     //const int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
@@ -457,7 +457,7 @@ float64 GainModelNoRisk::g(float64 betSize)
 	float64 x = e->betFraction(betSize);
 	float64 exf = e->betFraction(e->exf(betSize));
 
-    const float64 f_pot = e->betFraction(e->prevpotChips());
+    const float64 f_pot = e->betFraction(e->stagnantPot());
     const float64 exf_live = exf - f_pot;
 
     const float64 base = e->handBetBase();

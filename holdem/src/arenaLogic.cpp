@@ -375,6 +375,7 @@ void HoldemArena::prepareRound(const int8 comSize)
 
 	myBetSum = 0;
 	prevRoundPot = myPot;
+	prevRoundFoldedPot = myFoldedPot;
 
 	curIndex = curDealer;
 
@@ -603,6 +604,7 @@ void HoldemArena::DealHands()
 
     myPot        = 0;
     prevRoundPot = 0;
+    prevRoundFoldedPot = 0;
     myFoldedPot  = 0;
 
     curIndex = curDealer;

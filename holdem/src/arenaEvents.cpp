@@ -481,6 +481,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
 					randRem /= myBetSum + GetNumberInHand();
 
                     myFoldedPot += PlayerHandBetTotal( withP ) + PlayerLastBet(withP);
+                    prevRoundFoldedPot += PlayerHandBetTotal( withP ); //Retroactive
 
 					///You're taking money away here. addBets happenned a while ago
 					PlayerHandBetTotal( withP )= PlayerLastBet(withP);

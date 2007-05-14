@@ -100,6 +100,7 @@ public:
     virtual float64 maxBet() const;
     virtual int8 handsDealt() const;
     virtual float64 prevpotChips() const;
+    virtual float64 stagnantPot() const;
     virtual float64 betFraction(const float64 betSize) const;
     virtual float64 handBetBase() const; //The B (bankroll) in calculations
 	virtual float64 minRaiseTo() const;

@@ -435,6 +435,7 @@ float64 ImproveGainStrategy::MakeBet()
         }
 	}
 
+        logFile << "Guaranteed $" << myDeterredCall.stagnantPot() << endl;
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
@@ -521,9 +522,10 @@ float64 DeterredGainStrategy::MakeBet()
             ++raiseStep;
         }
 	}
-
+    logFile << "Guaranteed $" << myDeterredCall.stagnantPot() << endl;
     if( bGamble == 1 )
     {
+
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
@@ -622,7 +624,7 @@ float64 ImproveGainRankStrategy::MakeBet()
             ++raiseStep;
         }
 	}
-
+        logFile << "Guaranteed $" << myDeterredCall.stagnantPot() << endl;
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
 
         if( myDeterredCall.pWin(bestBet) > 0 )
@@ -713,7 +715,7 @@ float64 DeterredGainRankStrategy::MakeBet()
             ++raiseStep;
         }
 	}
-
+    logFile << "Guaranteed $" << myDeterredCall.stagnantPot() << endl;
     if( bGamble == 1 )
     {
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
@@ -839,7 +841,7 @@ float64 CorePositionalStrategy::MakeBet()
                 logFile << "\tBetWouldFold%" << myExpectedCall.pWin(rAmount) << endl;
                 ++raiseStep;
             }
-
+            logFile << "Guaranteed $" << myExpectedCall.stagnantPot() << endl;
 			logFile << "OppFoldChance% ... " << myExpectedCall.pWin(bestBet) << "   d\\" << myExpectedCall.pWinD(bestBet) << endl;
 
 			if( myExpectedCall.pWin(bestBet) > 0 )

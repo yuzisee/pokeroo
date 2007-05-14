@@ -23,6 +23,8 @@
 
 last_x = betSize;
 
+    const float64 invisiblePercent = quantum / ea->allChips();
+
 ///Establish [PushGain] values
 
 	float64 potFoldWin = ea->PushGain();
@@ -30,7 +32,7 @@ last_x = betSize;
     float64 oppFoldChance = ea->pWin(betSize);
     float64 oppFoldChanceD = ea->pWinD(betSize);
 #ifdef DEBUGASSERT
-	if( potFoldWin < 0 || oppFoldChance <= 0 ){
+	if( potFoldWin < 0 || oppFoldChance < invisiblePercent ){
 		potFoldWin =  1;
 		oppFoldChance = 0;
 		oppFoldChanceD = 0;
@@ -88,13 +90,14 @@ last_x = betSize;
             potRaisedWinD_A[i] = 0;
         }
 
-#else
-	raiseAmount_A[i] = 0;
+    if( oppRaisedChance_A[i] < invisiblePercent )
+#endif
+	{raiseAmount_A[i] = 0;
     oppRaisedChance_A[i] = 0;
     oppRaisedChanceD_A[i] = 0;
     potRaisedWin_A[i] = 1;
-    potRaisedWinD_A[i] = 0;
-#endif
+    potRaisedWinD_A[i] = 0;}
+
     }
 
 ///Establish [Play] values

@@ -264,6 +264,7 @@ protected:
         float64 myPot; //incl. betSum
         float64 myFoldedPot;
 		float64 myBetSum; //Just the current round.
+		float64 prevRoundFoldedPot;
 		float64 prevRoundPot;
 		float64 forcedBetSum; //Folded bets this round and bets that have been made blind before the player has had a chance to make another bet
 		float64 blindOnlySum; //Bets that have been made blind before the player has had a chance to make another bet
@@ -322,7 +323,7 @@ protected:
 #endif
         ,gamelog(targetout)
         ,bVerbose(illustrate),bSpectate(spectate),livePlayers(0),curHighBlind(-1),blinds(b),allChips(0)
-		,lastRaise(0),highBet(0), myPot(0), myFoldedPot(0), myBetSum(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)
+		,lastRaise(0),highBet(0), myPot(0), myFoldedPot(0), myBetSum(0), prevRoundFoldedPot(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)
 		#ifdef GLOBAL_AICACHE_SPEEDUP
 		,communityBuffer(0)
         #endif
@@ -357,6 +358,7 @@ protected:
 		virtual float64 GetLivePotSize() const;
 		virtual float64 GetRoundPotSize() const; //ThisRound pot size
 		virtual float64 GetPrevPotSize() const; //Pot size from previous rounds
+   		virtual float64 GetPrevFoldedRetroactive() const;
    		virtual float64 GetRoundBetsTotal() const; //Bets made this round by players still in hand, excludes blind bets
    		virtual float64 GetUnbetBlindsTotal() const; //blindOnlySum
 		virtual float64 GetPotSize() const;
@@ -386,6 +388,7 @@ class HoldemArenaEventBase
     int8 & curDealer;
     float64 & myPot;
     float64 & myFoldedPot;
+    float64 & prevRoundFoldedPot;
     float64 & myBetSum;
     const vector<Player*> &p;
     const bool & bVerbose;
@@ -428,7 +431,7 @@ class HoldemArenaEventBase
     , highBet(table->highBet), lastRaise(table->lastRaise), forcedBetSum(myTable->forcedBetSum), blindOnlySum(myTable->blindOnlySum)
     , playersInHand(table->playersInHand),playersAllIn(table->playersAllIn)
     , curIndex(table->curIndex), curDealer(table->curDealer)
-    , myPot(table->myPot), myFoldedPot(table->myFoldedPot), myBetSum(table->myBetSum), p(table->p)
+    , myPot(table->myPot), myFoldedPot(table->myFoldedPot), prevRoundFoldedPot(table->prevRoundFoldedPot), myBetSum(table->myBetSum), p(table->p)
     , bVerbose(table->bVerbose), randRem(table->randRem)
     , community(table->community)
     {
