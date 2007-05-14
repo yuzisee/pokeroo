@@ -637,8 +637,8 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 eaFoldPartial = -ea->pctWillCallD( w ) * rankFoldPartial;
 
 
-                    nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
-                    nextFoldPartial = (eaFold*eaFoldPartial+rankFold*rankFoldPartial)*sqrt(2)/nextFold ;
+                    nextFold = (eaFold+rankFold)/2;
+                    nextFoldPartial = (eaFoldPartial+rankFoldPartial)/2;
 
     #else
                     nextFold = w;
@@ -723,9 +723,10 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 eaFold = 1 - ea->pctWillCall( w );
                     const float64 rankFold = w;
 
-                    nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
+                    nextFold = (eaFold+rankFold)/2;
 
     #else
+
                     nextFold = w;
     #endif
                     if( nextFold > 1 ) nextFold = 1;
