@@ -62,6 +62,34 @@ void ExactCallD::SetImpliedFactor(const float64 bonus)
 }
 
 
+///This function is used to maximize chance to fold on a player-by-player basis
+float64 ExactCallBluffD::topTwoOfThree(float64 a, float64 b, float64 c, float64 a_d, float64 b_d, float64 c_d, float64 & r) const
+{
+    if( b < a )
+    {//a cannot be smallest
+        if( b < c )
+        {//b is smallest
+            r = (a + c)/2;
+            return (a_d + c_d)/2;
+        }else //c < b < a
+        {//c is smallest
+            r = (a + b)/2;
+            return (a_d + b_d)/2;
+        }
+    }
+    else
+    {//Since b > a, b cannot be smallest
+        if( a < c )
+        {//a is smallest
+            r = (b + c)/2;
+            return (b_d + c_d)/2;
+        }else
+        {//c is smallest
+            r = (a + b)/2;
+            return (a_d + b_d)/2;
+        }
+    }
+}
 
 /*
     //oppBetMake / (oppBetMake + totalexf)
@@ -638,11 +666,13 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 meanFoldPartial = -e->pctWillCallD( w ) * rankFoldPartial;
                     const float64 eaFoldPartial = -ea->pctWillCallD( w ) * rankFoldPartial;
 
+                    ///topTwoOfThree is on a player-by-player basis
+                    nextFoldPartial = topTwoOfThree(eaFold,meanFold,rankFold,eaFoldPartial,meanFoldPartial,rankFoldPartial,nextFold);
 
                     //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
                     //nextFoldPartial = (eaFold*eaFoldPartial+rankFold*rankFoldPartial)*sqrt(2)/nextFold ;
-                    nextFold = (meanFold+rankFold+eaFold)/3;
-                    nextFoldPartial = (meanFoldPartial+rankFoldPartial+eaFoldPartial)/3;
+                    //nextFold = (meanFold+rankFold+eaFold)/3;
+                    //nextFoldPartial = (meanFoldPartial+rankFoldPartial+eaFoldPartial)/3;
 
     #else
                     nextFold = w;
@@ -728,7 +758,10 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 meanFold = 1 - e->pctWillCall( w );
                     const float64 rankFold = w;
 
-                    nextFold = (meanFold+rankFold+eaFold)/3;
+                    ///topTwoOfThree is on a player-by-player basis
+                    topTwoOfThree(eaFold,meanFold,rankFold,0,0,0,nextFold);
+
+                    //nextFold = (meanFold+rankFold+eaFold)/3;
                     //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
     #else
 

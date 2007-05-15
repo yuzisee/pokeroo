@@ -155,6 +155,10 @@ class ExactCallD : public virtual ExpectedCallD
 
 class ExactCallBluffD : public virtual ExactCallD
 {
+    private:
+        //topTwoOfThree returns the average of the top two values {a,b,c} through the 7th parameter.
+        //The average of the corresponding values of {a_d, b_d, c_d} are returned by the function.
+        float64 topTwoOfThree(float64 a, float64 b, float64 c, float64 a_d, float64 b_d, float64 c_d, float64 & r) const;
     protected:
         const CallCumulationD* ea;
         float64 allFoldChance;
