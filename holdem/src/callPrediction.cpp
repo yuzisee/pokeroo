@@ -629,16 +629,20 @@ void ExactCallBluffD::query(const float64 betSize)
 
     #ifdef CALL_ALGB_PCT
                     const float64 eaFold = 1 - ea->pctWillCall( w );
+                    const float64 meanFold = 1 - e->pctWillCall( w );
                     const float64 rankFold = w;
 
 //(nLinear <= 0 && wn > 1) ? 0 :
 
                     const float64 rankFoldPartial = facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w, nLinear);
+                    const float64 meanFoldPartial = -e->pctWillCallD( w ) * rankFoldPartial;
                     const float64 eaFoldPartial = -ea->pctWillCallD( w ) * rankFoldPartial;
 
 
-                    nextFold = (eaFold+rankFold)/2;
-                    nextFoldPartial = (eaFoldPartial+rankFoldPartial)/2;
+                    //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
+                    //nextFoldPartial = (eaFold*eaFoldPartial+rankFold*rankFoldPartial)*sqrt(2)/nextFold ;
+                    nextFold = (meanFold+rankFold+eaFold)/3;
+                    nextFoldPartial = (meanFoldPartial+rankFoldPartial+eaFoldPartial)/3;
 
     #else
                     nextFold = w;
@@ -721,10 +725,11 @@ void ExactCallBluffD::query(const float64 betSize)
 
     #ifdef CALL_ALGB_PCT
                     const float64 eaFold = 1 - ea->pctWillCall( w );
+                    const float64 meanFold = 1 - e->pctWillCall( w );
                     const float64 rankFold = w;
 
-                    nextFold = (eaFold+rankFold)/2;
-
+                    nextFold = (meanFold+rankFold+eaFold)/3;
+                    //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
     #else
 
                     nextFold = w;
