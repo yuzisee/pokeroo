@@ -180,12 +180,22 @@ std::istream * HoldemArena::LoadState()
             loadFile >> blinds->mySmallBlind;
             loadFile.ignore(1,'=');
             loadFile >> blinds->myBigBlind;
-            blinds->Reload(blinds->mySmallBlind,blinds->myBigBlind);
+            blinds->Reload(blinds->mySmallBlind,blinds->myBigBlind
+            #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+            ,handnum
+            #endif
+            );
             loadFile.ignore(1,'@');
             loadFile >> numericValue;
 
             curDealer = static_cast<int8>(numericValue);
             loadFile.ignore(1,'@');
+
+            loadFile >> numericValue;
+
+            smallestChip = numericValue;
+            loadFile.ignore(1,'^');
+
 
             for( int8 i=0;i<nextNewPlayer;++i )
             {
@@ -218,7 +228,7 @@ void HoldemArena::saveState()
 {
     if( loadFile.is_open() ) loadFile.close();
 
-#if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE))
+#if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
             char handnumtxt/*[12] = "";
             char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
             sprintf(handnumtxt + strlen(handnumtxt) ,"%lu",handnum);
@@ -232,9 +242,11 @@ void HoldemArena::saveState()
         #ifdef DEBUGSAVEGAME_ALL
     allSaveState << handnum << "n";
     allSaveState << blinds->SmallBlind() << "=" << blinds->BigBlind() << "@" << (int)curDealer << "@" << flush;
+    allSaveState << smallestChip << "^" << flush;
         #endif
     #endif
     newSaveState << blinds->SmallBlind() << "=" << blinds->BigBlind() << "@" << (int)curDealer << "@" << flush;
+    newSaveState << smallestChip << "^" << flush;
 
     for( int8 i=0;i<nextNewPlayer;++i )
     {
@@ -242,18 +254,18 @@ void HoldemArena::saveState()
 		if( pMoney < 0 ) pMoney = 0;
         uint32 *pMoneyU = reinterpret_cast< uint32* >( &pMoney );
         newSaveState << *pMoneyU << "x" << *(pMoneyU+1) << ":" << flush;
-        #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE))
+        #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
         allSaveState << *pMoneyU << "x" << *(pMoneyU+1) << ":" << flush;
         #endif
     }
 #ifdef DEBUGSAVE_EXTRATOKEN
     newSaveState << EXTRATOKEN << endl;
-    #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE))
+    #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
     allSaveState << EXTRATOKEN << endl;
     #endif
 #endif
     newSaveState.close();
-    #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE))
+    #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
     allSaveState.close();
     #endif
 }

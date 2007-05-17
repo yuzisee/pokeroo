@@ -485,6 +485,9 @@ float64 DeterredGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
     myDeterredCall.SetImpliedFactor(futureFold);
+    myDeterredCall.insuranceDeterrent = 1 - futureFold; //more likely to fold due to uncertainty
+    const float64 fullVersus = myDeterredCall.callingPlayers();
+    //myDeterredCall.callingPlayers( fullVersus + 1 - futureFold );
 
 //bGamble == 0 is no bluff
 //bGamble == 1 is Bluff

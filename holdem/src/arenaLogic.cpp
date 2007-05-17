@@ -619,7 +619,7 @@ void HoldemArena::DealHands()
 	{
 		gamelog << "================================================================" << endl;
 		gamelog << "============================New Hand" <<
-		#if defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE)
+		#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
 		" #"<< handnum <<
 		#else
 		"==" <<
@@ -657,7 +657,7 @@ void HoldemArena::DealHands()
             dealer.LoggedShuffle(shuffleData, randRem);
             shuffleData << endl;
             shuffleData.close();
-                #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE))
+                #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
             char handnumtxt/*[12] = "";
             char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
             sprintf(handnumtxt + strlen(handnumtxt) ,"%lu",handnum);
@@ -686,7 +686,7 @@ void HoldemArena::DealHands()
 
     #ifdef DEBUGHOLECARDS
         holecardsData <<
-        		#if defined(DEBUGSPECIFIC) || defined(REPRODUCIBLE)
+        		#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
                 "############ Hand " << handnum << " " <<
                 #endif
         "############" << endl;
