@@ -485,12 +485,13 @@ float64 DeterredGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
     myDeterredCall.SetImpliedFactor(futureFold);
-    myDeterredCall.insuranceDeterrent = 1 - futureFold; //more likely to fold due to uncertainty
-    const float64 fullVersus = myDeterredCall.callingPlayers();
-    //myDeterredCall.callingPlayers( fullVersus + 1 - futureFold );
+    if( bGamble >= 1 )
+    {
+        myDeterredCall.insuranceDeterrent = 1 - futureFold; //more likely to fold due to uncertainty
+        const float64 fullVersus = myDeterredCall.callingPlayers();
+        //myDeterredCall.callingPlayers( fullVersus + 1 - futureFold );
+    }
 
-//bGamble == 0 is no bluff
-//bGamble == 1 is Bluff
 	GainModel hybridgainDeterred(hybridMagnified,&myDeterredCall);
 	GainModelNoRisk hybridgain(statmean,&myDeterredCall);
 
@@ -498,9 +499,9 @@ float64 DeterredGainStrategy::MakeBet()
 
 	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,hybridMagnified.pct*statmean.pct,&myDeterredCall);
     StateModel ap_aggressive( &myDeterredCall, &ap_passive );
-    HoldemFunctionModel* ap[2] =  { &ap_passive, &ap_aggressive };
 
-    HoldemFunctionModel& choicemodel = *(ap[bGamble]);
+
+    HoldemFunctionModel& choicemodel = ap_aggressive;
 
     const float64 bestBet = solveGainModel(&choicemodel);
 
@@ -526,15 +527,13 @@ float64 DeterredGainStrategy::MakeBet()
         }
 	}
     logFile << "Guaranteed $" << myDeterredCall.stagnantPot() << endl;
-    if( bGamble == 1 )
-    {
 
         logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
             logFile << "confirm " << choicemodel.f(bestBet) << endl;
         }
-    }
+
 #endif
 
     return bestBet;

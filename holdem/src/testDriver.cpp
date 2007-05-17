@@ -891,10 +891,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	CorePositionalStrategy WorseAlgbBluff(11);
 	CorePositionalStrategy HybridGeomBluff(14);
 
-	DeterredGainStrategy FutureFoldP;
 
+    DeterredGainStrategy StrikeFold(1);
     //Set 1
-	DeterredGainStrategy FutureFoldA(1);
+	DeterredGainStrategy FutureFoldA;
   	ImproveGainStrategy XFoldA(0);
   	ImproveGainStrategy ImproveA(1);
 	ImproveGainStrategy ReallyImproveA(2);
@@ -930,13 +930,13 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }
 
 	uint32 i;
-	const uint32 NUM_OPPONENTS = 5;
+	const uint32 NUM_OPPONENTS = 6;
     const uint32 randNum = ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % NUM_OPPONENTS;
     const uint32 randStep = ((labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % (NUM_OPPONENTS-1))+1;
 	switch(headsUp)
     {
         case 'P':
-            cout << randNum << "+" << randStep << "i" << endl;
+            //cout << randNum << "+" << randStep << "i" << endl;
             i = randNum;
             while(i<5)
             {
@@ -957,6 +957,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                         break;
                     case 4:
                         myTable.AddPlayer("ActionBotV",startingMoney, &ReallyImproveA);
+                        break;
+                    case 5:
+                        myTable.AddPlayer("DangerBotV",startingMoney, &StrikeFold);
                         break;
                 }
                 i=(i+randStep)%NUM_OPPONENTS;
@@ -990,10 +993,11 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             //myTable.AddPlayer("ComBotII", &FutureFoldP);
 		//myTable.AddPlayer("SpaceBotII", &AutoSetP);
 		//myTable.AddPlayer("TrapIII", &DistrScaleA);
-        myTable.AddPlayer("ComIV", &FutureFoldA);
-        myTable.AddPlayer("NormIV", &XFoldA);
-        myTable.AddPlayer("TrapIV", &ImproveA);
-		myTable.AddPlayer("AceIV", &ReallyImproveA);
+		myTable.AddPlayer("DangerV", &StrikeFold);
+        myTable.AddPlayer("ComV", &FutureFoldA);
+        myTable.AddPlayer("NormV", &XFoldA);
+        myTable.AddPlayer("TrapV", &ImproveA);
+		myTable.AddPlayer("AceV", &ReallyImproveA);
 
 		//myTable.AddPlayer("SpaceIV", &AutoSetA);
 
@@ -1070,7 +1074,7 @@ void superGame(char headsUp = 0)
 
 int main(int argc, char* argv[])
 {
-	cout << "BEGIN" << endl;
+	cout << "Final Table: 7 Players" << endl;
 	/*testHT(91, 1);
 	testHT(62, 1);
 	testHT(33, 1);
