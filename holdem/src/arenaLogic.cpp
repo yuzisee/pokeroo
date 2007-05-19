@@ -564,6 +564,7 @@ void HoldemArena::PlayGame()
         community.HandPlus::DisplayHand(gamelog);
 #ifdef FLOP_TURN_RIVER_ORDER
         flop.SetUnique(community);
+        gamelog << "   " << flush;
 #endif
     }
 
@@ -573,18 +574,17 @@ void HoldemArena::PlayGame()
     if( bSpectate )
     {
         gamelog << endl;
-        gamelog << "Flop\t" << flush;
-        community.HandPlus::DisplayHand(gamelog);
-        gamelog << endl;
         gamelog << "Turn:\t" << flush;
     }
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
 	if( bSpectate )
 	{
-	     HoldemUtil::PrintCard(gamelog, dealer.dealt.Suit,dealer.dealt.Value);
-	     #ifdef FLOP_TURN_RIVER_ORDER
-	     turn = dealer.dealt;
-	     #endif
+	    #ifdef FLOP_TURN_RIVER_ORDER
+	    turn = dealer.dealt;
+	    #endif
+	    flop.HandPlus::DisplayHand(gamelog);
+        HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
+        gamelog << "   " << flush;
 	}
 
 
@@ -595,16 +595,17 @@ void HoldemArena::PlayGame()
     if( bSpectate )
     {
         gamelog << endl;
-        gamelog << "Flop\t" << flush;
-        flop.HandPlus::DisplayHand(gamelog);
-        gamelog << endl;
-        gamelog << "Turn\t" << flush;
-        HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
-        gamelog << endl;
         gamelog << "River:\t" << flush;
     }
 	dealer.DealCard(community);
-    if( bSpectate ) HoldemUtil::PrintCard(gamelog, dealer.dealt.Suit,dealer.dealt.Value);
+    if( bSpectate )
+    {
+        flop.HandPlus::DisplayHand(gamelog);
+        HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
+        gamelog << " " << flush;
+        HoldemUtil::PrintCard(gamelog, dealer.dealt.Suit,dealer.dealt.Value);
+         gamelog << "  " << flush;
+    }
 
 
 	int8 playerToReveal = PlayRound(5);
