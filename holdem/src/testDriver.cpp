@@ -929,19 +929,24 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
     }
 
-	uint32 i;
 	const uint32 NUM_OPPONENTS = 6;
-    const uint32 randNum = ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % NUM_OPPONENTS;
-    const uint32 randStep = ((labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer)) % (NUM_OPPONENTS-1))+1;
+    const uint32 rand765 = 1 + (blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer);
+    const uint32 rand8432 = 1 + labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer);
+    const uint32 rand8 = rand8432%8;
+    const uint32 rand432 = rand8432/8;
+    const uint32 randSeed = rand8 + (rand765%(7*6*5))*8 + (rand432%(4*3*2))*(8*7*6*5);
+    uint8 i;
+    int8 * opponentorder;
+
 	switch(headsUp)
     {
         case 'P':
             //cout << randNum << "+" << randStep << "i" << endl;
-            i = randNum;
-            while(i<5)
+            opponentorder = HoldemUtil::Permute(NUM_OPPONENTS,randSeed);
+            for(i=0;i<NUM_OPPONENTS;++i)
             {
-                cout << i << endl;
-                switch(i)
+                //cout << i << endl;
+                switch(opponentorder[i])
                 {
                     case 0:
                         myTable.AddPlayer("TrapBotV", startingMoney, &ImproveA);
@@ -962,9 +967,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                         myTable.AddPlayer("DangerBotV",startingMoney, &StrikeFold);
                         break;
                 }
-                i=(i+randStep)%NUM_OPPONENTS;
-                i = (i == randNum) ? NUM_OPPONENTS:i;
-            }
+
+            }//End of for(i...
+
+            delete [] opponentorder;
                 //myTable.AddPlayer("NormalBotIV", &MeanGeomBluff); /* riskymode = 10 */
                 //myTable.AddPlayer("NormalBotIV", &RankGeomBluff); /* riskymode = 9 */
             break;
@@ -1075,6 +1081,7 @@ void superGame(char headsUp = 0)
 int main(int argc, char* argv[])
 {
 	cout << "Final Table: 7 Players" << endl;
+
 	/*testHT(91, 1);
 	testHT(62, 1);
 	testHT(33, 1);
