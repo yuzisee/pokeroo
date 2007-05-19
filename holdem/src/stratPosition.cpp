@@ -498,7 +498,11 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,hybridMagnified.pct*statmean.pct,&myDeterredCall);
-    StateModel ap_aggressive( &myDeterredCall, &ap_passive );
+
+    HoldemFunctionModel * (hybridChoice[2]) =  { &ap_passive, &hybridgainDeterred };
+
+    StateModel ap_aggressive( &myDeterredCall, hybridChoice[bGamble] );
+
 
 
     HoldemFunctionModel& choicemodel = ap_aggressive;
