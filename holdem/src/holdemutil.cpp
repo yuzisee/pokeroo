@@ -100,6 +100,22 @@ const uint32 HoldemUtil::INCRORDER[14] =
 
 const Hand Hand::EMPTY_HAND;
 
+float64 HoldemUtil::ReadFloat64(std::istream & loadFile)
+{
+    float64 result;
+    uint32 *pMoneyU = reinterpret_cast< uint32* >( &result );
+    loadFile >> *pMoneyU;
+    loadFile.ignore(1,'x');
+    loadFile >> *(pMoneyU+1);
+    loadFile.ignore(1,':');
+    return result;
+}
+
+void HoldemUtil::WriteFloat64( std::ostream& saveFile, const float64 v )
+{
+    const uint32 *pMoneyU = reinterpret_cast< const uint32* >( &v );
+    saveFile << *pMoneyU << "x" << *(pMoneyU+1) << ":" << flush;
+}
 
 void HoldemUtil::PermuteExisting(int8 * array, uint8 count, uint32 seed)
 {

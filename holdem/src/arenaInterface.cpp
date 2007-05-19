@@ -199,12 +199,7 @@ std::istream * HoldemArena::LoadState()
 
             for( int8 i=0;i<nextNewPlayer;++i )
             {
-                float64 pMoney;
-                uint32 *pMoneyU = reinterpret_cast< uint32* >( &pMoney );
-                loadFile >> *pMoneyU;
-                loadFile.ignore(1,'x');
-                loadFile >> *(pMoneyU+1);
-                loadFile.ignore(1,':');
+                float64 pMoney = HoldemUtil::ReadFloat64( loadFile );
                 p[i]->myMoney = pMoney;
 				if( pMoney <= 0 ){
 					--livePlayers;
@@ -252,10 +247,9 @@ void HoldemArena::saveState()
     {
         float64 pMoney =  p[i]->myMoney;
 		if( pMoney < 0 ) pMoney = 0;
-        uint32 *pMoneyU = reinterpret_cast< uint32* >( &pMoney );
-        newSaveState << *pMoneyU << "x" << *(pMoneyU+1) << ":" << flush;
+		HoldemUtil::WriteFloat64( newSaveState, pMoney );
         #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
-        allSaveState << *pMoneyU << "x" << *(pMoneyU+1) << ":" << flush;
+        HoldemUtil::WriteFloat64( allSaveState, pMoney );
         #endif
     }
 #ifdef DEBUGSAVE_EXTRATOKEN
