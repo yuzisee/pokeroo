@@ -143,6 +143,9 @@ public:
 
     }
 
+    void static PermuteExisting(int8 * array, uint8 count, uint32 seed);
+    static int8 * Permute(uint8 count, uint32 seed);
+
 	const static uint8 cleanz(const uint32);
 
 		template<typename T>
