@@ -24,6 +24,7 @@
 //#define DELAYHANDS
 #define NO_REDUNDANT_SEECOMMUNITY
 #define RELOAD_LAST_HAND
+#define FLOP_TURN_RIVER_ORDER
 
 #include "arena.h"
 #include <fstream>
@@ -310,6 +311,7 @@ void HoldemArena::prepareRound(const int8 comSize)
 
 	if( bVerbose )
 	{
+
 	    #ifdef OLD_DISPLAY_STYLE
 		gamelog <<endl<<endl<<endl;
 		#else
@@ -318,6 +320,7 @@ void HoldemArena::prepareRound(const int8 comSize)
 		    gamelog << endl << endl << "Preflop" << endl;
 		}
 		#endif
+		#ifndef FLOP_TURN_RIVER_ORDER
 		if( comSize == 3 )
 		{
 		    #ifdef OLD_DISPLAY_STYLE
@@ -348,6 +351,7 @@ void HoldemArena::prepareRound(const int8 comSize)
 			gamelog << endl << endl << "River" << endl;
 			#endif
 		}
+		#endif
 		#ifdef OLD_DISPLAY_STYLE
 		gamelog <<endl<<endl;
 		#else
@@ -531,7 +535,10 @@ int8 HoldemArena::PlayRound(const int8 comSize)
 
 void HoldemArena::PlayGame()
 {
-
+#ifdef FLOP_TURN_RIVER_ORDER
+    CommunityPlus flop;
+    DeckLocation turn;
+#endif
 	if( blinds->HandPlayed(0) )
     {
         if( bVerbose )
@@ -553,9 +560,11 @@ void HoldemArena::PlayGame()
     if( bSpectate )
     {
         gamelog << endl;
-        gamelog << "Dealer deals\t" << flush;
+        gamelog << "Flop:\t" << flush;
         community.HandPlus::DisplayHand(gamelog);
-
+#ifdef FLOP_TURN_RIVER_ORDER
+        flop.SetUnique(community);
+#endif
     }
 
 
@@ -564,13 +573,19 @@ void HoldemArena::PlayGame()
     if( bSpectate )
     {
         gamelog << endl;
-        gamelog << "Previously\t" << flush;
+        gamelog << "Flop\t" << flush;
         community.HandPlus::DisplayHand(gamelog);
         gamelog << endl;
-        gamelog << "Dealer deals\t" << flush;
+        gamelog << "Turn:\t" << flush;
     }
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
-	if( bSpectate ) HoldemUtil::PrintCard(gamelog, dealer.dealt.Suit,dealer.dealt.Value);
+	if( bSpectate )
+	{
+	     HoldemUtil::PrintCard(gamelog, dealer.dealt.Suit,dealer.dealt.Value);
+	     #ifdef FLOP_TURN_RIVER_ORDER
+	     turn = dealer.dealt;
+	     #endif
+	}
 
 
 
@@ -580,10 +595,13 @@ void HoldemArena::PlayGame()
     if( bSpectate )
     {
         gamelog << endl;
-        gamelog << "Previously\t" << flush;
-        community.HandPlus::DisplayHand(gamelog);
+        gamelog << "Flop\t" << flush;
+        flop.HandPlus::DisplayHand(gamelog);
         gamelog << endl;
-        gamelog << "Dealer deals\t" << flush;
+        gamelog << "Turn\t" << flush;
+        HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
+        gamelog << endl;
+        gamelog << "River:\t" << flush;
     }
 	dealer.DealCard(community);
     if( bSpectate ) HoldemUtil::PrintCard(gamelog, dealer.dealt.Suit,dealer.dealt.Value);
