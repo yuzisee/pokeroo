@@ -1,4 +1,28 @@
 
+
+/***************************************************************************
+ *   Copyright (C) 2006 by Joseph Huang                                    *
+ *                                                                         *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU Library General Public License as       *
+ *   published by the Free Software Foundation; either version 2 of the    *
+ *   License, or (at your option) any later version.                       *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU Library General Public     *
+ *   License along with this program; if not, write to the                 *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+
+#define LOAD_PAST_HANDS "saves/"
+
 #include "stratHistory.h"
 #include <algorithm>
 
@@ -125,19 +149,88 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
 
 }
 
+HistoryStrategy::~HistoryStrategy()
+{
+    if( picks != 0 ){ delete [] picks; }
+    if( strats != 0 ){ delete [] strats; }
+}
 
+void HistoryStrategy::init(PlayerStrategy** ps, uint8 n)
+{
+    strats = new PlayerStrategy*[n];
+    picks = new PerformanceHistory[n];
+    for(uint8 i=0;i<n;++i)
+    {
+        strats[i] = ps[i];
+        picks[i].id = i;
+    }
+
+
+}
 
 void HistoryStrategy::SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph )
 {
     saveFile << (int16)(ph.id) << endl;
     saveFile << ph.nonZeroWinLose << " Non-Zero W/L" << endl;
+    saveFile << ph.numHandsAboveBelow << " Hands Above/Below" << endl;
+    HoldemUtil::WriteFloat64( saveFile, ph.totalMoneyDelta );
+    saveFile << " Total Money Delta (" << ph.totalMoneyDelta << ")" << endl;
 }
 
 PerformanceHistory HistoryStrategy::UnserializeOne( std::istream& loadFile )
 {
+    char HUMAN_DATA_BUFFER[25+17+7+5]; //Longest string(24), maximum precision(17), exponent/negative/decimal(7), margin(5)
     PerformanceHistory restored;
     int16 tempInt;
+
     loadFile >> tempInt;
     restored.id = tempInt;
+
+    loadFile >> restored.nonZeroWinLose;
+    loadFile.getline(HUMAN_DATA_BUFFER,25+17+7+5);
+    loadFile >> restored.numHandsAboveBelow;
+    loadFile.getline(HUMAN_DATA_BUFFER,25+17+7+5);
+    restored.totalMoneyDelta = HoldemUtil::ReadFloat64( loadFile );
+    loadFile.getline(HUMAN_DATA_BUFFER,25+17+7+5);
+
+
     return restored;
+}
+
+
+bool HistoryStrategy::LoadState( )
+{
+    ifstream loadFile( (ViewPlayer().GetIdent() + ".state" ).c_str() );
+    if( loadFile.is_open() )
+    {
+        Unserialize( loadFile );
+        loadFile.close();
+        return true;
+    }else
+    {
+        loadFile.close();
+        return false;
+    }
+}
+
+void HistoryStrategy::SaveState( )
+{
+
+        ofstream saveFile( (ViewPlayer().GetIdent() + ".state" ).c_str() );
+        Serialize( saveFile );
+        saveFile.close();
+
+        #ifdef LOAD_PAST_HANDS
+        char handnumbasename[200];
+        char handnumstr[20];
+        sprintf(handnumstr,"%lu",handNumber);
+        strcpy(handnumbasename,"./" LOAD_PAST_HANDS);
+        strcat(handnumbasename, (ViewPlayer().GetIdent() + "-").c_str() );
+        strcat(handnumbasename, handnumstr);
+
+        saveFile.open( handnumbasename );
+        Serialize( saveFile );
+        saveFile.close();
+        #endif
+
 }

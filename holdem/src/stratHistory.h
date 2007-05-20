@@ -134,46 +134,37 @@ class PerformanceHistory
 class HistoryStrategy : public virtual PlayerStrategy
 {
     protected:
-        PerformanceHistory * picks;
-        uint8 stratcount;
-        uint32 handNumber;
+        PlayerStrategy ** strats; //Generated at construction (constant during a game load)
+        PerformanceHistory * picks; //Must be loaded/saved
+        int8 currentStrategy; //May need to be loaded/saved
+        uint8 stratcount; //Generated at construction...
+        uint32 handNumber; //Should be loaded/saved
 
-        void init(PlayerStrategy* ps, uint8 n);
+        void init(PlayerStrategy** ps, uint8 n);
 
-        void SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph );
 
-        PerformanceHistory UnserializeOne( std::istream& loadFile );
+
 
     public:
-        HistoryStrategy(PlayerStrategy* ps, uint8 n) : stratcount(n), handNumber(0)
+        static PerformanceHistory UnserializeOne( std::istream& loadFile );
+        static void SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph );
+
+        HistoryStrategy(PlayerStrategy** ps, uint8 n) : strats(0), picks(0), currentStrategy(-1), stratcount(n), handNumber(0)
         {
             init(ps,n);
         }
-}
-;
 
-class TrendStrategy : public virtual HistoryStrategy
-{
-    protected:
-        void initT();
-    public:
-    TrendStrategy(PlayerStrategy* ps, uint8 n) : HistoryStrategy(ps,n)
-    {}
+        ~HistoryStrategy();
 
-    void Serialize( std::ostream& saveFile );
+        virtual void SeeOppHand(const int8, const Hand&){};
+    virtual void SeeAction(const HoldemAction&) {};
+    virtual void FinishHand(){};
 
-}
-;
+    virtual void SaveState();
+    virtual bool LoadState();
+    virtual void Serialize( std::ostream& saveFile ) = 0;
+    virtual void Unserialize( std::istream& loadFile ) = 0;
 
-class MultiStrategy : public virtual HistoryStrategy
-{
-    protected:
-        void initM();
-    public:
-    MultiStrategy(PlayerStrategy* ps, uint8 n) : HistoryStrategy(ps,n)
-    {}
-
-    void Serialize( std::ostream& saveFile );
 }
 ;
 
