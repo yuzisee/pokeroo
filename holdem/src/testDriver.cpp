@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 
-
+#include "stratHistory.h"
 #include "stratPosition.h"
 //#include "stratTournament.h"
 #include "stratManual.h"
@@ -117,53 +117,6 @@ void genW(CommunityPlus& h1)
 {
     CommunityPlus h2;
     genW(h1,h2);
-}
-
-void testHT(int bonus = 0, int bOffsuit = 0)
-{
-	HandPlus h1;
-	RandomDeck rd;
-	rd.ShuffleDeck(bonus);
-
-	//CallCumulationMap map;
-
-	short cardcount=0;
-	if( bOffsuit == 0 )
-	{
-		while(cardcount < FIRST_DEAL)
-		{
-			rd.DealCard(h1);
-			++cardcount;
-		}
-		cout << "Cards dealt" << endl;
-		h1.HandPlus::DisplayHandBig(cout);
-		cout << endl;
-	}else
-	{
-		unsigned char carda = (rand()%(13));
-		unsigned char cardb = (rand()%(13));
-		cardcount = 2;
-		if( bOffsuit == 1 )
-		{
-			h1.AddToHand(0,carda,HoldemUtil::CARDORDER[carda]);
-			h1.AddToHand(1,cardb,HoldemUtil::CARDORDER[cardb]);
-		}
-		else if( bOffsuit == 2 )
-		{
-			h1.AddToHand(0,carda,HoldemUtil::CARDORDER[carda]);
-			h1.AddToHand(1,carda,HoldemUtil::CARDORDER[carda]);
-		}
-		else if( bOffsuit == -1 )
-		{
-			h1.AddToHand(0,carda,HoldemUtil::CARDORDER[carda]);
-			h1.AddToHand(0,cardb,HoldemUtil::CARDORDER[cardb]);
-		}
-	}
-
-
-	//map.BuildTable(h1);
-
-
 }
 
 void testW()
@@ -298,174 +251,6 @@ cout << (int)(hx.bestPair) << " then " << (int)(hx.nextbestPair) << endl;
 
 
 #endif
-void testDeal()
-{
-
-
-    SerializeRandomDeck rd;
-    CommunityPlus h1;
-    std::ofstream shufTest("shufTest.txt");
-    rd.LoggedShuffle(shufTest);
-    rd.DealCard(h1);
-    rd.DealCard(h1);
-    rd.DealCard(h1);
-    h1.DisplayHand(cout);
-    shufTest.close();
-
-    SerializeRandomDeck rd2;
-    rd2.ShuffleDeck();
-    rd2.ShuffleDeck(4.3);
-    std::ifstream shufTestRead("shufTest.txt");
-    rd2.Unserialize( shufTestRead );
-        shufTestRead.close();
-        h1.SetEmpty();
-        rd2.DealCard(h1);
-        rd2.DealCard(h1);
-        rd2.DealCard(h1);
-        h1.DisplayHand(cout);
-}
-
-void testDR()
-{
-
-	DealRemainder deal;
-	HandPlus h1, h2, dum;
-	int8 cardcount=0;
-	int unsigned lastCardCount=0;
-
-	//OrderedDeck rd;
-	RandomDeck rd;
-
-	while(cardcount < FIRST_DEAL)
-	{
-		lastCardCount=cardcount;
-
-		rd.DealCard(dum);
-		rd.DealCard(dum);
-
-		/*deal.dealtValue = HoldemUtil::CARDORDER[ (rand() % 13) + 1 ];
-		deal.dealtSuit = rand() % 4;*/
-
-		deal.dealt = rd.dealt;
-
-		if (deal.DealCard(h1) > 0)
-		{
-			if (cardcount >= 2)	h2.AddToHand(deal.dealt);
-		}
-		printf("%d %lu\n",deal.dealt.Suit,deal.dealt.Value);
-
-		cardcount = 0;
-		for(int gs=0;gs<4;++gs)
-			for(int g=1;g<=14;++g)
-		{
-			if((h1.SeeCards(gs) & (1 << g)) > 0) ++cardcount;
-		}
-        //if(lastCardCount==cardcount)
-	}
-
-#ifdef DEBUGSITUATION
-	cout << "Cards available to me" << endl;
-	h1.DisplayHandBig(cout);
-	cout << endl;
-#endif
-	/*
-	a.FillShowHand(h1.cardset,false);printf("\n");
-	CommunityPlus cm(h1.cardset,h1.suitCount);
-	cm.DisplayHandBig(cout);printf("\n");
-	cm.DisplayHand();printf("\n");
-	*/
-#ifdef DEBUGSITUATION
-	cout << "Cards in community" << endl;
-	h2.DisplayHandBig(cout);
-	cout << endl;
-
-//	a.FillShowHand(h2.cardset,false);
-	cout << endl;
-#endif
-	if( (--(--cardcount)) < 0 ) cardcount = 0;
-
-	//DummyStats ps(h1,h2, cardcount);
-#ifdef DEBUGSITUATION
-	cout << endl << "Analyze! " << cardcount << endl;
-#endif
-
-	CommunityPlus m, co;
-	//h1.DisplayHandBig(cout);
-	m.SetUnique(h1);
-
-
-			/*		cout << "b" << m.bestPair << " n" << m.nextbestPair << endl;
-					cout << m.threeOfAKind << endl;
-					m.HandPlus::DisplayHandBig(cout);
-					cout <<endl<<endl;
-h2.DisplayHandBig(cout);*/
-co.SetUnique(h2);
-					/*cout << "b" << co.bestPair << " n" << co.nextbestPair << endl;
-					cout << co.threeOfAKind << endl;
-					co.HandPlus::DisplayHandBig(cout);
-*/
-
-/*
-	WinCallStats ws(m,co,cardcount);
-*/
-
-	CallStats ps(m,co,cardcount);
-
-cout << "In" << endl;
-double r = deal.Analyze(&ps,deal.BaseDealtSuit(),deal.BaseDealtRank(),deal.BaseDealtValue());
-cout << "Returned from there" << endl;
-
-#ifdef DEBUGSITUATION
-	cout << endl << "Finished " << r << "\t" << flush;
-//	cout << endl << "Deals " << deal.deals << "\t" << endl;
-
-	cout << endl << "Confirm that -0.5:1 odds receives " << ps.pctWillCall(2) <<  endl;
-	cout << endl << "Confirm that .0101:1 odds receives " << ps.pctWillCall(.99) << endl;
-	cout << endl << "Confirm that .333:1 odds receives " << ps.pctWillCall(.75) <<  endl;
-	cout << endl << "Confirm that 1:1 odds receives " << ps.pctWillCall(.5) << endl;
-	cout << endl << "Confirm that heads up 1.333x pot receives " << ps.pctWillCall(.3)  << endl;
-	cout << endl << "Confirm that heads up 98x pot receives " << ps.pctWillCall(.01) << endl;
-	cout << endl << "Confirm that inf:1 odds receives " << ps.pctWillCall(0) <<  endl;
-	cout << endl << "Confirm that -2:1 odds receives " << ps.pctWillCall(-1) << endl;
-#endif
-/*
-#ifdef DEBUGSITUATION
-
-cout << endl << "Finished " << deal.AnalyzeComplete(&ws) << endl;
-	//cout << endl << "Finished " << r << "\t" << flush;
-//	cout << endl << "Deals " << deal.deals << "\t" << endl;
-
-	cout << endl << "Confirm that -0.5:1 odds receives " << ws.pctWillCall(2) <<  endl;
-	cout << endl << "Confirm that .0101:1 odds receives " << ws.pctWillCall(.99) << endl;
-	cout << endl << "Confirm that .333:1 odds receives " << ws.pctWillCall(.75) <<  endl;
-	cout << endl << "Confirm that 1:1 odds receives " << ws.pctWillCall(.5) << endl;
-	cout << endl << "Confirm that heads up 1.333x pot receives " << ws.pctWillCall(.3)  << endl;
-	cout << endl << "Confirm that heads up 98x pot receives " << ws.pctWillCall(.01) << endl;
-	cout << endl << "Confirm that inf:1 odds receives " << ws.pctWillCall(0) <<  endl;
-	cout << endl << "Confirm that -2:1 odds receives " << ws.pctWillCall(-1) << endl;
-
-
-#endif
-
-
-
-
-#ifdef DEBUGSITUATION
-	cout << endl << "Review callstats " << r << "\t" << flush;
-//	cout << endl << "Deals " << deal.deals << "\t" << endl;
-
-	cout << endl << "Confirm that -0.5:1 odds receives " << ps.pctWillCall(2) <<  endl;
-	cout << endl << "Confirm that .0101:1 odds receives " << ps.pctWillCall(.99) << endl;
-	cout << endl << "Confirm that .333:1 odds receives " << ps.pctWillCall(.75) <<  endl;
-	cout << endl << "Confirm that 1:1 odds receives " << ps.pctWillCall(.5) << endl;
-	cout << endl << "Confirm that heads up 1.333x pot receives " << ps.pctWillCall(.3)  << endl;
-	cout << endl << "Confirm that heads up 98x pot receives " << ps.pctWillCall(.01) << endl;
-	cout << endl << "Confirm that inf:1 odds receives " << ps.pctWillCall(0) <<  endl;
-	cout << endl << "Confirm that -2:1 odds receives " << ps.pctWillCall(-1) << endl;
-#endif
-*/
-
-}
 
 
 void genCMD(uint16 procnum)
@@ -526,180 +311,6 @@ void goCMD(int argc, char* argv)
  genCMD(atoi(argv));
 }
 
-/*
-void testFunction()
-{
-    RandomDeck rd;
-    RandomDeck rd2;
-    rd.ShuffleDeck();
-    cout << "Dealing" << endl;
-    float64* a = new float64[50*50*50*50];
-    float64* c = new float64[50*50*50*50];
-    float64 asum = 0;
-    int qcount = 0;
-    Hand x;
-    a[0] = rd.DealCard(x) + rd2.DealCard(x);
-    c[0] = a[0];
-    for(int32 i=1;i<50*50*50*50;++i)
-    {
-        x.SetEmpty();
-        a[i] = (a[i-1]*17 + (rd.dealt.Value+5)/(rd.dealt.Suit+5)*19)/41;
-        if( a[i] > 1e30 || a[i] < -1e30 )
-        {
-            a[i] = rd.dealt.Rank + rd2.dealt.Value/(rd2.dealt.Suit+13);
-            if( rd.DealCard(x) * rd2.DealCard(x) == 0 )
-            {
-                rd.ShuffleDeck();
-                rd2.ShuffleDeck();
-            }
-        }else
-        {
-            a[i] -= rd.dealt.Rank ;
-            a[i] += rd.DealCard(x) + rd2.DealCard(x);
-            if( rd.DealCard(x) * rd2.DealCard(x) == 0 )
-            {
-                rd.ShuffleDeck();
-                rd2.ShuffleDeck();
-            }
-        }
-        if( rd.dealt.GetIndex() > rd2.dealt.GetIndex() )
-        {
-            asum = (asum * 11 + a[i] * 2) / 13;
-        }else
-        {
-            float64 z = 1;
-            unsigned long long b = (*reinterpret_cast<unsigned long long*>(a+i)) ^ (*reinterpret_cast<unsigned long long*>(a+i-1));
-            b ^= *reinterpret_cast<unsigned long long*>(&z);
-            asum = *reinterpret_cast<float64*>(&b);
-        }
-        a[i] += asum;
-        if( qcount == 0 )
-        {
-            qcount = 50*50*50;
-            cout << i << "\r" << flush;
-        }
-        --qcount;
-        c[i] = a[i];
-    }
-
-    for(int32 i=100000;i<100050;++i)
-    {
-        cout << i << " " << a[i];
-        if( a[i] == a[i-1] ) cout << endl;
-    }
-    cout << "Sorting" << endl;
-
-    std::sort(a,a+50*50*50*50);
-    cout << "Done" << endl;
-    int32 i;
-    for( i=100000;i<100050;++i)
-    {
-        cout << i << " " << a[i];
-        if( a[i] == a[i-1] ) cout << endl;
-    }
-    for(int32 j=0;j<50*50*50*50;++j)
-    {
-        if( c[j] == a[i] )
-        {
-            cout << (j-1) << " c " << c[j-1] << endl;
-            cout << j << " c " << c[j] << endl;
-        }
-
-    }
-
-    delete [] a;
-    delete [] c;
-    cout << "Cleanup" << endl;
-
-}
-*/
-void testNewCallStats()
-{
-    CommunityPlus h1, h2;
-
-
-
-///TODO: Preflop AA doesn't get 50% in strongestOpponent, WHY?
-
-
-
-
-//Community
-/*
-    h2.AddToHand(HoldemConstants::HEARTS, 13, HoldemConstants::CARD_ACEHIGH );
-    h2.AddToHand(HoldemConstants::SPADES, 13, HoldemConstants::CARD_ACEHIGH );
-    h2.AddToHand(HoldemConstants::SPADES, 4, HoldemConstants::CARD_FIVE );
-
-    //h2.AddToHand(HoldemConstants::CLUBS, 9, HoldemConstants::CARD_TEN );
-    //h2.AddToHand(HoldemConstants::CLUBS, 1, HoldemConstants::CARD_DEUCE );
-    h1.SetUnique(h2);
-*/
-//Hole cards
-    h1.AddToHand(HoldemConstants::DIAMONDS, 13, HoldemConstants::CARD_ACEHIGH );
-    h1.AddToHand(HoldemConstants::CLUBS, 13, HoldemConstants::CARD_ACEHIGH );
-    const uint8 dealtCommunityNumber=0;
-
-
-
-
-    /*CommunityPlus emptyCards;
-    PreflopCallStats pfcs(h1, emptyCards);
-    pfcs.AutoPopulate();
-    pfcs.Analyze();*/
-
-   /*
-    DealRemainder myStatBuilder;
-    myStatBuilder.UndealAll();
-    myStatBuilder.OmitCards(h2); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
-*/
-    //CommunityCallStats ds(h1, h2,dealtCommunityNumber);
-    //myStatBuilder.AnalyzeComplete(&ds);
-
-
-    cout << endl << endl << "Next part" << endl;
-
-/*
-    h1.SetUnique(h2);
-
-    //Hole cards
-    h1.AddToHand(HoldemConstants::SPADES, 12, HoldemConstants::CARD_KING );
-    h1.AddToHand(HoldemConstants::DIAMONDS, 5, HoldemConstants::CARD_SIX );
-
-    myStatBuilder.UndealAll();
-    myStatBuilder.OmitCards(h2); ///Omit h2 NOT h1, because the opponent can think you have the cards you have
-*/
-//    CommunityCallStats *pds = 0; //this holds the cache
-//    CallCumulation dsCopyCCa;
-//    CallCumulation ds2CC;
-//    StatsManager::QueryOffense(ds2CC,h1,h2,dealtCommunityNumber,&pds);
-//    StatsManager::QueryOffense(dsCopyCCa,h1,h2,dealtCommunityNumber,&pds);
-
-    CallCumulation dsCopyCC;
-
-    StatsManager::QueryDefense(dsCopyCC,h1,h2,dealtCommunityNumber);
-
-cout << "STRONGEST:" << endl;
-    StatResult z = dsCopyCC.strongestOpponent();
-    cout << "w " << z.wins << endl;
-    cout << "s " << z.splits << endl;
-    cout << "l " << z.loss << endl;
-    cout << "= " << z.pct << endl;
-
-cout << endl;
-cout << endl;
-cout << "WEAKEST:" << endl;
-    z = dsCopyCC.weakestOpponent();
-    cout << "w " << z.wins << endl;
-    cout << "s " << z.splits << endl;
-    cout << "l " << z.loss << endl;
-    cout << "= " << z.pct << endl;
-
-    //CommunityCallStats dsCOPY(ds,h1,h2);
-    //CommunityCallStats ds2(h1, h2,dealtCommunityNumber);
-    //myStatBuilder.AnalyzeComplete(&ds2);
-    //dsCOPY.Analyze();
-
-}
 
 
 #ifdef DEBUGBETMODEL
@@ -785,7 +396,90 @@ void debugPosition()
 }
 #endif
 
+void testAnything()
+{
+    cout << "Testing history and ranksort" << endl;
 
+    PerformanceHistory a[6];
+
+    a[0].nonZeroWinLose = -2;
+    a[1].nonZeroWinLose = 0;
+    a[2].nonZeroWinLose = 0;
+    a[3].nonZeroWinLose = 0;
+    a[4].nonZeroWinLose = 1;
+    a[5].nonZeroWinLose = -5;
+
+    a[0].numHandsAboveBelow = 2;
+    a[1].numHandsAboveBelow = 4;
+    a[2].numHandsAboveBelow = 7;
+    a[3].numHandsAboveBelow = 0;
+    a[4].numHandsAboveBelow = 3;
+    a[5].numHandsAboveBelow = -10;
+
+
+    a[0].totalMoneyDelta = .5;
+    a[1].totalMoneyDelta = 60;
+    a[2].totalMoneyDelta = -40.3;
+    a[3].totalMoneyDelta = 23.1;
+    a[4].totalMoneyDelta = 0;
+    a[5].totalMoneyDelta = 0;
+
+    a[0].id = '0';
+    a[1].id = '1';
+    a[2].id = '2';
+    a[3].id = '3';
+    a[4].id = '4';
+    a[5].id = '5';
+
+    for(int i=0;i<6;++i)
+    {
+        cout << a[i].id << endl;
+        cout << "a[" << i << "]: #" << (int)(a[i].rank) << endl;
+        HistoryStrategy::SerializeOne(cout,a[i]);
+        cout << endl;
+    }
+cout << endl;
+cout << "S O R T" << endl;
+cout << endl;
+    PerformanceHistory::SortAndOffset(a,6);
+
+
+    ofstream testFile;
+    ifstream l;
+
+    for(int i=0;i<6;++i)
+    {
+        cout << a[i].id << endl;
+        cout << "a[" << i << "]: #" << (int)(a[i].rank) << endl;
+        cout << "\tWL=" << a[i].nonZeroWinLose << endl;
+        cout << "\tAB=" << a[i].numHandsAboveBelow << endl;
+        cout << "\tTD=" << (a[i].totalMoneyDelta) << endl;
+        cout << endl;
+
+        testFile.open("testingHistorySave.txt",std::ios::out|std::ios::trunc);
+        HistoryStrategy::SerializeOne(testFile,a[i]);
+        testFile.close();
+
+        l.open("testingHistorySave.txt");
+        a[i] = HistoryStrategy::UnserializeOne(l);
+        l.close();
+    }
+
+cout << endl;
+cout << "After reburn!" << endl;
+cout << endl;
+
+
+    for(int i=0;i<6;++i)
+    {
+        cout << a[i].id << endl;
+        cout << "a[" << i << "]: #" << (int)(a[i].rank) << endl;
+        HistoryStrategy::SerializeOne(cout,a[i]);
+        cout << endl;
+    }
+
+    exit(1);
+}
 
 std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
@@ -1081,7 +775,7 @@ void superGame(char headsUp = 0)
 int main(int argc, char* argv[])
 {
 	cout << "Final Table: 7 Players" << endl;
-
+testAnything();
 	/*testHT(91, 1);
 	testHT(62, 1);
 	testHT(33, 1);
