@@ -39,7 +39,7 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
     int32 averageWinLose=0;
     int32 averageAboveBelow=0;
 
-    uint8 potentialRank;
+    uint16 potentialRank;
 
     int32 lastAboveBelow;
     int32 lastWinLose;
@@ -76,7 +76,6 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
     { //Let i be the index of the element of which you are comparing to, for a tie
       //We iterate from the last (best) element to the first(worst)
         int32 & x = array[i-1].numHandsAboveBelow;
-        x -= averageAboveBelow;
 
         if( x < lastAboveBelow )
         {//Worse than previous
@@ -84,7 +83,9 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
             potentialRank = num-i+1;
         }
 
-        array[i-1].rank = potentialRank;
+        x -= averageAboveBelow;
+
+        array[i-1].rank = potentialRank*num;
 
         array[i-1].sortMode = SORT_NUM_WINLOSE;
     }
@@ -100,7 +101,6 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
     { //Let i be the index of the element of which you are comparing to, for a tie
       //We iterate from the last (best) element to the first(worst)
         int32 & x = array[i-1].nonZeroWinLose;
-        x -= averageWinLose;
 
         if( x < lastWinLose )
         {//Worse than previous
@@ -108,8 +108,10 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
             potentialRank = num-i+1;
         }
 
-        //Only keep the worst rank in all categories
+        x -= averageWinLose;
 
+        //Only keep the worst rank in all categories
+        array[i-1].rank /= num;
         if( potentialRank > array[i-1].rank )
         {
             array[i-1].rank += potentialRank*num - 1;
@@ -136,24 +138,26 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
     { //Let i be the index of the element of which you are comparing to, for a tie
       //We iterate from the last (best) element to the first(worst)
         float64 & x = array[i-1].totalMoneyDelta;
-        x -= averageTotalDelta;
+
 
         if( x < lastTotalDelta )
         {//Worse than previous (not good enough to tie, must be given a unique rank)
-            averageTotalDelta = x;
+            lastTotalDelta = x;
             potentialRank = num-i+1;
         }
 
+        x -= averageTotalDelta;
+
         //Only keep the worst rank in all categories
-        const uint8 tieBreaker = (array[i-1].rank % num) + 1;
-        const uint8 interimRank = array[i-1].rank / num;
+        const uint16 tieBreaker = (array[i-1].rank % (num)) + 1;
+        const uint16 interimRank = array[i-1].rank / (num);
         if( potentialRank > interimRank )
         {
-            array[i-1].rank = potentialRank*num;
-            array[i-1].rank += (interimRank + tieBreaker)/2 - 1;
+            array[i-1].rank = potentialRank*num*2;
+            array[i-1].rank += (interimRank + tieBreaker) - 2;
         }else
         {//interimRank is still the worst rank
-            array[i-1].rank = (interimRank*num) + (potentialRank + tieBreaker)/2 - 1;
+            array[i-1].rank = (interimRank*num*2) + (potentialRank + tieBreaker) - 2;
         }
 
 
@@ -196,6 +200,7 @@ void HistoryStrategy::SerializeOne( std::ostream& saveFile, const PerformanceHis
 {
     saveFile << (int16)(ph.id) << endl;
     saveFile << ph.score << " Misc." << endl;
+    saveFile << (int16)(ph.rank) << " ==Rank" << endl;
     saveFile << ph.nonZeroWinLose << " Non-Zero W/L" << endl;
     saveFile << ph.numHandsAboveBelow << " Hands Above/Below" << endl;
     HoldemUtil::WriteFloat64( saveFile, ph.totalMoneyDelta );
@@ -208,10 +213,13 @@ PerformanceHistory HistoryStrategy::UnserializeOne( std::istream& loadFile )
     PerformanceHistory restored;
     int16 tempInt;
 
+
     loadFile >> tempInt;
     restored.id = tempInt;
 
     loadFile >> restored.score;
+    loadFile.getline(HUMAN_DATA_BUFFER,25+17+7+5);
+    loadFile >> tempInt; //rank
     loadFile.getline(HUMAN_DATA_BUFFER,25+17+7+5);
 
     loadFile >> restored.nonZeroWinLose;

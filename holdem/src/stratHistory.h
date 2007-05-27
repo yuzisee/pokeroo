@@ -40,7 +40,7 @@ class PerformanceHistory
         int32 nonZeroWinLose;
         int32 numHandsAboveBelow;
         float64 totalMoneyDelta;
-        uint8 rank;
+        uint16 rank;
         int8 sortMode; //Sorting arrays with varying sortmodes is not allowed.
         int32 score;
 
