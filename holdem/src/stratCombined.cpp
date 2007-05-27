@@ -113,10 +113,15 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
         if( prevMoney > -1 )
         {
             const float64 avgBlind = (ViewTable().GetBigBlind() + ViewTable().GetSmallBlind()) / ViewTable().GetNumberAtTable();
+            if( bGamble > 0 )
+            {
+                picks[currentStrategy].totalMoneyDelta -= avgBlind;
+            }
+
             if( nowMoney < prevMoney - ViewTable().GetChipDenom()/2 )
             {//Lost more than half a chip
                 picks[currentStrategy].nonZeroWinLose -= 1 + bGamble;
-                picks[currentStrategy].totalMoneyDelta -= (prevMoney - nowMoney) + avgBlind*bGamble;
+                picks[currentStrategy].totalMoneyDelta -= (prevMoney - nowMoney);
             }
             else if( nowMoney > prevMoney + ViewTable().GetChipDenom()/2 )
             {//Won more than half a chip
