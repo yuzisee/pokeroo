@@ -88,14 +88,25 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
     if( n == 0 )
     {
         if( prevMoney < 0 )
-        {
-            initM();
+        {//If there is no previous hand, initialize
+            if( handNumber > 0 )
+            {//Arena loads game
+                uint32 realHandNumber = handNumber;
+                initM();
+                handNumber = realHandNumber;
+            }else
+            {//Arena new game
+                initM();
+                handNumber = 1;
+                prevMoney = -1;
+            }
         }else
-        {
+        {//Every hand runs through here
             SaveState();//SAVE STATE
+            handNumber += 1;
         }
 
-        handNumber += 1;
+
 
 
         float64 nowMoney = ViewPlayer().GetMoney();
@@ -122,6 +133,7 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
         currentStrategy = 0;
 
         strats[picks[currentStrategy].id]->Link(this);
+        strats[picks[currentStrategy].id]->SoftOpenLogFile();
         picks[currentStrategy].score += 1;
         prevMoney = nowMoney;
     }
@@ -138,6 +150,9 @@ void MultiStrategy::initM()
 {
     LoadState();
     currentStrategy = 0;
+    strats[0]->Link(this);
+    strats[0]->HardOpenLogFile();
+    strats[0]->ReleaseLogFile();
 }
 
 void MultiStrategy::Unserialize( std::istream& loadFile )

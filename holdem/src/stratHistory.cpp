@@ -109,7 +109,16 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
         }
 
         //Only keep the worst rank in all categories
-        if( potentialRank > array[i-1].rank ){ array[i-1].rank = potentialRank; }
+
+        if( potentialRank > array[i-1].rank )
+        {
+            array[i-1].rank += potentialRank*num - 1;
+        }else
+        {
+            array[i-1].rank *= num;
+            array[i-1].rank += potentialRank - 1;
+        }
+        //At this point, potentialRank * num is the rank, (potentialRank % num)+1 is tiebreaker
 
         array[i-1].sortMode = SORT_TOTAL_DELTA;
 
@@ -136,13 +145,23 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
         }
 
         //Only keep the worst rank in all categories
-        if( potentialRank > array[i-1].rank ){ array[i-1].rank = potentialRank; }
+        const uint8 tieBreaker = (array[i-1].rank % num) + 1;
+        const uint8 interimRank = array[i-1].rank / num;
+        if( potentialRank > interimRank )
+        {
+            array[i-1].rank = potentialRank*num;
+            array[i-1].rank += (interimRank + tieBreaker)/2 - 1;
+        }else
+        {//interimRank is still the worst rank
+            array[i-1].rank = (interimRank*num) + (potentialRank + tieBreaker)/2 - 1;
+        }
+
 
         array[i-1].sortMode = SORT_RANK;
 
     }
 
-
+//INVARIANT: Each rank is now num*worstRank + avg(otherRanks)
     ///Sort by WorstOfRank
     std::sort(array,array+num);
 
@@ -155,9 +174,9 @@ HistoryStrategy::~HistoryStrategy()
     if( strats != 0 ){ delete [] strats; }
 }
 
-void HistoryStrategy::init(PlayerStrategy** ps, uint8 n)
+void HistoryStrategy::init(PositionalStrategy** ps, uint8 n)
 {
-    strats = new PlayerStrategy*[n];
+    strats = new PositionalStrategy*[n];
     picks = new PerformanceHistory[n];
     for(uint8 i=0;i<n;++i)
     {
@@ -166,7 +185,11 @@ void HistoryStrategy::init(PlayerStrategy** ps, uint8 n)
         picks[i].id = i;
     }
 
+}
 
+void HistoryStrategy::FinishHand()
+{
+    strats[picks[currentStrategy].id]->ReleaseLogFile();
 }
 
 void HistoryStrategy::SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph )

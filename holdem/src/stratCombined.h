@@ -41,7 +41,7 @@ class TrendStrategy : public virtual HistoryStrategy
 
         uint32 RandomSeed();
     public:
-    TrendStrategy(PlayerStrategy** ps, uint8 n) : HistoryStrategy(ps,n)
+    TrendStrategy(PositionalStrategy** ps, uint8 n) : HistoryStrategy(ps,n)
     {}
 
     virtual void Serialize( std::ostream& saveFile );
@@ -62,9 +62,10 @@ class MultiStrategy : public virtual HistoryStrategy
         void initM(); //Load file if available
     public:
 
+
     int8 bGamble;
 
-    MultiStrategy(PlayerStrategy** ps, uint8 n) : HistoryStrategy(ps,n), prevMoney(-1), bGamble(0)
+    MultiStrategy(PositionalStrategy** ps, uint8 n) : HistoryStrategy(ps,n), prevMoney(-1), bGamble(0)
     {
     }
 

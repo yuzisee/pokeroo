@@ -40,15 +40,11 @@ const bool CorePositionalStrategy::lkupLogHybrid[BGAMBLE_MAX] = {false,false,fal
 PositionalStrategy::~PositionalStrategy()
 {
     #ifdef LOGPOSITION
-        if( logFile.is_open() )
-        {
-            logFile.close();
-        }
+        ReleaseLogFile();
     #endif
 }
 
-
-void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
+void PositionalStrategy::HardOpenLogFile()
 {
     #ifdef LOGPOSITION
         if( !(logFile.is_open()) )
@@ -59,6 +55,38 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
             #endif
             );
         }
+    #endif
+
+}
+
+
+void PositionalStrategy::SoftOpenLogFile()
+{
+    #ifdef LOGPOSITION
+        if( !(logFile.is_open()) )
+        {
+            logFile.open((ViewPlayer().GetIdent() + ".Thoughts.txt").c_str()
+            , std::ios::app
+            );
+        }
+    #endif
+
+}
+
+void PositionalStrategy::ReleaseLogFile()
+{
+    #ifdef LOGPOSITION
+    if( logFile.is_open() )
+    {
+        logFile.close();
+    }
+    #endif
+}
+
+void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
+{
+    #ifdef LOGPOSITION
+        HardOpenLogFile();
     #endif
     #ifdef LOGPOSITION
         logFile << endl;

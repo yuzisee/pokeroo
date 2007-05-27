@@ -608,13 +608,14 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     CorePositionalStrategy SpaceT(10), SpaceTR(10);
 
 
-    PlayerStrategy *(multiT[6]) = {&DangerT, &ComT, &NormT, &TrapT, &AceT, &SpaceT};
-    PlayerStrategy *(multiTR[6]) = {&DangerTR, &ComTR, &NormTR, &TrapTR, &AceTR, &SpaceTR};
+    PositionalStrategy *(multiT[6]) = {&DangerT, &ComT, &NormT, &TrapT, &AceT, &SpaceT};
+    PositionalStrategy *(multiTR[6]) = {&DangerTR, &ComTR, &NormTR, &TrapTR, &AceTR, &SpaceTR};
 
     MultiStrategy MultiT(multiT,6);
     MultiT.bGamble = 0;
     MultiStrategy MultiTR(multiTR,6);
     MultiTR.bGamble = 1;
+
 
     //TournamentStrategy asterisk;
     //TournamentStrategy gruff(1);
@@ -751,8 +752,15 @@ if( bLoadGame )
 #endif
 std::istream *saveLoc = myTable.LoadState();
 if( saveLoc != 0 ) consolePlay.myFifo = saveLoc;
+
+MultiT.handNumber = myTable.handnum;
+MultiTR.handNumber = myTable.handnum;
+
 }
 #endif
+
+
+
 
     Player* iWin = (myTable.PlayTable());
 

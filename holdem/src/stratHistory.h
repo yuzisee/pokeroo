@@ -31,6 +31,7 @@
 #define SORT_RANK 0
 
 class PlayerStrategy;
+class PositionalStrategy;
 
 class PerformanceHistory
 {
@@ -137,22 +138,24 @@ class PerformanceHistory
 class HistoryStrategy : public virtual PlayerStrategy
 {
     protected:
-        PlayerStrategy ** strats; //Generated at construction (constant during a game load)
+        PositionalStrategy ** strats; //Generated at construction (constant during a game load)
         PerformanceHistory * picks; //Must be loaded/saved
         int8 currentStrategy; //May need to be loaded/saved
         uint8 stratcount; //Generated at construction...
-        uint32 handNumber; //Should be loaded/saved
 
-        void init(PlayerStrategy** ps, uint8 n);
+
+        void init(PositionalStrategy** ps, uint8 n);
 
 
 
 
     public:
+        uint32 handNumber; //Should be loaded/saved
+
         static PerformanceHistory UnserializeOne( std::istream& loadFile );
         static void SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph );
 
-        HistoryStrategy(PlayerStrategy** ps, uint8 n) : strats(0), picks(0), currentStrategy(-1), stratcount(n), handNumber(0)
+        HistoryStrategy(PositionalStrategy** ps, uint8 n) : strats(0), picks(0), currentStrategy(-1), stratcount(n), handNumber(0)
         {
             init(ps,n);
         }
@@ -161,7 +164,7 @@ class HistoryStrategy : public virtual PlayerStrategy
 
         virtual void SeeOppHand(const int8, const Hand&){};
     virtual void SeeAction(const HoldemAction&) {};
-    virtual void FinishHand(){};
+    virtual void FinishHand();
 
     virtual void SaveState();
     virtual bool LoadState();

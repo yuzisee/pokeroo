@@ -79,6 +79,10 @@ class PositionalStrategy : virtual public PlayerStrategy
         float64 solveGainModel(HoldemFunctionModel*);
 	public:
 
+        void HardOpenLogFile();
+        void SoftOpenLogFile();
+        void ReleaseLogFile();
+
 		PositionalStrategy( bool bMean=false,bool bRanking=false,bool bWorse=true,bool bHybrid=false ) : PlayerStrategy(), detailPCT(0), bLogMean(bMean), bLogRanking(bRanking), bLogWorse(bWorse), bLogHybrid(bHybrid) {}
 		virtual ~PositionalStrategy();
 
