@@ -162,6 +162,7 @@ void HistoryStrategy::init(PlayerStrategy** ps, uint8 n)
     for(uint8 i=0;i<n;++i)
     {
         strats[i] = ps[i];
+        strats[i]->Link(this);
         picks[i].id = i;
     }
 
@@ -171,6 +172,7 @@ void HistoryStrategy::init(PlayerStrategy** ps, uint8 n)
 void HistoryStrategy::SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph )
 {
     saveFile << (int16)(ph.id) << endl;
+    saveFile << ph.score << " Misc." << endl;
     saveFile << ph.nonZeroWinLose << " Non-Zero W/L" << endl;
     saveFile << ph.numHandsAboveBelow << " Hands Above/Below" << endl;
     HoldemUtil::WriteFloat64( saveFile, ph.totalMoneyDelta );
@@ -185,6 +187,9 @@ PerformanceHistory HistoryStrategy::UnserializeOne( std::istream& loadFile )
 
     loadFile >> tempInt;
     restored.id = tempInt;
+
+    loadFile >> restored.score;
+    loadFile.getline(HUMAN_DATA_BUFFER,25+17+7+5);
 
     loadFile >> restored.nonZeroWinLose;
     loadFile.getline(HUMAN_DATA_BUFFER,25+17+7+5);

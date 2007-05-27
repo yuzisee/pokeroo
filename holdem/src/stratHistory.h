@@ -30,6 +30,7 @@
 #define SORT_TOTAL_DELTA 3
 #define SORT_RANK 0
 
+class PlayerStrategy;
 
 class PerformanceHistory
 {
@@ -40,15 +41,17 @@ class PerformanceHistory
         float64 totalMoneyDelta;
         uint8 rank;
         int8 sortMode; //Sorting arrays with varying sortmodes is not allowed.
+        int32 score;
 
         char id;
 
-        PerformanceHistory() : nonZeroWinLose(0), numHandsAboveBelow(0), totalMoneyDelta(0), rank(0), sortMode(0)
+        PerformanceHistory() : nonZeroWinLose(0), numHandsAboveBelow(0), totalMoneyDelta(0), rank(0), sortMode(0), score(0)
         {}
 
     const PerformanceHistory & operator=(const PerformanceHistory& a)
     {
         id = a.id;
+        score = a.score;
         nonZeroWinLose = a.nonZeroWinLose;
         numHandsAboveBelow = a.numHandsAboveBelow;
         totalMoneyDelta = a.totalMoneyDelta;

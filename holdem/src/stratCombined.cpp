@@ -24,32 +24,33 @@
 #include "stratCombined.h"
 
 
+#ifdef TREND_STRAT_ENABLE
 
 uint32 TrendStrategy::RandomSeed()
 {
     CallCumulationD possibleHands;
-            StatResult randomSeed;
+    StatResult randomSeed;
 
 
 
-            CommunityPlus withCommunity;
-            withCommunity.SetUnique(ViewHand());
+    CommunityPlus withCommunity;
+    withCommunity.SetUnique(ViewHand());
 
-            ViewTable().CachedQueryOffense(possibleHands,withCommunity);
+    ViewTable().CachedQueryOffense(possibleHands,withCommunity);
 
-            DistrShape tempP(0), tempW(0);
+    DistrShape tempP(0), tempW(0);
 
-            StatsManager::Query(0,&tempP,&tempW,withCommunity,CommunityPlus::EMPTY_COMPLUS,0);
-            StatResult myRank = GainModel::ComposeBreakdown(tempP.mean,tempW.mean);
+    StatsManager::Query(0,&tempP,&tempW,withCommunity,CommunityPlus::EMPTY_COMPLUS,0);
+    StatResult myRank = GainModel::ComposeBreakdown(tempP.mean,tempW.mean);
 
 
-            const float64 ranking3 = possibleHands.pctWillCall_tiefactor(1 - myRank.pct, 1); //wins+splits
-            const float64 ranking = possibleHands.pctWillCall_tiefactor(1 - myRank.pct, 0); //wins
+    const float64 ranking3 = possibleHands.pctWillCall_tiefactor(1 - myRank.pct, 1); //wins+splits
+    const float64 ranking = possibleHands.pctWillCall_tiefactor(1 - myRank.pct, 0); //wins
 
-            randomSeed.wins = ranking;
-            randomSeed.splits = ranking3 - ranking;
-            randomSeed.loss = 1 - ranking3;
-            randomSeed.genPCT();
+    randomSeed.wins = ranking;
+    randomSeed.splits = ranking3 - ranking;
+    randomSeed.loss = 1 - ranking3;
+    randomSeed.genPCT();
 
 }
 
@@ -79,50 +80,64 @@ void TrendStrategy::SeeCommunity(const Hand& h, const int8 n)
     strats[indexStrategy]->SeeCommunity(h,n);
 }
 
-
+#endif
 
 
 void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
 {
     if( n == 0 )
     {
-
-        SaveState();//SAVE STATE
+        if( prevMoney < 0 )
+        {
+            initM();
+        }else
+        {
+            SaveState();//SAVE STATE
+        }
 
         handNumber += 1;
+
 
         float64 nowMoney = ViewPlayer().GetMoney();
         if( prevMoney > -1 )
         {
+            const float64 avgBlind = (ViewTable().GetBigBlind() + ViewTable().GetSmallBlind()) / ViewTable().GetNumberAtTable();
             if( nowMoney < prevMoney - ViewTable().GetChipDenom()/2 )
             {//Lost more than half a chip
-                picks[currentStrategy].nonZeroWinLose -= 1;
-                picks[currentStrategy].totalMoneyDelta -= (prevMoney - nowMoney);
-            }/*
+                picks[currentStrategy].nonZeroWinLose -= 1 + bGamble;
+                picks[currentStrategy].totalMoneyDelta -= (prevMoney - nowMoney) + avgBlind*bGamble;
+            }
             else if( nowMoney > prevMoney + ViewTable().GetChipDenom()/2 )
             {//Won more than half a chip
-
-            }*/
+                if( bGamble > 0 )
+                {
+                    picks[currentStrategy].nonZeroWinLose += (1 + bGamble)*(ViewTable().GetNumberAtTable()) - 1;
+                    picks[currentStrategy].totalMoneyDelta += (nowMoney - prevMoney) - avgBlind;
+                }
+            }
         }
 
         //Pick the top strategy
         PerformanceHistory::SortAndOffset( picks, stratcount );
         currentStrategy = 0;
 
+        strats[picks[currentStrategy].id]->Link(this);
+        picks[currentStrategy].score += 1;
         prevMoney = nowMoney;
     }
 
-    strats[currentStrategy]->SeeCommunity(h,n);
+    strats[picks[currentStrategy].id]->SeeCommunity(h,n);
 }
 
 float64 MultiStrategy::MakeBet()
 {
-    return strats[currentStrategy]->MakeBet();
+    return strats[picks[currentStrategy].id]->MakeBet();
 }
 
 void MultiStrategy::initM()
 {
     LoadState();
+    currentStrategy = 0;
 }
 
 void MultiStrategy::Unserialize( std::istream& loadFile )

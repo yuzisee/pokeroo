@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 
-#include "stratHistory.h"
+#include "stratCombined.h"
 #include "stratPosition.h"
 //#include "stratTournament.h"
 #include "stratManual.h"
@@ -599,6 +599,23 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
   	ImproveGainRankStrategy ImproveA_R(1);
 	ImproveGainRankStrategy ReallyImproveA_R(2);
 
+    //TrendStrategies
+    DeterredGainStrategy DangerT(1), DangerTR(1);
+    DeterredGainStrategy ComT, ComTR;
+    ImproveGainStrategy NormT(0), NormTR(0);
+    ImproveGainStrategy TrapT(1), TrapTR(1);
+    ImproveGainStrategy AceT(2), AceTR(2);
+    CorePositionalStrategy SpaceT(10), SpaceTR(10);
+
+
+    PlayerStrategy *(multiT[6]) = {&DangerT, &ComT, &NormT, &TrapT, &AceT, &SpaceT};
+    PlayerStrategy *(multiTR[6]) = {&DangerTR, &ComTR, &NormTR, &TrapTR, &AceTR, &SpaceTR};
+
+    MultiStrategy MultiT(multiT,6);
+    MultiT.bGamble = 0;
+    MultiStrategy MultiTR(multiTR,6);
+    MultiTR.bGamble = 1;
+
     //TournamentStrategy asterisk;
     //TournamentStrategy gruff(1);
 
@@ -618,12 +635,12 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     {
         //myTable.AddPlayer("q4", &pushAll);
         myTable.AddPlayer("i4", &drainFold);
-        myTable.AddPlayer("X3", &pushFold);
-        myTable.AddPlayer("A3", &tightPushFold);
+        //myTable.AddPlayer("X3", &pushFold);
+        //myTable.AddPlayer("A3", &tightPushFold);
 
     }
 
-	const uint32 NUM_OPPONENTS = 6;
+	const uint32 NUM_OPPONENTS = 8;
     const uint32 rand765 = 1 + (blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer);
     const uint32 rand8432 = 1 + labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer);
     const uint32 rand8 = rand8432%8;
@@ -660,6 +677,12 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                     case 5:
                         myTable.AddPlayer("DangerBotV",startingMoney, &StrikeFold);
                         break;
+                    case 6:
+                        myTable.AddPlayer("MultiBotV", startingMoney, &MultiT);
+                        break;
+                    case 7:
+                        myTable.AddPlayer("GearBotV", startingMoney, &MultiTR);
+                        break;
                 }
 
             }//End of for(i...
@@ -693,14 +716,21 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             //myTable.AddPlayer("ComBotII", &FutureFoldP);
 		//myTable.AddPlayer("SpaceBotII", &AutoSetP);
 		//myTable.AddPlayer("TrapIII", &DistrScaleA);
+
+        myTable.AddPlayer("GearBotV", &MultiTR);
+        myTable.AddPlayer("MultiBotV", &MultiT);
+
 		myTable.AddPlayer("DangerV", &StrikeFold);
         myTable.AddPlayer("ComV", &FutureFoldA);
         myTable.AddPlayer("NormV", &XFoldA);
         myTable.AddPlayer("TrapV", &ImproveA);
 		myTable.AddPlayer("AceV", &ReallyImproveA);
 
-		//myTable.AddPlayer("SpaceIV", &AutoSetA);
 
+        myTable.AddPlayer("SpaceV", &MeanGeomBluff);
+
+
+        //myTable.AddPlayer("SpaceIV", &AutoSetA);
 /*
         myTable.AddPlayer("ComR", &FutureFoldA_R);
         myTable.AddPlayer("NormR", &XFoldA_R);
@@ -708,7 +738,6 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 		myTable.AddPlayer("AceR", &ReallyImproveA_R);
 
 */
-        myTable.AddPlayer("SpaceV", &MeanGeomBluff);
             break;
 
     }
@@ -774,8 +803,8 @@ void superGame(char headsUp = 0)
 
 int main(int argc, char* argv[])
 {
-	cout << "Final Table: 7 Players" << endl;
-testAnything();
+	cout << "Final Table: 9 Players" << endl;
+
 	/*testHT(91, 1);
 	testHT(62, 1);
 	testHT(33, 1);

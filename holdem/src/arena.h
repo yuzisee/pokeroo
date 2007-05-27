@@ -139,6 +139,14 @@ class PlayerStrategy
 		PlayerStrategy() : me(0), game(0), myPositionIndex(0) {}
 		virtual ~PlayerStrategy(){};
 
+        virtual void Link(PlayerStrategy* o)
+        {
+            myHand = (o->myHand);
+            me = (o->me);
+            game = (o->game);
+            myPositionIndex = o->myPositionIndex;
+        }
+
 		virtual void SeeCommunity(const Hand&, const int8) = 0;
 				/*
 		double myBetsIn; //(fraction)

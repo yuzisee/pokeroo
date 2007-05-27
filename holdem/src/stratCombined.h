@@ -26,6 +26,9 @@
 
 #include "stratHistory.h"
 
+#undef TREND_STRAT_ENABLE
+
+#ifdef TREND_STRAT_ENABLE
 class TrendStrategy : public virtual HistoryStrategy
 {
     protected:
@@ -50,6 +53,7 @@ class TrendStrategy : public virtual HistoryStrategy
 
 }
 ;
+#endif
 
 class MultiStrategy : public virtual HistoryStrategy
 {
@@ -57,8 +61,12 @@ class MultiStrategy : public virtual HistoryStrategy
         float64 prevMoney;
         void initM(); //Load file if available
     public:
-    MultiStrategy(PlayerStrategy** ps, uint8 n) : HistoryStrategy(ps,n), prevMoney(-1)
-    {}
+
+    int8 bGamble;
+
+    MultiStrategy(PlayerStrategy** ps, uint8 n) : HistoryStrategy(ps,n), prevMoney(-1), bGamble(0)
+    {
+    }
 
     virtual void SeeCommunity(const Hand&, const int8);
     virtual float64 MakeBet();
