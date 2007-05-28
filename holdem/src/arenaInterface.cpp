@@ -177,9 +177,10 @@ std::istream * HoldemArena::LoadState()
 #endif
             int16 numericValue;
 
-            loadFile >> blinds->mySmallBlind;
+
+            blinds->mySmallBlind = HoldemUtil::ReadFloat64( loadFile );
             loadFile.ignore(1,'=');
-            loadFile >> blinds->myBigBlind;
+            blinds->myBigBlind = HoldemUtil::ReadFloat64( loadFile );
             blinds->Reload(blinds->mySmallBlind,blinds->myBigBlind
             #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
             ,handnum
@@ -191,9 +192,7 @@ std::istream * HoldemArena::LoadState()
             curDealer = static_cast<int8>(numericValue);
             loadFile.ignore(1,'@');
 
-            loadFile >> numericValue;
-
-            smallestChip = numericValue;
+            smallestChip = HoldemUtil::ReadFloat64( loadFile );
             loadFile.ignore(1,'^');
 
 
@@ -236,12 +235,21 @@ void HoldemArena::saveState()
     newSaveState << handnum << "n";
         #ifdef DEBUGSAVEGAME_ALL
     allSaveState << handnum << "n";
-    allSaveState << blinds->SmallBlind() << "=" << blinds->BigBlind() << "@" << (int)curDealer << "@" << flush;
-    allSaveState << smallestChip << "^" << flush;
+    HoldemUtil::WriteFloat64( allSaveState, blinds->SmallBlind() );
+    allSaveState << "=" << flush;
+    HoldemUtil::WriteFloat64( allSaveState, blinds->BigBlind() );
+    allSaveState << "@" << (int)curDealer << "@" << flush;
+    HoldemUtil::WriteFloat64( allSaveState, smallestChip );
+    allSaveState << "^" << flush;
         #endif
     #endif
-    newSaveState << blinds->SmallBlind() << "=" << blinds->BigBlind() << "@" << (int)curDealer << "@" << flush;
-    newSaveState << smallestChip << "^" << flush;
+    HoldemUtil::WriteFloat64( newSaveState, blinds->SmallBlind() );
+    newSaveState << "=" << flush;
+    HoldemUtil::WriteFloat64( newSaveState, blinds->BigBlind() );
+    newSaveState << "@" << (int)curDealer << "@" << flush;
+    HoldemUtil::WriteFloat64( newSaveState, smallestChip );
+    newSaveState << "^" << flush;
+
 
     for( int8 i=0;i<nextNewPlayer;++i )
     {

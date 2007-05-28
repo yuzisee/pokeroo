@@ -62,6 +62,9 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 	comBuf.AppendUnique(h);
 
 	#ifdef INFOASSIST
+        CallCumulationD possibleHands;
+        StatResult rankPCT;
+
 	    CommunityPlus onlyCommunity;
         onlyCommunity.SetUnique(h);
 
@@ -72,6 +75,20 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
         DistrShape w_wl(0);
 	    StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
         winMean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+
+        ViewTable().CachedQueryOffense(possibleHands,withCommunity);
+
+        const float64 ranking3 = possibleHands.pctWillCall_tiefactor(1 - winMean.pct, 1); //wins+splits
+        const float64 ranking = possibleHands.pctWillCall_tiefactor(1 - winMean.pct, 0); //wins
+
+        rankPCT.wins = ranking;
+        rankPCT.splits = ranking3 - ranking;
+        rankPCT.loss = 1 - ranking3;
+        rankPCT.genPCT();
+        rarity = 1.0 - rankPCT.pct;
+
+
 	#endif
 }
 
@@ -354,16 +371,25 @@ void ConsoleStrategy::showSituation()
 	#endif
     UI_DESCRIPTOR << endl ;
 
-	UI_DESCRIPTOR << endl << "You ("<< ViewPlayer().GetIdent() <<") have:" << flush;
+	UI_DESCRIPTOR << endl << "You ("<< ViewPlayer().GetIdent() <<") have: " << flush;
 
 
 	HandPlus u;
 	u.SetUnique(ViewHand());
 	u.DisplayHand(UI_DESCRIPTOR);
+
+#ifdef INFOASSIST
+    UI_DESCRIPTOR.precision(4);
+
+	if( rarity > 0 )
+	{
+	    const float64 freqBetter = 1/rarity;
+        UI_DESCRIPTOR << "  (one in " << freqBetter << " hands is better)";
+	}
+
 	UI_DESCRIPTOR << endl;
 
 
-    #ifdef INFOASSIST
         float64 wsplitChance = 0;
         const int8 opphandsDealt = ViewTable().GetNumberAtTable() - 1;
         for( int8 i=0;i<=opphandsDealt;++i)
@@ -395,6 +421,8 @@ void ConsoleStrategy::showSituation()
             }
             UI_DESCRIPTOR << "." << endl << 50 * (1 - detailPCT.improve) << "% of the time, you are more likely to win now." << flush;
         }
+
+    UI_DESCRIPTOR.precision(6);
     #endif
 
 

@@ -38,6 +38,7 @@ class ConsoleStrategy : public PlayerStrategy
         #ifdef INFOASSIST
             StatResult winMean;
             DistrShape detailPCT;
+            float64 rarity;
         #endif
 	protected:
         Hand comBuf;
