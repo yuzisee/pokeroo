@@ -67,9 +67,9 @@ float64 ExpectedCallD::foldGain(const float64 extra) const
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
     #ifdef PURE_BLUFF
-    const float64 totalFG = (1 - (baseFraction+bigBlindFraction+smallBlindFraction)*handFreq*blindsPow);
+        const float64 totalFG = (1 - (baseFraction+(bigBlindFraction+smallBlindFraction)*blindsPow)*handFreq);
     #else
-    const float64 totalFG = (1 - baseFraction - (bigBlindFraction+smallBlindFraction)*handFreq*blindsPow);
+        const float64 totalFG = (1 - baseFraction - ((bigBlindFraction+smallBlindFraction)*blindsPow)*handFreq);
     #endif
 #else
     if( 1 < baseFraction + bigBlindFraction*handFreq )

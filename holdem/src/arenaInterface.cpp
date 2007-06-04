@@ -461,9 +461,14 @@ bool HoldemArena::CanStillBet(int8 n) const
     return IsInHand(n) && p[n]->allIn == INVALID && p[n]->GetMoney() > 0;
 }
 
-bool HoldemArena::CanRaise(int8 n) const
+bool HoldemArena::CanRaise(int8 n, int8 nowBettor) const
 {
-    return ( (curHighBlind == n) || (highBet > p[n]->myBetSize) || (highBet <= 0) ) && (CanStillBet(n));
+    bool bHasPlayed = ((curDealer < n) && (n < nowBettor) && (curDealer < nowBettor))
+                        ||
+                      ((curDealer < n) || (n < nowBettor) && (nowBettor < curDealer))
+                        ;
+    bool bCanCheck = (highBet <= 0) && (!bHasPlayed);
+    return ( (curHighBlind == n) || (highBet > p[n]->myBetSize) || (bCanCheck) ) && (CanStillBet(n));
 }
 
 float64 HoldemArena::GetBetToCall() const

@@ -357,7 +357,7 @@ protected:
 		virtual bool IsInHand(int8) const;
 		virtual bool HasFolded(int8) const;
 		virtual bool CanStillBet(int8) const; //This will not include players who have pushed all in
-		virtual bool CanRaise(int8) const;
+		virtual bool CanRaise(int8,int8) const;
 
         virtual float64 GetAllChips() const;
         virtual float64 GetFoldedPotSize() const;

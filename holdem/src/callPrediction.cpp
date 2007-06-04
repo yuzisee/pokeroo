@@ -32,6 +32,8 @@
 //#define CALL_SCALE_FOLD_PCT
 #define CALL_ALGB_PCT
 
+//#define ANTI_CHECK_PLAY
+
 #if defined(GEOM_FOLD_PCT) && defined(CALL_SCALE_FOLD_PCT)
 Don't define BOTH FOLD_PCT types
 #endif
@@ -105,7 +107,8 @@ float64 ExactCallBluffD::topTwoOfThree(float64 a, float64 b, float64 c, float64 
            );
 */
 
-float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, float64 wGuess)
+///Geom returns stricly call percentage (no check)
+float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, bool bCheckPossible)
 {
 
     const int8 N = handsDealt();
@@ -118,6 +121,7 @@ float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alread
     geomFunction.bet = bet;
     geomFunction.alreadyBet = alreadyBet;
     geomFunction.avgBlind = avgBlind;
+    geomFunction.bOppCheck = bCheckPossible;
     geomFunction.n = n;
 
 	 #ifdef DEBUG_CALLPRED_FUNCTION
@@ -148,13 +152,19 @@ float64 ExactCallFunctionModel::f( const float64 w )
 	const float64 frank = e->pctWillCall(1 - w);
     const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
     //fNRank == 0 and frank == 1? That means if you had this w pct, you would have the nuts or better.
-
+    //const float64 potwin = bOppCheck ? ( 0 ) : (pot);
 
     const float64 gainFactor = pow( Bankroll+pot , fw ) * pow( Bankroll-bet , 1-fw ) - Bankroll;
 
-    const float64 stackFactor = avgBlind / fNRank;
+    const float64 stackFactor = alreadyBet + avgBlind / fNRank;
 
-    return gainFactor + stackFactor;
+    if( bOppCheck )
+    {
+        return gainFactor;
+    }else
+    {
+        return gainFactor + stackFactor;
+    }
 }
 
 float64 ExactCallFunctionModel::fd( const float64 w, const float64 y )
@@ -173,25 +183,39 @@ float64 ExactCallFunctionModel::fd( const float64 w, const float64 y )
                                 * dfw;
 
 
-
-    return gainFactor - stackFactor;
+    if( bOppCheck )
+    {
+        return gainFactor;
+    }else
+    {
+        return gainFactor - stackFactor;
+    }
 }
 
-float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n)
+float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, bool bCheckPossible)
 {
 	if( w <= 0 ) return 0;
 	if( bet >= bankroll ) return 0;
 
     const int8 N = handsDealt();
-    const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
+    float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
             * ( N - 2 )/ N ;
+
+    const float64 fw = pow(w,n);
+    const float64 dfw = (n<0.5) ? (0) : (n * pow(w,n-1));
+
+    if( bCheckPossible )
+    {
+        if( dfw == 0 )
+        {
+            return 0;
+        }
+        avgBlind = 0;
+    }
 
     const float64 frank = e->pctWillCall(1 - w);
     const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
 
-
-    const float64 fw = pow(w,n);
-    const float64 dfw = (n<0.5) ? (0) : (n * pow(w,n-1));
 
 
     const float64 A = dfw * log1p( (bankroll+pot) / (bankroll - bet) - 1 );
@@ -236,6 +260,7 @@ float64 ExactCallD::facedOdds_Algb_step(float64 bankroll, float64 pot, float64 a
     return ret;
 }
 
+///Algb returns check OR call percentage
 float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet)
 {
     float64 newOdds = facedOdds_Algb_step(bankroll,pot,alreadyBet,bet);
@@ -428,7 +453,7 @@ void ExactCallD::query(const float64 betSize)
             if( betSize < oppBankRoll )
             {	//Can still call, at least
 
-                if( betSize > callBet() || table->CanRaise(pIndex) )
+                if( betSize > callBet() || table->CanRaise(pIndex, playerID) )
                 { //The player can raise you if he hasn't called yet, OR you're raising
 
                     //if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
@@ -440,9 +465,16 @@ void ExactCallD::query(const float64 betSize)
                         const float64 oppRaiseMake = thisRaise - oppBetAlready;
                         if( oppRaiseMake > 0 && thisRaise <= oppBankRoll )
                         {
-                            const float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance);
+                            const bool bOppCouldCheck = (betSize == 0);
+                            float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance,bOppCouldCheck);
+                            #ifdef ANTI_CHECK_PLAY
+                            if( bOppCouldCheck )
+                            {
+                                w_r = 1;
+                            }
+                            #endif
                             nextNoRaise_A[i] = 1 - e->pctWillCall( w_r );
-                            nextNoRaiseD_A[i] = - e->pctWillCallD(  w_r  )  * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance );
+                            nextNoRaiseD_A[i] = - e->pctWillCallD(  w_r  )  * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance, false );
                         }
                     }
                 }
@@ -475,12 +507,12 @@ void ExactCallD::query(const float64 betSize)
 #endif
                     //const float64 wn = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppBetMake, 1/significance); //f(w) = w^n
                     //const float64 w = pow( wn, significance );         //f-1(w) = w
-                    const float64 w = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppBetMake, 1/significance);
+                    const float64 w = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppBetMake, 1/significance, false);
                     nextexf = e->pctWillCall( w );
 
 
                     nextdexf = nextexf + oppBetMake * e->pctWillCallD(  w  )
-                            * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppBetMake,totaldexf,w, 1/significance );//wn, wn/w / significance );
+                            * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppBetMake,totaldexf,w, 1/significance, false );//wn, wn/w / significance );
                     //              *  pow(  oppBetMake / (oppBetMake + totalexf)  , significance - 1 ) * significance
 //                                * (totalexf - oppBetMake * totaldexf)
 //                                 /(oppBetMake + totalexf) /(oppBetMake + totalexf);
@@ -496,7 +528,7 @@ void ExactCallD::query(const float64 betSize)
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
 
 
-                nextexf = oppBetMake * e->pctWillCall( pow( facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significance),significance) );
+                nextexf = oppBetMake * e->pctWillCall( pow( facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significance, false),significance) );
 
                 nextdexf = 0;
 
@@ -829,17 +861,24 @@ float64 ExactCallBluffD::PushGain()
     if( handRarity >= 1 ) //all hands are better than this one
     {
            //1326 is the number of hands possible
-		#ifdef PURE_BLUFF
+//		#ifdef PURE_BLUFF
             return 1;
-			//return (1 + (baseFraction+bigBlindFraction+smallBlindFraction)*blindsPow*RAREST_HAND_CHANCE);
-		#else
-			return (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*RAREST_HAND_CHANCE);
-		#endif
+
+//		#else
+//			return (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*RAREST_HAND_CHANCE);
+//		#endif
     }
 	#ifdef PURE_BLUFF
-		const float64 totalFG = (1 + (baseFraction+bigBlindFraction+smallBlindFraction)*blindsPow*handFreq);
+        const float64 //totalFG;
+        //if( blindsPow*handFreq > 1 )
+        //{
+            totalFG = (1 + (baseFraction+(bigBlindFraction+smallBlindFraction)*blindsPow)*handFreq);
+        //}else
+        //{
+        //    totalFG = (1 + baseFraction+(bigBlindFraction+smallBlindFraction*blindsPow)*handFreq);
+        //}
 	#else
-		const float64 totalFG = (1 + baseFraction + (bigBlindFraction+smallBlindFraction)*blindsPow*handFreq);
+		const float64 totalFG = (1 + baseFraction + ((bigBlindFraction+smallBlindFraction)*blindsPow)*handFreq);
 	#endif
 
 #else

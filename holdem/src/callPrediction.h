@@ -24,7 +24,7 @@
 #include "functionbase.h"
 
 
-#define RAREST_HAND_CHANCE 332.0
+#define RAREST_HAND_CHANCE 221.0
 
 
 //For calculating geometric betting expectation
@@ -46,6 +46,8 @@ class ExactCallFunctionModel : public virtual ScalarFunctionModel
         float64 bet;
 
         float64 avgBlind;
+
+        bool bOppCheck;
 
         ExactCallFunctionModel(float64 step, const CallCumulationD* e) : ScalarFunctionModel(step), e(e){};
 
@@ -116,8 +118,8 @@ class ExactCallD : public virtual ExpectedCallD
         float64 *noRaiseChanceD_A;
 
 
-        float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, float64 wGuess = 0.75);
-        float64 facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);
+        float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, bool bCheckPossible);
+        float64 facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, bool bCheckPossible);
 		float64 facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 wGuess = 0.75);
 		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet);
         float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);
