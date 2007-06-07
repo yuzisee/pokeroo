@@ -291,7 +291,7 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 
 
     //const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
-    const float64 callGain = targetModel->f(betToCall)
+    const float64 callGain = (betToCall < myMoney) ? (targetModel->f(betToCall)) : (targetModel->f(myMoney))
     ;
 
 
@@ -312,7 +312,7 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
-            logFile << "relBPHG()=" << (1-targetModel->GetFoldGain()) << " ." << endl;
+            logFile << "FoldGain()=" << (targetModel->GetFoldGain()) << " ." << endl;
             logFile << "f("<< betToCall <<")=" << callGain << endl;
 
 
@@ -397,7 +397,7 @@ float64 ImproveGainStrategy::MakeBet()
     if( bGamble >= 1 )
     {
         #ifdef LOGPOSITION
-            logFile << minWin <<" ... "<< minWin+2 <<" =" << distrScale << endl;
+            logFile << minWin <<" ... "<< minWin+2 <<" = impliedfactor " << distrScale << endl;
         #endif
     }
 
@@ -418,7 +418,7 @@ float64 ImproveGainStrategy::MakeBet()
         const float64 rVersus = expectedVS*improveLevel*improveLevel + fullVersus*(1-improveLevel*improveLevel);
         myDeterredCall.callingPlayers( rVersus );
         #ifdef LOGPOSITION
-            logFile << expectedVS <<" ... "<< fullVersus <<" =" << rVersus << endl;
+            logFile << expectedVS <<" ... "<< fullVersus <<" = vs " << rVersus << endl;
         #endif
 	}
 
@@ -427,6 +427,7 @@ float64 ImproveGainStrategy::MakeBet()
     if( bGamble >= 1 )
     {
         myDeterredCall.SetImpliedFactor(distrScale);
+        myDeterredCall.insuranceDeterrent = -improveMod - 0.5;
         left = statranking;
         right = statranking;
     }
@@ -487,7 +488,8 @@ float64 DeterredGainStrategy::MakeBet()
 
     const float64 certainty = betToCall / maxShowdown;
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
-    const float64 volatilityFactor = 1 - sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
+    const float64 timeLeft = sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
+    const float64 volatilityFactor = 1 - timeLeft;
 
 	const float64 futureFold = volatilityFactor*(1-certainty) + certainty;
 
@@ -515,7 +517,8 @@ float64 DeterredGainStrategy::MakeBet()
     myDeterredCall.SetImpliedFactor(futureFold);
     if( bGamble >= 1 )
     {
-        myDeterredCall.insuranceDeterrent = 1 - futureFold; //more likely to fold due to uncertainty
+        myDeterredCall.insuranceDeterrent = 2.5*timeLeft - 0.9; //more likely to fold due to uncertainty
+        //myDeterredCall.insuranceDeterrent = -futureFold; //more likely to fold due to uncertainty
         const float64 fullVersus = myDeterredCall.callingPlayers();
         //myDeterredCall.callingPlayers( fullVersus + 1 - futureFold );
     }

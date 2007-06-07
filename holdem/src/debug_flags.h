@@ -29,7 +29,7 @@
 #define WINRELEASE
 #define LOGPOSITION
 /**********************************/
-//#define DEBUGSPECIFIC 59
+//#define DEBUGSPECIFIC 7
 #define GRAPHMONEY "chipcount.csv"
 #define REPRODUCIBLE
 ///COMMENT OUT DEBUGSPECIFIC IF YOU WISH TO GRAPHMONEY
