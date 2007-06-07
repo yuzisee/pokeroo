@@ -427,7 +427,7 @@ float64 ImproveGainStrategy::MakeBet()
     if( bGamble >= 1 )
     {
         myDeterredCall.SetImpliedFactor(distrScale);
-        myDeterredCall.insuranceDeterrent = -improveMod - 0.5;
+        //myDeterredCall.insuranceDeterrent = (-improveMod - 0.5)*(1-ViewTable().GetNumberInHand()/ViewTable().GetNumberAtTable());
         left = statranking;
         right = statranking;
     }
@@ -517,7 +517,7 @@ float64 DeterredGainStrategy::MakeBet()
     myDeterredCall.SetImpliedFactor(futureFold);
     if( bGamble >= 1 )
     {
-        myDeterredCall.insuranceDeterrent = 2.5*timeLeft - 0.9; //more likely to fold due to uncertainty
+        myDeterredCall.insuranceDeterrent = (2.5*timeLeft - 0.9)*(1-ViewTable().GetNumberInHand()/ViewTable().GetNumberAtTable()); //more likely to fold due to uncertainty
         //myDeterredCall.insuranceDeterrent = -futureFold; //more likely to fold due to uncertainty
         const float64 fullVersus = myDeterredCall.callingPlayers();
         //myDeterredCall.callingPlayers( fullVersus + 1 - futureFold );
