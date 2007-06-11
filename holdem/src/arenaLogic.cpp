@@ -799,10 +799,12 @@ void HoldemArena::RefreshPlayers()
         {
             if( bSpectate )
             {
-                leaderboard[leaderboardSize].id = i;
-                leaderboard[leaderboardSize].totalMoneyDelta = withP.myMoney;
-                ++leaderboardSize;
-
+                if( withP.myMoney > 0 )
+                {
+                    leaderboard[leaderboardSize].id = i;
+                    leaderboard[leaderboardSize].totalMoneyDelta = withP.myMoney;
+                    ++leaderboardSize;
+                }
             }
 
             withP.myBetSize = 0;
@@ -813,8 +815,9 @@ void HoldemArena::RefreshPlayers()
                 scoreboard << ",0";
             }else
             {
+                scoreboard << "," << flush;
                 scoreboard.precision(10);
-                scoreboard << "," << withP.GetMoney();
+                scoreboard << withP.myMoney << flush;
             }
 #endif
 
