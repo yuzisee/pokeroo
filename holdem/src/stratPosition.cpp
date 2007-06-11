@@ -450,7 +450,7 @@ float64 ImproveGainStrategy::MakeBet()
         right = statranking;
 
 //Need scaling
-        myDeterredCall_right.insuranceDeterrent = oppInsuranceBigBet * improvePure;
+        myDeterredCall_right.insuranceDeterrent = oppInsuranceBigBet;
 
         if( bGamble >= 2 )
         {
@@ -470,7 +470,7 @@ float64 ImproveGainStrategy::MakeBet()
     StateModel choicemodel( &myDeterredCall_left, &ap );
     StateModel choicemodel_right( &myDeterredCall_right, &ap_right );
 
-    AutoScalingFunction rolemodel(&choicemodel,&choicemodel_right,0.0,maxShowdown,&myDeterredCall_left);
+    AutoScalingFunction rolemodel(&choicemodel,&choicemodel_right,betToCall,maxShowdown,&myDeterredCall_left);
 
     const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
 
