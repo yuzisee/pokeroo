@@ -637,8 +637,12 @@ void AutoScalingFunction::query(float64 x)
             std::cout << slider << std::endl;
         #endif
 
-
-    if( slider > 1 )
+    if( saturate_max <= saturate_min )
+    {
+        y = yl;
+        dy = fd(x,yl);
+    }
+    else if( slider > 1 )
     {
         y = yr;
         dy = fd(x, yr);
