@@ -447,7 +447,14 @@ float64 ImproveGainStrategy::MakeBet()
         left.loss += detailPCT.avgDev/2;
         left.pct -= detailPCT.avgDev/2;
 
-        right = statranking;
+        const float64 actOrReact = betToCall / maxShowdown;
+        if( actOrReact > 1 )
+        {//Calling all-in [react]
+            right = statranking;
+        }else
+        {//When you bet high, you're giving your opponent the opportunity to call only with better hands
+            right = (statranking * actOrReact) + statmean * (1 - actOrReact);
+        }
 
 //Need scaling
         myDeterredCall_right.insuranceDeterrent = oppInsuranceBigBet;
