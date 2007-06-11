@@ -50,7 +50,9 @@ GainModelReverseNoRisk::~GainModelReverseNoRisk()
 GainModelReverse::~GainModelReverse()
 {
 }
+
 #endif
+
 StateModel::~StateModel()
 {
 }
@@ -58,6 +60,7 @@ StateModel::~StateModel()
 GainModelNoRisk::~GainModelNoRisk()
 {
 }
+
 
 GainModel::~GainModel()
 {

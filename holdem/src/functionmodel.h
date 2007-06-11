@@ -85,7 +85,8 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 }
 ;
 
-/*
+#ifndef NO_AWKWARD_MODELS
+
 class DummyFunctionModel : public virtual ScalarFunctionModel
 {
 	public:
@@ -94,7 +95,7 @@ class DummyFunctionModel : public virtual ScalarFunctionModel
     virtual float64 fd(const float64, const float64) const;
 }
 ;
-*/
+#endif
 
 
 class GainModel : public virtual HoldemFunctionModel

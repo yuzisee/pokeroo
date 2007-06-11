@@ -385,21 +385,24 @@ float64 ImproveGainStrategy::MakeBet()
 
     const float64 improveMod = detailPCT.improve; //Generally preflop is negative here, so you probably don't want to accentuate that
     const float64 improvePure= (improveMod+1)/2;
+
+    //const float64 targetImproveBy = detailPCT.avgDev / 2 / improvePure;
+    const float64 targetWorsenBy = detailPCT.avgDev / 2 / (1 - improvePure);
+    const float64 impliedOddsGain = (statmean.pct + detailPCT.avgDev / 2) / statmean.pct;
+    //const float64 oppInsuranceSmallBet = (1 - statmean.pct + targetWorsenBy) / (1 - statmean.pct);
+    const float64 oppInsuranceBigBet = 1 - improvePure;
+
+/*
     const float64 minWin = pow(statworse.pct,expectedVS);
     const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
+
 
     float64 distrScale = improveMod+minWin+1 ;
     if( bGamble >= 2 )
     {
         distrScale = (-improveMod/2)+minWin+1 ;
     }
-
-    if( bGamble >= 1 )
-    {
-        #ifdef LOGPOSITION
-            logFile << minWin <<" ... "<< minWin+2 <<" = impliedfactor " << distrScale << endl;
-        #endif
-    }
+*/
 
 
     CallCumulationD &choicecumu = callcumu;
@@ -408,38 +411,68 @@ float64 ImproveGainStrategy::MakeBet()
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall_left(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall_right(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
 #else
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
-    const float64 fullVersus = myDeterredCall.callingPlayers();
-    if( bGamble >= 2 )
-    {
-        const float64 improveLevel = (improveMod*sqrt(improveDev*2)*2+1)/2;
-        const float64 rVersus = expectedVS*improveLevel*improveLevel + fullVersus*(1-improveLevel*improveLevel);
-        myDeterredCall.callingPlayers( rVersus );
-        #ifdef LOGPOSITION
-            logFile << expectedVS <<" ... "<< fullVersus <<" = vs " << rVersus << endl;
-        #endif
-	}
 
-    StatResult left = hybridMagnified;
-    StatResult right = statmean;
+    const float64 fullVersus = ViewTable().GetNumberAtTable() - 1;
+    const float64 peopleDrawing = (1 - improvePure) * (ViewTable().GetNumberInHand() - 1);
+    const float64 newVersus = (fullVersus - peopleDrawing*(1-improvePure)*detailPCT.stdDev);
+
     if( bGamble >= 1 )
     {
-        myDeterredCall.SetImpliedFactor(distrScale);
-        //myDeterredCall.insuranceDeterrent = (-improveMod - 0.5)*(1-ViewTable().GetNumberInHand()/ViewTable().GetNumberAtTable());
+        #ifdef LOGPOSITION
+//            logFile << minWin <<" ... "<< minWin+2 <<" = impliedfactor " << distrScale << endl;
+            logFile << improvePure <<" improvePure " << endl;
+            logFile << " Likely Worsen By "<< targetWorsenBy << endl; //TRAPBOT, ACTIONBOT
+            logFile << "impliedOddsGain would be " << impliedOddsGain << endl; //ACTIONBOT
+            logFile << "opp Likely to fold " << oppInsuranceBigBet << endl; //TRAPBOT, ACTIONBOT
+            logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << endl; //ACTIONBOT
+        #endif
+    }
+//bGamble == 2 is ActionBot
+//bGamble == 1 is TrapBot
+
+
+//NormalBot uses this setup.
+    StatResult left = hybridMagnified;
+    StatResult right = statmean;
+//TrapBot and ActionBot are based on statranking only
+    if( bGamble >= 1 )
+    {
         left = statranking;
+        left.wins -= detailPCT.avgDev/2;
+        left.loss += detailPCT.avgDev/2;
+        left.pct -= detailPCT.avgDev/2;
+
         right = statranking;
+
+//Need scaling
+        myDeterredCall_right.insuranceDeterrent = oppInsuranceBigBet * improvePure;
+
+        if( bGamble >= 2 )
+        {
+            myDeterredCall_left.SetImpliedFactor(impliedOddsGain);
+
+//Need scaling
+            myDeterredCall_right.callingPlayers(newVersus);
+        }
     }
 
-	GainModel hybridgainDeterred_aggressive(left,&myDeterredCall);
-	GainModelNoRisk hybridgain_aggressive(right,&myDeterredCall);
+	GainModel hybridgainDeterred_aggressive(left,&myDeterredCall_left);
+	GainModelNoRisk hybridgain_aggressive(right,&myDeterredCall_right);
 
-	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,maxShowdown,left.pct*right.pct,&myDeterredCall);
+	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,maxShowdown,left.pct*right.pct,&myDeterredCall_left);
+	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,maxShowdown,left.pct*right.pct,&myDeterredCall_right);
 
-    StateModel choicemodel( &myDeterredCall, &ap );
+    StateModel choicemodel( &myDeterredCall_left, &ap );
+    StateModel choicemodel_right( &myDeterredCall_right, &ap_right );
 
-    const float64 bestBet = solveGainModel(&choicemodel);
+    AutoScalingFunction rolemodel(&choicemodel,&choicemodel_right,0.0,maxShowdown,&myDeterredCall_left);
+
+    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
 
 #ifdef LOGPOSITION
     if( bestBet < betToCall + ViewTable().GetChipDenom() )
@@ -515,12 +548,9 @@ float64 DeterredGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
     myDeterredCall.SetImpliedFactor(futureFold);
-    if( bGamble >= 1 )
+    if( bGamble < 1 ) //ComBot only, not DangerBot
     {
-        myDeterredCall.insuranceDeterrent = (2.5*timeLeft - 0.9)*(1-ViewTable().GetNumberInHand()/ViewTable().GetNumberAtTable()); //more likely to fold due to uncertainty
-        //myDeterredCall.insuranceDeterrent = -futureFold; //more likely to fold due to uncertainty
-        const float64 fullVersus = myDeterredCall.callingPlayers();
-        //myDeterredCall.callingPlayers( fullVersus + 1 - futureFold );
+        myDeterredCall.insuranceDeterrent = 1-futureFold; //more likely to fold due to uncertainty
     }
 
 	GainModel hybridgainDeterred(hybridMagnified,&myDeterredCall);

@@ -134,7 +134,46 @@ public:
 
 }
 ;
+/*
+class AutoScalingExpectedCallD : public virtual ExpectedCallD
+{
+    protected:
+        virtual void query(float64 x);
+        const float64 saturate_min, saturate_max, saturate_upto;
+        float64 last_x;
+        float64 y;
 
+        const ExpectedCallD* left;
+        const ExpectedCallD* right;
+    public:
+
+ExpectedCallD(const int8 id, const HoldemArena* base
+#ifdef ANTI_PRESSURE_FOLDGAIN
+            , const float64 rankPCT
+#endif
+                    , const CallCumulationD* data, const float64 commit = 0)
+
+        AutoScalingExpectedCallD(const ExpectedCallD* e_left,const ExpectedCallD* e_right,const float64 minX, const float64 maxX, const float64 upto)
+        : ExpectedCallD(
+                            (e_left->playerID == e_right->playerID) ? e_left->playerID : -1
+                            , (e_left->table == e_right->table) ? e_left->table : 0
+#ifdef ANTI_PRESSURE_FOLDGAIN
+                            ,sqrt(e_left->handRarity * e_right->handRarity) //Geometric mean here?
+#endif
+                            ,(e_left->e != e_right->e
+                            ,0
+                        )
+        , saturate_min(minX), saturate_max(maxX), saturate_upto(upto), left(e_left), right(e_right)
+        {
+            if( (e_left->playerID != e_right->playerID)
+                || (e_left->table != e_right->table)
+                || (e_left->handRarity != e_right->handRarity)
+                || e_left->
+            query(0);
+        }
+}
+;
+*/
 /*
 class EstimateCallD : public virtual ExpectedCallD
 {
