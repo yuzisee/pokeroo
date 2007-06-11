@@ -642,12 +642,12 @@ void AutoScalingFunction::query(float64 x)
         y = yl;
         dy = fd(x,yl);
     }
-    else if( slider > 1 )
+    else if( slider >= 1 )
     {
         y = yr;
         dy = fd(x, yr);
     }
-    else if( slider < 0 )
+    else if( slider <= 0 )
     {
         y = yl;
         dy = fd(x, yl);

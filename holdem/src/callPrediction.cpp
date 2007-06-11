@@ -857,7 +857,7 @@ float64 ExactCallBluffD::PushGain()
     const float64 bigBlindFraction = betFraction( table->GetBigBlind() );
     const float64 smallBlindFraction = betFraction( table->GetSmallBlind() );
 #ifdef CONSISTENT_AGG
-    const float64 handFreq = 1/(1-handRarity);
+    const float64 handFreq = 1+handRarity;//1/(1-handRarity);
     if( handRarity >= 1 ) //all hands are better than this one
     {
            //1326 is the number of hands possible
