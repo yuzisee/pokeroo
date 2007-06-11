@@ -27,6 +27,7 @@
 #define FLOP_TURN_RIVER_ORDER
 
 #include "arena.h"
+#include "stratHistory.h"
 #include <fstream>
 #include <algorithm>
 
@@ -750,9 +751,17 @@ void HoldemArena::DealHands()
 void HoldemArena::RefreshPlayers()
 {
 
+    PerformanceHistory * leaderboard;
+    int8 leaderboardSize = 0;
 
     if( bSpectate )
     {
+        leaderboard = new PerformanceHistory[livePlayers];
+        for( int8 i=0;i<livePlayers;++i)
+        {
+            leaderboard[i].sortMode = SORT_TOTAL_DELTA;
+        }
+
         gamelog << "\n\n==========\nCHIP COUNT" << endl;
     }
 #ifdef GRAPHMONEY
@@ -769,6 +778,7 @@ void HoldemArena::RefreshPlayers()
     }
 
     bool bPlayerElimBlindUp = false;
+
 
     for(int8 i=0;i<nextNewPlayer;++i)
     {
@@ -787,13 +797,16 @@ void HoldemArena::RefreshPlayers()
         }
         else
         {
+            if( bSpectate )
+            {
+                leaderboard[leaderboardSize].id = i;
+                leaderboard[leaderboardSize].totalMoneyDelta = withP.myMoney;
+                ++leaderboardSize;
+
+            }
 
             withP.myBetSize = 0;
 
-            if( bSpectate )
-            {
-                if( withP.GetMoney() > 0 ) gamelog << withP.GetIdent() << " now has $" << withP.GetMoney() << endl;
-            }
 #ifdef GRAPHMONEY
             if( withP.GetMoney() < 0 )
             {
@@ -814,6 +827,18 @@ void HoldemArena::RefreshPlayers()
 
     }
 
+
+    if( bSpectate )
+    {
+        std::sort(leaderboard,leaderboard+leaderboardSize);
+        for(int8 i=leaderboardSize-1;i>=0;--i)
+        {
+            Player& withP = *(p[leaderboard[i].id]);
+            gamelog << withP.GetIdent() << " now has $" << withP.GetMoney() << endl;
+        }
+        delete [] leaderboard;
+    }
+
     for(int8 i=0;i<nextNewPlayer;++i)
     {
         Player& withP = *(p[i]);
@@ -831,6 +856,7 @@ void HoldemArena::RefreshPlayers()
     ++handnum;
 #endif
 #endif
+
 
     if( bPlayerElimBlindUp && bVerbose )
     {

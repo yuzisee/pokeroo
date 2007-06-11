@@ -427,9 +427,9 @@ float64 ImproveGainStrategy::MakeBet()
 //            logFile << minWin <<" ... "<< minWin+2 <<" = impliedfactor " << distrScale << endl;
             logFile << improvePure <<" improvePure " << endl;
             logFile << " Likely Worsen By "<< targetWorsenBy << endl; //TRAPBOT, ACTIONBOT
-            logFile << "impliedOddsGain would be " << impliedOddsGain << endl; //ACTIONBOT
+            if( bGamble >= 2 ) logFile << "impliedOddsGain would be " << impliedOddsGain << endl; //ACTIONBOT
             logFile << "opp Likely to fold " << oppInsuranceBigBet << endl; //TRAPBOT, ACTIONBOT
-            logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << endl; //ACTIONBOT
+            if( bGamble >= 2 ) logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << endl; //ACTIONBOT
         #endif
     }
 //bGamble == 2 is ActionBot
@@ -534,10 +534,13 @@ float64 DeterredGainStrategy::MakeBet()
 	const float64 futureFold = volatilityFactor*(1-certainty) + certainty;
 
 #ifdef LOGPOSITION
-    logFile << "uncertainty      " << uncertainty << endl;
-    logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
-    logFile << "V Factor         " << volatilityFactor << endl;
-    logFile << "BetToCall PCT    " << certainty << endl;
+    if( bGamble == 0 )
+    {
+        logFile << "uncertainty      " << uncertainty << endl;
+        logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
+        logFile << "V Factor         " << volatilityFactor << endl;
+        logFile << "BetToCall PCT    " << certainty << endl;
+    }
     logFile << "impliedFactor... " << futureFold << endl;
 #endif
 
