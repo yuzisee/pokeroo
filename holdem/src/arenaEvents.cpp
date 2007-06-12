@@ -271,7 +271,7 @@ void HoldemArenaBetting::startBettingRound()
             allInsNow[allInsNowCount] = curIndex;
             ++allInsNowCount;
         }
-
+        addBets(PlayerBet(withP1));
             if( bVerbose )
             {
                 broadcastCurrentMove(curIndex, PlayerBet(withP2),PlayerBet(withP2), 0, 2, false, PlayerAllIn(withP2) > 0);
@@ -281,7 +281,7 @@ void HoldemArenaBetting::startBettingRound()
 
         forcedBetSum = PlayerBet(withP1)+PlayerBet(withP2);
         blindOnlySum = forcedBetSum;
-		addBets(forcedBetSum);
+		addBets(PlayerBet(withP2));
 
 		highestBetter = curIndex;
 		highBet = PlayerBet(withP2);

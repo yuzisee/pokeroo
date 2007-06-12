@@ -391,7 +391,7 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 targetWorsenBy = detailPCT.avgDev / 2 / (1 - improvePure);
     const float64 impliedOddsGain = (statmean.pct + detailPCT.avgDev / 2) / statmean.pct;
     //const float64 oppInsuranceSmallBet = (1 - statmean.pct + targetWorsenBy) / (1 - statmean.pct);
-    const float64 oppInsuranceBigBet = (improveMod>0)?(improveMod/2):0;
+    const float64 oppInsuranceBigBet = improvePure;//(improveMod>0)?(improveMod/2):0;
 
 /*
     const float64 minWin = pow(statworse.pct,expectedVS);
