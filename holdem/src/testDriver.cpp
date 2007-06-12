@@ -594,11 +594,12 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	ImproveGainStrategy ReallyImproveA(2);
 
     //Set 2
+    #ifndef NO_AWKWARD_MODELS
     DeterredGainRankStrategy FutureFoldA_R(1);
   	ImproveGainRankStrategy XFoldA_R(0);
   	ImproveGainRankStrategy ImproveA_R(1);
 	ImproveGainRankStrategy ReallyImproveA_R(2);
-
+    #endif
     //TrendStrategies
     DeterredGainStrategy DangerT(1), DangerTR(1);
     DeterredGainStrategy ComT, ComTR;

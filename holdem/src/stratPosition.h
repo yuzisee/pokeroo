@@ -119,7 +119,7 @@ class DeterredGainStrategy : public PositionalStrategy
 ;
 
 
-
+#ifndef NO_AWKWARD_MODELS
 class ImproveGainRankStrategy : public PositionalStrategy
 {
 protected:
@@ -142,7 +142,7 @@ class DeterredGainRankStrategy : public PositionalStrategy
     virtual float64 MakeBet();
 }
 ;
-
+#endif
 
 class CorePositionalStrategy : public PositionalStrategy
 {
