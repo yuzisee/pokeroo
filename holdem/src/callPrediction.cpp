@@ -898,10 +898,11 @@ float64 ExactCallBluffD::PushGain()
 
 float64 ExactCallBluffD::pWin(const float64 betSize)
 {
-    if( queryinput != betSize )
+    if( queryinputbluff != betSize )
     {
         query(betSize);
         queryinput = betSize;
+        queryinputbluff = betSize;
     }
     ///Try pow(,impliedFactor) maybe
     return allFoldChance;//*impliedFactor;

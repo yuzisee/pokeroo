@@ -166,6 +166,7 @@ class ExactCallBluffD : public virtual ExactCallD
         float64 allFoldChance;
         float64 allFoldChanceD;
 
+        float64 queryinputbluff;
 
         void query(const float64 betSize);
     public:
@@ -187,7 +188,7 @@ class ExactCallBluffD : public virtual ExactCallD
 #endif
                                     ,data,commit), ea(foldData), insuranceDeterrent(0), minimaxAdjustment(0)
                             {
-                                queryinput = UNITIALIZED_QUERY;
+                                queryinputbluff = UNITIALIZED_QUERY;
                             }
 
 
