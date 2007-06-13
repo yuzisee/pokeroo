@@ -112,40 +112,108 @@ class GainModel : public virtual HoldemFunctionModel
         virtual float64 gd(float64, const float64);
 
 	public:
+        const StatResult & ViewShape() { return shape; }
+
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 	GainModel(const StatResult s,ExpectedCallD *c)
 		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s)
 		{
-		    f_battle = (c->callingPlayers());
-		    //e_battle = static_cast<int8>(f_battle); //Truncate
-		    e_battle = c->handsDealt()-1;
-//		    const float64 t = c->chipDenom();
+
+		    const int8 totalEnemy = c->handsDealt()-1;
+
+		    f_battle = c->callingPlayers();
+
+		    e_battle = c->handsIn()-1;
+
 		    if( quantum == 0 ) quantum = 1;
 
 			if( shape.splits == 1 || (shape.loss + shape.wins == 0) )
 			{
 				p_cl = 0;
 				p_cw = 0;
+				shape.wins = 1; //You need wins to split, and shape is only used to split so this okay
 			}else
 			{
-				float64 oldTotal = 1 - pow(1 - shape.loss,e_battle) + pow(shape.wins,e_battle);
 
-				//std::cout << "Old <p_cl,p_cw>: " <<  1 - pow(1 - shape.loss,e_battle) << "," << pow(shape.wins,e_battle) << endl;
-				//std::cout << "e_battle is " << (int)e_battle << "\tf_battle is " << f_battle << endl;
-			///Use f_battle instead of e_battle
+			///Use f_battle instead of e_battle, convert to equivelant totalEnemy
 				p_cl =  1 - pow(1 - shape.loss,f_battle);
 				p_cw = pow(shape.wins,f_battle);
 
-				float64 newTotal = p_cl + p_cw;
-			///Since the ratios are different, make the adjustment to normalize
-				p_cl *= oldTotal/newTotal;
-				p_cw *= oldTotal/newTotal;
+				const float64 newTotal = p_cl + p_cw;
 
+				shape.wins = pow(p_cw,1.0/totalEnemy);
+				shape.loss = 1 - pow(1 - p_cl,1.0/totalEnemy);
+			///Normalize, total possibility must add up to 1
+                const float64 hundredTotal = shape.wins + shape.loss + shape.splits;
+                shape = shape * (1.0/hundredTotal);
+                shape.genPCT();
+            ///Normalize, total possibilities must add up to 1 (certain splits are impossible)
+                float64 splitTotal = 0;
+                for( int8 i=1;i<=e_battle;++i )
+                {//Split with i
+                    splitTotal += HoldemUtil::nchoosep<float64>(totalEnemy,i)*pow(shape.wins,totalEnemy-i)*pow(shape.splits,i);
+                }
 
+				p_cl *= (1-splitTotal)/newTotal;
+				p_cw *= (1-splitTotal)/newTotal;
 
-				//std::cout << "New <p_cl,p_cw>: " << p_cl << "," << p_cw << endl;
 			}
 		}
+
+///When the two-StatResult constructor is used, the .repeated properties represent weights
+	GainModel(const StatResult s, const StatResult opportunity,ExpectedCallD *c)
+		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s)
+		{
+
+		    const int8 totalEnemy = c->handsDealt()-1;
+
+		    f_battle = c->callingPlayers();
+
+		    e_battle = c->handsIn()-1;
+
+		    if( quantum == 0 ) quantum = 1;
+
+			if( shape.splits == 1 || (shape.loss + shape.wins == 0) )
+			{
+				p_cl = 0;
+				p_cw = 0;
+				shape.wins = 1; //You need wins to split, and shape is only used to split so this okay
+			}else
+			{
+
+                shape.splits = s.splits * s.repeated + opportunity.splits * opportunity.repeated;
+
+			///Use f_battle instead of e_battle, convert to equivelant totalEnemy
+				p_cl =  1 - pow(1 - shape.loss,f_battle);
+				p_cw = pow(shape.wins,f_battle);
+
+                const float64 p_cl_draw = 1 - pow(1 - opportunity.loss,e_battle);
+                const float64 p_cw_draw = pow(opportunity.wins,e_battle);
+
+                p_cl = p_cl * s.repeated + p_cl_draw * opportunity.repeated;
+                p_cw = p_cw * s.repeated + p_cw_draw * opportunity.repeated;
+
+				const float64 newTotal = p_cl + p_cw;
+
+				shape.wins = pow(p_cw,1.0/totalEnemy);
+				shape.loss = 1 - pow(1 - p_cl,1.0/totalEnemy);
+			///Normalize, total possibility must add up to 1
+                const float64 hundredTotal = shape.wins + shape.loss + shape.splits;
+                shape = shape * (1/hundredTotal);
+                shape.genPCT();
+            ///Normalize, total possibilities must add up to 1 (certain splits are impossible)
+                float64 splitTotal = 0;
+                for( int8 i=1;i<=e_battle;++i )
+                {//Split with i
+                    splitTotal += HoldemUtil::nchoosep<float64>(totalEnemy,i)*pow(shape.wins,totalEnemy-i)*pow(shape.splits,i);
+                }
+
+				p_cl *= (1-splitTotal)/newTotal;
+				p_cw *= (1-splitTotal)/newTotal;
+
+			}
+		}
+
 
     virtual ~GainModel();
 
@@ -218,6 +286,7 @@ class GainModelNoRisk : public virtual GainModel
         virtual float64 gd(float64,const float64);
     public:
 	GainModelNoRisk(const StatResult s,ExpectedCallD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c){}
+	GainModelNoRisk(const StatResult s,const StatResult sk,ExpectedCallD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,sk,c){}
 	virtual ~GainModelNoRisk();
 
 	virtual float64 f(const float64);

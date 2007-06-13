@@ -426,11 +426,12 @@ float64 ImproveGainStrategy::MakeBet()
 //bGamble == 2 is ActionBot
 //bGamble == 1 is TrapBot
 
-    const float64 actOrReact = betToCall / maxShowdown;
+    const float64 actOrReact = (betToCall > maxShowdown) ? 1 : (betToCall / maxShowdown);
 
 //NormalBot uses this setup.
     StatResult left = hybridMagnified;
     StatResult base_right = statmean;
+    base_right.repeated = actOrReact;
 
 //TrapBot and ActionBot are based on statranking only
     if( bGamble >= 1 )
@@ -455,10 +456,11 @@ float64 ImproveGainStrategy::MakeBet()
         }
     }
 
-    StatResult right = (actOrReact > 1) ? base_right: ((base_right * actOrReact) + statworse * (1 - actOrReact));
+    StatResult right = statworse;
+    right.repeated = (1 - actOrReact);
 
 	GainModel hybridgainDeterred_aggressive(left,&myDeterredCall_left);
-	GainModelNoRisk hybridgain_aggressive(right,&myDeterredCall_right);
+	GainModelNoRisk hybridgain_aggressive(base_right,right,&myDeterredCall_right);
 
 #ifdef LOGPOSITION
     if( bGamble >= 1 )
@@ -472,7 +474,7 @@ float64 ImproveGainStrategy::MakeBet()
             if( bGamble >= 2 ) logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << endl; //ACTIONBOT
         #endif
     }
-    logFile << "Act or React? React " << (actOrReact * 100) << "% --> pct of " << base_right.pct << " ... " << right.pct << " ... " << statworse.pct << endl;
+    logFile << "Act or React? React " << (actOrReact * 100) << "% --> pct of " << base_right.pct << " ... " << hybridgain_aggressive.ViewShape().pct << " ... " << statworse.pct << endl;
 #endif
 
 
@@ -531,7 +533,7 @@ float64 DeterredGainStrategy::MakeBet()
 	if( maxShowdown <= 0 ) return 0;
 
 
-    const float64 certainty = betToCall / maxShowdown;
+    const float64 certainty = (betToCall > maxShowdown) ? 1 : (betToCall / maxShowdown);
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
     const float64 timeLeft = sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
     const float64 volatilityFactor = 1 - timeLeft;
@@ -557,10 +559,13 @@ float64 DeterredGainStrategy::MakeBet()
         myDeterredCall.insuranceDeterrent = 1-futureFold; //more likely to fold due to uncertainty
     }
 
-    StatResult right = (certainty > 1) ? statmean : ((statmean * certainty) + statworse * (1 - certainty));
+    StatResult left = statmean;
+    left.repeated = certainty;
+    StatResult right = statworse;
+    right.repeated = 1-certainty;
 
 	GainModel hybridgainDeterred(hybridMagnified,&myDeterredCall);
-	GainModelNoRisk hybridgain(right,&myDeterredCall);
+	GainModelNoRisk hybridgain(left,right,&myDeterredCall);
 
 #ifdef LOGPOSITION
     if( bGamble == 0 )
@@ -569,7 +574,7 @@ float64 DeterredGainStrategy::MakeBet()
         logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
         logFile << "V Factor         " << volatilityFactor << endl;
     }
-    logFile << "BetToCall " << certainty << ", pct " << statmean.pct << " ... " << right.pct << " ... " << statworse.pct << endl;
+    logFile << "BetToCall " << certainty << ", pct " << statmean.pct << " ... " << hybridgain.ViewShape().pct << " ... " << statworse.pct << endl;
     logFile << "impliedFactor... " << futureFold << endl;
 #endif
 
@@ -577,9 +582,9 @@ float64 DeterredGainStrategy::MakeBet()
 
 	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,hybridMagnified.pct*statmean.pct*certainty - certainty + 1,&myDeterredCall);
 
-    HoldemFunctionModel * (hybridChoice[2]) =  { &ap_passive, &hybridgainDeterred };
+    //HoldemFunctionModel * (hybridChoice[2]) =  { &ap_passive, &hybridgainDeterred };
 
-    StateModel ap_aggressive( &myDeterredCall, hybridChoice[bGamble] );
+    StateModel ap_aggressive( &myDeterredCall, &ap_passive /*hybridChoice[bGamble]*/ );
 
 
 
