@@ -389,7 +389,7 @@ void ConsoleStrategy::showSituation()
 
 	UI_DESCRIPTOR << endl;
 
-
+/*
         float64 wsplitChance = 0;
         const int8 opphandsDealt = ViewTable().GetNumberAtTable() - 1;
         for( int8 i=0;i<=opphandsDealt;++i)
@@ -401,6 +401,7 @@ void ConsoleStrategy::showSituation()
         //UI_DESCRIPTOR << winMean.wins << endl;
         //UI_DESCRIPTOR << winMean.splits << endl;
         //UI_DESCRIPTOR << winMean.loss << endl;
+*/
         if( bComSize < 5 )
         {
             UI_DESCRIPTOR << endl << endl << (detailPCT.improve + 1) * 50 << "% of the time, you will be more likely to win after the " << flush;

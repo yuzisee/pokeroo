@@ -439,7 +439,13 @@ float64 ImproveGainStrategy::MakeBet()
         left.wins -= detailPCT.avgDev/2;
         left.loss += detailPCT.avgDev/2;
         left.pct -= detailPCT.avgDev/2;
-
+        //Since detailPCT is based on statmean, not statranking, it is possible for zero crossings
+        if( left.pct < 0 || left.wins < 0 )
+        {
+            left.wins = 0;
+            left.loss = 1 - left.splits;
+            left.genPCT();
+        }
 
         base_right = statranking;
 
