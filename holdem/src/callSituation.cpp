@@ -142,6 +142,11 @@ int8 ExpectedCallD::handsDealt() const
     return table->GetNumberAtTable();  //Number of live players
 }
 
+int8 ExpectedCallD::handsIn() const
+{
+    return table->GetNumberInHand();  //Number of live players not folded
+}
+
 float64 ExpectedCallD::prevpotChips() const
 {
     return (  table->GetPrevPotSize()  );

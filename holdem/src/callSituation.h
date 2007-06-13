@@ -99,6 +99,7 @@ public:
     virtual float64 allChips() const;
     virtual float64 maxBet() const;
     virtual int8 handsDealt() const;
+    virtual int8 handsIn() const;
     virtual float64 prevpotChips() const;
     virtual float64 stagnantPot() const;
     virtual float64 betFraction(const float64 betSize) const;
