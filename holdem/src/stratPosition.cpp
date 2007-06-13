@@ -506,7 +506,7 @@ float64 ImproveGainStrategy::MakeBet()
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
             logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
-//            logFile << "\tfold " << myDeterredCall_left.pWin(rAmount) << " left -- right " << myDeterredCall_right.pWin(rAmount) << endl;
+            logFile << "\tfold " << myDeterredCall_left.pWin(rAmount) << " left -- right " << myDeterredCall_right.pWin(rAmount) << endl;
             ++raiseStep;
         }
 	}
