@@ -181,7 +181,7 @@ class GainModel : public virtual HoldemFunctionModel
 			}else
 			{
 
-                shape.splits = s.splits * s.repeated + opportunity.splits * opportunity.repeated;
+                shape.splits = s.splits * s.repeated + opportunity.splits * (1 - s.repeated);
 
 			///Use f_battle instead of e_battle, convert to equivelant totalEnemy
 				p_cl =  1 - pow(1 - shape.loss,f_battle);
@@ -190,8 +190,16 @@ class GainModel : public virtual HoldemFunctionModel
                 const float64 p_cl_draw = 1 - pow(1 - opportunity.loss,e_battle);
                 const float64 p_cw_draw = pow(opportunity.wins,e_battle);
 
-                p_cl = p_cl * s.repeated + p_cl_draw * opportunity.repeated;
-                p_cw = p_cw * s.repeated + p_cw_draw * opportunity.repeated;
+                if( p_cw_draw > p_cw && p_cl_draw < p_cl )
+                {
+                    p_cl = p_cl_draw;
+                    p_cw = p_cw_draw;
+                    shape = opportunity;
+                }else
+                {
+                    p_cl = p_cl * s.repeated + p_cl_draw * (1 - s.repeated);
+                    p_cw = p_cw * s.repeated + p_cw_draw * (1 - s.repeated);
+                }
 
 				const float64 newTotal = p_cl + p_cw;
 

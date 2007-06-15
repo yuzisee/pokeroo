@@ -465,7 +465,9 @@ float64 ImproveGainStrategy::MakeBet()
     right.repeated = (1 - actOrReact);
     base_right.repeated = actOrReact;
 
-	GainModel hybridgainDeterred_aggressive(left,&myDeterredCall_left);
+    left.repeated = 1;
+
+	GainModel hybridgainDeterred_aggressive(left,right,&myDeterredCall_left);
 	GainModelNoRisk hybridgain_aggressive(base_right,right,&myDeterredCall_right);
 
 #ifdef LOGPOSITION
@@ -570,7 +572,9 @@ float64 DeterredGainStrategy::MakeBet()
     StatResult right = statworse;
     right.repeated = 1-certainty;
 
-	GainModel hybridgainDeterred(hybridMagnified,&myDeterredCall);
+    hybridMagnified.repeated = 1;
+
+	GainModel hybridgainDeterred(hybridMagnified,right,&myDeterredCall);
 	GainModelNoRisk hybridgain(left,right,&myDeterredCall);
 
 #ifdef LOGPOSITION

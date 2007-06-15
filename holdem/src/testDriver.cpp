@@ -609,12 +609,12 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     CorePositionalStrategy SpaceT(10), SpaceTR(10);
 
 
-    PositionalStrategy *(multiT[6]) = {&DangerT, &ComT, &NormT, &TrapT, &AceT, &SpaceT};
-    PositionalStrategy *(multiTR[6]) = {&DangerTR, &ComTR, &NormTR, &TrapTR, &AceTR, &SpaceTR};
+    PositionalStrategy *(multiT[5]) = {&DangerT, &ComT, &NormT, &TrapT, &AceT /*, &SpaceT*/};
+    PositionalStrategy *(multiTR[5]) = {&DangerTR, &ComTR, &NormTR, &TrapTR, &AceTR/*, &SpaceTR*/};
 
-    MultiStrategy MultiT(multiT,6);
+    MultiStrategy MultiT(multiT,5);
     MultiT.bGamble = 0;
-    MultiStrategy MultiTR(multiTR,6);
+    MultiStrategy MultiTR(multiTR,5);
     MultiTR.bGamble = 1;
 
 
