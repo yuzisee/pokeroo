@@ -22,6 +22,8 @@
 #include "stratPosition.h"
 
 
+#define RISKPRICE
+
 /// Summary of contained strategies:
 /// 1. ImproveStrategy (This is the old fashioned Geom<-->Algb vs. Rank<-->WorseNextCard)
 /// 2. ImproveGainStrategy (This is Norm/Trap/Ace using empirical data)
@@ -426,7 +428,9 @@ float64 ImproveGainStrategy::MakeBet()
 //bGamble == 2 is ActionBot
 //bGamble == 1 is TrapBot
 
-    const float64 actOrReact = (betToCall > maxShowdown) ? 1 : (betToCall / maxShowdown);
+    const float64 avgControl = myDeterredCall.stagnantPot() / ViewTable().GetNumberInHand();
+    const float64 raiseOver = (betToCall + avgControl);
+    const float64 actOrReact = (raiseOver > maxShowdown) ? 1 : (raiseOver / maxShowdown);
 
 //NormalBot uses this setup.
     StatResult left = hybridMagnified;
@@ -485,9 +489,12 @@ float64 ImproveGainStrategy::MakeBet()
     logFile << "Act or React? React " << (actOrReact * 100) << "% --> pct of " << base_right.pct << " ... " << hybridgain_aggressive.ViewShape().pct << " ... " << statworse.pct << endl;
 #endif
 
+#ifdef RISKPRICE
     const float64 averageStack = ViewTable().GetAllChips() / ViewTable().GetNumberAtTable();
     float64 riskprice = sqrt(averageStack*( ViewTable().GetPotSize() - myBet ));
-
+#else
+    float64 riskprice = maxShowdown;
+#endif
 	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,riskprice,left.pct*base_right.pct*actOrReact - actOrReact + 1,&myDeterredCall_left);
 	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,riskprice,left.pct*base_right.pct*actOrReact - actOrReact + 1,&myDeterredCall_right);
 
@@ -510,13 +517,26 @@ float64 ImproveGainStrategy::MakeBet()
 
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
+	    const float64 oppRaisedFoldGain = myDeterredCall_left.foldGain(bestBet - myDeterredCall_right.alreadyBet());
 		int32 raiseStep = 0;
         float64 rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-        while( rAmount < maxShowdown )
+        while( rAmount <= maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
+            logFile << "OppRAISEChance";
+            if( oppRaisedFoldGain > choicemodel.g(rAmount) )
+            {
+                logFile << " [F] ";
+            }else
+            {
+                logFile << " [*] ";
+            }
+            logFile << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
             logFile << "\tfold " << myDeterredCall_left.pWin(rAmount) << " left -- right " << myDeterredCall_right.pWin(rAmount) << endl;
+
+
+            if( rAmount >= maxShowdown ) break;
+
             ++raiseStep;
         }
 	}
@@ -543,14 +563,6 @@ float64 DeterredGainStrategy::MakeBet()
 	if( maxShowdown <= 0 ) return 0;
 
 
-    const float64 certainty = (betToCall > maxShowdown) ? 1 : (betToCall / maxShowdown);
-    const float64 uncertainty = fabs( statranking.pct - statmean.pct );
-    const float64 timeLeft = sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
-    const float64 volatilityFactor = 1 - timeLeft;
-
-	const float64 futureFold = volatilityFactor*(1-certainty) + certainty;
-
-
 
     CallCumulationD &choicecumu = callcumu;
     CallCumulationD &raisecumu = foldcumu;
@@ -563,6 +575,22 @@ float64 DeterredGainStrategy::MakeBet()
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
+
+
+
+    const float64 avgControl = myDeterredCall.stagnantPot() / ViewTable().GetNumberInHand();
+    const float64 raiseOver = betToCall + avgControl;
+    const float64 certainty = (raiseOver > maxShowdown) ? 1 : (raiseOver / maxShowdown);
+    //const float64 certainty = (betToCall > maxShowdown) ? 1 : (betToCall / maxShowdown);
+    const float64 uncertainty = fabs( statranking.pct - statmean.pct );
+    const float64 timeLeft = sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
+    const float64 volatilityFactor = 1 - timeLeft;
+
+	const float64 futureFold = volatilityFactor*(1-certainty) + certainty;
+
+
+
+
     myDeterredCall.SetImpliedFactor(futureFold);
     if( bGamble < 1 ) //ComBot only, not DangerBot
     {
@@ -590,8 +618,12 @@ float64 DeterredGainStrategy::MakeBet()
     logFile << "impliedFactor... " << futureFold << endl;
 #endif
 
+#ifdef RISKPRICE
     const float64 averageStack = ViewTable().GetAllChips() / ViewTable().GetNumberAtTable();
     float64 riskprice = sqrt(averageStack*( ViewTable().GetPotSize() - myBet ));
+#else
+    float64 riskprice = maxShowdown;
+#endif
 
 	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,riskprice,hybridMagnified.pct*statmean.pct*certainty - certainty + 1,&myDeterredCall);
 
@@ -616,13 +648,26 @@ float64 DeterredGainStrategy::MakeBet()
 
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
+	    const float64 oppRaisedFoldGain = myDeterredCall.foldGain(bestBet - myDeterredCall.alreadyBet());
 		int32 raiseStep = 0;
         float64 rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-        while( rAmount < maxShowdown )
+        while( rAmount <= maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-            logFile << "OppRAISEChance% ... " << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
+            logFile << "OppRAISEChance";
+            if( oppRaisedFoldGain > ap_aggressive.g(rAmount) )
+            ///ASSUMPTION: ap_aggressive is choicemodel!
+            {
+                logFile << " [F] ";
+            }else
+            {
+                logFile << " [*] ";
+            }
+            logFile << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
             logFile << "\tBetWouldFold%" << myDeterredCall.pWin(rAmount) << endl;
+
+            if( rAmount >= maxShowdown ) break;
+
             ++raiseStep;
         }
 	}

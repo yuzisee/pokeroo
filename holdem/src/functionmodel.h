@@ -316,10 +316,12 @@ class StateModel : public virtual HoldemFunctionModel
         ExactCallBluffD * ea;
         HoldemFunctionModel *fp;
 
-        virtual float64 g(float64);
+
         virtual float64 gd(float64, const float64);
 
     public:
+    virtual float64 g(float64);
+
     StateModel(ExactCallBluffD *c, HoldemFunctionModel *function) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
     ,last_x(-1),ea(c),fp(function)
     {
