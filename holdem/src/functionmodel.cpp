@@ -446,7 +446,7 @@ void StateModel::query( const float64 betSize )
     delete [] potRaisedWin_A;
     delete [] potRaisedWinD_A;
 
-	delete [] oppRaisedFoldGain_A;
+
 }
 
 float64 GainModelNoRisk::g(float64 betSize)
