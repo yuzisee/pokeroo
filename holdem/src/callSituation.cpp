@@ -45,7 +45,7 @@ float64 ExpectedCallD::foldGain(const float64 extra) const
 
     const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted + extra);
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    const float64 handFreq = 1/handRarity;
+    const float64 handFreq = 1+handRarity;//1/handRarity;
     if( handRarity <= 0 )
     {
         return 0;
