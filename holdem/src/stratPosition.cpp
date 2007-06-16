@@ -485,21 +485,23 @@ float64 ImproveGainStrategy::MakeBet()
     logFile << "Act or React? React " << (actOrReact * 100) << "% --> pct of " << base_right.pct << " ... " << hybridgain_aggressive.ViewShape().pct << " ... " << statworse.pct << endl;
 #endif
 
+    const float64 averageStack = ViewTable().GetAllChips() / ViewTable().GetNumberAtTable();
+    float64 riskprice = sqrt(averageStack*( ViewTable().GetPotSize() - myBet ));
 
-	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,maxShowdown,left.pct*base_right.pct*actOrReact - actOrReact + 1,&myDeterredCall_left);
-	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,maxShowdown,left.pct*base_right.pct*actOrReact - actOrReact + 1,&myDeterredCall_right);
+	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,riskprice,left.pct*base_right.pct*actOrReact - actOrReact + 1,&myDeterredCall_left);
+	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,riskprice,left.pct*base_right.pct*actOrReact - actOrReact + 1,&myDeterredCall_right);
 
     StateModel choicemodel( &myDeterredCall_left, &ap );
     StateModel choicemodel_right( &myDeterredCall_right, &ap_right );
 
-    AutoScalingFunction rolemodel(&choicemodel,&choicemodel_right,betToCall,maxShowdown,&myDeterredCall_left);
+    AutoScalingFunction rolemodel(&choicemodel,&choicemodel_right,betToCall,riskprice,&myDeterredCall_left);
 
     const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
 
 #ifdef LOGPOSITION
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
-        logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
+        logFile << "\"riskprice\"... " << riskprice << endl;
         logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
         logFile << "Algb("<< bestBet <<")=" << hybridgain_aggressive.f(bestBet) << endl;
 
@@ -588,9 +590,10 @@ float64 DeterredGainStrategy::MakeBet()
     logFile << "impliedFactor... " << futureFold << endl;
 #endif
 
+    const float64 averageStack = ViewTable().GetAllChips() / ViewTable().GetNumberAtTable();
+    float64 riskprice = sqrt(averageStack*( ViewTable().GetPotSize() - myBet ));
 
-
-	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,maxShowdown,hybridMagnified.pct*statmean.pct*certainty - certainty + 1,&myDeterredCall);
+	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,riskprice,hybridMagnified.pct*statmean.pct*certainty - certainty + 1,&myDeterredCall);
 
     //HoldemFunctionModel * (hybridChoice[2]) =  { &ap_passive, &hybridgainDeterred };
 
@@ -603,9 +606,9 @@ float64 DeterredGainStrategy::MakeBet()
     const float64 bestBet = solveGainModel(&choicemodel);
 
 #ifdef LOGPOSITION
-    if( bestBet < betToCall + ViewTable().GetChipDenom() )
+    //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
-        logFile << "\"shuftip\"... " << hybridMagnified.pct*statmean.pct << endl;
+        logFile << "\"riskprice\"... " << riskprice << endl;
         logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred.f(bestBet) << endl;
         logFile << "Algb("<< bestBet <<")=" << hybridgain.f(bestBet) << endl;
     }
