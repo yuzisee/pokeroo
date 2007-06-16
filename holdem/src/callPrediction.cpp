@@ -32,6 +32,7 @@
 //#define CALL_SCALE_FOLD_PCT
 #define CALL_ALGB_PCT
 
+
 //#define ANTI_CHECK_PLAY
 
 #if defined(GEOM_FOLD_PCT) && defined(CALL_SCALE_FOLD_PCT)
@@ -473,8 +474,20 @@ void ExactCallD::query(const float64 betSize)
                                 w_r = 1;
                             }
                             #endif
-                            nextNoRaise_A[i] = 1 - e->pctWillCall( w_r );
-                            nextNoRaiseD_A[i] = - e->pctWillCallD(  w_r  )  * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance, false );
+
+
+                            const float64 noraiseRank = w_r;
+                            const float64 noraiseRankD = facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance, false );
+
+                            const float64 noraiseMean = 1 - e->pctWillCall( w_r );
+                            const float64 noraiseMeanD = - e->pctWillCallD(  w_r  )  * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance, false );
+//Crappy raiseGain effect
+                            float64 pushChips = (totalexf - oppBetAlready - table->ViewPlayer(pIndex)->GetContribution() );
+                            pushChips = pushChips / (pushChips + oppBankRoll);
+
+                            nextNoRaise_A[i] = noraiseMean*(1-pushChips) + noraiseRank*(pushChips);
+                            nextNoRaiseD_A[i] = noraiseMeanD*(1-pushChips) + noraiseRankD*(pushChips);
+
                         }
                     }
                 }
@@ -688,7 +701,10 @@ void ExactCallBluffD::query(const float64 betSize)
 //                        pow(  oppBetMake / (oppBetMake + origPot)  , significanceLinear  );
 
     #ifdef CALL_ALGB_PCT
-                    const float64 eaFold = 1 - ea->pctWillCall( w );
+                    float64 oppCommitted = table->ViewPlayer(pIndex)->GetContribution();
+                    oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
+
+                    const float64 eaFold = (1 - ea->pctWillCall( w ))*(1 - oppCommitted);
                     const float64 meanFold = 1 - e->pctWillCall( w );
                     const float64 rankFold = w;
 
@@ -786,7 +802,9 @@ void ExactCallBluffD::query(const float64 betSize)
                     }
 
     #ifdef CALL_ALGB_PCT
-                    const float64 eaFold = 1 - ea->pctWillCall( w );
+                    float64 oppCommitted = table->ViewPlayer(pIndex)->GetContribution();
+                    oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
+                    const float64 eaFold = (1 - ea->pctWillCall( w ))*(1 - oppCommitted);
                     const float64 meanFold = 1 - e->pctWillCall( w );
                     const float64 rankFold = w;
 
