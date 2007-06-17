@@ -33,6 +33,10 @@
 #define CALL_ALGB_PCT
 
 
+#define NO_AUTO_RAISE
+
+
+
 //#define ANTI_CHECK_PLAY
 
 #if defined(GEOM_FOLD_PCT) && defined(CALL_SCALE_FOLD_PCT)
@@ -466,7 +470,7 @@ void ExactCallD::query(const float64 betSize)
                         const float64 oppRaiseMake = thisRaise - oppBetAlready;
                         if( oppRaiseMake > 0 && thisRaise <= oppBankRoll )
                         {
-                            const bool bOppCouldCheck = (betSize == 0);
+                            const bool bOppCouldCheck = (betSize == 0) || (oppBetAlready == betSize); //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
                             float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance,bOppCouldCheck);
                             #ifdef ANTI_CHECK_PLAY
                             if( bOppCouldCheck )
@@ -485,8 +489,19 @@ void ExactCallD::query(const float64 betSize)
                             float64 pushChips = (totalexf - oppBetAlready - table->ViewPlayer(pIndex)->GetContribution() );
                             pushChips = pushChips / (pushChips + oppBankRoll);
 
-                            nextNoRaise_A[i] = noraiseMean*(1-pushChips) + noraiseRank*(pushChips);
-                            nextNoRaiseD_A[i] = noraiseMeanD*(1-pushChips) + noraiseRankD*(pushChips);
+                            #ifdef NO_AUTO_RAISE
+                            if( noraiseMean > noraiseRank )
+                            { //Rank is more likely to raise
+                            #endif
+                                nextNoRaise_A[i] = noraiseMean*(1-pushChips) + noraiseRank*(pushChips);
+                                nextNoRaiseD_A[i] = noraiseMeanD*(1-pushChips) + noraiseRankD*(pushChips);
+                            #ifdef NO_AUTO_RAISE
+                            }else
+                            { //Rank is more likely NOT to raise
+                                nextNoRaise_A[i] = noraiseRank*(1-pushChips) + noraiseMean*(pushChips);
+                                nextNoRaiseD_A[i] = noraiseRankD*(1-pushChips) + noraiseMeanD*(pushChips);
+                            }
+                            #endif
 
                         }
                     }
@@ -561,7 +576,7 @@ void ExactCallD::query(const float64 betSize)
         for( int32 i=0;i<noRaiseArraySize;++i)
         {
             //At this point, each nextNoRaise is 100% unless otherwise adjusted.
-            noRaiseChance_A[i] *= nextNoRaise_A[i];
+            noRaiseChance_A[i] *= (nextNoRaise_A[i] < 0) ? 0 : nextNoRaise_A[i];
             if( noRaiseChance_A[i] == 0 ) //and nextNoRaiseD == 0
             {
                 noRaiseChanceD_A[i] = 0;
