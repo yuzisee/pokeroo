@@ -429,7 +429,7 @@ float64 ImproveGainStrategy::MakeBet()
 //bGamble == 1 is TrapBot
 
     const float64 avgControl = myDeterredCall.stagnantPot() / ViewTable().GetNumberInHand();
-    const float64 raiseOver = (betToCall + avgControl);
+    const float64 raiseOver = (betToCall + avgControl < myBet) ? 0 : (betToCall + avgControl - myBet) ;
     const float64 actOrReact = (raiseOver > maxShowdown) ? 1 : (raiseOver / maxShowdown);
 
 //NormalBot uses this setup.
@@ -471,8 +471,13 @@ float64 ImproveGainStrategy::MakeBet()
 
     left.repeated = 1;
 
-	GainModel hybridgainDeterred_aggressive(left,right,&myDeterredCall_left);
-	GainModelNoRisk hybridgain_aggressive(base_right,right,&myDeterredCall_right);
+
+	GainModel geomModel(left,right,&myDeterredCall_left);
+	GainModel geomModel_fear(base_right,right,&myDeterredCall_left);
+	GainModelNoRisk algbModel(left,right,&myDeterredCall_right);
+	GainModelNoRisk algbModel_fear(base_right,right,&myDeterredCall_right);
+
+
 
 #ifdef LOGPOSITION
     if( bGamble >= 1 )
@@ -486,7 +491,7 @@ float64 ImproveGainStrategy::MakeBet()
             if( bGamble >= 2 ) logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << endl; //ACTIONBOT
         #endif
     }
-    logFile << "Act or React? React " << (actOrReact * 100) << "% --> pct of " << base_right.pct << " ... " << hybridgain_aggressive.ViewShape().pct << " ... " << statworse.pct << endl;
+    logFile << "Act or React? React " << (actOrReact * 100) << "% --> pct of " << base_right.pct << " ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << endl;
 #endif
 
 #ifdef RISKPRICE
@@ -495,11 +500,19 @@ float64 ImproveGainStrategy::MakeBet()
 #else
     float64 riskprice = maxShowdown;
 #endif
-	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,riskprice,left.pct*base_right.pct*actOrReact - actOrReact + 1,&myDeterredCall_left);
-	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,riskprice,left.pct*base_right.pct*actOrReact - actOrReact + 1,&myDeterredCall_right);
 
-    StateModel choicemodel( &myDeterredCall_left, &ap );
+///From geom to algb
+	AutoScalingFunction hybridgainDeterred_aggressive(&geomModel,&algbModel,0.0,riskprice,left.pct*base_right.pct,&myDeterredCall_left);
+	AutoScalingFunction hybridgain_aggressive(&geomModel_fear,&algbModel_fear,0.0,riskprice,left.pct*base_right.pct,&myDeterredCall_right);
+
+
+///From regular to fear (x2)
+	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,riskprice,&myDeterredCall_left);
+	StateModel choicemodel( &myDeterredCall_left, &ap );
+	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,riskprice,&myDeterredCall_right);
     StateModel choicemodel_right( &myDeterredCall_right, &ap_right );
+
+
 
     AutoScalingFunction rolemodel(&choicemodel,&choicemodel_right,betToCall,riskprice,&myDeterredCall_left);
 
@@ -524,7 +537,7 @@ float64 ImproveGainStrategy::MakeBet()
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
             logFile << "OppRAISEChance";
-            if( oppRaisedFoldGain > choicemodel.g(rAmount) )
+            if( oppRaisedFoldGain > choicemodel.g_raised(bestBet,rAmount) )
             {
                 logFile << " [F] ";
             }else
@@ -579,7 +592,7 @@ float64 DeterredGainStrategy::MakeBet()
 
 
     const float64 avgControl = myDeterredCall.stagnantPot() / ViewTable().GetNumberInHand();
-    const float64 raiseOver = betToCall + avgControl;
+    const float64 raiseOver = (betToCall + avgControl < myBet) ? 0 : (betToCall + avgControl - myBet) ;
     const float64 certainty = (raiseOver > maxShowdown) ? 1 : (raiseOver / maxShowdown);
     //const float64 certainty = (betToCall > maxShowdown) ? 1 : (betToCall / maxShowdown);
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
@@ -604,8 +617,11 @@ float64 DeterredGainStrategy::MakeBet()
 
     hybridMagnified.repeated = 1;
 
-	GainModel hybridgainDeterred(hybridMagnified,right,&myDeterredCall);
-	GainModelNoRisk hybridgain(left,right,&myDeterredCall);
+	GainModel geomModel(hybridMagnified,right,&myDeterredCall);
+	GainModel geomModel_fear(left,right,&myDeterredCall);
+	GainModelNoRisk algbModel(hybridMagnified,right,&myDeterredCall);
+	GainModelNoRisk algbModel_fear(left,right,&myDeterredCall);
+
 
 #ifdef LOGPOSITION
     if( bGamble == 0 )
@@ -614,7 +630,7 @@ float64 DeterredGainStrategy::MakeBet()
         logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
         logFile << "V Factor         " << volatilityFactor << endl;
     }
-    logFile << "BetToCall " << certainty << ", pct " << statmean.pct << " ... " << hybridgain.ViewShape().pct << " ... " << statworse.pct << endl;
+    logFile << "BetToCall " << certainty << ", pct " << statmean.pct << " ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << endl;
     logFile << "impliedFactor... " << futureFold << endl;
 #endif
 
@@ -625,7 +641,12 @@ float64 DeterredGainStrategy::MakeBet()
     float64 riskprice = maxShowdown;
 #endif
 
-	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,riskprice,hybridMagnified.pct*statmean.pct*certainty - certainty + 1,&myDeterredCall);
+    ///Choose from geom to algb
+	AutoScalingFunction hybridgainDeterred(&geomModel,&algbModel,0.0,riskprice,hybridMagnified.pct*statmean.pct,&myDeterredCall);
+	AutoScalingFunction hybridgain(&geomModel_fear,&algbModel_fear,0.0,riskprice,hybridMagnified.pct*statmean.pct,&myDeterredCall);
+
+    ///Choose from regular to fear (using raisefrom)
+	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,riskprice,1,&myDeterredCall);
 
     //HoldemFunctionModel * (hybridChoice[2]) =  { &ap_passive, &hybridgainDeterred };
 
@@ -655,7 +676,7 @@ float64 DeterredGainStrategy::MakeBet()
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
             logFile << "OppRAISEChance";
-            if( oppRaisedFoldGain > ap_aggressive.g(rAmount) )
+            if( oppRaisedFoldGain > ap_aggressive.g_raised(bestBet,rAmount) )
             ///ASSUMPTION: ap_aggressive is choicemodel!
             {
                 logFile << " [F] ";
@@ -939,12 +960,12 @@ float64 CorePositionalStrategy::MakeBet()
     GainModel meanGeomPC(statmean,&myCommittalCall);
 
 
-	StateModel rankGeomBluff(&myExpectedCall,&rankGeom);
-	StateModel meanGeomBluff(&myExpectedCall,&meanGeom);
-    StateModel worstAlgbBluff(&myLimitCall,&worstAlgb);
-    StateModel rankAlgbBluff(&myExpectedCall,&rankAlgb);
-    StateModel meanAlgbBluff(&myExpectedCall,&meanAlgb);
-    StateModel hybridGeomBluff(&myExpectedCall,&hybridGeom);
+	StateModel rankGeomBluff(&myExpectedCall,&rankGeom,true);
+	StateModel meanGeomBluff(&myExpectedCall,&meanGeom,true);
+    StateModel worstAlgbBluff(&myLimitCall,&worstAlgb,true);
+    StateModel rankAlgbBluff(&myExpectedCall,&rankAlgb,true);
+    StateModel meanAlgbBluff(&myExpectedCall,&meanAlgb,true);
+    StateModel hybridGeomBluff(&myExpectedCall,&hybridGeom,true);
 
     #ifdef DEBUGASSERT
         if( bGamble >= BGAMBLE_MAX )

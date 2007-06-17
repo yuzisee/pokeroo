@@ -55,6 +55,10 @@ GainModelReverse::~GainModelReverse()
 
 StateModel::~StateModel()
 {
+    if( bSingle && fp != 0 )
+    {
+        delete fp;
+    }
 }
 
 GainModelNoRisk::~GainModelNoRisk()
@@ -369,15 +373,15 @@ StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 
 
 
-float64 StateModel::g(const float64 betSize)
+float64 StateModel::g_raised(float64 raisefrom, const float64 betSize)
 {
-    return fp->f(betSize) + e->foldGain();
+    return fp->f_raised(raisefrom, betSize) + e->foldGain();
 }
 
 
-float64 StateModel::gd(const float64 betSize, const float64 y)
+float64 StateModel::gd_raised(float64 raisefrom, const float64 betSize, const float64 y)
 {
-    return fp->fd(betSize, y-e->foldGain());
+    return fp->fd_raised(raisefrom, betSize, y-e->foldGain());
 }
 
 
@@ -416,7 +420,7 @@ void StateModel::query( const float64 betSize )
 
         if( raiseAmount_A[i] >= ea->maxBet() )
         {
-            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g(raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g(raiseAmount_A[i]-quantum/2) );
+            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g_raised(betSize,raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g_raised(betSize,raiseAmount_A[i]-quantum/2) );
         }else
         {
             gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
@@ -428,7 +432,7 @@ void StateModel::query( const float64 betSize )
 
 	if( betSize >= ea->maxBet() )
 	{
-		gainNormallnD = playChance*potNormalWinD/g(betSize-quantum/2) + playChanceD*log(g(betSize-quantum/2));
+		gainNormallnD = playChance*potNormalWinD/g_raised(betSize,betSize-quantum/2) + playChanceD*log(g_raised(betSize,betSize-quantum/2));
 	}
 
 ///Store results
@@ -611,7 +615,7 @@ float64 SlidingPairFunction::fd(const float64 x, const float64 y_dummy)
 }
 
 
-void AutoScalingFunction::query(float64 x)
+void AutoScalingFunction::query(float64 sliderx, float64 x)
 {
         #ifdef DEBUG_FUNCTIONCORE
             std::cout << std::endl<< "\t\t\t\tleft(" << x << ")=" << std::flush;
@@ -627,12 +631,13 @@ void AutoScalingFunction::query(float64 x)
         #endif
 
     last_x = x;
+    last_sliderx = sliderx;
 
         #ifdef DEBUG_FUNCTIONCORE
             std::cout << std::endl << "\t\t\t\t" << saturate_max << "  ~~  " << saturate_min << "!" << std::flush;
         #endif
     const float64 autoSlope = saturate_upto / (saturate_max - saturate_min) ;
-    const float64 slider = (x - saturate_min) * autoSlope ;
+    const float64 slider = (sliderx - saturate_min) * autoSlope ;
         #ifdef DEBUG_FUNCTIONCORE
             std::cout << slider << std::endl;
         #endif
@@ -674,18 +679,37 @@ void AutoScalingFunction::query(float64 x)
 
 float64 AutoScalingFunction::f(const float64 x)
 {
-    if( last_x != x )
+    if( last_x != x || last_sliderx != x)
     {
-        query(x);
+        query(x,x);
     }
     return y;
 }
 
 float64 AutoScalingFunction::fd(const float64 x, const float64 y_dummy)
 {
-    if( last_x != x )
+    if( last_x != x || last_sliderx != x)
     {
-        query(x);
+        query(x,x);
+    }
+    return dy;
+}
+
+
+float64 AutoScalingFunction::f_raised(float64 sliderx, const float64 x)
+{
+    if( last_x != x || last_sliderx != sliderx)
+    {
+        query(sliderx,x);
+    }
+    return y;
+}
+
+float64 AutoScalingFunction::fd_raised(float64 sliderx, const float64 x, const float64 y_dummy)
+{
+    if( last_x != x || last_sliderx != sliderx)
+    {
+        query(sliderx,x);
     }
     return dy;
 }

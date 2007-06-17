@@ -81,8 +81,8 @@ last_x = betSize;
         lastuptoRaisedChance = newRaisedChance;
         lastuptoRaisedChanceD = newRaisedChanceD;
 
-        potRaisedWin_A[i] = g(raiseAmount_A[i]);
-        potRaisedWinD_A[i] = gd(raiseAmount_A[i],potRaisedWin_A[i]);
+        potRaisedWin_A[i] = g_raised(betSize,raiseAmount_A[i]);
+        potRaisedWinD_A[i] = gd_raised(betSize,raiseAmount_A[i],potRaisedWin_A[i]);
 
 
         if( potRaisedWin_A[i] < oppRaisedFoldGain )
@@ -110,8 +110,8 @@ last_x = betSize;
         playChanceD -= oppRaisedChanceD_A[i];
 	}
 
-    float64 potNormalWin = g(betSize);
-    float64 potNormalWinD = gd(betSize,potNormalWin);
+    float64 potNormalWin = g_raised(betSize,betSize);
+    float64 potNormalWinD = gd_raised(betSize,betSize,potNormalWin);
 
     if( playChance <= 0 ) //roundoff, but {playChance == 0} is push-fold for the opponent
     {

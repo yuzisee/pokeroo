@@ -303,39 +303,6 @@ class GainModelNoRisk : public virtual GainModel
 ;
 
 
-class StateModel : public virtual HoldemFunctionModel
-{
-    private:
-    float64 last_x;
-    float64 y;
-    float64 dy;
-
-    void query( const float64 );
-
-    protected:
-        ExactCallBluffD * ea;
-        HoldemFunctionModel *fp;
-
-
-        virtual float64 gd(float64, const float64);
-
-    public:
-    virtual float64 g(float64);
-
-    StateModel(ExactCallBluffD *c, HoldemFunctionModel *function) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
-    ,last_x(-1),ea(c),fp(function)
-    {
-        query(0);
-    }
-
-    virtual ~StateModel();
-
-	virtual float64 f(const float64);
-    virtual float64 fd(const float64, const float64);
-
-}
-;
-
 class SlidingPairFunction : public virtual HoldemFunctionModel
 {
     protected:
@@ -368,9 +335,10 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
             return b;
         }
     protected:
-        virtual void query(float64 x);
+        virtual void query(float64 sliderx, float64 x);
         const float64 saturate_min, saturate_max, saturate_upto;
         float64 last_x;
+        float64 last_sliderx;
         float64 y;
         float64 dy;
         ScalarFunctionModel *left;
@@ -380,20 +348,69 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
         AutoScalingFunction(ScalarFunctionModel *f_left, ScalarFunctionModel *f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c)
             : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left->quantum,f_right->quantum), c)
             , saturate_min(minX), saturate_max(maxX), saturate_upto(1), left(f_left), right(f_right){
-                query(0);
+                query(0,0);
             }
         AutoScalingFunction(ScalarFunctionModel *f_left, ScalarFunctionModel *f_right, const float64 minX, const float64 maxX, const float64 upto ,ExpectedCallD *c)
             : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left->quantum,f_right->quantum), c)
             , saturate_min(minX), saturate_max(maxX), saturate_upto(upto), left(f_left), right(f_right){
-                query(0);
+                query(0,0);
             }
         virtual ~AutoScalingFunction(){}
 
         virtual float64 f(const float64);
         virtual float64 fd(const float64, const float64);
 
+
+        float64 f_raised(float64 raisefrom, const float64);
+        float64 fd_raised(float64 raisefrom, const float64, const float64);
 }
 ;
+
+
+
+class StateModel : public virtual HoldemFunctionModel
+{
+    private:
+    float64 last_x;
+    float64 y;
+    float64 dy;
+
+    void query( const float64 );
+
+    protected:
+        ExactCallBluffD * ea;
+        AutoScalingFunction *fp;
+        bool bSingle;
+
+
+
+        float64 gd_raised(float64 raisefrom, float64, const float64);
+
+    public:
+    float64 g_raised(float64 raisefrom, float64);
+
+    StateModel(ExactCallBluffD *c, AutoScalingFunction *function) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
+    ,last_x(-1),ea(c),fp(function),bSingle(false)
+    {
+        query(0);
+    }
+
+    StateModel(ExactCallBluffD *c, HoldemFunctionModel *function, bool b) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
+    ,last_x(-1),ea(c),bSingle(true)
+    {
+        fp = new AutoScalingFunction(function,function,0,0,c);
+        query(0);
+    }
+
+
+    virtual ~StateModel();
+
+	virtual float64 f(const float64);
+    virtual float64 fd(const float64, const float64);
+
+}
+;
+
 
 #endif
 
