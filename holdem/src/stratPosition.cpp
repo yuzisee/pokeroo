@@ -22,8 +22,16 @@
 #include "stratPosition.h"
 
 
+//#define DEBUG_TRAP_AS_NORMAL
+
 #define RISKPRICE
 
+#ifdef RISKPRICE
+#define ACTREACTUSES riskprice
+//#define ACTREACTUSES maxShowdown
+#else
+#define ACTREACTUSES maxShowdown
+#endif
 /// Summary of contained strategies:
 /// 1. ImproveStrategy (This is the old fashioned Geom<-->Algb vs. Rank<-->WorseNextCard)
 /// 2. ImproveGainStrategy (This is Norm/Trap/Ace using empirical data)
@@ -439,10 +447,12 @@ float64 ImproveGainStrategy::MakeBet()
 //TrapBot and ActionBot are based on statranking only
     if( bGamble >= 1 )
     {
+        const float64 enemyChances = (ViewTable().GetNumberInHand() - 1.0) / ViewTable().GetNumberInHand() / 2;
         left = statranking;
-        left.wins -= detailPCT.avgDev/2;
-        left.loss += detailPCT.avgDev/2;
-        left.pct -= detailPCT.avgDev/2;
+        #ifndef DEBUG_TRAP_AS_NORMAL
+        left.wins -= detailPCT.avgDev*enemyChances;
+        left.loss += detailPCT.avgDev*enemyChances;
+        left.pct -= detailPCT.avgDev*enemyChances;
         //Since detailPCT is based on statmean, not statranking, it is possible for zero crossings
         if( left.pct < 0 || left.wins < 0 )
         {
@@ -450,11 +460,13 @@ float64 ImproveGainStrategy::MakeBet()
             left.loss = 1 - left.splits;
             left.genPCT();
         }
+        #endif
+        //Need scaling
+        myDeterredCall_right.insuranceDeterrent = oppInsuranceBigBet;
+
 
         base_right = statranking;
 
-//Need scaling
-        myDeterredCall_right.insuranceDeterrent = oppInsuranceBigBet;
 
         if( bGamble >= 2 )
         {
@@ -469,12 +481,12 @@ float64 ImproveGainStrategy::MakeBet()
     right.repeated = (1 - actOrReact);
     base_right.repeated = actOrReact;
 
+
     left.repeated = 1;
-
-
 	GainModel geomModel(left,right,&myDeterredCall_left);
 	GainModel geomModel_fear(base_right,right,&myDeterredCall_left);
-	GainModelNoRisk algbModel(left,right,&myDeterredCall_right);
+	statranking.repeated = 1;
+	GainModelNoRisk algbModel(statranking,right,&myDeterredCall_right);
 	GainModelNoRisk algbModel_fear(base_right,right,&myDeterredCall_right);
 
 
@@ -506,10 +518,16 @@ float64 ImproveGainStrategy::MakeBet()
 	AutoScalingFunction hybridgain_aggressive(&geomModel_fear,&algbModel_fear,0.0,riskprice,left.pct*base_right.pct,&myDeterredCall_right);
 
 
+
+#ifdef DEBUG_TRAP_AS_NORMAL
+    StateModel choicemodel( &myDeterredCall_left, &hybridgainDeterred_aggressive );
+    const float64 bestBet = solveGainModel(&choicemodel) ;
+#else
+
 ///From regular to fear (x2)
-	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,riskprice,&myDeterredCall_left);
+	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,ACTREACTUSES,&myDeterredCall_left);
 	StateModel choicemodel( &myDeterredCall_left, &ap );
-	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,riskprice,&myDeterredCall_right);
+	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,ACTREACTUSES,&myDeterredCall_right);
     StateModel choicemodel_right( &myDeterredCall_right, &ap_right );
 
 
@@ -517,6 +535,8 @@ float64 ImproveGainStrategy::MakeBet()
     AutoScalingFunction rolemodel(&choicemodel,&choicemodel_right,betToCall,riskprice,&myDeterredCall_left);
 
     const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
+#endif
+
 
 #ifdef LOGPOSITION
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
@@ -646,7 +666,7 @@ float64 DeterredGainStrategy::MakeBet()
 	AutoScalingFunction hybridgain(&geomModel_fear,&algbModel_fear,0.0,riskprice,hybridMagnified.pct*statmean.pct,&myDeterredCall);
 
     ///Choose from regular to fear (using raisefrom)
-	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,riskprice,1,&myDeterredCall);
+	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,ACTREACTUSES,&myDeterredCall);
 
     //HoldemFunctionModel * (hybridChoice[2]) =  { &ap_passive, &hybridgainDeterred };
 
