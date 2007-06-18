@@ -120,7 +120,8 @@ float64 HoldemFunctionModel::FindBestBet()
     ///desiredBet has been established, one way or another
 
 	const float64 callGain = f(betToCall);
-	if( callGain > f(desiredBet) )
+	const float64 raiseGain = f(desiredBet);
+	if( callGain > raiseGain )
 	{
 		desiredBet = betToCall;
 	}else

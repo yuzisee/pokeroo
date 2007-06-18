@@ -45,7 +45,8 @@ float64 ExpectedCallD::foldGain(const float64 extra) const
 
     const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted + extra);
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    const float64 handFreq = 1/handRarity;
+///If extra > 0, you are making them raise you, which allows you to wait out a good spot?
+    const float64 handFreq = /*(extra > 0) ? (2-handRarity) : */1/handRarity;
     if( handRarity <= 0 )
     {
         return 0;
@@ -112,6 +113,7 @@ float64 ExpectedCallD::stagnantPot() const
     return (roundFolds + prevpotChips());
 }
 
+
 float64 ExpectedCallD::minCallFraction(const float64 betSize)
 {
     const float64 maxShowdown = table->GetMaxShowdown();
@@ -120,6 +122,7 @@ float64 ExpectedCallD::minCallFraction(const float64 betSize)
     const float64 minCall = (betSize < maxShowdown) ? betSize : maxShowdown;
     return betFraction(minCall + stagnantPot());
 }
+
 
 float64 ExpectedCallD::maxBet() const
 {
