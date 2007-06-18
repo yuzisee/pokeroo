@@ -27,8 +27,8 @@
 #define RISKPRICE
 
 #ifdef RISKPRICE
-#define ACTREACTUSESIN riskprice
-//#define ACTREACTUSESIN maxShowdown
+//#define ACTREACTUSESIN riskprice
+#define ACTREACTUSESIN maxShowdown
 
 //#define ACTREACTUSES riskprice
 #define ACTREACTUSES maxShowdown
@@ -682,6 +682,35 @@ float64 DeterredGainStrategy::MakeBet()
 
 
     HoldemFunctionModel& choicemodel = ap_aggressive;
+
+
+////DEB UG
+//    const float64 z1 = ap_passive.f(60);
+
+/*
+//    const float64 a1 = ap_passive.f_raised(60,90);
+//    const float64 b1 = ap_passive.f_raised(60,150);
+    //const float64 z11 = hybridgainDeterred.f(60);
+    //const float64 a11 = hybridgainDeterred.f_raised(60,90);
+    //const float64 b11 = hybridgainDeterred.f_raised(60,150);
+    const float64 o111e = myDeterredCall.exf(30);
+    const float64 z111e = myDeterredCall.exf(60);
+    const float64 a111e = myDeterredCall.exf(90);
+    const float64 b111e = myDeterredCall.exf(150);
+    const float64 o111 = geomModel.f(30);
+    const float64 z111 = geomModel.f(60);
+    const float64 a111 = geomModel.f(90);
+    const float64 b111 = geomModel.f(150);
+    //const float64 z112 = algbModel.f(60);
+    //const float64 a112 = algbModel.f(90);
+    //const float64 b112 = algbModel.f(150);
+//    const float64 z12 = hybridgain.f(60);
+//    const float64 a12 = hybridgain.f_raised(60,90);
+//    const float64 b12 = hybridgain.f_raised(60,150);
+*/
+
+
+
 
     const float64 bestBet = solveGainModel(&choicemodel);
 

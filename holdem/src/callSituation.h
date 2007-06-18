@@ -107,6 +107,7 @@ public:
 	virtual float64 minRaiseTo() const;
 	virtual bool inBlinds() const;
 
+
     virtual float64 exf(const float64 betSize) = 0;
     virtual float64 dexf(const float64 betSize) = 0;
 
