@@ -517,34 +517,20 @@ float64 HoldemArena::GetMaxShowdown() const
 */
 float64 HoldemArena::GetMaxShowdown() const
 {
-	int8 highest;
-	int8 secondhighest;
+	int8 highest = -1;
+	int8 secondhighest = -1;
 
-    if( p[1]->GetMoney()
-             >
-             p[0]->GetMoney() )
-    {
-        highest = 1;
-        secondhighest = 0;
-    }else
-    {
-        highest = 0;
-        secondhighest = 1;
-    }
 
-	for(int8 i=2;i<nextNewPlayer;++i)
+	for(int8 i=0;i<nextNewPlayer;++i)
 	{
 		if(! HasFolded(i) )
 		{
-			if( p[i]->GetMoney()
-						 >
-						 p[highest]->GetMoney() )
+		    if( highest == -1 || p[i]->GetMoney() > p[highest]->GetMoney() )
 			{
 				secondhighest = highest;
 				highest = i;
-			}else if( p[i]->GetMoney()
-						>
-						p[secondhighest]->GetMoney() )
+			}else if( secondhighest == -1 ||
+                        p[i]->GetMoney() > p[secondhighest]->GetMoney() )
 			{
 				secondhighest = i;
 			}
