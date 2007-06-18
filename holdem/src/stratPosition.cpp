@@ -651,9 +651,9 @@ float64 DeterredGainStrategy::MakeBet()
     statranking.repeated = 1;
     hybridMagnified.repeated = 1;
 
-	GainModel geomModel(statranking,right,&myDeterredCall);
+	GainModel geomModel(hybridMagnified,right,&myDeterredCall);
 	GainModel geomModel_fear(left,right,&myDeterredCall);
-	GainModelNoRisk algbModel(statranking,right,&myDeterredCall);
+	GainModelNoRisk algbModel(hybridMagnified,right,&myDeterredCall);
 	GainModelNoRisk algbModel_fear(left,right,&myDeterredCall);
 
 
