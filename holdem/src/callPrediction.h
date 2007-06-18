@@ -105,12 +105,12 @@ class ExactCallD : public virtual ExpectedCallD
         float64 totalexf;
         float64 totaldexf;
 
-        void GenerateRaiseChances(float64 noraiseRank, float64 noraiseRankD, const Player * withP, float64 sig, float64 liveOpp, float64 & out, float64 & outD);
+        void GenerateRaiseChances(float64 raisebet, float64 noraiseRank, float64 noraiseRankD, const Player * withP, float64 sig, float64 liveOpp, float64 & out, float64 & outD);
     protected:
         static const float64 UNITIALIZED_QUERY;
         float64 queryinput;
 
-
+        float64 nearest;
         float64 impliedFactor;
 
         ExactCallFunctionModel geomFunction;
@@ -145,6 +145,7 @@ class ExactCallD : public virtual ExpectedCallD
             }
 
             ~ExactCallD();
+
 
             virtual float64 exf(const float64 betSize);
             virtual float64 dexf(const float64 betSize);

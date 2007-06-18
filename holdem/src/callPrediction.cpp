@@ -117,7 +117,11 @@ float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alread
 {
 
     const int8 N = handsDealt();
-    const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetBigBlind()) / N )
+    const float64 avgBlind = (
+    #ifdef PURE_BLUFF
+    alreadyBet +
+    #endif
+            (table->GetBigBlind() + table->GetBigBlind()) / N )
             * ( N - 2 )/ N ;
 
     //geomFunction.quantum = 1 / RAREST_HAND_CHANCE / 2.0;
@@ -390,32 +394,44 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 	return raiseAmount;
 }
 
-void ExactCallD::GenerateRaiseChances(float64 noraiseRank_prescaled, float64 noraiseRankD_prescaled, const Player * withP, float64 sig, float64 liveOpp, float64 & out, float64 & outD)
+void ExactCallD::GenerateRaiseChances(float64 raisebet, float64 noraiseRank_prescaled, float64 noraiseRankD_prescaled, const Player * withP, float64 sig, float64 liveOpp, float64 & out, float64 & outD)
 {
         const float64 upperlimit = table->GetMaxShowdown();// RiskPrice();
-        const float64 percentReact = ActOrReact(callBet(),withP->GetBetSize(),upperlimit);
+        const float64 uReact = ActOrReact(callBet(),withP->GetBetSize(),upperlimit);
+        const float64 dist = raisebet / table->GetMaxShowdown();
+        const float64 percentReact = (dist > 1) ? uReact : (1-(1-uReact)*dist);
         const float64 needed_pcw = pow(noraiseRank_prescaled,1/sig);
 
-        const float64 p_cw_draw = pow(e->strongestOpponent().pct,liveOpp);
+        const float64 extra_pcw = pow(noraiseRank_prescaled,1/sig-liveOpp);
+        const float64 p_cw_draw = extra_pcw*pow(e->strongestOpponent().pct*noraiseRank_prescaled,liveOpp);
         //needed_pcw = f(noraiseRank) * percentReact + p_cw_draw * (1 - percentReact)
         //f(noraiseRank) = (needed_pcw - p_cw_draw * (1 - percentReact))  /  percentReact;
-        //Note: percentReact can never be zero, unless blinds are zero.
+        //Note: percentReact can be zero if you are in the blind, since your lastbet == betToCall
+        //       Also, dist has to be 1
         const float64 a = (needed_pcw - p_cw_draw * (1 - percentReact));
         const float64 pcw_to_win = a  /  percentReact;
 
-        if( p_cw_draw > needed_pcw || percentReact <= 0 || pcw_to_win <= 0 )
+
+        if( pcw_to_win > 1 || percentReact <= 0 )
+        {
+            out = 1;
+            outD = 0;
+            return;
+        }else if( p_cw_draw > needed_pcw || pcw_to_win <= 0 )
         {
             out = 0;
             outD = 0;
+            return;
         }
 
+
         const float64 noraiseRank = pow(pcw_to_win,sig);
-        const float64 noraiseRankD = pow(pow(1/a,sig)*noraiseRank_prescaled,1/sig-1)/pow(percentReact,sig);
+        const float64 noraiseRankD = pow(pow(1/a,sig)*noraiseRank_prescaled,1/sig-1)/pow(percentReact,sig)*noraiseRankD_prescaled;
 
         const float64 noraiseMean = 1 - e->pctWillCall( noraiseRank );
         const float64 noraiseMeanD = - e->pctWillCallD(  noraiseRank  )  * noraiseRankD;
 //Crappy raiseGain effect
-        float64 pushChips = (stagnantPot() - withP->GetContribution() );
+        float64 pushChips = - withP->GetContribution() - withP->GetBetSize() + table->GetPotSize();//stagnantPot();
         pushChips = pushChips / (pushChips + withP->GetMoney());
 
         #ifdef NO_AUTO_RAISE
@@ -442,6 +458,7 @@ void ExactCallD::GenerateRaiseChances(float64 noraiseRank_prescaled, float64 nor
 
 void ExactCallD::query(const float64 betSize)
 {
+    nearest = 0;
     float64 peopleInHandUpper = table->GetNumberInHand() - 1;
     const float64 significance = 1/static_cast<float64>( handsDealt()-1 );
     const float64 myexf = betSize;
@@ -520,7 +537,7 @@ void ExactCallD::query(const float64 betSize)
                         const float64 oppRaiseMake = thisRaise - oppBetAlready;
                         if( oppRaiseMake > 0 && thisRaise <= oppBankRoll )
                         {
-                            const bool bOppCouldCheck = (betSize == 0) || (oppBetAlready == betSize); //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+                            const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize); //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
                             float64 w_r = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, 1/significance,bOppCouldCheck);
                             #ifdef ANTI_CHECK_PLAY
                             if( bOppCouldCheck )
@@ -535,7 +552,7 @@ void ExactCallD::query(const float64 betSize)
                             const float64 noraiseRank = w_r;
                             const float64 noraiseRankD = facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance, false );
 
-                            GenerateRaiseChances(noraiseRank,noraiseRankD,withP,significance,peopleInHandUpper,nextNoRaise_A[i],nextNoRaiseD_A[i]);
+                            GenerateRaiseChances(thisRaise,noraiseRank,noraiseRankD,withP,significance,peopleInHandUpper,nextNoRaise_A[i],nextNoRaiseD_A[i]);
 
                         }
                     }
@@ -579,6 +596,10 @@ void ExactCallD::query(const float64 betSize)
 //                                * (totalexf - oppBetMake * totaldexf)
 //                                 /(oppBetMake + totalexf) /(oppBetMake + totalexf);
                     nextexf *= oppBetMake;
+                    if( oppBetAlready + nextexf > nearest )
+                    {
+                        nearest = oppBetAlready + nextexf;
+                    }
 
                 }
 				//End of else, blocked executed UNLESS oppBetMake <= 0
@@ -593,6 +614,11 @@ void ExactCallD::query(const float64 betSize)
                 nextexf = e->pctWillCall( pow( facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significance, false),significance) );
                 peopleInHandUpper -= 1-nextexf;
                 nextexf *= oppBetMake ;
+
+                if( oppBetAlready + nextexf + (betSize - oppBankRoll) > nearest )
+                {
+                    nearest = oppBetAlready + nextexf + (betSize - oppBankRoll);
+                }
 
                 nextdexf = 0;
 
@@ -1023,7 +1049,7 @@ float64 ExactCallD::exf(const float64 betSize)
         query(betSize);
         queryinput = betSize;
     }
-    return totalexf*impliedFactor;
+    return totalexf*impliedFactor + (betSize - nearest);
 }
 
 float64 ExactCallD::dexf(const float64 betSize)
@@ -1042,7 +1068,7 @@ float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit)
 {
 
     const float64 avgControl = stagnantPot() / table->GetNumberInHand();
-    const float64 raiseOver = (callb + avgControl < lastbet) ? 0 : (callb + avgControl - lastbet) ;
+    const float64 raiseOver = (callb + avgControl);// < lastbet) ? 0 : (callb + avgControl - lastbet) ;
     const float64 actOrReact = (raiseOver > limit) ? 1 : (raiseOver / limit);
     return actOrReact;
 }
