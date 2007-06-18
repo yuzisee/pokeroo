@@ -30,8 +30,8 @@
 //#define ACTREACTUSESIN riskprice
 #define ACTREACTUSESIN maxShowdown
 
-//#define ACTREACTUSES riskprice
-#define ACTREACTUSES maxShowdown
+#define ACTREACTUSES_RA riskprice
+#define ACTREACTUSES_HD maxShowdown
 #define DELAYENEMYOPP 0
 //#define DELAYENEMYOPP riskprice
 #else
@@ -532,9 +532,9 @@ float64 ImproveGainStrategy::MakeBet()
 #else
 
 ///From regular to fear (x2)
-	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES,&myDeterredCall_left);
+	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES_RA,&myDeterredCall_left);
 	StateModel choicemodel( &myDeterredCall_left, &ap );
-	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES,&myDeterredCall_right);
+	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES_RA,&myDeterredCall_right);
     StateModel choicemodel_right( &myDeterredCall_right, &ap_right );
 
 
@@ -673,7 +673,7 @@ float64 DeterredGainStrategy::MakeBet()
 	AutoScalingFunction hybridgain(&geomModel_fear,&algbModel_fear,0.0,riskprice,hybridMagnified.pct*statmean.pct,&myDeterredCall);
 
     ///Choose from regular to fear (using raisefrom)
-	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,DELAYENEMYOPP,ACTREACTUSES,&myDeterredCall);
+	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,DELAYENEMYOPP,ACTREACTUSES_HD,&myDeterredCall);
 
     //HoldemFunctionModel * (hybridChoice[2]) =  { &ap_passive, &hybridgainDeterred };
 
