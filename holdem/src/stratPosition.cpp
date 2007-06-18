@@ -27,8 +27,13 @@
 #define RISKPRICE
 
 #ifdef RISKPRICE
-#define ACTREACTUSES riskprice
-//#define ACTREACTUSES maxShowdown
+#define ACTREACTUSESIN riskprice
+//#define ACTREACTUSESIN maxShowdown
+
+//#define ACTREACTUSES riskprice
+#define ACTREACTUSES maxShowdown
+#define DELAYENEMYOPP 0
+//#define DELAYENEMYOPP riskprice
 #else
 #define ACTREACTUSES maxShowdown
 #endif
@@ -416,6 +421,7 @@ float64 ImproveGainStrategy::MakeBet()
 */
 
 
+
     CallCumulationD &choicecumu = callcumu;
     CallCumulationD &raisecumu = foldcumu;
 
@@ -428,6 +434,15 @@ float64 ImproveGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
 
+
+
+#ifdef RISKPRICE
+    float64 riskprice = myDeterredCall.RiskPrice();
+#else
+    float64 riskprice = maxShowdown;
+#endif
+
+
     const float64 fullVersus = ViewTable().GetNumberAtTable() - 1;
     const float64 peopleDrawing = (1 - improvePure) * (ViewTable().GetNumberInHand() - 1);
     const float64 newVersus = (fullVersus - peopleDrawing*(1-improvePure)*detailPCT.stdDev);
@@ -436,18 +451,17 @@ float64 ImproveGainStrategy::MakeBet()
 //bGamble == 2 is ActionBot
 //bGamble == 1 is TrapBot
 
-    const float64 avgControl = myDeterredCall.stagnantPot() / ViewTable().GetNumberInHand();
-    const float64 raiseOver = (betToCall + avgControl < myBet) ? 0 : (betToCall + avgControl - myBet) ;
-    const float64 actOrReact = (raiseOver > maxShowdown) ? 1 : (raiseOver / maxShowdown);
+
+    const float64 actOrReact = myDeterredCall.ActOrReact(betToCall,myBet,ACTREACTUSESIN);
 
 //NormalBot uses this setup.
-    StatResult left = hybridMagnified;
+    StatResult left = statranking;//hybridMagnified;
     StatResult base_right = statmean;
 
 //TrapBot and ActionBot are based on statranking only
     if( bGamble >= 1 )
     {
-        const float64 enemyChances = (ViewTable().GetNumberInHand() - 1.0) / ViewTable().GetNumberInHand() / 2;
+        const float64 enemyChances = 0.5;//(ViewTable().GetNumberInHand() - 1.0) / ViewTable().GetNumberInHand() / 2;
         left = statranking;
         #ifndef DEBUG_TRAP_AS_NORMAL
         left.wins -= detailPCT.avgDev*enemyChances;
@@ -506,13 +520,6 @@ float64 ImproveGainStrategy::MakeBet()
     logFile << "Act or React? React " << (actOrReact * 100) << "% --> pct of " << base_right.pct << " ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << endl;
 #endif
 
-#ifdef RISKPRICE
-    const float64 averageStack = ViewTable().GetAllChips() / ViewTable().GetNumberAtTable();
-    float64 riskprice = sqrt(averageStack*( ViewTable().GetPotSize() - myBet ));
-#else
-    float64 riskprice = maxShowdown;
-#endif
-
 ///From geom to algb
 	AutoScalingFunction hybridgainDeterred_aggressive(&geomModel,&algbModel,0.0,riskprice,left.pct*base_right.pct,&myDeterredCall_left);
 	AutoScalingFunction hybridgain_aggressive(&geomModel_fear,&algbModel_fear,0.0,riskprice,left.pct*base_right.pct,&myDeterredCall_right);
@@ -525,9 +532,9 @@ float64 ImproveGainStrategy::MakeBet()
 #else
 
 ///From regular to fear (x2)
-	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,ACTREACTUSES,&myDeterredCall_left);
+	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES,&myDeterredCall_left);
 	StateModel choicemodel( &myDeterredCall_left, &ap );
-	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,0.0,ACTREACTUSES,&myDeterredCall_right);
+	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES,&myDeterredCall_right);
     StateModel choicemodel_right( &myDeterredCall_right, &ap_right );
 
 
@@ -611,9 +618,15 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 
-    const float64 avgControl = myDeterredCall.stagnantPot() / ViewTable().GetNumberInHand();
-    const float64 raiseOver = (betToCall + avgControl < myBet) ? 0 : (betToCall + avgControl - myBet) ;
-    const float64 certainty = (raiseOver > maxShowdown) ? 1 : (raiseOver / maxShowdown);
+#ifdef RISKPRICE
+    float64 riskprice = myDeterredCall.RiskPrice();
+#else
+    float64 riskprice = maxShowdown;
+#endif
+
+
+
+    const float64 certainty = myDeterredCall.ActOrReact(betToCall,myBet,ACTREACTUSESIN);
     //const float64 certainty = (betToCall > maxShowdown) ? 1 : (betToCall / maxShowdown);
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
     const float64 timeLeft = sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
@@ -635,11 +648,12 @@ float64 DeterredGainStrategy::MakeBet()
     StatResult right = statworse;
     right.repeated = 1-certainty;
 
+    statranking.repeated = 1;
     hybridMagnified.repeated = 1;
 
-	GainModel geomModel(hybridMagnified,right,&myDeterredCall);
+	GainModel geomModel(statranking,right,&myDeterredCall);
 	GainModel geomModel_fear(left,right,&myDeterredCall);
-	GainModelNoRisk algbModel(hybridMagnified,right,&myDeterredCall);
+	GainModelNoRisk algbModel(statranking,right,&myDeterredCall);
 	GainModelNoRisk algbModel_fear(left,right,&myDeterredCall);
 
 
@@ -654,19 +668,12 @@ float64 DeterredGainStrategy::MakeBet()
     logFile << "impliedFactor... " << futureFold << endl;
 #endif
 
-#ifdef RISKPRICE
-    const float64 averageStack = ViewTable().GetAllChips() / ViewTable().GetNumberAtTable();
-    float64 riskprice = sqrt(averageStack*( ViewTable().GetPotSize() - myBet ));
-#else
-    float64 riskprice = maxShowdown;
-#endif
-
     ///Choose from geom to algb
 	AutoScalingFunction hybridgainDeterred(&geomModel,&algbModel,0.0,riskprice,hybridMagnified.pct*statmean.pct,&myDeterredCall);
 	AutoScalingFunction hybridgain(&geomModel_fear,&algbModel_fear,0.0,riskprice,hybridMagnified.pct*statmean.pct,&myDeterredCall);
 
     ///Choose from regular to fear (using raisefrom)
-	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,0.0,ACTREACTUSES,&myDeterredCall);
+	AutoScalingFunction ap_passive(&hybridgainDeterred,&hybridgain,DELAYENEMYOPP,ACTREACTUSES,&myDeterredCall);
 
     //HoldemFunctionModel * (hybridChoice[2]) =  { &ap_passive, &hybridgainDeterred };
 

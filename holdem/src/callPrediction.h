@@ -104,6 +104,8 @@ class ExactCallD : public virtual ExpectedCallD
     private:
         float64 totalexf;
         float64 totaldexf;
+
+        void GenerateRaiseChances(float64 noraiseRank, float64 noraiseRankD, const Player * withP, float64 sig, float64 liveOpp, float64 & out, float64 & outD);
     protected:
         static const float64 UNITIALIZED_QUERY;
         float64 queryinput;
@@ -152,6 +154,9 @@ class ExactCallD : public virtual ExpectedCallD
 			virtual float64 pRaiseD(const float64 betSize, const int32 step );
 
             virtual void SetImpliedFactor(const float64 bonus);
+
+            float64 ActOrReact(float64 callb, float64 lastbet,float64 limit);
+            float64 RiskPrice();
 }
 ;
 
@@ -196,6 +201,8 @@ class ExactCallBluffD : public virtual ExactCallD
 
                             virtual float64 pWin(const float64 betSize);
                             virtual float64 pWinD(const float64 betSize);
+
+
 
 
 }

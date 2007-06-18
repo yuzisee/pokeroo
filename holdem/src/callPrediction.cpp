@@ -390,9 +390,59 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 	return raiseAmount;
 }
 
+void ExactCallD::GenerateRaiseChances(float64 noraiseRank_prescaled, float64 noraiseRankD_prescaled, const Player * withP, float64 sig, float64 liveOpp, float64 & out, float64 & outD)
+{
+        const float64 upperlimit = table->GetMaxShowdown();// RiskPrice();
+        const float64 percentReact = ActOrReact(callBet(),withP->GetBetSize(),upperlimit);
+        const float64 needed_pcw = pow(noraiseRank_prescaled,1/sig);
+
+        const float64 p_cw_draw = pow(e->strongestOpponent().pct,liveOpp);
+        //needed_pcw = f(noraiseRank) * percentReact + p_cw_draw * (1 - percentReact)
+        //f(noraiseRank) = (needed_pcw - p_cw_draw * (1 - percentReact))  /  percentReact;
+        //Note: percentReact can never be zero, unless blinds are zero.
+        const float64 a = (needed_pcw - p_cw_draw * (1 - percentReact));
+        const float64 pcw_to_win = a  /  percentReact;
+
+        if( p_cw_draw > needed_pcw || percentReact <= 0 || pcw_to_win <= 0 )
+        {
+            out = 0;
+            outD = 0;
+        }
+
+        const float64 noraiseRank = pow(pcw_to_win,sig);
+        const float64 noraiseRankD = pow(pow(1/a,sig)*noraiseRank_prescaled,1/sig-1)/pow(percentReact,sig);
+
+        const float64 noraiseMean = 1 - e->pctWillCall( noraiseRank );
+        const float64 noraiseMeanD = - e->pctWillCallD(  noraiseRank  )  * noraiseRankD;
+//Crappy raiseGain effect
+        float64 pushChips = (stagnantPot() - withP->GetContribution() );
+        pushChips = pushChips / (pushChips + withP->GetMoney());
+
+        #ifdef NO_AUTO_RAISE
+        if( noraiseMean > noraiseRank )
+        { //Rank is more likely to raise
+        #endif
+            out = noraiseMean*(1-pushChips) + noraiseRank*(pushChips);
+            outD = noraiseMeanD*(1-pushChips) + noraiseRankD*(pushChips);
+        #ifdef NO_AUTO_RAISE
+        }else
+        { //Rank is more likely NOT to raise
+            out = noraiseRank*(1-pushChips) + noraiseMean*(pushChips);
+            outD = noraiseRankD*(1-pushChips) + noraiseMeanD*(pushChips);
+        }
+        #endif
+
+        if( out > 1 )
+        {
+            out = 1;
+            outD = 0;
+        }
+
+}
+
 void ExactCallD::query(const float64 betSize)
 {
-
+    float64 peopleInHandUpper = table->GetNumberInHand() - 1;
     const float64 significance = 1/static_cast<float64>( handsDealt()-1 );
     const float64 myexf = betSize;
     const float64 mydexf = 1;
@@ -448,12 +498,12 @@ void ExactCallD::query(const float64 betSize)
             nextNoRaiseD_A[i] = 0;
         }
 
-
-        const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
+        const Player * withP = table->ViewPlayer(pIndex);
+        const float64 oppBetAlready = withP->GetBetSize();
 
         if( table->CanStillBet(pIndex) )
         {///Predict how much the bet will be
-            const float64 oppBankRoll = table->ViewPlayer(pIndex)->GetMoney();
+            const float64 oppBankRoll = withP->GetMoney();
 
             if( betSize < oppBankRoll )
             {	//Can still call, at least
@@ -480,28 +530,12 @@ void ExactCallD::query(const float64 betSize)
                             #endif
 
 
+
+
                             const float64 noraiseRank = w_r;
                             const float64 noraiseRankD = facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance, false );
 
-                            const float64 noraiseMean = 1 - e->pctWillCall( w_r );
-                            const float64 noraiseMeanD = - e->pctWillCallD(  w_r  )  * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance, false );
-//Crappy raiseGain effect
-                            float64 pushChips = (totalexf - oppBetAlready - table->ViewPlayer(pIndex)->GetContribution() );
-                            pushChips = pushChips / (pushChips + oppBankRoll);
-
-                            #ifdef NO_AUTO_RAISE
-                            if( noraiseMean > noraiseRank )
-                            { //Rank is more likely to raise
-                            #endif
-                                nextNoRaise_A[i] = noraiseMean*(1-pushChips) + noraiseRank*(pushChips);
-                                nextNoRaiseD_A[i] = noraiseMeanD*(1-pushChips) + noraiseRankD*(pushChips);
-                            #ifdef NO_AUTO_RAISE
-                            }else
-                            { //Rank is more likely NOT to raise
-                                nextNoRaise_A[i] = noraiseRank*(1-pushChips) + noraiseMean*(pushChips);
-                                nextNoRaiseD_A[i] = noraiseRankD*(1-pushChips) + noraiseMeanD*(pushChips);
-                            }
-                            #endif
+                            GenerateRaiseChances(noraiseRank,noraiseRankD,withP,significance,peopleInHandUpper,nextNoRaise_A[i],nextNoRaiseD_A[i]);
 
                         }
                     }
@@ -537,7 +571,7 @@ void ExactCallD::query(const float64 betSize)
                     //const float64 w = pow( wn, significance );         //f-1(w) = w
                     const float64 w = facedOdds_Geom(oppBankRoll,totalexf,oppBetAlready,oppBetMake, 1/significance, false);
                     nextexf = e->pctWillCall( w );
-
+                    peopleInHandUpper -= 1-nextexf;
 
                     nextdexf = nextexf + oppBetMake * e->pctWillCallD(  w  )
                             * facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppBetMake,totaldexf,w, 1/significance, false );//wn, wn/w / significance );
@@ -556,7 +590,9 @@ void ExactCallD::query(const float64 betSize)
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
 
 
-                nextexf = oppBetMake * e->pctWillCall( pow( facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significance, false),significance) );
+                nextexf = e->pctWillCall( pow( facedOdds_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBetMake, 1/significance, false),significance) );
+                peopleInHandUpper -= 1-nextexf;
+                nextexf *= oppBetMake ;
 
                 nextdexf = 0;
 
@@ -1002,6 +1038,20 @@ float64 ExactCallD::dexf(const float64 betSize)
 }
 
 
+float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit)
+{
 
+    const float64 avgControl = stagnantPot() / table->GetNumberInHand();
+    const float64 raiseOver = (callb + avgControl < lastbet) ? 0 : (callb + avgControl - lastbet) ;
+    const float64 actOrReact = (raiseOver > limit) ? 1 : (raiseOver / limit);
+    return actOrReact;
+}
 
+float64 ExactCallD::RiskPrice()
+{
+    const float64 myBet = 0;
+    const float64 averageStack = table->GetAllChips() / table->GetNumberAtTable();
+    float64 riskprice = sqrt(averageStack*( table->GetPotSize() - myBet ));
+    return riskprice;
+}
 
