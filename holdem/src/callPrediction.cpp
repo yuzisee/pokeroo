@@ -1067,7 +1067,7 @@ float64 ExactCallD::dexf(const float64 betSize)
 float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit)
 {
 
-    const float64 avgControl = stagnantPot() / table->GetNumberInHand();
+    const float64 avgControl = (stagnantPot() + table->GetUnbetBlindsTotal()) / table->GetNumberInHand();
     const float64 raiseOver = (callb + avgControl);// < lastbet) ? 0 : (callb + avgControl - lastbet) ;
     const float64 actOrReact = (raiseOver > limit) ? 1 : (raiseOver / limit);
     return actOrReact;
