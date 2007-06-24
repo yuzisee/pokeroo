@@ -510,14 +510,14 @@ float64 ImproveGainStrategy::MakeBet()
     {
         #ifdef LOGPOSITION
 //            logFile << minWin <<" ... "<< minWin+2 <<" = impliedfactor " << distrScale << endl;
-            logFile << improvePure <<" improvePure " << endl;
-            logFile << " Likely Worsen By "<< targetWorsenBy << endl; //TRAPBOT, ACTIONBOT
+            logFile << " " << improvePure <<" improvePure " << endl;
+            logFile << "Likely Worsen By "<< targetWorsenBy << endl; //TRAPBOT, ACTIONBOT
             if( bGamble >= 2 ) logFile << "impliedOddsGain would be " << impliedOddsGain << endl; //ACTIONBOT
             logFile << "opp Likely to fold " << oppInsuranceBigBet << endl; //TRAPBOT, ACTIONBOT
             if( bGamble >= 2 ) logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << endl; //ACTIONBOT
         #endif
     }
-    logFile << "Act or React? React " << (actOrReact * 100) << "% --> pct of " << base_right.pct << " ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << endl;
+    logFile << " Act or React? React " << (actOrReact * 100) << "% --> pct of " << base_right.pct << " ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << endl;
 #endif
 
 ///From geom to algb
@@ -572,7 +572,7 @@ float64 ImproveGainStrategy::MakeBet()
                 logFile << " [*] ";
             }
             logFile << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
-            logFile << "\tfold " << myDeterredCall_left.pWin(rAmount) << " left -- right " << myDeterredCall_right.pWin(rAmount) << endl;
+            logFile << "\tfold -- left" << myDeterredCall_left.pWin(rAmount) << "  " << myDeterredCall_right.pWin(rAmount) << " right" << endl;
 
 
             if( rAmount >= maxShowdown ) break;
@@ -582,10 +582,11 @@ float64 ImproveGainStrategy::MakeBet()
 	}
 
         logFile << "Guaranteed $" << myDeterredCall.stagnantPot() << endl;
-        logFile << "OppFoldChance% ... " << myDeterredCall_left.pWin(bestBet) << " left -- right " << myDeterredCall_right.pWin(bestBet) << endl;
+        logFile << "OppFoldChance% ... left " << myDeterredCall_left.pWin(bestBet) << " --" << myDeterredCall_right.pWin(bestBet) << " right" << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
-            logFile << "confirm " << choicemodel.f(bestBet) << endl;
+            logFile << "confirm Normal " << choicemodel.f(bestBet) << endl;
+            logFile << "confirm " << rolemodel.f(bestBet) << endl;
         }
 
 #endif
@@ -750,7 +751,7 @@ float64 DeterredGainStrategy::MakeBet()
 	}
     logFile << "Guaranteed $" << myDeterredCall.stagnantPot() << endl;
 
-        logFile << "OppFoldChance% ... " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
+        logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
             logFile << "confirm " << choicemodel.f(bestBet) << endl;

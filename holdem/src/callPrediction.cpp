@@ -98,6 +98,51 @@ float64 ExactCallBluffD::topTwoOfThree(float64 a, float64 b, float64 c, float64 
     }
 }
 
+float64 ExactCallBluffD::bottomThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const
+{
+    float64 x[4] = {a,b,c,d};
+
+    std::sort(x,x+4); //Ascending, so drop bottom
+    r = ( x[0] + x[1] + x[2] ) / 3;
+
+    if( x[3] == a )
+    {
+        return (b_d + c_d + d_d)/3;
+    }else if( x[3] == b )
+    {
+        return (a_d + c_d + d_d)/3;
+    }else if( x[3] == c )
+    {
+        return (a_d + b_d + d_d)/3;
+    }else
+    {
+        return (a_d + b_d + c_d)/3;
+    }
+}
+
+
+float64 ExactCallBluffD::topThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const
+{
+    float64 x[4] = {a,b,c,d};
+
+    std::sort(x,x+4); //Ascending, so drop first
+    r = ( x[3] + x[2] + x[1] ) / 3;
+
+    if( x[0] == a )
+    {
+        return (b_d + c_d + d_d)/3;
+    }else if( x[0] == b )
+    {
+        return (a_d + c_d + d_d)/3;
+    }else if( x[0] == c )
+    {
+        return (a_d + b_d + d_d)/3;
+    }else
+    {
+        return (a_d + b_d + c_d)/3;
+    }
+}
+
 
 ///This function is used to maximize chance to CALL on a player-by-player basis
 float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float64 a_d, float64 b_d, float64 c_d, float64 & r) const
@@ -851,6 +896,7 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 eaFold = (1 - ea->pctWillCall( w_mean ))*(1 - oppCommitted);
                     const float64 meanFold = 1 - e->pctWillCall( w_mean );
                     const float64 rankFold = w_rank;
+                    const float64 eaRkFold = 1-handRarity;
 
 //(nLinear <= 0 && wn > 1) ? 0 :
 
@@ -858,9 +904,10 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 rankFoldPartial = facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w_rank, nLinear, true);
                     const float64 meanFoldPartial = -e->pctWillCallD( w_mean ) * baseFoldPartial;
                     const float64 eaFoldPartial = -ea->pctWillCallD( w_mean ) * baseFoldPartial;
+                    const float64 eaRkFoldPartial = 0;
 
                     ///topTwoOfThree is on a player-by-player basis
-                    nextFoldPartial = bottomTwoOfThree(eaFold,meanFold,rankFold,eaFoldPartial,meanFoldPartial,rankFoldPartial,nextFold);
+                    nextFoldPartial = bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,eaFoldPartial,meanFoldPartial,rankFoldPartial,eaRkFoldPartial,nextFold);
 
                     //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
                     //nextFoldPartial = (eaFold*eaFoldPartial+rankFold*rankFoldPartial)*sqrt(2)/nextFold ;
@@ -948,9 +995,10 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 eaFold = (1 - ea->pctWillCall( w_mean ))*(1 - oppCommitted);
                     const float64 meanFold = 1 - e->pctWillCall( w_mean );
                     const float64 rankFold = w_rank;
+                    const float64 eaRkFold = 1-handRarity;
 
                     ///topTwoOfThree is on a player-by-player basis
-                    bottomTwoOfThree(eaFold,meanFold,rankFold,0,0,0,nextFold);
+                    bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,0,0,0,0,nextFold);
 
                     //nextFold = (meanFold+rankFold+eaFold)/3;
                     //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
@@ -1130,9 +1178,11 @@ float64 ExactCallD::dexf(const float64 betSize)
 
 float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit)
 {
-
+/*
     const float64 avgControl = (stagnantPot() + table->GetUnbetBlindsTotal()) / table->GetNumberInHand();
     const float64 raiseOver = (callb + avgControl);// < lastbet) ? 0 : (callb + avgControl - lastbet) ;
+*/
+    const float64 raiseOver = (table->GetPotSize() - callb) / table->GetNumberInHand();
     const float64 actOrReact = (raiseOver > limit) ? 1 : (raiseOver / limit);
     return actOrReact;
 }
