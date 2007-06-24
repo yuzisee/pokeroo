@@ -189,7 +189,7 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
 */
 
 ///Geom returns stricly call percentage (no check)
-float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, bool bCheckPossible)
+float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet, float64 n, bool bCheckPossible)
 {
 
     const int8 N = handsDealt();
@@ -201,14 +201,15 @@ float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alread
             * ( N - 2 )/ N ;
 
     //geomFunction.quantum = 1 / RAREST_HAND_CHANCE / 2.0;
-    geomFunction.Bankroll = bankroll - alreadyBet; //TODO: Confirm {- alreadyBet}
-    geomFunction.pot = pot;
-    if ( bet + alreadyBet > bankroll )
+
+    geomFunction.Bankroll = bankroll;
+    geomFunction.pot = pot-alreadyBet;
+
+
+    geomFunction.bet = incrbet+alreadyBet;
+    if( geomFunction.bet > bankroll )
     {
         geomFunction.bet = bankroll;
-    }else
-    {
-        geomFunction.bet = bet+alreadyBet;
     }
     geomFunction.alreadyBet = alreadyBet;
     geomFunction.avgBlind = avgBlind;
@@ -334,6 +335,7 @@ float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alre
 
 float64 ExactCallD::facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet, bool bRank, float64 wGuess)
 {
+    //pot -= alreadyBet;
     float64 bet = alreadyBet + incrbet;
     if( bet > bankroll )
     {
