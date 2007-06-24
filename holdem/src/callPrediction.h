@@ -122,10 +122,9 @@ class ExactCallD : public virtual ExpectedCallD
 
         float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, bool bCheckPossible);
         float64 facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, bool bCheckPossible);
-		float64 facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 wGuess = 0.75);
-		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet);
-        float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);
-
+		float64 facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, bool bRank, float64 wGuess);
+		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet,float64 sig, bool bRank);
+        float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, bool bRank);
 
 
         void query(const float64 betSize);
@@ -167,6 +166,7 @@ class ExactCallBluffD : public virtual ExactCallD
         //topTwoOfThree returns the average of the top two values {a,b,c} through the 7th parameter.
         //The average of the corresponding values of {a_d, b_d, c_d} are returned by the function.
         float64 topTwoOfThree(float64 a, float64 b, float64 c, float64 a_d, float64 b_d, float64 c_d, float64 & r) const;
+        float64 bottomTwoOfThree(float64 a, float64 b, float64 c, float64 a_d, float64 b_d, float64 c_d, float64 & r) const;
     protected:
         const CallCumulationD* ea;
         float64 allFoldChance;
@@ -177,7 +177,6 @@ class ExactCallBluffD : public virtual ExactCallD
         void query(const float64 betSize);
     public:
         float64 insuranceDeterrent;
-        float64 minimaxAdjustment;
 
         ExactCallBluffD(const int8 id, const HoldemArena* base
 #ifdef ANTI_PRESSURE_FOLDGAIN
@@ -192,7 +191,7 @@ class ExactCallBluffD : public virtual ExactCallD
 #ifdef ANTI_PRESSURE_FOLDGAIN
                             ,rankPCT
 #endif
-                                    ,data,commit), ea(foldData), insuranceDeterrent(0), minimaxAdjustment(0)
+                                    ,data,commit), ea(foldData), insuranceDeterrent(0)
                             {
                                 queryinputbluff = UNITIALIZED_QUERY;
                             }
