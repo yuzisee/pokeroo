@@ -152,7 +152,13 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     #endif
 
 
+    const float64 rankingA = 1 - foldcumu.pctWillCall_tiefactor(0.5, 1); //loss+splits
+    const float64 rankingA3 = 1 - foldcumu.pctWillCall_tiefactor(0.5, 0); //loss
 
+    statrelation.wins = rankingA;
+    statrelation.splits = rankingA3 - rankingA;
+    statrelation.loss = 1 - rankingA3;
+    statrelation.genPCT();
 
     //const float64 ranking3 = callcumu.pctWillCall(statmean.loss); //wins+splits
     //const float64 ranking = callcumu.pctWillCall(1-statmean.wins); //wins
@@ -169,13 +175,33 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     statranking.loss = 1 - ranking3;
     statranking.genPCT();
 
-    hybridMagnified.wins = sqrt(statmean.wins*statranking.wins);
-    hybridMagnified.splits = sqrt(statmean.splits*statranking.splits);
-    hybridMagnified.loss = sqrt(statmean.loss*statranking.loss);
+//Pick the better one for hybrid
+    if( statranking.pct > statrelation.pct )
+    {
+        statversus = statranking;
+    }else
+    {
+        statversus = statrelation;
+    }
+
+    hybridMagnified.wins = sqrt(statmean.wins*statversus.wins);
+    hybridMagnified.splits = sqrt(statmean.splits*statversus.splits);
+    hybridMagnified.loss = sqrt(statmean.loss*statversus.loss);
     hybridMagnified.genPCT();
     const float64 adjust = hybridMagnified.wins + hybridMagnified.splits + hybridMagnified.loss;
     hybridMagnified = hybridMagnified * ( 1.0 / adjust );
     hybridMagnified.repeated = 0; ///.repeated WILL otherwise ACCUMULATE!
+
+//Pick the safer one for play
+    if( statranking.pct < statrelation.pct )
+    {
+        statversus = statranking;
+    }else
+    {
+        statversus = statrelation;
+    }
+
+
 
 #ifdef LOGPOSITION
     if(bLogMean)
@@ -194,15 +220,15 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     }
     if(bLogRanking)
     {
+        logFile << "(Versus) " << statrelation.pct * 100 << "%"  << std::endl;
+        logFile << "(V.s) " << statrelation.splits * 100 << "%"  << std::endl;
         logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
-        logFile << "(O.w) " << statranking.wins * 100 << "%"  << std::endl;
         logFile << "(O.s) " << statranking.splits * 100 << "%"  << std::endl;
-        logFile << "(O.l) " << statranking.loss * 100 << "%"  << std::endl;
     }
     if(bLogHybrid)
     {
 		if( !bLogMean ) logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
-		if( !bLogRanking ) logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
+		if( !bLogRanking ) logFile << "(Versus) " << statversus.pct * 100 << "%"  << std::endl;
         logFile << "(Hybrid) " << hybridMagnified.pct * 100 << "%"  << std::endl;
         logFile << "(H.w) " << hybridMagnified.wins * 100 << "%"  << std::endl;
         logFile << "(H.s) " << hybridMagnified.splits * 100 << "%"  << std::endl;
@@ -455,19 +481,19 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 actOrReact = myDeterredCall.ActOrReact(betToCall,myBet,ACTREACTUSESIN);
 
 //NormalBot uses this setup.
-    StatResult left = statranking;//hybridMagnified;
+    StatResult left = statversus;//hybridMagnified;
     StatResult base_right = statmean;
 
-//TrapBot and ActionBot are based on statranking only
+//TrapBot and ActionBot are based on statversus only
     if( bGamble >= 1 )
     {
         const float64 enemyChances = 0.5;//(ViewTable().GetNumberInHand() - 1.0) / ViewTable().GetNumberInHand() / 2;
-        left = statranking;
+        left = statversus;
         #ifndef DEBUG_TRAP_AS_NORMAL
         left.wins -= detailPCT.avgDev*enemyChances;
         left.loss += detailPCT.avgDev*enemyChances;
         left.pct -= detailPCT.avgDev*enemyChances;
-        //Since detailPCT is based on statmean, not statranking, it is possible for zero crossings
+        //Since detailPCT is based on statmean, not statversus, it is possible for zero crossings
         if( left.pct < 0 || left.wins < 0 )
         {
             left.wins = 0;
@@ -479,7 +505,7 @@ float64 ImproveGainStrategy::MakeBet()
         myDeterredCall_right.insuranceDeterrent = oppInsuranceBigBet;
 
 
-        base_right = statranking;
+        base_right = statversus;
 
 
         if( bGamble >= 2 )
@@ -499,8 +525,8 @@ float64 ImproveGainStrategy::MakeBet()
     left.repeated = 1;
 	GainModel geomModel(left,right,&myDeterredCall_left);
 	GainModel geomModel_fear(base_right,right,&myDeterredCall_left);
-	statranking.repeated = 1;
-	GainModelNoRisk algbModel(statranking,right,&myDeterredCall_right);
+	statversus.repeated = 1;
+	GainModelNoRisk algbModel(statversus,right,&myDeterredCall_right);
 	GainModelNoRisk algbModel_fear(base_right,right,&myDeterredCall_right);
 
 
@@ -649,7 +675,7 @@ float64 DeterredGainStrategy::MakeBet()
     StatResult right = statworse;
     right.repeated = 1-certainty;
 
-    statranking.repeated = 1;
+    statversus.repeated = 1;
     hybridMagnified.repeated = 1;
 
 	GainModel geomModel(hybridMagnified,right,&myDeterredCall);
@@ -802,7 +828,7 @@ float64 ImproveGainRankStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
 
-    myDeterredCall.insuranceDeterrent = statranking.pct;
+    myDeterredCall.insuranceDeterrent = .pct;
 
     const float64 fullVersus = myDeterredCall.callingPlayers();
     if( bGamble >= 2 )
@@ -820,7 +846,7 @@ float64 ImproveGainRankStrategy::MakeBet()
     if( bGamble >= 1 )
     {
         myDeterredCall.SetImpliedFactor(distrScale);
-        left = statranking;
+        left = ;
     //    right = statranking;
     }
 
@@ -901,7 +927,7 @@ float64 DeterredGainRankStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
 
-    myDeterredCall.insuranceDeterrent = statranking.pct;
+    myDeterredCall.insuranceDeterrent = .pct;
 
     myDeterredCall.SetImpliedFactor(futureFold);
 
@@ -1001,19 +1027,19 @@ float64 CorePositionalStrategy::MakeBet()
 
 
 
-    GainModel rankGeom(statranking,&myExpectedCall);
+    GainModel rankGeom(statversus,&myExpectedCall);
     GainModel hybridGeom(hybridMagnified,&myExpectedCall);
     GainModelNoRisk hybridAlgb(hybridMagnified,&myExpectedCall);
-    //GainModelNoRisk choicegain_rnr(statranking,&myExpectedCall);
+    //GainModelNoRisk choicegain_rnr(statversus,&myExpectedCall);
 
 
     GainModel meanGeom(statmean,&myExpectedCall);
 
 
     GainModelNoRisk worstAlgb(statworse,&myLimitCall);
-    GainModelNoRisk rankAlgb(statranking,&myExpectedCall);
+    GainModelNoRisk rankAlgb(statversus,&myExpectedCall);
     GainModelNoRisk meanAlgb(statmean,&myExpectedCall);
-    GainModel rankGeomPC(statranking,&myCommittalCall);
+    GainModel rankGeomPC(statversus,&myCommittalCall);
     GainModel meanGeomPC(statmean,&myCommittalCall);
 
 

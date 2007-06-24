@@ -52,6 +52,8 @@ class PositionalStrategy : virtual public PlayerStrategy
         StatResult statmean;
         StatResult statworse;
         StatResult statranking;
+        StatResult statversus;
+        StatResult statrelation;
         StatResult hybridMagnified;
         CallCumulationD foldcumu;
         CallCumulationD callcumu;
