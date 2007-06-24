@@ -335,7 +335,9 @@ float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alre
 
 float64 ExactCallD::facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet, bool bRank, float64 wGuess)
 {
-    //pot -= alreadyBet;
+    //pot -= alreadyBet/2; //Half their bet is implied odds
+    pot -= alreadyBet;
+
     float64 bet = alreadyBet + incrbet;
     if( bet > bankroll )
     {
@@ -367,10 +369,10 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
     float64 min = 0;
     float64 useOdds;
     float64 newOdds = pow(facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,bRank,0),sig);
-    float64 curOdds = newOdds/2;
+    float64 curOdds = newOdds*(1-sig);
     float64 prevOdds = 0;
     float64 cycleDetection = -1;
-    float64 cycleQuantum = 0.5 * chipDenom() / allChips();
+    float64 cycleQuantum = 0.5 * chipDenom() / allChips() * sig;
     do
     {
         if( newOdds > max ) newOdds = max;
@@ -381,7 +383,7 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
             prevOdds = curOdds;
             curOdds = newOdds;
             useOdds = (max+min)/2;
-            newOdds = pow(facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,bRank,useOdds),sig);//*2 + curOdds)/3;
+            newOdds = pow(facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,bRank,useOdds),sig)*sig + useOdds*(1-sig);
             if( fabs(cycleDetection - newOdds) < cycleQuantum )
             {
                 return (newOdds+prevOdds+curOdds)/3;
@@ -395,7 +397,7 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
             prevOdds = curOdds;
             curOdds = newOdds;
             useOdds = curOdds;
-            newOdds = pow(facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,bRank,useOdds),sig);//*2 + curOdds)/3;
+            newOdds = (pow(facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,bRank,useOdds),sig)*sig + useOdds*(1-sig));
         }
 
         if( newOdds < useOdds && max > useOdds)
@@ -909,7 +911,9 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 eaRkFoldPartial = 0;
 
                     ///topTwoOfThree is on a player-by-player basis
-                    nextFoldPartial = bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,eaFoldPartial,meanFoldPartial,rankFoldPartial,eaRkFoldPartial,nextFold);
+                    //nextFoldPartial = bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,eaFoldPartial,meanFoldPartial,rankFoldPartial,eaRkFoldPartial,nextFold);
+                    nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
+                    nextFoldPartial=(eaFoldPartial+meanFoldPartial+rankFoldPartial+eaRkFoldPartial)/4;
 
                     //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
                     //nextFoldPartial = (eaFold*eaFoldPartial+rankFold*rankFoldPartial)*sqrt(2)/nextFold ;
@@ -1000,7 +1004,9 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 eaRkFold = 1-handRarity;
 
                     ///topTwoOfThree is on a player-by-player basis
-                    bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,0,0,0,0,nextFold);
+//                    bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,0,0,0,0,nextFold);
+                    nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
+
 
                     //nextFold = (meanFold+rankFold+eaFold)/3;
                     //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
