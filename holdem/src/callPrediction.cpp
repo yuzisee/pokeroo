@@ -579,7 +579,7 @@ void ExactCallD::GenerateRaiseChances(float64 raisebet, float64 noraiseRank_pres
 
 void ExactCallD::query(const float64 betSize)
 {
-    nearest = 0;
+    nearest = (betSize <= callBet() + table->GetChipDenom()/2) ? betSize : 0;
     float64 peopleInHandUpper = table->GetNumberInHand() - 1;
     const float64 significance = 1/static_cast<float64>( handsDealt()-1 );
     const float64 myexf = betSize;
