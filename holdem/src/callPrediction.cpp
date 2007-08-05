@@ -61,7 +61,6 @@ ExactCallD::~ExactCallD()
         delete [] noRaiseChanceD_A;
     }
 }
-ExactCallFunctionModel::~ExactCallFunctionModel(){};
 
 void ExactCallD::SetImpliedFactor(const float64 bonus)
 {
@@ -232,56 +231,6 @@ float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alread
 
     return g;
 
-}
-//1. If Geom all-in, return based on alreadyBet?
-//2. If k is stretched larger than B because of wGuess, so that w would be negative? Return w=0;
-//3. Is bankroll supposed to be passed in as (oppBankRoll - alreadyBet) or not? (Is betSize passed in as oppBetMake or not?)
-//Is Algb different than Geom for point #3?
-float64 ExactCallFunctionModel::f( const float64 w )
-{
-    const float64 fw = pow(w,n);
-
-	const float64 frank = e->pctWillCall(1 - w);
-    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
-    //fNRank == 0 and frank == 1? That means if you had this w pct, you would have the nuts or better.
-    //const float64 potwin = bOppCheck ? ( 0 ) : (pot);
-
-    const float64 gainFactor = pow( Bankroll+pot , fw ) * pow( Bankroll-bet , 1-fw ) - Bankroll;
-
-    const float64 stackFactor = alreadyBet + avgBlind / fNRank;
-
-    if( bOppCheck )
-    {
-        return gainFactor;
-    }else
-    {
-        return gainFactor + stackFactor;
-    }
-}
-
-float64 ExactCallFunctionModel::fd( const float64 w, const float64 y )
-{
-    const float64 fw = pow(w,n);
-    const float64 dfw = (n<0.5) ? (0) : (n * pow(w,n-1));
-
-    const float64 frank = e->pctWillCall(1 - w);
-    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
-
-    const float64 stackFactor = avgBlind * e->pctWillCallD(1-w) / fNRank / fNRank;
-
-    const float64 gainFactor = (Bankroll - bet)
-                                * pow(  (Bankroll+pot)/(Bankroll-bet)  ,  fw  )
-                                * log1p( (Bankroll+pot)/(Bankroll-bet) - 1)
-                                * dfw;
-
-
-    if( bOppCheck )
-    {
-        return gainFactor;
-    }else
-    {
-        return gainFactor - stackFactor;
-    }
 }
 
 float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, bool bCheckPossible)
@@ -515,7 +464,7 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 	return raiseAmount;
 }
 
-void ExactCallD::GenerateRaiseChances(float64 raisebet, float64 noraiseRank_prescaled, float64 noraiseRankD_prescaled, const Player * withP, float64 sig, float64 liveOpp, float64 & out, float64 & outD)
+void ExactCallD::GenerateRaiseChances(float64 raisebet, float64 raisedFrom, float64 noraiseRank_prescaled, float64 noraiseRankD_prescaled, const Player * withP, float64 sig, float64 liveOpp, float64 & out, float64 & outD)
 {
         const float64 upperlimit = table->GetMaxShowdown();// RiskPrice();
         const float64 uReact = ActOrReact(callBet(),withP->GetBetSize(),upperlimit);
@@ -524,7 +473,12 @@ void ExactCallD::GenerateRaiseChances(float64 raisebet, float64 noraiseRank_pres
         const float64 needed_pcw = pow(noraiseRank_prescaled,1/sig);
 
         const float64 extra_pcw = pow(noraiseRank_prescaled,1/sig-liveOpp);
-        const float64 p_cw_draw = extra_pcw*pow(e->strongestOpponent().pct*noraiseRank_prescaled,liveOpp);
+        float64 bestOpponent = e->strongestOpponent().pct;
+        if( noraiseRank_prescaled < bestOpponent )
+        {
+            bestOpponent = noraiseRank_prescaled;
+        }
+        float64 p_cw_draw = extra_pcw*pow(bestOpponent,liveOpp);
         //needed_pcw = f(noraiseRank) * percentReact + p_cw_draw * (1 - percentReact)
         //f(noraiseRank) = (needed_pcw - p_cw_draw * (1 - percentReact))  /  percentReact;
         //Note: percentReact can be zero if you are in the blind, since your lastbet == betToCall
@@ -552,7 +506,7 @@ void ExactCallD::GenerateRaiseChances(float64 raisebet, float64 noraiseRank_pres
         const float64 noraiseMean = 1 - e->pctWillCall( noraiseRank );
         const float64 noraiseMeanD = - e->pctWillCallD(  noraiseRank  )  * noraiseRankD;
 //Crappy raiseGain effect
-        float64 pushChips = - withP->GetContribution() - withP->GetBetSize() + table->GetPotSize();//stagnantPot();
+        float64 pushChips = raisedFrom - withP->GetContribution() - withP->GetBetSize() + table->GetPotSize();//stagnantPot();
         pushChips = pushChips / (pushChips + withP->GetMoney());
 
         #ifdef NO_AUTO_RAISE
@@ -579,7 +533,7 @@ void ExactCallD::GenerateRaiseChances(float64 raisebet, float64 noraiseRank_pres
 
 void ExactCallD::query(const float64 betSize)
 {
-    nearest = (betSize <= callBet() + table->GetChipDenom()/2) ? betSize : 0;
+    nearest = (betSize <= callBet() + table->GetChipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
     float64 peopleInHandUpper = table->GetNumberInHand() - 1;
     const float64 significance = 1/static_cast<float64>( handsDealt()-1 );
     const float64 myexf = betSize;
@@ -673,7 +627,7 @@ void ExactCallD::query(const float64 betSize)
                             const float64 noraiseRank = w_r;
                             const float64 noraiseRankD = facedOddsND_Geom( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,totaldexf,w_r, 1/significance, false );
 
-                            GenerateRaiseChances(thisRaise,noraiseRank,noraiseRankD,withP,significance,peopleInHandUpper,nextNoRaise_A[i],nextNoRaiseD_A[i]);
+                            GenerateRaiseChances(thisRaise,betSize,noraiseRank,noraiseRankD,withP,significance,peopleInHandUpper,nextNoRaise_A[i],nextNoRaiseD_A[i]);
 
                         }
                     }

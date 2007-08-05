@@ -567,6 +567,28 @@ float64 ImproveGainStrategy::MakeBet()
 
     AutoScalingFunction rolemodel(&choicemodel,&choicemodel_right,betToCall,riskprice,&myDeterredCall_left);
 
+
+
+
+//DEBUG //
+/*
+    if( betToCall >= 799 )
+    {
+        const float64 b21 = geomModel_fear.f(800);
+        const float64 b22 = algbModel_fear.f(800);
+        const float64 b11 = geomModel.f(800);
+        const float64 b12 = algbModel.f(800);
+
+        const float64 b1 = hybridgainDeterred_aggressive.f(800);
+        const float64 b2 = hybridgain_aggressive.f(800);
+
+        const float64 a1 = ap.f(800);
+        const float64 a2 = ap_right.f(800);
+
+        const float64 z = 0;
+    }
+*/
+
     const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
 #endif
 
@@ -735,7 +757,11 @@ float64 DeterredGainStrategy::MakeBet()
 //    const float64 a12 = hybridgain.f_raised(60,90);
 //    const float64 b12 = hybridgain.f_raised(60,150);
 */
-
+    if( betToCall > 100 )
+    {
+        const float64 p1 = myDeterredCall.pWin(630);
+        const float64 z = 0;
+    }
 
 
 

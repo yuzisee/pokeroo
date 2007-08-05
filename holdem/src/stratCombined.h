@@ -58,6 +58,7 @@ class TrendStrategy : public virtual HistoryStrategy
 class MultiStrategy : public virtual HistoryStrategy
 {
     protected:
+        bool bHandShown;
         float64 prevMoney;
         void initM(); //Load file if available
     public:
@@ -69,6 +70,7 @@ class MultiStrategy : public virtual HistoryStrategy
     {
     }
 
+    virtual void SeeOppHand(const int8, const Hand&);
     virtual void SeeCommunity(const Hand&, const int8);
     virtual float64 MakeBet();
 

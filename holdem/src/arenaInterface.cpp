@@ -158,6 +158,7 @@ void HoldemArena::broadcastHand(const Hand& h, const int8 broadcaster)
         (*p[cycleIndex]).myStrat->SeeOppHand(broadcaster, h);
 		incrIndex(cycleIndex);
 	}
+	(*p[broadcaster]).myStrat->SeeOppHand(broadcaster, h);
 }
 
 #ifdef DEBUGSAVEGAME
