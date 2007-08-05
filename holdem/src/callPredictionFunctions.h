@@ -26,10 +26,65 @@
 #include "functionbase.h"
 #include "callSituation.h"
 
+#undef OLD_PREDICTION_ALGORITHM
 
 
 #define RAREST_HAND_CHANCE 221.0
 
+class FoldWaitLengthModel : public virtual ScalarFunctionModel
+{
+    public:
+    float64 amountSacrifice;
+    float64 betSize;
+    float64 bankroll;
+    float64 opponents;
+
+    FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0), amountSacrifice(0), bankroll(0), opponents(1){};
+
+    virtual ~FoldWaitLengthModel();
+
+    virtual float64 f(const float64);
+    virtual float64 fd(const float64, const float64);
+    virtual float64 d_dbetSize( const float64 n );
+
+}
+;
+
+
+
+class FoldGainModel : public virtual ScalarFunctionModel
+{
+    protected:
+    float64 n;
+
+    float64 lastAmountSacrifice;
+    float64 lastOpponents;
+    float64 lastBankroll;
+    float64 lastBetSize;
+    float64 lastf;
+    float64 lastfd;
+
+    void query(const float64 betSize);
+
+    public:
+    float64 bankroll;
+    float64 amountSacrifice;
+    float64 opponents;
+
+    FoldWaitLengthModel waitLength;
+
+    FoldGainModel() : ScalarFunctionModel(1.0/3.0), lastAmountSacrifice(-1), lastOpponents(0), lastBankroll(-1), lastBetSize(-1){};
+
+    virtual ~FoldGainModel();
+
+    virtual float64 f(const float64 betSize);
+    virtual float64 fd(const float64 betSize, const float64 gain);
+
+
+}
+;
+
+#ifdef OLD_PREDICTION_ALGORITHM
 
 //For calculating geometric betting expectation
 class ExactCallFunctionModel : public virtual ScalarFunctionModel
@@ -102,7 +157,7 @@ class ExactCallFunctionModel : public virtual ScalarFunctionModel
 
 }
 ;
-
+#endif //OLD_PREDICTION_ALGORITHM
 
 #endif
 

@@ -177,6 +177,7 @@ public:
 	vector<StatResult> cumulation;
 	float64 pctWillCall_tiefactor(const float64, const float64) const;
 	virtual float64 pctWillCall(const float64) const;
+	virtual float64 reverseLookup(const float64) const;
 	virtual StatResult strongestOpponent() const;
 	virtual StatResult weakestOpponent() const;
 
@@ -205,6 +206,7 @@ private:
 	virtual float64 slopeof(const size_t, const size_t) const;
 public:
 	virtual float64 pctWillCallD(const float64) const;
+	virtual float64 inverseD(const float64) const;
 
         #ifdef DEBUG_DEXF
             void breakdown(float64 points, std::ostream& target)

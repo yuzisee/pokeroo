@@ -38,18 +38,23 @@ class ExactCallD : public virtual ExpectedCallD
         float64 nearest;
         float64 impliedFactor;
 
+#ifdef OLD_PREDICTION_ALGORITHM
         ExactCallFunctionModel geomFunction;
+        float64 facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, bool bRank, float64 wGuess);
+#else
+        FoldGainModel FG;
+#endif
 
         int8 noRaiseArraySize;
         float64 *noRaiseChance_A;
         float64 *noRaiseChanceD_A;
 
 
-        float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 n, bool bCheckPossible);
-        float64 facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, bool bCheckPossible);
-		float64 facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, bool bRank, float64 wGuess);
-		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet,float64 sig, bool bRank);
-        float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, bool bRank);
+        float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible);
+        float64 facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 dpot, float64 w, float64 n, bool bCheckPossible);
+
+		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet,float64 opponents);
+        float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);
 
 
         void query(const float64 betSize);
@@ -63,7 +68,11 @@ class ExactCallD : public virtual ExpectedCallD
 #ifdef ANTI_PRESSURE_FOLDGAIN
             ,rankPCT
 #endif
-                    ,data,commit), impliedFactor(1), geomFunction(0.5/RAREST_HAND_CHANCE,data),noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
+                    ,data,commit), impliedFactor(1)
+#ifdef OLD_PREDICTION_ALGORITHM
+,geomFunction(0.5/RAREST_HAND_CHANCE,data)
+#endif
+                    ,noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
             {
                 queryinput = UNITIALIZED_QUERY;
             }

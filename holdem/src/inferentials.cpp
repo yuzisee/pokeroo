@@ -86,6 +86,66 @@ CallCumulation::~CallCumulation()
 {
 }
 
+
+float64 CallCumulationD::inverseD(const float64 rank) const
+{
+    //reverseLookup(x) = f-1(1-x)
+    //reverseLookup'(x) = f-1'(1-x)*-1
+    //f-1'(x) = 1/f'(f-1(x))
+    //reverseLookup'(x) = -1/f'(f-1(1-x))
+    //reverseLookup'(x) = -1/f'(reverseLookup(x))
+    return - 1 / pctWillCallD( reverseLookup( rank ) );
+}
+
+//How this works:
+//reverseLookup(0.9) returns A pct, where (1-0.9) of opponents are better than A pct.
+float64 CallCumulation::reverseLookup(const float64 rank) const
+{
+    const float64 betterThan = 1 - rank; //Search for this .repeated
+    const size_t maxsize = cumulation.size();
+    size_t high_index = maxsize - 1;
+    size_t low_index = 0;
+
+//Early returns
+    if( betterThan > cumulation[0].repeated )
+    {
+        return cumulation[0].pct;
+    }
+    if( betterThan < cumulation[high_index].repeated )
+    {
+        return cumulation[high_index].pct;
+    }
+
+
+    while( high_index > low_index + 1 )
+    {
+        const size_t guess_index = (high_index + low_index)/2;
+        const float64 guess_betterThan = cumulation[guess_index].repeated;
+
+        if( guess_betterThan >= betterThan )
+        {
+            high_index = guess_index;
+        }
+
+        if( guess_betterThan <= betterThan )
+        {
+            low_index = guess_index;
+        }
+
+    }
+
+    const float64 high_betterThan = cumulation[high_index].repeated;
+    const float64 low_betterThan = cumulation[low_index].repeated;
+
+    return (
+                cumulation[high_index].pct * (low_betterThan - betterThan)
+                +
+                cumulation[low_index].pct * (betterThan - high_betterThan)
+            ) / (low_betterThan - high_betterThan);
+
+
+}
+
 ///oddsFaced is the "virtual chance to win" that would correspond to the pot odds faced.
 ///eg. 4:1 pot odds means opponent can bet 1 to win 4, (ie. pay 1 to receive 5 = 20% = 0.2 = oddsFaced)
 ///The lower oddsFaced is, the better his/her odds are.
@@ -237,77 +297,7 @@ float64 SlidingPairCallCumulationD::pctWillCallD(const float64 oddsFaced) const
 {
     return left->pctWillCallD(oddsFaced) * (1-slider) + right->pctWillCallD(oddsFaced) * (slider);
 }
-/*
-float64 CallCumulation::pctWillCallDEBUG(const float64 oddsFaced, const float64 tiefactor) const
-{
-	//binary search
-	size_t first=0;
-	size_t last=cumulation.size()-1;
-	size_t guess;
-	float64 curPCT;
 
-
-    ///Binary search for oddsFaced
-    ///Post-analysis of the algorithm defines a DECREASING pct in cumulation
-	while(last > first)
-	{
-		guess = (last+first)/2;
-		curPCT = cumulation[guess].pct;
-
-		if (curPCT < oddsFaced)
-		{
-
-			if (guess == first)
-			{ //A. guess == first implies last == first + 1
-				if (guess == 0) return 0;
-				return cumulation[guess-1].repeated;
-			}
-			last = guess - 1;
-		}
-		else if (curPCT > oddsFaced)
-		{
-			if (guess + 1 == last)
-			{ //B. first  + 1 == last - 1
-				if ( cumulation[last].pct > oddsFaced )
-				{
-					++last;
-					if (last == cumulation.size() ) return 1;
-					return cumulation[last].repeated;
-				}
-				else if (cumulation[last].pct < oddsFaced)
-				{
-					return cumulation[guess].repeated;
-				}
-				else
-				{// cumulation[last].pct == oddsFaced
-					return cumulation[last].repeated;
-				}
-			}
-			first = guess + 1;
-		}
-		else
-		{///The odds faced are EXACTLY the chance to win. How many people would take this bet?
-            ///Let's scale this by the scalefactor
-            if( guess == 0 ) return cumulation[guess].repeated;
-			return cumulation[guess].repeated * tiefactor + cumulation[guess-1].repeated * (1 - tiefactor);
-		}
-	}
-	curPCT = cumulation[last].pct;
-	if(curPCT < oddsFaced)
-	{
-		if (last == 0)
-		{
-			return 0;
-		}
-		return cumulation[last-1].repeated;
-	}
-	else
-	{
-		return cumulation[last].repeated;
-	}
-
-}
-*/
 //Search for the first element with a lower .pct and oddsFaced from a descending set in a binary manner
 //The last element of cumulation represents my weakest hand. This also represents the opponent's strongest hand.
 //As such, the largest "call number" will occur at the bottom.
