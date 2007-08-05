@@ -35,61 +35,30 @@ float64 ExpectedCallD::forfeitChips() const
     return ( alreadyBet() + stagnantPot() - table->ViewPlayer(playerID)->GetContribution() );
 }
 
-float64 ExpectedCallD::foldGain(const float64 extra) const
+float64 ExpectedCallD::foldGain(const float64 extra)
 {
+    const float64 playerCount = table->GetNumberAtTable();
 
 
-#ifdef DEBUGWATCHPARMS
-    const float64 a = 1 - betFraction( table->ViewPlayer(playerID)->GetBetSize() );
-#endif
-
-    const float64 baseFraction = betFraction( table->ViewPlayer(playerID)->GetBetSize() + potCommitted + extra);
-#ifdef ANTI_PRESSURE_FOLDGAIN
-///If extra > 0, you are making them raise you, which allows you to wait out a good spot?
-    const float64 handFreq = /*(extra > 0) ? (2-handRarity) : */1/handRarity;
-    if( handRarity <= 0 )
-    {
-        return 0;
-    }
-#else
-    const float64 handFreq = 1;
-#endif
-
-#ifdef BLIND_ADJUSTED_FOLD
-    //const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
-    const float64 bigBlindFraction = betFraction( table->GetBigBlind() );
-    const float64 smallBlindFraction = betFraction( table->GetSmallBlind() );
+    const float64 bigBlind = table->GetBigBlind() ;
+    const float64 smallBlind = table->GetSmallBlind() ;
 #ifdef SAME_WILL_LOSE_BLIND
-    const float64 blindsPow = 1.0 / table->GetNumberAtTable();
+    const float64 blindsPow = 1.0 / (playerCount);
 #else
-    const float64 rawLoseFreq = 1 - (2.0 / table->GetNumberAtTable()) ;
-    const float64 blindsPow = rawLoseFreq / table->GetNumberAtTable();
+    const float64 rawLoseFreq = 1 - (2.0 / playerCount) ;
+    const float64 blindsPow = rawLoseFreq / playerCount;
 #endif
 
-#ifdef ANTI_PRESSURE_FOLDGAIN
-    #ifdef PURE_BLUFF
-        const float64 totalFG = (1 - (baseFraction+(bigBlindFraction+smallBlindFraction)*blindsPow)*handFreq);
-    #else
-        const float64 totalFG = (1 - baseFraction - ((bigBlindFraction+smallBlindFraction)*blindsPow)*handFreq);
-    #endif
-#else
-    if( 1 < baseFraction + bigBlindFraction*handFreq )
-    {
-        return 0;
-    }else
-    {
-        const float64 blindsGain = (1 - baseFraction - bigBlindFraction*handFreq)*(1 - baseFraction - smallBlindFraction*handFreq);
+    const float64 avgBlinds = (bigBlind+smallBlind)*blindsPow;
+    FG.bankroll = table->ViewPlayer(playerID)->GetMoney();
+    FG.amountSacrifice = table->ViewPlayer(playerID)->GetBetSize() + potCommitted + extra + avgBlinds;
+    FG.opponents = playerCount - 1;
 
-        const float64 totalFG = pow(1-baseFraction,1-2*blindsPow)*pow(blindsGain,blindsPow);
-    }
-#endif
+    const float64 totalFG = 1 + betFraction(  FG.f(callBet())  );
+
     if( totalFG < 0 ) return 0;
     return totalFG;
 
-#else
-
-    return 1 - baseFraction;
-#endif
 }
 
 float64 ExpectedCallD::oppBet() const

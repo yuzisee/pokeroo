@@ -21,7 +21,7 @@
 //#define DEBUG_CALLPRED_FUNCTION
 
 #include "callPredictionFunctions.h"
-
+#include "callSituation.h"
 
 
 class ExactCallD : public virtual ExpectedCallD
@@ -50,8 +50,13 @@ class ExactCallD : public virtual ExpectedCallD
         float64 *noRaiseChanceD_A;
 
 
-        float64 facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible);
-        float64 facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 dpot, float64 w, float64 n, bool bCheckPossible);
+        float64 facedOdds_call_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 n);
+        float64 dfacedOdds_dbetSize_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 dpot, float64 w, float64 n);
+
+
+        float64 facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible);
+        float64 dfacedOdds_dpot_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 w, float64 opponents);
+
 
 		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet,float64 opponents);
         float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);

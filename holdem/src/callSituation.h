@@ -22,6 +22,7 @@
 #define HOLDEM_ArenaSituations
 
 #include "arena.h"
+#include "callPredictionFunctions.h"
 
 //#define DEBUG_EXFDEXF
 #define ASSUMEFOLDS
@@ -60,6 +61,7 @@ protected:
     const float64 potCommitted;
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
+    FoldGainModel FG;
     const float64 handRarity;
 #endif
 
@@ -90,7 +92,7 @@ public:
     virtual ~ExpectedCallD();
 
     virtual float64 forfeitChips() const;
-    virtual float64 foldGain(const float64 extra=0) const;
+    virtual float64 foldGain(const float64 extra=0);
     virtual float64 oppBet() const;
     virtual float64 alreadyBet() const;
     virtual float64 callBet() const;
