@@ -58,8 +58,6 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 class FoldGainModel : public virtual ScalarFunctionModel
 {
     protected:
-    float64 n;
-
     float64 lastAmountSacrifice;
     float64 lastOpponents;
     float64 lastBankroll;
@@ -70,6 +68,7 @@ class FoldGainModel : public virtual ScalarFunctionModel
     void query(const float64 betSize);
 
     public:
+    float64 n;
     float64 bankroll;
     float64 amountSacrifice;
     float64 opponents;

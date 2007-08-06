@@ -61,6 +61,12 @@ float64 ExpectedCallD::foldGain(const float64 extra)
 
 }
 
+float64 ExpectedCallD::foldWaitLength()
+{
+    foldGain(0);
+    return FG.n;
+}
+
 float64 ExpectedCallD::oppBet() const
 {
     return table->GetRoundBetsTotal();

@@ -93,6 +93,9 @@ public:
 
     virtual float64 forfeitChips() const;
     virtual float64 foldGain(const float64 extra=0);
+#ifdef ANTI_PRESSURE_FOLDGAIN
+    virtual float64 foldWaitLength();
+#endif
     virtual float64 oppBet() const;
     virtual float64 alreadyBet() const;
     virtual float64 callBet() const;

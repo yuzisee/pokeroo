@@ -174,6 +174,12 @@ const float64 HoldemFunctionModel::GetFoldGain() const
     return e->foldGain();
 }
 
+const float64 HoldemFunctionModel::GetFoldWaitLength() const
+{
+    return e->foldWaitLength();
+}
+
+
 float64 GainModel::g(float64 betSize)
 {
 

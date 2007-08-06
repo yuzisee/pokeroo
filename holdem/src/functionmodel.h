@@ -47,6 +47,7 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
     virtual float64 FindFoldBet(const float64);
 
     const float64 GetFoldGain() const;
+    const float64 GetFoldWaitLength() const;
 
     #ifdef DEBUG_GAIN
         void breakdown(float64 points, std::ostream& target, float64 start=0, float64 end=1)
