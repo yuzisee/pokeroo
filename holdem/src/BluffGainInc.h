@@ -61,9 +61,6 @@ last_x = betSize;
     float64 * potRaisedWin_A = new float64[arraySize];
     float64 * potRaisedWinD_A = new float64[arraySize];
 
-    ///If you decide to bet betSize, it doesn't matter how much you get raised, this is your new foldGain
-	const float64 oppRaisedFoldGain = e->foldGain(betSize - ea->alreadyBet()); //You would fold the additional (betSize - ea->alreadyBet() )
-
 
     float64 lastuptoRaisedChance = 0;
     float64 lastuptoRaisedChanceD = 0;
@@ -84,6 +81,7 @@ last_x = betSize;
         potRaisedWin_A[i] = g_raised(betSize,raiseAmount_A[i]);
         potRaisedWinD_A[i] = gd_raised(betSize,raiseAmount_A[i],potRaisedWin_A[i]);
 
+        const float64 oppRaisedFoldGain = e->foldGain(betSize - ea->alreadyBet(),raiseAmount_A[i]); //You would fold the additional (betSize - ea->alreadyBet() )
 
         if( potRaisedWin_A[i] < oppRaisedFoldGain )
         {

@@ -92,7 +92,8 @@ public:
     virtual ~ExpectedCallD();
 
     virtual float64 forfeitChips() const;
-    virtual float64 foldGain(const float64 extra=0);
+    virtual float64 foldGain();
+    virtual float64 foldGain(const float64 extra, const float64 facedBet);
 #ifdef ANTI_PRESSURE_FOLDGAIN
     virtual float64 foldWaitLength();
 #endif

@@ -611,12 +611,12 @@ float64 ImproveGainStrategy::MakeBet()
 
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
-	    const float64 oppRaisedFoldGain = myDeterredCall_left.foldGain(bestBet - myDeterredCall_right.alreadyBet());
 		int32 raiseStep = 0;
         float64 rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
         while( rAmount <= maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
+            const float64 oppRaisedFoldGain = myDeterredCall_left.foldGain(bestBet - myDeterredCall_right.alreadyBet(),rAmount);
             logFile << "OppRAISEChance";
             if( oppRaisedFoldGain > choicemodel.g_raised(bestBet,rAmount) )
             {
@@ -784,12 +784,13 @@ float64 DeterredGainStrategy::MakeBet()
 
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
-	    const float64 oppRaisedFoldGain = myDeterredCall.foldGain(bestBet - myDeterredCall.alreadyBet());
+
 		int32 raiseStep = 0;
         float64 rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
         while( rAmount <= maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
+            const float64 oppRaisedFoldGain = myDeterredCall.foldGain(bestBet - myDeterredCall.alreadyBet(),rAmount);
             logFile << "OppRAISEChance";
             if( oppRaisedFoldGain > ap_aggressive.g_raised(bestBet,rAmount) )
             ///ASSUMPTION: ap_aggressive is choicemodel!

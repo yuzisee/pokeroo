@@ -35,7 +35,12 @@ float64 ExpectedCallD::forfeitChips() const
     return ( alreadyBet() + stagnantPot() - table->ViewPlayer(playerID)->GetContribution() );
 }
 
-float64 ExpectedCallD::foldGain(const float64 extra)
+float64 ExpectedCallD::foldGain()
+{
+    return foldGain(0,callBet());
+}
+
+float64 ExpectedCallD::foldGain(const float64 extra, const float64 facedBet)
 {
     const float64 playerCount = table->GetNumberAtTable();
 
@@ -54,7 +59,7 @@ float64 ExpectedCallD::foldGain(const float64 extra)
     FG.amountSacrifice = table->ViewPlayer(playerID)->GetBetSize() + potCommitted + extra + avgBlinds;
     FG.opponents = playerCount - 1;
 
-    const float64 totalFG = 1 + betFraction(  FG.f(callBet())  );
+    const float64 totalFG = 1 + betFraction(  FG.f(facedBet)  );
 
     if( totalFG < 0 ) return 0;
     return totalFG;
@@ -63,7 +68,7 @@ float64 ExpectedCallD::foldGain(const float64 extra)
 
 float64 ExpectedCallD::foldWaitLength()
 {
-    foldGain(0);
+    foldGain();
     return FG.n;
 }
 
