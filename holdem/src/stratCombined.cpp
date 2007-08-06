@@ -82,9 +82,9 @@ void TrendStrategy::SeeCommunity(const Hand& h, const int8 n)
 
 #endif
 
-void MultiStrategy::SeeOppHand(const int8, const Hand&)
+void MultiStrategy::SeeOppHand(const int8 pID, const Hand& h)
 {
-    bHandShown = true;
+    if( pID == myPositionIndex ) bHandShown = true;
 }
 
 void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
@@ -122,6 +122,12 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
                 picks[currentStrategy].totalMoneyDelta -= avgBlind;
             }
 
+            if (bHandShown)
+            {//Revealed something
+                picks[currentStrategy].numHandsAboveBelow -= 1;
+            }
+
+
             if( nowMoney < prevMoney - ViewTable().GetChipDenom()/2 )
             {//Lost more than half a chip
                 picks[currentStrategy].nonZeroWinLose -= 1 + bGamble;
@@ -133,11 +139,11 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
                 {
                     picks[currentStrategy].nonZeroWinLose += (1 + bGamble)*(ViewTable().GetNumberAtTable()) - 1;
                     picks[currentStrategy].totalMoneyDelta += (nowMoney - prevMoney) - avgBlind;
-                }
 
-                if (!bHandShown)
-                {//Won a hand WITHOUT showing my hand
-                    picks[currentStrategy].numHandsAboveBelow += 1;
+                    if (!bHandShown)
+                    {//Won a hand WITHOUT showing my hand
+                        picks[currentStrategy].numHandsAboveBelow += 1;
+                    }
                 }
             }
         }
