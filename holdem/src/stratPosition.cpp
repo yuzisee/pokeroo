@@ -157,6 +157,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
     statrelation.wins = rankingA;
     statrelation.splits = rankingA3 - rankingA;
+    if( statrelation.splits < 0 ) statrelation.splits = 0;
     statrelation.loss = 1 - rankingA3;
     statrelation.genPCT();
 
@@ -172,6 +173,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
     statranking.wins = ranking;
     statranking.splits = ranking3 - ranking;
+    if( statranking.splits < 0 ) statranking.splits = 0;
     statranking.loss = 1 - ranking3;
     statranking.genPCT();
 
