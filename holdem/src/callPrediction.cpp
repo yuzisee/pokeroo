@@ -444,6 +444,11 @@ float64 ExactCallD::facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 
     const float64 power_minus_1 = (fold_utility+raiseto)/(bankroll-raiseto);//power = (B+FG)/(B-betSize); = 1 + (FG+betSize)/(B-betSize);
     const float64 base_minus_1 = (pot+raiseto)/(bankroll-raiseto);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
 
+    if( fold_utility + raiseto < 0 )
+    {//Folding is so pointless, you may as well play
+        return 0;
+    }
+
     const float64 fw = log1p( power_minus_1 ) / log1p( base_minus_1 );
 
     return pow ( fw, 1.0/opponents);
@@ -492,6 +497,11 @@ float64 ExactCallD::facedOdds_call_Geom(float64 bankroll, float64 pot, float64 a
     const float64 power_minus_1 = (FG.f(humanbet)+humanbet)/(bankroll-humanbet);//power = (B+FG)/(B-betSize); = 1 + (FG+betSize)/(B-betSize);
     const float64 base_minus_1 = (pot+humanbet)/(bankroll-humanbet);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
 
+    if( power_minus_1 < 0 )
+    { //then power < 1 and log(power) is negative, making fw negative
+        return 0; //folding would be pointless
+    }
+
     const float64 fw = log1p( power_minus_1 ) / log1p( base_minus_1 );
 
     return pow ( fw, 1.0/opponents);
@@ -536,6 +546,7 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
 
     const float64 fw = (  betSize  + FG.f(betSize) ) / (pot + betSize);
 
+    if( fw < 0 ) return 0; //Folding is SO pointless you are forced to call
 
 //    if( bRank )
 //    {
@@ -547,6 +558,8 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
 }
 float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet, float64 dpot, float64 w, float64 opponents)
 {
+    if( w <= 0 ) return 0;
+
     const float64 wN_1 = pow(w,opponents-1);
 
     float64 fw = wN_1 * w;
@@ -797,7 +810,7 @@ void ExactCallD::query(const float64 betSize)
                                     const float64 noraiseRankD = 0;
 
                                     GenerateRaiseChances(thisRaise,betSize,noraiseRank,noraiseRankD,withP,significance,peopleInHandUpper,nextNoRaise_A[i],nextNoRaiseD_A[i]);
-                                    nextNoRaise_A[i] *= oppBankRoll / thisRaise;
+                                    nextNoRaise_A[i] = 1 - (1 - nextNoRaise_A[i]) * oppBankRoll / thisRaise;
                                     nextNoRaiseD_A[i] *= oppBankRoll / thisRaise;
                                 }
 

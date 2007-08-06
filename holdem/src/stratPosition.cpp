@@ -532,6 +532,10 @@ float64 ImproveGainStrategy::MakeBet()
 
 
 #ifdef LOGPOSITION
+    if( bGamble == 0 ) logFile << " -  NORMAL  - " << endl;
+    else if( bGamble == 1 ) logFile << " -  TRAP  - " << endl;
+    else if( bGamble == 2 ) logFile << " -  ACTION  - " << endl;
+
     if( bGamble >= 1 )
     {
         #ifdef LOGPOSITION
@@ -756,13 +760,13 @@ float64 DeterredGainStrategy::MakeBet()
 //    const float64 z12 = hybridgain.f(60);
 //    const float64 a12 = hybridgain.f_raised(60,90);
 //    const float64 b12 = hybridgain.f_raised(60,150);
-*/
     if( betToCall > 100 )
     {
         const float64 p1 = myDeterredCall.pWin(630);
         const float64 z = 0;
     }
 
+*/
 
 
     const float64 bestBet = solveGainModel(&choicemodel);

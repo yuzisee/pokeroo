@@ -111,7 +111,18 @@ void FoldGainModel::query( const float64 betSize )
         n = n_above;
         lastf = gain_above;
     }
-    lastfd = waitLength.d_dbetSize( n );
+
+    const float64 concedeGain = -amountSacrifice;
+
+    if( concedeGain > lastf )
+    {
+        n = 0;
+        lastf = concedeGain;
+        lastfd = 0;
+    }else
+    {
+        lastfd = waitLength.d_dbetSize( n );
+    }
 
 }
 
