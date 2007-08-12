@@ -543,7 +543,7 @@ float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alread
     FG.amountSacrifice = alreadyBet + avgBlind;
     FG.bankroll = bankroll;
     FG.opponents = opponents;
-
+//if FG.f(betSize) > 0 it means the opponent is willing to fold
     const float64 fw = (  betSize  + FG.f(betSize) ) / (pot + betSize);
 
     if( fw < 0 ) return 0; //Folding is SO pointless you are forced to call
@@ -630,19 +630,27 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 
 void ExactCallD::GenerateRaiseChances(float64 raisebet, float64 raisedFrom, float64 noraiseRank_prescaled, float64 noraiseRankD_prescaled, const Player * withP, float64 sig, float64 liveOpp, float64 & out, float64 & outD)
 {
+    //Upperlimit defines the 100% React of the uReact/ActOrReact
         const float64 upperlimit = table->GetMaxShowdown();// RiskPrice();
         const float64 uReact = ActOrReact(callBet(),withP->GetBetSize(),upperlimit);
+    //Dist is the amount of the raise. A high dist with a low react should be discouraged
         const float64 dist = raisebet / table->GetMaxShowdown();
+    //In other words, too low of percentReact is the deterrent
         const float64 percentReact = (dist > 1) ? uReact : (1-(1-uReact)*dist);
+    //noraiseRank_prescaled is the needed win, so needed_pcw is the needed w^e
         const float64 needed_pcw = pow(noraiseRank_prescaled,1/sig);
 
-        const float64 extra_pcw = pow(noraiseRank_prescaled,1/sig-liveOpp);
-        float64 bestOpponent = e->strongestOpponent().pct;
+        float64 bestOpponent = e->strongestOpponent().pct; //What are my odds against the strongest opponent
         if( noraiseRank_prescaled < bestOpponent )
         {
             bestOpponent = noraiseRank_prescaled;
         }
-        float64 p_cw_draw = extra_pcw*pow(bestOpponent,liveOpp);
+    //p_cw_draw is your w^e assuming only the best opponents call you
+    //We use a sqrt, because if one person has the best hand, other people are less likely
+        const float64 extra_pcw = pow(noraiseRank_prescaled,1/sig-sqrt(liveOpp));
+    //... extra_pcw comes from the idea that if you have a strong hand, you have better worst-case odds
+        float64 p_cw_draw = extra_pcw*pow(bestOpponent,sqrt(liveOpp));
+
         //needed_pcw = f(noraiseRank) * percentReact + p_cw_draw * (1 - percentReact)
         //f(noraiseRank) = (needed_pcw - p_cw_draw * (1 - percentReact))  /  percentReact;
         //Note: percentReact can be zero if you are in the blind, since your lastbet == betToCall
@@ -670,8 +678,11 @@ void ExactCallD::GenerateRaiseChances(float64 raisebet, float64 raisedFrom, floa
         const float64 noraiseMean = 1 - e->pctWillCall( noraiseRank );
         const float64 noraiseMeanD = - e->pctWillCallD(  noraiseRank  )  * noraiseRankD;
 //Crappy raiseGain effect
-        float64 pushChips = raisedFrom - withP->GetContribution() - withP->GetBetSize() + table->GetPotSize();//stagnantPot();
-        pushChips = pushChips / (pushChips + withP->GetMoney());
+        const float64 othersContribution = raisedFrom - withP->GetContribution() - withP->GetBetSize() + table->GetPotSize();//stagnantPot();
+        const float64 pushChips = othersContribution / ( othersContribution + raisebet );
+//A high "act" is overagression, which causes people to fold
+        float64 actGain = sqrt((1-percentReact)*pushChips);
+        if( actGain > 1 ) actGain = 1;
 
         #ifdef NO_AUTO_RAISE
         if( noraiseMean > noraiseRank )
@@ -1030,10 +1041,13 @@ void ExactCallBluffD::query(const float64 betSize)
     #ifdef CALL_ALGB_PCT
                     float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
                     oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
-
+                    //ea-> is if they know your hand
                     const float64 eaFold = (1 - ea->pctWillCall( w ))*(1 - oppCommitted);
+                    //e-> is if they don't know your hand
                     const float64 meanFold = 1 - e->pctWillCall( w );
+                    //w is if they don't know your hand
                     const float64 rankFold = w;
+                    //handRarity is based on if they know your hand
                     const float64 eaRkFold = 1-handRarity;
 
 //(nLinear <= 0 && wn > 1) ? 0 :
@@ -1045,9 +1059,9 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 eaRkFoldPartial = 0;
 
                     ///topTwoOfThree is on a player-by-player basis
-                    //nextFoldPartial = bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,eaFoldPartial,meanFoldPartial,rankFoldPartial,eaRkFoldPartial,nextFold);
-                    nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
-                    nextFoldPartial=(eaFoldPartial+meanFoldPartial+rankFoldPartial+eaRkFoldPartial)/4;
+                    nextFoldPartial = bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,eaFoldPartial,meanFoldPartial,rankFoldPartial,eaRkFoldPartial,nextFold);
+                    //nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
+                    //nextFoldPartial=(eaFoldPartial+meanFoldPartial+rankFoldPartial+eaRkFoldPartial)/4;
 
                     //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
                     //nextFoldPartial = (eaFold*eaFoldPartial+rankFold*rankFoldPartial)*sqrt(2)/nextFold ;
@@ -1132,8 +1146,8 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 eaRkFold = 1-handRarity;
 
                     ///topTwoOfThree is on a player-by-player basis
-//                    bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,0,0,0,0,nextFold);
-                    nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
+                    bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,0,0,0,0,nextFold);
+//                    nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
 
 
                     //nextFold = (meanFold+rankFold+eaFold)/3;

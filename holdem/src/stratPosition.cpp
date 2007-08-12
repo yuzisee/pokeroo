@@ -715,9 +715,13 @@ float64 DeterredGainStrategy::MakeBet()
 #ifdef LOGPOSITION
     if( bGamble == 0 )
     {
+        logFile << " -  Conservative  - " << endl;
         logFile << "uncertainty      " << uncertainty << endl;
         logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
         logFile << "V Factor         " << volatilityFactor << endl;
+    }else
+    {
+        logFile << " -  Danger  - " << endl;
     }
     logFile << "BetToCall " << certainty << ", pct " << statmean.pct << " ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << endl;
     logFile << "impliedFactor... " << futureFold << endl;
