@@ -38,11 +38,14 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
     public:
     float64 amountSacrifice;
-    float64 betSize;
     float64 bankroll;
     float64 opponents;
+    float64 betSize;
 
     FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0), amountSacrifice(0), bankroll(0), opponents(1){};
+    FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0), amountSacrifice(o.amountSacrifice), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize){};
+
+    const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o );
 
     virtual ~FoldWaitLengthModel();
 

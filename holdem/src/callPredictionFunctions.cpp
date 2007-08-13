@@ -33,9 +33,19 @@ FoldGainModel::~FoldGainModel(){};
 
 FoldWaitLengthModel::~FoldWaitLengthModel(){};
 
+
 #ifdef OLD_PREDICTION_ALGORITHM
 ExactCallFunctionModel::~ExactCallFunctionModel(){};
 #endif
+
+const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengthModel & o )
+{
+    this->amountSacrifice = o.amountSacrifice;
+    this->bankroll = o.bankroll;
+    this->betSize = o.betSize;
+    this->opponents = o.opponents;
+    return *this;
+}
 
 float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 {
