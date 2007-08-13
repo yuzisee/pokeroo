@@ -22,6 +22,8 @@
 #include <math.h>
 
 
+//The idea behind eaFold, meanFold, rankFold, eaRkFold is that opponents have different reasons for folding
+
 
 ///In the end, we had to stick with Algb for foldgain. (At low blinds, oppfold is guaranteed in Geom)
 //#define GEOM_FOLD_PCT
@@ -1337,11 +1339,31 @@ float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit)
     return actOrReact;
 }
 
-float64 ExactCallD::RiskPrice()
+float64 ExactCallD::RiskPrice(const float64 w_worst)
 {
-    const float64 myBet = 0;
-    const float64 averageStack = table->GetAllChips() / table->GetNumberAtTable();
-    float64 riskprice = sqrt(averageStack*( table->GetPotSize() - myBet ));
-    return riskprice;
+    const float64 oppWin = (1-w_worst);
+    const float64 N = table->GetNumberInHand()-1; //For the riskprice, N is based on worst case so is not NumberAtTable
+    //const float64 pcw = pow(oppWin,N);
+
+//pcw = (1-oppWin) ^ N = ( 1 - 1 over n ) ^ N
+//1 - oppWin = 1 / n
+    const float64 n = N / (1 - oppWin);
+
+// ( 1 over b )  = 4N/C * left ( 1 - 1 over n right)^(N-1) times left[ {1 over n^2} right]
+// ( 1 over b )  = 4N/(C*(n^2)) * ( w_worst )^(N-1)
+// b  = (C*(n^2))/4N / ( w_worst )^(N-1)
+
+    const float64 estSacrifice = (table->GetPotSize() - callBet())/N;
+    const float64 riskprice = estSacrifice * n * n / 4 / N / pow( oppWin, N-1 );
+
+    //const float64 averageStack = table->GetAllChips() / table->GetNumberAtTable();
+    const float64 maxShowdown = table->GetMaxShowdown();
+    if( maxShowdown < riskprice )
+    {
+        return maxShowdown;
+    }else
+    {
+        return riskprice;
+    }
 }
 

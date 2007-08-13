@@ -95,7 +95,7 @@ class ExactCallD : public virtual ExpectedCallD
             virtual void SetImpliedFactor(const float64 bonus);
 
             float64 ActOrReact(float64 callb, float64 lastbet,float64 limit);
-            float64 RiskPrice();
+            float64 RiskPrice(const float64 w_worst);
 }
 ;
 

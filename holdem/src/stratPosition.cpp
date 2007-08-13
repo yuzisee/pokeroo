@@ -30,7 +30,11 @@
 //#define ACTREACTUSESIN riskprice
 #define ACTREACTUSESIN maxShowdown
 
-#define ACTREACTUSES_RA riskprice
+//Okay, so riskprice is how you control attitude, e.g. geom to algb, or trap_left to trap_right
+//but ACTREACTUSES is how you control fear.
+
+//#define ACTREACTUSES_RA maxShowdown
+#define ACTREACTUSES_RA (riskprice)
 #define ACTREACTUSES_HD maxShowdown
 #define DELAYENEMYOPP 0
 //#define DELAYENEMYOPP riskprice
@@ -434,7 +438,7 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 targetWorsenBy = detailPCT.avgDev / 2 / (1 - improvePure);
     const float64 impliedOddsGain = (statmean.pct + detailPCT.avgDev / 2) / statmean.pct;
     //const float64 oppInsuranceSmallBet = (1 - statmean.pct + targetWorsenBy) / (1 - statmean.pct);
-    const float64 oppInsuranceBigBet = improvePure;//(improveMod>0)?(improveMod/2):0;
+    const float64 oppInsuranceBigBet = (improveMod>0)?(improveMod/2):0;
 
 /*
     const float64 minWin = pow(statworse.pct,expectedVS);
@@ -465,7 +469,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 
 #ifdef RISKPRICE
-    float64 riskprice = myDeterredCall.RiskPrice();
+    float64 riskprice = myDeterredCall.RiskPrice(statworse.pct);
 #else
     float64 riskprice = maxShowdown;
 #endif
@@ -492,6 +496,7 @@ float64 ImproveGainStrategy::MakeBet()
         const float64 enemyChances = 0.5;//(ViewTable().GetNumberInHand() - 1.0) / ViewTable().GetNumberInHand() / 2;
         left = statversus;
         #ifndef DEBUG_TRAP_AS_NORMAL
+        //targetWorsenBy is here
         left.wins -= detailPCT.avgDev*enemyChances;
         left.loss += detailPCT.avgDev*enemyChances;
         left.pct -= detailPCT.avgDev*enemyChances;
@@ -545,7 +550,7 @@ float64 ImproveGainStrategy::MakeBet()
             logFile << " " << improvePure <<" improvePure " << endl;
             logFile << "Likely Worsen By "<< targetWorsenBy << endl; //TRAPBOT, ACTIONBOT
             if( bGamble >= 2 ) logFile << "impliedOddsGain would be " << impliedOddsGain << endl; //ACTIONBOT
-            logFile << "opp Likely to fold " << oppInsuranceBigBet << endl; //TRAPBOT, ACTIONBOT
+            logFile << "opp Likely to fold " << oppInsuranceBigBet << " (to a big bet) is the same as improveMod/2 if positive" << endl; //TRAPBOT, ACTIONBOT
             if( bGamble >= 2 ) logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << endl; //ACTIONBOT
         #endif
     }
@@ -557,15 +562,17 @@ float64 ImproveGainStrategy::MakeBet()
 	AutoScalingFunction hybridgain_aggressive(&geomModel_fear,&algbModel_fear,0.0,riskprice,left.pct*base_right.pct,&myDeterredCall_right);
 
 
-
-#ifdef DEBUG_TRAP_AS_NORMAL
-    StateModel choicemodel( &myDeterredCall_left, &hybridgainDeterred_aggressive );
-    const float64 bestBet = solveGainModel(&choicemodel) ;
-#else
-
 ///From regular to fear (x2)
 	AutoScalingFunction ap(&hybridgainDeterred_aggressive,&hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES_RA,&myDeterredCall_left);
 	StateModel choicemodel( &myDeterredCall_left, &ap );
+#ifdef DEBUG_TRAP_AS_NORMAL
+#ifdef LOGPOSITION
+logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
+#endif
+    //StateModel choicemodel( &myDeterredCall_left, &hybridgainDeterred_aggressive );
+    const float64 bestBet = solveGainModel(&choicemodel) ;
+    StateModel & rolemodel = choicemodel;
+#else
 	AutoScalingFunction ap_right(&hybridgainDeterred_aggressive,&hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES_RA,&myDeterredCall_right);
     StateModel choicemodel_right( &myDeterredCall_right, &ap_right );
 
@@ -578,18 +585,22 @@ float64 ImproveGainStrategy::MakeBet()
 
 //DEBUG //
 /*
-    if( betToCall >= 799 )
+    if( bGamble == 2 )
     {
-        const float64 b21 = geomModel_fear.f(800);
-        const float64 b22 = algbModel_fear.f(800);
-        const float64 b11 = geomModel.f(800);
-        const float64 b12 = algbModel.f(800);
+        const float64 b21 = geomModel_fear.f(60);
+        const float64 b22 = algbModel_fear.f(60);
+        const float64 b11 = geomModel.f(60);
+        const float64 b12 = algbModel.f(60);
+        const float64 b01 = geomModel.f(30);
+        const float64 b02 = algbModel.f(30);
 
-        const float64 b1 = hybridgainDeterred_aggressive.f(800);
-        const float64 b2 = hybridgain_aggressive.f(800);
 
-        const float64 a1 = ap.f(800);
-        const float64 a2 = ap_right.f(800);
+        const float64 b1 = hybridgainDeterred_aggressive.f(30);
+        const float64 b2 = hybridgain_aggressive.f(60);
+
+        const float64 a0 = ap.f(30);
+        const float64 a1 = ap.f(60);
+        const float64 a2 = ap_right.f(60);
 
         const float64 z = 0;
     }
@@ -674,7 +685,7 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 #ifdef RISKPRICE
-    float64 riskprice = myDeterredCall.RiskPrice();
+    float64 riskprice = myDeterredCall.RiskPrice(statworse.pct);
 #else
     float64 riskprice = maxShowdown;
 #endif
