@@ -177,6 +177,7 @@ public:
 	vector<StatResult> cumulation;
 	float64 pctWillCall_tiefactor(const float64, const float64) const;
 	virtual float64 pctWillCall(const float64) const;
+	virtual float64 pctWillCall_smoothed(const float64) const;
 	virtual float64 reverseLookup(const float64) const;
 	virtual StatResult strongestOpponent() const;
 	virtual StatResult weakestOpponent() const;

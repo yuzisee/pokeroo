@@ -1044,7 +1044,7 @@ void ExactCallBluffD::query(const float64 betSize)
                     float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
                     oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
                     //ea-> is if they know your hand
-                    const float64 eaFold = (1 - ea->pctWillCall( w ))*(1 - oppCommitted);
+                    const float64 eaFold = (1 - ea->pctWillCall_smoothed( w ))*(1 - oppCommitted);
                     //e-> is if they don't know your hand
                     const float64 meanFold = 1 - e->pctWillCall( w );
                     //w is if they don't know your hand
@@ -1142,7 +1142,7 @@ void ExactCallBluffD::query(const float64 betSize)
     #ifdef CALL_ALGB_PCT
                     float64 oppCommitted = table->ViewPlayer(pIndex)->GetContribution();
                     oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
-                    const float64 eaFold = (1 - ea->pctWillCall( w ))*(1 - oppCommitted);
+                    const float64 eaFold = (1 - ea->pctWillCall_smoothed( w ))*(1 - oppCommitted);
                     const float64 meanFold = 1 - e->pctWillCall( w );
                     const float64 rankFold = w;
                     const float64 eaRkFold = 1-handRarity;

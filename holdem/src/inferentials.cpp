@@ -155,54 +155,53 @@ float64 CallCumulation::reverseLookup(const float64 rank) const
 float64 CallCumulation::pctWillCall_tiefactor(const float64 oddsFaced, const float64 tiefactor) const
 {
 
-/*    if( (oddsFaced - .63 < 0.0001 && oddsFaced - .63 > -0.0001) || (oddsFaced - .48 < 0.0001 && oddsFaced - .48 > -0.0001) )
-    {
-        searchGap(oddsFaced);
-    }*/
 
     const size_t maxsize = cumulation.size();
 	const size_t guess = searchGap(oddsFaced);
 	if( guess  == maxsize +1 ) return 0;
 	if( guess == maxsize ) return 1;
 	float64 curPCT = cumulation[guess].repeated;
-	if( curPCT == oddsFaced )
+	if( cumulation[guess].pct == oddsFaced )
 	{
 		if( guess == 0 ) return 0;
 		return cumulation[guess].repeated * tiefactor + cumulation[guess-1].repeated * (1 - tiefactor);
 	}
-	#ifdef SMOOTHED_CALLCUMULATION
-		if( guess == maxsize -1 || guess == 0 )
-        {
-            return curPCT;
-        }
 
-/*        if( (oddsFaced - .63 < 0.0001 && oddsFaced - .63 > -0.0001) || (oddsFaced - .48 < 0.0001 && oddsFaced - .48 > -0.0001) )
-        {
-         const StatResult& sn1 = cumulation[guess-1];
-         const StatResult& s0 = cumulation[guess];
-         const StatResult& s2 = cumulation[guess+1];
-         float64 s = (
-                cumulation[guess].repeated * (oddsFaced - cumulation[guess+1].pct)
-                +
-                cumulation[guess+1].repeated * (cumulation[guess].pct - oddsFaced)
-              )
-              / (cumulation[guess].pct - cumulation[guess+1].pct)
-                ;
-         float64 h = (cumulation[guess].pct - cumulation[guess+1].pct);
-        }
-*/
-        curPCT =
-            (
-                cumulation[guess].repeated * (oddsFaced - cumulation[guess+1].pct)
-                +
-                cumulation[guess+1].repeated * (cumulation[guess].pct - oddsFaced)
-            )
-            / (cumulation[guess].pct - cumulation[guess+1].pct)
-                ;
-	#endif
 	return curPCT;
 
 }
+
+
+float64 CallCumulation::pctWillCall_smoothed(const float64 oddsFaced) const
+{
+
+
+    const size_t maxsize = cumulation.size();
+	const size_t guess = searchGap(oddsFaced);
+	if( guess  == maxsize +1 ) return 0;
+	if( guess == maxsize ) return 1;
+	float64 curPCT = cumulation[guess].repeated;
+	const float64 curValue = cumulation[guess].pct;
+
+    if( guess == maxsize -1 )
+    {
+        return curPCT;
+    }
+
+        curPCT =
+            (
+                curPCT * (oddsFaced - cumulation[guess+1].pct)
+                +
+                cumulation[guess+1].repeated * (curValue - oddsFaced)
+            )
+            / (curValue - cumulation[guess+1].pct)
+                ;
+
+
+	return curPCT;
+
+}
+
 
 float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
 {
