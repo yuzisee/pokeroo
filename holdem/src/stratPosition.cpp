@@ -584,9 +584,10 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 
 
 //DEBUG //
-/*
-    if( bGamble == 2 )
+  /*
+    if( bGamble == 0 )
     {
+
         const float64 b21 = geomModel_fear.f(60);
         const float64 b22 = algbModel_fear.f(60);
         const float64 b11 = geomModel.f(60);
@@ -602,6 +603,7 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
         const float64 a1 = ap.f(60);
         const float64 a2 = ap_right.f(60);
 
+        const float64 theyfold = myDeterredCall_left.pWin( 195 );
         const float64 z = 0;
     }
 */

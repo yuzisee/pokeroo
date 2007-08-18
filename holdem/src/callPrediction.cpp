@@ -1342,18 +1342,15 @@ float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit)
 float64 ExactCallD::RiskPrice(const float64 w_worst)
 {
     const float64 Ne = table->GetNumberInHand()-1;
-//    const float64 N = table->GetNumberAtTable()-1;
+    const float64 N = table->GetNumberAtTable()-1;
 
     const float64 n = RAREST_HAND_CHANCE / Ne;
-    const float64 estSacrifice = (table->GetPotSize())/Ne;
+    const float64 estSacrifice = (table->GetPotSize())/N;
+    //Actually, is the sum of (table->GetPotSize())/N + (table->GetPotSize())/(N-1)  + (table->GetPotSize())/(N-2) + ...
+    // So we would really divide Ne by two here ...
 
-// ( 1 over b )  = 4N/C * left ( 1 - 1 over n right)^(N-1) times left[ {1 over n^2} right]
-// ( 1 over b )  = 4N/(C*(n^2)) * ( w_worst )^(N-1)
-// b  = (C*(n^2))/4N / ( w_worst )^(N-1)
-
-//    const float64 riskprice = estSacrifice * n * n / 4 / N / pow( 1 - 1/n, N-1 );
-
-    const float64 riskprice = - estSacrifice*n / (2*pow(w_worst,Ne)-1);
+    //... but then estSacrifice is expected to take (n-1)/2 hands at the median, so that cancels out the factor of 2
+    const float64 riskprice = - estSacrifice*(n-1) / (2*pow(w_worst,Ne)-1);
 
     //const float64 averageStack = table->GetAllChips() / table->GetNumberAtTable();
     const float64 maxShowdown = table->GetMaxShowdown();

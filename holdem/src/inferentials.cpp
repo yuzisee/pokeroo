@@ -23,7 +23,6 @@
 
 //#include <iostream>
 
-//#define SMOOTHED_CALLCUMULATION
 #define SMOOTHED_CALLCUMULATION_D
 
 //const float64 CallCumulation::tiefactor = DEFAULT_TIE_SCALE_FACTOR;

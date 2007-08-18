@@ -49,14 +49,14 @@ const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengt
 
 float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 {
-    return (2*pow(1.0-1.0/n,opponents)) - 1;
+    return (2*pow(1.0-1.0/(n),opponents)) - 1;
 }
 
 //Maximizing this function gives you the best length that you want to wait for a fold for
 float64 FoldWaitLengthModel::f( const float64 n )
 {
     const float64 PW = d_dbetSize(n);
-    const float64 remainingbet = ( bankroll - n*amountSacrifice  );
+    const float64 remainingbet = ( bankroll - (n-1)*amountSacrifice  );
     float64 playbet = (remainingbet < betSize ) ? remainingbet : betSize;
 
     if( playbet < 0 )
@@ -64,7 +64,7 @@ float64 FoldWaitLengthModel::f( const float64 n )
         playbet = 0;
     }
 
-    return playbet*PW - n*amountSacrifice;
+    return playbet*PW - (n-1)*amountSacrifice/2;
 }
 
 float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
@@ -79,11 +79,11 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
     {
         const float64 dRemainingbet = -amountSacrifice;
 
-        //d{  remainingbet*PW - n*amountSacrifice  }/dn
-        return (dRemainingbet*PW + remainingbet*dPW_dn - amountSacrifice);
+        //d{  remainingbet*PW - n*amountSacrifice/2  }/dn
+        return (dRemainingbet*PW + remainingbet*dPW_dn - amountSacrifice/2);
 
     }else{
-        return (betSize*dPW_dn - amountSacrifice);
+        return (betSize*dPW_dn - amountSacrifice/2);
     }
 }
 
