@@ -25,10 +25,8 @@
 #undef OLD_PREDICTION_ALGORITHM
 
 #include "functionbase.h"
+#include "inferentials.h"
 
-#ifdef OLD_PREDICTION_ALGORITHM
-#include "callSituation.h"
-#endif
 
 
 
@@ -36,22 +34,38 @@
 
 class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
+    protected:
+    const float64 dRemainingBet_dn() const;
+    const float64 grossSacrifice(const float64 n) const;
+    const float64 rarity() const;
+    const float64 lookup(const float64 x) const;
+    const float64 dlookup(const float64 x) const;
     public:
+
+
+
+    const CallCumulationD (* meanConv); //Set to zero if using RANK
+    float64 w;
     float64 amountSacrifice;
     float64 bankroll;
     float64 opponents;
     float64 betSize;
 
-    FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0), amountSacrifice(0), bankroll(0), opponents(1){};
-    FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0), amountSacrifice(o.amountSacrifice), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize){};
+    FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0), meanConv(0), w(0), amountSacrifice(0), bankroll(0), opponents(1){};
+    FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0), w(o.w), amountSacrifice(o.amountSacrifice), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize){};
 
     const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o );
+    const bool operator== ( const FoldWaitLengthModel & o ) const;
 
     virtual ~FoldWaitLengthModel();
 
     virtual float64 f(const float64);
     virtual float64 fd(const float64, const float64);
     virtual float64 d_dbetSize( const float64 n );
+    virtual float64 d_dw( const float64 n );
+    virtual float64 d_dC( const float64 n );
+
+    virtual float64 FindBestLength();
 
 }
 ;
@@ -61,108 +75,100 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 class FoldGainModel : public virtual ScalarFunctionModel
 {
     protected:
-    float64 lastAmountSacrifice;
-    float64 lastOpponents;
-    float64 lastBankroll;
-    float64 lastBetSize;
+    FoldWaitLengthModel lastWaitLength;
+    float64 last_dw_dbet;
     float64 lastf;
     float64 lastfd;
+    float64 lastFA, lastFB,lastFC;
 
     void query(const float64 betSize);
 
     public:
     float64 n;
-    float64 bankroll;
-    float64 amountSacrifice;
-    float64 opponents;
+    float64 dw_dbet;
+
+
 
     FoldWaitLengthModel waitLength;
 
-    FoldGainModel() : ScalarFunctionModel(1.0/3.0), lastAmountSacrifice(-1), lastOpponents(0), lastBankroll(-1), lastBetSize(-1){};
+    FoldGainModel() : ScalarFunctionModel(1.0/3.0), last_dw_dbet(0){};
 
     virtual ~FoldGainModel();
 
     virtual float64 f(const float64 betSize);
     virtual float64 fd(const float64 betSize, const float64 gain);
+    virtual float64 F_a(const float64 betSize);
+    virtual float64 F_b(const float64 betSize);
+    virtual float64 dF_dAmountSacrifice(const float64 betSize);
 
 
 }
 ;
 
-#ifdef OLD_PREDICTION_ALGORITHM
-
-//For calculating geometric betting expectation
-class ExactCallFunctionModel : public virtual ScalarFunctionModel
+class FacedOddsCallGeom : public virtual ScalarFunctionModel
 {
     protected:
-
-        const CallCumulationD* e;
-
+    float64 lastW;
+    float64 lastF;
+    float64 lastFD;
+    void query( const float64 w );
     public:
-
-        float64 Bankroll;
-
-        float64 n;
-
-        float64 pot;
-
-        float64 alreadyBet;
-        float64 bet;
-
-        float64 avgBlind;
-
-        bool bOppCheck;
-
-        ExactCallFunctionModel(float64 step, const CallCumulationD* e) : ScalarFunctionModel(step), e(e){};
-
-        virtual ~ExactCallFunctionModel();
-
-        virtual float64 f(const float64);
-        virtual float64 fd(const float64, const float64);
+    float64 B;
+    float64 pot;
+    float64 alreadyBet;
+    float64 outsidebet;
+    float64 opponents;
 
 
-    #ifdef DEBUG_CALLPRED_FUNCTION
-        void breakdown(float64 points, std::ostream& target, float64 start=0, float64 end=1)
-        {
-            target.precision(17);
-
-            float64 dist;
-            if( points > 0 ) dist = (end-start)/points;
-
-
-            target << "w,p(w),dp/dw,avgBlind/fNRank" << std::endl;
-            if( points > 0 && dist > 0 )
-            {
-                for( float64 i=start;i<=end;i+=dist)
-                {
-
-                    const float64 y = f(i);
-					const float64 frank = e->pctWillCall(1 - i);
-					const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
-
-
-
-                    target << i << "," << y << "," << fd(i,y) << "," << y - avgBlind/fNRank << std::endl;
-
-                }
-            }else
-            {
-				const float64 frank = e->pctWillCall(1 - end);
-				const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
-
-
-                target << end << "," << f(end) << "," << fd(end,f(end)) << "," << f(end) - avgBlind/fNRank << std::endl;
-            }
-
-            target.precision(6);
-
-
-        }
-    #endif
-
+    FoldGainModel FG;
+    FacedOddsCallGeom() : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1) {}
+    virtual float64 f(const float64 w);
+    virtual float64 fd(const float64 w, const float64 U);
 }
 ;
-#endif //OLD_PREDICTION_ALGORITHM
+
+
+class FacedOddsAlgb : public virtual ScalarFunctionModel
+{
+    protected:
+    float64 lastW;
+    float64 lastF;
+    float64 lastFD;
+    void query( const float64 w );
+    public:
+    float64 pot;
+    float64 alreadyBet;
+    float64 betSize;
+
+
+    FoldGainModel FG;
+    FacedOddsAlgb() : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1) {}
+    virtual float64 f(const float64 w);
+    virtual float64 fd(const float64 w, const float64 U);
+}
+;
+
+
+class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
+{
+    protected:
+    float64 lastW;
+    float64 lastF;
+    float64 lastFD;
+    void query( const float64 w );
+    public:
+    float64 pot;
+    float64 raiseTo;
+    float64 fold_bet;
+    float64 riskLoss;
+    bool bCheckPossible;
+
+    FoldGainModel FG;
+    FacedOddsRaiseGeom() : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1) {}
+    virtual float64 f(const float64 w);
+    virtual float64 fd(const float64 w, const float64 U);
+}
+;
 
 #endif
 

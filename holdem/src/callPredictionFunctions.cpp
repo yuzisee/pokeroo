@@ -44,19 +44,78 @@ const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengt
     this->bankroll = o.bankroll;
     this->betSize = o.betSize;
     this->opponents = o.opponents;
+    this->w = o.w;
+    this->meanConv = o.meanConv;
     return *this;
+}
+
+const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) const
+{
+    return (
+        (o.amountSacrifice == amountSacrifice)
+        && (o.bankroll == bankroll)
+        && (o.opponents == opponents)
+        && (o.betSize == betSize)
+        && (o.w == w)
+        && (o.meanConv == meanConv)
+    );
 }
 
 float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 {
-    return (2*pow(1.0-1.0/(n),opponents)) - 1;
+    return (2*pow(lookup(1.0-1.0/(n)),opponents)) - 1;
+}
+
+
+float64 FoldWaitLengthModel::d_dw( const float64 n )
+{
+    if( meanConv == 0 ) return (n)*amountSacrifice/2;
+    return -(n)*amountSacrifice/2 * meanConv->pctWillCallD( w );
+}
+
+
+float64 FoldWaitLengthModel::d_dC( const float64 n )
+{
+    return -(n*rarity()-1)/2;
+}
+
+
+const float64 FoldWaitLengthModel::dRemainingBet_dn( ) const
+{
+    return -amountSacrifice*rarity();
+}
+
+
+const float64 FoldWaitLengthModel::grossSacrifice( const float64 n ) const
+{
+    return -(n*rarity()-1)*amountSacrifice;
+}
+
+
+const float64 FoldWaitLengthModel::rarity( ) const
+{
+    if( w >= 1/RAREST_HAND_CHANCE ) return 1/RAREST_HAND_CHANCE;
+    if( meanConv == 0 ) return 1-w;
+    return meanConv->pctWillCall(w);
+}
+
+const float64 FoldWaitLengthModel::lookup( const float64 rank ) const
+{
+    if( meanConv == 0 ) return rank;
+    return meanConv->reverseLookup(rank);
+}
+
+const float64 FoldWaitLengthModel::dlookup( const float64 rank ) const
+{
+    if( meanConv == 0 ) return 1;
+    return meanConv->inverseD(rank);
 }
 
 //Maximizing this function gives you the best length that you want to wait for a fold for
 float64 FoldWaitLengthModel::f( const float64 n )
 {
     const float64 PW = d_dbetSize(n);
-    const float64 remainingbet = ( bankroll - (n-1)*amountSacrifice  );
+    const float64 remainingbet = ( bankroll - grossSacrifice(n)  );
     float64 playbet = (remainingbet < betSize ) ? remainingbet : betSize;
 
     if( playbet < 0 )
@@ -64,49 +123,47 @@ float64 FoldWaitLengthModel::f( const float64 n )
         playbet = 0;
     }
 
-    return playbet*PW - (n-1)*amountSacrifice/2;
+    return playbet*PW - grossSacrifice(n)/2;
 }
 
 float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
 {
     const float64 PW = d_dbetSize(n);
-    const float64 dPW_dn = 2*pow(1.0-1.0/n,opponents-1)*opponents/n/n;
-    const float64 remainingbet = ( bankroll - n*amountSacrifice  );
+    const float64 dPW_dn = 2*pow(lookup(1.0-1.0/n),opponents-1)*opponents/n/n*dlookup(1.0-1.0/n);
+    const float64 remainingbet = ( bankroll - grossSacrifice(n)  );
     if(remainingbet < 0)
     {
         return 0;
     }else if(remainingbet < betSize )
     {
-        const float64 dRemainingbet = -amountSacrifice;
+        const float64 dRemainingbet = dRemainingBet_dn();
 
         //d{  remainingbet*PW - n*amountSacrifice/2  }/dn
-        return (dRemainingbet*PW + remainingbet*dPW_dn - amountSacrifice/2);
+        return (dRemainingbet*PW + remainingbet*dPW_dn - grossSacrifice(n)/2);
 
     }else{
-        return (betSize*dPW_dn - amountSacrifice/2);
+        return (betSize*dPW_dn - grossSacrifice(n)/2);
     }
 }
 
+
+float64 FoldWaitLengthModel::FindBestLength()
+{
+    return FindMax(1/rarity(), ceil(bankroll / amountSacrifice / rarity()) + 1);
+}
 
 
 
 void FoldGainModel::query( const float64 betSize )
 {
-    if( lastBankroll == bankroll && lastAmountSacrifice == amountSacrifice && lastOpponents == opponents && lastBetSize == betSize )
+    if( last_dw_dbet == dw_dbet && lastWaitLength == waitLength)
     {
         return;
     }
-    lastBankroll = bankroll;
-    lastBetSize = betSize;
-    lastOpponents = opponents;
-    lastAmountSacrifice = amountSacrifice;
+    last_dw_dbet = dw_dbet;
+    lastWaitLength = waitLength;
 
-    waitLength.amountSacrifice = amountSacrifice;
-    waitLength.opponents = opponents;
-    waitLength.betSize = betSize;
-    waitLength.bankroll = bankroll;
-
-    n = waitLength.FindMax(1, ceil(bankroll / amountSacrifice) + 1);
+    n = waitLength.FindBestLength();
 
     const float64 n_below = floor(n);
     const float64 n_above = ceil(n);
@@ -122,19 +179,28 @@ void FoldGainModel::query( const float64 betSize )
         lastf = gain_above;
     }
 
-    const float64 concedeGain = -amountSacrifice;
+    const float64 concedeGain = -waitLength.amountSacrifice;
 
     if( concedeGain > lastf )
     {
         n = 0;
         lastf = concedeGain;
-        lastfd = 0;
+        lastFA = 0;
+        lastFB = 0;
+        lastFC = 0;
     }else
     {
-        lastfd = waitLength.d_dbetSize( n );
+        lastFA = waitLength.d_dw( n );
+        lastFB = waitLength.d_dbetSize( n );
+        lastFC = waitLength.d_dC( n );
     }
+    lastfd = lastFA * dw_dbet + lastFB ;
 
 }
+
+float64 FoldGainModel::F_a( const float64 betSize ) {   query(betSize);return lastFA;   }
+float64 FoldGainModel::F_b( const float64 betSize ) {   query(betSize);return lastFB;   }
+float64 FoldGainModel::dF_dAmountSacrifice( const float64 betSize) {    query(betSize);return lastFC;   }
 
 float64 FoldGainModel::f( const float64 betSize )
 {
@@ -149,57 +215,99 @@ float64 FoldGainModel::fd( const float64 betSize, const float64 y )
     return lastfd;
 }
 
-
-#ifdef OLD_PREDICTION_ALGORITHM
-//1. If Geom all-in, return based on alreadyBet?
-//2. If k is stretched larger than B because of wGuess, so that w would be negative? Return w=0;
-//3. Is bankroll supposed to be passed in as (oppBankRoll - alreadyBet) or not? (Is betSize passed in as oppBetMake or not?)
-//Is Algb different than Geom for point #3?
-float64 ExactCallFunctionModel::f( const float64 w )
+void FacedOddsCallGeom::query( const float64 w )
 {
-    const float64 fw = pow(w,n);
+    if( lastW == w ) return;
+    lastW = w;
 
-	const float64 frank = e->pctWillCall(1 - w);
-    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
-    //fNRank == 0 and frank == 1? That means if you had this w pct, you would have the nuts or better.
-    //const float64 potwin = bOppCheck ? ( 0 ) : (pot);
+    FG.waitLength.w = w;
 
-    const float64 gainFactor = pow( Bankroll+pot , fw ) * pow( Bankroll-bet , 1-fw ) - Bankroll;
+    const float64 fw = pow(w,FG.waitLength.opponents);
+    const float64 U = pow(B+pot,fw)*pow(B-outsidebet,1-fw);
 
-    const float64 stackFactor = alreadyBet + avgBlind / fNRank;
+    lastF = U - 1 - FG.f(outsidebet);
 
-    if( bOppCheck )
+    const float64 dfw = FG.waitLength.opponents*pow(w,FG.waitLength.opponents-1);
+    const float64 dU_dw = dfw*log1p((pot+outsidebet)/(B-outsidebet)) * U;
+    //base = (B+pot)/(B-humanbet); = 1 + (pot+humanbet)/(B-humanbet);
+
+    lastFD = dU_dw;
+    if( FG.n > 0 )
     {
-        return gainFactor;
-    }else
-    {
-        return gainFactor + stackFactor;
+        lastFD -= FG.waitLength.d_dw(FG.n);
     }
+
+}
+
+float64 FacedOddsCallGeom::f( const float64 w )
+{
+    query(w);
+    return lastF;
 }
 
 
-float64 ExactCallFunctionModel::fd( const float64 w, const float64 y )
+float64 FacedOddsCallGeom::fd( const float64 w, const float64 excessU )
 {
-    const float64 fw = pow(w,n);
-    const float64 dfw = (n<0.5) ? (0) : (n * pow(w,n-1));
+    query(w);
+    return lastFD;
+}
 
-    const float64 frank = e->pctWillCall(1 - w);
-    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
+void FacedOddsAlgb::query( const float64 w )
+{
+    if( lastW == w ) return;
+    lastW = w;
 
-    const float64 stackFactor = avgBlind * e->pctWillCallD(1-w) / fNRank / fNRank;
+    FG.waitLength.w = w;
 
-    const float64 gainFactor = (Bankroll - bet)
-                                * pow(  (Bankroll+pot)/(Bankroll-bet)  ,  fw  )
-                                * log1p( (Bankroll+pot)/(Bankroll-bet) - 1)
-                                * dfw;
+    const float64 fw = pow(w,FG.waitLength.opponents);
+    const float64 U = (pot + betSize)*fw;
 
+    lastF = U - betSize - FG.f(betSize);
 
-    if( bOppCheck )
+    const float64 dU_dw = U*FG.waitLength.opponents/w;
+
+    lastFD = dU_dw;
+    if( FG.n > 0 )
     {
-        return gainFactor;
-    }else
-    {
-        return gainFactor - stackFactor;
+        lastFD -= FG.waitLength.d_dw(FG.n);
     }
 }
-#endif
+
+float64 FacedOddsAlgb::f( const float64 w ) { query(w);  return lastF; }
+float64 FacedOddsAlgb::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
+
+
+void FacedOddsRaiseGeom::query( const float64 w )
+{
+    if( lastW == w ) return;
+    lastW = w;
+
+    FG.waitLength.w = w;
+
+    const float64 fw = pow(w,FG.waitLength.opponents);
+
+    const float64 U = pow(1 + pot/FG.waitLength.bankroll  , fw)*pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
+    float64 excess = 1;
+
+    if( !bCheckPossible )
+    {
+        excess += FG.f(fold_bet) / FG.waitLength.bankroll;
+    }
+
+    lastF = U - excess - riskLoss / FG.waitLength.bankroll;
+
+    const float64 dfw = FG.waitLength.opponents*pow(w,FG.waitLength.opponents-1);
+    const float64 dU_dw = dfw*log1p((pot+raiseTo)/(FG.waitLength.bankroll-raiseTo)) * U;
+
+    lastFD = dU_dw;
+    if( FG.n > 0 )
+    {
+        lastFD -= FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
+    }
+}
+
+float64 FacedOddsRaiseGeom::f( const float64 w ) { query(w);  return lastF; }
+float64 FacedOddsRaiseGeom::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
+
+
+

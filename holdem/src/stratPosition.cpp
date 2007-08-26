@@ -33,9 +33,10 @@
 //Okay, so riskprice is how you control attitude, e.g. geom to algb, or trap_left to trap_right
 //but ACTREACTUSES is how you control fear.
 
-//#define ACTREACTUSES_RA maxShowdown
+
 #define ACTREACTUSES_RA (riskprice)
 #define ACTREACTUSES_HD maxShowdown
+//#define ACTREACTUSES_HD maxShowdown
 #define DELAYENEMYOPP 0
 //#define DELAYENEMYOPP riskprice
 #else
@@ -616,8 +617,8 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
         logFile << "\"riskprice\"... " << riskprice << endl;
-        logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
-        logFile << "Algb("<< bestBet <<")=" << hybridgain_aggressive.f(bestBet) << endl;
+        logFile << "Regular("<< bestBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
+        logFile << "Fear("<< bestBet <<")=" << hybridgain_aggressive.f(bestBet) << endl;
 
     }
 

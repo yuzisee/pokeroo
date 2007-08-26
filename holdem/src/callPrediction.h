@@ -18,6 +18,10 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#ifndef HOLDEM_CallPredict
+#define HOLDEM_CallPredict
+
+
 //#define DEBUG_CALLPRED_FUNCTION
 
 #include "callPredictionFunctions.h"
@@ -30,7 +34,13 @@ class ExactCallD : public virtual ExpectedCallD
         float64 totalexf;
         float64 totaldexf;
 
-        void GenerateRaiseChances(float64 raisebet, float64 raisedFrom, float64 noraiseRank, float64 noraiseRankD, const Player * withP, float64 sig, float64 liveOpp, float64 & out, float64 & outD);
+#ifdef OLD_PREDICTION_ALGORITHM
+        const float64 percentReact(float64 raisebet, const Player * withP) const;
+        void GeneratePctWithRisk(float64 sig, float64 liveOpp, float64 noraise_prescaled, float64 noraiseD_prescaled, float64 percentReact, float64 & out, float64 & outD) const;
+        void GenerateRaiseChances(float64 noraiseRank, float64 noraiseRankD, float64 noraiseMean, float64 noraiseMeanD, float64 raisedFrom, float64 actGain, float64 & out, float64 & outD) const;
+#endif
+        const float64 RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo, const CallCumulationD * useMean, float64 * out_dPot = 0);
+
     protected:
         static const float64 UNITIALIZED_QUERY;
         float64 queryinput;
@@ -41,8 +51,6 @@ class ExactCallD : public virtual ExpectedCallD
 #ifdef OLD_PREDICTION_ALGORITHM
         ExactCallFunctionModel geomFunction;
         float64 facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, bool bRank, float64 wGuess);
-#else
-        FoldGainModel FG;
 #endif
 
         int8 noRaiseArraySize;
@@ -50,16 +58,16 @@ class ExactCallD : public virtual ExpectedCallD
         float64 *noRaiseChanceD_A;
 
 
-        float64 facedOdds_call_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 n);
-        float64 dfacedOdds_dbetSize_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 dpot, float64 w, float64 n);
+        float64 facedOdds_call_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 n, const CallCumulationD * useMean);
+        float64 dfacedOdds_dbetSize_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 dpot, float64 w, float64 n, const CallCumulationD * useMean);
 
 
-        float64 facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible);
-        float64 dfacedOdds_dpot_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 w, float64 opponents);
+        float64 facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, const CallCumulationD * useMean);
+        float64 dfacedOdds_dpot_GeomDEXF(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, const CallCumulationD * useMean);
 
 
-		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet,float64 opponents);
-        float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n);
+		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet,float64 opponents, const CallCumulationD * useMean);
+        float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, const CallCumulationD * useMean);
 
 
         void query(const float64 betSize);
@@ -94,8 +102,7 @@ class ExactCallD : public virtual ExpectedCallD
 
             virtual void SetImpliedFactor(const float64 bonus);
 
-            float64 ActOrReact(float64 callb, float64 lastbet,float64 limit);
-            float64 RiskPrice(const float64 w_worst);
+            float64 ActOrReact(float64 callb, float64 lastbet,float64 limit) const;
 }
 ;
 
@@ -143,10 +150,11 @@ class ExactCallBluffD : public virtual ExactCallD
                             virtual float64 pWin(const float64 betSize);
                             virtual float64 pWinD(const float64 betSize);
 
-
+            float64 RiskPrice();
 
 
 }
 ;
 
 
+#endif
