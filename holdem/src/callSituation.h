@@ -63,6 +63,7 @@ protected:
 #ifdef ANTI_PRESSURE_FOLDGAIN
     FoldGainModel FG;
     const float64 handRarity;
+    const float64 meanW;
 #endif
 
     #if defined(ASSUMEFOLDS)
@@ -77,12 +78,12 @@ protected:
 public:
     ExpectedCallD(const int8 id, const HoldemArena* base
 #ifdef ANTI_PRESSURE_FOLDGAIN
-            , const float64 rankPCT
+            , const float64 rankPCT, const float64 meanPCT
 #endif
                     , const CallCumulationD* data, const float64 commit = 0)
     : playerID(id), table(base), e(data), potCommitted(0)
     #ifdef ANTI_PRESSURE_FOLDGAIN
-    ,handRarity(1-rankPCT)
+    ,handRarity(1-rankPCT), meanW(meanPCT)
     #endif
     #if defined(ASSUMEFOLDS)
     ,eFold(base->GetNumberAtTable()-1)
@@ -92,8 +93,8 @@ public:
     virtual ~ExpectedCallD();
 
     virtual float64 forfeitChips() const;
-    virtual float64 foldGain(const float64 w);
-    virtual float64 foldGain(const float64 w, const float64 extra, const float64 facedBet);
+    virtual float64 foldGain();
+    virtual float64 foldGain(const float64 extra, const float64 facedBet);
 #ifdef ANTI_PRESSURE_FOLDGAIN
     virtual float64 foldWaitLength();
 #endif
@@ -203,12 +204,12 @@ class ZeroCallD : public virtual ExpectedCallD
 public:
     ZeroCallD(const int8 id, const HoldemArena* base
 #ifdef ANTI_PRESSURE_FOLDGAIN
-            , const float64 rankPCT
+            , const float64 rankPCT, const float64 meanPCT
 #endif
                     , const CallCumulationD* data)
     : ExpectedCallD(id,base
 #ifdef ANTI_PRESSURE_FOLDGAIN
-            ,rankPCT
+            ,rankPCT, meanPCT
 #endif
                     ,data)
     {}

@@ -537,6 +537,7 @@ float64 ExactCallD::facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 
 
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
+    //We don't need to set w, because a.FindZero searches over w
     a.FG.waitLength.amountSacrifice = alreadyBet + avgBlind;
     a.FG.waitLength.bankroll = bankroll;
     a.FG.waitLength.opponents = opponents;
@@ -594,7 +595,6 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(float64 bankroll, float64 pot, floa
 
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
-    FG.waitLength.meanConv = useMean;
 
     //The pot can't be zero, so base_minus_1 can't be 0, so base can't be 1, so log(base) can't be zero
     const float64 base_minus_1 = (pot+raiseto)/(bankroll-raiseto);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
@@ -621,6 +621,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(float64 bankroll, float64 pot, floa
 
 
     //USE FG for F_a and F_b
+        FG.waitLength.meanConv = useMean;
         FG.waitLength.w = w;
         FG.waitLength.amountSacrifice = alreadyBet + avgBlind;
         FG.waitLength.bankroll = bankroll;

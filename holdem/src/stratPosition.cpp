@@ -279,7 +279,7 @@ void PositionalStrategy::setupPosition()
 
     const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
 #ifdef ANTI_PRESSURE_FOLDGAIN
-	ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &callcumu);
+	ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &callcumu);
 
 #else
 	ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
@@ -460,9 +460,9 @@ float64 ImproveGainStrategy::MakeBet()
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
-    ExactCallBluffD myDeterredCall_left(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
-    ExactCallBluffD myDeterredCall_right(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall_left(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall_right(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &choicecumu, &raisecumu);
 #else
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
@@ -470,7 +470,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 
 #ifdef RISKPRICE
-    float64 riskprice = myDeterredCall.RiskPrice(statworse.pct);
+    float64 riskprice = myDeterredCall.RiskPrice();
 #else
     float64 riskprice = maxShowdown;
 #endif
@@ -679,7 +679,7 @@ float64 DeterredGainStrategy::MakeBet()
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu);
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &choicecumu, &raisecumu);
 #else
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
@@ -688,7 +688,7 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 #ifdef RISKPRICE
-    float64 riskprice = myDeterredCall.RiskPrice(statworse.pct);
+    float64 riskprice = myDeterredCall.RiskPrice();
 #else
     float64 riskprice = maxShowdown;
 #endif
@@ -1061,10 +1061,10 @@ float64 CorePositionalStrategy::MakeBet()
 #ifdef ANTI_PRESSURE_FOLDGAIN
 #define HANDRANK_MACRO  statranking.pct,
 #endif
-    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, &raisecumu);//foldcumu);
-    ExactCallBluffD myLimitCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, &raisecumu);//foldcumu);
+    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO statmean.pct, &choicecumu, &raisecumu);//foldcumu);
+    ExactCallBluffD myLimitCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO  statmean.pct, &choicecumu, &raisecumu);//foldcumu);
     const float64 committed = ViewPlayer().GetContribution() + myBet;
-    ExactCallD myCommittalCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO &choicecumu, committed );
+    ExactCallD myCommittalCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO  statmean.pct, &choicecumu, committed );
 #ifdef ANTI_PRESSURE_FOLDGAIN
 #undef HANDRANK_MACRO
 #endif

@@ -74,12 +74,12 @@ class ExactCallD : public virtual ExpectedCallD
     public:
         ExactCallD(const int8 id, const HoldemArena* base
 #ifdef ANTI_PRESSURE_FOLDGAIN
-                , const float64 rankPCT
+                , const float64 rankPCT, const float64 meanPCT
 #endif
                         , const CallCumulationD* data, const float64 commit = 0)
     : ExpectedCallD(id,base
 #ifdef ANTI_PRESSURE_FOLDGAIN
-            ,rankPCT
+            ,rankPCT, meanPCT
 #endif
                     ,data,commit), impliedFactor(1)
 #ifdef OLD_PREDICTION_ALGORITHM
@@ -128,16 +128,16 @@ class ExactCallBluffD : public virtual ExactCallD
 
         ExactCallBluffD(const int8 id, const HoldemArena* base
 #ifdef ANTI_PRESSURE_FOLDGAIN
-                , const float64 rankPCT
+                , const float64 rankPCT, const float64 meanPCT
 #endif
                         , const CallCumulationD* data, const CallCumulationD* foldData, const float64 commit = 0)
     : ExpectedCallD(id,base
 #ifdef ANTI_PRESSURE_FOLDGAIN
-            ,rankPCT
+            ,rankPCT, meanPCT
 #endif
                     ,data,commit),ExactCallD(id,base
 #ifdef ANTI_PRESSURE_FOLDGAIN
-                            ,rankPCT
+                            ,rankPCT, meanPCT
 #endif
                                     ,data,commit), ea(foldData), insuranceDeterrent(0)
                             {

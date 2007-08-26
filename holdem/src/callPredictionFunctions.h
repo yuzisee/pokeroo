@@ -76,6 +76,7 @@ class FoldGainModel : public virtual ScalarFunctionModel
 {
     protected:
     FoldWaitLengthModel lastWaitLength;
+    float64 lastBetSize;
     float64 last_dw_dbet;
     float64 lastf;
     float64 lastfd;

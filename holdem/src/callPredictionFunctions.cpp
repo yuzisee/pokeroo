@@ -156,30 +156,45 @@ float64 FoldWaitLengthModel::FindBestLength()
 
 void FoldGainModel::query( const float64 betSize )
 {
-    if( last_dw_dbet == dw_dbet && lastWaitLength == waitLength)
+    if( lastBetSize == betSize && last_dw_dbet == dw_dbet && lastWaitLength == waitLength)
     {
         return;
     }
+    lastBetSize = betSize;
     last_dw_dbet = dw_dbet;
     lastWaitLength = waitLength;
 
-    n = waitLength.FindBestLength();
-
-    const float64 n_below = floor(n);
-    const float64 n_above = ceil(n);
-    const float64 gain_below = waitLength.f(n_below);
-    const float64 gain_above = waitLength.f(n_above);
-    if(gain_below > gain_above && n_below > 0)
-    {
-        n = n_below;
-        lastf = gain_below;
-    }else
-    {
-        n = n_above;
-        lastf = gain_above;
-    }
+    waitLength.betSize = betSize;
 
     const float64 concedeGain = -waitLength.amountSacrifice;
+
+    if( betSize <= 0 )
+    {//singularity
+        n = 0;
+        lastf = concedeGain;
+        lastFA = 0;
+        lastFB = 0;
+        lastFC = 0;
+        lastfd = 0;
+        return;
+    }else
+    {
+        n = waitLength.FindBestLength();
+
+        const float64 n_below = floor(n);
+        const float64 n_above = ceil(n);
+        const float64 gain_below = waitLength.f(n_below);
+        const float64 gain_above = waitLength.f(n_above);
+        if(gain_below > gain_above && n_below > 0)
+        {
+            n = n_below;
+            lastf = gain_below;
+        }else
+        {
+            n = n_above;
+            lastf = gain_above;
+        }
+    }
 
     if( concedeGain > lastf )
     {
@@ -294,7 +309,7 @@ void FacedOddsRaiseGeom::query( const float64 w )
         excess += FG.f(fold_bet) / FG.waitLength.bankroll;
     }
 
-    lastF = U - excess - riskLoss / FG.waitLength.bankroll;
+    lastF = U - excess + riskLoss / FG.waitLength.bankroll;
 
     const float64 dfw = FG.waitLength.opponents*pow(w,FG.waitLength.opponents-1);
     const float64 dU_dw = dfw*log1p((pot+raiseTo)/(FG.waitLength.bankroll-raiseTo)) * U;
