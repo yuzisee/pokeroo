@@ -560,6 +560,7 @@ float64 ExactCallD::facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 
 
 const float64 ExactCallD::RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot)
 {
+
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
     FG.waitLength.meanConv = useMean;
@@ -624,18 +625,18 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(float64 bankroll, float64 pot, floa
         float64 dRiskLoss_pot;
         RiskLoss(alreadyBet, bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
 
+        FoldGainModel myFG(1.0/3.0);
+
+    //USE myFG for F_a and F_b
+        myFG.waitLength.meanConv = useMean;
+        myFG.waitLength.w = w;
+        myFG.waitLength.amountSacrifice = alreadyBet + avgBlind;
+        myFG.waitLength.bankroll = bankroll;
+        myFG.waitLength.opponents = opponents;
+        myFG.dw_dbet = 0; //Again, we don't need this
 
 
-    //USE FG for F_a and F_b
-        FG.waitLength.meanConv = useMean;
-        FG.waitLength.w = w;
-        FG.waitLength.amountSacrifice = alreadyBet + avgBlind;
-        FG.waitLength.bankroll = bankroll;
-        FG.waitLength.opponents = opponents;
-        FG.dw_dbet = 0; //Again, we don't need this
-
-
-        return (h_times_remaining*C*dexf - FG.F_b(fold_bet) + dRiskLoss_pot*dexf) / (FG.F_a(fold_bet) - h_times_remaining*A);
+        return (h_times_remaining*C*dexf - myFG.F_b(fold_bet) + dRiskLoss_pot*dexf) / (myFG.F_a(fold_bet) - h_times_remaining*A);
     }
 
 
@@ -893,6 +894,9 @@ void ExactCallD::query(const float64 betSize)
                                 const float64 noRaiseMean = e->Pr_haveWinPCT_orbetter(w_r_mean);
                                 const float64 noraiseMeanD = e->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(),w_r_mean, 1/significance,totaldexf,bOppCouldCheck,e);
 
+                                //nextNoRaise_A[i] = w_r_rank;
+                                //nextNoRaiseD_A[i] = noraiseRankD;
+
                                 nextNoRaise_A[i] = (noRaiseMean+w_r_rank)/2;
                                 nextNoRaiseD_A[i] = (noraiseMeanD+noraiseRankD)/2;
 
@@ -1093,8 +1097,8 @@ void ExactCallBluffD::query(const float64 betSize)
                                                  /(oppBetMake + origPot) /(oppBetMake + origPot);
 */
 
-                float64 w_mean = facedOdds_Algb(oppBankRoll,origPot,oppBetAlready,oppBetMake,nLinear,e);
                 float64 w_rank = facedOdds_Algb(oppBankRoll,origPot,oppBetAlready,oppBetMake,nLinear,0);
+                float64 w_mean = facedOdds_Algb(oppBankRoll,origPot,oppBetAlready,oppBetMake,nLinear,e);
                 if( nLinear <= 0 )
                 {
                     w_mean = 1;

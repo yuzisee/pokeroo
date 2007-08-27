@@ -283,6 +283,8 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 			dy1 = dyb;
 		}
 
+
+        ++stepMode;
         stepMode %= 3;
         if( stepMode > 0 && dy1 == dyb && dy2 == dyb && dyb == 0)
         {
@@ -296,7 +298,6 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
         {
             xb = bisectionStep(x1,x2);
         }
-        ++stepMode;
 
 		yb = f(xb);
 		if(!( dy1 == dyb && dy2 == dyb && dyb == 0 ))
