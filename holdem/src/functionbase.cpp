@@ -265,9 +265,9 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 		#endif
 	}
 
-    float64 dy1 = fd(x1,y1);
-    float64 dy2 = fd(x2,y2);
-    float64 dyb;
+    float64 dy1 = 0;
+    float64 dy2 = 0;
+    float64 dyb = 0;
     while( (y1-yb)*(y2-yb) < 0 && x2 - x1 > quantum/2)
     {   ///(y1-yb) and (y2-yb) have different signs
         ///therefore y1 and y2 are OPPOSITE vertical directions from yb.
@@ -283,17 +283,26 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 			dy1 = dyb;
 		}
 
-        ++stepMode;
         stepMode %= 3;
-        if( stepMode > 0 && dy2*dy1 <= 0 && fabs((dy2 - dy1)/dy2) > fabs(quantum/2/(x2 - x1)) )
+        if( stepMode > 0 && dy1 == dyb && dy2 == dyb && dyb == 0)
+        {
+            dy1 = fd(x1,y1);
+            dy2 = fd(x2,y2);
+        }
+        if( stepMode > 0 && dy2*dy1 <= 0 && fabs((dy2 - dy1)/dy2) >= fabs(quantum/2/(x2 - x1)) )
         {
             xb = fabs((dy2*x1 - dy1*x2)/(dy2-dy1));
         }else
         {
             xb = bisectionStep(x1,x2);
         }
+        ++stepMode;
+
 		yb = f(xb);
-		dyb = fd(xb,yb);
+		if(!( dy1 == dyb && dy2 == dyb && dyb == 0 ))
+		{
+		    dyb = fd(xb,yb);
+		}
 	}
 
 

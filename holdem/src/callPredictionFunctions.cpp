@@ -162,7 +162,36 @@ float64 FoldWaitLengthModel::FindBestLength()
 
     quantum = 1.0/3.0/rarity();
 
-    return FindMax(1/rarity(), ceil(bankroll / amountSacrifice / rarity()) + 1);
+    float64 maxTurns = bankroll / amountSacrifice / rarity();
+
+    float64 maxProfit = d_dbetSize( maxTurns ) * betSize ;
+    if ( maxProfit < amountSacrifice )
+    {
+        return 0;
+    }
+
+
+    float64 newMaxTurns = maxProfit/amountSacrifice/rarity();
+    while( maxTurns >  newMaxTurns)
+    {
+        newMaxTurns = maxProfit/amountSacrifice/rarity();
+        if( maxTurns - newMaxTurns < quantum )
+        {
+            break;
+        }
+
+        maxTurns = newMaxTurns;
+        maxProfit = d_dbetSize( maxTurns ) * betSize ;
+
+        if ( maxProfit < amountSacrifice )
+        {
+            return 0;
+        }
+
+    }
+
+
+    return FindMax(1/rarity(), ceil(maxTurns + 1) );
 }
 
 
