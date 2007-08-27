@@ -151,10 +151,11 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave) con
 
     }
 
+//repeated is rank, 1-.pct is pctToHave
     const float64 high_rank = cumulation[high_index].repeated;
-    const float64 high_pct = cumulation[high_index+1].repeated;
+    const float64 high_pct = 1 - cumulation[high_index+1].pct;
     const float64 low_rank = cumulation[low_index].repeated;
-    const float64 low_pct = cumulation[low_index+1].repeated;
+    const float64 low_pct = 1 - cumulation[low_index+1].pct;
 //Higher indices have higher ranks (to have), bump up low_index
     return (
                 low_pct * (high_rank - rank_toHave)

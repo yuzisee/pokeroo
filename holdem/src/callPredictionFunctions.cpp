@@ -63,7 +63,9 @@ const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) con
 
 float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 {
-    return (2*pow(lookup(1.0-1.0/(n)),opponents)) - 1;
+    const float64 rawPCT = lookup(1.0-1.0/(n));
+    const float64 rawPCW = pow(rawPCT,opponents);
+    return (2*rawPCW) - 1;
 }
 
 
@@ -88,7 +90,9 @@ const float64 FoldWaitLengthModel::dRemainingBet_dn( ) const
 
 const float64 FoldWaitLengthModel::grossSacrifice( const float64 n ) const
 {
-    return -(n*rarity()-1)*amountSacrifice;
+    const float64 sacrificeCount = n*rarity() - 1;
+    const float64 gross = sacrificeCount*amountSacrifice;
+    return gross;
 }
 
 
@@ -170,7 +174,7 @@ void FoldGainModel::query( const float64 betSize )
 
     const float64 concedeGain = -waitLength.amountSacrifice;
 
-    if( betSize <= 0 )
+    if( betSize <= 0 || waitLength.w <= 0 )
     {//singularity
         n = 0;
         lastf = concedeGain;
