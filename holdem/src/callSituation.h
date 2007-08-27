@@ -67,7 +67,7 @@ public:
                     , const CallCumulationD* data, const float64 commit = 0)
     : playerID(id), table(base), e(data), potCommitted(0)
     #ifdef ANTI_PRESSURE_FOLDGAIN
-    ,handRarity(1-rankPCT), meanW(meanPCT)
+    ,FG(base->GetChipDenom()/2),handRarity(1-rankPCT), meanW(meanPCT)
     #endif
     #if defined(ASSUMEFOLDS)
     ,eFold(base->GetNumberAtTable()-1)

@@ -216,7 +216,7 @@ float64 CallCumulationD::Pr_haveWinPCT_orbetter_continuous(const float64 winPCT_
     if( firstBetterThan == maxsize )
     {//No hands meet criteria
         if( out_d_dw != 0 ){*out_d_dw = 0;}
-        return 0; //same is:  {return midpointRarity;}
+        return 1; //same is:  {return midpointRarity;}
     }
 //These boundaries form a region with midpoint:
     size_t nextBestHandToHave = firstBetterThan + 1;
@@ -234,7 +234,7 @@ float64 CallCumulationD::Pr_haveWinPCT_orbetter_continuous(const float64 winPCT_
          if( winPCT_toHave < midpointPCT_toHave )
          {
              if( out_d_dw != 0 ){*out_d_dw = 0;}
-             return 1; //Obviously the frequency of having a better hand than a hand equal to or even worse than the worst is 100%
+             return 0; //Obviously the frequency of having a better hand than a hand equal to or even worse than the worst is 100%
          }
 
     }else
@@ -321,6 +321,33 @@ StatResult CallCumulation::bestHandToHave() const
     return retVal;
 }
 
+float64 CallCumulationD::sampleInBounds_pct(size_t x) const
+{
+    if( x == cumulation.size() + 1 )
+    {
+        return 1;
+    }else if( x == cumulation.size() )
+    {
+        return 0;
+    }
+
+    return cumulation[x].pct;
+}
+
+
+float64 CallCumulationD::sampleInBounds_repeated(size_t x) const
+{
+    if( x == cumulation.size() + 1 )
+    {
+        return 0;
+    }else if( x == cumulation.size() )
+    {
+        return 1;
+    }
+
+    return cumulation[x].repeated;
+}
+
 
 float64 CallCumulationD::slopeof(size_t x10, size_t x11, size_t x20, size_t x21,size_t y_index0, size_t y_index1) const
 {
@@ -343,14 +370,14 @@ float64 CallCumulationD::slopeof(size_t x10, size_t x11, size_t x20, size_t x21,
     }
     #endif
 
-    const float64 p10 = ( x10 == cumulation.size() + 1) ? 1 : cumulation[x10].pct;
-    const float64 p11 = ( x11 == cumulation.size() + 1) ? 1 : cumulation[x11].pct;
+    const float64 p10 = sampleInBounds_pct(x10);
+    const float64 p11 = sampleInBounds_pct(x11);
 
-    const float64 p20 = ( x20 == cumulation.size()) ? 0 : cumulation[x20].pct;
-    const float64 p21 = ( x21 == cumulation.size()) ? 0 : cumulation[x21].pct;
+    const float64 p20 = sampleInBounds_pct(x20);
+    const float64 p21 = sampleInBounds_pct(x21);
 
-    const float64 y0 = (y_index0 == cumulation.size() + 1) ? 1 : (1-cumulation[y_index0].repeated);
-    const float64 y1 = (y_index1 == cumulation.size()) ? 0 : (1-cumulation[y_index1].repeated);
+    const float64 y0 = (1-sampleInBounds_repeated(y_index0));
+    const float64 y1 = (1-sampleInBounds_repeated(y_index1));
     const float64 p0 = 1-(p10 + p11)/2;
     const float64 p1 = 1-(p20 + p21)/2;
 	return (y1 - y0)/(p1 - p0);

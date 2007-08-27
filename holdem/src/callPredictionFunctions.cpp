@@ -78,7 +78,7 @@ float64 FoldWaitLengthModel::d_dw( const float64 n )
 
 float64 FoldWaitLengthModel::d_dC( const float64 n )
 {
-    return -(n*rarity()-1)/2;
+    return -(n*rarity())/2;
 }
 
 
@@ -90,7 +90,7 @@ const float64 FoldWaitLengthModel::dRemainingBet_dn( ) const
 
 const float64 FoldWaitLengthModel::grossSacrifice( const float64 n ) const
 {
-    const float64 sacrificeCount = n*rarity() - 1;
+    const float64 sacrificeCount = n*rarity();
     const float64 gross = sacrificeCount*amountSacrifice;
     return gross;
 }
@@ -98,9 +98,12 @@ const float64 FoldWaitLengthModel::grossSacrifice( const float64 n ) const
 
 const float64 FoldWaitLengthModel::rarity( ) const
 {
-    if( w >= 1/RAREST_HAND_CHANCE ) return 1/RAREST_HAND_CHANCE;
-    if( meanConv == 0 ) return 1-w;
-    return meanConv->Pr_haveWinPCT_orbetter_continuous(w);
+    float64 freq;
+
+    if( meanConv == 0 ){freq = 1-w;}
+    else{freq= meanConv->Pr_haveWinPCT_orbetter_continuous(w);}
+    if( freq < 1.0/RAREST_HAND_CHANCE ) return 1.0/RAREST_HAND_CHANCE;
+    return freq;
 }
 
 const float64 FoldWaitLengthModel::lookup( const float64 rank ) const

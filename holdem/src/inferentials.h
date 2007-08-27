@@ -213,6 +213,8 @@ public:
 class CallCumulationD : public virtual CallCumulation
 {
 private:
+    float64 sampleInBounds_pct(size_t x) const;
+    float64 sampleInBounds_repeated(size_t x) const;
     float64 linearInterpolate(float64 x1, float64 y1, float64 x2, float64 y2, float64 x) const;
 	virtual float64 slopeof(size_t x10, size_t x11, size_t x20, size_t x21, size_t, size_t) const;
 public:

@@ -525,7 +525,7 @@ float64 ExactCallD::facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 
         fold_bet = bankroll;
     }
 
-    FacedOddsRaiseGeom a;
+    FacedOddsRaiseGeom a(table->GetChipDenom());
 
     a.pot = pot;
     a.raiseTo = raiseto;
@@ -564,10 +564,16 @@ const float64 ExactCallD::RiskLoss(float64 alreadyBet, float64 bankroll, float64
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
     FG.waitLength.meanConv = useMean;
 
-    FG.waitLength.w = 1.0 - 1.0/N;
+    if(useMean == 0)
+    {
+        FG.waitLength.w = 1.0 - 1.0/N;
+    }else
+    {
+        FG.waitLength.w = useMean->nearest_winPCT_given_rank(1.0 - 1.0/N);
+    }
     FG.waitLength.amountSacrifice = (table->GetPotSize() - stagnantPot() - alreadyBet)/(handsIn()-1) + avgBlind;
     FG.waitLength.bankroll = (allChips() - bankroll)/(N-1);
-    FG.waitLength.opponents = opponents;
+    FG.waitLength.opponents = 1;
     FG.dw_dbet = 0; //Again, we don't need this
     const float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrifice;
     if(out_dPot != 0)
@@ -646,7 +652,7 @@ float64 ExactCallD::facedOdds_call_Geom(float64 bankroll, float64 pot, float64 a
     }
 
 
-    FacedOddsCallGeom a;
+    FacedOddsCallGeom a(table->GetChipDenom());
     a.B = bankroll;
     a.pot = pot;
     a.alreadyBet = alreadyBet;
@@ -698,7 +704,7 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(float64 bankroll, float64 pot, floa
 
 float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 betSize, float64 opponents, const CallCumulationD * useMean)
 {
-    FacedOddsAlgb a;
+    FacedOddsAlgb a(table->GetChipDenom());
     a.pot = pot;
     a.alreadyBet = alreadyBet;
     a.betSize = betSize;
@@ -880,9 +886,11 @@ void ExactCallD::query(const float64 betSize)
                                 }
                                 #endif
 
-                                const float64 noRaiseMean = e->Pr_haveWinPCT_orbetter(w_r_mean);
+
 
                                 const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(), w_r_rank, 1/significance, totaldexf, bOppCouldCheck,0);
+
+                                const float64 noRaiseMean = e->Pr_haveWinPCT_orbetter(w_r_mean);
                                 const float64 noraiseMeanD = e->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(),w_r_mean, 1/significance,totaldexf,bOppCouldCheck,e);
 
                                 nextNoRaise_A[i] = (noRaiseMean+w_r_rank)/2;
@@ -1352,12 +1360,12 @@ float64 ExactCallBluffD::RiskPrice()
 
     const float64 maxStack = table->GetAllChips();
 
-    FG.waitLength.w = 1.0 - 1.0/N;
-    FG.waitLength.amountSacrifice = estSacrifice;
+    FG.waitLength.w = ea->nearest_winPCT_given_rank(1.0 - 1.0/N);
+    FG.waitLength.amountSacrifice = callBet();//estSacrifice;
     FG.waitLength.bankroll = maxStack;
-    FG.waitLength.opponents = N-1;
+    FG.waitLength.opponents = 1;
     FG.waitLength.meanConv = ea; //TODO: Is this a good idea?
-    const float64 riskprice = FG.FindZero(table->GetChipDenom(),maxStack);
+    const float64 riskprice = FG.FindZero(table->GetChipDenom() + callBet(),maxStack);
 
 //const float64 n = RAREST_HAND_CHANCE;
 
