@@ -36,13 +36,17 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
     private:
     float64 cacheRarity;
+    float64 lastdBetSizeN;
     protected:
     const float64 dRemainingBet_dn();
     const float64 grossSacrifice(const float64 n);
     const float64 lookup(const float64 x) const;
     const float64 dlookup(const float64 x) const;
-    public:
 
+    public:
+    bool bSearching;
+
+    float64 cached_d_dbetSize;
 
 
     CallCumulationD (* meanConv); //Set to zero if using RANK
@@ -52,7 +56,7 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     float64 opponents;
     float64 betSize;
 
-    FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0), meanConv(0), w(0), amountSacrifice(0), bankroll(0), opponents(1){};
+    FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0), bSearching(false), meanConv(0), w(0), amountSacrifice(0), bankroll(0), opponents(1){};
     FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0), w(o.w), amountSacrifice(o.amountSacrifice), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize){};
 
     const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o );

@@ -63,9 +63,18 @@ const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) con
 
 float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 {
-    const float64 rawPCT = lookup(1.0-1.0/(n));
-    const float64 rawPCW = pow(rawPCT,opponents);
-    return (2*rawPCW) - 1;
+    if( lastdBetSizeN != n || !bSearching )
+    {
+        const float64 rawPCT = lookup(1.0-1.0/(n));
+        const float64 rawPCW = pow(rawPCT,opponents);
+        cached_d_dbetSize = (2*rawPCW) - 1;
+        lastdBetSizeN = n;
+    }else
+    {
+        return cached_d_dbetSize;
+    }
+
+    return cached_d_dbetSize;
 }
 
 
@@ -132,19 +141,25 @@ float64 FoldWaitLengthModel::f( const float64 n )
         playbet = 0;
     }
 
-    return playbet*PW - grossSacrifice(n)/2;
+    const float64 lastF = playbet*PW - grossSacrifice(n)/2;
+    return lastF;
 }
 
 float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
 {
-    const float64 PW = d_dbetSize(n);
-    const float64 dPW_dn = 2*pow(lookup(1.0-1.0/n),opponents-1)*opponents/n/n*dlookup(1.0-1.0/n);
     const float64 remainingbet = ( bankroll - grossSacrifice(n)  );
     if(remainingbet < 0)
     {
         return 0;
-    }else if(remainingbet < betSize )
+    }
+
+    const float64 dPW_dn = 2*pow(lookup(1.0-1.0/n),opponents-1)*opponents/n/n*dlookup(1.0-1.0/n);
+
+    if(remainingbet < betSize )
     {
+        //Since float64 playbet = (remainingbet < betSize ) ? remainingbet : betSize;
+        //And lastF = playbet*PW - grossSacrifice(n)/2;
+        const float64 PW = (y + grossSacrifice(n)/2)/remainingbet; //d_dbetSize(n);
         const float64 dRemainingbet = dRemainingBet_dn();
 
         //d{  remainingbet*PW - n*amountSacrifice/2  }/dn
@@ -153,6 +168,7 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
     }else{
         return (betSize*dPW_dn - grossSacrifice(n)/2);
     }
+
 }
 
 
@@ -162,36 +178,45 @@ float64 FoldWaitLengthModel::FindBestLength()
 
     quantum = 1.0/3.0/rarity();
 
-    float64 maxTurns = bankroll / amountSacrifice / rarity();
+    float64 maxTurns[3];
+    maxTurns[0] = bankroll / amountSacrifice / rarity();
 
-    float64 maxProfit = d_dbetSize( maxTurns ) * betSize ;
+    float64 maxProfit = d_dbetSize( maxTurns[0] ) * betSize ;
     if ( maxProfit < amountSacrifice )
     {
         return 0;
     }
 
 
-    float64 newMaxTurns = maxProfit/amountSacrifice/rarity();
-    while( maxTurns >  newMaxTurns)
-    {
-        newMaxTurns = maxProfit/amountSacrifice/rarity();
-        if( maxTurns - newMaxTurns < quantum )
-        {
-            break;
-        }
 
-        maxTurns = newMaxTurns;
-        maxProfit = d_dbetSize( maxTurns ) * betSize ;
+    maxTurns[0] = maxProfit/amountSacrifice/rarity();
+    maxTurns[1] = maxTurns[0];
+
+    do
+    {
+
+        maxProfit = d_dbetSize(  maxTurns[0] ) * betSize ;
 
         if ( maxProfit < amountSacrifice )
         {
             return 0;
         }
 
-    }
 
+        maxTurns[2] = maxTurns[1];
+        maxTurns[1] = maxTurns[0];
+        maxTurns[0] = maxProfit/amountSacrifice/rarity();
 
-    return FindMax(1/rarity(), ceil(maxTurns + 1) );
+        if( maxTurns[1] - maxTurns[0] < quantum )
+        {
+            break;
+        }
+    }while( maxTurns[1] - maxTurns[0] > fabs(maxTurns[2] - maxTurns[1])/2 );
+
+    bSearching = true;
+    const float64 bestN = FindMax(1/rarity(), ceil(maxTurns[0] + 1) );
+    bSearching = false;
+    return bestN;
 }
 
 
@@ -228,15 +253,19 @@ void FoldGainModel::query( const float64 betSize )
         const float64 n_below = floor(floor(n*waitLength.rarity())/waitLength.rarity());
         const float64 n_above = ceil(ceil(n*waitLength.rarity())/waitLength.rarity());
         const float64 gain_below = waitLength.f(n_below);
+        const float64 FB_below = waitLength.cached_d_dbetSize;
         const float64 gain_above = waitLength.f(n_above);
+        const float64 FB_above = waitLength.cached_d_dbetSize;
         if(gain_below > gain_above && n_below > 0)
         {
             n = n_below;
             lastf = gain_below;
+            lastFB = FB_below;
         }else
         {
             n = n_above;
             lastf = gain_above;
+            lastFB = FB_above;
         }
     }
 
@@ -250,7 +279,6 @@ void FoldGainModel::query( const float64 betSize )
     }else
     {
         lastFA = waitLength.d_dw( n );
-        lastFB = waitLength.d_dbetSize( n );
         lastFC = waitLength.d_dC( n );
     }
     lastfd = lastFA * dw_dbet + lastFB ;
