@@ -82,13 +82,13 @@ float64 FoldWaitLengthModel::d_dC( const float64 n )
 }
 
 
-const float64 FoldWaitLengthModel::dRemainingBet_dn( ) const
+const float64 FoldWaitLengthModel::dRemainingBet_dn( )
 {
     return -amountSacrifice*rarity();
 }
 
 
-const float64 FoldWaitLengthModel::grossSacrifice( const float64 n ) const
+const float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
 {
     const float64 sacrificeCount = n*rarity();
     const float64 gross = sacrificeCount*amountSacrifice;
@@ -96,14 +96,16 @@ const float64 FoldWaitLengthModel::grossSacrifice( const float64 n ) const
 }
 
 
-const float64 FoldWaitLengthModel::rarity( ) const
+const float64 FoldWaitLengthModel::rarity( )
 {
-    float64 freq;
+    if( cacheRarity >= 0 ) return cacheRarity;
 
-    if( meanConv == 0 ){freq = 1-w;}
-    else{freq= meanConv->Pr_haveWinPCT_orbetter_continuous(w);}
-    if( freq < 1.0/RAREST_HAND_CHANCE ) return 1.0/RAREST_HAND_CHANCE;
-    return freq;
+
+    if( meanConv == 0 ){cacheRarity = 1-w;}
+    else{cacheRarity= meanConv->Pr_haveWinPCT_orbetter_continuous(w);}
+
+    if( cacheRarity < 1.0/RAREST_HAND_CHANCE ){ cacheRarity = 1.0/RAREST_HAND_CHANCE; }
+    return cacheRarity;
 }
 
 const float64 FoldWaitLengthModel::lookup( const float64 rank ) const
@@ -156,6 +158,10 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
 
 float64 FoldWaitLengthModel::FindBestLength()
 {
+    cacheRarity = -1;
+
+    quantum = 1.0/3.0/rarity();
+
     return FindMax(1/rarity(), ceil(bankroll / amountSacrifice / rarity()) + 1);
 }
 
@@ -190,8 +196,8 @@ void FoldGainModel::query( const float64 betSize )
     {
         n = waitLength.FindBestLength();
 
-        const float64 n_below = floor(n);
-        const float64 n_above = ceil(n);
+        const float64 n_below = floor(n*waitLength.rarity())/waitLength.rarity();
+        const float64 n_above = ceil(n*waitLength.rarity())/waitLength.rarity();
         const float64 gain_below = waitLength.f(n_below);
         const float64 gain_above = waitLength.f(n_above);
         if(gain_below > gain_above && n_below > 0)

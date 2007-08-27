@@ -705,6 +705,10 @@ float64 UserConsoleStrategy::queryAction()
 
 				}
 			}
+			else if ( strncmp(inputBuf, "EXIT", 4) == 0 )
+			{
+			    exit(0);
+			}
 			else if ( 0 == inputBuf[0] )
 			{///Just press [ENTER]: do default action
 			    #ifdef DEBUGASSERT

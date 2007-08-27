@@ -1365,7 +1365,7 @@ float64 ExactCallBluffD::RiskPrice()
     FG.waitLength.bankroll = maxStack;
     FG.waitLength.opponents = 1;
     FG.waitLength.meanConv = ea; //TODO: Is this a good idea?
-    const float64 riskprice = FG.FindZero(table->GetChipDenom() + callBet(),maxStack);
+    const float64 riskprice = FG.FindZero(table->GetMinRaise() + callBet(),maxStack);
 
 //const float64 n = RAREST_HAND_CHANCE;
 

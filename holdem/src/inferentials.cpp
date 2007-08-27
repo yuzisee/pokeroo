@@ -112,12 +112,17 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave) con
     size_t high_index = maxsize - 1;
     size_t low_index = 0;
 
+    float64 high_rank, low_rank;
+
+    low_rank = cumulation[0].repeated;
+    high_rank = cumulation[high_index].repeated;
+
 //Early returns
     if( rank_toHave < 0 )
     {//Closer to rank 0 than the smallest positive rank
         return 0;
     }
-    if( rank_toHave < cumulation[0].repeated )
+    if( rank_toHave < low_rank )
     {
         return 1 - cumulation[0].pct; //1-.pct is the toHave.
     }
@@ -125,25 +130,49 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave) con
     {
         return 1 - cumulation[high_index].pct; //1-.pct is the toHave.
     }
-    if( rank_toHave > cumulation[high_index].repeated ) //Greater than 1??
+    if( rank_toHave > high_rank ) //Greater than 1??
     {
         return 1;
     }
 
+    bool bFloor = true;
 
     while( high_index > low_index + 1 )
     {
-        const size_t guess_index = (high_index + low_index)/2;
+        float64 false_position = (high_index*(rank_toHave-low_rank) + low_index*(high_rank-rank_toHave))/(high_rank-low_rank);
+        false_position = bFloor ? floor(false_position) : ceil(false_position);
+        size_t guess_index = static_cast<size_t>(false_position);
+
+        if( guess_index <= low_index + 1 )
+        {
+            guess_index = low_index + 1;
+        }else
+        {
+            if( !bFloor ) {++guess_index ;}
+        }
+
+        if( guess_index >= high_index - 1 )
+        {
+            guess_index = high_index - 1;
+        }else
+        {
+            if( bFloor ) {--guess_index ;}
+        }
+
         const float64 guess_rank = cumulation[guess_index].repeated;
 
 
         if( guess_rank > rank_toHave )
         {
+            high_rank = guess_rank;
             high_index = guess_index;
+            bFloor = true;
         }
         else if( guess_rank < rank_toHave ) //midpoint rank too low
         {//Higher indices have higher ranks, bump up low_index
+            low_rank = guess_rank;
             low_index = guess_index;
+            bFloor = false;
         }else
         {//Perfect match. The PCT for a given rank is one index higher
             return 1 - cumulation[guess_index+1].pct;
@@ -152,9 +181,9 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave) con
     }
 
 //repeated is rank, 1-.pct is pctToHave
-    const float64 high_rank = cumulation[high_index].repeated;
+    high_rank = cumulation[high_index].repeated;
     const float64 high_pct = 1 - cumulation[high_index+1].pct;
-    const float64 low_rank = cumulation[low_index].repeated;
+    low_rank = cumulation[low_index].repeated;
     const float64 low_pct = 1 - cumulation[low_index+1].pct;
 //Higher indices have higher ranks (to have), bump up low_index
     return (
@@ -234,7 +263,7 @@ float64 CallCumulationD::Pr_haveWinPCT_orbetter_continuous(const float64 winPCT_
          if( winPCT_toHave < midpointPCT_toHave )
          {
              if( out_d_dw != 0 ){*out_d_dw = 0;}
-             return 0; //Obviously the frequency of having a better hand than a hand equal to or even worse than the worst is 100%
+             return 1; //Obviously the frequency of having a better hand than a hand equal to or even worse than the worst is 100%
          }
 
     }else

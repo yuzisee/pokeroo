@@ -34,10 +34,11 @@
 
 class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
+    private:
+    float64 cacheRarity;
     protected:
-    const float64 dRemainingBet_dn() const;
-    const float64 grossSacrifice(const float64 n) const;
-    const float64 rarity() const;
+    const float64 dRemainingBet_dn();
+    const float64 grossSacrifice(const float64 n);
     const float64 lookup(const float64 x) const;
     const float64 dlookup(const float64 x) const;
     public:
@@ -66,6 +67,7 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     virtual float64 d_dC( const float64 n );
 
     virtual float64 FindBestLength();
+    const float64 rarity();
 
 }
 ;
