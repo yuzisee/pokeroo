@@ -39,7 +39,7 @@ class ExactCallD : public virtual ExpectedCallD
         void GeneratePctWithRisk(float64 sig, float64 liveOpp, float64 noraise_prescaled, float64 noraiseD_prescaled, float64 percentReact, float64 & out, float64 & outD) const;
         void GenerateRaiseChances(float64 noraiseRank, float64 noraiseRankD, float64 noraiseMean, float64 noraiseMeanD, float64 raisedFrom, float64 actGain, float64 & out, float64 & outD) const;
 #endif
-        const float64 RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo, const CallCumulationD * useMean, float64 * out_dPot = 0);
+        const float64 RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo, CallCumulationD * useMean, float64 * out_dPot = 0);
 
     protected:
         static const float64 UNITIALIZED_QUERY;
@@ -58,15 +58,15 @@ class ExactCallD : public virtual ExpectedCallD
         float64 *noRaiseChanceD_A;
 
 
-        float64 facedOdds_call_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 n, const CallCumulationD * useMean);
-        float64 dfacedOdds_dbetSize_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 dpot, float64 w, float64 n, const CallCumulationD * useMean);
+        float64 facedOdds_call_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 n,  CallCumulationD * useMean);
+        float64 dfacedOdds_dbetSize_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD * useMean);
 
 
-        float64 facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, const CallCumulationD * useMean);
-        float64 dfacedOdds_dpot_GeomDEXF(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, const CallCumulationD * useMean);
+        float64 facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, CallCumulationD * useMean);
+        float64 dfacedOdds_dpot_GeomDEXF(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, CallCumulationD * useMean);
 
 
-		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet,float64 opponents, const CallCumulationD * useMean);
+		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet,float64 opponents,  CallCumulationD * useMean);
         float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, const CallCumulationD * useMean);
 
 
@@ -76,7 +76,7 @@ class ExactCallD : public virtual ExpectedCallD
 #ifdef ANTI_PRESSURE_FOLDGAIN
                 , const float64 rankPCT, const float64 meanPCT
 #endif
-                        , const CallCumulationD* data, const float64 commit = 0)
+                        , CallCumulationD* data, const float64 commit = 0)
     : ExpectedCallD(id,base
 #ifdef ANTI_PRESSURE_FOLDGAIN
             ,rankPCT, meanPCT
@@ -116,7 +116,7 @@ class ExactCallBluffD : public virtual ExactCallD
         float64 topThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const;
         float64 bottomThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const;
     protected:
-        const CallCumulationD* ea;
+        CallCumulationD* ea;
         float64 allFoldChance;
         float64 allFoldChanceD;
 
@@ -130,7 +130,7 @@ class ExactCallBluffD : public virtual ExactCallD
 #ifdef ANTI_PRESSURE_FOLDGAIN
                 , const float64 rankPCT, const float64 meanPCT
 #endif
-                        , const CallCumulationD* data, const CallCumulationD* foldData, const float64 commit = 0)
+                        , CallCumulationD* data, CallCumulationD* foldData, const float64 commit = 0)
     : ExpectedCallD(id,base
 #ifdef ANTI_PRESSURE_FOLDGAIN
             ,rankPCT, meanPCT

@@ -196,8 +196,8 @@ void FoldGainModel::query( const float64 betSize )
     {
         n = waitLength.FindBestLength();
 
-        const float64 n_below = floor(n*waitLength.rarity())/waitLength.rarity();
-        const float64 n_above = ceil(n*waitLength.rarity())/waitLength.rarity();
+        const float64 n_below = floor(floor(n*waitLength.rarity())/waitLength.rarity());
+        const float64 n_above = ceil(ceil(n*waitLength.rarity())/waitLength.rarity());
         const float64 gain_below = waitLength.f(n_below);
         const float64 gain_above = waitLength.f(n_above);
         if(gain_below > gain_above && n_below > 0)

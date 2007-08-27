@@ -172,7 +172,8 @@ class StatResult
 
 class CallCumulation
 {
-
+private:
+    size_t cached_high_index;
 protected:
 	size_t searchWinPCT_betterThan_toHave(const float64 winPCT_toHave) const;
 
@@ -181,13 +182,13 @@ public:
     {
         *this = o;
     }
-    CallCumulation(){}
+    CallCumulation() : cached_high_index(1) {}
     virtual ~CallCumulation();
     const CallCumulation & operator=(const CallCumulation& o);
 
 	vector<StatResult> cumulation;
 	virtual float64 Pr_haveWinPCT_orbetter(const float64 w_toHave) const;
-	virtual float64 nearest_winPCT_given_rank(const float64 rank) const;
+	virtual float64 nearest_winPCT_given_rank(const float64 rank);
 	virtual StatResult bestHandToHave() const;
 	virtual StatResult worstHandToHave() const;
 
@@ -220,7 +221,7 @@ private:
 public:
     float64 d_dw_only(const float64 w_toHave) const;
 	virtual float64 Pr_haveWinPCT_orbetter_continuous(const float64 w_toHave, float64 *out_d_dw = 0) const;
-	virtual float64 inverseD(const float64) const;
+	virtual float64 inverseD(const float64);
 
         #ifdef DEBUG_DEXF
             void breakdown(float64 points, std::ostream& target)

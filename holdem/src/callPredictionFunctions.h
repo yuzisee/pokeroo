@@ -45,7 +45,7 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 
 
 
-    const CallCumulationD (* meanConv); //Set to zero if using RANK
+    CallCumulationD (* meanConv); //Set to zero if using RANK
     float64 w;
     float64 amountSacrifice;
     float64 bankroll;

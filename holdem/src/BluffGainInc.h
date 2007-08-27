@@ -22,7 +22,6 @@
 //This file is used as a multi-line macro expansion
 
 last_x = betSize;
-
     const float64 invisiblePercent = quantum / ea->allChips();
 
 ///Establish [PushGain] values
@@ -31,6 +30,7 @@ last_x = betSize;
 	const float64 potFoldWinD = 0;
     float64 oppFoldChance = ea->pWin(betSize);
     float64 oppFoldChanceD = ea->pWinD(betSize);
+
 #ifdef DEBUGASSERT
 	if( potFoldWin < 0 || oppFoldChance < invisiblePercent ){
 		potFoldWin =  1;
@@ -99,6 +99,8 @@ last_x = betSize;
 
     }
 
+
+
 ///Establish [Play] values
 	float64 playChance = 1 - oppFoldChance;
 	float64 playChanceD = - oppFoldChanceD;
@@ -129,6 +131,4 @@ last_x = betSize;
         potNormalWin = 1;
         potNormalWinD = 0;
     }
-
-
 

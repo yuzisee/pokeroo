@@ -396,6 +396,7 @@ float64 StateModel::f(const float64 betSize)
 {
     if( last_x != betSize )
     {
+
         query(betSize);
     }
     return y;
@@ -414,6 +415,7 @@ void StateModel::query( const float64 betSize )
 {
 
 #include "BluffGainInc.h"
+
 ///Calculate factors
 	const float64 gainWithFold = pow(potFoldWin , oppFoldChance);
 	const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
@@ -433,8 +435,6 @@ void StateModel::query( const float64 betSize )
             gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
         }
     }
-
-
 
 
 	if( betSize >= ea->maxBet() )

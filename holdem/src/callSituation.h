@@ -44,7 +44,7 @@ class ExpectedCallD /*: public virtual ExpectedCall*/
 protected:
     const int8 playerID;
     const HoldemArena* table;
-    const CallCumulationD* e;
+    CallCumulationD* e;
 
     const float64 potCommitted;
 
@@ -64,7 +64,7 @@ public:
 #ifdef ANTI_PRESSURE_FOLDGAIN
             , const float64 rankPCT, const float64 meanPCT
 #endif
-                    , const CallCumulationD* data, const float64 commit = 0)
+                    , CallCumulationD* data, const float64 commit = 0)
     : playerID(id), table(base), e(data), potCommitted(0)
     #ifdef ANTI_PRESSURE_FOLDGAIN
     ,FG(base->GetChipDenom()/2),handRarity(1-rankPCT), meanW(meanPCT)
@@ -190,7 +190,7 @@ public:
 #ifdef ANTI_PRESSURE_FOLDGAIN
             , const float64 rankPCT, const float64 meanPCT
 #endif
-                    , const CallCumulationD* data)
+                    , CallCumulationD* data)
     : ExpectedCallD(id,base
 #ifdef ANTI_PRESSURE_FOLDGAIN
             ,rankPCT, meanPCT

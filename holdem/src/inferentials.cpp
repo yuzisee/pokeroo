@@ -24,7 +24,7 @@
 //#include <iostream>
 
 #define SMOOTHED_CALLCUMULATION_D
-
+#define ACCELERATE_SEARCH_MINIMUM 256
 //const float64 CallCumulation::tiefactor = DEFAULT_TIE_SCALE_FACTOR;
 
 
@@ -86,7 +86,7 @@ CallCumulation::~CallCumulation()
 }
 
 ///This function is the derivative of nearest_winPCT_given_rank by drank
-float64 CallCumulationD::inverseD(const float64 rank) const
+float64 CallCumulationD::inverseD(const float64 rank)
 {
     //f(x) = Pr_haveWinPCT_orbetter(x), where f(x) is rarity, 1-f(x) is rank, x is winPCT
     //nearest_winPCT_given_rank(1 - Pr_haveWinPCT_orbetter(x)) = x
@@ -105,7 +105,7 @@ float64 CallCumulationD::inverseD(const float64 rank) const
 //How this works:
 //reverseLookup(0.9) returns A pct, where (1-0.9) of hands are better to have than A pct.
 ///If you have rank, you would have winPCT
-float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave) const
+float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
 {
     //Search for this .repeated is the rank_toHave
     const size_t maxsize = cumulation.size();
@@ -136,27 +136,50 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave) con
     }
 
     bool bFloor = true;
+    size_t guess_index;
+
+    //See if the cache hits
+    if( cached_high_index > 0 )
+    {
+        low_rank = cumulation[cached_high_index-1].repeated;
+        high_rank = cumulation[cached_high_index].repeated;
+        //High index should be just above the desired rank
+        //Low index should be just below
+        if( high_rank > rank_toHave && rank_toHave > low_rank )
+        {
+            high_index = cached_high_index;
+            low_index = cached_high_index - 1;
+        }
+    }
 
     while( high_index > low_index + 1 )
     {
-        float64 false_position = (high_index*(rank_toHave-low_rank) + low_index*(high_rank-rank_toHave))/(high_rank-low_rank);
-        false_position = bFloor ? floor(false_position) : ceil(false_position);
-        size_t guess_index = static_cast<size_t>(false_position);
 
-        if( guess_index <= low_index + 1 )
+        if( high_index-low_index < ACCELERATE_SEARCH_MINIMUM )
         {
-            guess_index = low_index + 1;
+            guess_index = (high_index+low_index)/2;
         }else
         {
-            if( !bFloor ) {++guess_index ;}
-        }
+            float64 false_position = (high_index*(rank_toHave-low_rank) + low_index*(high_rank-rank_toHave))/(high_rank-low_rank);
+            false_position = bFloor ? floor(false_position) : ceil(false_position);
+            guess_index = static_cast<size_t>(false_position);
 
-        if( guess_index >= high_index - 1 )
-        {
-            guess_index = high_index - 1;
-        }else
-        {
-            if( bFloor ) {--guess_index ;}
+
+            if( guess_index <= low_index + 1 )
+            {
+                guess_index = low_index + 1;
+            }else
+            {
+                if( !bFloor ) {++guess_index ;}
+            }
+
+            if( guess_index >= high_index - 1 )
+            {
+                guess_index = high_index - 1;
+            }else
+            {
+                if( bFloor ) {--guess_index ;}
+            }
         }
 
         const float64 guess_rank = cumulation[guess_index].repeated;
@@ -175,6 +198,7 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave) con
             bFloor = false;
         }else
         {//Perfect match. The PCT for a given rank is one index higher
+            cached_high_index = guess_index;
             return 1 - cumulation[guess_index+1].pct;
         }
 
@@ -186,6 +210,9 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave) con
     low_rank = cumulation[low_index].repeated;
     const float64 low_pct = 1 - cumulation[low_index+1].pct;
 //Higher indices have higher ranks (to have), bump up low_index
+
+    cached_high_index = high_index;
+
     return (
                 low_pct * (high_rank - rank_toHave)
                 +
@@ -292,8 +319,8 @@ float64 CallCumulationD::Pr_haveWinPCT_orbetter_continuous(const float64 winPCT_
         barelyWorseRarity = 1;
     }else
     {
-        barelyWorsePCT_toHave = 1 - (cumulation[barelyWorseHandToHave-1].pct + cumulation[barelyWorseHandToHave].pct)/2;
-        barelyWorseRarity = 1 - cumulation[barelyWorseHandToHave-1].repeated;
+        barelyWorsePCT_toHave = 1 - ( sampleInBounds_pct(prebarelyWorseHandToHave) + sampleInBounds_pct(barelyWorseHandToHave))/2;
+        barelyWorseRarity = 1 - sampleInBounds_repeated(prebarelyWorseHandToHave);
     }
 
 
