@@ -39,18 +39,6 @@
 
 
 
-/*
-class ExpectedCall
-{
-    protected:
-
-    const HoldemArena* table;
-    const int8 playerID;
-    public:
-    virtual float64 exf(float64 betSize);
-}
-;
-*/
 class ExpectedCallD /*: public virtual ExpectedCall*/
 {
 protected:
@@ -68,11 +56,7 @@ protected:
 
     #if defined(ASSUMEFOLDS)
     float64 eFold;
-/*
-    float64 wPct;
-    float64 scaleToMean;
-    float64 offset;
-*/
+
     #endif
 
 public:

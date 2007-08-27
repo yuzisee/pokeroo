@@ -149,7 +149,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     //StatsManager::QueryOffense(callcumu,withCommunity,onlyCommunity,cardsInCommunity );
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
     statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
-    statworse = foldcumu.strongestOpponent(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
+    statworse = foldcumu.worstHandToHave(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
     //CallStats is foldcumu
 
     #ifdef LOGPOSITION
@@ -157,29 +157,31 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     #endif
 
 
-    const float64 rankingA = 1 - foldcumu.pctWillCall_tiefactor(0.5, 1); //loss+splits
-    const float64 rankingA3 = 1 - foldcumu.pctWillCall_tiefactor(0.5, 0); //loss
 
-    statrelation.wins = rankingA;
-    statrelation.splits = rankingA3 - rankingA;
-    if( statrelation.splits < 0 ) statrelation.splits = 0;
-    statrelation.loss = 1 - rankingA3;
+
+
+    const float64 rarityA3 = foldcumu.Pr_haveWinPCT_orbetter(0.5);
+
+//You can tie in rank if and only if you tie in mean
+    statrelation.wins = 1 - rarityA3;
+    statrelation.splits = statmean.splits;
+    statrelation.loss = rarityA3;
+    const float64 scaleTotalA3 = statrelation.wins + statrelation.splits + statrelation.loss;
+    statrelation.wins /= scaleTotalA3;
+    statrelation.splits /= scaleTotalA3;
+    statrelation.loss /= scaleTotalA3;
     statrelation.genPCT();
 
-    //const float64 ranking3 = callcumu.pctWillCall(statmean.loss); //wins+splits
-    //const float64 ranking = callcumu.pctWillCall(1-statmean.wins); //wins
-    const float64 ranking3 = callcumu.pctWillCall_tiefactor(1 - statmean.pct, 1); //wins+splits
-    const float64 ranking = callcumu.pctWillCall_tiefactor(1 - statmean.pct, 0); //wins
 
+    const float64 rarity3 = callcumu.Pr_haveWinPCT_orbetter(statmean.pct);
 
-
-    //std::cout << "=" << ranking << "..." << ranking2 << "..." << ranking3 << std::endl;
-    //std::cout << "=" << (ranking3 - ranking) << "\tsplits " << statmean.splits << std::endl;
-
-    statranking.wins = ranking;
-    statranking.splits = ranking3 - ranking;
-    if( statranking.splits < 0 ) statranking.splits = 0;
-    statranking.loss = 1 - ranking3;
+    statranking.wins = 1 - rarity3;
+    statranking.splits = statmean.splits;
+    statranking.loss = rarity3;
+    const float64 scaleTotal3 = statranking.wins + statranking.splits + statranking.loss;
+    statranking.wins /= scaleTotal3;
+    statranking.splits /= scaleTotal3;
+    statranking.loss /= scaleTotal3;
     statranking.genPCT();
 
 //Pick the better one for hybrid

@@ -127,7 +127,6 @@ protected:
 	virtual void myEval();
 	virtual void myRevert(const int16 undoIndex);
 public:
-	float64 pctWillCall(const float64) const;
 
     //double myCallPct(double); //give pct of HIS percieved bankroll and returns chance to call
     virtual void Analyze();

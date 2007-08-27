@@ -85,129 +85,209 @@ CallCumulation::~CallCumulation()
 {
 }
 
-
+///This function is the derivative of nearest_winPCT_given_rank by drank
 float64 CallCumulationD::inverseD(const float64 rank) const
 {
-    //reverseLookup(x) = f-1(1-x)
-    //reverseLookup'(x) = f-1'(1-x)*-1
-    //f-1'(x) = 1/f'(f-1(x))
-    //reverseLookup'(x) = -1/f'(f-1(1-x))
-    //reverseLookup'(x) = -1/f'(reverseLookup(x))
-    return - 1 / pctWillCallD( reverseLookup( rank ) );
+    //f(x) = Pr_haveWinPCT_orbetter(x), where f(x) is rarity, 1-f(x) is rank, x is winPCT
+    //nearest_winPCT_given_rank(1 - Pr_haveWinPCT_orbetter(x)) = x
+    //nearest_winPCT_given_rank(1 - f(x)) = x
+    //nearest_winPCT_given_rank(1 - x) = f-1(x)
+    //nearest_winPCT_given_rank(x) = f-1(1-x)
+    //Pr_haveWinPCT_orbetter(nearest_winPCT_given_rank(rank)) = rarity = 1 - rank
+    //f(nearest_winPCT_given_rank(rank)) = rarity = 1 - rank
+//differentiate with respect to rank
+    //f'(nearest_winPCT_given_rank(rank)) * nearest_winPCT_given_rank'(rank) = -1
+    //nearest_winPCT_given_rank'(rank) = -1 / f'(nearest_winPCT_given_rank(rank))
+
+    return - 1 / d_dw_only( nearest_winPCT_given_rank( rank ) );
 }
 
 //How this works:
-//reverseLookup(0.9) returns A pct, where (1-0.9) of opponents are better than A pct.
-float64 CallCumulation::reverseLookup(const float64 rank) const
+//reverseLookup(0.9) returns A pct, where (1-0.9) of hands are better to have than A pct.
+///If you have rank, you would have winPCT
+float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave) const
 {
-    const float64 betterThan = 1 - rank; //Search for this .repeated
+    //Search for this .repeated is the rank_toHave
     const size_t maxsize = cumulation.size();
     size_t high_index = maxsize - 1;
     size_t low_index = 0;
 
 //Early returns
-    if( betterThan > cumulation[0].repeated )
-    {
-        return cumulation[0].pct;
+    if( rank_toHave < 0 )
+    {//Closer to rank 0 than the smallest positive rank
+        return 0;
     }
-    if( betterThan < cumulation[high_index].repeated )
+    if( rank_toHave < cumulation[0].repeated )
     {
-        return cumulation[high_index].pct;
+        return 1 - cumulation[0].pct; //1-.pct is the toHave.
+    }
+    if( rank_toHave > cumulation[high_index-1].repeated )
+    {
+        return 1 - cumulation[high_index].pct; //1-.pct is the toHave.
+    }
+    if( rank_toHave > cumulation[high_index].repeated ) //Greater than 1??
+    {
+        return 1;
     }
 
 
     while( high_index > low_index + 1 )
     {
         const size_t guess_index = (high_index + low_index)/2;
-        const float64 guess_betterThan = cumulation[guess_index].repeated;
+        const float64 guess_rank = cumulation[guess_index].repeated;
 
-        if( guess_betterThan >= betterThan )
+
+        if( guess_rank > rank_toHave )
         {
             high_index = guess_index;
         }
-
-        if( guess_betterThan <= betterThan )
-        {
+        else if( guess_rank < rank_toHave ) //midpoint rank too low
+        {//Higher indices have higher ranks, bump up low_index
             low_index = guess_index;
+        }else
+        {//Perfect match. The PCT for a given rank is one index higher
+            return 1 - cumulation[guess_index+1].pct;
         }
 
     }
 
-    const float64 high_betterThan = cumulation[high_index].repeated;
-    const float64 low_betterThan = cumulation[low_index].repeated;
-
+    const float64 high_rank = cumulation[high_index].repeated;
+    const float64 high_pct = cumulation[high_index+1].repeated;
+    const float64 low_rank = cumulation[low_index].repeated;
+    const float64 low_pct = cumulation[low_index+1].repeated;
+//Higher indices have higher ranks (to have), bump up low_index
     return (
-                cumulation[high_index].pct * (low_betterThan - betterThan)
+                low_pct * (high_rank - rank_toHave)
                 +
-                cumulation[low_index].pct * (betterThan - high_betterThan)
-            ) / (low_betterThan - high_betterThan);
+                high_pct * (rank_toHave - low_rank)
+            ) / (high_rank - low_rank);
 
 
 }
 
-///oddsFaced is the "virtual chance to win" that would correspond to the pot odds faced.
-///eg. 4:1 pot odds means opponent can bet 1 to win 4, (ie. pay 1 to receive 5 = 20% = 0.2 = oddsFaced)
-///The lower oddsFaced is, the better his/her odds are.
-///On a side note, if you're looking at heads up, and I bet x/3 of the pot, I'm giving him 4:1 or 0.2
-///A quick way to figure out what to put for oddsFaced would be to say:
-///If this is a permanently-even bet to make, what would my chance to win be?
-float64 CallCumulation::pctWillCall_tiefactor(const float64 oddsFaced, const float64 tiefactor) const
+float64 CallCumulationD::linearInterpolate(float64 x1, float64 y1, float64 x2, float64 y2, float64 x) const
+{
+    return ((x-x1)*y2 + (x2-x)*y1)/(x2-x1);
+}
+
+///This function returns the probability of having winPCT_toHave or better
+float64 CallCumulation::Pr_haveWinPCT_orbetter(const float64 winPCT_toHave) const
 {
 
+    //const size_t maxsize = cumulation.size();
+	const size_t firstBetterThan = searchWinPCT_betterThan_toHave(winPCT_toHave);
 
-    const size_t maxsize = cumulation.size();
-	const size_t guess = searchGap(oddsFaced);
-	if( guess  == maxsize +1 ) return 0;
-	if( guess == maxsize ) return 1;
-	float64 curPCT = cumulation[guess].repeated;
-	if( cumulation[guess].pct == oddsFaced )
-	{
-		if( guess == 0 ) return 0;
-		return cumulation[guess].repeated * tiefactor + cumulation[guess-1].repeated * (1 - tiefactor);
+	//The absolute best had to have is at maxsize-1, so to take frequency from one step back...
+	if(firstBetterThan == 0)
+	{//All hands are better.
+	    return 1;
 	}
 
-	return curPCT;
+    const float64 frequency = 1 - cumulation[firstBetterThan-1].repeated;//The probability of having this hand or better
+    return frequency;
 
 }
 
-
-float64 CallCumulation::pctWillCall_smoothed(const float64 oddsFaced) const
+float64 CallCumulationD::d_dw_only(const float64 w_toHave) const
 {
+    float64 d_dw;
+    Pr_haveWinPCT_orbetter_continuous(w_toHave, &d_dw);
+    return d_dw;
+}
 
+///In this function, assume cumulation is all the possible hands your opponent could have.
+//.wins, .loss, .splits are the stats of your opponent's cards
+//.pct is YOUR chance to win if opponent has that hand
+//.repeated is the rank of your opponents cards (actually, of the next hand better for your opponent to have)
+///Let's say the opponent could read you, and knew what cards you had.
+///It would know your PCT as a function of the hand it had.
+float64 CallCumulationD::Pr_haveWinPCT_orbetter_continuous(const float64 winPCT_toHave, float64 *out_d_dw) const
+{//However, we would like to piecewise linear interpolate, so the function is continuous.
 
     const size_t maxsize = cumulation.size();
-	const size_t guess = searchGap(oddsFaced);
-	if( guess  == maxsize +1 ) return 0;
-	if( guess == maxsize ) return 1;
-	float64 curPCT = cumulation[guess].repeated;
-	const float64 curValue = cumulation[guess].pct;
+	const size_t firstBetterThan = searchWinPCT_betterThan_toHave(winPCT_toHave);
+	//firstBetterThan is the first hand where your opponent can beat you with odds more than winPCT_toHave
+	//cumulation[maxsize-1] is the best hand your opponent can have
 
-    if( guess == maxsize -1 )
+    float64 midpointRarity;
+//Without interpolation, we would return cumulation[firstBetterThan-1].repeated as the chance of getting a better hand next time (the rarity)
+//winPCT_toHave is between cumulation[firstBetterThan-1].pct and cumulation[firstBetterThan].pct
+    if( firstBetterThan == maxsize )
+    {//No hands meet criteria
+        if( out_d_dw != 0 ){*out_d_dw = 0;}
+        return 0; //same is:  {return midpointRarity;}
+    }
+//These boundaries form a region with midpoint:
+    size_t nextBestHandToHave = firstBetterThan + 1;
+    size_t barelyWorseHandToHave = firstBetterThan - 1;
+    size_t prebarelyWorseHandToHave = barelyWorseHandToHave - 1;
+    float64 midpointPCT_toHave;
+    if( firstBetterThan == 0 )
+    {//Noting that cumulation[0].pct as high as possible, and also cumulation[0].repeated is not zero
+        midpointPCT_toHave = 1 - (1 + cumulation[firstBetterThan].pct)/2;
+        midpointRarity = 1;
+        //There is no hand worse for your opponent to have
+        barelyWorseHandToHave = maxsize+1;
+        prebarelyWorseHandToHave = maxsize+1;
+        ///SPECIAL CASE handling:
+         if( winPCT_toHave < midpointPCT_toHave )
+         {
+             if( out_d_dw != 0 ){*out_d_dw = 0;}
+             return 1; //Obviously the frequency of having a better hand than a hand equal to or even worse than the worst is 100%
+         }
+
+    }else
     {
-        return curPCT;
+        midpointPCT_toHave = 1 - (cumulation[barelyWorseHandToHave].pct + cumulation[firstBetterThan].pct)/2;
+        midpointRarity = 1 - cumulation[barelyWorseHandToHave].repeated;
     }
 
-        curPCT =
-            (
-                curPCT * (oddsFaced - cumulation[guess+1].pct)
-                +
-                cumulation[guess+1].repeated * (curValue - oddsFaced)
-            )
-            / (curValue - cumulation[guess+1].pct)
-                ;
+    float64 nextBestPCT_toHave;
+    const float64 nextBestRarity = 1 - cumulation[firstBetterThan].repeated; //Frequency of having better than firstBetterThan
+    if( firstBetterThan == maxsize - 1 )
+    {
+        nextBestPCT_toHave = 1 - cumulation[firstBetterThan].pct;
+    }else
+    {
+        nextBestPCT_toHave = 1 - (cumulation[firstBetterThan].pct + cumulation[firstBetterThan+1].pct)/2;
+    }
 
 
-	return curPCT;
+    float64 barelyWorsePCT_toHave,barelyWorseRarity;
+
+    if( firstBetterThan == 1 )
+    {
+        prebarelyWorseHandToHave = maxsize+1;
+        barelyWorsePCT_toHave = 1 - (1 + cumulation[firstBetterThan].pct)/2;
+        barelyWorseRarity = 1;
+    }else
+    {
+        barelyWorsePCT_toHave = 1 - (cumulation[barelyWorseHandToHave-1].pct + cumulation[barelyWorseHandToHave].pct)/2;
+        barelyWorseRarity = 1 - cumulation[barelyWorseHandToHave-1].repeated;
+    }
+
+
+
+    if( winPCT_toHave < midpointPCT_toHave )
+    {
+        if( out_d_dw != 0 ){*out_d_dw = slopeof(prebarelyWorseHandToHave,barelyWorseHandToHave,barelyWorseHandToHave,firstBetterThan,prebarelyWorseHandToHave,barelyWorseHandToHave);}
+        return linearInterpolate(barelyWorsePCT_toHave,barelyWorseRarity,midpointPCT_toHave,midpointRarity,winPCT_toHave);
+    }
+    else if( winPCT_toHave > midpointPCT_toHave )
+    {//Highest PCT_toHave is at the high indices
+        if( out_d_dw != 0 ){*out_d_dw = slopeof(barelyWorseHandToHave,firstBetterThan,firstBetterThan,nextBestHandToHave,barelyWorseHandToHave,firstBetterThan);}
+        return linearInterpolate(midpointPCT_toHave,midpointRarity,nextBestPCT_toHave,nextBestRarity,winPCT_toHave);
+    }
+    else//( winPCT_toHave == midpointPCT_toHave )
+    {
+        if( out_d_dw != 0 ){*out_d_dw = slopeof(prebarelyWorseHandToHave,barelyWorseHandToHave,firstBetterThan,nextBestHandToHave,prebarelyWorseHandToHave,firstBetterThan);}
+        return midpointRarity;
+    }
 
 }
 
 
-float64 CallCumulation::pctWillCall(const float64 oddsFaced) const
-{
-    return pctWillCall_tiefactor(oddsFaced, DEFAULT_TIE_SCALE_FACTOR);
-}
-
-StatResult CallCumulation::strongestOpponent() const
+StatResult CallCumulation::worstHandToHave() const
 {
     #ifdef DEBUGASSERT
         if( cumulation.size() == 0 )
@@ -220,10 +300,11 @@ StatResult CallCumulation::strongestOpponent() const
     StatResult retVal;
     retVal = cumulation[0];
     retVal.pct = 1 - retVal.pct;
+    retVal.repeated = 0;
     return retVal;
 }
 
-StatResult CallCumulation::weakestOpponent() const
+StatResult CallCumulation::bestHandToHave() const
 {
     #ifdef DEBUGASSERT
         if( cumulation.size() == 0 )
@@ -235,57 +316,46 @@ StatResult CallCumulation::weakestOpponent() const
     StatResult retVal;
     retVal = cumulation[cumulation.size()-1];
     retVal.pct = 1 - retVal.pct;
+    retVal.repeated = cumulation[cumulation.size()-2].repeated;
     return retVal;
 }
 
 
-float64 CallCumulationD::slopeof(const size_t x1, const size_t x0) const
+float64 CallCumulationD::slopeof(size_t x10, size_t x11, size_t x20, size_t x21,size_t y_index0, size_t y_index1) const
 {
-    const float64& y0 = cumulation[x0].repeated;
-    const float64& y1 = cumulation[x1].repeated;
-    const float64& p0 = cumulation[x0].pct;
-    const float64& p1 = cumulation[x1].pct;
+    #ifdef SMOOTHED_CALLCUMULATION_D
+    if( x10 < cumulation.size() )
+    {
+        for( int8 extraSmooth=0;extraSmooth<2;++extraSmooth)
+        {
+            if( x10 <= 0 || x21 >= cumulation.size() - 1)
+            {
+                break;
+            }
+            --y_index0;
+            --x10;
+            --x11;
+            ++y_index1;
+            ++x20;
+            ++x21;
+        }
+    }
+    #endif
+
+    const float64 p10 = ( x10 == cumulation.size() + 1) ? 1 : cumulation[x10].pct;
+    const float64 p11 = ( x11 == cumulation.size() + 1) ? 1 : cumulation[x11].pct;
+
+    const float64 p20 = ( x20 == cumulation.size()) ? 0 : cumulation[x20].pct;
+    const float64 p21 = ( x21 == cumulation.size()) ? 0 : cumulation[x21].pct;
+
+    const float64 y0 = (y_index0 == cumulation.size() + 1) ? 1 : (1-cumulation[y_index0].repeated);
+    const float64 y1 = (y_index1 == cumulation.size()) ? 0 : (1-cumulation[y_index1].repeated);
+    const float64 p0 = 1-(p10 + p11)/2;
+    const float64 p1 = 1-(p20 + p21)/2;
 	return (y1 - y0)/(p1 - p0);
 }
 
-
-float64 CallCumulationD::pctWillCallD(const float64 oddsFaced) const
-{
-	const size_t maxsize = cumulation.size();
-	if( maxsize <= 1 ) return 0;
-	const size_t guess = searchGap(oddsFaced);
-
-
-	if( guess >= maxsize )
-    {
-        return 0; //This is either less than 0 or more than maxsize-1, to return 0 slope
-    }
-	if( guess == maxsize -1 )
-	{
-	    return slopeof(maxsize-1,maxsize-2);
-	}
-
-	if( guess == 0 ) return slopeof(1,0);
-	float64 curPCT = cumulation[guess].repeated;
-	if( curPCT == oddsFaced )
-	{
-		return slopeof(guess+1,guess-1);
-	}
-	#ifdef SMOOTHED_CALLCUMULATION_D
-	if( guess == 1 || guess == maxsize-2 )
-	#endif
-	{
-        return slopeof(guess,guess-1);
-	}
-	#ifdef SMOOTHED_CALLCUMULATION_D
-	if( guess == 2 || guess == maxsize-3 )
-	{
-	    return slopeof(guess+1,guess-2);
-	}
-    return slopeof(guess+2,guess-3);
-    #endif
-}
-
+/*
 float64 SlidingPairCallCumulationD::pctWillCall(const float64 oddsFaced) const
 {
     return left->pctWillCall(oddsFaced) * (1-slider) + right->pctWillCall(oddsFaced) * (slider);
@@ -295,14 +365,20 @@ float64 SlidingPairCallCumulationD::pctWillCallD(const float64 oddsFaced) const
 {
     return left->pctWillCallD(oddsFaced) * (1-slider) + right->pctWillCallD(oddsFaced) * (slider);
 }
+*/
+//First, "pct to have" is  1-(.pct)
+//If you have winPCT_toHave, then the opponent has winPCT_toBeAgainst
+//If you have a pct better than winPCT_toHave, then your opponent has a worse pct than winPCT_toBeAgainst
+//Therefore, we find the best (.pct) that is less than winPCT_toBeAgainst
+//Here, "to be against" means your odds of winning without knowing your cards, but knowing your opponents'
 
-//Search for the first element with a lower .pct and oddsFaced from a descending set in a binary manner
-//The last element of cumulation represents my weakest hand. This also represents the opponent's strongest hand.
-//As such, the largest "call number" will occur at the bottom.
-//So for any given odds, we want to find the .repeated of the NEXT ELEMENT DOWN (we list front to back : 0 to size()-1 : top to bottom)
-//because that is the cumulative sum of all the "repeated" that are better (below)
-size_t CallCumulation::searchGap(const float64 oddsFaced) const
+//This function returns the index of the worst winPCT_toHave which is still better than winPCT_toHave
+//After calling this function, you are interested in all the elements from [returnedIndex to size()-1]
+//The frequency of this set of hands can be determined by taking (1 - cumulation[returnedIndex-1].repeated)
+size_t CallCumulation::searchWinPCT_betterThan_toHave(const float64 winPCT_toHave) const
 {
+    const float64 winPCT_toBeAgainst = 1-winPCT_toHave;
+
 	//binary search
 	size_t first=0;
 	size_t last=cumulation.size()-1;
@@ -310,65 +386,70 @@ size_t CallCumulation::searchGap(const float64 oddsFaced) const
 	float64 curPCT;
 
 
+	curPCT = cumulation[last].pct;
+	//First, we check a special case
+	//Could NO hands be better? We must check if cumulation[last] is also unacceptable
+	if( curPCT > winPCT_toBeAgainst )
+	{
+	    //Even the worst hand to be against puts you in a better position than the requested position
+	    //ie. Even the best hand to have isn't as good as winPCT_toHave
+	    return cumulation.size();
+	}
+
+
     ///Binary search for oddsFaced
-    ///Post-analysis of the algorithm defines a DECREASING pct in cumulation
+    ///The lowest .pct is at last
+    ///We want the pct FURTHEST from last, that doesn't exceed winPCT_toBeAgainst
 	while(last > first)
 	{
 		guess = (last+first)/2;
 		curPCT = cumulation[guess].pct;
 
-		if (curPCT < oddsFaced)
-		{
+		if (curPCT < winPCT_toBeAgainst) //curPCT doesn't exceed, so we can go higher in PCT, lower in index (drop the large indices)
+		{//Still too close to .size(), pct was too low
 
-			if (guess == first)
-			{ //A. guess == first implies last == first + 1
-				if (guess == 0) return cumulation.size()+1;
-				return guess-1;
-			}
-			last = guess;
+            if( guess == last )
+            {
+                //This should be impossible, since guess would round down always.
+                if( cumulation[first].pct < winPCT_toBeAgainst )
+                {
+                    //still doesn't exceed, we're good
+                    last = first;
+                }else
+                {
+                    first = last;
+                }
+            }else
+            {
+                last = guess;
+                //We can't go last = guess - 1 because that might be too high of a curPCT
+            }
+
 		}
-		else if (curPCT > oddsFaced)
-		{
-			if (guess + 1 == last)
-			{ //B. first  + 1 == last - 1
-				if ( cumulation[last].pct > oddsFaced )
-				{
-					++last;
-					if (last == cumulation.size() ) return cumulation.size();
-					return last;
-				}
-				else if (cumulation[last].pct < oddsFaced)
-				{
-					return guess;
-				}
-				else
-				{// cumulation[last].pct == oddsFaced
-					return last;
-				}
-			}
-			first = guess;
+		else if (curPCT > winPCT_toBeAgainst)
+		{//we went too far (up, if 0 is at the top) and we exceeded winPCT_toBeAgainst!
+		 //first is no good.
+
+            if( guess == last )
+            {
+                first = guess; //This should be impossible, since guess would round down always.
+            }else
+            {
+                first = guess+1;
+            }
 		}
 		else
-		{///The odds faced are EXACTLY the chance to win. How many people would take this bet?
-            ///Let's scale this by the scalefactor
-            //if( guess == 0 ) return cumulation[guess].repeated;
-			return guess; //Please check if(cumulation[searchGap(oddsFaced)].pct == oddsFaced) then SCALEFACTOR
-			//return cumulation[guess].repeated * tiefactor + cumulation[guess-1].repeated * (1 - tiefactor);
-		}
-	}
-	curPCT = cumulation[last].pct;
-	if(curPCT < oddsFaced)
-	{
-		if (last == 0)
 		{
-			return cumulation.size()+1;
+		    last = guess;
+		    first = guess;
 		}
-		return last-1;
 	}
-	else
-	{
-		return last;
-	}
+
+
+	//INVARIANT: last==first
+	//last should be the first winPCT to have that is better than the winPCT_toHave
+	//For exmaple, if( last == 0 ) ALL hands are better!
+	return last;
 
 }
 

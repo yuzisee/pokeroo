@@ -70,7 +70,7 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 float64 FoldWaitLengthModel::d_dw( const float64 n )
 {
     if( meanConv == 0 ) return (n)*amountSacrifice/2;
-    return -(n)*amountSacrifice/2 * meanConv->pctWillCallD( w );
+    return -(n)*amountSacrifice/2 * meanConv->d_dw_only( w );
 }
 
 
@@ -96,13 +96,13 @@ const float64 FoldWaitLengthModel::rarity( ) const
 {
     if( w >= 1/RAREST_HAND_CHANCE ) return 1/RAREST_HAND_CHANCE;
     if( meanConv == 0 ) return 1-w;
-    return meanConv->pctWillCall(w);
+    return meanConv->Pr_haveWinPCT_orbetter_continuous(w);
 }
 
 const float64 FoldWaitLengthModel::lookup( const float64 rank ) const
 {
     if( meanConv == 0 ) return rank;
-    return meanConv->reverseLookup(rank);
+    return meanConv->nearest_winPCT_given_rank(rank);
 }
 
 const float64 FoldWaitLengthModel::dlookup( const float64 rank ) const
@@ -160,11 +160,13 @@ void FoldGainModel::query( const float64 betSize )
     {
         return;
     }
+
+    waitLength.betSize = betSize;
+
     lastBetSize = betSize;
     last_dw_dbet = dw_dbet;
     lastWaitLength = waitLength;
 
-    waitLength.betSize = betSize;
 
     const float64 concedeGain = -waitLength.amountSacrifice;
 

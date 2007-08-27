@@ -635,11 +635,6 @@ void CallStats::showProgressUpdate() const
     std::cerr << "C: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 }
 
-float64 CallStats::pctWillCall(const float64 oddsFaced) const
-{
-	return calc->pctWillCall(oddsFaced);
-}
-
 void CallStats::DropCard(const DeckLocation deck)
 {
 

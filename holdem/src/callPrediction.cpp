@@ -880,12 +880,12 @@ void ExactCallD::query(const float64 betSize)
                                 }
                                 #endif
 
-                                w_r_mean = e->pctWillCall(w_r_mean);
+                                const float64 noRaiseMean = e->Pr_haveWinPCT_orbetter(w_r_mean);
 
                                 const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(), w_r_rank, 1/significance, totaldexf, bOppCouldCheck,0);
-                                const float64 noraiseMeanD = e->pctWillCallD(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(),w_r_mean, 1/significance,totaldexf,bOppCouldCheck,e);
+                                const float64 noraiseMeanD = e->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(),w_r_mean, 1/significance,totaldexf,bOppCouldCheck,e);
 
-                                nextNoRaise_A[i] = (w_r_mean+w_r_rank)/2;
+                                nextNoRaise_A[i] = (noRaiseMean+w_r_rank)/2;
                                 nextNoRaiseD_A[i] = (noraiseMeanD+noraiseRankD)/2;
 
                                 prevRaise = thisRaise;
@@ -941,10 +941,10 @@ void ExactCallD::query(const float64 betSize)
 #endif
 
                     const float64 w = facedOdds_call_Geom(oppBankRoll,totalexf,oppBetAlready,betSize, 1/significance, e);
-                    nextexf = e->pctWillCall(w);
+                    nextexf = e->Pr_haveWinPCT_orbetter(w);
                     peopleInHandUpper -= 1-nextexf;
 
-                    nextdexf = nextexf + oppBetMake * e->pctWillCallD(w)
+                    nextdexf = nextexf + oppBetMake * e->d_dw_only(w)
                                         * dfacedOdds_dbetSize_Geom( oppBankRoll,totalexf,oppBetAlready,betSize,totaldexf,w, 1/significance, e);
 
                     nextexf *= oppBetMake;
@@ -963,7 +963,7 @@ void ExactCallD::query(const float64 betSize)
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
 
 
-                nextexf = e->pctWillCall( facedOdds_call_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBankRoll, 1/significance,e) );
+                nextexf = e->Pr_haveWinPCT_orbetter( facedOdds_call_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBankRoll, 1/significance,e) );
                 peopleInHandUpper -= 1-nextexf;
                 nextexf *= oppBetMake ;
 
@@ -1099,9 +1099,9 @@ void ExactCallBluffD::query(const float64 betSize)
                     float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
                     oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
                     //ea-> is if they know your hand
-                    const float64 eaFold = (1 - ea->pctWillCall_smoothed( w_mean ))*(1 - oppCommitted);
+                    const float64 eaFold = (1 - ea->Pr_haveWinPCT_orbetter_continuous( w_mean ))*(1 - oppCommitted);
                     //e-> is if they don't know your hand
-                    const float64 meanFold = 1 - e->pctWillCall( w_mean );
+                    const float64 meanFold = 1 - e->Pr_haveWinPCT_orbetter( w_mean );
                     //w is if they don't know your hand
                     const float64 rankFold = w_rank;
                     //handRarity is based on if they know your hand
@@ -1111,8 +1111,8 @@ void ExactCallBluffD::query(const float64 betSize)
 
 
                     const float64 rankFoldPartial = dw_dbetSize_rank;
-                    const float64 meanFoldPartial = -e->pctWillCallD( w_mean ) * dw_dbetSize_mean;
-                    const float64 eaFoldPartial = -ea->pctWillCallD( w_mean ) * dw_dbetSize_mean;
+                    const float64 meanFoldPartial = -e->d_dw_only( w_mean ) * dw_dbetSize_mean;
+                    const float64 eaFoldPartial = -ea->d_dw_only( w_mean ) * dw_dbetSize_mean;
                     const float64 eaRkFoldPartial = 0;
 
                     ///topTwoOfThree is on a player-by-player basis
@@ -1156,8 +1156,8 @@ void ExactCallBluffD::query(const float64 betSize)
 
                     float64 oppCommitted = table->ViewPlayer(pIndex)->GetContribution();
                     oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
-                    const float64 eaFold = (1 - ea->pctWillCall_smoothed( w_mean ))*(1 - oppCommitted);
-                    const float64 meanFold = 1 - e->pctWillCall( w_mean );
+                    const float64 eaFold = (1 - ea->Pr_haveWinPCT_orbetter_continuous( w_mean ))*(1 - oppCommitted);
+                    const float64 meanFold = 1 - e->Pr_haveWinPCT_orbetter( w_mean );
                     const float64 rankFold = w_rank;
                     const float64 eaRkFold = 1-handRarity;
 

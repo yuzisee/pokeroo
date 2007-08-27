@@ -186,7 +186,7 @@ void genC(CommunityPlus& h1, CommunityPlus& h2)
 				<< " pct\tx;"<< calc.cumulation[i].repeated <<flush;
 	}
 
-
+/*
 	cout << endl << "Confirm that -0.5:1 odds receives " << calc.pctWillCall(2) <<  endl;
 	cout << endl << "Confirm that .0101:1 odds receives " << calc.pctWillCall(.99) << endl;
 	cout << endl << "Confirm that .333:1 odds receives " << calc.pctWillCall(.75) <<  endl;
@@ -205,7 +205,7 @@ void genC(CommunityPlus& h1, CommunityPlus& h2)
 	cout << endl << "Confirm that inf:1 odds slope " << calc.pctWillCallD(0) <<  endl;
 	cout << endl << "Confirm that -2:1 odds slope " << calc.pctWillCallD(-1) << endl;
 
-/*
+
 	cout << endl << "Confirm that -0.5:1 odds receives " << calc.pctWillCallDEBUG(2,.5) <<  endl;
 	cout << endl << "Confirm that .0101:1 odds receives " << calc.pctWillCallDEBUG(.99,.5) << endl;
 	cout << endl << "Confirm that .333:1 odds receives " << calc.pctWillCallDEBUG(.75,.5) <<  endl;

@@ -79,14 +79,17 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
         ViewTable().CachedQueryOffense(possibleHands,withCommunity);
 
-        const float64 ranking3 = possibleHands.pctWillCall_tiefactor(1 - winMean.pct, 1); //wins+splits
-        const float64 ranking = possibleHands.pctWillCall_tiefactor(1 - winMean.pct, 0); //wins
+        rarity = possibleHands.Pr_haveWinPCT_orbetter(winMean.pct);
 
-        rankPCT.wins = ranking;
-        rankPCT.splits = ranking3 - ranking;
-        rankPCT.loss = 1 - ranking3;
+//You can tie in rank if and only if you tie in mean
+        rankPCT.wins = 1 - rarity;
+        rankPCT.splits = winMean.splits;
+        rankPCT.loss = rarity;
+        const float64 scaleTotal = rankPCT.wins + rankPCT.splits + rankPCT.loss;
+        rankPCT.wins /= scaleTotal;
+        rankPCT.splits /= scaleTotal;
+        rankPCT.loss /= scaleTotal;
         rankPCT.genPCT();
-        rarity = 1.0 - rankPCT.pct;
 
 
 	#endif

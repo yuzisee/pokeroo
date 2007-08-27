@@ -148,22 +148,33 @@ class StatResult
 
 }
 ;
-/*
-class StatResultZero : public StatResult
-{
-	StatResultZero() : StatResult()
-	{
-		StatResult::repeated = 0;
-	}
-}
-;
-*/
 
+
+//In CallCumulation[n], .pct represents the opponents PCT if YOU had hand #n
+//.wins, .splits, .loss represent the YOUR rating with hand #n
+//.repeated is rank (1.0 for the best hand to have, and slightly above 0 for the worst hand to have)
+//1 - .repeated  is rarity (chance of having this or better)
+//INVARIANT: 84.9% is the win percentage of AA preflop
+//(http://seoblackhat.com/texas-hold-em-poker-statistics/)
+//AA is cumulation[168]
+//AA has .wins = 84.9%
+//AA has .splits = 0.54%
+//AA has .loss = 14.6%
+//AA has .repeated = 1
+//AA has .pct = 0.148
+
+//32o is probably cumulation[0]
+//32o has .wins = 29.2%
+//32o has .splits = 6.12%
+//32o has .loss = 64.6%
+//32o has .repeated = 0.00980
+//32o has .pct = 0.677
 
 class CallCumulation
 {
+
 protected:
-	size_t searchGap(const float64) const;
+	size_t searchWinPCT_betterThan_toHave(const float64 winPCT_toHave) const;
 
 public:
     CallCumulation(const CallCumulation& o)
@@ -175,12 +186,10 @@ public:
     const CallCumulation & operator=(const CallCumulation& o);
 
 	vector<StatResult> cumulation;
-	float64 pctWillCall_tiefactor(const float64, const float64) const;
-	virtual float64 pctWillCall(const float64) const;
-	virtual float64 pctWillCall_smoothed(const float64) const;
-	virtual float64 reverseLookup(const float64) const;
-	virtual StatResult strongestOpponent() const;
-	virtual StatResult weakestOpponent() const;
+	virtual float64 Pr_haveWinPCT_orbetter(const float64 w_toHave) const;
+	virtual float64 nearest_winPCT_given_rank(const float64 rank) const;
+	virtual StatResult bestHandToHave() const;
+	virtual StatResult worstHandToHave() const;
 
 	#ifdef DEBUGLOGINFERENTIALS
         static void displayCallCumulation(std::ostream &targetoutput, const CallCumulation& calc)
@@ -204,9 +213,11 @@ public:
 class CallCumulationD : public virtual CallCumulation
 {
 private:
-	virtual float64 slopeof(const size_t, const size_t) const;
+    float64 linearInterpolate(float64 x1, float64 y1, float64 x2, float64 y2, float64 x) const;
+	virtual float64 slopeof(size_t x10, size_t x11, size_t x20, size_t x21, size_t, size_t) const;
 public:
-	virtual float64 pctWillCallD(const float64) const;
+    float64 d_dw_only(const float64 w_toHave) const;
+	virtual float64 Pr_haveWinPCT_orbetter_continuous(const float64 w_toHave, float64 *out_d_dw = 0) const;
 	virtual float64 inverseD(const float64) const;
 
         #ifdef DEBUG_DEXF
@@ -248,7 +259,7 @@ class CallCumulationFlat : public virtual CallCumulationD
     {return -1;}
 }
 ;
-
+/*
 class SlidingPairCallCumulationD : public virtual CallCumulationD
 {
     protected:
@@ -263,7 +274,7 @@ class SlidingPairCallCumulationD : public virtual CallCumulationD
         virtual float64 pctWillCallD(const float64 oddsFaced) const;
 }
 ;
-
+*/
 
 class DistrShape
 {
