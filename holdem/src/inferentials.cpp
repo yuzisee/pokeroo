@@ -25,7 +25,7 @@
 //#include <iostream>
 
 #define SMOOTHED_CALLCUMULATION_D
-#define ACCELERATE_SEARCH_MINIMUM 256
+#define ACCELERATE_SEARCH_MINIMUM 64
 //const float64 CallCumulation::tiefactor = DEFAULT_TIE_SCALE_FACTOR;
 
 
@@ -195,12 +195,20 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
         }
     }
 
+    size_t lastWidth = high_index - low_index;
+
     while( high_index > low_index + 1 )
     {
 
-        if( high_index-low_index < ACCELERATE_SEARCH_MINIMUM )
+#ifdef ACCELERATE_SEARCH_MINIMUM
+        size_t currentWidth = high_index-low_index;
+        if( currentWidth < ACCELERATE_SEARCH_MINIMUM || (currentWidth-1)*2 > lastWidth )
         {
+            //We use bisection if the last iteration didn't cut the range in at least half
+            //We also start using bisection exclusively after a SEARCH_MINIMUM
+#endif
             guess_index = (high_index+low_index)/2;
+#ifdef ACCELERATE_SEARCH_MINIMUM
         }else
         {
             float64 false_position = (high_index*(rank_toHave-low_rank) + low_index*(high_rank-rank_toHave))/(high_rank-low_rank);
@@ -224,9 +232,9 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
                 if( bFloor ) {--guess_index ;}
             }
         }
-
+#endif
         const float64 guess_rank = cumulation[guess_index].repeated;
-
+        lastWidth = currentWidth;
 
         if( guess_rank > rank_toHave )
         {

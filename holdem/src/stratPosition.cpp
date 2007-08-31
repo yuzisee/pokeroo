@@ -35,7 +35,7 @@
 
 
 #define ACTREACTUSES_RA (riskprice)
-#define ACTREACTUSES_HD maxShowdown
+#define ACTREACTUSES_HD riskprice
 //#define ACTREACTUSES_HD maxShowdown
 #define DELAYENEMYOPP 0
 //#define DELAYENEMYOPP riskprice
