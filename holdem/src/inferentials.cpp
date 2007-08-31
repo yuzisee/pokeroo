@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include <math.h>
+#include <algorithm>
 #include "inferentials.h"
 
 //#include <iostream>
@@ -85,6 +86,36 @@ CallCumulation::~CallCumulation()
 {
 }
 
+
+void CallCumulation::ReversePerspective()
+{
+//Originally, the incremental/marginal rank of hand #n is [n].repeated - [n-1].repeated
+    std::reverse(cumulation.begin(),cumulation.end());
+//After reversing, you must calculate [n].repeated - [n+1].repeated
+    vector<StatResult>::iterator target;
+    vector<StatResult>::iterator next_target = cumulation.begin();
+    do
+    {
+        target = next_target;
+
+        (*target).pct = 1 - (*target).pct;
+        (*target).wins = 1 - (*target).wins;
+        (*target).loss = 1 - (*target).loss;
+
+        ++next_target;
+
+        (*target).repeated = 1 - (*next_target).repeated;
+
+    }while( next_target != cumulation.end() );
+
+
+    (*next_target).pct = 1 - (*next_target).pct;
+    (*next_target).wins = 1 - (*next_target).wins;
+    (*next_target).loss = 1 - (*next_target).loss;
+    (*next_target).repeated = 1;
+
+}
+
 ///This function is the derivative of nearest_winPCT_given_rank by drank
 float64 CallCumulationD::inverseD(const float64 rank)
 {
@@ -145,9 +176,13 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
         high_rank = cumulation[cached_high_index].repeated;
         //High index should be just above the desired rank
         //Low index should be just below
-        if( high_rank > rank_toHave && rank_toHave > low_rank )
+        if( high_rank > rank_toHave )
         {
             high_index = cached_high_index;
+        }
+
+        if( low_rank < rank_toHave )
+        {//as if guess_rank < rank_toHave
             low_index = cached_high_index - 1;
         }
     }

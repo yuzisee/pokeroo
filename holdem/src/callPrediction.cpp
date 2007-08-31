@@ -1358,29 +1358,22 @@ float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit) co
 
 float64 ExactCallBluffD::RiskPrice()
 {
-    const float64 N = table->GetNumberAtTable();
+    //const float64 N = table->GetNumberAtTable();
     const float64 Ne = table->GetNumberInHand()-1;
 
-    const float64 estSacrifice = (table->GetPotSize())/Ne;
+    const float64 estSacrifice = (table->GetPotSize() - table->ViewPlayer(playerID)->GetBetSize());
 
     const float64 maxStack = table->GetAllChips();
+    const float64 maxShowdown = table->GetMaxShowdown();
 
-    FG.waitLength.w = ea->nearest_winPCT_given_rank(1.0 - 1.0/N);
-    FG.waitLength.amountSacrifice = callBet();//estSacrifice;
+    FG.waitLength.w = ea->nearest_winPCT_given_rank(1.0 - 1.0/Ne); //If you're past the flop, we need definitely consider only the true number of opponents
+    FG.waitLength.amountSacrifice = estSacrifice; //rarity() already implies the Ne
     FG.waitLength.bankroll = maxStack;
     FG.waitLength.opponents = 1;
     FG.waitLength.meanConv = ea; //TODO: Is this a good idea?
-    const float64 riskprice = FG.FindZero(table->GetMinRaise() + callBet(),maxStack);
+    const float64 riskprice = FG.FindZero(table->GetMinRaise() + callBet(),maxShowdown);
 
-//const float64 n = RAREST_HAND_CHANCE;
+    return riskprice;
 
-    const float64 maxShowdown = table->GetMaxShowdown();
-    if( maxShowdown < riskprice )
-    {
-        return maxShowdown;
-    }else
-    {
-        return riskprice;
-    }
 }
 

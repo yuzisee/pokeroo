@@ -141,6 +141,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     //if(bLogWorse)
     {
         StatsManager::QueryDefense(foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
+        foldcumu.ReversePerspective();
     }
     //else{
 

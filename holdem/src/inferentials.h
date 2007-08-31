@@ -186,7 +186,11 @@ public:
     virtual ~CallCumulation();
     const CallCumulation & operator=(const CallCumulation& o);
 
-	vector<StatResult> cumulation;
+    vector<StatResult> cumulation;
+
+    virtual void ReversePerspective();
+
+
 	virtual float64 Pr_haveWinPCT_orbetter(const float64 w_toHave) const;
 	virtual float64 nearest_winPCT_given_rank(const float64 rank);
 	virtual StatResult bestHandToHave() const;
