@@ -462,7 +462,7 @@ float64 UserConsoleStrategy::queryAction()
             #ifdef USERINPUT
             UI_DESCRIPTOR << "Mark fileinput" << endl;
             #endif
-            while( myFifo->peek() == '\n' || myFifo->peek() == '\r' )
+            while( myFifo->peek() == '\n' || myFifo->peek() == '\r' || myFifo->peek() == ' ' )
             {
                 #ifdef USERINPUT
                 UI_DESCRIPTOR << "ExtraE" << endl;
