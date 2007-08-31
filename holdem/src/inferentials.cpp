@@ -99,20 +99,27 @@ void CallCumulation::ReversePerspective()
     (*next_target).wins = 1 - (*next_target).wins - (*next_target).splits;
     (*next_target).loss = 1 - (*next_target).loss - (*next_target).splits;
 
-    do
+    while( next_target != cumulation.end() )
     {
         target = next_target;
         ++next_target;
 
-        (*target).repeated = 1 - (*next_target).repeated;
+        if( next_target == cumulation.end() )
+        {
+            (*target).repeated = 1;
+            break;
+        }else
+        {
 
-        (*next_target).pct = 1 - (*next_target).pct;
-        (*next_target).wins = 1 - (*next_target).wins - (*next_target).splits;
-        (*next_target).loss = 1 - (*next_target).loss - (*next_target).splits;
+            (*target).repeated = 1 - (*next_target).repeated;
 
-    }while( next_target != cumulation.end() );
+            (*next_target).pct = 1 - (*next_target).pct;
+            (*next_target).wins = 1 - (*next_target).wins - (*next_target).splits;
+            (*next_target).loss = 1 - (*next_target).loss - (*next_target).splits;
+        }
+    }
 
-    (*next_target).repeated = 1;
+
 
 }
 

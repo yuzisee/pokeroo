@@ -1108,10 +1108,10 @@ void ExactCallBluffD::query(const float64 betSize)
                 const float64 dw_dbetSize_rank = facedOddsND_Algb( oppBankRoll,origPot,oppBetAlready,oppBetMake,origPotD,w_rank, nLinear, 0);
 
 
-                    float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
-                    oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
+                    //float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
+                    //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
                     //ea-> is if they know your hand
-                    const float64 eaFold = (1 - ea->Pr_haveWinPCT_orbetter_continuous( w_mean ))*(1 - oppCommitted);
+                    const float64 eaFold = (1 - ea->Pr_haveWinPCT_orbetter_continuous( w_mean ));//*(1 - oppCommitted);
                     //e-> is if they don't know your hand
                     const float64 meanFold = 1 - e->Pr_haveWinPCT_orbetter( w_mean );
                     //w is if they don't know your hand
@@ -1166,9 +1166,9 @@ void ExactCallBluffD::query(const float64 betSize)
                         w_rank = 1;
                     }
 
-                    float64 oppCommitted = table->ViewPlayer(pIndex)->GetContribution();
-                    oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
-                    const float64 eaFold = (1 - ea->Pr_haveWinPCT_orbetter_continuous( w_mean ))*(1 - oppCommitted);
+                    //float64 oppCommitted = table->ViewPlayer(pIndex)->GetContribution();
+                    //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
+                    const float64 eaFold = (1 - ea->Pr_haveWinPCT_orbetter_continuous( w_mean ));//*(1 - oppCommitted);
                     const float64 meanFold = 1 - e->Pr_haveWinPCT_orbetter( w_mean );
                     const float64 rankFold = w_rank;
                     const float64 eaRkFold = 1-handRarity;
