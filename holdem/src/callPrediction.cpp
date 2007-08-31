@@ -891,8 +891,8 @@ void ExactCallD::query(const float64 betSize)
 
                                 const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(), w_r_rank, 1/significance, totaldexf, bOppCouldCheck,0);
 
-                                const float64 noRaiseMean = e->Pr_haveWinPCT_orbetter(w_r_mean);
-                                const float64 noraiseMeanD = e->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(),w_r_mean, 1/significance,totaldexf,bOppCouldCheck,e);
+                                const float64 noRaiseMean = 1-e->Pr_haveWinPCT_orbetter(w_r_mean);
+                                const float64 noraiseMeanD = -e->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(),w_r_mean, 1/significance,totaldexf,bOppCouldCheck,e);
 
                                 //nextNoRaise_A[i] = w_r_rank;
                                 //nextNoRaiseD_A[i] = noraiseRankD;
