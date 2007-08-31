@@ -94,24 +94,24 @@ void CallCumulation::ReversePerspective()
 //After reversing, you must calculate [n].repeated - [n+1].repeated
     vector<StatResult>::iterator target;
     vector<StatResult>::iterator next_target = cumulation.begin();
+
+    (*next_target).pct = 1 - (*next_target).pct;
+    (*next_target).wins = 1 - (*next_target).wins - (*next_target).splits;
+    (*next_target).loss = 1 - (*next_target).loss - (*next_target).splits;
+
     do
     {
         target = next_target;
-
-        (*target).pct = 1 - (*target).pct;
-        (*target).wins = 1 - (*target).wins;
-        (*target).loss = 1 - (*target).loss;
-
         ++next_target;
 
         (*target).repeated = 1 - (*next_target).repeated;
 
+        (*next_target).pct = 1 - (*next_target).pct;
+        (*next_target).wins = 1 - (*next_target).wins - (*next_target).splits;
+        (*next_target).loss = 1 - (*next_target).loss - (*next_target).splits;
+
     }while( next_target != cumulation.end() );
 
-
-    (*next_target).pct = 1 - (*next_target).pct;
-    (*next_target).wins = 1 - (*next_target).wins;
-    (*next_target).loss = 1 - (*next_target).loss;
     (*next_target).repeated = 1;
 
 }

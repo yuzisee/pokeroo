@@ -625,7 +625,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(float64 bankroll, float64 pot, floa
         float64 dRiskLoss_pot;
         RiskLoss(alreadyBet, bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
 
-        FoldGainModel myFG(1.0/3.0);
+        FoldGainModel myFG(table->GetChipDenom());
 
     //USE myFG for F_a and F_b
         myFG.waitLength.meanConv = useMean;
