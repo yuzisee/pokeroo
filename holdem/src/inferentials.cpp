@@ -307,7 +307,7 @@ float64 CallCumulationD::Pr_haveWinPCT_orbetter_continuous(const float64 winPCT_
     if( firstBetterThan == maxsize )
     {//No hands meet criteria
         if( out_d_dw != 0 ){*out_d_dw = 0;}
-        return 1; //same is:  {return midpointRarity;}
+        return 0; //same is:  {return midpointRarity;}
     }
 //These boundaries form a region with midpoint:
     size_t nextBestHandToHave = firstBetterThan + 1;
