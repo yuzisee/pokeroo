@@ -416,10 +416,10 @@ float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alre
 const float64 ExactCallD::percentReact(float64 raisebet, const Player * withP) const
 {
     //Upperlimit defines the 100% React of the uReact/ActOrReact
-        const float64 upperlimit = table->GetMaxShowdown();// RiskPrice();
+        const float64 upperlimit = table->GetMaxShowdown(withP->GetMoney());// RiskPrice();
         const float64 uReact = ActOrReact(callBet(),withP->GetBetSize(),upperlimit);
     //Dist is the amount of the raise. A high dist with a low react should be discouraged
-        const float64 dist = raisebet / table->GetMaxShowdown();
+        const float64 dist = raisebet / upperlimit;
     //In other words, too low of percentReact is the deterrent
         const float64 percentreact = (dist > 1) ? uReact : (1-(1-uReact)*dist);
 
@@ -1059,7 +1059,7 @@ void ExactCallBluffD::query(const float64 betSize)
     const float64 origPotD = mydexf;
 
 
-    if( betSize < minRaiseTo() - chipDenom()/4 || callBet() >= table->GetMaxShowdown() )
+    if( betSize < minRaiseTo() - chipDenom()/4 || callBet() >= table->GetMaxShowdown(table->ViewPlayer(playerID)->GetMoney()) )
     { //Bet is a call, no chance of oppFold
         allFoldChance = 0;
         allFoldChanceD = 0;
@@ -1364,7 +1364,7 @@ float64 ExactCallBluffD::RiskPrice()
     const float64 estSacrifice = (table->GetPotSize() - table->ViewPlayer(playerID)->GetBetSize());
 
     const float64 maxStack = table->GetAllChips();
-    const float64 maxShowdown = table->GetMaxShowdown();
+    const float64 maxShowdown = table->GetMaxShowdown(table->ViewPlayer(playerID)->GetMoney());
 
     FG.waitLength.w = ea->nearest_winPCT_given_rank(1.0 - 1.0/Ne); //If you're past the flop, we need definitely consider only the true number of opponents
     FG.waitLength.amountSacrifice = estSacrifice; //rarity() already implies the Ne
@@ -1373,7 +1373,7 @@ float64 ExactCallBluffD::RiskPrice()
     FG.waitLength.meanConv = ea; //TODO: Is this a good idea?
     const float64 riskprice = FG.FindZero(table->GetMinRaise() + callBet(),maxShowdown);
 
-    const float64 zero = FG.f(riskprice);
+    FG.f(riskprice);
 
     if( FG.n > 0 )
     {

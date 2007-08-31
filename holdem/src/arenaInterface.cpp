@@ -476,69 +476,36 @@ float64 HoldemArena::GetBetToCall() const
 {
 	return highBet;
 }
-/*
-float64 HoldemArena::GetMaxShowdown() const
+
+float64 HoldemArena::GetMaxShowdown(const float64 myMoney) const
 {
-	int8 highest;
-	int8 secondhighest;
-
-    std::cout << p[0]->GetIdent() << " can still bet " << p[0]->GetMoney() - p[0]->GetBetSize() << std::endl;
-    std::cout << p[1]->GetIdent() << " can still bet " << p[1]->GetMoney() - p[1]->GetBetSize() << std::endl;
-
-    if( p[1]->GetMoney() - p[1]->GetBetSize()
-             >
-             p[0]->GetMoney() - p[0]->GetBetSize() )
-    {
-        highest = 1;
-        secondhighest = 0;
-    }else
-    {
-        highest = 0;
-        secondhighest = 1;
-    }
-
-	for(int8 i=2;i<nextNewPlayer;++i)
-	{
-		if(! HasFolded(i) )
-		{
-		    std::cout << p[i]->GetIdent() << " can still bet " << p[i]->GetMoney() - p[i]->GetBetSize() << std::endl;
-			if( p[i]->GetMoney() - p[i]->GetBetSize()
-						 >
-						 p[highest]->GetMoney() - p[highest]->GetBetSize() )
-			{
-				secondhighest = highest;
-				highest = i;
-			}
-		}
-	}
-
-	return p[secondhighest]->GetMoney() - p[secondhighest]->GetBetSize();
-}
-
-*/
-float64 HoldemArena::GetMaxShowdown() const
-{
-	int8 highest = -1;
-	int8 secondhighest = -1;
+	float64 highestMoney = -1;
+	float64 secondHighestMoney = -1;
 
 
 	for(int8 i=0;i<nextNewPlayer;++i)
 	{
 		if(! HasFolded(i) )
 		{
-		    if( highest == -1 || p[i]->GetMoney() > p[highest]->GetMoney() )
+		    if( highestMoney <= 0 || p[i]->GetMoney() > highestMoney )
 			{
-				secondhighest = highest;
-				highest = i;
-			}else if( secondhighest == -1 ||
-                        p[i]->GetMoney() > p[secondhighest]->GetMoney() )
+				secondHighestMoney = highestMoney;
+				highestMoney = p[i]->GetMoney();
+			}else if( secondHighestMoney <= 0 ||
+                        p[i]->GetMoney() > secondHighestMoney )
 			{
-				secondhighest = i;
+				secondHighestMoney = p[i]->GetMoney();
 			}
 		}
 	}
 
-	return p[secondhighest]->GetMoney();
+    if( myMoney > 0 && myMoney < secondHighestMoney )
+    {
+        return myMoney;
+    }else
+    {
+        return secondHighestMoney;
+    }
 }
 
 

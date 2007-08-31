@@ -371,7 +371,7 @@ protected:
    		virtual float64 GetUnbetBlindsTotal() const; //blindOnlySum
 		virtual float64 GetPotSize() const;
 		virtual float64 GetBetToCall() const; //since ROUND start
-		virtual float64 GetMaxShowdown() const;
+		virtual float64 GetMaxShowdown(const float64 myMoney = -1) const;
 		virtual float64 GetMinRaise() const;
 		virtual float64 GetBigBlind() const;
 		virtual float64 GetSmallBlind() const;
