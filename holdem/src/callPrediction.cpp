@@ -1373,7 +1373,16 @@ float64 ExactCallBluffD::RiskPrice()
     FG.waitLength.meanConv = ea; //TODO: Is this a good idea?
     const float64 riskprice = FG.FindZero(table->GetMinRaise() + callBet(),maxShowdown);
 
-    return riskprice;
+    const float64 zero = FG.f(riskprice);
+
+    if( FG.n > 0 )
+    {
+        return riskprice;
+    }else
+    {
+        return maxShowdown;
+    }
+
 
 }
 
