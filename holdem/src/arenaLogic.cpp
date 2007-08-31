@@ -737,6 +737,7 @@ DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
     }else
     #endif
     {
+        bLoadGame = false;
         userCard.SetByIndex( HoldemUtil::ReadCard( s ) );
     }
     return userCard;
@@ -786,47 +787,54 @@ void HoldemArena::DealHands()
     #endif
 
 
-	int8 dealtEach = 0;
-
-
 
 #ifdef EXTERNAL_DEALER
 
-incrIndex();
 
-    Player& withP = *(p[curIndex]);
 
-    if(withP.myMoney > 0)
+    do
     {
+        incrIndex();
 
-        if(!(withP.bSync))
+        Player& withP = *(p[curIndex]);
+
+        if(withP.myMoney > 0)
         {
-            std::cerr << withP.GetIdent().c_str() << ", enter your cards (no whitespace): " << endl;
-            std::cin.sync();
-            std::cin.clear();
-            withP.myHand.AddToHand(ExternalQueryCard(std::cin));
-            withP.myHand.AddToHand(ExternalQueryCard(std::cin));
-            std::cin.sync();
-            std::cin.clear();
 
-            #ifdef DEBUGSAVEGAME
-            std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-            (withP.myHand).HandPlus::DisplayHand(saveFile);
-            saveFile.close();
-            #endif
+            if(!(withP.bSync))
+            {
+                std::cerr << withP.GetIdent().c_str() << ", enter your cards (no whitespace): " << endl;
+                std::cin.sync();
+                std::cin.clear();
+                withP.myHand.AddToHand(ExternalQueryCard(std::cin));
+                withP.myHand.AddToHand(ExternalQueryCard(std::cin));
+                std::cin.sync();
+                std::cin.clear();
 
-            (withP.myHand).HandPlus::DisplayHand(holecardsData);
-            holecardsData << withP.GetIdent().c_str() << endl;
+                #ifdef DEBUGSAVEGAME
+                std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+                (withP.myHand).HandPlus::DisplayHand(saveFile);
+                saveFile.close();
+                #endif
+
+                (withP.myHand).HandPlus::DisplayHand(holecardsData);
+                holecardsData << withP.GetIdent().c_str() << endl;
+            }
         }
-    }
-    else
-    {
-        withP.lastBetSize = INVALID;
-        withP.myBetSize = INVALID;
-    }
+        else
+        {
+            withP.lastBetSize = INVALID;
+            withP.myBetSize = INVALID;
+        }
 
-    if(curDealer == curIndex) ++dealtEach;
+
+
+    }while(curDealer != curIndex);
+
 #else
+
+    int8 dealtEach = 0;
+
 	#ifdef DEBUGSAVEGAME
     if( bLoadGame )
     {
