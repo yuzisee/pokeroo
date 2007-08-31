@@ -77,13 +77,17 @@ class Player
 		float64 handBetTotal; //Sum of bets made during COMPLETED betting rounds
 		float64 myBetSize; //Within a betting round, the current bet on the table
 		float64 lastBetSize; //Within a betting round, the bet before myBetSize
+#ifdef EXTERNAL_DEALER
 		bool bSync;
-
+#endif
 
 
 		Player( float64 money, const std::string name, PlayerStrategy* strat, float64 init_play, bool syncHuman = false)
 		: myStrat(strat),  allIn(init_play), myMoney(money),
-		 handBetTotal(0), myBetSize(0), lastBetSize(init_play), bSync(syncHuman)
+		 handBetTotal(0), myBetSize(0), lastBetSize(init_play)
+#ifdef EXTERNAL_DEALER
+, bSync(syncHuman)
+#endif
 		{
 			myName = name;
 			myHand.SetEmpty();

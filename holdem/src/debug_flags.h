@@ -22,6 +22,11 @@
 #undef NO_LOG_FILES
 #define DEBUGASSERT
 
+/***********************/
+
+/* Game Flags */
+#define EXTERNAL_DEALER
+
 /******************/
 
 #ifndef NO_LOG_FILES
