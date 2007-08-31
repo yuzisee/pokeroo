@@ -124,7 +124,7 @@ void CallCumulation::ReversePerspective()
 }
 
 ///This function is the derivative of nearest_winPCT_given_rank by drank
-float64 CallCumulationD::inverseD(const float64 rank)
+float64 CallCumulationD::inverseD(const float64 rank, const float64 mean)
 {
     //f(x) = Pr_haveWinPCT_orbetter(x), where f(x) is rarity, 1-f(x) is rank, x is winPCT
     //nearest_winPCT_given_rank(1 - Pr_haveWinPCT_orbetter(x)) = x
@@ -137,7 +137,8 @@ float64 CallCumulationD::inverseD(const float64 rank)
     //f'(nearest_winPCT_given_rank(rank)) * nearest_winPCT_given_rank'(rank) = -1
     //nearest_winPCT_given_rank'(rank) = -1 / f'(nearest_winPCT_given_rank(rank))
 
-    return - 1 / d_dw_only( nearest_winPCT_given_rank( rank ) );
+    //Since mean == nearest_winPCT_given_rank( rank )
+    return - 1 / d_dw_only( mean );
 }
 
 //How this works:

@@ -41,7 +41,7 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     const float64 dRemainingBet_dn();
     const float64 grossSacrifice(const float64 n);
     const float64 lookup(const float64 x) const;
-    const float64 dlookup(const float64 x) const;
+    const float64 dlookup(const float64 x, const float64 mean) const;
 
     public:
     bool bSearching;

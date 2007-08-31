@@ -225,7 +225,7 @@ private:
 public:
     float64 d_dw_only(const float64 w_toHave) const;
 	virtual float64 Pr_haveWinPCT_orbetter_continuous(const float64 w_toHave, float64 *out_d_dw = 0) const;
-	virtual float64 inverseD(const float64);
+	virtual float64 inverseD(const float64, const float64 mean);
 
         #ifdef DEBUG_DEXF
             void breakdown(float64 points, std::ostream& target)

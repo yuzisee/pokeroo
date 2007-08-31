@@ -123,10 +123,10 @@ const float64 FoldWaitLengthModel::lookup( const float64 rank ) const
     return meanConv->nearest_winPCT_given_rank(rank);
 }
 
-const float64 FoldWaitLengthModel::dlookup( const float64 rank ) const
+const float64 FoldWaitLengthModel::dlookup( const float64 rank, const float64 lookupped ) const
 {
     if( meanConv == 0 ) return 1;
-    return meanConv->inverseD(rank);
+    return meanConv->inverseD(rank, lookupped);
 }
 
 //Maximizing this function gives you the best length that you want to wait for a fold for
@@ -153,7 +153,8 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
         return 0;
     }
 
-    const float64 dPW_dn = 2*pow(lookup(1.0-1.0/n),opponents-1)*opponents/n/n*dlookup(1.0-1.0/n);
+    const float64 wmean  = lookup(1.0-1.0/n);
+    const float64 dPW_dn = 2*pow(wmean,opponents-1)*opponents/n/n*dlookup(1.0-1.0/n,wmean);
 
     if(remainingbet < betSize )
     {
