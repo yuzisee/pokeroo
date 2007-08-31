@@ -174,9 +174,12 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
                 p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
                 p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
                 #ifdef DEBUGSAVEGAME
-                std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-                p[curIndex]->myHand.HandPlus::DisplayHand(saveFile);
-                saveFile.close();
+                if( !bLoadGame )
+                {
+                    std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+                    p[curIndex]->myHand.HandPlus::DisplayHand(saveFile);
+                    saveFile.close();
+                }
                 #endif
             }
         }//else, error on input
@@ -608,9 +611,12 @@ void HoldemArena::PlayGame()
     std::cin.sync();
     std::cin.clear();
     #ifdef DEBUGSAVEGAME
-    std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-    community.HandPlus::DisplayHand(saveFile);
-    saveFile.close();
+    if( !bLoadGame )
+    {
+        std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+        community.HandPlus::DisplayHand(saveFile);
+        saveFile.close();
+    }
     #endif
 #else
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
@@ -647,9 +653,12 @@ void HoldemArena::PlayGame()
     std::cin.sync();
     std::cin.clear();
     #ifdef DEBUGSAVEGAME
-    saveFile.open(DEBUGSAVEGAME,std::ios::app);
-    HoldemUtil::PrintCard( saveFile, turn.GetIndex() );
-    saveFile.close();
+    if( !bLoadGame )
+    {
+        std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+        HoldemUtil::PrintCard( saveFile, turn.GetIndex() );
+        saveFile.close();
+    }
     #endif
 #else
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
@@ -685,9 +694,12 @@ void HoldemArena::PlayGame()
     std::cin.sync();
     std::cin.clear();
     #ifdef DEBUGSAVEGAME
-    saveFile.open(DEBUGSAVEGAME,std::ios::app);
-    HoldemUtil::PrintCard( saveFile, river.GetIndex() );
-    saveFile.close();
+    if( !bLoadGame )
+    {
+        std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+        HoldemUtil::PrintCard( saveFile, river.GetIndex() );
+        saveFile.close();
+    }
     #endif
 #else
 	dealer.DealCard(community);
@@ -718,17 +730,22 @@ DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
     DeckLocation userCard;
     #ifdef DEBUGSAVEGAME
     bool bNextCardSaved;
-    bNextCardSaved = bLoadGame && (loadFile.is_open()) && (!loadFile.eof()) && (loadFile.rdbuf()->in_avail() > 0);
+    bNextCardSaved = bLoadGame && (!loadFile.eof());
+    bNextCardSaved = bNextCardSaved && (loadFile.rdbuf()->in_avail() > 0);
+    bNextCardSaved = bNextCardSaved && (loadFile.is_open());
+
 
     while( bNextCardSaved )
     {
-        if( loadFile.peek() == '\n' || loadFile.peek() == '\r'  || loadFile.peek() == ' ' )
+        int16 upcomingChar = loadFile.peek();
+        if( upcomingChar == '\n' || upcomingChar == '\r'  || upcomingChar == ' ' )
         {
             loadFile.ignore(1);
             bNextCardSaved = bLoadGame && (loadFile.is_open()) && (!loadFile.eof()) && (loadFile.rdbuf()->in_avail() > 0);
         }else
         {
             bNextCardSaved = true;
+            break;
         }
     }
     if( bNextCardSaved )
@@ -812,9 +829,12 @@ void HoldemArena::DealHands()
                 std::cin.clear();
 
                 #ifdef DEBUGSAVEGAME
-                std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-                (withP.myHand).HandPlus::DisplayHand(saveFile);
-                saveFile.close();
+                if( !bLoadGame )
+                {
+                    std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+                    (withP.myHand).HandPlus::DisplayHand(saveFile);
+                    saveFile.close();
+                }
                 #endif
 
                 (withP.myHand).HandPlus::DisplayHand(holecardsData);
