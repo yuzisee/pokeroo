@@ -252,7 +252,10 @@ protected:
         #ifdef GRAPHMONEY
             std::ofstream scoreboard;
         #endif
+
+#ifndef EXTERNAL_DEALER
 		SerializeRandomDeck dealer;
+#endif
 		float64 randRem;
 
         int8 cardsInCommunity;
@@ -298,11 +301,16 @@ protected:
 		void PlayShowdown(const int8);
 			void compareAllHands(const int8, vector<ShowdownRep>& );
 			double* organizeWinnings(int8&, vector<ShowdownRep>&, vector<ShowdownRep>&);
+#ifdef EXTERNAL_DEALER
+        DeckLocation ExternalQueryCard(std::istream& s) const;
+#endif
 		void DealHands();
+
 		void prepareRound(const int8);
 		int8 PlayRound(const int8);
 			//returns the first person to reveal cards (-1 if all fold)
 
+        virtual int8 AddPlayer(const char* id, float64 money, PlayerStrategy* newStrat);
 	public:
 
 #ifdef DEBUGSAVEGAME
@@ -345,8 +353,13 @@ protected:
 
 		virtual ~HoldemArena();
 
-		virtual int8 AddPlayer(const char*, PlayerStrategy*);
-		virtual int8 AddPlayer(const char* id, float64 money, PlayerStrategy* newStrat);
+
+        //virtual int8 AddHuman(const char* id, UserConsoleStrategy*);
+		//virtual int8 AddHuman(const char* id, float64 money, UserConsoleStrategy*);
+		virtual int8 AddHuman(const char* id, PlayerStrategy*);
+		virtual int8 AddHuman(const char* id, float64 money, PlayerStrategy*);
+		virtual int8 AddBot(const char*, PlayerStrategy*);
+		virtual int8 AddBot(const char* id, float64 money, PlayerStrategy* newStrat);
 
         virtual int8 GetNumberInHand() const;
 		virtual int8 GetNumberAtTable() const;

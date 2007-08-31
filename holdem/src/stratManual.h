@@ -32,6 +32,7 @@
 #endif
 
 
+///This class is used only for debugging, but the derived class UserConsoleStrategy allows for human players
 class ConsoleStrategy : public PlayerStrategy
 {
     private:

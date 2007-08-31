@@ -206,6 +206,18 @@ class ShowdownRep
 	void DisplayHandText(std::ostream& o) const { comp.DisplayHandText(o); }
 	void DisplayHand(std::ostream& o) const { comp.DisplayHand(o); }
 
+    bool IsMuck()
+    {
+        return( (strength == 0) && (valueset == 0) && (revtiebreak == 0) && comp.IsEmpty() );
+    }
+
+    void SetMuck()
+    {
+        comp.SetEmpty();
+        strength = 0;
+        valueset = 0;
+        revtiebreak = 0;
+    }
 
     void Reset(const CommunityPlus* h)
     {

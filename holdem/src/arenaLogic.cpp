@@ -155,8 +155,42 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 
     while(w.bRoundState != '!')
     {
-        ShowdownRep comp(&(p[curIndex]->myHand), &community, curIndex);
-        w.RevealHand(comp);
+        #ifdef EXTERNAL_DEALER
+        bool bMuck = true;
+        const int16 INPUTLEN = 5;
+        char inputBuf[INPUTLEN];
+
+
+        std::cerr << p[curIndex]->GetIdent().c_str() << ", enter your cards (no whitespace)" << endl;
+        std::cerr << "or enter nothing to muck: " << endl;
+        std::cin.sync();
+        std::cin.clear();
+
+        if( std::cin.getline( inputBuf, INPUTLEN ) != 0 )
+        {
+            if( 0 != inputBuf[0] )
+            {
+                bMuck = false;
+                p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
+                p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
+            }
+        }//else, error on input
+
+        std::cin.sync();
+        std::cin.clear();
+
+        if( bMuck )
+        {
+            ShowdownRep comp(curIndex);
+            comp.SetMuck();
+            w.RevealHand(comp);
+        }
+        else
+        #endif
+        {
+            ShowdownRep comp(&(p[curIndex]->myHand), &community, curIndex);
+            w.RevealHand(comp);
+        }
     }
 }
 
@@ -508,7 +542,7 @@ void HoldemArena::resolveActions(Player& withP)
 
 
 
-///This was a three part function. (LEGACY COMMENT)
+///HoldemEvents are used to handle each game
 /// 1. Prepare the round for play
 ///			Round pot, round bets set to 0
 
@@ -519,6 +553,8 @@ void HoldemArena::resolveActions(Player& withP)
 /// 3. Cleanup and finish
 ///			First, all-ins are taken into account here
 ///			Finally, the round pot and round bets are moved into hand bets/pot
+
+
 int8 HoldemArena::PlayRound(const int8 comSize)
 {
     HoldemArenaBetting b(this, comSize);
@@ -555,9 +591,21 @@ void HoldemArena::PlayGame()
 
 	if( PlayRound(0) == -1 ) return;
 
+#ifdef EXTERNAL_DEALER
+    std::cerr << "Please enter the flop (no whitespace): " << endl;
+    std::cin.sync();
+    std::cin.clear();
+    community.AddToHand(ExternalQueryCard(std::cin));
+    community.AddToHand(ExternalQueryCard(std::cin));
+    community.AddToHand(ExternalQueryCard(std::cin));
+    std::cin.sync();
+    std::cin.clear();
+#else
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
+#endif //ifdef EXTERNAL_DEALER, else
+
     if( bSpectate )
     {
         gamelog << endl;
@@ -577,12 +625,29 @@ void HoldemArena::PlayGame()
         gamelog << endl;
         gamelog << "Turn:\t" << flush;
     }
+
+#ifdef EXTERNAL_DEALER
+    std::cerr << "Please enter the turn (no whitespace): " << endl;
+    std::cin.sync();
+    std::cin.clear();
+    #ifdef FLOP_TURN_RIVER_ORDER
+    turn = ExternalQueryCard(std::cin);
+    community.AddToHand(turn);
+    #else
+    community.AddToHand(ExternalQueryCard(std::cin));
+    #endif
+
+    std::cin.sync();
+    std::cin.clear();
+#else
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
+    #ifdef FLOP_TURN_RIVER_ORDER
+    turn = dealer.dealt;
+    #endif
+#endif
+
 	if( bSpectate )
 	{
-	    #ifdef FLOP_TURN_RIVER_ORDER
-	    turn = dealer.dealt;
-	    #endif
 	    flop.HandPlus::DisplayHand(gamelog);
         HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
         gamelog << "   " << flush;
@@ -598,13 +663,26 @@ void HoldemArena::PlayGame()
         gamelog << endl;
         gamelog << "River:\t" << flush;
     }
+    DeckLocation river;
+#ifdef EXTERNAL_DEALER
+    std::cerr << "Please enter the river (no whitespace): " << endl;
+    std::cin.sync();
+    std::cin.clear();
+    river = ExternalQueryCard(std::cin);
+    community.AddToHand(river);
+    std::cin.sync();
+    std::cin.clear();
+#else
 	dealer.DealCard(community);
+	river = dealer.dealt;
+#endif
     if( bSpectate )
     {
         flop.HandPlus::DisplayHand(gamelog);
         HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
         gamelog << " " << flush;
-        HoldemUtil::PrintCard(gamelog, dealer.dealt.Suit,dealer.dealt.Value);
+
+        HoldemUtil::PrintCard(gamelog, river.Suit,river.Value);
          gamelog << "  " << flush;
     }
 
@@ -617,6 +695,14 @@ void HoldemArena::PlayGame()
 }
 
 
+#ifdef EXTERNAL_DEALER
+DeckLocation HoldemArena::ExternalQueryCard(std::istream& s) const
+{
+    DeckLocation userCard;
+    userCard.SetByIndex( HoldemUtil::ReadCard( s ) );
+    return userCard;
+}
+#endif
 
 void HoldemArena::DealHands()
 {
@@ -662,6 +748,37 @@ void HoldemArena::DealHands()
 
 
 	int8 dealtEach = 0;
+
+#ifdef EXTERNAL_DEALER
+incrIndex();
+
+    Player& withP = *(p[curIndex]);
+
+    if(withP.myMoney > 0)
+    {
+
+        if(!(withP.bSync))
+        {
+            std::cerr << withP.GetIdent().c_str() << ", enter your cards (no whitespace): " << endl;
+            std::cin.sync();
+            std::cin.clear();
+            withP.myHand.AddToHand(ExternalQueryCard(std::cin));
+            withP.myHand.AddToHand(ExternalQueryCard(std::cin));
+            std::cin.sync();
+            std::cin.clear();
+
+            (withP.myHand).HandPlus::DisplayHand(holecardsData);
+            holecardsData << withP.GetIdent().c_str() << endl;
+        }
+    }
+    else
+    {
+        withP.lastBetSize = INVALID;
+        withP.myBetSize = INVALID;
+    }
+
+    if(curDealer == curIndex) ++dealtEach;
+#else
 	#ifdef DEBUGSAVEGAME
     if( bLoadGame )
     {
@@ -669,6 +786,7 @@ void HoldemArena::DealHands()
     }else
     #endif
     {
+        //Shuffle the deck here
         dealer.UndealAll();
         if(randRem != 0)
         {
@@ -702,7 +820,8 @@ void HoldemArena::DealHands()
     #endif
         }
     }
-	randRem = 1;
+
+
 
     #ifdef DEBUGHOLECARDS
         holecardsData <<
@@ -746,6 +865,10 @@ void HoldemArena::DealHands()
         holecardsData.close();
     #endif
 */
+#endif //ifdef EXTERNAL_DEALER, else
+
+randRem = 1;
+
 }
 
 void HoldemArena::RefreshPlayers()
@@ -885,8 +1008,9 @@ Player* HoldemArena::PlayTable()
     {
         curIndex = 0;
         curDealer = 0;
-
+#ifndef EXTERNAL_DEALER
         dealer.ShuffleDeck(static_cast<float64>(livePlayers));
+#endif
         #ifdef DEBUGSPECIFIC
 
             randRem = 1;
@@ -937,9 +1061,10 @@ Player* HoldemArena::PlayTable()
 
 	while(livePlayers > 1)
 	{
-        	DealHands();
+
+        DealHands();
 		PlayGame();
-        	RefreshPlayers(); ///New Hand
+        RefreshPlayers(); ///New Hand
 #ifdef DEBUGSAVEGAME
     #ifdef RELOAD_LAST_HAND
         if( livePlayers > 1 )

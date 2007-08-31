@@ -313,89 +313,6 @@ void goCMD(int argc, char* argv)
 
 
 
-#ifdef DEBUGBETMODEL
-
-void debugPosition()
-{
-
-    CommunityPlus h1, honly, h2;
-
-
-
-
-
-
-//Community 2C 7D KC
-    h2.AddToHand(HoldemConstants::SPADES, 4, HoldemConstants::CARD_FIVE );
-    h2.AddToHand(HoldemConstants::HEARTS, 10, HoldemConstants::CARD_JACK );
-    h2.AddToHand(HoldemConstants::HEARTS, 7, HoldemConstants::CARD_EIGHT );
-    h2.AddToHand(HoldemConstants::SPADES, 13, HoldemConstants::CARD_ACEHIGH );
-    h2.AddToHand(HoldemConstants::CLUBS, 12, HoldemConstants::CARD_KING );
-    //BlindStructure.AddToHand(HoldemConstants::CLUBS, 2, HoldemConstants::CARD_TREY );
-//    h1.SetUnique(h2);
-
-//Hole cards 8H tH
-    honly.AddToHand(HoldemConstants::SPADES,9, HoldemConstants::CARD_TEN );
-    //honly.AddToHand(HoldemConstants::DIAMONDS, 3, HoldemConstants::CARD_FOUR );
-    //honly.AddToHand(HoldemConstants::SPADES,12, HoldemConstants::CARD_KING );
-    honly.AddToHand(HoldemConstants::CLUBS, 11, HoldemConstants::CARD_QUEEN);
-    h1.AppendUnique(honly);
-    const uint8 dealtCommunityNumber=5;
-
-
-#ifdef DEBUGSITUATION
-	cout << "Cards available to me" << endl;
-	h1.DisplayHand(cout);
-	cout << endl;
-#endif
-
-#ifdef DEBUGSITUATION
-	cout << "Cards with community" << endl;
-	h2.DisplayHand(cout);
-	cout << endl;
-
-	cout << endl;
-#endif
-
-   float64 chipDenom = .25;
-	BlindStructure b(chipDenom,chipDenom*2);
-	DebugArena myTable(&b,cout, true);
-    UserConsoleStrategy testDummy[5];
-
-    CorePositionalStrategy a(2);
-
-
-
-
-    #ifdef DEBUGSPECIFIC
-    myTable.AssignHandNum(DEBUGSPECIFIC);
-    #endif
-    myTable.SetBlindPot(0);
-	myTable.SetDeadPot(2);
-
-
-    myTable.SetBet(  myTable.AddPlayer("testDriver.cpp",199, &a) , 0 );
-    //myTable.SetBet(  myTable.AddPlayer("X3",125, testDummy+1) ,  myTable.GetSmallBlind() );
-
-
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent3",150, testDummy+2) , 0 );
-    //myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent4",17, testDummy+4) , 0 );
-//    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent5",50, testDummy+1) , 0 );
-    myTable.SetBet(  myTable.AddPlayer("TestDummyOpponent6",420, testDummy+3) , 0.05 );
-    myTable.InitGame();
-
-    cout << "Number in hand " << (int)(myTable.GetNumberInHand()) << endl;
-
-
-    myTable.GiveCards(0,honly);
-    myTable.SetCommunity(h2,dealtCommunityNumber);
-
-    a.SeeCommunity(h2,dealtCommunityNumber);
-
-    cout << endl << a.MakeBet() << endl;
-}
-#endif
-
 void testAnything()
 {
     cout << "Testing history and ranksort" << endl;
@@ -626,9 +543,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
 
 
-        if( myPlayerName == 0 ){ myTable.AddPlayer("P1", startingMoney, &consolePlay); }
+        if( myPlayerName == 0 ){ myTable.AddHuman("P1", startingMoney, &consolePlay); }
         else{
-            myTable.AddPlayer(myPlayerName, startingMoney, &consolePlay);
+            myTable.AddHuman(myPlayerName, startingMoney, &consolePlay);
 #ifdef DEBUGSAVE_EXTRATOKEN
             myTable.EXTRATOKEN = myPlayerName;
 #endif
@@ -636,7 +553,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }else
     {
         //myTable.AddPlayer("q4", &pushAll);
-        myTable.AddPlayer("i4", &drainFold);
+        myTable.AddBot("i4", &drainFold);
         //myTable.AddPlayer("X3", &pushFold);
         //myTable.AddPlayer("A3", &tightPushFold);
 
@@ -662,28 +579,28 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                 switch(opponentorder[i])
                 {
                     case 0:
-                        myTable.AddPlayer("TrapBotV", startingMoney, &ImproveA);
+                        myTable.AddBot("TrapBotV", startingMoney, &ImproveA);
                         break;
                     case 1:
-                        myTable.AddPlayer("ConservativeBotV", startingMoney, &FutureFoldA);
+                        myTable.AddBot("ConservativeBotV", startingMoney, &FutureFoldA);
                         break;
                     case 2:
-                        myTable.AddPlayer("NormalBotV",startingMoney, &XFoldA);
+                        myTable.AddBot("NormalBotV",startingMoney, &XFoldA);
                         break;
                     case 3:
-                        myTable.AddPlayer("SpaceBotV", startingMoney, &MeanGeomBluff);
+                        myTable.AddBot("SpaceBotV", startingMoney, &MeanGeomBluff);
                         break;
                     case 4:
-                        myTable.AddPlayer("ActionBotV",startingMoney, &ReallyImproveA);
+                        myTable.AddBot("ActionBotV",startingMoney, &ReallyImproveA);
                         break;
                     case 5:
-                        myTable.AddPlayer("DangerBotV",startingMoney, &StrikeFold);
+                        myTable.AddBot("DangerBotV",startingMoney, &StrikeFold);
                         break;
                     case 6:
-                        myTable.AddPlayer("MultiBotV", startingMoney, &MultiT);
+                        myTable.AddBot("MultiBotV", startingMoney, &MultiT);
                         break;
                     case 7:
-                        myTable.AddPlayer("GearBotV", startingMoney, &MultiTR);
+                        myTable.AddBot("GearBotV", startingMoney, &MultiTR);
                         break;
                 }
 
@@ -694,10 +611,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                 //myTable.AddPlayer("NormalBotIV", &RankGeomBluff); /* riskymode = 9 */
             break;
         case 'M':
-            myTable.AddPlayer("M2", &RankGeom); /* riskymode = 0 */
+            myTable.AddBot("M2", &RankGeom); /* riskymode = 0 */
             break;
         case 'G':
-            myTable.AddPlayer("G2", &MeanGeom); /* riskymode = 1 */
+            myTable.AddBot("G2", &MeanGeom); /* riskymode = 1 */
             break;
         default:
             //myTable.AddPlayer("RankGeom", &RankGeom); /* riskymode = 0 */
@@ -719,17 +636,17 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 		//myTable.AddPlayer("SpaceBotII", &AutoSetP);
 		//myTable.AddPlayer("TrapIII", &DistrScaleA);
 
-        myTable.AddPlayer("GearBotV", &MultiTR);
-        myTable.AddPlayer("MultiBotV", &MultiT);
+        myTable.AddBot("GearBotV", &MultiTR);
+        myTable.AddBot("MultiBotV", &MultiT);
 
-		myTable.AddPlayer("DangerV", &StrikeFold);
-        myTable.AddPlayer("ComV", &FutureFoldA);
-        myTable.AddPlayer("NormV", &XFoldA);
-        myTable.AddPlayer("TrapV", &ImproveA);
-		myTable.AddPlayer("AceV", &ReallyImproveA);
+		myTable.AddBot("DangerV", &StrikeFold);
+        myTable.AddBot("ComV", &FutureFoldA);
+        myTable.AddBot("NormV", &XFoldA);
+        myTable.AddBot("TrapV", &ImproveA);
+		myTable.AddBot("AceV", &ReallyImproveA);
 
 
-        myTable.AddPlayer("SpaceV", &MeanGeomBluff);
+        myTable.AddBot("SpaceV", &MeanGeomBluff);
 
 
         //myTable.AddPlayer("SpaceIV", &AutoSetA);

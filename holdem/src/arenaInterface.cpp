@@ -213,7 +213,11 @@ std::istream * HoldemArena::LoadState()
             loadFile.getline(EXTRATOKEN, DEBUGSAVE_EXTRATOKEN);
             #endif
 
+
+#ifndef EXTERNAL_DEALER
+            //Save state of deck
             dealer.Unserialize( loadFile );
+#endif
 
             return &loadFile;
 }
@@ -274,9 +278,28 @@ void HoldemArena::saveState()
 }
 #endif
 
-int8 HoldemArena::AddPlayer(const char* id, PlayerStrategy* newStrat)
+int8 HoldemArena::AddHuman(const char* id, PlayerStrategy* newStrat)
 {
-	return AddPlayer(id, BASE_CHIP_COUNT, newStrat);
+	return AddHuman(id, BASE_CHIP_COUNT, newStrat);
+}
+
+int8 HoldemArena::AddHuman(const char* id, float64 money, PlayerStrategy* newStrat)
+{
+    int8 newID = AddPlayer(id, money, newStrat);
+    #ifdef EXTERNAL_DEALER
+    p[newID]->bSync = true;
+    #endif
+    return newID;
+}
+
+int8 HoldemArena::AddBot(const char* id, PlayerStrategy* newStrat)
+{
+	return AddBot(id, BASE_CHIP_COUNT, newStrat);
+}
+
+int8 HoldemArena::AddBot(const char* id, float64 money, PlayerStrategy* newStrat)
+{
+    AddPlayer(id, money, newStrat);
 }
 
 int8 HoldemArena::AddPlayer(const char* id, float64 money, PlayerStrategy* newStrat)
@@ -285,7 +308,7 @@ int8 HoldemArena::AddPlayer(const char* id, float64 money, PlayerStrategy* newSt
 
     newStrat->myPositionIndex = nextNewPlayer;
 	newStrat->game = this;
-	Player* newP = new Player(money, id,newStrat, INVALID);
+    Player* newP = new Player(money, id,newStrat, INVALID);
 	newStrat->me = newP;
 	newStrat->myHand = &(newP->myHand);
 	p.push_back( newP );

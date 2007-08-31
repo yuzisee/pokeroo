@@ -448,8 +448,9 @@ float64 UserConsoleStrategy::queryAction()
 	inputBuf[0] = 0;
 	float64 returnMe;
 
+#ifndef EXTERNAL_DEALER
 	showSituation();
-
+#endif
 
 
 	while( bExtraTry != 0 )
