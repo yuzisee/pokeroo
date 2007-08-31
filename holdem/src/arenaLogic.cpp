@@ -808,6 +808,15 @@ void HoldemArena::DealHands()
 #ifdef EXTERNAL_DEALER
 
 
+    #ifdef DEBUGHOLECARDS
+        holecardsData <<
+        		#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+                "############ Hand " << handnum << " " <<
+                #endif
+        "############" << endl;
+
+    #endif
+
 
     do
     {

@@ -140,7 +140,7 @@ public:
 #ifdef DEBUGASSERT
         if( valNum == -1 || suitNum == -1 )
         {
-            std::cout << "Wrong reverse-PrintCard, v=" << valchar << " s=" << suitchar << endl;
+            std::cout << "Could not identify the card, v=" << valchar << " s=" << suitchar << endl;
             exit(1);
 //            return -1;
         }
