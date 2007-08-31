@@ -66,6 +66,7 @@ public:
     static const uint32 VALUEORDER[14];
     static const uint32 INCRORDER[14];
 	static const char VALKEY[16];
+	static const char ALT_VALKEY[16];
 	static const char SUITKEY[5];
 
     ///COMMON PROBLEMS:
@@ -103,7 +104,7 @@ public:
         unsigned char nextChar[2];
         charSource >> nextChar[0];
         charSource >> nextChar[1];
-        while( nextChar[0] == ' ' )
+        while( nextChar[0] == ' ' || nextChar[0] == '\n' || nextChar[0] == '\r' )
         {
             nextChar[0] = nextChar[1];
             charSource >> nextChar[1];
@@ -120,7 +121,7 @@ public:
         int8 suitNum = -1;
         for( int8 i=2;i<=14;++i )
         {
-            if( VALKEY[i] == valchar )
+            if( VALKEY[i] == valchar || ALT_VALKEY[i] == valchar )
             {
                 valNum = i-2;
                 break;

@@ -97,6 +97,7 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
 void UserConsoleStrategy::SeeCommunity(const Hand& h, const int8 n)
 {
+#ifndef EXTERNAL_DEALER
 	ConsoleStrategy::SeeCommunity(h,n);
 	if ( !bNoPrint ){ printCommunity(); }
 
@@ -109,6 +110,7 @@ void UserConsoleStrategy::SeeCommunity(const Hand& h, const int8 n)
 	UI_DESCRIPTOR << endl;
 	UI_DESCRIPTOR << endl;
 	#endif
+#endif
 }
 
 void UserConsoleStrategy::FinishHand()
