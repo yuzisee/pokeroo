@@ -118,7 +118,11 @@ void UserConsoleStrategy::FinishHand()
     std::cin.sync();
     std::cin.clear();
 
-    std::cin.get();
+    int16 getChar = std::cin.get();
+    if( getChar == 'X' )
+    {
+        exit(0);
+    }
 
     std::cin.sync();
     std::cin.clear();
