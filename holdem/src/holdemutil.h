@@ -103,6 +103,11 @@ public:
         unsigned char nextChar[2];
         charSource >> nextChar[0];
         charSource >> nextChar[1];
+        while( nextChar[0] == ' ' )
+        {
+            nextChar[0] = nextChar[1];
+            charSource >> nextChar[1];
+        }
 
             return
             ParseCard(nextChar[0],nextChar[1]);

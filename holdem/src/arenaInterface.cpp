@@ -299,7 +299,7 @@ int8 HoldemArena::AddBot(const char* id, PlayerStrategy* newStrat)
 
 int8 HoldemArena::AddBot(const char* id, float64 money, PlayerStrategy* newStrat)
 {
-    AddPlayer(id, money, newStrat);
+    return AddPlayer(id, money, newStrat);
 }
 
 int8 HoldemArena::AddPlayer(const char* id, float64 money, PlayerStrategy* newStrat)

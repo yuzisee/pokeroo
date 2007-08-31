@@ -173,6 +173,11 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
                 bMuck = false;
                 p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
                 p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
+                #ifdef DEBUGSAVEGAME
+                std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+                p[curIndex]->myHand.HandPlus::DisplayHand(saveFile);
+                saveFile.close();
+                #endif
             }
         }//else, error on input
 
@@ -574,6 +579,8 @@ void HoldemArena::PlayGame()
 {
 #ifdef FLOP_TURN_RIVER_ORDER
     CommunityPlus flop;
+#endif
+#if defined(FLOP_TURN_RIVER_ORDER) || defined(EXTERNAL_DEALER)
     DeckLocation turn;
 #endif
 	if( blinds->HandPlayed(0) )
@@ -600,6 +607,11 @@ void HoldemArena::PlayGame()
     community.AddToHand(ExternalQueryCard(std::cin));
     std::cin.sync();
     std::cin.clear();
+    #ifdef DEBUGSAVEGAME
+    std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+    community.HandPlus::DisplayHand(saveFile);
+    saveFile.close();
+    #endif
 #else
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
@@ -630,15 +642,15 @@ void HoldemArena::PlayGame()
     std::cerr << "Please enter the turn (no whitespace): " << endl;
     std::cin.sync();
     std::cin.clear();
-    #ifdef FLOP_TURN_RIVER_ORDER
     turn = ExternalQueryCard(std::cin);
     community.AddToHand(turn);
-    #else
-    community.AddToHand(ExternalQueryCard(std::cin));
-    #endif
-
     std::cin.sync();
     std::cin.clear();
+    #ifdef DEBUGSAVEGAME
+    saveFile.open(DEBUGSAVEGAME,std::ios::app);
+    HoldemUtil::PrintCard( saveFile, turn.GetIndex() );
+    saveFile.close();
+    #endif
 #else
 	if (!dealer.DealCard(community))  gamelog << "OUT OF CARDS ERROR" << endl;
     #ifdef FLOP_TURN_RIVER_ORDER
@@ -672,6 +684,11 @@ void HoldemArena::PlayGame()
     community.AddToHand(river);
     std::cin.sync();
     std::cin.clear();
+    #ifdef DEBUGSAVEGAME
+    saveFile.open(DEBUGSAVEGAME,std::ios::app);
+    HoldemUtil::PrintCard( saveFile, river.GetIndex() );
+    saveFile.close();
+    #endif
 #else
 	dealer.DealCard(community);
 	river = dealer.dealt;
@@ -696,10 +713,32 @@ void HoldemArena::PlayGame()
 
 
 #ifdef EXTERNAL_DEALER
-DeckLocation HoldemArena::ExternalQueryCard(std::istream& s) const
+DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
 {
     DeckLocation userCard;
-    userCard.SetByIndex( HoldemUtil::ReadCard( s ) );
+    #ifdef DEBUGSAVEGAME
+    bool bNextCardSaved;
+    bNextCardSaved = bLoadGame && (loadFile.is_open()) && (!loadFile.eof()) && (loadFile.rdbuf()->in_avail() > 0);
+
+    while( bNextCardSaved )
+    {
+        if( loadFile.peek() == '\n' || loadFile.peek() == '\r'  || loadFile.peek() == ' ' )
+        {
+            loadFile.ignore(1);
+            bNextCardSaved = bLoadGame && (loadFile.is_open()) && (!loadFile.eof()) && (loadFile.rdbuf()->in_avail() > 0);
+        }else
+        {
+            bNextCardSaved = true;
+        }
+    }
+    if( bNextCardSaved )
+    {
+        userCard.SetByIndex( HoldemUtil::ReadCard( loadFile ) );
+    }else
+    #endif
+    {
+        userCard.SetByIndex( HoldemUtil::ReadCard( s ) );
+    }
     return userCard;
 }
 #endif
@@ -749,7 +788,10 @@ void HoldemArena::DealHands()
 
 	int8 dealtEach = 0;
 
+
+
 #ifdef EXTERNAL_DEALER
+
 incrIndex();
 
     Player& withP = *(p[curIndex]);
@@ -766,6 +808,12 @@ incrIndex();
             withP.myHand.AddToHand(ExternalQueryCard(std::cin));
             std::cin.sync();
             std::cin.clear();
+
+            #ifdef DEBUGSAVEGAME
+            std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+            (withP.myHand).HandPlus::DisplayHand(saveFile);
+            saveFile.close();
+            #endif
 
             (withP.myHand).HandPlus::DisplayHand(holecardsData);
             holecardsData << withP.GetIdent().c_str() << endl;

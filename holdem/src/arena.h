@@ -302,7 +302,7 @@ protected:
 			void compareAllHands(const int8, vector<ShowdownRep>& );
 			double* organizeWinnings(int8&, vector<ShowdownRep>&, vector<ShowdownRep>&);
 #ifdef EXTERNAL_DEALER
-        DeckLocation ExternalQueryCard(std::istream& s) const;
+        DeckLocation ExternalQueryCard(std::istream& s);
 #endif
 		void DealHands();
 
