@@ -937,20 +937,7 @@ void ExactCallD::query(const float64 betSize)
                     nextdexf = 1;
                 }else
                 {
-#ifdef DEBUGWATCHPARMS
-                    const float64 vodd = pow(  oppBetMake / (oppBetMake + totalexf), significance);
-                    const float64 willCall = e->pctWillCall( pow(  oppBetMake / (oppBetMake + totalexf)  , significance  ) );
-                    const float64 willCallD = e->pctWillCallD(   pow(  oppBetMake / (oppBetMake + totalexf)  , significance  )  );
 
-/*
-                    std::cout << willCall << " ... " << willCallD << std::endl;
-                    std::cout << "significance " << significance << std::endl;
-                    std::cout << "(oppBetMake + totalexf) " << (oppBetMake + totalexf) << std::endl;
-                    std::cout << "(oppBetMake ) " << (oppBetMake ) << std::endl;
-                    std::cout << "(betSize) " << (oppBetMake) << std::endl;
-                    std::cout << "(oppBetAlready) " << (oppBetAlready) << std::endl;
-*/
-#endif
 
                     const float64 w = facedOdds_call_Geom(oppBankRoll,totalexf,oppBetAlready,betSize, 1/significance, e);
                     nextexf = e->Pr_haveWinPCT_orbetter(w);
