@@ -469,7 +469,7 @@ void PreflopCallStats::AutoPopulate()
     OrderedDeck myPockets;
     myPockets.OmitCards(myStrength);
         #ifdef SUPERPROGRESSUPDATE
-            cout << "Analyzing...                    \r" << flush;
+            std::cout << "Analyzing...                    \r" << flush;
         #endif
     for(int8 carda=0;carda<52;carda+=4)
     {
@@ -489,7 +489,7 @@ void PreflopCallStats::AutoPopulate()
     statCount = statGroup;
     //myChancesEach =
         #ifdef SUPERPROGRESSUPDATE
-            cout << "Deciding.....                    \r" << endl;
+            std::cout << "Deciding.....                    \r" << endl;
         #endif
 }
 

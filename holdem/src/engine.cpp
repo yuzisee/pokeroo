@@ -177,7 +177,7 @@ HoldemUtil::PrintCard(cout,dealt.Suit,dealt.Value);
 		return 0;
 	}
 	else if (HoldemConstants::CARD_MISC == dealt.Value)
-	{
+	{//time for next suit
 
 #ifdef DEBUGDEAL
    cout << " next suit" << flush;
@@ -187,7 +187,7 @@ HoldemUtil::PrintCard(cout,dealt.Suit,dealt.Value);
 
 	}
 	else if ( (dealtHand[dealt.Suit] & dealt.Value) != 0 )
-	{//card already dealt, or needs to be skipped
+	{//card already dealt/omitted, i.e. needs to be skipped
 
 #ifdef DEBUGDEAL
        cout << " (already dealt)" << flush;
@@ -235,7 +235,8 @@ HoldemUtil::PrintCard(cout,dealt.Suit,dealt.Value);
 			(bMatchesOld && hBack==hHere)
 		  )
 		{
-
+            //Essentially, we need to avoid adding to this suit, since it is the same as the last suit, which would already
+            //have been counted for double!
 			SetNextSuit();
 			return DealCard(h);
 		}

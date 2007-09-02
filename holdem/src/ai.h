@@ -26,7 +26,7 @@
 
 //#define DEBUGCALLPART
 //#define DEBUGCALLPCT
-
+#define DEBUG_AA
 
 
 #include "holdem2.h"
@@ -71,6 +71,9 @@ class PlayStats
 
     public:
 
+#ifdef DEBUG_AA
+        bool bDEBUG;
+#endif
 		int16 moreCards;
 		int32 statGroup;
 

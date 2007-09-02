@@ -315,6 +315,27 @@ void goCMD(int argc, char* argv)
 
 void testAnything()
 {
+    CommunityPlus withCommunity;
+    CommunityPlus onlyCommunity;
+    DeckLocation acecard;
+    acecard.SetByIndex(HoldemUtil::ParseCard('A','s'));
+    withCommunity.AddToHand(acecard);
+    acecard.SetByIndex(HoldemUtil::ParseCard('A','h'));
+    withCommunity.AddToHand(acecard);
+
+    //2d 3d 4d 6d 7d As Ah
+/*
+    onlyCommunity.SetEmpty();
+
+    DealRemainder myStatBuilder;
+    myStatBuilder.UndealAll();
+    myStatBuilder.OmitCards(withCommunity);
+
+    CallStats ds(withCommunity, onlyCommunity,0);
+    myStatBuilder.AnalyzeComplete(&ds);
+*/
+    //const CallCumulation &newC = *(ds.calc);
+    /*
     cout << "Testing history and ranksort" << endl;
 
     PerformanceHistory a[6];
@@ -394,6 +415,7 @@ cout << endl;
         HistoryStrategy::SerializeOne(cout,a[i]);
         cout << endl;
     }
+*/
 
     exit(1);
 }
@@ -783,7 +805,7 @@ int main(int argc, char* argv[])
 #ifdef WINRELEASE
 	    testPlay('L');
 #else
-//        debugPosition();
+        testAnything();
 #ifdef NO_LOG_FILES
 	    superGame(0);
 #else

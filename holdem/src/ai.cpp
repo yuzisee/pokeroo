@@ -27,6 +27,7 @@
 //#define DEBUGCOMPARE
 //#define DEBUGFINALCALC
 
+
 //#define DEBUGCALLPCT
 
 
@@ -41,11 +42,12 @@ using std::sort;
 void PlayStats::Compare(const float64 occ)
 {
 #ifdef DEBUGCOMPARE
-	myStrength.DisplayHandBig(cout);
-	cout << "\nvs" << endl;
-	oppStrength.DisplayHandBig(cout);
-	cout << endl << endl;
+        myStrength.DisplayHandBig(std::cout);
+        std::cout << "\nvs (" << occ << ")" << endl;
+        oppStrength.DisplayHandBig(std::cout);
+        std::cout << endl << endl;
 #endif
+
 	if ( myStrength.strength > oppStrength.strength )
 	{
 		//myWins[statGroup].wins += occ/myOcc[statGroup];
@@ -88,6 +90,17 @@ if( ttt >= myChancesEach - 2 || ttt == 0 )
 
 void PlayStats::countWin(const float64 occ)
 {
+#ifdef DEBUG_AA
+    if( bDEBUG )
+    {
+        myStrength.DisplayHand(std::cout);
+        std::cout << "\tbeats vs (" << occ << ")" << flush;
+        oppStrength.DisplayHand(std::cout);
+        std::cout << endl << endl;
+    }
+#endif
+
+
 	myWins[statGroup].wins += occ;
 	//myWins[statGroup].pct += occ;
 }
@@ -98,6 +111,16 @@ void PlayStats::countSplit(const float64 occ)
 }
 void PlayStats::countLoss(const float64 occ)
 {
+#ifdef DEBUG_AA
+    if( bDEBUG )
+    {
+        myStrength.DisplayHand(std::cout);
+        std::cout << "\tloses vs (" << occ << ")" << flush;
+        oppStrength.DisplayHand(std::cout);
+        std::cout << endl << endl;
+    }
+#endif
+
 	myWins[statGroup].loss += occ;
 }
 
@@ -224,7 +247,7 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 		#ifdef SUPERPROGRESSUPDATE
 		if( statGroup > 10)
 		{
-			cout << (currentCard % 10) << " -- " << statGroup << "\n" << flush;
+			std::cout << (currentCard % 10) << " -- " << statGroup << "\n" << flush;
 		//}
 		//else
 		//{
@@ -686,7 +709,7 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 		#ifdef SUPERPROGRESSUPDATE
 		if( currentCard < moreCards )
 		{
-			cout << (currentCard % 10) << "\r" << flush;
+			std::cout << (currentCard % 10) << "\r" << flush;
 		//}
 		//else
 		//{
@@ -713,6 +736,10 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 	    mynoAddCard(deck,currentCard-1);
 	    if ( currentCard == 2 )
         {
+
+#ifdef DEBUG_AA
+        bDEBUG = ( oppStrength.SeeCards(2) == HoldemConstants::CARD_ACEHIGH && oppStrength.SeeCards(3) == HoldemConstants::CARD_ACEHIGH );
+#endif
 
             if( moreCards == 2) oppStrength.evaluateStrength();
 
