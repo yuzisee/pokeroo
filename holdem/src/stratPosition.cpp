@@ -150,7 +150,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     //StatsManager::QueryOffense(callcumu,withCommunity,onlyCommunity,cardsInCommunity );
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
     statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
-    statworse = foldcumu.worstHandToHave(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
+    statworse = foldcumu.oddsAgainstBestHand(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
     //CallStats is foldcumu
 
     #ifdef LOGPOSITION
@@ -280,18 +280,6 @@ void PositionalStrategy::setupPosition()
             logFile << "Bet to call " << betToCall << " (from " << myBet << ") at " << ViewTable().GetPotSize() << " pot" << endl;
         #endif
 
-    const float64 raiseBattle = betToCall ? betToCall : ViewTable().GetChipDenom();
-#ifdef ANTI_PRESSURE_FOLDGAIN
-	ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &callcumu);
-
-#else
-	ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &callcumu);
-#endif
-    expectedVS = ( myExpectedCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
-    if( expectedVS <= 0 ) //You have no money
-    {
-        expectedVS = ( myExpectedCall.betFraction(ViewTable().GetChipDenom()) ) ;
-    }
 }
 
 float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
@@ -1076,6 +1064,18 @@ float64 CorePositionalStrategy::MakeBet()
     if( betToCall > raiseBattle )
     {
         raiseBattle = betToCall;
+    }
+
+#ifdef ANTI_PRESSURE_FOLDGAIN
+	ExactCallD myVSCall(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &callcumu);
+
+#else
+	ExactCallD myVSCall(myPositionIndex, &(ViewTable()), &callcumu);
+#endif
+    float64 expectedVS = ( myVSCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
+    if( expectedVS <= 0 ) //You have no money
+    {
+        expectedVS = ( myVSCall.betFraction(ViewTable().GetChipDenom()) ) ;
     }
 
     myLimitCall.callingPlayers(  expectedVS  );

@@ -132,12 +132,13 @@ float64 HoldemFunctionModel::FindBestBet()
 		if( desiredBet > myMoney ) desiredBet = myMoney; //due to rounding of desiredBet
 		if( nextOptimal > myMoney ) nextOptimal = myMoney;
 		if( prevOptimal < minRaiseBetTo ) prevOptimal = minRaiseBetTo;
+		if( prevOptimal > myMoney ) prevOptimal = myMoney;
 
-		if( f(nextOptimal) > f(desiredBet) )
+		if( nextOptimal != desiredBet && f(nextOptimal) > f(desiredBet) )
 		{
 			desiredBet = nextOptimal;
 		}
-		if( f(prevOptimal) > f(desiredBet) )
+		if( prevOptimal != desiredBet && f(prevOptimal) > f(desiredBet) )
 		{
 			desiredBet = prevOptimal;
 		}
@@ -191,7 +192,7 @@ float64 GainModel::g(float64 betSize)
 	float64 x = e->betFraction(betSize);
 	float64 exf = e->betFraction(e->exf(betSize));
 
-    const float64 minexf = e->minCallFraction(betSize);
+    const float64 minexf = e->minCallFraction(betSize); //Because of say, impliedFactor
     if( exf < minexf )
     {
         exf = minexf;
@@ -221,7 +222,7 @@ float64 GainModel::g(float64 betSize)
 	float64 sav=1;
 	for(int8 i=1;i<=e_call;++i)
 	{
-        //In our model, we can assume that if it is obvious many (everyone) will split, only those who don't see that opportunity will definately fold
+        //In our model, we can assume that if it is obvious many (everyone) will split, only those who don't see that opportunity will definitely fold
         //  however if it is not clear there will be a split (few split) everybody will call as expected
         //The dragCalls multiplier achieves this:
         float64 dragCalls = i;
@@ -230,7 +231,7 @@ float64 GainModel::g(float64 betSize)
         dragCalls = dragCalls * dragCalls - dragCalls + 1;
 
 		sav *=  pow(
-                    base+( f_pot+exf_live*dragCalls )/(i+1)
+                    base - x +( f_pot+x+exf_live*dragCalls )/(i+1)
                         ,
                         HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
                 );
@@ -289,7 +290,7 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 	float64 exf = e->betFraction(e->exf(betSize));
 
 
-    const float64 minexf = e->minCallFraction(betSize);
+    const float64 minexf = e->minCallFraction(betSize); //Because of say, impliedFactor
     if( exf < minexf )
     {
         return 0; //Incremental decrease is zero, so incremental increase must be zero at the limit
@@ -331,7 +332,7 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
                     *
                     dexf
                     /
-                    ( (i+1+f_pot)/dragCalls + exf_live )
+                    ( (i+1+f_pot + x)/dragCalls + exf_live )
                     ;
         }///Else you'd just {savd+=0;} anyways
 	}
@@ -471,6 +472,12 @@ float64 GainModelNoRisk::g(float64 betSize)
 	float64 x = e->betFraction(betSize);
 	float64 exf = e->betFraction(e->exf(betSize));
 
+    const float64 minexf = e->minCallFraction(betSize); //Because of say, impliedFactor
+    if( exf < minexf )
+    {
+        exf = minexf;
+    }
+
     const float64 f_pot = e->betFraction(e->stagnantPot());
     const float64 exf_live = exf - f_pot;
 
@@ -506,7 +513,7 @@ float64 GainModelNoRisk::g(float64 betSize)
         dragCalls = dragCalls * dragCalls - dragCalls + 1;
 
 		sav +=
-                (    base+( f_pot+exf_live*dragCalls )/(i+1)    )
+                (    base - x+( f_pot+x+exf_live*dragCalls )/(i+1)    )
                         *
                 (        HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)    )
                 ;
@@ -624,61 +631,38 @@ float64 SlidingPairFunction::fd(const float64 x, const float64 y_dummy)
 
 void AutoScalingFunction::query(float64 sliderx, float64 x)
 {
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << std::endl<< "\t\t\t\tleft(" << x << ")=" << std::flush;
-        #endif
-    const float64 yl = left->f(x);
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << yl << std::endl ;
-            std::cout << "\t\t\t\tright(" << x << ")=" << std::flush;
-        #endif
-    const float64 yr = right->f(x);
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << yr << std::endl;
-        #endif
 
     last_x = x;
     last_sliderx = sliderx;
 
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << std::endl << "\t\t\t\t" << saturate_max << "  ~~  " << saturate_min << "!" << std::flush;
-        #endif
     const float64 autoSlope = saturate_upto / (saturate_max - saturate_min) ;
     const float64 slider = (sliderx - saturate_min) * autoSlope ;
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << slider << std::endl;
-        #endif
 
     if( saturate_max <= saturate_min )
     {
+        const float64 yl = left->f(x);
         y = yl;
         dy = fd(x,yl);
     }
     else if( slider >= 1 )
     {
+        const float64 yr = right->f(x);
         y = yr;
         dy = fd(x, yr);
     }
     else if( slider <= 0 )
     {
+        const float64 yl = left->f(x);
         y = yl;
         dy = fd(x, yl);
     }
     else
     {
+        const float64 yl = left->f(x);
+        const float64 yr = right->f(x);
         y = yl*(1-slider)+yr*slider;
-            #ifdef DEBUG_FUNCTIONCORE
-                std::cout << "\t\t\t\tfd_yl=" << std::flush;
-            #endif
         const float64 fd_yl = left->fd(x,yl);
-            #ifdef DEBUG_FUNCTIONCORE
-                std::cout <<fd_yl << std::endl ;
-                std::cout << "\t\t\t\tfd_yr=" << std::flush;
-            #endif
         const float64 fd_yr = right->fd(x,yr);
-            #ifdef DEBUG_FUNCTIONCORE
-                std::cout <<fd_yr << std::endl ;
-            #endif
         dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
     }
 

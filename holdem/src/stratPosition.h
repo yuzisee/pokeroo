@@ -66,7 +66,6 @@ class PositionalStrategy : virtual public PlayerStrategy
 
         float64 myBet;
         float64 maxShowdown;
-        float64 expectedVS;
 
 
         bool bLogMean;

@@ -23,6 +23,9 @@
 
 
 
+#undef INLINE_INTEGER_POWERS
+
+
 #ifndef log1p
 #define log1p( _X_ ) log( (_X_) + 1 )
 #endif
@@ -66,8 +69,23 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
     if( lastdBetSizeN != n || !bSearching )
     {
         const float64 rawPCT = lookup(1.0-1.0/(n));
-        const float64 rawPCW = pow(rawPCT,opponents);
-        cached_d_dbetSize = (2*rawPCW) - 1;
+        if( rawPCT != lastRawPCT || !bSearching )
+        {
+#ifdef INLINE_INTEGER_POWERS
+            float64 intOpponents = round(opponents);
+            if( intOpponents == opponents )
+            {
+                cached_d_dbetSize = pow(rawPCT,static_cast<uint8>(intOpponents));
+            }else
+            {//opponents isn't an even integer
+#endif
+                cached_d_dbetSize = pow(rawPCT,opponents);
+#ifdef INLINE_INTEGER_POWERS
+            }//end if intOpponents == opponents , else
+#endif
+            cached_d_dbetSize = (2*cached_d_dbetSize) - 1;
+            lastRawPCT = rawPCT;
+        }
         lastdBetSizeN = n;
     }else
     {
@@ -176,6 +194,8 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
 float64 FoldWaitLengthModel::FindBestLength()
 {
     cacheRarity = -1;
+    lastdBetSizeN = -1;
+    lastRawPCT = -1;
 
     quantum = 1.0/3.0/rarity();
 

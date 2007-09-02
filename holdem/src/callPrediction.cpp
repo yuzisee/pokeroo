@@ -164,352 +164,6 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
     }
 }
 
-
-/*
-    //oppBetMake / (oppBetMake + totalexf)
-    const int8 N = handsDealt();
-    const float64 fNRank = (wGuess >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - e->pctWillCall(1 - wGuess));
-    const float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetSmallBlind()) / N )
-                                        * ( N - 2 )/ N ;
-
-    return (
-            log((1 - avgBlind / fNRank ) / (1 - bet))
-            /
-            log((1+pot) / (1 - bet))
-           );
-*/
-
-#ifdef OLD_PREDICTION_ALGORITHM
-
-///Geom returns stricly call percentage (no check)
-float64 ExactCallD::facedOdds_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet, float64 fold_bet, float64 n, bool bCheckPossible)
-{
-
-    const int8 N = handsDealt();
-    const float64 avgBlind = (
-    #ifdef PURE_BLUFF
-    alreadyBet +
-    #endif
-            (table->GetBigBlind() + table->GetSmallBlind()) / N )
-            * ( N - 2 )/ N ;
-
-    //geomFunction.quantum = 1 / RAREST_HAND_CHANCE / 2.0;
-
-    geomFunction.Bankroll = bankroll;
-    geomFunction.pot = pot-alreadyBet;
-
-
-    geomFunction.bet = incrbet+alreadyBet;
-    if( geomFunction.bet > bankroll )
-    {
-        geomFunction.bet = bankroll;
-    }
-    geomFunction.alreadyBet = alreadyBet;
-    geomFunction.avgBlind = avgBlind;
-    geomFunction.bOppCheck = bCheckPossible;
-    geomFunction.n = n;
-
-	 #ifdef DEBUG_CALLPRED_FUNCTION
-	if(bet < 0)
-	{
-            std::ofstream excel( "callmodel.csv" );
-            if( !excel.is_open() ) std::cerr << "\n!callmodel.cvs file access denied" << std::endl;
-            geomFunction.breakdown(1000,excel,0,1);
-            //myExpectedCall.breakdown(0.005,excel);
-
-            excel.close();
-	}
-        #endif
-
-    const float64 g = geomFunction.FindZero( 0,1 );
-
-    return g;
-
-}
-
-float64 ExactCallD::facedOddsND_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, bool bCheckPossible)
-{
-	if( w <= 0 ) return 0;
-	if( bet >= bankroll ) return 0;
-
-    const int8 N = handsDealt();
-    float64 avgBlind = ( alreadyBet + (table->GetBigBlind() + table->GetSmallBlind()) / N )
-            * ( N - 2 )/ N ;
-
-    const float64 fw = pow(w,n);
-    const float64 dfw = (n<0.5) ? (0) : (n * pow(w,n-1));
-
-    if( bCheckPossible )
-    {
-        if( dfw == 0 )
-        {
-            return 0;
-        }
-        avgBlind = 0;
-    }
-
-    const float64 frank = e->pctWillCall(1 - w);
-    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
-
-
-
-    const float64 A = dfw * log1p( (bankroll+pot) / (bankroll - bet) - 1 );
-    const float64 C = (dpot/(bankroll+pot) + 1/(bankroll-bet))
-                        *
-                        fw
-                       ;
-
-
-    const float64 h = pow( (bankroll+pot) / (bankroll - bet) , fw );
-
-    const float64 dwdbet = (C * (1-bet) - 1)
-                            /
-                           (
-                                (avgBlind/h)*( avgBlind * e->pctWillCallD(1-w) ) / fNRank / fNRank
-                                -
-                                A * (1-bet)
-                           )
-                         ;
-
-    return dwdbet;
-
-}
-
-
-float64 ExactCallD::facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet, bool bRank, float64 wGuess)
-{
-    //pot -= alreadyBet/2; //Half their bet is implied odds
-    pot -= alreadyBet;
-
-    float64 bet = alreadyBet + incrbet;
-    if( bet > bankroll )
-    {
-        bet = bankroll;
-    }
-    //oppBetMake / (oppBetMake + totalexf)
-    const int8 N = handsDealt();
-
-    const float64 frank = bRank ? wGuess : e->pctWillCall(1 - wGuess);
-    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
-
-    const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
-
-    const float64 foldCorrectly = frank * (bet-alreadyBet);
-
-    const float64 ret =
-           (
-            (bet - alreadyBet + foldCorrectly - avgBlind / fNRank ) / (bet + pot)
-           );
-
-    if (ret < 0) return 0;
-    return ret;
-}
-
-///Algb returns check OR call percentage
-float64 ExactCallD::facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 sig, bool bRank)
-{
-    float64 max = 1;
-    float64 min = 0;
-    float64 useOdds;
-    float64 newOdds = pow(facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,bRank,0),sig);
-    float64 curOdds = newOdds*(1-sig);
-    float64 prevOdds = 0;
-    float64 cycleDetection = -1;
-    float64 cycleQuantum = 0.5 * chipDenom() / allChips() * sig;
-    do
-    {
-        if( newOdds > max ) newOdds = max;
-        if( newOdds < min ) newOdds = min;
-
-        if( (newOdds-curOdds)*(curOdds-prevOdds) <= 0 )
-        {   //new terms are converging in alternate directions
-            prevOdds = curOdds;
-            curOdds = newOdds;
-            useOdds = (max+min)/2;
-            newOdds = pow(facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,bRank,useOdds),sig)*sig + useOdds*(1-sig);
-            if( fabs(cycleDetection - newOdds) < cycleQuantum )
-            {
-                return (newOdds+prevOdds+curOdds)/3;
-            }
-            if( max - min < cycleQuantum )
-            {
-                return (max+min)/2;
-            }
-        }else
-        {
-            prevOdds = curOdds;
-            curOdds = newOdds;
-            useOdds = curOdds;
-            newOdds = (pow(facedOdds_Algb_step(bankroll,pot,alreadyBet,bet,bRank,useOdds),sig)*sig + useOdds*(1-sig));
-        }
-
-        if( newOdds < useOdds && max > useOdds)
-        {//Decreased from useOdds
-            max = useOdds;
-        }else if( newOdds > useOdds && min < useOdds)
-        {
-            min = useOdds;
-        }
-
-        cycleDetection = prevOdds;
-    }while( fabs(useOdds - newOdds) > cycleQuantum );
-    return newOdds;
-}
-
-float64 ExactCallD::facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet, float64 dpot, float64 w, float64 n, bool bRank)
-{
-    float64 bet = alreadyBet + incrbet;
-    if( bet > bankroll )
-    {
-        bet = bankroll;
-    }
-	//TODO: Really?
-	//Approximate at the limit. It should be about linear in this region anyways, and we probably only
-	//hit this case when there is no zero in the range [0..1].
-	//if( w <= 1.0/RAREST_HAND_CHANCE / 4 ) w = 1.0/RAREST_HAND_CHANCE / 4;
-	if( w <= 0 ) return 0;
-	if( n < 0.5 ) return 0;
-
-    const int8 N = handsDealt();
-    const float64 frank = bRank ? w : e->pctWillCall(1 - w);
-	const float64 dfrank = bRank ? -1 : e->pctWillCallD(1-w);
-    const float64 fNRank = (frank >= 1) ? 1.0/RAREST_HAND_CHANCE : (1 - frank);
-    const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
-
-    const float64 fw = pow(w,n);
-    const float64 dfw = (n<0.5) ? (0) : (n * pow(w,n-1));
-
-    const float64 DfoldCorrectly = frank;
-    const float64 DfoldCorrectlyDw = (bet - alreadyBet) * dfrank;
-    //    (pot - bet * dpot)
-    //    /(bet + pot) /(bet + pot);
-
-    //to
-    /*
-    =
-    {1 - ( dpot + 1 ) f(w) }
-    over
-
-            (
-                ( pot + betSize ) f'(w)
-                +
-                    {avgBlind * pctWillCall' ( 1 - w ) }
-                    over
-                    ( 1 - pctWillCall ( 1 - w ) )^2
-            )
-    */
-
-
-
-    return (
-                (1 - fw*(dpot + 1) + DfoldCorrectly)
-                /
-                (   (pot+bet)*dfw
-                    +
-                    ( avgBlind * dfrank ) / fNRank / fNRank
-                    - DfoldCorrectlyDw
-                )
-           );
-}
-
-
-const float64 ExactCallD::percentReact(float64 raisebet, const Player * withP) const
-{
-    //Upperlimit defines the 100% React of the uReact/ActOrReact
-        const float64 upperlimit = table->GetMaxShowdown(withP->GetMoney());// RiskPrice();
-        const float64 uReact = ActOrReact(callBet(),withP->GetBetSize(),upperlimit);
-    //Dist is the amount of the raise. A high dist with a low react should be discouraged
-        const float64 dist = raisebet / upperlimit;
-    //In other words, too low of percentReact is the deterrent
-        const float64 percentreact = (dist > 1) ? uReact : (1-(1-uReact)*dist);
-
-        return percentreact;
-}
-
-void ExactCallD::GeneratePctWithRisk(float64 sig, float64 liveOpp, float64 noraise_prescaled, float64 noraiseD_prescaled, float64 percentReact, float64 & out, float64 & outD) const
-{
-    //noraiseRank_prescaled is the needed win, so needed_pcw is the needed w^e
-        const float64 needed_pcw = pow(noraise_prescaled,1/sig);
-
-
-        float64 bestOpponent = (e==0) ? 0 : e->strongestOpponent().pct; //What are my odds against the strongest opponent
-        if( noraise_prescaled < bestOpponent )
-        {
-            bestOpponent = noraise_prescaled;
-        }
-    //p_cw_draw is your w^e assuming only the best opponents call you
-    //We use a sqrt, because if one person has the best hand, other people are less likely
-        const float64 extra_pcw = pow(noraise_prescaled,1/sig-sqrt(liveOpp));
-    //... extra_pcw comes from the idea that if you have a strong hand, you have better worst-case odds
-        float64 p_cw_draw = extra_pcw*pow(bestOpponent,sqrt(liveOpp));
-
-        //needed_pcw = f(noraiseRank) * percentReact + p_cw_draw * (1 - percentReact)
-        //f(noraiseRank) = (needed_pcw - p_cw_draw * (1 - percentReact))  /  percentReact;
-        //Note: percentReact can be zero if you are in the blind, since your lastbet == betToCall
-        //       Also, dist has to be 1
-        const float64 a = (needed_pcw - p_cw_draw * (1 - percentReact));
-        const float64 pcw_to_win = a  /  percentReact;
-
-        if( pcw_to_win > 1 || percentReact <= 0 )
-        {
-            out = 1;
-            outD = 0;
-            return;
-        }else if( p_cw_draw > needed_pcw || pcw_to_win <= 0 )
-        {
-            out = 0;
-            outD = 0;
-            return;
-        }
-
-
-        out = pow(pcw_to_win,sig);
-        outD = pow(pow(1/a,sig)*noraiseRank_prescaled,1/sig-1)/pow(percentReact,sig)*noraiseRankD_prescaled;
-
-        if(e != 0)
-        {
-            out = 1 - e->pctWillCall( noraiseRank ); //REALLY???!?!!?!?!?!
-            outD = - e->pctWillCallD(  noraiseRank  )  * noraiseRankD;
-        }
-
-        return;
-}
-
-void ExactCallD::GenerateRaiseChances(float64 noraiseRank, float64 noraiseRankD, float64 noraiseMean, float64 noraiseMeanD, float64 raisedFrom, float64 actGain, float64 & out, float64 & outD) const;
-{
-
-
-//Crappy raiseGain effect
-        const float64 othersContribution = raisedFrom - withP->GetContribution() - withP->GetBetSize() + table->GetPotSize();//stagnantPot();
-        const float64 pushChips = othersContribution / ( othersContribution + raisebet );
-//A high "act" is overagression, which causes people to fold
-
-
-        #ifdef NO_AUTO_RAISE
-        if( noraiseMean > noraiseRank )
-        { //Rank is more likely to raise
-        #endif
-            out = noraiseMean*(1-pushChips) + noraiseRank*(pushChips);
-            outD = noraiseMeanD*(1-pushChips) + noraiseRankD*(pushChips);
-        #ifdef NO_AUTO_RAISE
-        }else
-        { //Rank is more likely NOT to raise
-            out = noraiseRank*(1-pushChips) + noraiseMean*(pushChips);
-            outD = noraiseRankD*(1-pushChips) + noraiseMeanD*(pushChips);
-        }
-        #endif
-
-        if( out > 1 )
-        {
-            out = 1;
-            outD = 0;
-        }
-
-}
-
-
-#endif //OLD_PREDICTION_ALGORITHM
-
 float64 ExactCallD::facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrRaise, float64 fold_bet, float64 opponents, bool bCheckPossible, CallCumulationD * useMean)
 {
 
@@ -796,7 +450,7 @@ void ExactCallD::query(const float64 betSize)
 {
     nearest = (betSize <= callBet() + table->GetChipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
     float64 peopleInHandUpper = table->GetNumberInHand() - 1;
-    const float64 significance = 1/static_cast<float64>( handsDealt()-1 );
+    const float64 opponents = handsDealt()-1;
     const float64 myexf = betSize;
     const float64 mydexf = 1;
 
@@ -877,8 +531,8 @@ void ExactCallD::query(const float64 betSize)
                             if(thisRaise <= oppBankRoll)
                             {
                                 const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize); //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
-                                float64 w_r_mean = facedOdds_raise_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, betSize, 1/significance,bOppCouldCheck,e);
-                                float64 w_r_rank = facedOdds_raise_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, betSize, 1/significance,bOppCouldCheck,0);
+                                float64 w_r_mean = facedOdds_raise_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, betSize, opponents,bOppCouldCheck,e);
+                                float64 w_r_rank = facedOdds_raise_Geom(oppBankRoll,totalexf,oppBetAlready,oppRaiseMake, betSize, opponents,bOppCouldCheck,0);
                                 #ifdef ANTI_CHECK_PLAY
                                 if( bOppCouldCheck )
                                 {
@@ -889,10 +543,10 @@ void ExactCallD::query(const float64 betSize)
 
 
 
-                                const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(), w_r_rank, 1/significance, totaldexf, bOppCouldCheck,0);
+                                const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck,0);
 
                                 const float64 noRaiseMean = 1-e->Pr_haveWinPCT_orbetter(w_r_mean);
-                                const float64 noraiseMeanD = -e->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(),w_r_mean, 1/significance,totaldexf,bOppCouldCheck,e);
+                                const float64 noraiseMeanD = -e->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppBankRoll,totalexf,oppBetAlready,oppRaiseMake,callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck,e);
 
                                 //nextNoRaise_A[i] = w_r_rank;
                                 //nextNoRaiseD_A[i] = noraiseRankD;
@@ -939,12 +593,12 @@ void ExactCallD::query(const float64 betSize)
                 {
 
 
-                    const float64 w = facedOdds_call_Geom(oppBankRoll,totalexf,oppBetAlready,betSize, 1/significance, e);
+                    const float64 w = facedOdds_call_Geom(oppBankRoll,totalexf,oppBetAlready,betSize, opponents, e);
                     nextexf = e->Pr_haveWinPCT_orbetter(w);
                     peopleInHandUpper -= 1-nextexf;
 
                     nextdexf = nextexf + oppBetMake * e->d_dw_only(w)
-                                        * dfacedOdds_dbetSize_Geom( oppBankRoll,totalexf,oppBetAlready,betSize,totaldexf,w, 1/significance, e);
+                                        * dfacedOdds_dbetSize_Geom( oppBankRoll,totalexf,oppBetAlready,betSize,totaldexf,w, opponents, e);
 
                     nextexf *= oppBetMake;
                     if( oppBetAlready + nextexf > nearest )
@@ -962,7 +616,7 @@ void ExactCallD::query(const float64 betSize)
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
 
 
-                nextexf = e->Pr_haveWinPCT_orbetter( facedOdds_call_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBankRoll, 1/significance,e) );
+                nextexf = e->Pr_haveWinPCT_orbetter( facedOdds_call_Geom(oppBankRoll, oldpot + effroundpot,oppBetAlready,oppBankRoll, opponents,e) );
                 peopleInHandUpper -= 1-nextexf;
                 nextexf *= oppBetMake ;
 
@@ -1074,16 +728,6 @@ void ExactCallBluffD::query(const float64 betSize)
                 //To understand the above, consider that totalexf includes already made bets
 
 
-
-/*
-
-                const float64 nextFoldB = ea->pctWillCall( pow(  oppBetMake / (oppBetMake + origPot)  , significance  ) );
-                const float64 nextFoldPartialB = ea->pctWillCallD(   pow(  oppBetMake / (oppBetMake + origPot)  , significance  )  )
-                *  pow(  oppBetMake / (oppBetMake + origPot)  , significance - 1 ) * significance
-                * (origPot - oppBetMake * origPotD)
-                                                 /(oppBetMake + origPot) /(oppBetMake + origPot);
-*/
-
                 float64 w_rank = facedOdds_Algb(oppBankRoll,origPot,oppBetAlready,oppBetMake,nLinear,0);
                 float64 w_mean = facedOdds_Algb(oppBankRoll,origPot,oppBetAlready,oppBetMake,nLinear,e);
                 if( nLinear <= 0 )
@@ -1139,10 +783,7 @@ void ExactCallBluffD::query(const float64 betSize)
                     nextFold = 0;
                 }else
                 {
-/*
-                    const float64 nextFoldB = e->pctWillCall( pow(oppBetMake / (oppBetMake + oldpot + effroundpot),significance) );
-*/
-//					const float64 nextFoldF = 1 -
+
 
                     float64 w_mean = facedOdds_Algb(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppBetMake, nLinear,e);
                     float64 w_rank = facedOdds_Algb(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppBetMake, nLinear,0);
@@ -1334,11 +975,16 @@ float64 ExactCallD::dexf(const float64 betSize)
 
 float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit) const
 {
-/*
-    const float64 avgControl = (stagnantPot() + table->GetUnbetBlindsTotal()) / table->GetNumberInHand();
-    const float64 raiseOver = (callb + avgControl);// < lastbet) ? 0 : (callb + avgControl - lastbet) ;
-*/
-    const float64 raiseOver = (table->GetPotSize() - callb) / table->GetNumberInHand();
+//One must consider the possibilities:
+//1. [ACT] The player betting has been folding all this time, and has hit his/her hand ALREADY
+//2. [ACT] The opponents have not bet yet, and would be the reactors of this hand.
+//3. [REACT] The pot is large from previous rounds, opponents can't fold easily
+
+    //const float64 avgControl = (stagnantPot() + table->GetUnbetBlindsTotal()) / table->GetNumberInHand();
+    //const float64 raiseOverBet = (callb + avgControl);// < lastbet) ? 0 : (callb + avgControl - lastbet) ;
+
+    const float64 raiseOverOthers = (table->GetPotSize() - callb) / table->GetNumberInHand();
+    const float64 raiseOver = (raiseOverOthers);// + raiseOverBet)/2;
     const float64 actOrReact = (raiseOver > limit) ? 1 : (raiseOver / limit);
     return actOrReact;
 }

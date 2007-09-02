@@ -207,14 +207,15 @@ class GainModel : public virtual HoldemFunctionModel
 				shape.wins = pow(p_cw,1.0/totalEnemy);
 				shape.loss = 1 - pow(1 - p_cl,1.0/totalEnemy);
 			///Normalize, total possibility must add up to 1
-                const float64 hundredTotal = shape.wins + shape.loss + shape.splits;
-                shape = shape * (1/hundredTotal);
+                const float64 hundredTotal = shape.wins + shape.loss;
+                shape.wins *= (1-shape.splits)/hundredTotal;
+                shape.loss *= (1-shape.splits)/hundredTotal;
                 shape.genPCT();
             ///Normalize, total possibilities must add up to 1 (certain splits are impossible)
                 float64 splitTotal = 0;
                 for( int8 i=1;i<=e_battle;++i )
                 {//Split with i
-                    splitTotal += HoldemUtil::nchoosep<float64>(totalEnemy,i)*pow(shape.wins,totalEnemy-i)*pow(shape.splits,i);
+                    splitTotal += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i);
                 }
 
 				p_cl *= (1-splitTotal)/newTotal;

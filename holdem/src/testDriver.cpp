@@ -440,7 +440,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     if( headsUp == 'P' )
     {
         #ifdef REQUEST_USER_BLINDSIZE
-            smallBlindChoice=1;
+
             if( !bLoadGame )
             {
                 std::cerr << "You will start with "<< startingMoney <<" chips.\nPlease enter the initial big blind:" << std::endl;
@@ -459,6 +459,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                 tokenRandomizer = ((uint32)(startingMoney/smallBlindChoice));
                 storePlayerName << tokenRandomizer << endl;
                 storePlayerName.close();
+            }else
+            {
+                //If you try to load a game without the savegame file, what's the default?
+                smallBlindChoice=startingMoney/tokenRandomizer;
             }
         #else
             smallBlindChoice=2;

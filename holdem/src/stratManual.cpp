@@ -492,7 +492,11 @@ float64 UserConsoleStrategy::queryAction()
         }else
         {
             UI_DESCRIPTOR << endl << endl;
+            #ifdef EXTERNAL_DEALER
+            UI_DESCRIPTOR << "== " << ViewPlayer().GetIdent().c_str() << " ==";
+            #else
             UI_DESCRIPTOR << "==ENTER ACTION==";
+            #endif
             UI_DESCRIPTOR << "      (press only [Enter] for check/fold)" << endl;
             if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
             {

@@ -195,6 +195,7 @@ public:
 	virtual float64 nearest_winPCT_given_rank(const float64 rank);
 	virtual StatResult bestHandToHave() const;
 	virtual StatResult worstHandToHave() const;
+	virtual StatResult oddsAgainstBestHand() const;
 
 	#ifdef DEBUGLOGINFERENTIALS
         static void displayCallCumulation(std::ostream &targetoutput, const CallCumulation& calc)

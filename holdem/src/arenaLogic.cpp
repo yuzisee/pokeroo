@@ -156,36 +156,40 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
     while(w.bRoundState != '!')
     {
         #ifdef EXTERNAL_DEALER
-        bool bMuck = true;
-        const int16 INPUTLEN = 5;
-        char inputBuf[INPUTLEN];
+        bool bMuck = p[curIndex]->bSync;
 
-
-        std::cerr << p[curIndex]->GetIdent().c_str() << ", enter your cards (no whitespace)" << endl;
-        std::cerr << "or enter nothing to muck: " << endl;
-        std::cin.sync();
-        std::cin.clear();
-
-        if( std::cin.getline( inputBuf, INPUTLEN ) != 0 )
+        if(bMuck) //then you must be human player, what's your hand?
         {
-            if( 0 != inputBuf[0] )
-            {
-                bMuck = false;
-                p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
-                p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
-                #ifdef DEBUGSAVEGAME
-                if( !bLoadGame )
-                {
-                    std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-                    p[curIndex]->myHand.HandPlus::DisplayHand(saveFile);
-                    saveFile.close();
-                }
-                #endif
-            }
-        }//else, error on input
+            const int16 INPUTLEN = 5;
+            char inputBuf[INPUTLEN];
 
-        std::cin.sync();
-        std::cin.clear();
+
+            std::cerr << p[curIndex]->GetIdent().c_str() << ", enter your cards (no whitespace)" << endl;
+            std::cerr << "or enter nothing to muck: " << endl;
+            std::cin.sync();
+            std::cin.clear();
+
+            if( std::cin.getline( inputBuf, INPUTLEN ) != 0 )
+            {
+                if( 0 != inputBuf[0] )
+                {
+                    bMuck = false;
+                    p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
+                    p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
+                    #ifdef DEBUGSAVEGAME
+                    if( !bLoadGame )
+                    {
+                        std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+                        p[curIndex]->myHand.HandPlus::DisplayHand(saveFile);
+                        saveFile.close();
+                    }
+                    #endif
+                }
+            }//else, error on input
+
+            std::cin.sync();
+            std::cin.clear();
+        }
 
         if( bMuck )
         {

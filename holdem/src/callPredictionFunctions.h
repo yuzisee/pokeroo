@@ -37,6 +37,7 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     private:
     float64 cacheRarity;
     float64 lastdBetSizeN;
+    float64 lastRawPCT;
     protected:
     const float64 dRemainingBet_dn();
     const float64 grossSacrifice(const float64 n);

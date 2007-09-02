@@ -412,6 +412,25 @@ StatResult CallCumulation::worstHandToHave() const
     return retVal;
 }
 
+
+StatResult CallCumulation::oddsAgainstBestHand() const
+{
+    #ifdef DEBUGASSERT
+        if( cumulation.size() == 0 )
+        {
+            std::cout << "EMPTY CALLCUMULATION!";
+            exit(1);
+        }
+    #endif
+
+    StatResult retVal;
+    retVal = cumulation[cumulation.size()-1];
+    retVal.wins = 1 - retVal.splits - retVal.wins;
+    retVal.loss = 1 - retVal.splits - retVal.loss;
+    retVal.repeated = 1 - cumulation[cumulation.size()-2].repeated;
+    return retVal;
+}
+
 StatResult CallCumulation::bestHandToHave() const
 {
     #ifdef DEBUGASSERT
