@@ -24,16 +24,16 @@
 #include "engine.h"
 
 
-class GameDeck : virtual public OrderedDeck
+class GameDeck : virtual public DealableOrderedDeck
 {
 
 public:
-        
+
     virtual void ShuffleDeck()=0;
     virtual void ShuffleDeck(float64)=0;
-    
+
     virtual float64 DealCard(Hand&)=0;
-    
+
 }
 ;
 
@@ -54,7 +54,7 @@ class RandomDeck : virtual public GameDeck
 
 		virtual float64 DealCard(Hand&);
 
-		RandomDeck(bool autoshuffle = false) : OrderedDeck(), bDeckEmpty(false), bAutoShuffle(autoshuffle), lastDealtPos(-1)
+		RandomDeck(bool autoshuffle = false) : DealableOrderedDeck(), bDeckEmpty(false), bAutoShuffle(autoshuffle), lastDealtPos(-1)
 		{
 			firstDealtPos = DECKSIZE-1;
 			for(uint8 i=0;i<DECKSIZE;++i)
@@ -74,11 +74,11 @@ class LiveDeck : virtual public GameDeck
     public:
     virtual void ShuffleDeck(){}
     virtual void ShuffleDeck(float64){}
-    
+
     virtual float64 DealCard(Hand&)=0;
-    
+
     void SetTopCard(const DeckLocation &d);
-    
+
     LiveDeck() {}
 }
 ;

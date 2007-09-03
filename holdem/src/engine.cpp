@@ -145,7 +145,7 @@ void OrderedDeck::sortSuits()
 }
 
 
-void OrderedDeck::UndealCard(const DeckLocation& deck)
+void DealableOrderedDeck::UndealCard(const DeckLocation& deck)
 {
 	dealtHand[deck.Suit] &= ~deck.Value;
 	dealt = deck;
@@ -154,7 +154,7 @@ void OrderedDeck::UndealCard(const DeckLocation& deck)
 
 
 
-float64 OrderedDeck::DealCard(Hand& h) //(int maxSuit, unsigned long maxCard)
+float64 DealableOrderedDeck::DealCard(Hand& h) //(int maxSuit, unsigned long maxCard)
 //startSuit=0 and startValue=ACELOW will deal all cards
 {
 	bool bMatchesOld = false;
@@ -310,30 +310,42 @@ void OrderedDeck::OmitCards(const Hand& h)
 	OrderedDeck::dealtHand[3] |= h.SeeCards(3);
 }
 
-void OrderedDeck::SetIndependant()
+void DealableOrderedDeck::SetIndependant()
 {
 	dealt.Value = BaseDealtValue();
 	dealt.Suit = BaseDealtSuit();
 	dealt.Rank = BaseDealtRank();
 }
 
-void OrderedDeck::SetNextSuit()
+void DealableOrderedDeck::SetNextSuit()
 {
 	dealt.Suit = nextSuit[dealt.Suit];
 	dealt.Value = BaseDealtValue();
 	dealt.Rank = BaseDealtRank();
 }
 
-void OrderedDeck::UndealAll()
+void OrderedDeck::SetEmpty()
 {
 	OrderedDeck::dealtHand[0] = 0;
 	OrderedDeck::dealtHand[1] = 0;
 	OrderedDeck::dealtHand[2] = 0;
 	OrderedDeck::dealtHand[3] = 0;
-	OrderedDeck::SetIndependant();
 }
 
+
+void DealableOrderedDeck::UndealAll()
+{
+	OrderedDeck::SetEmpty();
+	SetIndependant();
+}
+
+
 OrderedDeck::~OrderedDeck()
+{
+}
+
+
+DealableOrderedDeck::~DealableOrderedDeck()
 {
 }
 
@@ -341,7 +353,7 @@ DealRemainder::~DealRemainder()
 {
 	CleanStats();
 }
-
+/*
 void DealRemainder::DeOmitCards(const Hand& h)
 {
 	OrderedDeck::dealtHand[0] &= ~( h.SeeCards(0) );
@@ -349,18 +361,11 @@ void DealRemainder::DeOmitCards(const Hand& h)
 	OrderedDeck::dealtHand[2] &= ~( h.SeeCards(2) );
 	OrderedDeck::dealtHand[3] &= ~( h.SeeCards(3) );
 }
-
+*/
 void DealRemainder::CleanStats()
 {
-	/*
-    if (lastStats != NULL)
-	{
-		delete lastStats;
-	}
-	*/
-	lastStats = NULL;
 }
-
+/*
 float64 DealRemainder::Analyze(PlayStats* i,
 			const int8 dsuit, const uint8 drank, const uint32 dvalue)
 {
@@ -388,15 +393,18 @@ float64 DealRemainder::Analyze(PlayStats* instructions,
 	dealt = pos;
 	return Analyze(instructions);
 }
-
-float64 DealRemainder::Analyze(PlayStats* instructions)
+*/
+float64 DealRemainder::AnalyzeComplete()
 {
+	sortSuits();
+	DeckLocation pos;
+	pos.Rank = BaseDealtRank();
+	pos.Value = BaseDealtValue();
+	pos.Suit = BaseDealtSuit();
 
-	moreCards = instructions->moreCards;
 //	deals=0;
 
 	CleanStats();
-	lastStats = instructions;
 	float64 returnResult;
 //	if ( bRecursive )
 //		returnResult = executeRecursive(dealtSuit,dealtValue,1);

@@ -30,6 +30,7 @@
 
 #define GLOBAL_AICACHE_SPEEDUP
 
+typedef bool SuitsUsedBool[13][4];
 
 class OrderedDeck
 {
@@ -45,11 +46,54 @@ class OrderedDeck
 		void sortSuits();
     //static const int Occurrences(unsigned long*);
     //int lastOccurrences;
-		void UndealAll();//Make sure you Empty all the hands!
-		virtual float64 DealCard(Hand&);
-		void UndealCard(const DeckLocation&);
+		void SetEmpty();//Make sure you Empty all the hands!
 		void OmitCard(const DeckLocation&);
 		void OmitCards(const Hand&);
+
+
+    //after redealing it, set dealtSuit and dealtValue to
+    //0 and ACELOW. This allows the next card to be independant
+        OrderedDeck(const OrderedDeck& other)
+        {
+            firstSuit = other.firstSuit;
+
+            for( int8 i=0;i<4;++i)
+            {
+                nextSuit[i] = other.nextSuit[i];
+                prevSuit[i] = other.prevSuit[i];
+                dealtHand[i] = other.dealtHand[i];
+            }
+        }
+
+		OrderedDeck()
+		{
+			firstSuit = 0;
+
+			nextSuit[0] = 1;
+			nextSuit[1] = 2;
+			nextSuit[2] = 3;
+			nextSuit[3] = HoldemConstants::NO_SUIT;
+			prevSuit[0] = HoldemConstants::NO_SUIT;
+			prevSuit[1] = 0;
+			prevSuit[2] = 1;
+			prevSuit[3] = 2;
+
+			SetEmpty();
+		}
+
+                virtual ~OrderedDeck();
+
+		bool operator==(const OrderedDeck&) const;
+}
+;
+
+
+class DealableOrderedDeck : public OrderedDeck
+{
+
+	public:
+		virtual float64 DealCard(Hand&);
+		void UndealCard(const DeckLocation&);
 
 		const uint32 BaseDealtValue() const
 		{
@@ -68,74 +112,46 @@ class OrderedDeck
 
 		void SetIndependant();
 		void SetNextSuit();
+		void UndealAll();//Make sure you Empty all the hands!
 
     //after redealing it, set dealtSuit and dealtValue to
     //0 and ACELOW. This allows the next card to be independant
-        OrderedDeck(const OrderedDeck& other)
+        DealableOrderedDeck(const DealableOrderedDeck& other) : OrderedDeck(other)
         {
-            firstSuit = other.firstSuit;
-
-            for( int8 i=0;i<4;++i)
-            {
-                nextSuit[i] = other.nextSuit[i];
-                prevSuit[i] = other.prevSuit[i];
-                dealtHand[i] = other.dealtHand[i];
-            }
 			dealt = other.dealt;
         }
 
-		OrderedDeck()
+		DealableOrderedDeck() : OrderedDeck()
 		{
-			firstSuit = 0;
-
-			nextSuit[0] = 1;
-			nextSuit[1] = 2;
-			nextSuit[2] = 3;
-			nextSuit[3] = HoldemConstants::NO_SUIT;
-			prevSuit[0] = HoldemConstants::NO_SUIT;
-			prevSuit[1] = 0;
-			prevSuit[2] = 1;
-			prevSuit[3] = 2;
-
-			UndealAll();
 		}
 
-                virtual ~OrderedDeck();
+        virtual ~DealableOrderedDeck();
 
-		bool operator==(const OrderedDeck&) const;
 }
 ;
 
-class DealRemainder : public OrderedDeck
+
+class DealRemainder : public DealableOrderedDeck
 {
 	private:
 
-		Hand addend; //temporary
-//		double executeRecursive(int,unsigned long,double);
+		Hand baseAddend;
 		float64 executeIterative();
 		int16 moreCards;
+    protected:
+        SuitsUsedBool * dealtTables;
 	public:
 
-//		bool bRecursive;
-
-		PlayStats* lastStats;
-
-   		void DeOmitCards(const Hand&);
+		PlayStats (*lastStats);
 
 		void CleanStats();
 
-		//double deals;
+		float64 AnalyzeComplete();
 
-		float64 AnalyzeComplete(PlayStats*);
-		float64 Analyze(PlayStats*);
-		float64 Analyze(PlayStats*,const int8,const uint8,const uint32);
-		float64 Analyze(PlayStats*,const DeckLocation&);
-
-		DealRemainder() : OrderedDeck()
+		DealRemainder(PlayStats* instructions) : DealableOrderedDeck(), moreCards(instructions->moreCards), lastStats(instructions)
 		{
-			//bRecursive = false;
-			lastStats = 0;
-//			addend.Empty();
+		    dealtTables = new SuitsUsedBool[instructions->moreCards];
+			baseAddend.SetEmpty();
 		}
 
 

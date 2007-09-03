@@ -63,7 +63,6 @@ char * myPlayerName = 0;
 
 void genW(CommunityPlus& h1, CommunityPlus& h2)
 {
-    DealRemainder deal;
 
 #ifdef DEBUGSITUATION
 	cout << "Cards available to me" << endl;
@@ -90,8 +89,6 @@ void genW(CommunityPlus& h1, CommunityPlus& h2)
     StatResult myWins;
     DistrShape myDistrPCT(0);
     StatsManager::Query( &myWins,&myDistrPCT,0,h1, h2,0);
-    //deal.OmitCards(h1);
-    // deal.AnalyzeComplete(&ds);
 
     cout << endl << "AVG "  << myWins.loss << " l + "
             << myWins.splits << " s + " << myWins.wins << " w = " <<
@@ -146,8 +143,6 @@ void testW()
 void genC(CommunityPlus& h1, CommunityPlus& h2)
 {
 
-     DealRemainder deal;
-
 #ifdef DEBUGSITUATION
 	cout << "Cards available to me" << endl;
 	h1.DisplayHand(cout);
@@ -172,8 +167,7 @@ void genC(CommunityPlus& h1, CommunityPlus& h2)
     //WinStats ds(h1, h2,FIRST_DEAL-2);
     CallCumulationD calc;
     StatsManager::QueryOffense( calc,h1, h2,0);
-    //deal.OmitCards(h1);
-    // deal.AnalyzeComplete(&ds);
+
 
     cout << endl << "=============Reduced=============" << endl;
 	cout.precision(4);

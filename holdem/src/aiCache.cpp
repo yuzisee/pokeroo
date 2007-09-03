@@ -204,12 +204,12 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
         }
     }
 
-    DealRemainder myStatBuilder;
+    WinStats ds(withCommunity, onlyCommunity,n);
+    DealRemainder myStatBuilder(&ds);
     myStatBuilder.UndealAll();
     myStatBuilder.OmitCards(withCommunity);
 
-    WinStats ds(withCommunity, onlyCommunity,n);
-    myStatBuilder.AnalyzeComplete(&ds);
+    myStatBuilder.AnalyzeComplete();
 
     if( "" != datafilename )
     {
@@ -282,12 +282,13 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
     if( lastds == 0 )
     {
 #endif
-        DealRemainder myStatBuilder;
+        CommunityCallStats ds(withCommunity, onlyCommunity,n);
+
+        DealRemainder myStatBuilder(&ds);
         myStatBuilder.UndealAll();
         myStatBuilder.OmitCards(onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
 
-        CommunityCallStats ds(withCommunity, onlyCommunity,n);
-        myStatBuilder.AnalyzeComplete(&ds);
+        myStatBuilder.AnalyzeComplete();
         const CallCumulation &newC = *(ds.calc);
         q = newC;
 #ifdef GLOBAL_AICACHE_SPEEDUP
@@ -305,12 +306,14 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
         {///New community being queried
             if( *lastds != 0 ) delete *lastds;
 
-            DealRemainder myStatBuilder;
+            *lastds = new CommunityCallStats(withCommunity, onlyCommunity,n);
+
+
+            DealRemainder myStatBuilder(*lastds);
             myStatBuilder.UndealAll();
             myStatBuilder.OmitCards(onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
 
-            *lastds = new CommunityCallStats(withCommunity, onlyCommunity,n);
-            myStatBuilder.AnalyzeComplete(*lastds);
+            myStatBuilder.AnalyzeComplete();
             const CallCumulation &newC = *((*lastds)->calc);
             q = newC;
         }
@@ -345,12 +348,13 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
         }
     }
 
-    DealRemainder myStatBuilder;
+    CallStats ds(withCommunity, onlyCommunity,n);
+
+    DealRemainder myStatBuilder(&ds);
     myStatBuilder.UndealAll();
     myStatBuilder.OmitCards(withCommunity);
 
-    CallStats ds(withCommunity, onlyCommunity,n);
-    myStatBuilder.AnalyzeComplete(&ds);
+    myStatBuilder.AnalyzeComplete();
     const CallCumulation &newC = *(ds.calc);
 
     if( "" != datafilename )
