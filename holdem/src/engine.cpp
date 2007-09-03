@@ -59,37 +59,47 @@ bool OrderedDeck::operator==(const OrderedDeck& o) const
 
 void OrderedDeck::sortSuits()
 {
-	//Mergesort
+    int8 s0 = firstSuit;
+    int8 s1 = nextSuit[s0];
+    int8 s2 = nextSuit[s1];
+    int8 s3 = nextSuit[s2];
+	//Mergesort, stable
 
+    //We implicitly divide the hands into two groups.
+    //f1 represents suit 0 and suit 1
+    //f2 represents suit 2 and suit 3
 	int8 f1, f2;
 
-	if( dealtHand[0] > dealtHand[2] )
+//We sort the f1 subgroup
+	if( dealtHand[s0] >= dealtHand[s1] )
 	{
-		f1 = 0;
-		nextSuit[0] = 2;
-		nextSuit[2] = HoldemConstants::NO_SUIT;
+		f1 = s0;
+		nextSuit[s0] = s1;
+		nextSuit[s1] = HoldemConstants::NO_SUIT;
 	}
 	else
 	{
-		f1 = 2;
-		nextSuit[2] = 0;
-		nextSuit[0] = HoldemConstants::NO_SUIT;
+		f1 = s1;
+		nextSuit[s1] = s0;
+		nextSuit[s0] = HoldemConstants::NO_SUIT;
 	}
 
-	if( dealtHand[1] > dealtHand[3] )
+//We sort the f2 subgroup
+	if( dealtHand[s2] >= dealtHand[s3] )
 	{
-		f2 = 1;
-		nextSuit[1] = 3;
-		nextSuit[3] = HoldemConstants::NO_SUIT;
+		f2 = s2;
+		nextSuit[s2] = s3;
+		nextSuit[s3] = HoldemConstants::NO_SUIT;
 	}
 	else
 	{
-		f2 = 3;
-		nextSuit[3] = 1;
-		nextSuit[1] = HoldemConstants::NO_SUIT;
+		f2 = s3;
+		nextSuit[s3] = s2;
+		nextSuit[s2] = HoldemConstants::NO_SUIT;
 	}
 
-	if ( dealtHand[f1] > dealtHand[f2] )
+//We select from the head of the two sublists to form firstSuit, and then shorten that sublist
+	if ( dealtHand[f1] >= dealtHand[f2] )
 	{
 		firstSuit = f1;
 		f1 = nextSuit[f1];
@@ -103,11 +113,11 @@ void OrderedDeck::sortSuits()
 	int8 curSuit = firstSuit;
 
 
-
+//While both lists exist, continue to take the higher of the two sublist heads
 	while(f2 != HoldemConstants::NO_SUIT && f1 != HoldemConstants::NO_SUIT)
 	{
 
-		if (dealtHand[f1] > dealtHand[f2] )
+		if (dealtHand[f1] >= dealtHand[f2] )
 		{
 			nextSuit[curSuit] = f1;
 			curSuit = f1;
@@ -130,18 +140,42 @@ void OrderedDeck::sortSuits()
 		nextSuit[curSuit] = f2;
 	}
 
-	prevSuit[firstSuit] = -1;
+	prevSuit[firstSuit] = HoldemConstants::NO_SUIT;
 
 	curSuit = firstSuit;
 
 
 
-
+//Assign all the prevsuits
 	while(nextSuit[curSuit] != HoldemConstants::NO_SUIT)
 	{
 		prevSuit[nextSuit[curSuit]] = curSuit;
 		curSuit=nextSuit[curSuit];
 	}
+}
+
+
+void DealRemainder::sortSuitsStable(const Hand & addend)
+{
+    baseAddend.SetUnique(addend);
+	uint32 dealtHandFull[4];
+	for(int8 n=0;n<4;++n)
+	{
+	    dealtHandFull[n] = dealtHand[n];
+	    dealtHand[n] = addend.SeeCards(n);
+	}
+
+	//Sort the addend, first. This order will act as the tiebreaker for the real suit sorting
+	sortSuits();
+
+	//Restore actual dealtHand
+    for(int8 n=0;n<4;++n)
+	{
+	    dealtHand[n] = dealtHandFull[n];
+	}
+
+    sortSuits();
+
 }
 
 
@@ -154,7 +188,7 @@ void DealableOrderedDeck::UndealCard(const DeckLocation& deck)
 
 
 
-float64 DealableOrderedDeck::DealCard(Hand& h) //(int maxSuit, unsigned long maxCard)
+float64 DealRemainder::DealCard(Hand& h) //(int maxSuit, unsigned long maxCard)
 //startSuit=0 and startValue=ACELOW will deal all cards
 {
 	bool bMatchesOld = false;
@@ -194,11 +228,16 @@ HoldemUtil::PrintCard(cout,dealt.Suit,dealt.Value);
 #endif
 		return DealCard(h);
 	}
-	else if(prevSuit[dealt.Suit] != HoldemConstants::NO_SUIT)
+	else if(prevSuit[dealt.Suit] != HoldemConstants::NO_SUIT) //unless we are in the first suit, we have to check for certain cases
 	{
-		int8 qprevSuit = prevSuit[dealt.Suit];
-		uint32 hHere=h.SeeCards(dealt.Suit);
-		uint32 hBack=h.SeeCards(qprevSuit);
+		const int8 qprevSuit = prevSuit[dealt.Suit];
+		const uint32 hHere=h.SeeCards(dealt.Suit);
+		const uint32 hBack=h.SeeCards(qprevSuit);
+		const uint32 allHere = dealtHand[dealt.Suit];
+		const uint32 allBack = dealtHand[qprevSuit];
+		const uint32 oldHere = (allHere&~hHere);
+		const uint32 oldBack = (allBack&~hBack);
+
 
 		//bMatchesOld = ( dealtHand[dealtSuit] & (~dealtHand[qprevSuit]) )
 							 //>= dealtHand[qprevSuit];
@@ -217,23 +256,22 @@ HoldemUtil::PrintCard(cout,dealt.Suit,dealt.Value);
 		else{ cout << " AddToDifferent" << flush;}
 	   }
 #endif
+
+        const bool bPreviouslyIdentical = ( oldHere == oldBack );
+
 		if(
-		(
-			(
-				 ( (hHere | dealt.Value) > hBack) //violates "greater first" rule
-					//||
-					//(hHere == hBack)
-				 )
-				 &&
-				 (
-					 (dealtHand[qprevSuit]&~hBack)
-					 == //if eligible for "greater first" rule
-					 (dealtHand[dealt.Suit]&~hHere)
-				 )
-			)
-			||
-			(bMatchesOld && hBack==hHere)
-		  )
+             bPreviouslyIdentical//if eligible for "greater first" rule
+             &&
+             (hHere | dealt.Value) > hBack //violates "greater first" rule
+           )
+        {
+            //To prevent cycles, we keep additions sorted in previously identical suits
+			SetNextSuit();
+			return DealCard(h);
+		}
+
+
+        if (bMatchesOld && hBack==hHere)
 		{
             //Essentially, we need to avoid adding to this suit, since it is the same as the last suit, which would already
             //have been counted for double!
@@ -351,6 +389,7 @@ DealableOrderedDeck::~DealableOrderedDeck()
 
 DealRemainder::~DealRemainder()
 {
+//    delete [] dealtTables;
 	CleanStats();
 }
 /*

@@ -92,7 +92,7 @@ class DealableOrderedDeck : public OrderedDeck
 {
 
 	public:
-		virtual float64 DealCard(Hand&);
+		virtual float64 DealCard(Hand&) = 0;
 		void UndealCard(const DeckLocation&);
 
 		const uint32 BaseDealtValue() const
@@ -139,8 +139,10 @@ class DealRemainder : public DealableOrderedDeck
 		float64 executeIterative();
 		int16 moreCards;
     protected:
-        SuitsUsedBool * dealtTables;
+        //SuitsUsedBool * dealtTables;
 	public:
+        virtual float64 DealCard(Hand&);
+        void sortSuitsStable(const Hand & addend);
 
 		PlayStats (*lastStats);
 
@@ -150,7 +152,7 @@ class DealRemainder : public DealableOrderedDeck
 
 		DealRemainder(PlayStats* instructions) : DealableOrderedDeck(), moreCards(instructions->moreCards), lastStats(instructions)
 		{
-		    dealtTables = new SuitsUsedBool[instructions->moreCards];
+		    //dealtTables = new SuitsUsedBool[instructions->moreCards];
 			baseAddend.SetEmpty();
 		}
 
