@@ -99,7 +99,7 @@ class FoldGainModel : public virtual ScalarFunctionModel
 
     FoldWaitLengthModel waitLength;
 
-    FoldGainModel(float64 quantum) : ScalarFunctionModel(quantum), last_dw_dbet(0){};
+    FoldGainModel(float64 myQuantum) : ScalarFunctionModel(myQuantum), last_dw_dbet(0){};
 
     virtual ~FoldGainModel();
 
@@ -129,7 +129,7 @@ class FacedOddsCallGeom : public virtual ScalarFunctionModel
 
 
     FoldGainModel FG;
-    FacedOddsCallGeom(float64 quantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(quantum/2) {}
+    FacedOddsCallGeom(float64 myQuantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 }
@@ -150,7 +150,7 @@ class FacedOddsAlgb : public virtual ScalarFunctionModel
 
 
     FoldGainModel FG;
-    FacedOddsAlgb(float64 quantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(quantum/2) {}
+    FacedOddsAlgb(float64 myQuantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 }
@@ -172,7 +172,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     bool bCheckPossible;
 
     FoldGainModel FG;
-    FacedOddsRaiseGeom(float64 quantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(quantum/2) {}
+    FacedOddsRaiseGeom(float64 myQuantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 }
