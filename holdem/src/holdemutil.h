@@ -204,11 +204,12 @@ protected:
 public:
     static const Hand EMPTY_HAND;
 
-	uint32 SeeCards(const int8 someSuit) const
+	const uint32 & SeeCards(const int8 someSuit) const
 	{
 		return cardset[someSuit];
 	}
 //    const int Occurrences() const;
+    virtual void ResetCardset(const uint32 * const);
     virtual void SetEmpty();
     const virtual bool IsEmpty() const;
 

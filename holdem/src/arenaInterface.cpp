@@ -278,12 +278,12 @@ void HoldemArena::saveState()
 }
 #endif
 
-int8 HoldemArena::AddHuman(const char* id, PlayerStrategy* newStrat)
+int8 HoldemArena::AddHuman(const char* const id, PlayerStrategy* newStrat)
 {
 	return AddHuman(id, BASE_CHIP_COUNT, newStrat);
 }
 
-int8 HoldemArena::AddHuman(const char* id, float64 money, PlayerStrategy* newStrat)
+int8 HoldemArena::AddHuman(const char* const id, const float64 money, PlayerStrategy* newStrat)
 {
     int8 newID = AddPlayer(id, money, newStrat);
     #ifdef EXTERNAL_DEALER
@@ -292,17 +292,17 @@ int8 HoldemArena::AddHuman(const char* id, float64 money, PlayerStrategy* newStr
     return newID;
 }
 
-int8 HoldemArena::AddBot(const char* id, PlayerStrategy* newStrat)
+int8 HoldemArena::AddBot(const char* const id, PlayerStrategy* newStrat)
 {
 	return AddBot(id, BASE_CHIP_COUNT, newStrat);
 }
 
-int8 HoldemArena::AddBot(const char* id, float64 money, PlayerStrategy* newStrat)
+int8 HoldemArena::AddBot(const char* const id, const float64 money, PlayerStrategy* newStrat)
 {
     return AddPlayer(id, money, newStrat);
 }
 
-int8 HoldemArena::AddPlayer(const char* id, float64 money, PlayerStrategy* newStrat)
+int8 HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat)
 {
 	if( curIndex != -1 || newStrat->game != 0 || newStrat->me != 0) return -1;
 

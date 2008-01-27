@@ -327,15 +327,17 @@ void Hand::AppendUnique(const Hand& h)
 	}
 }
 
+void Hand::ResetCardset(const uint32 * const cardArray)
+{
+    cardset[0] = cardArray[0];
+	cardset[1] = cardArray[1];
+	cardset[2] = cardArray[2];
+	cardset[3] = cardArray[3];
+}
 
 void Hand::SetUnique(const Hand& h)
 {
-
-	cardset[0] = h.cardset[0];
-	cardset[1] = h.cardset[1];
-	cardset[2] = h.cardset[2];
-	cardset[3] = h.cardset[3];
-
+    ResetCardset( h.cardset );
 }
 
 void HandPlus::populateValueset()

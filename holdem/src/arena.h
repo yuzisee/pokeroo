@@ -310,7 +310,7 @@ protected:
 		int8 PlayRound(const int8);
 			//returns the first person to reveal cards (-1 if all fold)
 
-        virtual int8 AddPlayer(const char* id, float64 money, PlayerStrategy* newStrat);
+        virtual int8 AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
 	public:
 
 #ifdef DEBUGSAVEGAME
@@ -354,12 +354,12 @@ protected:
 		virtual ~HoldemArena();
 
 
-        //virtual int8 AddHuman(const char* id, UserConsoleStrategy*);
-		//virtual int8 AddHuman(const char* id, float64 money, UserConsoleStrategy*);
-		virtual int8 AddHuman(const char* id, PlayerStrategy*);
-		virtual int8 AddHuman(const char* id, float64 money, PlayerStrategy*);
-		virtual int8 AddBot(const char*, PlayerStrategy*);
-		virtual int8 AddBot(const char* id, float64 money, PlayerStrategy* newStrat);
+        //virtual int8 AddHuman(const char* const id, UserConsoleStrategy*);
+		//virtual int8 AddHuman(const char* const id, const float64 money, UserConsoleStrategy*);
+		virtual int8 AddHuman(const char* const id, PlayerStrategy*);
+		virtual int8 AddHuman(const char* const id, const float64 money, PlayerStrategy*);
+		virtual int8 AddBot(const char* const, PlayerStrategy*);
+		virtual int8 AddBot(const char* const id, const float64 money, PlayerStrategy* newStrat);
 
         virtual int8 GetNumberInHand() const;
 		virtual int8 GetNumberAtTable() const;
