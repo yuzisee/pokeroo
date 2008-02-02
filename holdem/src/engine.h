@@ -30,6 +30,7 @@
 
 #define GLOBAL_AICACHE_SPEEDUP
 
+
 typedef bool SuitsUsedBool[13][4];
 
 class OrderedDeck
@@ -41,9 +42,12 @@ class OrderedDeck
 		int8 firstSuit;
 		int8 nextSuit[4];
 		int8 prevSuit[4];
+
+        void AssignSuitsFrom(const OrderedDeck & suitorder);
+
 	public:
         static const OrderedDeck EMPTY_ODECK;
-		void sortSuits();
+		void sortSuits(); //Stable Mergesort
     //static const int Occurrences(unsigned long*);
     //int lastOccurrences;
 		void SetEmpty();//Make sure you Empty all the hands!
@@ -55,14 +59,7 @@ class OrderedDeck
     //0 and ACELOW. This allows the next card to be independant
         OrderedDeck(const OrderedDeck& other)
         {
-            firstSuit = other.firstSuit;
-
-            for( int8 i=0;i<4;++i)
-            {
-                nextSuit[i] = other.nextSuit[i];
-                prevSuit[i] = other.prevSuit[i];
-                dealtHand[i] = other.dealtHand[i];
-            }
+            AssignSuitsFrom(other);
         }
 
 		OrderedDeck()
@@ -92,8 +89,8 @@ class DealableOrderedDeck : public OrderedDeck
 {
 
 	public:
-		virtual float64 DealCard(Hand&) = 0;
-		void UndealCard(const DeckLocation&);
+        virtual float64 DealCard(Hand&)=0;
+        virtual void UndealCard(const DeckLocation & deck); //Can be undealt only if not locked into addendSum
 
 		const uint32 BaseDealtValue() const
 		{
@@ -131,29 +128,67 @@ class DealableOrderedDeck : public OrderedDeck
 ;
 
 
-class DealRemainder : public DealableOrderedDeck
+
+
+class DealRemainder : public virtual DealableOrderedDeck
 {
 	private:
+        Hand addendSum;
+        Hand justDealt;
 
-		Hand baseAddend;
-		float64 executeIterative();
-		int16 moreCards;
+		static float64 executeRecursive(const DealRemainder & refDeck, PlayStats (* const lastStats), const int16 moreCards);
+		static float64 executeDealing(DealRemainder & refDeck, PlayStats (* const lastStats), const int16 moreCards, const float64 fromRuns);
+		static float64 executeComparison(const DealRemainder & refDeck, PlayStats (* const lastStats), const float64 fromRuns);
+
+        void UpdateSameSuits();
+
     protected:
-        //SuitsUsedBool * dealtTables;
+
+   		bool addendSameSuit[4][4];
 	public:
         virtual float64 DealCard(Hand&);
-        void sortSuitsStable(const Hand & addend);
 
-		PlayStats (*lastStats);
 
-		void CleanStats();
+   		void OmitSet(const CommunityPlus& setOne, const CommunityPlus& setTwo);
+   		void LockNewAddend(); //And re-sort as needed, stable.
+   		///Conditions for sorting:
+   		/// 1) cardset's must be descending
+   		/// 2) Identical suits must be beside each other
+   		/// 3) Afterwards, using addendSameSuit or otherwise, whether two adjacent cardsets are identical or not must be known.
 
-		float64 AnalyzeComplete();
+		void CleanStats(); //Releasing memory?
 
-		DealRemainder(PlayStats* instructions) : DealableOrderedDeck(), moreCards(instructions->moreCards), lastStats(instructions)
-		{
-		    //dealtTables = new SuitsUsedBool[instructions->moreCards];
-			baseAddend.SetEmpty();
+
+		float64 AnalyzeComplete(PlayStats* instructions);
+
+        DealRemainder(const DealRemainder & other) : DealableOrderedDeck(other)
+        {
+
+            addendSum.SetUnique(other.addendSum);
+            justDealt.SetUnique(other.justDealt);
+
+            for( int8 i=0; i<4 ; ++i )
+            {
+                for( int8 j=0; j<4 ; ++j )
+                {
+                    addendSameSuit[i][j] = other.addendSameSuit[i][j];
+                }
+            }
+
+
+        }
+
+		DealRemainder() : DealableOrderedDeck()
+		{//They start true, and once two suits are different, there is no changing it. They stay different forever
+            for( int8 i=0; i<4 ; ++i )
+            {
+                for( int8 j=0; j<4 ; ++j )
+                {
+                    addendSameSuit[i][j] = true;
+                }
+            }
+
+            justDealt.SetEmpty();
 		}
 
 

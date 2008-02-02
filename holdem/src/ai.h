@@ -37,9 +37,10 @@
 
 struct StatRequest
 {
-    StatRequest() : bNewHand(false), bTareOcc(false) {}
-    bool bNewHand;
-    bool bTareOcc;
+    StatRequest() : bNewSet(false)
+    {}//, bTareOcc(false) {}
+    bool bNewSet;
+    //bool bTareOcc;
 }
 ;
 
@@ -80,7 +81,8 @@ class PlayStats
         virtual void Analyze() = 0;
 		virtual void Compare(const float64 occ);
 
-
+        const CommunityPlus & SeeCommunityOnly() { return oppStrength; }
+        const CommunityPlus & SeeCommunityAndHand() { return myStrength; }
 
 		PlayStats(const CommunityPlus& withcommunity, const CommunityPlus& onlycommunity)
 		{

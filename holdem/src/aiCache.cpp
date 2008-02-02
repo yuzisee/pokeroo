@@ -205,11 +205,11 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
     }
 
     WinStats ds(withCommunity, onlyCommunity,n);
-    DealRemainder myStatBuilder(&ds);
+    DealRemainder myStatBuilder;
     myStatBuilder.UndealAll();
-    myStatBuilder.OmitCards(withCommunity);
+    myStatBuilder.OmitSet(onlyCommunity, withCommunity);
 
-    myStatBuilder.AnalyzeComplete();
+    myStatBuilder.AnalyzeComplete(&ds);
 
     if( "" != datafilename )
     {
@@ -256,8 +256,7 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
 
 void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity)
 {
-    CommunityPlus emptyHand;
-    PreflopCallStats pfcs(withCommunity, emptyHand);
+    PreflopCallStats pfcs(withCommunity, CommunityPlus::EMPTY_COMPLUS);
     pfcs.AutoPopulate();
     pfcs.Analyze();
 
@@ -284,11 +283,11 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
 #endif
         CommunityCallStats ds(withCommunity, onlyCommunity,n);
 
-        DealRemainder myStatBuilder(&ds);
+        DealRemainder myStatBuilder;
         myStatBuilder.UndealAll();
-        myStatBuilder.OmitCards(onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
+        myStatBuilder.OmitSet(CommunityPlus::EMPTY_COMPLUS, onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
 
-        myStatBuilder.AnalyzeComplete();
+        myStatBuilder.AnalyzeComplete(&ds);
         const CallCumulation &newC = *(ds.calc);
         q = newC;
 #ifdef GLOBAL_AICACHE_SPEEDUP
@@ -309,11 +308,11 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
             *lastds = new CommunityCallStats(withCommunity, onlyCommunity,n);
 
 
-            DealRemainder myStatBuilder(*lastds);
+            DealRemainder myStatBuilder;
             myStatBuilder.UndealAll();
-            myStatBuilder.OmitCards(onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
+            myStatBuilder.OmitSet(CommunityPlus::EMPTY_COMPLUS, onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
 
-            myStatBuilder.AnalyzeComplete();
+            myStatBuilder.AnalyzeComplete(*lastds);
             const CallCumulation &newC = *((*lastds)->calc);
             q = newC;
         }
@@ -350,11 +349,11 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
 
     CallStats ds(withCommunity, onlyCommunity,n);
 
-    DealRemainder myStatBuilder(&ds);
+    DealRemainder myStatBuilder;
     myStatBuilder.UndealAll();
-    myStatBuilder.OmitCards(withCommunity);
+    myStatBuilder.OmitSet(onlyCommunity, withCommunity);
 
-    myStatBuilder.AnalyzeComplete();
+    myStatBuilder.AnalyzeComplete(&ds);
     const CallCumulation &newC = *(ds.calc);
 
     if( "" != datafilename )

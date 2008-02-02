@@ -306,15 +306,13 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 			}
 
 
-			r.bTareOcc = true;
-			r.bNewHand = true;
+			r.bNewSet = true;
 			return r;
 		}
 		else
 		{
 			//Mid-batch (probably only if mid-flop)
-            r.bTareOcc = false;
-			r.bNewHand = false;
+            //r.bNewSet = false; //Valid and unncessary -- constructor defaults to false
 			return r;
 		}
 
@@ -337,13 +335,13 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 			myStrength.AddToHand(deck);
 			if (cardsLeft == 3) //Complete community
 			{
-
+                //You just dealt the last community card
 				myStrength.evaluateStrength();
 #ifdef DEBUGNEW
 				myStrength.DisplayHandBig(cout);
 #endif
-				//r.bTareOcc = false;
-                r.bNewHand = true;
+
+                r.bNewSet = true;
                 //return r;
 			}
 			/*else if (cardsLeft == 1)
@@ -357,7 +355,7 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 		else //only add to oppHand
 		{
 			if( cardsLeft == 1 )
-			{
+			{//You just dealt the last card
 
 				oppStrength.evaluateStrength();
 			}
@@ -746,8 +744,7 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
             ++statGroup;
 
 
-            r.bTareOcc = true;
-            r.bNewHand = true;
+            r.bNewSet = true;
 
             setCurrentGroupOcc(occ);
 
