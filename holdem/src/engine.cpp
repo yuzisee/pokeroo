@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 //#define DEBUGTARE
-#define DEBUGDEAL
+//#define DEBUGDEAL
 
 //#include <iostream>
 //#define NULL 0

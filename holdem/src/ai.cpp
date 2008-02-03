@@ -22,7 +22,7 @@
 //#define DEBUGLEAK
 //#define DEBUGGROUPING
 //#define DEBUGNEW
-#define DEBUGDROP
+//#define DEBUGDROP
 //#define DEBUGCALC
 //#define DEBUGCOMPARE
 //#define DEBUGFINALCALC
@@ -393,7 +393,7 @@ void WinStats::DropCard(const DeckLocation deck)
 		   if( currentCard == cardsToNextBet )
 		   {
 		       const StatResult & xd = myWins[statGroup];
-		        std::cout << endl << "TOTAL"  << xd.loss << " l + "
+		        std::cout << endl << "TOTAL "  << xd.loss << " l + "
                 << xd.splits << " s + " << xd.wins << " w = " <<
                 xd.loss+xd.splits+xd.wins
                 << "\tx;"<< xd.repeated  << " w" << oppReps <<endl;
@@ -412,7 +412,7 @@ void WinStats::DropCard(const DeckLocation deck)
 		   if( currentCard == cardsToNextBet )
 		   {
 		       const StatResult & xd = myWins[statGroup];
-		        std::cout << endl << "CUMUL"  << xd.loss << " l + "
+		        std::cout << endl << "CUMUL "  << xd.loss << " l + "
                 << xd.splits << " s + " << xd.wins << " w = " <<
                 xd.loss+xd.splits+xd.wins
                 << "\tx;"<< xd.repeated  << " w" << oppReps <<endl;
