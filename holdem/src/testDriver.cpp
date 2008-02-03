@@ -166,7 +166,8 @@ void genC(CommunityPlus& h1, CommunityPlus& h2)
 
     //WinStats ds(h1, h2,FIRST_DEAL-2);
     CallCumulationD calc;
-    StatsManager::QueryOffense( calc,h1, h2,0);
+    //StatsManager::QueryOffense( calc,h1, h2,0);
+    StatsManager::QueryDefense( calc,h1, h2,0);
 
 
     cout << endl << "=============Reduced=============" << endl;
@@ -287,6 +288,7 @@ void genCMD(uint16 procnum)
             {
                 h1.DisplayHand(cout);
                 genC(h1);
+                h1.DisplayHand(cout);
                 return;
             }
 
@@ -294,6 +296,7 @@ void genCMD(uint16 procnum)
             {
                 h1.DisplayHandBig(cout);
                 genW(h1);
+                h1.DisplayHandBig(cout);
                 return;
             }
         }
@@ -314,6 +317,9 @@ void goCMD(char* str)
 
 void testAnything()
 {
+
+//    goCMD("0");
+
     CommunityPlus withCommunity;
     CommunityPlus onlyCommunity;
     DeckLocation acecard;
@@ -322,23 +328,44 @@ void testAnything()
     acecard.SetByIndex(HoldemUtil::ParseCard('A','h'));
     withCommunity.AddToHand(acecard);
 
+const int num_in_community = 3;
     //2d 3d 4d 6d 7d As Ah
 
-    onlyCommunity.SetEmpty();
-/*
-    DealRemainder myStatBuilder;
-    myStatBuilder.UndealAll();
-    myStatBuilder.OmitSet(withCommunity,onlyCommunity);
-
-    CallStats ds(withCommunity, onlyCommunity,0);
-*/
-    //CallCumulationD x;
-    //StatsManager::QueryOffense(x,withCommunity,onlyCommunity,0);
-
-
-    DistrShape w_wl(0);
+    acecard.SetByIndex(HoldemUtil::ParseCard('2','d'));
+    onlyCommunity.AddToHand(acecard);
+    withCommunity.AddToHand(acecard);
+    acecard.SetByIndex(HoldemUtil::ParseCard('3','d'));
+    onlyCommunity.AddToHand(acecard);
+    withCommunity.AddToHand(acecard);
+    acecard.SetByIndex(HoldemUtil::ParseCard('4','d'));
+    onlyCommunity.AddToHand(acecard);
+    withCommunity.AddToHand(acecard);
 
 
+
+    StatResult myWins;
+    DistrShape myDistrPCT(0);
+    StatsManager::Query( &myWins,&myDistrPCT,0,withCommunity, onlyCommunity,num_in_community);
+
+
+
+    cout << endl << "AVG "  << myWins.loss << " l + "
+            << myWins.splits << " s + " << myWins.wins << " w = " <<
+            myWins.loss+myWins.splits+myWins.wins
+            << "\tx;"<< myWins.repeated   <<endl;
+
+    cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;
+    cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
+    cout << endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << endl;
+    cout << "Worst:" << myDistrPCT.worst *100 << "%" << endl;
+    cout << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << endl;
+    cout << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << endl;
+    cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
+    cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
+
+    cout << endl;
+
+cout << "Finish." << endl;
 
 //    cout << "w: " << x. << endl;
     //const CallCumulation &newC = *(ds.calc);

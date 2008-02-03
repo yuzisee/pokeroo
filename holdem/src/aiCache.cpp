@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 //#define DEBUGQUERYW
+#define QUERYTOTALS
 
 #include "aiCache.h"
 #include "functionmodel.h"
@@ -209,7 +210,18 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
     myStatBuilder.UndealAll();
     myStatBuilder.OmitSet(onlyCommunity, withCommunity);
 
+
+#ifdef QUERYTOTALS
+std::streamsize old_precision = std::cout.precision();
+std::cout.precision(17);
+std::cout << endl << "totalCount: " <<
+#endif
     myStatBuilder.AnalyzeComplete(&ds);
+#ifdef QUERYTOTALS
+std::cout << endl;
+std::cout.precision(old_precision);
+#endif
+
 
     if( "" != datafilename )
     {
@@ -228,27 +240,27 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
         #ifdef DEBUGQUERYW
 
 
-            cout << "Cards available to me" << endl;
-            withCommunity.DisplayHand(cout);
-            cout << endl;
+            std::cout << "Cards available to me" << endl;
+            withCommunity.DisplayHand(std::cout);
+            std::cout << endl;
 
 
-            cout << "Cards in community" << endl;
-            onlyCommunity.DisplayHand(cout);
-            cout << endl;
+            std::cout << "Cards in community" << endl;
+            onlyCommunity.DisplayHand(std::cout);
+            std::cout << endl;
 
-            cout << endl;
+            std::cout << endl;
 
 
-            cout << "(Mean) " << ds.pctDistr().mean * 100 << "%"  << endl;
-            cout << endl << "Adjusted improve? " << ds.pctDistr().improve * 100 << "%"  << endl;
-            cout << "Worst:" << ds.pctDistr().worst *100 << "%" << endl;
-            cout << "Standard Deviations:" << ds.pctDistr().stdDev*100 << "%" << endl;
-            cout << "Average Absolute Fluctuation:" << ds.pctDistr().avgDev*100 << "%" << endl;
-            cout << "Skew:" << ds.pctDistr().skew*100 << "%" << endl;
-            cout << "Kurtosis:" << (ds.pctDistr().kurtosis)*100 << "%" << endl;
+            std::cout << "(Mean) " << ds.pctDistr().mean * 100 << "%"  << endl;
+            std::cout << endl << "Adjusted improve? " << ds.pctDistr().improve * 100 << "%"  << endl;
+            std::cout << "Worst:" << ds.pctDistr().worst *100 << "%" << endl;
+            std::cout << "Standard Deviations:" << ds.pctDistr().stdDev*100 << "%" << endl;
+            std::cout << "Average Absolute Fluctuation:" << ds.pctDistr().avgDev*100 << "%" << endl;
+            std::cout << "Skew:" << ds.pctDistr().skew*100 << "%" << endl;
+            std::cout << "Kurtosis:" << (ds.pctDistr().kurtosis)*100 << "%" << endl;
 
-            cout << endl;
+            std::cout << endl;
         #endif
 
 
@@ -287,7 +299,20 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
         myStatBuilder.UndealAll();
         myStatBuilder.OmitSet(CommunityPlus::EMPTY_COMPLUS, onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
 
+
+#ifdef QUERYTOTALS
+std::streamsize old_precision = std::cout.precision();
+std::cout.precision(17);
+std::cout << endl << "totalCount: " <<
+#endif
         myStatBuilder.AnalyzeComplete(&ds);
+#ifdef QUERYTOTALS
+std::cout << endl;
+std::cout.precision(old_precision);
+#endif
+
+
+
         const CallCumulation &newC = *(ds.calc);
         q = newC;
 #ifdef GLOBAL_AICACHE_SPEEDUP
@@ -312,7 +337,18 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
             myStatBuilder.UndealAll();
             myStatBuilder.OmitSet(CommunityPlus::EMPTY_COMPLUS, onlyCommunity); ///Very smart, omit h2 NOT h1, because the opponent can think you have the cards you have
 
+
+#ifdef QUERYTOTALS
+std::streamsize old_precision = std::cout.precision();
+std::cout.precision(17);
+std::cout << endl << "totalCount: " <<
+#endif
             myStatBuilder.AnalyzeComplete(*lastds);
+#ifdef QUERYTOTALS
+std::cout << endl;
+std::cout.precision(old_precision);
+#endif
+
             const CallCumulation &newC = *((*lastds)->calc);
             q = newC;
         }

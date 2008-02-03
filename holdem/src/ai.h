@@ -65,11 +65,6 @@ class PlayStats
 
 
 
-        //std::vector<int32> myWins;
-        //std::vector<int32> myReps;
-        //std::vector<int32> oppWins;
-        //std::vector<int32> oppReps;
-
     public:
 
 #ifdef DEBUG_AA
@@ -169,6 +164,8 @@ protected:
 	CommunityPlus* myUndo;
 	CommunityPlus* oppUndo;
 
+	float64 oppReps;
+
     DistrShape *myDistrPCT;
 	DistrShape *myDistrWL;
 	StatResult myAvg;
@@ -182,7 +179,7 @@ public:
 	virtual void DropCard(const DeckLocation);
 
 	WinStats(const CommunityPlus& myP, const CommunityPlus& cP,
-		const int8 cardsInCommunity) : PlayStats(myP, cP), myDistrPCT(0), myDistrWL(0)
+		const int8 cardsInCommunity) : PlayStats(myP, cP), oppReps(1.0), myDistrPCT(0), myDistrWL(0)
 	{
 		initW(cardsInCommunity);
 	}

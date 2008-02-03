@@ -18,13 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-//#define DEBUGTOTALRUNS
-
 //#define DEBUGTARE
-//#define DEBUGINFLOOP
-//#define DEBUGSTATSDEAL
-//#define DEBUGORDER
-//#define DEBUGORDERING
+#define DEBUGDEAL
+
 //#include <iostream>
 //#define NULL 0
 
@@ -32,6 +28,7 @@
 #include "holdem2.h"
 #include "ai.h"
 
+using std::cout;
 using std::endl;
 
 const OrderedDeck OrderedDeck::EMPTY_ODECK;
@@ -493,42 +490,27 @@ float64 DealRemainder::executeComparison(const DealRemainder & refDeck, PlayStat
 ///    Process Situation with lastStats
 /// ======================================
 
-        #ifdef DEBUGCALLPART
-            if(lastStats->debugViewD(0) == 0)
-            {
-                if( lastDealt[0].Rank == 1 && lastDealt[1].Rank == 1 )
-                {
-                    if(r[thisDepth].bTareOcc){cout << endl << "dOcc = 1";}
-                    else{cout << endl << "dOcc = " << dOcc[curDepth-1];}
-
-                    lastStats->debugPrint();
-                }
-            }
-            else if (	(*(lastStats->debugViewD(0))).Rank == 1 &&
-                        (*(lastStats->debugViewD(1))).Rank == 1 )
-            {
-                if(r[thisDepth].bTareOcc){cout << endl << "dOcc = 1";}
-                else{cout << endl << "dOcc = " << dOcc[curDepth-1];}
-                lastStats->debugPrint();
-            }
-        #endif
-
-
         if(r.bNewSet)
         {
             lastStats->Compare(1);
+            totalRuns += 1;
         }
         else
         {
             lastStats->Compare( dOcc );
+            totalRuns += dOcc;
         }
 
 //It's okay to use deckState.dealt here instead of a separate lastDealt, because this deckState isn't going to be passed on anywhere else
         deckState.justDealt.RemoveFromHand(deckState.dealt);
         lastStats->DropCard(deckState.dealt);
         deckState.UndealCard(deckState.dealt);
-        totalRuns += dOcc;
+
     }
+
+#ifdef DEBUGDEAL
+//                cout << "C" << totalRuns << endl;
+#endif
     return totalRuns;
 }
 
@@ -549,15 +531,6 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
     DeckLocation lastDealt;
 
 
-		#ifdef DEBUGORDER
-		bool bDebugVerbose = false;
-		long int debugCount[maxDepth];
-		debugCount[0] = 0;
-		#endif
-		#ifdef DEBUGCALLPART
-		bool bDebugVerbose = false;
-		#endif
-
 
     while( (dOcc = deckState.DealCard(deckState.justDealt)*fromRuns) > 0 )
     {
@@ -571,20 +544,11 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
 ///Note: You can use lastDealt to see which card was dealt
                 lastDealt = deckState.dealt;
 
-				#ifdef DEBUGORDER
-				++debugCount[curDepth];
-				if( debugCount[0] <= 1 )
-				{
-					bDebugVerbose = true;
-					cout << lastStats->statGroup << "\t" << flush;
-					for(int8 i=0;i<=curDepth;++i)
-					{
-						cout << debugCount[i] << " " << flush;
-					}
-					cout << "\t[" << dOcc[curDepth] << "]" << endl;
-				}
-				#endif
-
+#ifdef DEBUGDEAL
+                for( int sn=0;sn<moreCards;++sn ) cout << "   ";
+                HoldemUtil::PrintCard(cout, lastDealt.GetIndex());
+                cout << " ×" << dOcc/fromRuns << "*" << fromRuns << "=  " << dOcc << "  \t\t" << "@lvl" << moreCards << endl;
+#endif
 
 /// ====================
 ///    Check Validity
@@ -598,17 +562,6 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
 			//{
 
 
-					/*#ifdef DEBUGCALLPART
-						if( curDepth == maxDepth - 2 || bDebugVerbose)
-						{
-							cout << "=============At this stage " << dOcc[curDepth] << endl;
-							if(lastStats->debugViewD(0) != 0 && dOcc[curDepth] == 2)
-							{
-								//bDebugVerbose = true;
-								cout << "\t\t\t\ttrace." << endl;
-							}
-						}
-					#endif*/
 
 /// ===============================
 ///    Add New Card to lastStats
@@ -625,7 +578,14 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
 
 //                    fromRuns = 1;
                     ///RECURSION HERE
+#ifdef DEBUGDEAL
+ cout << "(" << dOcc << ")" << endl;
+#endif
                     totalRuns += executeRecursive(deckState, lastStats, moreCards - 1) * dOcc;
+#ifdef DEBUGDEAL
+cout.precision(16);
+ cout << "~" << dOcc << "~ ................ " << totalRuns << endl;
+#endif
                         //totalRuns+=executeRecursive(BaseDealtSuit(),BaseDealtValue(),1)*dOcc[thisDepth];
                 }
                 else
@@ -636,12 +596,6 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
                         //totalRuns+=executeRecursive(BaseDealtSuit(),BaseDealtValue(),dOcc[thisDepth]);
                 }
 
-
-
-
-#ifdef DEBUGTOTALRUNS
-cout << "curDepth = " << curDepth << "\t totalRuns is " << totalRuns[curDepth] << endl;
-#endif
 
 
 			deckState.justDealt.RemoveFromHand(lastDealt);
@@ -684,9 +638,6 @@ float64 DealRemainder::executeRecursive(const DealRemainder & refDeck, PlayStats
 
 
 //this->dealt = lastDealt[curDepth];
-    #ifdef DEBUGORDER
-    debugCount[curDepth]=0;
-    #endif
 
         #ifdef DEBUGCALLPART
             cout << "TARE" << endl;

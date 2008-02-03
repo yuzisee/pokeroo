@@ -22,7 +22,7 @@
 //#define DEBUGLEAK
 //#define DEBUGGROUPING
 //#define DEBUGNEW
-//#define DEBUGDROP
+#define DEBUGDROP
 //#define DEBUGCALC
 //#define DEBUGCOMPARE
 //#define DEBUGFINALCALC
@@ -80,10 +80,10 @@ void PlayStats::Compare(const float64 occ)
 #ifdef DEBUGCALC
 float64 ttt = myWins[statGroup].loss+myWins[statGroup].splits+myWins[statGroup].wins;
 if( ttt >= myChancesEach - 2 || ttt == 0 )
-		cout << endl << "{" << statGroup << "}" << myWins[statGroup].loss << " l + " <<
+		std::cout << endl << "{" << statGroup << "}" << myWins[statGroup].loss << " l + " <<
 		myWins[statGroup].splits << " s + " << myWins[statGroup].wins << " w = " <<
 		myWins[statGroup].loss+myWins[statGroup].splits+myWins[statGroup].wins
-			<< flush;
+			<< endl;
 #endif
 
 }
@@ -126,19 +126,22 @@ void PlayStats::countLoss(const float64 occ)
 
 void WinStats::countSplit(const float64 occ)
 {
-	PlayStats::countSplit(occ);
-	myAvg.splits += occ * myWins[statGroup].repeated;// / myTotalChances;
+    float64 dOccRep = oppReps * occ;
+	PlayStats::countSplit(dOccRep);
+	myAvg.splits += dOccRep * myWins[statGroup].repeated;// / myTotalChances;
 
 }
 void WinStats::countLoss(const float64 occ)
 {
-	PlayStats::countLoss(occ);
-	myAvg.loss += occ * myWins[statGroup].repeated;// / myTotalChances;
+    float64 dOccRep = oppReps * occ;
+	PlayStats::countLoss(dOccRep);
+	myAvg.loss += dOccRep * myWins[statGroup].repeated;// / myTotalChances;
 }
 void WinStats::countWin(const float64 occ)
 {
-	PlayStats::countWin(occ);
-	myAvg.wins += occ * myWins[statGroup].repeated;// / myTotalChances;
+    float64 dOccRep = oppReps * occ;
+	PlayStats::countWin(dOccRep);
+	myAvg.wins += dOccRep * myWins[statGroup].repeated;// / myTotalChances;
 
 }
 
@@ -333,14 +336,14 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 		{
 			myUndo[currentCard-1].SetUnique(myStrength);
 			myStrength.AddToHand(deck);
-			if (cardsLeft == 3) //Complete community
+			if (cardsLeft == 3) //Complete community (three cards were left: the river, and the opponent's two)
 			{
                 //You just dealt the last community card
 				myStrength.evaluateStrength();
 #ifdef DEBUGNEW
 				myStrength.DisplayHandBig(cout);
 #endif
-
+                oppReps = occ;
                 r.bNewSet = true;
                 //return r;
 			}
@@ -370,11 +373,7 @@ void WinStats::DropCard(const DeckLocation deck)
 {
 
 
-		#ifdef DEBUGDROP
-			HandPlus u;
-			u.FillShowHand(oppHand.cardset,false);cout << endl;
-			u.FillShowHand(myHand.cardset,false);cout << endl;
-		#endif
+
 	///TODO: Confirms...
 	//oppStrength.RemoveFromHand(deck);
 	oppStrength.SetUnique(oppUndo[currentCard-1]);
@@ -389,14 +388,39 @@ void WinStats::DropCard(const DeckLocation deck)
 	}
 
 
-	--currentCard;
 
 		#ifdef DEBUGDROP
-			u.FillShowHand(oppHand.cardset,false);cout << endl;
-			u.FillShowHand(myHand.cardset,false);cout << "---" << cardsLeft << endl;
+		   if( currentCard == cardsToNextBet )
+		   {
+		       const StatResult & xd = myWins[statGroup];
+		        std::cout << endl << "TOTAL"  << xd.loss << " l + "
+                << xd.splits << " s + " << xd.wins << " w = " <<
+                xd.loss+xd.splits+xd.wins
+                << "\tx;"<< xd.repeated  << " w" << oppReps <<endl;
+
+		   }
+			//u.FillShowHand(oppHand.cardset,false);cout << endl;
+			//u.FillShowHand(myHand.cardset,false);cout << "---" << cardsLeft << endl;
 		#endif
 
 
+
+
+	--currentCard;
+
+#ifdef DEBUGDROP
+		   if( currentCard == cardsToNextBet )
+		   {
+		       const StatResult & xd = myWins[statGroup];
+		        std::cout << endl << "CUMUL"  << xd.loss << " l + "
+                << xd.splits << " s + " << xd.wins << " w = " <<
+                xd.loss+xd.splits+xd.wins
+                << "\tx;"<< xd.repeated  << " w" << oppReps <<endl;
+
+		   }
+			//u.FillShowHand(oppHand.cardset,false);cout << endl;
+			//u.FillShowHand(myHand.cardset,false);cout << "---" << cardsLeft << endl;
+		#endif
 
 
 }
@@ -460,7 +484,7 @@ void WinStats::initW(const int8 cardsInCommunity)
 
 			//Note - Assumption: Hold'em
 	}
-
+    oppReps = 1;
 
 	//SPECIAL CASE:
 	if( moreCards == 2 )
