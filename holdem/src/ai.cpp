@@ -737,6 +737,8 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
 #ifdef DEBUG_AA
         bDEBUG = ( oppStrength.SeeCards(2) == HoldemConstants::CARD_ACEHIGH && oppStrength.SeeCards(3) == HoldemConstants::CARD_ACEHIGH );
+
+
 #endif
 
             if( moreCards == 2) oppStrength.evaluateStrength();
@@ -756,7 +758,14 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
 #ifdef PROGRESSUPDATE
             showProgressUpdate();
-
+        #ifdef DEBUG_AA
+        if( !bDEBUG )
+        {
+            std::cout << "SKIP: " << flush;
+            oppStrength.DisplayHand(std::cout);
+            std::cout << endl << endl;
+        }
+        #endif
 #endif
 
         }

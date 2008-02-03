@@ -50,7 +50,7 @@ using std::cout;
 using std::endl;
 using std::flush;
 
-
+#define LARGESTPROCNUM 675
 
 //FIRST_DEAL = 6 expects 46
 //FIRST_DEAL = 5 expects 1081
@@ -249,7 +249,7 @@ cout << (int)(hx.bestPair) << " then " << (int)(hx.nextbestPair) << endl;
 
 void genCMD(uint16 procnum)
 {
-	    uint16 handnum = procnum % 338;///From 0-675 to 0-337
+	    uint16 handnum = procnum % 338;///procnum is 0 .. 675 , handnum is 0 .. 337
 	    procnum = procnum/338;///0 or 1
 
 	    uint16 card1 = handnum / 26; ///0 to 12
@@ -285,14 +285,14 @@ void genCMD(uint16 procnum)
 
             if( procnum == 0 )
             {
-                //h1.DisplayHand();
+                h1.DisplayHand(cout);
                 genC(h1);
                 return;
             }
 
             if( procnum == 1 )
             {
-                //h1.DisplayHandBig(cout);
+                h1.DisplayHandBig(cout);
                 genW(h1);
                 return;
             }
@@ -300,9 +300,14 @@ void genCMD(uint16 procnum)
 
 }
 
-void goCMD(int argc, char* argv)
+void goCMD(char* str)
 {
- genCMD(atoi(argv));
+    int genNum = atoi(str);
+    while(genNum <= LARGESTPROCNUM)
+    {
+        genCMD(genNum);
+        ++genNum;
+    }
 }
 
 
@@ -318,16 +323,24 @@ void testAnything()
     withCommunity.AddToHand(acecard);
 
     //2d 3d 4d 6d 7d As Ah
-/*
-    onlyCommunity.SetEmpty();
 
+    onlyCommunity.SetEmpty();
+/*
     DealRemainder myStatBuilder;
     myStatBuilder.UndealAll();
-    myStatBuilder.OmitCards(withCommunity);
+    myStatBuilder.OmitSet(withCommunity,onlyCommunity);
 
     CallStats ds(withCommunity, onlyCommunity,0);
-    myStatBuilder.AnalyzeComplete(&ds);
 */
+    //CallCumulationD x;
+    //StatsManager::QueryOffense(x,withCommunity,onlyCommunity,0);
+
+
+    DistrShape w_wl(0);
+
+
+
+//    cout << "w: " << x. << endl;
     //const CallCumulation &newC = *(ds.calc);
     /*
     cout << "Testing history and ranksort" << endl;
@@ -749,29 +762,16 @@ void superGame(char headsUp = 0)
 
 int main(int argc, char* argv[])
 {
-	cout << "Final Table: 9 Players" << endl;
-
-	/*testHT(91, 1);
-	testHT(62, 1);
-	testHT(33, 1);
-	testHT(84, 1);
-	testHT(55, 1);
-	testHT(6, 1);
-	testHT(55, 2);
-	testHT(6, 2);
-	testHT(291, -1);
-	testHT(262, -1);
-	testHT(933, -1);*/
-	//testHT();
-
-
-	//
-	//testHands();
 
 #ifdef WINRELEASE
+	cout << "Final Table: 9 Players" << endl;
+
+		//
+	//testHands();
+
+
 	if( argc == 2 )
 	{
-        //goCMD(2,argv[1]);
         myPlayerName = argv[1];
         #ifdef AUTOEXTRATOKEN
         std::ofstream storePlayerName(AUTOEXTRATOKEN);
@@ -781,24 +781,57 @@ int main(int argc, char* argv[])
 
         testPlay('P');
     }else
-#endif
-    if( argc == 4 )
     {
-        uint16 i=675;
-		while(1)
+
+
+	    testPlay('L');
+/*
+#ifdef NO_LOG_FILES
+	    superGame(0);
+#else
+   	    testPlay(0);
+#endif
+*/
+
+    }
+#endif
+
+    int n=1;
+    cout << "Parsing Command Line Options..." << flush;
+    while(n<argc)
+    {
+        if( *argv[n] == '-' || *argv[n] == '/' )
         {
-             genCMD(i);
-			 if( i == 0 ) break;
-			 --i;
+            switch( argv[n][1] )
+            {
+                case 'e':
+                case 'E':
+                case 'g':
+                case 'G':
+                    ++n;
+                    if( n == argc )
+                    {
+                        cout << "Please specify a number between 0 and " << LARGESTPROCNUM << " inclusive." << endl;
+                        exit(1);
+                    }
+                    goCMD(argv[n]);
+                    exit(0);
+                    break;
+            }
         }
-	}
-	else
+        ++n;
+    }
+    cout << "Done!" << endl;
+
+
+
+
+
+
 	{
 
 
-#ifdef WINRELEASE
-	    testPlay('L');
-#else
+
         testAnything();
 #ifdef NO_LOG_FILES
 	    superGame(0);
@@ -806,14 +839,16 @@ int main(int argc, char* argv[])
    	    testPlay(0);
 #endif
    	    //testNewCallStats();
-#endif
 	    //testDeal();
 
 
 	    //testC();
-		//goCMD(2,"505");
+
 
 	}
 
 }
 
+/*
+#set tabstop=4 shiftwidth=4 incsearch nowrap
+*/
