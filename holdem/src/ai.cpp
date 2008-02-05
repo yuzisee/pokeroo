@@ -28,8 +28,6 @@
 //#define DEBUGFINALCALC
 
 
-//#define DEBUGCALLPCT
-
 
 #include <algorithm>
 #include <math.h>
@@ -96,6 +94,11 @@ void PlayStats::countWin(const float64 occ)
         myStrength.DisplayHand(std::cout);
         std::cout << "\tbeats vs (" << occ << ")" << flush;
         oppStrength.DisplayHand(std::cout);
+        std::cout << endl << endl;
+
+        myStrength.DisplayHandBig(std::cout);
+        std::cout << "\tbeats vs (" << occ << ")" << flush;
+        oppStrength.DisplayHandBig(std::cout);
         std::cout << endl << endl;
     }
 #endif
@@ -578,10 +581,13 @@ void CallStats::Analyze()
 	cpop.reserve(statCount);
 
     float64 cumulate = myWins[0].repeated;
+    myWins[count].wins *= cumulate;
+	myWins[count].splits *= cumulate;
+	myWins[count].loss *= cumulate;
 
 	cpop.push_back(myWins[0]);
 	size_t vectorLast = cpop.size()-1; //(zero)
-	int lastStreak=1;
+	float64 lastStreak=cumulate; //ASSERT: lastStreak == myWins[0].repeated
 
 	while(count < statCount)
 	{
@@ -596,15 +602,34 @@ void CallStats::Analyze()
             b.wins /= lastStreak;
             b.splits /= lastStreak;
             b.loss /= lastStreak;
+            //Final set b
+
+
+#ifdef DEBUGASSERT
+
+            if( lastStreak != b.repeated  -  (vectorLast ? cpop[vectorLast-1].repeated : 0) )
+            {
+                std::cerr << "Inconsistent lastStreak! " << ( b.repeated  -  cpop[vectorLast-1].repeated) << " were generated, but only " << lastStreak << " were counted." << endl;
+                exit(1);
+            }
+#endif
+
+			//Prep existing
+			lastStreak = myWins[count].repeated;
+			myWins[count].wins *= lastStreak;
+			myWins[count].splits *= lastStreak;
+			myWins[count].loss *= lastStreak;
+
+
+			//Load for cumulation
 			cpop.push_back(myWins[count]);
 			++vectorLast;
-			lastStreak = 1;
 		}else
         {
-            b.wins += myWins[count].wins;
-            b.splits += myWins[count].splits;
-            b.loss += myWins[count].loss;
-            ++lastStreak;
+            b.wins += myWins[count].wins * myWins[count].repeated;
+            b.splits += myWins[count].splits * myWins[count].repeated;
+            b.loss += myWins[count].loss * myWins[count].repeated;
+            lastStreak += myWins[count].repeated;
 		}
 		//cumulation[vectorLast].repeated = cumulate;
 		cpop.back().repeated = cumulate;
@@ -615,6 +640,29 @@ void CallStats::Analyze()
     b.splits /= lastStreak;
     b.loss /= lastStreak;
 
+                               //  http://www.ddj.com/dept/cpp/184403792
+#ifdef DEBUGCALLPCT
+	std::cout << endl << "======= C O M B I N E D =======" << endl;
+	for(size_t j=0;j<vectorLast;++j)
+	{
+		std::cout << endl << "{" << j << "}" << calc->cumulation[j].loss << " l + "
+				<< calc->cumulation[j].splits << " s + " << calc->cumulation[j].wins << " w =\t" << flush;
+				std::cout.precision(8);
+				std::cout << calc->cumulation[j].pct
+				//<< " pct\tx;"<< calc->cumulation[i].repeated <<flush;
+				<< " \t"<< calc->cumulation[j].repeated << "\ttocall" << flush;
+	}
+#endif
+
+#ifdef DEBUGASSERT
+    if( cumulate != myTotalChances )
+    {
+        std::cerr << "Raw count after sorting does not match: " << cumulate << " counted, but " << myTotalChances << " expected." << endl;
+        exit(1);
+    }
+
+    float64 chanceTest = 0;
+#endif
 
 	for(size_t k=0;k<=vectorLast;++k)
 	{
@@ -622,7 +670,17 @@ void CallStats::Analyze()
                 const float64 & t_myChancesEach = myChancesEach;
                 const float64 & t_myTotalChances = myTotalChances;
             #endif
+
 	    StatResult& temptarget = calc->cumulation[k];
+
+	    #ifdef DEBUGASSERT
+          if( temptarget.wins + temptarget.splits + temptarget.loss > myChancesEach + 0.1 || temptarget.wins + temptarget.splits + temptarget.loss < myChancesEach - 0.1  )
+          {
+              std::cerr << "Failure to maintain w+s+l=" << myChancesEach << " after combine step on {"<< k <<"}. Instead, w+s+l=" << (temptarget.wins + temptarget.splits + temptarget.loss) << endl;
+              exit(1);
+          }
+	    #endif
+
 		temptarget.wins /= myChancesEach;
 		temptarget.loss /= myChancesEach;
 		temptarget.splits /= myChancesEach;
@@ -634,7 +692,7 @@ void CallStats::Analyze()
 #ifdef DEBUGCALLPCT
 std::cout << endl << "=============Reduced=============" << endl;
 	std::cout.precision(2);
-	for(size_t j=0;j<=vectorLast;j++)
+	for(size_t j=0;j<=vectorLast;++j)
 	{
 		std::cout << endl << "{" << j << "}" << calc->cumulation[j].loss << " l + "
 				<< calc->cumulation[j].splits << " s + " << calc->cumulation[j].wins << " w =\t" << flush;
@@ -683,15 +741,25 @@ void CallStats::showProgressUpdate() const
 void CallStats::DropCard(const DeckLocation deck)
 {
 
-
+/*
         #ifdef DEBUGCALLPCT
             if( currentCard == 2 )
             {
+
                 myStrength.DisplayHand(std::cout);
                 oppStrength.DisplayHand(std::cout);
 
+
                 const int32 & i = statGroup;
-                std::cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
+                std::cout << endl << "{" << i << "}";
+
+                HoldemUtil::PrintCard(std::cout,namecorrelate[0].GetIndex());
+                HoldemUtil::PrintCard(std::cout,namecorrelate[1].GetIndex());
+
+
+
+
+                std::cout << myWins[i].loss << " l + "
                         << myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
                 myWins[i].loss+myWins[i].splits+myWins[i].wins << "(" << myWins[i].pct << ")"
                         << "\tx;"<< myWins[i].repeated <<flush;
@@ -700,8 +768,10 @@ void CallStats::DropCard(const DeckLocation deck)
                 std::cout << endl;
                 std::cout << endl;
                 std::cout << endl;
+
             }
         #endif
+*/
 
 	///TODO: Confirm
 	//oppStrength.RemoveFromHand(deck);
@@ -713,6 +783,7 @@ void CallStats::DropCard(const DeckLocation deck)
 		myRevert(currentCard-3);
 		//myStrength.RemoveFromHand(deck);
 	}
+
 
 
 
@@ -755,13 +826,14 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 	}
 	else
 	{
+
 	    mynoAddCard(deck,currentCard-1);
 	    if ( currentCard == 2 )
         {
 
 #ifdef DEBUG_AA
-        bDEBUG = ( oppStrength.SeeCards(2) == HoldemConstants::CARD_ACEHIGH && oppStrength.SeeCards(3) == HoldemConstants::CARD_ACEHIGH );
-
+        //bDEBUG = ( oppStrength.SeeCards(2) == HoldemConstants::CARD_ACEHIGH && oppStrength.SeeCards(3) == HoldemConstants::CARD_ACEHIGH );
+        bDEBUG = ( oppStrength.SeeCards(1) == HoldemConstants::CARD_TREY && oppStrength.SeeCards(2) == HoldemConstants::CARD_TREY );
 
 #endif
 
@@ -782,17 +854,30 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
 #ifdef PROGRESSUPDATE
             showProgressUpdate();
-        #ifdef DEBUG_AA
-        if( !bDEBUG )
-        {
-            std::cout << "SKIP: " << flush;
-            oppStrength.DisplayHand(std::cout);
-            std::cout << endl << endl;
-        }
-        #endif
+            #ifdef DEBUG_AA
+            if( !bDEBUG )
+            {
+                std::cout << "SKIP: " << flush;
+                oppStrength.DisplayHand(std::cout);
+                std::cout << endl << endl;
+            }
+            #endif
 #endif
 
         }
+
+        #ifdef DEBUGCALLPCT
+            if( currentCard == 1 ){ namecorrelate = deck; }
+            else
+            {
+                const int32 & i = statGroup;
+                std::cout << endl << "{" << i << "}";
+
+                HoldemUtil::PrintCard(std::cout,namecorrelate.GetIndex());
+                HoldemUtil::PrintCard(std::cout,deck.GetIndex());
+            }
+        #endif
+
 	}
 
 	return r;
@@ -825,6 +910,7 @@ void CallStats::initC(const int8 cardsInCommunity)
 
     myWins = new StatResult[oppHands];
 
+
     myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
 
 	if (moreCards == 2)
@@ -851,6 +937,8 @@ CallStats::~CallStats()
 	delete calc;
 	delete [] myUndo;
 	delete [] oppUndo;
+
+
 }
 
 PlayStats::~PlayStats()

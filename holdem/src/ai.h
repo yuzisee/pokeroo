@@ -25,7 +25,7 @@
 
 
 //#define DEBUGCALLPART
-//#define DEBUGCALLPCT
+#define DEBUGCALLPCT
 //#define DEBUG_AA
 
 
@@ -66,6 +66,10 @@ class PlayStats
 
 
     public:
+
+#ifdef DEBUGCALLPCT
+DeckLocation namecorrelate;
+#endif
 
 #ifdef DEBUG_AA
         bool bDEBUG;
@@ -116,6 +120,8 @@ private:
 protected:
 	CommunityPlus* myUndo;
 	CommunityPlus* oppUndo;
+
+
 
 	CallCumulation* calc;
 

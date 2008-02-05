@@ -373,7 +373,7 @@ void CommunityPlus::AddToHand(
 	HandPlus::AddToHand(aSuit,aIndex,aCard);
 	++flushCount[aSuit];
 	if(HoldemUtil::VALUEORDER[aIndex] == (HoldemUtil::VALUEORDER[aIndex] & valueset))
-	{
+	{//Three of a kind
 			#ifdef DEBUGBOAT
 				if( aIndex == 1 )
 				{
@@ -383,21 +383,23 @@ void CommunityPlus::AddToHand(
 				}
 			#endif
 
-		///This addition formed a better three-of-a-kind
-		///aIndex used to be paired, so we must un-pair it...
-		if( aIndex == bestPair )
-		{
-			bestPair = nextbestPair;
-			nextbestPair = 0;
-		}
-		else if( aIndex == nextbestPair )
-		{
-			nextbestPair = 0;
-		}
-
 		if( aIndex > threeOfAKind )
 		{
-			///First insert the old threeOfAKind as a higher pair if possible
+
+            ///This addition formed a better three-of-a-kind
+            ///aIndex used to be paired, so we must un-pair it...
+            if( aIndex == bestPair )
+            {
+                bestPair = nextbestPair;
+                nextbestPair = 0;
+            }
+            else if( aIndex == nextbestPair )
+            {
+                nextbestPair = 0;
+            }
+
+
+			///Then shift-insert the old threeOfAKind as a higher pair if possible
 			if( threeOfAKind > bestPair )
 			{
 				nextbestPair = bestPair;
@@ -408,7 +410,23 @@ void CommunityPlus::AddToHand(
 				nextbestPair = threeOfAKind;
 			}
 			threeOfAKind = aIndex;
+
 		}
+		/*
+		else
+		{
+            ///This addition formed a worse three-of-a-kind
+            ///aIndex used to be paired, so we must un-pair it...
+            if( aIndex == bestPair )
+            {
+                bestPair = nextbestPair;
+                nextbestPair = 0;
+            }
+            else if( aIndex == nextbestPair )
+            {
+                nextbestPair = 0;
+            }
+		}*/
 
 			#ifdef DEBUGBOAT
 				if( aIndex == 1 )
@@ -420,7 +438,8 @@ void CommunityPlus::AddToHand(
 	}
 	else
 	{///Not three of a kind, but we are adding one of aIndex (valueset already updated)
-		//We can screw this up safely if there is a legitimate quad.
+		//We can screw this up safely if there is a legitimate quad, since two quads in seven cards is impossible.
+		//ASSUMPTION: Omaha might need a different system?
 
 
 		if( HoldemUtil::INCRORDER[aIndex] != (HoldemUtil::VALUEORDER[aIndex] & valueset) )

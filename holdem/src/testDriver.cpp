@@ -318,41 +318,90 @@ void goCMD(char* str)
 void testAnything()
 {
 
-//    goCMD("0");
+    DeckLocation acecard;
 
+/*
+
+
+    CommunityPlus smokes, holysmokes;
+    acecard.SetByIndex(HoldemUtil::ParseCard('2','s'));
+    smokes.AddToHand(acecard);
+    acecard.SetByIndex(HoldemUtil::ParseCard('3','s'));
+    smokes.AddToHand(acecard);
+    acecard.SetByIndex(HoldemUtil::ParseCard('4','s'));
+    smokes.AddToHand(acecard);
+    acecard.SetByIndex(HoldemUtil::ParseCard('3','h'));
+    smokes.AddToHand(acecard);
+    acecard.SetByIndex(HoldemUtil::ParseCard('3','c'));
+    smokes.AddToHand(acecard);
+    acecard.SetByIndex(HoldemUtil::ParseCard('2','h'));
+    smokes.AddToHand(acecard);
+    acecard.SetByIndex(HoldemUtil::ParseCard('2','c'));
+    smokes.AddToHand(acecard);
+
+    smokes.evaluateStrength();
+    smokes.DisplayHandBig(std::cout);
+
+    exit(1);
+//2s 3s 4s
+//2s 3s 4s : 3c3h
+//2s 3s 4s 2h 2c : 3c3h
+
+//  2s 2h 2c 3s 4s : 3c3h
+
+//    goCMD("0");
+*/
     CommunityPlus withCommunity;
     CommunityPlus onlyCommunity;
-    DeckLocation acecard;
+
     acecard.SetByIndex(HoldemUtil::ParseCard('A','s'));
     withCommunity.AddToHand(acecard);
     acecard.SetByIndex(HoldemUtil::ParseCard('A','h'));
     withCommunity.AddToHand(acecard);
 
+//const int num_in_community = 0;
+
 const int num_in_community = 3;
     //2d 3d 4d 6d 7d As Ah
 
-    acecard.SetByIndex(HoldemUtil::ParseCard('2','d'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('2','s'));
     onlyCommunity.AddToHand(acecard);
     withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('3','d'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('3','s'));
     onlyCommunity.AddToHand(acecard);
     withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('4','d'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('4','s'));
     onlyCommunity.AddToHand(acecard);
     withCommunity.AddToHand(acecard);
 
 
+    CallCumulationD calc;
+    StatsManager::QueryDefense( calc,withCommunity, onlyCommunity,num_in_community);
 
+
+    cout << endl << "=============Reduced=============" << endl;
+	cout.precision(10);
+	size_t vectorLast = calc.cumulation.size();
+	StatResult myWins;
+	for(size_t i=0;i<vectorLast;i++)
+	{
+	    float64 nn = (calc.cumulation[i].repeated - (i ? calc.cumulation[i-1].repeated : 0));
+	    myWins = myWins + (calc.cumulation[i] * nn);
+		cout << endl << "{" << i << "}" << calc.cumulation[i].loss * nn * 2097572400.0 << " l +\t"
+				<< calc.cumulation[i].splits * nn * 2097572400.0 << " s +\t" << calc.cumulation[i].wins * nn * 2097572400.0 << " w =\t" <<
+				calc.cumulation[i].pct
+				<< " pct\tx;"<< nn * 2097572400.0 <<flush;
+	}
+    myWins.repeated = 0;
+
+/*
     StatResult myWins;
     DistrShape myDistrPCT(0);
     StatsManager::Query( &myWins,&myDistrPCT,0,withCommunity, onlyCommunity,num_in_community);
 
 
 
-    cout << endl << "AVG "  << myWins.loss << " l + "
-            << myWins.splits << " s + " << myWins.wins << " w = " <<
-            myWins.loss+myWins.splits+myWins.wins
-            << "\tx;"<< myWins.repeated   <<endl;
+
 
     cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;
     cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
@@ -366,90 +415,13 @@ const int num_in_community = 3;
     cout << endl;
 
 cout << "Finish." << endl;
-
-//    cout << "w: " << x. << endl;
-    //const CallCumulation &newC = *(ds.calc);
-    /*
-    cout << "Testing history and ranksort" << endl;
-
-    PerformanceHistory a[6];
-
-    a[0].nonZeroWinLose = -2;
-    a[1].nonZeroWinLose = 0;
-    a[2].nonZeroWinLose = 0;
-    a[3].nonZeroWinLose = 0;
-    a[4].nonZeroWinLose = 1;
-    a[5].nonZeroWinLose = -5;
-
-    a[0].numHandsAboveBelow = 2;
-    a[1].numHandsAboveBelow = 4;
-    a[2].numHandsAboveBelow = 7;
-    a[3].numHandsAboveBelow = 0;
-    a[4].numHandsAboveBelow = 3;
-    a[5].numHandsAboveBelow = -10;
-
-
-    a[0].totalMoneyDelta = .5;
-    a[1].totalMoneyDelta = 60;
-    a[2].totalMoneyDelta = -40.3;
-    a[3].totalMoneyDelta = 23.1;
-    a[4].totalMoneyDelta = 0;
-    a[5].totalMoneyDelta = 0;
-
-    a[0].id = '0';
-    a[1].id = '1';
-    a[2].id = '2';
-    a[3].id = '3';
-    a[4].id = '4';
-    a[5].id = '5';
-
-    for(int i=0;i<6;++i)
-    {
-        cout << a[i].id << endl;
-        cout << "a[" << i << "]: #" << (int)(a[i].rank) << endl;
-        HistoryStrategy::SerializeOne(cout,a[i]);
-        cout << endl;
-    }
-cout << endl;
-cout << "S O R T" << endl;
-cout << endl;
-    PerformanceHistory::SortAndOffset(a,6);
-
-
-    ofstream testFile;
-    ifstream l;
-
-    for(int i=0;i<6;++i)
-    {
-        cout << a[i].id << endl;
-        cout << "a[" << i << "]: #" << (int)(a[i].rank) << endl;
-        cout << "\tWL=" << a[i].nonZeroWinLose << endl;
-        cout << "\tAB=" << a[i].numHandsAboveBelow << endl;
-        cout << "\tTD=" << (a[i].totalMoneyDelta) << endl;
-        cout << endl;
-
-        testFile.open("testingHistorySave.txt",std::ios::out|std::ios::trunc);
-        HistoryStrategy::SerializeOne(testFile,a[i]);
-        testFile.close();
-
-        l.open("testingHistorySave.txt");
-        a[i] = HistoryStrategy::UnserializeOne(l);
-        l.close();
-    }
-
-cout << endl;
-cout << "After reburn!" << endl;
-cout << endl;
-
-
-    for(int i=0;i<6;++i)
-    {
-        cout << a[i].id << endl;
-        cout << "a[" << i << "]: #" << (int)(a[i].rank) << endl;
-        HistoryStrategy::SerializeOne(cout,a[i]);
-        cout << endl;
-    }
 */
+
+cout << endl << "AVG "  << myWins.loss << " l + "
+            << myWins.splits << " s + " << myWins.wins << " w = " <<
+            myWins.loss+myWins.splits+myWins.wins
+            << "\tx;"<< myWins.repeated   <<endl;
+
 
     exit(1);
 }
