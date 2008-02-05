@@ -581,9 +581,9 @@ void CallStats::Analyze()
 	cpop.reserve(statCount);
 
     float64 cumulate = myWins[0].repeated;
-    myWins[count].wins *= cumulate;
-	myWins[count].splits *= cumulate;
-	myWins[count].loss *= cumulate;
+    myWins[0].wins *= cumulate;
+	myWins[0].splits *= cumulate;
+	myWins[0].loss *= cumulate;
 
 	cpop.push_back(myWins[0]);
 	size_t vectorLast = cpop.size()-1; //(zero)
@@ -661,7 +661,6 @@ void CallStats::Analyze()
         exit(1);
     }
 
-    float64 chanceTest = 0;
 #endif
 
 	for(size_t k=0;k<=vectorLast;++k)
