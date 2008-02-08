@@ -90,6 +90,8 @@ void genW(CommunityPlus& h1, CommunityPlus& h2)
     DistrShape myDistrPCT(0);
     StatsManager::Query( &myWins,&myDistrPCT,0,h1, h2,0);
 
+cout.precision(10);
+
     cout << endl << "AVG "  << myWins.loss << " l + "
             << myWins.splits << " s + " << myWins.wins << " w = " <<
             myWins.loss+myWins.splits+myWins.wins
@@ -171,7 +173,7 @@ void genC(CommunityPlus& h1, CommunityPlus& h2)
 
 
     cout << endl << "=============Reduced=============" << endl;
-	cout.precision(4);
+	cout.precision(16);
 	size_t vectorLast = calc.cumulation.size();
 	for(size_t i=0;i<vectorLast;i++)
 	{
@@ -250,7 +252,8 @@ cout << (int)(hx.bestPair) << " then " << (int)(hx.nextbestPair) << endl;
 
 void genCMD(uint16 procnum)
 {
-	    uint16 handnum = procnum % 338;///procnum is 0 .. 675 , handnum is 0 .. 337
+    
+        uint16 handnum = procnum % 338;///procnum is 0 .. 675 , handnum is 0 .. 337
 	    procnum = procnum/338;///0 or 1
 
 	    uint16 card1 = handnum / 26; ///0 to 12
@@ -263,6 +266,8 @@ void genCMD(uint16 procnum)
 
         if( card1 != card2 )
         {
+            cout << "Cache generate: " << handnum << " " << procnum << endl;
+            
             DeckLocation hands[2];
 
             hands[0].Suit = 0;
@@ -303,10 +308,10 @@ void genCMD(uint16 procnum)
 
 }
 
-void goCMD(char* str)
+void goCMD(char* str, int lastGen)
 {
     int genNum = atoi(str);
-    while(genNum <= LARGESTPROCNUM)
+    while(genNum <= lastGen)
     {
         genCMD(genNum);
         ++genNum;
@@ -349,8 +354,10 @@ void testAnything()
 
 //  2s 2h 2c 3s 4s : 3c3h
 
-//    goCMD("0");
+
 */
+    genCMD(200);
+
     CommunityPlus withCommunity;
     CommunityPlus onlyCommunity;
 
@@ -374,7 +381,7 @@ const int num_in_community = 3;
     onlyCommunity.AddToHand(acecard);
     withCommunity.AddToHand(acecard);
 
-
+/*
     CallCumulationD calc;
     StatsManager::QueryDefense( calc,withCommunity, onlyCommunity,num_in_community);
 
@@ -393,7 +400,7 @@ const int num_in_community = 3;
 				<< " pct\tx;"<< nn * 2097572400.0 <<flush;
 	}
     myWins.repeated = 0;
-
+*/
 /*
     StatResult myWins;
     DistrShape myDistrPCT(0);
@@ -416,12 +423,12 @@ const int num_in_community = 3;
 
 cout << "Finish." << endl;
 */
-
+/*
 cout << endl << "AVG "  << myWins.loss << " l + "
             << myWins.splits << " s + " << myWins.wins << " w = " <<
             myWins.loss+myWins.splits+myWins.wins
             << "\tx;"<< myWins.repeated   <<endl;
-
+*/
 
     exit(1);
 }
@@ -795,6 +802,7 @@ int main(int argc, char* argv[])
     }
 #endif
 
+    int maxGo=LARGESTPROCNUM;
     int n=1;
     cout << "Parsing Command Line Options..." << flush;
     while(n<argc)
@@ -803,6 +811,10 @@ int main(int argc, char* argv[])
         {
             switch( argv[n][1] )
             {
+                case 'x':
+                    ++n;
+                    maxGo = atoi(argv[n]);
+                    break;
                 case 'e':
                 case 'E':
                 case 'g':
@@ -813,7 +825,7 @@ int main(int argc, char* argv[])
                         cout << "Please specify a number between 0 and " << LARGESTPROCNUM << " inclusive." << endl;
                         exit(1);
                     }
-                    goCMD(argv[n]);
+                    goCMD(argv[n],maxGo);
                     exit(0);
                     break;
             }

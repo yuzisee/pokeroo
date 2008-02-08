@@ -34,9 +34,14 @@ using std::endl;
 class CommunityPlus : public virtual HandPlus //greater strength wins, then greater valueset
 {
 private:
+    uint32 prestraight;
+    int8 bFlushSuit;//In order to cleanlasttwo of a flush, we need to know the number of surplus cards in the flush suit
+                    //Therefore, BOTH bFlushSuit AND flushCount need to be accurate at all times
     int8 flushCount[4]; //number of cards in that suit
-
+    
 	uint8 threeOfAKind;
+    
+    
 
 #ifdef DEBUG_TWOPAIR
 public:

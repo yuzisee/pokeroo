@@ -192,44 +192,61 @@ void CommunityPlus::evaluateStrength()
     //The (1st) 2nd to 14th bit must be the ONLY ones with data...
     //outer bits stay zero please
 
+    
+    //Pre-emptive STRAIGHT
+    //uint32 straights = cardset[0] | cardset[1] | cardset[2] | cardset[3];
+    uint32 straights = prestraight;
+    straights |= straights >> 13;
+    straights &= straights << 1;
+    straights &= straights << 1;
+    straights &= straights << 1;
+    straights &= straights << 1; //the high card of any straight remains
+    
     strength = 0;
     //EVALUATE STRAIGHT FLUSHE
-    uint32 sflush;
-    //	unsigned long flush[4];
+    
+    
 	///ASSUMPTION: You can't have two straight flushes
 	///Valueset must not be used in the detection of straight flushes
-    for(int8 i=0;i<4;++i)
+    if( straights > 0 )
     {
-    	//tempcardset[i] = cardset[i];
-        sflush = cardset[i];
-        //		flush[i] = sflush;  //also prep for flush part later
-        sflush |= sflush >> 13;//first add ace-low if ace-high exists
-
-        sflush &= sflush << 1;
-        sflush &= sflush << 1;
-        sflush &= sflush << 1;
-        sflush &= sflush << 1; //the high card of any straight remains
-
-        if (sflush > 0)
+        if( bFlushSuit >= 0 ) //(bFlushSuit != -1) implies bFlushSuit == 0 .. 3
         {
-            //in case there is a 6 card straight or whatever:
-            sflush &= ~((sflush >> 1) & sflush);
-
-            strength = HoldemConstants::ROYAL;
-            valueset = sflush;
-            return;
+        //if  (flushCount[i] >= 0)
+        //{
+            uint32 sflush;
+            
+            
+            sflush = cardset[bFlushSuit];
+            
+            sflush |= sflush >> 13;//first add ace-low if ace-high exists
+    
+            sflush &= sflush << 1;
+            sflush &= sflush << 1;
+            sflush &= sflush << 1;
+            sflush &= sflush << 1; //the high card of any straight remains
+    
+            if (sflush > 0)
+            {
+                //in case there is a 6 card straight or whatever:
+                sflush &= ~((sflush >> 1) & sflush);
+    
+                strength = HoldemConstants::ROYAL;
+                valueset = sflush;
+                return;
+            }
+            //		flushCount[i] = -5;
+        //}
         }
-        //		flushCount[i] = -5;
     }
 
-	//Pre-emptive STRAIGHT
-	uint32 straights = cardset[0] | cardset[1] | cardset[2] | cardset[3];
+    
     //EVALUATE QUAD
     uint32 quads = cardset[0] & cardset[1] & cardset[2] & cardset[3];
 
     if (quads > 0)
     {
-        straights &= ~quads;
+        prestraight &= ~quads;
 
 
         //There is four-of-a-kind
@@ -242,10 +259,10 @@ void CommunityPlus::evaluateStrength()
         }
 
 		valueset = 13;
-		while( (straights & HoldemConstants::CARD_ACEHIGH) == 0 )
+        while( (prestraight & HoldemConstants::CARD_ACEHIGH) == 0 )
 		{
 			--valueset;
-			straights <<= 1;
+            prestraight <<= 1;
 				#ifdef DEBUGASSERT
 				//std::cerr << "INFINTE LOOP: Quad-no-kicker!" << endl;
 				#endif
@@ -265,30 +282,30 @@ void CommunityPlus::evaluateStrength()
 
     //extra debug checkpoint
 	///ASSUMPTION: You can't have two flushes
-    for(int8 i=0;i<4;++i)
+    if( bFlushSuit >= 0 ) //(bFlushSuit != -1) implies bFlushSuit == 0 .. 3
     {
-        if  (flushCount[i] >= 0)
-        {
+        //if  (flushCount[i] >= 0)
+        //{
 				#ifdef DEBUGFLUSH
-					cout << "f" << flushCount[i] << endl;
+        cout << "f" << flushCount[bFlushSuit] << endl;
 				#endif
             //There is a flush
             strength = HoldemConstants::FLUSH;
-            valueset = cardset[i];
+            valueset = cardset[bFlushSuit];
 
             //Just like cleanLastTwo()
             int8 shiftCount = 1; //for consistency at least with
             //straights, the other hand that
             //uses valueset = tempcardset
             valueset >>= shiftCount;
-            while (flushCount[i] > 0)
+            while (flushCount[bFlushSuit] > 0) //While there is a SURPLUS of cards in the flush suit
             {
                 while ((valueset & HoldemConstants::CARD_ACELOW) == 0)
                 {
                     ++shiftCount;
                     valueset >>= 1;
                 }
-                flushCount[i]--;
+                flushCount[bFlushSuit]--;
                 valueset &= ~1;
             }
             valueset <<= shiftCount;
@@ -297,14 +314,10 @@ void CommunityPlus::evaluateStrength()
 				DisplayHandBig(cout);
             #endif
             return;
-        }
+        //}
     }
-    //EVALUATE STRAIGHT
-    straights |= straights >> 13;
-    straights &= straights << 1;
-    straights &= straights << 1;
-    straights &= straights << 1;
-    straights &= straights << 1; //the high card of any straight remains
+    
+    //TEST STRAIGHT
     if (straights > 0)
     {
         straights &= ~((straights >> 1) & straights);
@@ -371,7 +384,15 @@ void CommunityPlus::AddToHand(
 	const int8 aSuit,const uint8 aIndex,const uint32 aCard)
 {
 	HandPlus::AddToHand(aSuit,aIndex,aCard);
+    prestraight |= aCard;
+    
 	++flushCount[aSuit];
+    //ASSUMPTION: You can have at most one flush
+    if( flushCount[aSuit] >= 0 )
+    {
+        bFlushSuit = aSuit;
+    }
+    
 	if(HoldemUtil::VALUEORDER[aIndex] == (HoldemUtil::VALUEORDER[aIndex] & valueset))
 	{//Three of a kind
 			#ifdef DEBUGBOAT
@@ -500,9 +521,16 @@ void CommunityPlus::AppendUnique(const HandPlus& h)
 void CommunityPlus::AppendUnique(const CommunityPlus& h)
 {
 	HandPlus::AppendUnique(h);
+    
+    prestraight |= h.prestraight;
+    
 	for(int8 cd=0;cd<4;++cd)
 	{
 		flushCount[cd] += h.flushCount[cd] + 5;
+        if( flushCount[cd] >= 0 )
+        {
+            bFlushSuit = cd;
+        }
 	}
 
 	///Just determine improvements to the pairs. That is, find new pairs
@@ -605,6 +633,8 @@ void CommunityPlus::SetEmpty()
 	bestPair = 0;
 	nextbestPair = 0;
 	strength = 0;
+    prestraight = 0;
+    bFlushSuit = -1;
 }
 
 void CommunityPlus::SetUnique(const Hand& h)
@@ -660,6 +690,14 @@ void CommunityPlus::preEvalStrength()
         flushCount[3] += static_cast<int8>(tempforflush[3] & 1);
 
     }
+    
+    //This is slightly less efficient than it could be, but use of this function at all is discouraged anyway
+    if( 0 <= flushCount[0] ) bFlushSuit = 0;
+    if( 0 <= flushCount[1] ) bFlushSuit = 1;
+    if( 0 <= flushCount[2] ) bFlushSuit = 2;
+    if( 0 <= flushCount[3] ) bFlushSuit = 3;
+    
+    prestraight = cardset[0] | cardset[1] | cardset[2] | cardset[3];
 }
 
 void CommunityPlus::SetUnique(const HandPlus& h)
@@ -682,6 +720,8 @@ void CommunityPlus::SetUnique(const CommunityPlus& h)
 	bestPair = h.bestPair;
 	nextbestPair = h.nextbestPair;
 	strength = h.strength;
+    prestraight = h.prestraight;
+    bFlushSuit = h.bFlushSuit;
 }
 
 
