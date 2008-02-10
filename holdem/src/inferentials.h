@@ -114,6 +114,16 @@ class StatResult
 	//float64 wlr;
 	//float64 pyth;
 
+	StatResult ReversedPerspective() const
+	{
+		StatResult temp = *this;
+		temp.wins = 1 - splits - wins;
+		temp.loss = 1 - splits - loss;
+		temp.genPCT();
+
+		return (temp);
+	}
+
 	void genPCT()
 	{
 		pct = wins + splits/2;
@@ -196,6 +206,7 @@ public:
 	virtual StatResult bestHandToHave() const;
 	virtual StatResult worstHandToHave() const;
 	virtual StatResult oddsAgainstBestHand() const;
+	virtual StatResult oddsAgainstBestTwoHands() const;
 
 	#ifdef DEBUGLOGINFERENTIALS
         static void displayCallCumulation(std::ostream &targetoutput, const CallCumulation& calc)

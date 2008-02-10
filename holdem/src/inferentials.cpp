@@ -425,9 +425,33 @@ StatResult CallCumulation::oddsAgainstBestHand() const
 
     StatResult retVal;
     retVal = cumulation[cumulation.size()-1];
-    retVal.wins = 1 - retVal.splits - retVal.wins;
+    retVal.wins = 1 - retVal.splits - retVal.wins; ///These two lines reverse the perspective.
     retVal.loss = 1 - retVal.splits - retVal.loss;
     retVal.repeated = 1 - cumulation[cumulation.size()-2].repeated;
+    return retVal;
+}
+
+
+StatResult CallCumulation::oddsAgainstBestTwoHands() const
+{
+    #ifdef DEBUGASSERT
+        if( cumulation.size() == 0 )
+        {
+            std::cout << "EMPTY CALLCUMULATION!";
+            exit(1);
+        }
+    #endif
+
+///Retrieve stats and reverse the perspective.
+
+    StatResult retVal, retValA, retValB;
+    retValA = cumulation[cumulation.size()-1].ReversedPerspective();
+    retValA.repeated = 1 - cumulation[cumulation.size()-3].repeated;
+
+    retValB = cumulation[cumulation.size()-2].ReversedPerspective();
+    retValB.repeated = 1 - cumulation[cumulation.size()-3].repeated;
+
+    retVal = (retValA + retValB)/2;
     return retVal;
 }
 

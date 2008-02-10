@@ -20,6 +20,7 @@
 
 #include "callPrediction.h"
 #include <math.h>
+#include <algorithm>
 
 
 //The idea behind eaFold, meanFold, rankFold, eaRkFold is that opponents have different reasons for folding
@@ -30,7 +31,12 @@
 
 #define NO_AUTO_RAISE
 
-
+#ifndef log1p
+inline float64 log1p(float64 x)
+{
+    return log(1+x);
+}
+#endif
 
 //#define ANTI_CHECK_PLAY
 

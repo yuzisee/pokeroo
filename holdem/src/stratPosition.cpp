@@ -150,7 +150,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     //StatsManager::QueryOffense(callcumu,withCommunity,onlyCommunity,cardsInCommunity );
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
     statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
-    statworse = foldcumu.oddsAgainstBestHand(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
+    statworse = foldcumu.oddsAgainstBestTwoHands(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
     //CallStats is foldcumu
 
     #ifdef LOGPOSITION
@@ -769,16 +769,19 @@ float64 DeterredGainStrategy::MakeBet()
     //const float64 z112 = algbModel.f(60);
     //const float64 a112 = algbModel.f(90);
     //const float64 b112 = algbModel.f(150);
-//    const float64 z12 = hybridgain.f(60);
-//    const float64 a12 = hybridgain.f_raised(60,90);
-//    const float64 b12 = hybridgain.f_raised(60,150);
-    if( betToCall > 100 )
-    {
-        const float64 p1 = myDeterredCall.pWin(630);
-        const float64 z = 0;
-    }
+    const float64 z12 = hybridgain.f(60);
+    const float64 a12 = hybridgain.f_raised(60,90);
+    const float64 b12 = hybridgain.f_raised(60,150);
 
+	if( betToCall > 100 && bGamble )
+    {
+        const float64 z12 = hybridgain.f(betToCall); //You're in the blind, so folding is -2.25 chips. Then what?
+		const float64 ff = myDeterredCall.foldGain();
+        //const float64 a12 = hybridgain.f_raised(60,90);
+        //const float64 b12 = hybridgain.f_raised(60,150);
+    }
 */
+
 
 
     const float64 bestBet = solveGainModel(&choicemodel);
