@@ -252,7 +252,7 @@ cout << (int)(hx.bestPair) << " then " << (int)(hx.nextbestPair) << endl;
 
 void genCMD(uint16 procnum)
 {
-    
+
         uint16 handnum = procnum % 338;///procnum is 0 .. 675 , handnum is 0 .. 337
 	    procnum = procnum/338;///0 or 1
 
@@ -267,7 +267,7 @@ void genCMD(uint16 procnum)
         if( card1 != card2 )
         {
             cout << "Cache generate: " << handnum << " " << procnum << endl;
-            
+
             DeckLocation hands[2];
 
             hands[0].Suit = 0;
@@ -276,33 +276,36 @@ void genCMD(uint16 procnum)
             hands[0].Rank = HoldemUtil::CardRank( card1 )+1;
             hands[1].Rank = HoldemUtil::CardRank( card2 )+1;
 
-            hands[0].Value = HoldemUtil::CARDORDER[hands[0].Rank];
-            hands[1].Value = HoldemUtil::CARDORDER[hands[1].Rank];
-
-            cout << (int)(hands[0].Suit) << "\t" << (int)(hands[0].Rank) << "\t" << hands[0].Value << endl;
-            cout << (int)(hands[1].Suit) << "\t" << (int)(hands[1].Rank) << "\t" << hands[1].Value << endl;
-
-
-            CommunityPlus h1;
-            h1.AddToHand(hands[0]);
-            h1.AddToHand(hands[1]);
-
-
-
-            if( procnum == 0 )
+            if( hands[0].Rank <= hands[1].Rank )
             {
-                h1.DisplayHand(cout);
-                genC(h1);
-                h1.DisplayHand(cout);
-                return;
-            }
+                hands[0].Value = HoldemUtil::CARDORDER[hands[0].Rank];
+                hands[1].Value = HoldemUtil::CARDORDER[hands[1].Rank];
 
-            if( procnum == 1 )
-            {
-                h1.DisplayHandBig(cout);
-                genW(h1);
-                h1.DisplayHandBig(cout);
-                return;
+                cout << (int)(hands[0].Suit) << "\t" << (int)(hands[0].Rank) << "\t" << hands[0].Value << endl;
+                cout << (int)(hands[1].Suit) << "\t" << (int)(hands[1].Rank) << "\t" << hands[1].Value << endl;
+
+
+                CommunityPlus h1;
+                h1.AddToHand(hands[0]);
+                h1.AddToHand(hands[1]);
+
+
+
+                if( procnum == 0 )
+                {
+                    h1.DisplayHand(cout);
+                    genC(h1);
+                    h1.DisplayHand(cout);
+                    return;
+                }
+
+                if( procnum == 1 )
+                {
+                    h1.DisplayHandBig(cout);
+                    genW(h1);
+                    h1.DisplayHandBig(cout);
+                    return;
+                }
             }
         }
 

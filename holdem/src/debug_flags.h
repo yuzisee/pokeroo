@@ -25,13 +25,13 @@
 /***********************/
 
 /* Game Flags */
-#define EXTERNAL_DEALER
+#undef EXTERNAL_DEALER
 
 /******************/
 
 #ifndef NO_LOG_FILES
 /* Mode Flags (Depends on NO_LOG_FILES) */
-#undef WINRELEASE
+#define WINRELEASE
 #define LOGPOSITION
 /**********************************/
 //#define DEBUGSPECIFIC 7

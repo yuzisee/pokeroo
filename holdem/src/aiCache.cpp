@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 //#define DEBUGQUERYW
-#define QUERYTOTALS
+//#define QUERYTOTALS
 
 #include "aiCache.h"
 #include "functionmodel.h"
