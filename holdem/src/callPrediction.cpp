@@ -389,9 +389,9 @@ float64 ExactCallD::facedOdds_Algb(const ChipPositionState & cps, float64 betSiz
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
     #ifdef SACRIFICE_COMMITTED
-    FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    a.FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
     #else
-    FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
+    a.FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
     #endif
     a.FG.waitLength.bankroll = cps.bankroll;
     a.FG.waitLength.opponents = opponents;
