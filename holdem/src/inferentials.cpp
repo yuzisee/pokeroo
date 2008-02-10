@@ -178,7 +178,7 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
     size_t guess_index;
 
     //See if the cache hits
-    if( cached_high_index > 0 )
+    if( cached_high_index > 0 && cached_high_index < maxsize )
     {
         low_rank = cumulation[cached_high_index-1].repeated;
         high_rank = cumulation[cached_high_index].repeated;
