@@ -198,7 +198,11 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
     //We don't need to set w, because a.FindZero searches over w
+    #ifdef SACRIFICE_COMMITTED
+    a.FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    #else
     a.FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
+    #endif
     a.FG.waitLength.bankroll = cps.bankroll;
     a.FG.waitLength.opponents = opponents;
     a.FG.waitLength.meanConv = useMean;
@@ -290,7 +294,11 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
     //USE myFG for F_a and F_b
         myFG.waitLength.meanConv = useMean;
         myFG.waitLength.w = w;
+    #ifdef SACRIFICE_COMMITTED
+        myFG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    #else
         myFG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
+    #endif
         myFG.waitLength.bankroll = cps.bankroll;
         myFG.waitLength.opponents = opponents;
         myFG.dw_dbet = 0; //Again, we don't need this
@@ -316,13 +324,17 @@ float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 h
     FacedOddsCallGeom a(table->GetChipDenom());
     a.B = cps.bankroll;
     a.pot = cps.pot;
-    a.alreadyBet = cps.alreadyBet;
+//    a.alreadyBet = cps.alreadyBet;
     a.outsidebet = humanbet;
     a.opponents = opponents;
 
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
+    #ifdef SACRIFICE_COMMITTED
+    a.FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    #else
     a.FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
+    #endif
     a.FG.waitLength.bankroll = cps.bankroll;
     a.FG.waitLength.opponents = opponents;
     a.FG.waitLength.meanConv = useMean;
@@ -342,7 +354,11 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
     const float64 base_minus_1 = (cps.pot+humanbet)/(cps.bankroll-humanbet);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
 
     FG.waitLength.w = w;
+    #ifdef SACRIFICE_COMMITTED
+    FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    #else
     FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
+    #endif
     FG.waitLength.bankroll = cps.bankroll;
     FG.waitLength.opponents = opponents;
     FG.waitLength.meanConv = useMean;
@@ -367,12 +383,16 @@ float64 ExactCallD::facedOdds_Algb(const ChipPositionState & cps, float64 betSiz
 {
     FacedOddsAlgb a(table->GetChipDenom());
     a.pot = cps.pot;
-    a.alreadyBet = cps.alreadyBet; //just for recordkeeping
+    //a.alreadyBet = cps.alreadyBet; //just for the books?
     a.betSize = betSize;
 
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
-    a.FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
+    #ifdef SACRIFICE_COMMITTED
+    FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    #else
+    FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
+    #endif
     a.FG.waitLength.bankroll = cps.bankroll;
     a.FG.waitLength.opponents = opponents;
     a.FG.waitLength.meanConv = useMean;
@@ -380,7 +400,7 @@ float64 ExactCallD::facedOdds_Algb(const ChipPositionState & cps, float64 betSiz
 
     return a.FindZero(0,1);
 }
-float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incrbet, float64 dpot, float64 w, float64 opponents, const CallCumulationD * useMean)
+float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incrbet, float64 dpot, float64 w, float64 opponents)
 {
     if( w <= 0 ) return 0;
 
@@ -398,9 +418,15 @@ float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incr
 
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
+    #ifdef SACRIFICE_COMMITTED
+    FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    #else
     FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
+    #endif
     FG.waitLength.bankroll = cps.bankroll;
     FG.waitLength.opponents = opponents;
+//derivative of algebraic uses FG_a and FG_b which are independent of useMean
+
 
     return (
                 ( (1+FG.F_b(bet)) - ((dpot+1) * fw ) )
@@ -750,8 +776,8 @@ void ExactCallBluffD::query(const float64 betSize)
                     w_mean = 1;
                     w_rank = 0;
                 }
-                const float64 dw_dbetSize_mean = facedOddsND_Algb( opporigCPS,oppBetMake,origPotD,w_mean, nLinear, e);
-                const float64 dw_dbetSize_rank = facedOddsND_Algb( opporigCPS,oppBetMake,origPotD,w_rank, nLinear, 0);
+                const float64 dw_dbetSize_mean = facedOddsND_Algb( opporigCPS,oppBetMake,origPotD,w_mean, nLinear);
+                const float64 dw_dbetSize_rank = facedOddsND_Algb( opporigCPS,oppBetMake,origPotD,w_rank, nLinear);
 
 
                     //float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();

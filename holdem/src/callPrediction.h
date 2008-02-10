@@ -81,7 +81,7 @@ class ExactCallD : public virtual ExpectedCallD
 
 
 		float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
-        float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n, const CallCumulationD * useMean);
+        float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n);
 
 
         void query(const float64 betSize);

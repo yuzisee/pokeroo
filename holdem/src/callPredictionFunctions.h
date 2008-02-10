@@ -124,7 +124,7 @@ class FacedOddsCallGeom : public virtual ScalarFunctionModel
     public:
     float64 B;
     float64 pot;
-    float64 alreadyBet;
+//    float64 alreadyBet;
     float64 outsidebet;
     float64 opponents;
 
@@ -146,7 +146,7 @@ class FacedOddsAlgb : public virtual ScalarFunctionModel
     void query( const float64 w );
     public:
     float64 pot;
-    float64 alreadyBet;
+    //float64 alreadyBet;
     float64 betSize;
 
 
