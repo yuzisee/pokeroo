@@ -58,7 +58,11 @@ float64 ExpectedCallD::foldGain(const float64 extra, const float64 facedBet)
     FG.waitLength.meanConv = e;
     FG.waitLength.w = meanW;
     FG.waitLength.bankroll = table->ViewPlayer(playerID)->GetMoney();
-    FG.waitLength.amountSacrifice = table->ViewPlayer(playerID)->GetBetSize() + potCommitted + extra + avgBlinds;
+    FG.waitLength.amountSacrifice = table->ViewPlayer(playerID)->GetBetSize()
+    #ifdef SACRIFICE_COMMITTED
+                 + table->ViewPlayer(playerID)->GetContribution()
+    #endif
+                                    + potCommitted + extra + avgBlinds;
     FG.waitLength.opponents = playerCount - 1;
 
     const float64 totalFG = 1 + betFraction(  FG.f(facedBet)  );

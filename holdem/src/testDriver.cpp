@@ -371,7 +371,7 @@ void testAnything()
 
 //const int num_in_community = 0;
 
-const int num_in_community = 3;
+//const int num_in_community = 3;
     //2d 3d 4d 6d 7d As Ah
 
     acecard.SetByIndex(HoldemUtil::ParseCard('2','s'));

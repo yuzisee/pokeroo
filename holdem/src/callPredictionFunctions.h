@@ -113,6 +113,7 @@ class FoldGainModel : public virtual ScalarFunctionModel
 }
 ;
 
+//How much call can you pick up to your bet?
 class FacedOddsCallGeom : public virtual ScalarFunctionModel
 {
     protected:
@@ -135,7 +136,7 @@ class FacedOddsCallGeom : public virtual ScalarFunctionModel
 }
 ;
 
-
+//Will everybody fold consecutively to your bet?
 class FacedOddsAlgb : public virtual ScalarFunctionModel
 {
     protected:
@@ -156,7 +157,7 @@ class FacedOddsAlgb : public virtual ScalarFunctionModel
 }
 ;
 
-
+//How much/likely would they raise or reraise?
 class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 {
     protected:

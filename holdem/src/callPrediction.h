@@ -28,6 +28,20 @@
 #include "callSituation.h"
 
 
+struct ChipPositionState
+{
+    ChipPositionState(float64 stack, float64 tablepot, float64 sofar, float64 commit)
+       : bankroll(stack), pot(tablepot), alreadyBet(sofar), alreadyContributed(commit)
+    {}
+
+    float64 bankroll;
+    float64 pot;
+    float64 alreadyBet;
+    float64 alreadyContributed;
+
+}
+;
+
 class ExactCallD : public virtual ExpectedCallD
 {
     private:
@@ -58,16 +72,16 @@ class ExactCallD : public virtual ExpectedCallD
         float64 *noRaiseChanceD_A;
 
 
-        float64 facedOdds_call_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 n,  CallCumulationD * useMean);
-        float64 dfacedOdds_dbetSize_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD * useMean);
+        float64 facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 n,  CallCumulationD * useMean);
+        float64 dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD * useMean);
 
 
-        float64 facedOdds_raise_Geom(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, CallCumulationD * useMean);
-        float64 dfacedOdds_dpot_GeomDEXF(float64 bankroll, float64 pot, float64 alreadyBet, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, CallCumulationD * useMean);
+        float64 facedOdds_raise_Geom(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, CallCumulationD * useMean);
+        float64 dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, CallCumulationD * useMean);
 
 
-		float64 facedOdds_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet,float64 opponents,  CallCumulationD * useMean);
-        float64 facedOddsND_Algb(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, float64 dpot, float64 w, float64 n, const CallCumulationD * useMean);
+		float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
+        float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n, const CallCumulationD * useMean);
 
 
         void query(const float64 betSize);

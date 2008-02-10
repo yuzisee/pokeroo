@@ -43,7 +43,7 @@
 
 /* AI Processing Interface */
 
-#define PROGRESSUPDATE
+#undef PROGRESSUPDATE
 #undef SUPERPROGRESSUPDATE
 #undef DEBUG_TESTDEALINTERFACE
 
