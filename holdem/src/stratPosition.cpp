@@ -352,7 +352,7 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
-            logFile << "FoldGain()=" << (targetModel->GetFoldGain()) << " x " << targetModel->GetFoldWaitLength() << endl;
+			logFile << "FoldGain()=" << (targetModel->GetFoldGain()) << " x " << targetModel->GetFoldWaitLength() << "\tvs play:" << (callGain + (targetModel->GetFoldGain())) << endl;
             logFile << "f("<< betToCall <<")=" << callGain << endl;
 
 
