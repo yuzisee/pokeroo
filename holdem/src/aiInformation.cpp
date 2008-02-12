@@ -46,10 +46,11 @@ void TriviaDeck::DiffHand(const Hand& h)
 
 void CommunityCallStats::Compare(const float64 occ)
 {
+
         #ifdef DEBUGASSERT
             if( showdownIndex >= showdownCount )
             {
-                std::cerr << "DEBUG" << endl;
+				std::cerr << "Ran out of array space to collect showdownCount (up to " << showdownCount << "). Note: showdownMax=" << showdownMax << endl;
                 exit(1);
             }
         #endif

@@ -364,9 +364,9 @@ void testAnything()
     CommunityPlus withCommunity;
     CommunityPlus onlyCommunity;
 //Ks Kd
-    acecard.SetByIndex(HoldemUtil::ParseCard('K','s'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('7','s'));
     withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('K','d'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('J','h'));
     withCommunity.AddToHand(acecard);
 
 //const int num_in_community = 0;
@@ -374,18 +374,20 @@ void testAnything()
 const int num_in_community = 3;
     ////4h 6h Kc
 
-    acecard.SetByIndex(HoldemUtil::ParseCard('4','h'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('2','d'));
     onlyCommunity.AddToHand(acecard);
     withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('6','h'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('6','c'));
     onlyCommunity.AddToHand(acecard);
     withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('K','c'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('9','h'));
     onlyCommunity.AddToHand(acecard);
     withCommunity.AddToHand(acecard);
 
 
     CallCumulationD calc;
+    StatsManager::QueryOffense(calc,withCommunity,onlyCommunity,num_in_community);
+/*
     StatsManager::QueryDefense( calc,withCommunity, onlyCommunity,num_in_community);
 
 
@@ -403,7 +405,7 @@ const int num_in_community = 3;
 				<< " pct\tx;"<< nn * 2097572400.0 <<flush;
 	}
     myWins.repeated = 0;
-
+*/
 /*
     StatResult myWins;
     DistrShape myDistrPCT(0);

@@ -411,15 +411,15 @@ void DealRemainder::CleanStats()
 
 //setOne may be empty, setTwo must contain cards that are a superset of setOne
 void DealRemainder::OmitSet(const CommunityPlus& setOne, const CommunityPlus& setTwo)
-{
+{//Note: Sorting is done by OmitCards
 
 
-	//Note: Sorting is done by OmitCards
+	
 
     if( setOne.IsEmpty() )
-    {
+    {//This is used especially by aiInformation
         addendSum.SetUnique(setTwo);
-        OmitCards(setOne); UpdateSameSuits();
+        OmitCards(setTwo); UpdateSameSuits();
     }else
     {
         addendSum.SetUnique(setOne);//usually onlyCommunity?
