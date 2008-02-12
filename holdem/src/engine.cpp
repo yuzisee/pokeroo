@@ -19,8 +19,8 @@
  ***************************************************************************/
 
 //#define DEBUGTARE
-#define DEBUGDEAL
-#define DEBUGSORTSUITS
+//#define DEBUGDEAL
+//#define DEBUGSORTSUITS
 
 //#include <iostream>
 //#define NULL 0
@@ -412,8 +412,8 @@ void DealRemainder::CleanStats()
 //setOne may be empty, setTwo must contain cards that are a superset of setOne
 void DealRemainder::OmitSet(const CommunityPlus& setOne, const CommunityPlus& setTwo)
 {
-    
-    
+
+
 	//Note: Sorting is done by OmitCards
 
     if( setOne.IsEmpty() )
