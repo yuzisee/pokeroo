@@ -19,7 +19,8 @@
  ***************************************************************************/
 
 //#define DEBUGTARE
-//#define DEBUGDEAL
+#define DEBUGDEAL
+#define DEBUGSORTSUITS
 
 //#include <iostream>
 //#define NULL 0
@@ -59,6 +60,15 @@ void OrderedDeck::sortSuits()
     int8 s1 = nextSuit[s0];
     int8 s2 = nextSuit[s1];
     int8 s3 = nextSuit[s2];
+
+#ifdef DEBUGSORTSUITS
+	std::cout << "Before: ";
+	std::cout << HoldemUtil::SUITKEY[s0];
+	std::cout << HoldemUtil::SUITKEY[s1];
+	std::cout << HoldemUtil::SUITKEY[s2];
+	std::cout << HoldemUtil::SUITKEY[s3];
+#endif
+
 	//Mergesort, stable
 
     //We implicitly divide the hands into two groups.
@@ -140,14 +150,25 @@ void OrderedDeck::sortSuits()
 
 	curSuit = firstSuit;
 
-
+#ifdef DEBUGSORTSUITS
+	std::cout << "\tAfter: ";
+#endif
 
 //Assign all the prevsuits
 	while(nextSuit[curSuit] != HoldemConstants::NO_SUIT)
 	{
+			#ifdef DEBUGSORTSUITS
+				std::cout << HoldemUtil::SUITKEY[curSuit];
+			#endif
 		prevSuit[nextSuit[curSuit]] = curSuit;
 		curSuit=nextSuit[curSuit];
 	}
+
+#ifdef DEBUGSORTSUITS
+	std::cout << HoldemUtil::SUITKEY[curSuit];
+	std::cout << std::endl;
+#endif
+
 }
 
 void OrderedDeck::AssignSuitsFrom(const OrderedDeck & suitorder)
@@ -391,19 +412,20 @@ void DealRemainder::CleanStats()
 //setOne may be empty, setTwo must contain cards that are a superset of setOne
 void DealRemainder::OmitSet(const CommunityPlus& setOne, const CommunityPlus& setTwo)
 {
-    OmitCards(setOne);
-    OmitCards(setTwo);
+    
+    
+	//Note: Sorting is done by OmitCards
 
     if( setOne.IsEmpty() )
     {
         addendSum.SetUnique(setTwo);
-        UpdateSameSuits();
+        OmitCards(setOne); UpdateSameSuits();
     }else
     {
         addendSum.SetUnique(setOne);//usually onlyCommunity?
-        UpdateSameSuits();
+        OmitCards(setOne); UpdateSameSuits();
         addendSum.SetUnique(setTwo);
-        UpdateSameSuits();
+        OmitCards(setTwo); UpdateSameSuits();
     }
 
 }

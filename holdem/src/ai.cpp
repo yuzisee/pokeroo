@@ -558,6 +558,13 @@ void CallStats::Analyze()
 	for(int32 k=0;k<statCount;++k)
 	{
 		myWins[k].genPCT();
+		#ifdef DEBUGASSERT
+          if( myWins[k].loss+myWins[k].splits+myWins[k].wins > myChancesEach + 0.1 || myWins[k].loss+myWins[k].splits+myWins[k].wins < myChancesEach - 0.1  )
+          {
+              std::cerr << "Failure to generate w+s+l=" << myChancesEach << " with {"<< k <<"}. Instead, w+s+l=" << (myWins[k].loss+myWins[k].splits+myWins[k].wins) << endl;
+              exit(1);
+          }
+	    #endif
 	}
 
 
@@ -832,7 +839,7 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
 #ifdef DEBUG_AA
         //bDEBUG = ( oppStrength.SeeCards(2) == HoldemConstants::CARD_ACEHIGH && oppStrength.SeeCards(3) == HoldemConstants::CARD_ACEHIGH );
-        bDEBUG = ( oppStrength.SeeCards(1) == HoldemConstants::CARD_TREY && oppStrength.SeeCards(2) == HoldemConstants::CARD_TREY );
+        bDEBUG = ( oppStrength.SeeCards(1) == HoldemConstants::CARD_TREY + HoldemConstants::CARD_DEUCE + HoldemConstants::CARD_FOUR + HoldemConstants::CARD_SIX );
 
 #endif
 

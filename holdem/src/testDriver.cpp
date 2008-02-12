@@ -359,32 +359,32 @@ void testAnything()
 
 
 */
-    genCMD(200);
+/*    genCMD(200); */
 
     CommunityPlus withCommunity;
     CommunityPlus onlyCommunity;
-
-    acecard.SetByIndex(HoldemUtil::ParseCard('A','s'));
+//Ks Kd
+    acecard.SetByIndex(HoldemUtil::ParseCard('K','s'));
     withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('A','h'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('K','d'));
     withCommunity.AddToHand(acecard);
 
 //const int num_in_community = 0;
 
-//const int num_in_community = 3;
-    //2d 3d 4d 6d 7d As Ah
+const int num_in_community = 3;
+    ////4h 6h Kc
 
-    acecard.SetByIndex(HoldemUtil::ParseCard('2','s'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('4','h'));
     onlyCommunity.AddToHand(acecard);
     withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('3','s'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('6','h'));
     onlyCommunity.AddToHand(acecard);
     withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('4','s'));
+    acecard.SetByIndex(HoldemUtil::ParseCard('K','c'));
     onlyCommunity.AddToHand(acecard);
     withCommunity.AddToHand(acecard);
 
-/*
+
     CallCumulationD calc;
     StatsManager::QueryDefense( calc,withCommunity, onlyCommunity,num_in_community);
 
@@ -403,7 +403,7 @@ void testAnything()
 				<< " pct\tx;"<< nn * 2097572400.0 <<flush;
 	}
     myWins.repeated = 0;
-*/
+
 /*
     StatResult myWins;
     DistrShape myDistrPCT(0);
@@ -828,6 +828,7 @@ int main(int argc, char* argv[])
 					++n;
                     testPlay(atoi(argv[n]));
                     #endif
+                    exit(0);
                     break;
                 case 'x':
                     ++n;
@@ -854,9 +855,9 @@ int main(int argc, char* argv[])
 
 
 #ifndef WINRELEASE
-testPlay(1);
+//testPlay(1);
 //exit(0);
-//   testAnything();
+   testAnything();
 
 
 #endif
