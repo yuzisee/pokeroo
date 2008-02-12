@@ -366,7 +366,7 @@ float64 CallCumulationD::Pr_haveWinPCT_orbetter_continuous(const float64 winPCT_
     if( firstBetterThan == 1 )
     {
         prebarelyWorseHandToHave = maxsize+1;
-        barelyWorsePCT_toHave = 1 - (1 + cumulation[firstBetterThan].pct)/2;
+        barelyWorsePCT_toHave = 1 - (1 + cumulation[barelyWorseHandToHave].pct)/2;
         barelyWorseRarity = 1;
     }else
     {

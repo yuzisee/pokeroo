@@ -1,6 +1,6 @@
 # Call Prediction Model
 
-chipcountFile = 'C:\Users\Joseph\Documents\holdem.release\Results.16.05.2007-21.16.11.27\chipcount.csv' 
+chipcountFile = 'F:\X\Fross_G\Yuzisee\holdem\codeblocks\bin\chipcount.csv' 
 
 reset
 set key center top horizontal 
@@ -17,11 +17,20 @@ set key center top horizontal
 #        , chipcountFile using '%*lf,%*lf,%lf' with lines linewidth 1 title "X3" \
 #        , chipcountFile using '%*lf,%lf' with lines linewidth 1 title "i4"
 
-plot    chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 1 title "ActionBot" \
-        , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "SpaceBot" \
-        , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "NormalBot" \
-        , chipcountFile using '%*lf,%*lf,%*lf,%lf' with lines linewidth 1 title "ConservativeBot" \
-        , chipcountFile using '%*lf,%*lf,%lf' with lines linewidth 1 title "TrapBot" \
-        , chipcountFile using '%*lf,%lf' with lines linewidth 5 title "Hero"
+#plot    chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 1 title "ActionBot" \
+#        , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "SpaceBot" \
+#        , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "NormalBot" \
+#        , chipcountFile using '%*lf,%*lf,%*lf,%lf' with lines linewidth 1 title "ConservativeBot" \
+#        , chipcountFile using '%*lf,%*lf,%lf' with lines linewidth 1 title "TrapBot" \
+#        , chipcountFile using '%*lf,%lf' with lines linewidth 5 title "Hero"
         
-
+#Hand,i4,GearBotV,MultiBotV,DangerV,ComV,NormV,TrapV,AceV,SpaceV
+plot         chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 5 title "SpaceV" \
+        , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 1 title "AceV" \
+        , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "TrapV" \
+        , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "NormV" \
+        , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "ComV" \
+        , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "DangerV" \
+        , chipcountFile using '%*lf,%*lf,%*lf,%lf' with lines linewidth 1 title "MultiBotV" \
+        , chipcountFile using '%*lf,%*lf,%lf' with lines linewidth 1 title "GeatBotV" \
+        , chipcountFile using '%*lf,%lf' with lines linewidth 1 title "i4"

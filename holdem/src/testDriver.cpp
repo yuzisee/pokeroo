@@ -434,6 +434,12 @@ cout << endl << "AVG "  << myWins.loss << " l + "
 */
 
     exit(1);
+
+       	    //testNewCallStats();
+	    //testDeal();
+
+
+	    //testC();
 }
 
 std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
@@ -789,7 +795,7 @@ int main(int argc, char* argv[])
         #endif
 
         testPlay('P');
-    }else
+    }else if( argc == 1 )
     {
 
 
@@ -802,8 +808,9 @@ int main(int argc, char* argv[])
 #endif
 */
 
-    }
+    }else
 #endif
+    {
 
     int maxGo=LARGESTPROCNUM;
     int n=1;
@@ -814,6 +821,14 @@ int main(int argc, char* argv[])
         {
             switch( argv[n][1] )
             {
+                case 'r':
+                    #ifdef NO_LOG_FILES
+                    superGame(0);
+                    #else
+					++n;
+                    testPlay(atoi(argv[n]));
+                    #endif
+                    break;
                 case 'x':
                     ++n;
                     maxGo = atoi(argv[n]);
@@ -838,26 +853,13 @@ int main(int argc, char* argv[])
     cout << "Done!" << endl;
 
 
+#ifndef WINRELEASE
+testPlay(1);
+//exit(0);
+//   testAnything();
 
 
-
-
-	{
-
-
-
-        testAnything();
-#ifdef NO_LOG_FILES
-	    superGame(0);
-#else
-   	    testPlay(0);
 #endif
-   	    //testNewCallStats();
-	    //testDeal();
-
-
-	    //testC();
-
 
 	}
 
