@@ -41,7 +41,7 @@
 
 
 class ExpectedCallD /*: public virtual ExpectedCall*/
-{
+{//NO ASSIGNMENT OPERATOR
 protected:
     const int8 playerID;
     const HoldemArena* table;
@@ -185,7 +185,7 @@ public:
 
 
 class ZeroCallD : public virtual ExpectedCallD
-{
+{//NO ASSIGNMENT OPERATOR
 public:
     ZeroCallD(const int8 id, const HoldemArena* base
 #ifdef ANTI_PRESSURE_FOLDGAIN

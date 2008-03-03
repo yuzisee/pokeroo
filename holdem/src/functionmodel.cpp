@@ -256,7 +256,8 @@ float64 GainModel::g(float64 betSize)
 
 float64 GainModel::f(const float64 betSize)
 {
-    return g(betSize) - e->foldGain();
+	const float64 fx = g(betSize) - e->foldGain();
+    return fx;
 }
 
 
@@ -537,7 +538,8 @@ float64 GainModelNoRisk::g(float64 betSize)
 
 float64 GainModelNoRisk::f(const float64 betSize)
 {
-    return g(betSize) - e->foldGain();
+	const float64 fx = g(betSize) - e->foldGain();
+    return fx;
 }
 
 
@@ -637,6 +639,9 @@ void AutoScalingFunction::query(float64 sliderx, float64 x)
 
     const float64 autoSlope = saturate_upto / (saturate_max - saturate_min) ;
     const float64 slider = (sliderx - saturate_min) * autoSlope ;
+
+	//std::cerr << autoSlope << endl;
+	//std::cerr << slider << endl;
 
     if( saturate_max <= saturate_min )
     {

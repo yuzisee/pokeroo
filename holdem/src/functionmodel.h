@@ -306,7 +306,7 @@ class GainModelNoRisk : public virtual GainModel
 
 
 class SlidingPairFunction : public virtual HoldemFunctionModel
-{
+{//NO ASSIGNMENT OPERATOR
     protected:
         virtual void query(float64 x);
         const float64 slider;
@@ -329,7 +329,7 @@ class SlidingPairFunction : public virtual HoldemFunctionModel
 ;
 
 class AutoScalingFunction : public virtual HoldemFunctionModel
-{
+{//NO ASSIGNMENT OPERATOR
     private:
         float64 inline finequantum(float64 a, float64 b)
         {
@@ -343,10 +343,11 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
         float64 last_sliderx;
         float64 y;
         float64 dy;
-        ScalarFunctionModel *left;
-        ScalarFunctionModel *right;
 
     public:
+        ScalarFunctionModel * const left;
+        ScalarFunctionModel * const right;
+
         AutoScalingFunction(ScalarFunctionModel *f_left, ScalarFunctionModel *f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c)
             : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left->quantum,f_right->quantum), c)
             , saturate_min(minX), saturate_max(maxX), saturate_upto(1), left(f_left), right(f_right){

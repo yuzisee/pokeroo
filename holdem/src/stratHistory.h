@@ -127,7 +127,7 @@ class PerformanceHistory
         }
 	}
 
-    static void SortAndOffset( PerformanceHistory * array, uint8 num );
+    static void SortAndOffset( PerformanceHistory * array, const uint16 num );
 
 
 
@@ -162,7 +162,7 @@ class HistoryStrategy : public virtual PlayerStrategy
 
         ~HistoryStrategy();
 
-        virtual void SeeOppHand(const int8, const Hand&) = 0;
+    virtual void SeeOppHand(const int8, const Hand&) = 0;
     virtual void SeeAction(const HoldemAction&) {};
     virtual void FinishHand();
 

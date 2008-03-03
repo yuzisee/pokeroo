@@ -571,6 +571,7 @@ int8 HoldemArena::PlayRound(const int8 comSize)
 {
     HoldemArenaBetting b(this, comSize);
 
+
     while(b.bBetState == 'b')
     {
         b.MakeBet(p[curIndex]->myStrat->MakeBet());
@@ -584,6 +585,8 @@ int8 HoldemArena::PlayRound(const int8 comSize)
 
 void HoldemArena::PlayGame()
 {
+
+    gamelog << "BEGIN" << endl;
 #ifdef FLOP_TURN_RIVER_ORDER
     CommunityPlus flop;
 #endif

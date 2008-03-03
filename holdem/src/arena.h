@@ -172,7 +172,7 @@ class PlayerStrategy
 
 
 class HoldemAction
-{
+{//NO ASSIGNMENT OPERATOR
 	private:
 		int8 myPlayerIndex;
 		float64 bet;
@@ -397,7 +397,7 @@ protected:
 ;
 
 class HoldemArenaEventBase
-{
+{//NO ASSIGNMENT OPERATOR
     protected:
     HoldemArena * myTable;
     std::ostream& gamelog;
@@ -467,7 +467,7 @@ class HoldemArenaEventBase
 ;
 
 class HoldemArenaBetting : public HoldemArenaEventBase
-{
+{//NO ASSIGNMENT OPERATOR
     private:
     const int8 comSize;
 
@@ -513,7 +513,7 @@ class HoldemArenaBetting : public HoldemArenaEventBase
 
 
 class HoldemArenaShowdown : public HoldemArenaEventBase
-{
+{//NO ASSIGNMENT OPERATOR
     private:
         const int8 called;
     protected:

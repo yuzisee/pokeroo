@@ -66,7 +66,7 @@ class MultiStrategy : public virtual HistoryStrategy
 
     int8 bGamble;
 
-    MultiStrategy(PositionalStrategy** ps, uint8 n) : HistoryStrategy(ps,n), prevMoney(-1), bGamble(0)
+    MultiStrategy(PositionalStrategy** ps, uint8 n) : HistoryStrategy(ps,n), bHandShown(false), prevMoney(-1), bGamble(0)
     {
     }
 

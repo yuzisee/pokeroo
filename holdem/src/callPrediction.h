@@ -43,7 +43,7 @@ struct ChipPositionState
 ;
 
 class ExactCallD : public virtual ExpectedCallD
-{
+{//NO ASSIGNMENT OPERATOR
     private:
         float64 totalexf;
         float64 totaldexf;
@@ -121,7 +121,7 @@ class ExactCallD : public virtual ExpectedCallD
 ;
 
 class ExactCallBluffD : public virtual ExactCallD
-{
+{//NO ASSIGNMENT OPERATOR
     private:
         //topTwoOfThree returns the average of the top two values {a,b,c} through the 7th parameter.
         //The average of the corresponding values of {a_d, b_d, c_d} are returned by the function.
