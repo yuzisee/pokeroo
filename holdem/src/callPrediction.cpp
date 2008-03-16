@@ -398,6 +398,10 @@ float64 ExactCallD::facedOdds_Algb(const ChipPositionState & cps, float64 betSiz
     a.FG.waitLength.meanConv = useMean;
     a.FG.dw_dbet = 0; //We don't need this...
 
+    #if defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_SEARCH)
+		a.bTraceEnable = traceOut != 0 && useMean == 0;
+    #endif
+
     return a.FindZero(0,1);
 }
 float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incrbet, float64 dpot, float64 w, float64 opponents)
@@ -728,11 +732,12 @@ void ExactCallBluffD::query(const float64 betSize)
     const float64 myexf = betSize;
     const float64 mydexf = 1;
 
+#ifdef DEBUG_TRACE_PWIN
+		if( traceOut != 0 ) *traceOut << "Begin Query" << endl;
+#endif
 
-
-
-    float64 nextFold;
-    float64 nextFoldPartial;
+    float64 nextFold = -1;
+    float64 nextFoldPartial = 0;
     allFoldChance = 1;
     allFoldChanceD = 0;
     const float64 origPot = table->GetPotSize() - table->ViewPlayer(playerID)->GetBetSize()  +  myexf;
@@ -745,12 +750,23 @@ void ExactCallBluffD::query(const float64 betSize)
         allFoldChanceD = 0;
         nextFold = 0;
         nextFoldPartial = 0;
+
+		#ifdef DEBUG_TRACE_PWIN
+		    if( traceOut != 0 ) *traceOut << "N/A. Call doesn't pWin" << endl;
+		#endif
     }
 
     int8 pIndex = playerID;
     table->incrIndex(pIndex);
     while( pIndex != playerID && allFoldChance > 0)
     {
+		#ifdef DEBUG_TRACE_PWIN
+		if( traceOut != 0 )
+		{
+			*traceOut << "allFoldChance is " << allFoldChance << ",  last multiplied by " << nextFold << endl;
+			*traceOut << "\tPlayer " << (int)pIndex;
+		}
+		#endif
 
         const float64 oppBetAlready = table->ViewPlayer(pIndex)->GetBetSize();
         const float64 oppPastCommit = table->ViewPlayer(pIndex)->GetContribution();
@@ -761,8 +777,16 @@ void ExactCallBluffD::query(const float64 betSize)
         {///Predict how much the bet will be
             const float64 oppBankRoll = table->ViewPlayer(pIndex)->GetMoney();
 
+		#ifdef DEBUG_TRACE_PWIN
+		    if( traceOut != 0 ) *traceOut << " can still bet" << endl;
+		#endif
+
             if( betSize < oppBankRoll )
             {
+
+		#ifdef DEBUG_TRACE_PWIN
+		    if( traceOut != 0 ) *traceOut << "\t\tCan raise" << endl;
+		#endif
 
                 ChipPositionState opporigCPS(oppBankRoll,origPot,oppBetAlready,oppPastCommit);
                 const float64 oppBetMake = betSize - oppBetAlready;
@@ -783,13 +807,22 @@ void ExactCallBluffD::query(const float64 betSize)
                     //float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
                     //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
                     //ea-> is if they know your hand
-                    const float64 eaFold = (1 - ea->Pr_haveWinPCT_orbetter_continuous( w_mean ));//*(1 - oppCommitted);
+                    const float64 eaFold = (1 - ea->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
                     //e-> is if they don't know your hand
                     const float64 meanFold = 1 - e->Pr_haveWinPCT_orbetter( w_mean );
                     //w is if they don't know your hand
                     const float64 rankFold = w_rank;
                     //handRarity is based on if they know your hand
                     const float64 eaRkFold = 1-handRarity;
+
+					#ifdef DEBUG_TRACE_PWIN
+						if( traceOut != 0 )
+						{
+						    *traceOut << "\t\tWillFold (eaFold,meanFold,rankFold,eaRkFold) = (" << eaFold << "," << meanFold << "," << rankFold << "," << eaRkFold << ")" << endl;
+						    *traceOut << "\t\t\tusing w_rank = " << w_rank << endl;
+						}
+
+					#endif
 
 //(nLinear <= 0 && wn > 1) ? 0 :
 
@@ -809,10 +842,18 @@ void ExactCallBluffD::query(const float64 betSize)
                     //nextFold = (meanFold+rankFold+eaFold)/3;
                     //nextFoldPartial = (meanFoldPartial+rankFoldPartial+eaFoldPartial)/3;
 
+					#ifdef DEBUG_TRACE_PWIN
+						if( traceOut != 0 ) *traceOut << "\t\tPicked = (" << nextFold << ")" << endl;
+					#endif
 
 
             }else
             {///Opponent would be all-in to call this bet
+
+				#ifdef DEBUG_TRACE_PWIN
+					if( traceOut != 0 ) *traceOut << "\t\tShort stacked" << endl;
+				#endif
+
                 const float64 oldpot = table->GetPrevPotSize();
                 const float64 effroundpot = (origPot - oldpot) * oppBankRoll / betSize;
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
@@ -875,8 +916,17 @@ void ExactCallBluffD::query(const float64 betSize)
 
         }else
         {//Player can't bet anymore
+
+            #ifdef DEBUG_TRACE_PWIN
+		        if( traceOut != 0 ) *traceOut << " ignored" << endl;
+		    #endif
+
             if( oppBetAlready > 0 )
             {//Must have gone all-in just now, or at least this round
+                #ifdef DEBUG_TRACE_PWIN
+		            if( traceOut != 0 ) *traceOut << "N/A! All-in detected." << endl;
+		        #endif
+
                 allFoldChance = 0;
                 allFoldChanceD = 0;
             }

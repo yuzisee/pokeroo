@@ -23,10 +23,14 @@
 
 
 //#define DEBUG_CALLPRED_FUNCTION
+#define DEBUG_TRACE_PWIN
 
 #include "callPredictionFunctions.h"
 #include "callSituation.h"
 
+#ifdef DEBUG_TRACE_PWIN
+#include <iostream>
+#endif
 
 struct ChipPositionState
 {
@@ -86,6 +90,11 @@ class ExactCallD : public virtual ExpectedCallD
 
         void query(const float64 betSize);
     public:
+
+#ifdef DEBUG_TRACE_PWIN
+		std::ostream * traceOut;
+#endif
+
         ExactCallD(const int8 id, const HoldemArena* base
 #ifdef ANTI_PRESSURE_FOLDGAIN
                 , const float64 rankPCT, const float64 meanPCT
@@ -100,6 +109,9 @@ class ExactCallD : public virtual ExpectedCallD
 ,geomFunction(0.5/RAREST_HAND_CHANCE,data)
 #endif
                     ,noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
+#ifdef DEBUG_TRACE_PWIN
+					,traceOut(0)
+#endif
             {
                 queryinput = UNITIALIZED_QUERY;
             }

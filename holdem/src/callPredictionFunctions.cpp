@@ -30,6 +30,16 @@
 #define log1p( _X_ ) log( (_X_) + 1 )
 #endif
 
+#ifndef round
+#include <cmath>
+inline float64 round(float64 a)
+{
+    return floor(a+0.5);
+}
+
+#endif
+
+
 
 
 FoldGainModel::~FoldGainModel(){};
@@ -275,12 +285,26 @@ void FoldGainModel::query( const float64 betSize )
     {
         n = waitLength.FindBestLength();
 
-        const float64 n_below = floor(floor(n*waitLength.rarity())/waitLength.rarity());
-        const float64 n_above = ceil(ceil(n*waitLength.rarity())/waitLength.rarity());
+
+		const float64 m_restored = round(n*waitLength.rarity());
+		const float64 n_restored = m_restored/waitLength.rarity();
+
+        const float64 n_below = floor(n_restored);
+        const float64 n_above = ceil(n_restored);
         const float64 gain_below = waitLength.f(n_below);
         const float64 FB_below = waitLength.cached_d_dbetSize;
         const float64 gain_above = waitLength.f(n_above);
         const float64 FB_above = waitLength.cached_d_dbetSize;
+
+    #ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable)
+        {
+             std::cout << "\t\t\t\tBasicSolution n=" << n << " based on rarity " << waitLength.rarity() << std::endl;
+             std::cout << "\t\t\t\tCompare (n_below,gain_below)=" << "(" << n_below << "," << gain_below << ")" << std::endl;
+             std::cout << "\t\t\t\tCompare (n_above,gain_above)=" << "(" << n_above << "," << gain_above << ")" << std::endl;
+        }
+    #endif
+
         if(gain_below > gain_above && n_below > 0)
         {
             n = n_below;
@@ -374,7 +398,23 @@ void FacedOddsAlgb::query( const float64 w )
     const float64 fw = pow(w,FG.waitLength.opponents);
     const float64 U = (pot + betSize)*fw;
 
+    #ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable)
+        {
+             std::cout << "\t\t\t faceOddsAlgb.FG.waitLength.SEARCH!" << std::endl;
+             //FG.waitLength.bTraceEnable = true;
+             FG.bTraceEnable = true;
+        }
+    #endif
+
     lastF = U - betSize - FG.f(betSize);
+
+    #ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable)
+        {
+             std::cout << "\t\t\t faceOddsAlgb(U,betSize,FG.f,FG.n) = (" << U << " , " << betSize << " , " << FG.f(betSize) << " , " << FG.n << ")" << std::endl;
+        }
+    #endif
 
     const float64 dU_dw = U*FG.waitLength.opponents/w;
 

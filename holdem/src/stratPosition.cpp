@@ -595,14 +595,20 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 
 //DEBUG //
 
-    if( bGamble == 1 && ViewTable().GetPrevPotSize() > 3.0 )
+ //   if( bGamble == 1 && ViewTable().GetPrevPotSize() > 3.0 )
+    if( bGamble == 0 )
     {
 
-#ifdef DEBUG_TRACE_SEARCH
-        rolemodel.bTraceEnable = true;
-        const float64 bestBet = solveGainModel(&rolemodel);
-        std::cout << bestBet << endl;
-#endif
+
+        #ifdef DEBUG_TRACE_PWIN
+            myDeterredCall.traceOut = &logFile;
+            myDeterredCall_left.traceOut = &logFile;
+            //myDeterredCall_right.traceOut = &logfile;
+		#endif
+        float64 rAmount =  myDeterredCall.RaiseAmount(0.25,3);
+        logFile << myDeterredCall.pRaise(0.25,3) << " @ $" << rAmount;
+        logFile << "\tfold -- left" << myDeterredCall_left.pWin(rAmount) << "  " << myDeterredCall_right.pWin(rAmount) << " right" << endl;
+
         exit(1);
 /*
 		if(betToCall > 0.9 || bestBet > 0.3)

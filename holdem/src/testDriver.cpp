@@ -598,10 +598,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }else
     {
         //myTable.AddPlayer("q4", &pushAll);
-        //if( startingMoney < 100 * myTable.GetBigBlind() )
-        //{
-            myTable.AddBot("i4", &drainFold);
-        //}
+        myTable.AddBot("i4", &drainFold);
         //myTable.AddPlayer("X3", &pushFold);
         //myTable.AddPlayer("A3", &tightPushFold);
 
