@@ -603,7 +603,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }else
     {
         //myTable.AddPlayer("q4", &pushAll);
-        myTable.AddBot("i4", &drainFold);
+        //if( startingMoney < 100 * myTable.GetBigBlind() )
+        //{
+            myTable.AddBot("i4", &drainFold);
+        //}
         //myTable.AddPlayer("X3", &pushFold);
         //myTable.AddPlayer("A3", &tightPushFold);
 
@@ -787,7 +790,7 @@ int main(int argc, char* argv[])
 	//testHands();
 
 
-	if( argc == 2 )
+	if( argc == 2 ) //one option
 	{
         myPlayerName = argv[1];
         #ifdef AUTOEXTRATOKEN
@@ -797,7 +800,7 @@ int main(int argc, char* argv[])
         #endif
 
         testPlay('P');
-    }else if( argc == 1 )
+    }else if( argc == 1 ) //no options, only command by itself
     {
 
 
@@ -827,6 +830,7 @@ int main(int argc, char* argv[])
                     #ifdef NO_LOG_FILES
                     superGame(0);
                     #else
+                    cout << "testplay()" << flush;
 					++n;
                     testPlay(atoi(argv[n]));
                     #endif
@@ -840,6 +844,7 @@ int main(int argc, char* argv[])
                 case 'E':
                 case 'g':
                 case 'G':
+                    cout << "goCMD()" << flush;
                     ++n;
                     if( n == argc )
                     {
@@ -857,9 +862,9 @@ int main(int argc, char* argv[])
 
 
 #ifndef WINRELEASE
-//testPlay(1);
-//exit(0);
-   testAnything();
+testPlay(1);
+exit(0);
+//   testAnything();
 
 
 #endif

@@ -575,33 +575,57 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 
 
 
+
+    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
+
 //DEBUG //
-  /*
+
     if( bGamble == 0 )
     {
 
-        const float64 b21 = geomModel_fear.f(60);
-        const float64 b22 = algbModel_fear.f(60);
-        const float64 b11 = geomModel.f(60);
-        const float64 b12 = algbModel.f(60);
-        const float64 b01 = geomModel.f(30);
-        const float64 b02 = algbModel.f(30);
+        const float64 b21 = geomModel_fear.f(.95);
+        const float64 b22 = algbModel_fear.f(.95);
+        const float64 b11 = geomModel.f(.95);
+        const float64 b12 = algbModel.f(.95);
+
+        const float64 c21 = hybridgain_aggressive.left->f(.95);
+        const float64 c22 = hybridgain_aggressive.right->f(.95);
+        const float64 c11 = hybridgainDeterred_aggressive.left->f(.95);
+        const float64 c12 = hybridgainDeterred_aggressive.right->f(.95);
+
+        const float64 b1 = hybridgainDeterred_aggressive.f(.95);
+        const float64 b2 = hybridgain_aggressive.f(.95);
+
+        const float64 a0 = ap.f(.95);
+        //const float64 a1 = ap.f(.5);
+        const float64 a2 = ap_right.f(.95);
+
+        //const float64 theyfold = myDeterredCall_left.pWin( .95 );
+        //const float64 z = 0;
+
+        logFile << b11 << " " << b12 << endl;
+        logFile << b21 << " " << b22 << endl;
+        logFile << c11 << " " << c12 << endl;
+        logFile << c21 << " " << c22 << endl;
+
+        logFile << a0 << " " /*<< a1*/ << " " << a2 << " <--- AutoScaling" << endl;
+        logFile << b1 << " " << b2 << endl;
 
 
-        const float64 b1 = hybridgainDeterred_aggressive.f(30);
-        const float64 b2 = hybridgain_aggressive.f(60);
 
-        const float64 a0 = ap.f(30);
-        const float64 a1 = ap.f(60);
-        const float64 a2 = ap_right.f(60);
+		if(betToCall > 0.9 || bestBet > 0.3)
+		{
+			logFile << bestBet << endl;
 
-        const float64 theyfold = myDeterredCall_left.pWin( 195 );
-        const float64 z = 0;
+
+			std::cerr << "DEBUG QUIT" << endl;
+			exit(0);
+		}
     }
-*/
 
 
-    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
+
+
 #endif
 
 

@@ -1,9 +1,9 @@
 # Call Prediction Model
 
-filename = 'C:\Users\Joseph\Documents\Yuzisee\holdem\codeblocks\ConservativeBotV.functionlog.purebluff.csv' 
+filename = 'F:\X\Fross_G\Yuzisee\holdem\codeblocks\NormV.functionlog.csv' 
 
 reset
-plot      [0:700] filename using 1:2 '%lf,%lf' with lines linewidth 2 title "purebluff"
+plot      [0:6] filename using 1:2 '%lf,%lf' with lines linewidth 2 title "purebluff"
 
 #plot      filename using 1:2 '%lf,%*lf,%lf' with lines   title "dgain" \
         , filename using 1:2 '%lf,%lf' with lines linewidth 2 title "gain" \
