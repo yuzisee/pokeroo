@@ -120,30 +120,7 @@ class DeterredGainStrategy : public PositionalStrategy
 ;
 
 
-#ifndef NO_AWKWARD_MODELS
-class ImproveGainRankStrategy : public PositionalStrategy
-{
-protected:
-    int8 bGamble;
-public:
-    ImproveGainRankStrategy(int8 riskymode =0) : PositionalStrategy(riskymode ? false : true,riskymode ? true : false,riskymode ? true : false,riskymode? false : true), bGamble(riskymode) {}
 
-    virtual float64 MakeBet();
-}
-;
-
-//Deterrent
-class DeterredGainRankStrategy : public PositionalStrategy
-{
-    protected:
-    int8 bGamble;
-    public:
-    DeterredGainRankStrategy(int8 riskymode =0) : PositionalStrategy(false,false,false,true), bGamble(riskymode) {}
-
-    virtual float64 MakeBet();
-}
-;
-#endif
 
 class CorePositionalStrategy : public PositionalStrategy
 {

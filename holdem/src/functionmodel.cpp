@@ -28,34 +28,27 @@
 
 #define FOLD_EQUITY_STINGE
 
-//#define DEBUGVIEWINTERMEDIARIES
 
 
-/*
-float64 DummyFunctionModel::f(const float64 x) const
-{
-    return 1+2*(1-x)*x;
-}
 
-float64 DummyFunctionModel::fd(const float64 x, const float64 y) const
-{
+template class AutoScalingFunction<GainModel,GainModelNoRisk>;
+template class StateModel<GainModel,GainModelNoRisk>;
 
-    return -4*x+2;
-}
-*/
+template class AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >;
+template class StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >;
 
-#ifndef NO_AWKWARD_MODELS
-GainModelReverseNoRisk::~GainModelReverseNoRisk()
-{
-}
+template class AutoScalingFunction<   StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
+                                      , StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
+                                    >;
 
-GainModelReverse::~GainModelReverse()
-{
-}
+template class StateModel<GainModel,GainModel>;
+template class StateModel<GainModelNoRisk,GainModelNoRisk>;
 
-#endif
 
-StateModel::~StateModel()
+
+
+template <class LL, class RR>
+StateModel<LL,RR>::~StateModel()
 {
     if( bSingle && fp != 0 )
     {
@@ -386,20 +379,20 @@ StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 }
 
 
-
-float64 StateModel::g_raised(float64 raisefrom, const float64 betSize)
+template <class LL, class RR>
+float64 StateModel<LL,RR>::g_raised(float64 raisefrom, const float64 betSize)
 {
     return fp->f_raised(raisefrom, betSize) + e->foldGain();
 }
 
-
-float64 StateModel::gd_raised(float64 raisefrom, const float64 betSize, const float64 y)
+template <class LL, class RR>
+float64 StateModel<LL,RR>::gd_raised(float64 raisefrom, const float64 betSize, const float64 y)
 {
     return fp->fd_raised(raisefrom, betSize, y-e->foldGain());
 }
 
-
-float64 StateModel::f(const float64 betSize)
+template <class LL, class RR>
+float64 StateModel<LL,RR>::f(const float64 betSize)
 {
     if( last_x != betSize )
     {
@@ -409,7 +402,8 @@ float64 StateModel::f(const float64 betSize)
     return y;
 }
 
-float64 StateModel::fd(const float64 betSize, const float64 y)
+template <class LL, class RR>
+float64 StateModel<LL,RR>::fd(const float64 betSize, const float64 y)
 {
     if( last_x != betSize )
     {
@@ -418,7 +412,8 @@ float64 StateModel::fd(const float64 betSize, const float64 y)
     return dy;
 }
 
-void StateModel::query( const float64 betSize )
+template <class LL, class RR>
+void StateModel<LL,RR>::query( const float64 betSize )
 {
 
 
@@ -642,50 +637,60 @@ float64 SlidingPairFunction::fd(const float64 x, const float64 y_dummy)
     return dy;
 }
 
-
-void AutoScalingFunction::query(float64 sliderx, float64 x)
+template<class LL, class RR>
+void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
 {
 
     last_x = x;
     last_sliderx = sliderx;
 
-    const float64 autoSlope = saturate_upto / (saturate_max - saturate_min) ;
-    const float64 slider = (sliderx - saturate_min) * autoSlope ;
+    if( bLeft )
+    {
+        yl = left.f(x);
+        fd_yl = left.fd(x,yl);
 
-	//std::cerr << autoSlope << endl;
-	//std::cerr << slider << endl;
+        y = yl; dy = fd_yl;
+    }else
+    {
 
-    if( saturate_max <= saturate_min )
-    {
-        const float64 yl = left->f(x);
-        y = yl;
-        dy = fd(x,yl);
-    }
-    else if( slider >= 1 )
-    {
-        const float64 yr = right->f(x);
-        y = yr;
-        dy = fd(x, yr);
-    }
-    else if( slider <= 0 )
-    {
-        const float64 yl = left->f(x);
-        y = yl;
-        dy = fd(x, yl);
-    }
-    else
-    {
-        const float64 yl = left->f(x);
-        const float64 yr = right->f(x);
-        y = yl*(1-slider)+yr*slider;
-        const float64 fd_yl = left->fd(x,yl);
-        const float64 fd_yr = right->fd(x,yr);
-        dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
-    }
 
+        const float64 autoSlope = saturate_upto / (saturate_max - saturate_min) ;
+        const float64 slider = (sliderx - saturate_min) * autoSlope ;
+
+        //std::cerr << autoSlope << endl;
+        //std::cerr << slider << endl;
+
+
+        if( slider >= 1 )
+        {
+            y = right.f(x);
+            dy = right.fd(x, yr);
+        }
+        else if( slider <= 0 )
+        {
+            yl = left.f(x);
+            fd_yl = left.fd(x,yl);
+
+            y = yl; dy = fd_yl;
+        }
+        else
+        {
+            yl = left.f(x);
+            yr = right.f(x);
+
+            fd_yl = left.fd(x,yl);
+            fd_yr = right.fd(x,yr);
+
+            y = yl*(1-slider)+yr*slider;
+            dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
+        }
+
+
+    }
 }
 
-float64 AutoScalingFunction::f(const float64 x)
+template<class LL, class RR>
+float64 AutoScalingFunction<LL,RR>::f(const float64 x)
 {
     if( last_x != x || last_sliderx != x)
     {
@@ -694,7 +699,8 @@ float64 AutoScalingFunction::f(const float64 x)
     return y;
 }
 
-float64 AutoScalingFunction::fd(const float64 x, const float64 y_dummy)
+template<class LL, class RR>
+float64 AutoScalingFunction<LL,RR>::fd(const float64 x, const float64 y_dummy)
 {
     if( last_x != x || last_sliderx != x)
     {
@@ -703,8 +709,8 @@ float64 AutoScalingFunction::fd(const float64 x, const float64 y_dummy)
     return dy;
 }
 
-
-float64 AutoScalingFunction::f_raised(float64 sliderx, const float64 x)
+template<class LL, class RR>
+float64 AutoScalingFunction<LL,RR>::f_raised(float64 sliderx, const float64 x)
 {
     if( last_x != x || last_sliderx != sliderx)
     {
@@ -713,7 +719,8 @@ float64 AutoScalingFunction::f_raised(float64 sliderx, const float64 x)
     return y;
 }
 
-float64 AutoScalingFunction::fd_raised(float64 sliderx, const float64 x, const float64 y_dummy)
+template<class LL, class RR>
+float64 AutoScalingFunction<LL,RR>::fd_raised(float64 sliderx, const float64 x, const float64 y_dummy)
 {
     if( last_x != x || last_sliderx != sliderx)
     {

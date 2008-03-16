@@ -86,17 +86,6 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 }
 ;
 
-#ifndef NO_AWKWARD_MODELS
-
-class DummyFunctionModel : public virtual ScalarFunctionModel
-{
-	public:
-	DummyFunctionModel(float64 step) : ScalarFunctionModel(step){};
-    virtual float64 f(const float64) const;
-    virtual float64 fd(const float64, const float64) const;
-}
-;
-#endif
 
 
 class GainModel : public virtual HoldemFunctionModel
@@ -328,6 +317,7 @@ class SlidingPairFunction : public virtual HoldemFunctionModel
 }
 ;
 
+template <class LL, class RR>
 class AutoScalingFunction : public virtual HoldemFunctionModel
 {//NO ASSIGNMENT OPERATOR
     private:
@@ -336,6 +326,8 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
             if( a < b ) return a;
             return b;
         }
+
+        const bool bLeft;
     protected:
         virtual void query(float64 sliderx, float64 x);
         const float64 saturate_min, saturate_max, saturate_upto;
@@ -344,18 +336,25 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
         float64 y;
         float64 dy;
 
-    public:
-        ScalarFunctionModel * const left;
-        ScalarFunctionModel * const right;
+        float64 yl;
+        float64 yr;
+        float64 fd_yl;
+        float64 fd_yr;
 
-        AutoScalingFunction(ScalarFunctionModel *f_left, ScalarFunctionModel *f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c)
-            : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left->quantum,f_right->quantum), c)
-            , saturate_min(minX), saturate_max(maxX), saturate_upto(1), left(f_left), right(f_right){
+    public:
+        LL & left;
+        RR & right;
+
+        AutoScalingFunction(LL & f_left, RR & f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c)
+            : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.quantum,f_right.quantum), c)
+            , bLeft( saturate_max <= saturate_min ), saturate_min(minX), saturate_max(maxX), saturate_upto(1), left(f_left), right(f_right){
+
                 query(0,0);
             }
-        AutoScalingFunction(ScalarFunctionModel *f_left, ScalarFunctionModel *f_right, const float64 minX, const float64 maxX, const float64 upto ,ExpectedCallD *c)
-            : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left->quantum,f_right->quantum), c)
-            , saturate_min(minX), saturate_max(maxX), saturate_upto(upto), left(f_left), right(f_right){
+        AutoScalingFunction(LL & f_left, RR & f_right, const float64 minX, const float64 maxX, const float64 upto ,ExpectedCallD *c)
+            : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.quantum,f_right.quantum), c)
+            , bLeft( saturate_max <= saturate_min ), saturate_min(minX), saturate_max(maxX), saturate_upto(upto), left(f_left), right(f_right){
+
                 query(0,0);
             }
         virtual ~AutoScalingFunction(){}
@@ -370,7 +369,7 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
 ;
 
 
-
+template <class LL, class RR>
 class StateModel : public virtual HoldemFunctionModel
 {
     private:
@@ -378,11 +377,12 @@ class StateModel : public virtual HoldemFunctionModel
     float64 y;
     float64 dy;
 
+
     void query( const float64 );
 
     protected:
         ExactCallBluffD * ea;
-        AutoScalingFunction *fp;
+        AutoScalingFunction<LL,RR> *fp;
         bool bSingle;
 
 
@@ -392,16 +392,22 @@ class StateModel : public virtual HoldemFunctionModel
     public:
     float64 g_raised(float64 raisefrom, float64);
 
-    StateModel(ExactCallBluffD *c, AutoScalingFunction *function) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
+    StateModel(ExactCallBluffD *c, AutoScalingFunction<LL,RR> *function) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
     ,last_x(-1),ea(c),fp(function),bSingle(false)
     {
         query(0);
     }
 
-    StateModel(ExactCallBluffD *c, HoldemFunctionModel *function, bool b) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
+
+    StateModel(ExactCallBluffD *c, LL & functionL, RR & functionR) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
     ,last_x(-1),ea(c),bSingle(true)
     {
-        fp = new AutoScalingFunction(function,function,0,0,c);
+        if( (&functionL) != (&functionR) ) //ASSERT: LL == RR !!
+        {
+            std::cerr << "Static Type Error. Use this constructor only when <class LL>==<class RR>." << endl;
+            exit(1);
+        }
+        fp = new AutoScalingFunction<LL,RR>(functionL,functionR,0,0,c);
         query(0);
     }
 
@@ -415,7 +421,9 @@ class StateModel : public virtual HoldemFunctionModel
 ;
 
 
-#endif
+
+
+#endif // HOLDEM_GainModels
 
 
 
