@@ -327,7 +327,7 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
             return b;
         }
 
-        const bool bLeft;
+
     protected:
         virtual void query(float64 sliderx, float64 x);
         const float64 saturate_min, saturate_max, saturate_upto;
@@ -342,20 +342,23 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
         float64 fd_yr;
 
     public:
+		const bool bLeft;
         LL & left;
         RR & right;
 
         AutoScalingFunction(LL & f_left, RR & f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c)
             : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.quantum,f_right.quantum), c)
-            , bLeft( saturate_max <= saturate_min ), saturate_min(minX), saturate_max(maxX), saturate_upto(1), left(f_left), right(f_right){
-
-                query(0,0);
+            , saturate_min(minX), saturate_max(maxX), saturate_upto(1), bLeft( maxX <= minX ), left(f_left), right(f_right){
+                last_x = -1;
+                last_sliderx = -1;
+                //query(0,0);
             }
         AutoScalingFunction(LL & f_left, RR & f_right, const float64 minX, const float64 maxX, const float64 upto ,ExpectedCallD *c)
             : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.quantum,f_right.quantum), c)
-            , bLeft( saturate_max <= saturate_min ), saturate_min(minX), saturate_max(maxX), saturate_upto(upto), left(f_left), right(f_right){
-
-                query(0,0);
+            , saturate_min(minX), saturate_max(maxX), saturate_upto(upto), bLeft( maxX <= minX ), left(f_left), right(f_right){
+                last_x = -1;
+                last_sliderx = -1;
+                //query(0,0);
             }
         virtual ~AutoScalingFunction(){}
 

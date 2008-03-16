@@ -1034,7 +1034,8 @@ float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit) co
 float64 ExactCallBluffD::RiskPrice()
 {
     //const float64 N = table->GetNumberAtTable();
-    const float64 Ne = table->GetNumberInHand()-1;
+	const int8 Ne_int = table->GetNumberInHand() - 1;
+    const float64 Ne = static_cast<float64>(Ne_int);
 
     const float64 estSacrifice = (table->GetPotSize() - table->ViewPlayer(playerID)->GetBetSize());
 

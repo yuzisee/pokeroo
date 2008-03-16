@@ -37,7 +37,7 @@
 #define ACTREACTUSES_RA (riskprice)
 #define ACTREACTUSES_HD riskprice
 //#define ACTREACTUSES_HD maxShowdown
-#define DELAYENEMYOPP 0
+#define DELAYENEMYOPP 0.0
 //#define DELAYENEMYOPP riskprice
 #else
 #define ACTREACTUSES maxShowdown
@@ -621,20 +621,22 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
         //const float64 theyfold = myDeterredCall_left.pWin( .95 );
         //const float64 z = 0;
 
-        logFile << b11 << " " << b12 << endl;
-        logFile << b21 << " " << b22 << endl;
-        logFile << c11 << " " << c12 << endl;
-        logFile << c21 << " " << c22 << endl;
 
-        logFile << a0 << " " /*<< a1*/ << " " << a2 << " <--- AutoScaling" << endl;
-        logFile << b1 << " " << b2 << endl;
 
+
+
+		logFile << a0 << " " /*<< a1*/ << " " << a2 << " <--- " << (ap.bLeft ? "N/A " : "Auto") << "Scaling from (" << DELAYENEMYOPP << "," << ACTREACTUSES_RA << "]" << endl;
+        logFile << b1 << " " << b2  << " <--- Should be between these two values" << endl;
+        logFile << c11 << " " << c12 << " <-- which should be between --> " << c21 << " " << c22 << endl;
+        logFile << b11 << " " << b12 << " <-- which equals --> " << b21 << " " << b22 << endl;
 
 
 		if(betToCall > 0.9 || bestBet > 0.3)
 		{
 			logFile << bestBet << endl;
-
+			const float64 z0 = choicemodel.f(.95);
+			const float64 z2 = choicemodel_right.f(.95);
+            logFile << z0 << "  " << z2 << " State of autoscale." << endl;
 
 			std::cerr << "DEBUG QUIT" << endl;
 			exit(0);
