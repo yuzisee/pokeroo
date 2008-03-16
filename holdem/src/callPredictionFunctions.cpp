@@ -243,7 +243,12 @@ float64 FoldWaitLengthModel::FindBestLength()
 
 void FoldGainModel::query( const float64 betSize )
 {
-    if( lastBetSize == betSize && last_dw_dbet == dw_dbet && lastWaitLength == waitLength)
+
+
+    if(     lastBetSize == betSize
+         && last_dw_dbet == dw_dbet
+         && lastWaitLength == waitLength
+      )
     {
         return;
     }
@@ -407,7 +412,7 @@ void FacedOddsRaiseGeom::query( const float64 w )
     const float64 dU_dw = dfw*log1p((pot+raiseTo)/(FG.waitLength.bankroll-raiseTo)) * U;
 
     lastFD = dU_dw;
-    if( FG.n > 0 )
+    if( (!bCheckPossible) && FG.n > 0 )
     {
         lastFD -= FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
     }

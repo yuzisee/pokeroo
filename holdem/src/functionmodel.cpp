@@ -22,6 +22,8 @@
 #include "functionmodel.h"
 #include "ai.h"
 
+
+
 #define RAISED_PWIN
 
 #define FOLD_EQUITY_STINGE
@@ -356,7 +358,10 @@ float64 GainModel::fd(const float64 betSize, const float64 y)
     #ifdef DEBUG_FUNCTIONCORE
         std::cout << std::endl << "\t\t\t\t\tfd(" << betSize <<","<< y << " to " << y+e->foldGain() << ")" << endl;
     #endif
-    return gd(betSize, y+e->foldGain());
+    const float64 efg = e->foldGain();
+    const float64 betVal = gd(betSize, y+efg);
+
+    return betVal;
 }
 
 
@@ -416,7 +421,10 @@ float64 StateModel::fd(const float64 betSize, const float64 y)
 void StateModel::query( const float64 betSize )
 {
 
+
 #include "BluffGainInc.h"
+
+
 
 ///Calculate factors
 	const float64 gainWithFold = pow(potFoldWin , oppFoldChance);
@@ -444,9 +452,13 @@ void StateModel::query( const float64 betSize )
 		gainNormallnD = playChance*potNormalWinD/g_raised(betSize,betSize-quantum/2) + playChanceD*log(g_raised(betSize,betSize-quantum/2));
 	}
 
+
+
 ///Store results
     y = gainWithFold*gainNormal*gainRaised;
+
     dy = (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
+
     y -= e->foldGain();
 
 

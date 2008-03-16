@@ -33,7 +33,7 @@ const int8 PerformanceHistory::SORT_TOTAL_DELTA = 3;
 const int8 PerformanceHistory::SORT_RANK = 0;
 */
 
-void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
+void PerformanceHistory::SortAndOffset( PerformanceHistory * parray, const uint16 num )
 {
     float64 averageTotalDelta=0;
     int32 averageWinLose=0;
@@ -48,16 +48,16 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
     ///Set up sort mode, and calculate averages (totals)
     for(uint8 i=0;i<num;++i)
     {
-        averageTotalDelta += array[i].totalMoneyDelta;
-        averageWinLose += array[i].nonZeroWinLose;
-        averageAboveBelow += array[i].numHandsAboveBelow;
+        averageTotalDelta += parray[i].totalMoneyDelta;
+        averageWinLose += parray[i].nonZeroWinLose;
+        averageAboveBelow += parray[i].numHandsAboveBelow;
 
         //array[i].rank = 0;
-        array[i].sortMode = SORT_ABOVE_BELOW;
+        parray[i].sortMode = SORT_ABOVE_BELOW;
     }
 
     ///Sort by Above/Below
-    std::sort(array,array+num);//Ascending by default
+    std::sort(parray,parray+num);//Ascending by default
                                 //  http://www.ddj.com/dept/cpp/184403792
 
     ///Note that the BEST score will receive a rank of 1.
@@ -70,12 +70,12 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
 
     ///Rank and offset above/below
     potentialRank = 1;
-    lastAboveBelow = array[num-1].numHandsAboveBelow; //Force a tie to put the best at rank 1
+    lastAboveBelow = parray[num-1].numHandsAboveBelow; //Force a tie to put the best at rank 1
 
     for( uint8 i=num;i>0;--i )
     { //Let i be the index of the element of which you are comparing to, for a tie
       //We iterate from the last (best) element to the first(worst)
-        int32 & x = array[i-1].numHandsAboveBelow;
+        int32 & x = parray[i-1].numHandsAboveBelow;
 
         if( x < lastAboveBelow )
         {//Worse than previous
@@ -85,22 +85,22 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
 
         x -= averageAboveBelow;
 
-        array[i-1].rank = potentialRank*num;
+        parray[i-1].rank = potentialRank*num;
 
-        array[i-1].sortMode = SORT_NUM_WINLOSE;
+        parray[i-1].sortMode = SORT_NUM_WINLOSE;
     }
 
     ///Sort by Win/Lose
-    std::sort(array,array+num);
+    std::sort(parray,parray+num);
 
 ///Rank and offset Win/Lose
     potentialRank = 1;
-    lastWinLose = array[num-1].nonZeroWinLose; //Force a tie to put the best at rank 1
+    lastWinLose = parray[num-1].nonZeroWinLose; //Force a tie to put the best at rank 1
 
     for( uint8 i=num;i>0;--i )
     { //Let i be the index of the element of which you are comparing to, for a tie
       //We iterate from the last (best) element to the first(worst)
-        int32 & x = array[i-1].nonZeroWinLose;
+        int32 & x = parray[i-1].nonZeroWinLose;
 
         if( x < lastWinLose )
         {//Worse than previous
@@ -111,33 +111,33 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
         x -= averageWinLose;
 
         //Only keep the worst rank in all categories
-        array[i-1].rank /= num;
-        if( potentialRank > array[i-1].rank )
+        parray[i-1].rank /= num;
+        if( potentialRank > parray[i-1].rank )
         {
-            array[i-1].rank += potentialRank*num - 1;
+            parray[i-1].rank += potentialRank*num - 1;
         }else
         {
-            array[i-1].rank *= num;
-            array[i-1].rank += potentialRank - 1;
+            parray[i-1].rank *= num;
+            parray[i-1].rank += potentialRank - 1;
         }
         //At this point, potentialRank * num is the rank, (potentialRank % num)+1 is tiebreaker
 
-        array[i-1].sortMode = SORT_TOTAL_DELTA;
+        parray[i-1].sortMode = SORT_TOTAL_DELTA;
 
     }
 
 
     ///Sort by TotalDelta
-    std::sort(array,array+num);
+    std::sort(parray,parray+num);
 
 ///Rank and offset TotalDelta
     potentialRank = 1;
-    lastTotalDelta = array[num-1].totalMoneyDelta; //Force a tie to put the best at rank 1
+    lastTotalDelta = parray[num-1].totalMoneyDelta; //Force a tie to put the best at rank 1
 
     for( uint8 i=num;i>0;--i )
     { //Let i be the index of the element of which you are comparing to, for a tie
       //We iterate from the last (best) element to the first(worst)
-        float64 & x = array[i-1].totalMoneyDelta;
+        float64 & x = parray[i-1].totalMoneyDelta;
 
 
         if( x < lastTotalDelta )
@@ -149,25 +149,25 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * array, uint8 num )
         x -= averageTotalDelta;
 
         //Only keep the worst rank in all categories
-        const uint16 tieBreaker = (array[i-1].rank % (num)) + 1;
-        const uint16 interimRank = array[i-1].rank / (num);
+        const uint16 tieBreaker = (parray[i-1].rank % (num)) + 1;
+        const uint16 interimRank = parray[i-1].rank / (num);
         if( potentialRank > interimRank )
         {
-            array[i-1].rank = potentialRank*num*2;
-            array[i-1].rank += (interimRank + tieBreaker) - 2;
+            parray[i-1].rank = potentialRank*num*2;
+            parray[i-1].rank += (interimRank + tieBreaker) - 2;
         }else
         {//interimRank is still the worst rank
-            array[i-1].rank = (interimRank*num*2) + (potentialRank + tieBreaker) - 2;
+            parray[i-1].rank = (interimRank*num*2) + (potentialRank + tieBreaker) - 2;
         }
 
 
-        array[i-1].sortMode = SORT_RANK;
+        parray[i-1].sortMode = SORT_RANK;
 
     }
 
 //INVARIANT: Each rank is now num*worstRank + avg(otherRanks)
     ///Sort by WorstOfRank
-    std::sort(array,array+num);
+    std::sort(parray,parray+num);
 
 
 }

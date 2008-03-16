@@ -99,7 +99,10 @@ class FoldGainModel : public virtual ScalarFunctionModel
 
     FoldWaitLengthModel waitLength;
 
-    FoldGainModel(float64 myQuantum) : ScalarFunctionModel(myQuantum), last_dw_dbet(0){};
+    FoldGainModel(float64 myQuantum) : ScalarFunctionModel(myQuantum)
+            , lastWaitLength(), lastBetSize(-1), last_dw_dbet(0) //Cache variables
+            , dw_dbet(0) //Input variables
+            {};
 
     virtual ~FoldGainModel();
 
