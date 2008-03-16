@@ -25,9 +25,14 @@
 
 
 
-//#define SINGLETURNINGPOINT
+#undef DEBUG_TRACE_SEARCH
+#undef SINGLETURNINGPOINT
 #define BYPASS_ANOMALIES
-//#define DEBUG_FUNCTIONCORE
+
+
+#ifdef DEBUG_TRACE_SEARCH
+#include <iostream>
+#endif
 
 class ScalarFunctionModel
 {
@@ -44,7 +49,16 @@ class ScalarFunctionModel
 		virtual float64 FindTurningPoint(float64 x1,float64 y1,float64 xb,float64 yb,float64 x2,float64 y2,float64 signDir);
     public:
     float64 quantum;
-    ScalarFunctionModel(float64 step) : quantum(step){};
+
+    #ifdef DEBUG_TRACE_SEARCH
+    bool bTraceEnable;
+    #endif
+
+    ScalarFunctionModel(float64 step) : quantum(step)
+    #ifdef DEBUG_TRACE_SEARCH
+    ,bTraceEnable(false)
+    #endif
+    {};
     virtual float64 f(const float64) = 0;
     virtual float64 fd(const float64, const float64) = 0;
 	virtual float64 FindMax(float64,float64) ;

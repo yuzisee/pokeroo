@@ -81,21 +81,12 @@ float64 HoldemFunctionModel::FindBestBet()
     }else
     {
 
-        #ifdef DEBUG_FUNCTIONCORE
-    		std::cout << "\t\tFindMax(" << minRaiseBetTo << "," << myMoney << ")" << endl;
-        #endif
 
     	desiredBet = FindMax(minRaiseBetTo,myMoney);
 
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << "\t\t" << desiredBet << " FoundMax" << endl;
-        #endif
 
         if( desiredBet < minRaiseBetTo )
         {
-		#ifdef DEBUG_FUNCTIONCORE
-            		std::cout << "ASSERT desiredBet rounding " << desiredBet << " against minRaise of " << minRaiseBetTo << endl;
-		#endif
 		/*
 		#ifdef DEBUGASSERT
                 if( desiredBet < minRaiseBetTo - e->chipDenom()/4 )
@@ -263,16 +254,11 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 
 
     const float64 adjQuantum = quantum/4;
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << std::endl << "\t\t\t\t\tconstraints: " << e->callBet() << " to " << e->minRaiseTo() << " and " << adjQuantum << endl;
-        #endif
+
     const float64 fracQuantum = e->betFraction(adjQuantum);
 
 	if( betSize > e->callBet()+adjQuantum && betSize < e->minRaiseTo()-adjQuantum )
 	{
-            #ifdef DEBUG_FUNCTIONCORE
-                std::cout << std::endl << "\t\t\t\t\tsplitDist " << betSize << endl;
-            #endif
 		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
 		return splitDist/(e->minRaiseTo() - e->callBet());
 	}
@@ -305,9 +291,7 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
             const float64 & t_cl = p_cl;
             const float64 & t_cw = p_cw;
         #endif
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << std::endl << "\t\t\t\t\tPrepared gd" << std::endl;
-        #endif
+
 
     if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
@@ -348,9 +332,7 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 
 float64 GainModel::fd(const float64 betSize, const float64 y)
 {
-    #ifdef DEBUG_FUNCTIONCORE
-        std::cout << std::endl << "\t\t\t\t\tfd(" << betSize <<","<< y << " to " << y+e->foldGain() << ")" << endl;
-    #endif
+
     const float64 efg = e->foldGain();
     const float64 betVal = gd(betSize, y+efg);
 

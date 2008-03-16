@@ -1156,6 +1156,9 @@ Player* HoldemArena::PlayTable()
 
         DealHands();
 		PlayGame();
+#ifdef DEBUG_SINGLE_HAND
+        exit(0);
+#endif
         RefreshPlayers(); ///New Hand
 #ifdef DEBUGSAVEGAME
     #ifdef RELOAD_LAST_HAND

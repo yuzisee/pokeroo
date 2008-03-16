@@ -103,25 +103,26 @@ float64 ScalarFunctionModel::searchStep(float64 x1, float64 y1, float64 x2, floa
 
 float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 {
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << "\t\t\t(x1,y1)=" << x1 << std::flush;
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t\t(x1,y1)=" << x1 << std::flush;
         #endif
     const float64 y1 = f(x1);
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout <<","<< y1 << endl;
-            std::cout << "\t\t\t(x2,y2)=" << x2 << std::flush;
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable)
+            {  std::cout <<","<< y1 << endl;
+               std::cout << "\t\t\t(x2,y2)=" << x2 << std::flush; }
         #endif
     const float64 y2 = f(x2);
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout <<","<< y2 << endl;
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout <<","<< y2 << endl;
         #endif
 
     const float64 xb = bisectionStep(x1,x2);
     const float64 yb = f(xb);
 
 
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << "\t\t\t(xb,yb)=" << xb <<","<< yb << endl;
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t\t(xb,yb)=" << xb <<","<< yb << endl;
         #endif
 
 	if( yb <= y1 && yb <= y2)
@@ -142,10 +143,14 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 	        #endif
 	    }
 
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t  Reduced to (xb,yb)=" << xb <<","<< yb << endl;
+        #endif
+
         return round(xb/quantum)*quantum;
     }
-        #ifdef DEBUG_FUNCTIONCORE
-            std::cout << "\t\t  FindTurningPoint" << endl;
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t  FindTurningPoint" << endl;
         #endif
 	return FindTurningPoint(x1, y1, xb, yb, x2, y2, 1);
 }
@@ -185,7 +190,10 @@ float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
 
 float64 ScalarFunctionModel::SplitTurningPoint(float64 x1, float64 y1, float64 xa, float64 ya, float64 xb, float64 yb, float64 x2, float64 y2, float64 signDir)
 {
-//std::cout << "Split <" << x1 << "," << x2 << ">" << std::endl;
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\tSplit <" << x1 << "," << xa << "," << xb << "," << x2 << ">" << std::endl;
+        #endif
+
     if( x2 - x1 < quantum/2 )
     {
         return round(bisectionStep(x1,x2)/quantum)*quantum;
@@ -250,7 +258,7 @@ float64 ScalarFunctionModel::SplitTurningPoint(float64 x1, float64 y1, float64 x
 float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb, float64 yb, float64 x2, float64 y2, float64 signDir)
 {
     int8 stepMode = 0;
-//std::cout << "Going {" << x1 << "," << x2 << "}" << std::endl;
+
     float64 yn;
     float64 xn;
 
@@ -291,9 +299,20 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
             dy1 = fd(x1,y1);
             dy2 = fd(x2,y2);
         }
-        if( stepMode > 0 && dy2*dy1 <= 0 && fabs((dy2 - dy1)/dy2) >= fabs(quantum/2/(x2 - x1)) )
+
+
+        //Newton step:
+        //  f1 = y1 + (x-x1)*dy1
+        //  f2 = y2 + (x-x2)*dy2
+        //  Locus f1=f2: y1 + x*dy1 - x1*dy1 = y2 + x*dy2 - x2*dy2
+        //               x(dy1 - dy2) = (x1 - x1) - (x2*dy2 - x1*dy1)
+        const float64 newtonxb = ((x1 - x1) - (x2*dy2 - x1*dy1))/(dy1 - dy2);
+        //Old: const float64 xb = fabs((dy2*x1 - dy1*x2)/(dy2-dy1));
+        //Old: if dy2*dy1 <= 0 && fabs((dy2 - dy1)/dy2) >= fabs(quantum/2/(x2 - x1))
+
+        if( stepMode > 0 && newtonxb < x2 - quantum/2 && newtonxb > x1 + quantum/2 )
         {
-            xb = fabs((dy2*x1 - dy1*x2)/(dy2-dy1));
+            xb = newtonxb;
         }else
         {
             xb = bisectionStep(x1,x2);
@@ -304,11 +323,19 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 		{
 		    dyb = fd(xb,yb);
 		}
+
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t\tSlide x<" << x1 << "," << xb << "," << x2 << ">  y<" << y1 << "," << yb << "," << y2 << ">" << std::endl;
+        #endif
 	}
 
 
     while(x2 - x1 > quantum/2)
     {
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t\tGo x<" << x1 << "," << x2 << ">  y<" << y1 << "," << y2 << ">" << std::endl;
+        #endif
+
         ++stepMode;
         stepMode %= 5;
         switch(stepMode)
@@ -422,11 +449,13 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 
                 }
                 #else
+                //Then don't BYPASS_ANOMALIES
                     cout << "WARNING: Function has multiple turning points!" << endl;
                     exit(1);
                     return xb;
                 #endif
             #else
+            //Then don't SINGLE_TURNING_POINT
                 return SplitTurningPoint(x1,y1,xn,yn,xb,yb,x2,y2,signDir);
             #endif
 

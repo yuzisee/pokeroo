@@ -593,30 +593,38 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 
 
 
-
-    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
-
 //DEBUG //
 
-    if( bGamble == 0 )
+    if( bGamble == 1 && ViewTable().GetPrevPotSize() > 3.0 )
     {
 
-        const float64 b21 = geomModel_fear.f(.95);
-        const float64 b22 = algbModel_fear.f(.95);
-        const float64 b11 = geomModel.f(.95);
-        const float64 b12 = algbModel.f(.95);
+#ifdef DEBUG_TRACE_SEARCH
+        rolemodel.bTraceEnable = true;
+        const float64 bestBet = solveGainModel(&rolemodel);
+        std::cout << bestBet << endl;
+#endif
+        exit(1);
+/*
+		if(betToCall > 0.9 || bestBet > 0.3)
+		{
 
-        const float64 c21 = hybridgain_aggressive.left.f(.95);
-        const float64 c22 = hybridgain_aggressive.right.f(.95);
-        const float64 c11 = hybridgainDeterred_aggressive.left.f(.95);
-        const float64 c12 = hybridgainDeterred_aggressive.right.f(.95);
 
-        const float64 b1 = hybridgainDeterred_aggressive.f(.95);
-        const float64 b2 = hybridgain_aggressive.f(.95);
+        const float64 b21 = geomModel_fear.f(.9500001);
+        const float64 b22 = algbModel_fear.f(.9500001);
+        const float64 b11 = geomModel.f(.9500001);
+        const float64 b12 = algbModel.f(.9500001);
 
-        const float64 a0 = ap.f(.95);
+        const float64 c21 = hybridgain_aggressive.left.f(.9500001);
+        const float64 c22 = hybridgain_aggressive.right.f(.9500001);
+        const float64 c11 = hybridgainDeterred_aggressive.left.f(.9500001);
+        const float64 c12 = hybridgainDeterred_aggressive.right.f(.9500001);
+
+        const float64 b1 = hybridgainDeterred_aggressive.f(.9500001);
+        const float64 b2 = hybridgain_aggressive.f(.9500001);
+
+        const float64 a0 = ap.f(.9500001);
         //const float64 a1 = ap.f(.5);
-        const float64 a2 = ap_right.f(.95);
+        const float64 a2 = ap_right.f(.9500001);
 
         //const float64 theyfold = myDeterredCall_left.pWin( .95 );
         //const float64 z = 0;
@@ -624,29 +632,38 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 
 
 
-
-		logFile << a0 << " " /*<< a1*/ << " " << a2 << " <--- " << (ap.bLeft ? "N/A " : "Auto") << "Scaling from (" << DELAYENEMYOPP << "," << ACTREACTUSES_RA << "]" << endl;
+        //HEY! NormBot only uses a0 anyways, and z0/z2 don't apply
+		logFile << a0 << " " << " " << a2 << " <--- " << (ap.bLeft ? "N/A " : "Auto") << "Scaling from (" << DELAYENEMYOPP << "," << ACTREACTUSES_RA << "]" << endl;
         logFile << b1 << " " << b2  << " <--- Should be between these two values" << endl;
         logFile << c11 << " " << c12 << " <-- which should be between --> " << c21 << " " << c22 << endl;
         logFile << b11 << " " << b12 << " <-- which equals --> " << b21 << " " << b22 << endl;
 
 
-		if(betToCall > 0.9 || bestBet > 0.3)
-		{
+
+
+
 			logFile << bestBet << endl;
-			const float64 z0 = choicemodel.f(.95);
-			const float64 z2 = choicemodel_right.f(.95);
+			const float64 z0 = choicemodel.f(.9500001);
+			const float64 z2 = choicemodel_right.f(.9500001);
             logFile << z0 << "  " << z2 << " State of autoscale." << endl;
 
 			std::cerr << "DEBUG QUIT" << endl;
 			exit(0);
 		}
+		*/
+
     }
 
 
-
+    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
 
 #endif
+
+
+
+
+
+
 
 
 #ifdef LOGPOSITION

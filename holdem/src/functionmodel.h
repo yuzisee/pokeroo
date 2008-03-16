@@ -32,7 +32,6 @@
 #define NO_AWKWARD_MODELS
 
 
-
 #define DEFAULT_EPS_STEP 0.001
 
 class HoldemFunctionModel : public virtual ScalarFunctionModel
@@ -41,7 +40,7 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
     ExpectedCallD *e;
     public:
 
-    HoldemFunctionModel(float64 step,ExpectedCallD *c) : ScalarFunctionModel(step),e(c){};
+    HoldemFunctionModel(float64 step,ExpectedCallD *c) : ScalarFunctionModel(step),e(c) {};
 
     virtual float64 FindBestBet();
     virtual float64 FindFoldBet(const float64);
