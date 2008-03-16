@@ -594,7 +594,7 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 
 
 //DEBUG //
-
+/*
  //   if( bGamble == 1 && ViewTable().GetPrevPotSize() > 3.0 )
     if( bGamble == 0 )
     {
@@ -610,7 +610,7 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
         logFile << "\tfold -- left" << myDeterredCall_left.pWin(rAmount) << "  " << myDeterredCall_right.pWin(rAmount) << " right" << endl;
 
         exit(1);
-/*
+
 		if(betToCall > 0.9 || bestBet > 0.3)
 		{
 
@@ -656,10 +656,10 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 			std::cerr << "DEBUG QUIT" << endl;
 			exit(0);
 		}
-		*/
+
 
     }
-
+*/
 
     const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
 

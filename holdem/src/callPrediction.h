@@ -23,7 +23,7 @@
 
 
 //#define DEBUG_CALLPRED_FUNCTION
-#define DEBUG_TRACE_PWIN
+#undef DEBUG_TRACE_PWIN
 
 #include "callPredictionFunctions.h"
 #include "callSituation.h"
