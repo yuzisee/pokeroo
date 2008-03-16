@@ -231,9 +231,9 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
         logFile << "(M.s) " << statmean.splits * 100 << "%"  << std::endl;
         logFile << "(M.l) " << statmean.loss * 100 << "%"  << std::endl;
     }
+    logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
     if(bLogWorse)
     {
-        logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
         logFile << "(W.w) " << statworse.wins * 100 << "%"  << std::endl;
         logFile << "(W.s) " << statworse.splits * 100 << "%"  << std::endl;
         logFile << "(W.l) " << statworse.loss * 100 << "%"  << std::endl;
@@ -684,20 +684,34 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
-		int32 raiseStep = 0;
-        float64 rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
+	    int32 raiseStep = 0;
+        float64 rAmount =  myDeterredCall.RaiseAmount(betToCall,raiseStep);
+        while( rAmount < bestBet )
+        {
+            rAmount =  myDeterredCall.RaiseAmount(betToCall,raiseStep);
+            const float64 oppRaisedFoldGain = myDeterredCall_left.foldGain(betToCall - myDeterredCall_right.alreadyBet(),rAmount);
+            logFile << "OppRAISEChance";
+            if( oppRaisedFoldGain > choicemodel.g_raised(betToCall,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  }
+
+            logFile << myDeterredCall.pRaise(betToCall,raiseStep) << " @ $" << rAmount;
+            logFile << "\tfold -- left" << myDeterredCall_left.pWin(rAmount) << "  " << myDeterredCall_right.pWin(rAmount) << " right" << endl;
+
+
+            if( rAmount >= maxShowdown ) break;
+
+            ++raiseStep;
+        }
+
+
+		raiseStep = 0;
+        rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
         while( rAmount <= maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
             const float64 oppRaisedFoldGain = myDeterredCall_left.foldGain(bestBet - myDeterredCall_right.alreadyBet(),rAmount);
             logFile << "OppRAISEChance";
-            if( oppRaisedFoldGain > choicemodel.g_raised(bestBet,rAmount) )
-            {
-                logFile << " [F] ";
-            }else
-            {
-                logFile << " [*] ";
-            }
+            if( oppRaisedFoldGain > choicemodel.g_raised(bestBet,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  }
+
             logFile << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
             logFile << "\tfold -- left" << myDeterredCall_left.pWin(rAmount) << "  " << myDeterredCall_right.pWin(rAmount) << " right" << endl;
 
@@ -870,22 +884,34 @@ float64 DeterredGainStrategy::MakeBet()
 
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
+	    int32 raiseStep = 0;
+        float64 rAmount =  myDeterredCall.RaiseAmount(betToCall,raiseStep);
+        while( rAmount < bestBet )
+        {
+            rAmount =  myDeterredCall.RaiseAmount(betToCall,raiseStep);
+            const float64 oppRaisedFoldGain = myDeterredCall.foldGain(betToCall - myDeterredCall.alreadyBet(),rAmount);
+            logFile << "OppRAISEChance";
+            if( oppRaisedFoldGain > ap_aggressive.g_raised(betToCall,rAmount) ){ logFile << " [F] "; }else { logFile << " [*] "; }
+            logFile << myDeterredCall.pRaise(betToCall,raiseStep) << " @ $" << rAmount;
+            logFile << "\tBetWouldFold%" << myDeterredCall.pWin(rAmount) << endl;
 
-		int32 raiseStep = 0;
-        float64 rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
+
+            if( rAmount >= maxShowdown ) break;
+
+            ++raiseStep;
+        }
+
+
+		raiseStep = 0;
+        rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
         while( rAmount <= maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
             const float64 oppRaisedFoldGain = myDeterredCall.foldGain(bestBet - myDeterredCall.alreadyBet(),rAmount);
             logFile << "OppRAISEChance";
-            if( oppRaisedFoldGain > ap_aggressive.g_raised(bestBet,rAmount) )
+            if( oppRaisedFoldGain > ap_aggressive.g_raised(bestBet,rAmount) ){ logFile << " [F] "; }else { logFile << " [*] "; }
             ///ASSUMPTION: ap_aggressive is choicemodel!
-            {
-                logFile << " [F] ";
-            }else
-            {
-                logFile << " [*] ";
-            }
+
             logFile << myDeterredCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
             logFile << "\tBetWouldFold%" << myDeterredCall.pWin(rAmount) << endl;
 
