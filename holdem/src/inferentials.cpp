@@ -448,12 +448,21 @@ StatResult CallCumulation::oddsAgainstBestTwoHands() const
 
     StatResult retVal, retValA, retValB;
     retValA = cumulation[cumulation.size()-1].ReversedPerspective();
-    retValA.repeated = 1 - cumulation[cumulation.size()-3].repeated;
-
     retValB = cumulation[cumulation.size()-2].ReversedPerspective();
-    retValB.repeated = 1 - cumulation[cumulation.size()-3].repeated;
 
     retVal = (retValA + retValB)/2;
+
+    if( cumulation.size() >= 3 )
+    {
+        //retValA.repeated = 1 - cumulation[cumulation.size()-3].repeated;
+        //retValB.repeated = 1 - cumulation[cumulation.size()-3].repeated;
+        retVal.repeated = = 1 - cumulation[cumulation.size()-3].repeated;
+    }else
+    {
+        retVal.repeated = 1;
+    }
+
+
     return retVal;
 }
 
