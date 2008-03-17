@@ -547,7 +547,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
     xb = bisectionStep(x1,x2);
     yb = f(xb);
 
-        #ifdef DEBUG_TRACE_SEARCH
+        #ifdef DEBUG_TRACE_ZERO
             if(bTraceEnable)
             {
                 std::cout << "FindZero (x1,xb,x2) = (" << x1 <<","<< xb <<","<< x2 << ")" << endl;
@@ -560,7 +560,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
 
         xn = newtonStep(xb,yb);
 
-        #ifdef DEBUG_TRACE_SEARCH
+        #ifdef DEBUG_TRACE_ZERO
             if(bTraceEnable) std::cout << "\t\tPossible xn " << xn << std::endl;
         #endif
 
@@ -584,7 +584,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
                     y2 = yb;
                 }
 
-                #ifdef DEBUG_TRACE_SEARCH
+                #ifdef DEBUG_TRACE_ZERO
                     if(bTraceEnable) std::cout << "\t\t\t Shortcut! Switch to xn and xb: new (x1,x2) = (" << x1 << "," << x2 << ")" << std::endl;
                 #endif
 
@@ -595,13 +595,13 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
                 xb = xn;
                 yb = yn;
 
-                #ifdef DEBUG_TRACE_SEARCH
+                #ifdef DEBUG_TRACE_ZERO
                     if(bTraceEnable) std::cout << "\t\t\t No shortcut" << std::endl;
                 #endif
             }
         }///Otherwise we stay with xb and yb which is bisection
 
-        #ifdef DEBUG_TRACE_SEARCH
+        #ifdef DEBUG_TRACE_ZERO
             if(bTraceEnable) std::cout << "\t\tSelected <xb,yb> = <" << xb << "," << yb << ">" << std::endl;
         #endif
 
@@ -621,7 +621,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
         xb = bisectionStep(x1,x2);
         yb = f(xb);
 
-        #ifdef DEBUG_TRACE_SEARCH
+        #ifdef DEBUG_TRACE_ZERO
             if(bTraceEnable)
             {
                 std::cout << "\tNext (x1,xb,x2) = (" << x1 <<","<< xb <<","<< x2 << ")" << endl;
@@ -630,7 +630,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
         #endif
     }
 
-    #ifdef DEBUG_TRACE_SEARCH
+    #ifdef DEBUG_TRACE_ZERO
         if(bTraceEnable) std::cout << "Done. f(" << round(xb/quantum)*quantum << ") is zero" << endl;
     #endif
 

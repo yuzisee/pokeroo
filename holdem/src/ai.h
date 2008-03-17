@@ -160,7 +160,7 @@ public:
 class WinStats : virtual public PlayStats
 {
 private:
-	short cardsToNextBet;
+	int8 cardsToNextBet;
 	void initW(const int8);
 	void clearDistr();
 protected:

@@ -25,12 +25,13 @@
 
 
 
+#undef DEBUG_TRACE_ZERO
 #undef DEBUG_TRACE_SEARCH
 #undef SINGLETURNINGPOINT
 #define BYPASS_ANOMALIES
 
 
-#ifdef DEBUG_TRACE_SEARCH
+#if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
 #include <iostream>
 #endif
 
@@ -50,12 +51,12 @@ class ScalarFunctionModel
     public:
     float64 quantum;
 
-    #ifdef DEBUG_TRACE_SEARCH
+    #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
     bool bTraceEnable;
     #endif
 
     ScalarFunctionModel(float64 step) : quantum(step)
-    #ifdef DEBUG_TRACE_SEARCH
+    #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
     ,bTraceEnable(false)
     #endif
     {};

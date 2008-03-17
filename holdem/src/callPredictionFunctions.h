@@ -26,8 +26,29 @@
 
 #include "functionbase.h"
 #include "inferentials.h"
+#include <math.h>
+
+#ifndef log1p
+inline float64 log1p(float64 x)
+{
+    return log(1+x);
+}
+#endif
+/*
+#ifndef log1p
+#define log1p( _X_ ) log( (_X_) + 1 )
+#endif
+*/
 
 
+#ifndef round
+#include <cmath>
+inline float64 round(float64 a)
+{
+    return floor(a+0.5);
+}
+
+#endif
 
 
 #define RAREST_HAND_CHANCE 221.0

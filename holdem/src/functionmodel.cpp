@@ -65,6 +65,9 @@ GainModel::~GainModel()
 {
 }
 
+
+
+
 float64 HoldemFunctionModel::FindBestBet()
 {
     const float64 myMoney = e->maxBet();
@@ -663,8 +666,31 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
             fd_yl = left.fd(x,yl);
             fd_yr = right.fd(x,yr);
 
-            y = yl*(1-slider)+yr*slider;
-            dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
+
+            if( AUTOSCALE_TYPE == LOGARITHMIC_AUTOSCALE )
+            {
+                const float64 leftWeight = log1p(1-slider)/log(2.0);
+                const float64 rightWeight = log1p(slider)/log(2.0);
+                y = yl*leftWeight+yr*rightWeight;
+                //y = yl*log(2-slider)/log(2)+yr*log(1+slider)/log(2);
+
+                const float64 d_leftWeight_d_slider = 1.0/(2.0-slider)/log(2.0);
+                const float64 d_rightWeight_d_slider = 1.0/(1.0+slider)/log(2.0);
+                dy = fd_yl*leftWeight - yl*autoSlope*d_leftWeight_d_slider   +   fd_yr*rightWeight + yr*autoSlope*d_rightWeight_d_slider;
+            }else
+            #ifdef DEBUGASSERT
+            if( AUTOSCALE_TYPE == ALGEBRAIC_AUTOSCALE )
+            #endif
+            {
+                y = yl*(1-slider)+yr*slider;
+                dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
+            }
+            #ifdef DEBUGASSERT
+            else{
+                std::cerr << "AutoScale TYPE MUST BE SPECIFIED" << endl;
+				exit(1);
+            }
+            #endif
         }
 
 

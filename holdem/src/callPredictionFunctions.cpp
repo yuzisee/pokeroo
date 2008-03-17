@@ -19,25 +19,14 @@
  ***************************************************************************/
 
 #include "callPredictionFunctions.h"
-#include <math.h>
+
 
 
 
 #undef INLINE_INTEGER_POWERS
 
 
-#ifndef log1p
-#define log1p( _X_ ) log( (_X_) + 1 )
-#endif
 
-#ifndef round
-#include <cmath>
-inline float64 round(float64 a)
-{
-    return floor(a+0.5);
-}
-
-#endif
 
 
 

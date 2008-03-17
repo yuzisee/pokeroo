@@ -316,6 +316,8 @@ class SlidingPairFunction : public virtual HoldemFunctionModel
 }
 ;
 
+enum AutoScaleType { ALGEBRAIC_AUTOSCALE, LOGARITHMIC_AUTOSCALE };
+
 template <class LL, class RR>
 class AutoScalingFunction : public virtual HoldemFunctionModel
 {//NO ASSIGNMENT OPERATOR
@@ -341,20 +343,27 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
         float64 fd_yr;
 
     public:
-		const bool bLeft;
+
+        const AutoScaleType AUTOSCALE_TYPE;
+
+        const bool bLeft;
         LL & left;
         RR & right;
 
-        AutoScalingFunction(LL & f_left, RR & f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c)
+        AutoScalingFunction(LL & f_left, RR & f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c, AutoScaleType type = ALGEBRAIC_AUTOSCALE)
+
             : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.quantum,f_right.quantum), c)
-            , saturate_min(minX), saturate_max(maxX), saturate_upto(1), bLeft( maxX <= minX ), left(f_left), right(f_right){
+            , saturate_min(minX), saturate_max(maxX), saturate_upto(1)
+            , AUTOSCALE_TYPE(type), bLeft( maxX <= minX ), left(f_left), right(f_right){
                 last_x = -1;
                 last_sliderx = -1;
                 //query(0,0);
             }
-        AutoScalingFunction(LL & f_left, RR & f_right, const float64 minX, const float64 maxX, const float64 upto ,ExpectedCallD *c)
+        AutoScalingFunction(LL & f_left, RR & f_right, const float64 minX, const float64 maxX, const float64 upto ,ExpectedCallD *c, AutoScaleType type = ALGEBRAIC_AUTOSCALE)
+
             : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.quantum,f_right.quantum), c)
-            , saturate_min(minX), saturate_max(maxX), saturate_upto(upto), bLeft( maxX <= minX ), left(f_left), right(f_right){
+            , saturate_min(minX), saturate_max(maxX), saturate_upto(upto)
+            , AUTOSCALE_TYPE(type), bLeft( maxX <= minX ), left(f_left), right(f_right){
                 last_x = -1;
                 last_sliderx = -1;
                 //query(0,0);

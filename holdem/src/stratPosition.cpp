@@ -822,14 +822,14 @@ float64 DeterredGainStrategy::MakeBet()
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>
                         , AutoScalingFunction<GainModel,GainModelNoRisk>
                        >
-            ap_passive(hybridgainDeterred,hybridgain,DELAYENEMYOPP,ACTREACTUSES_HD,&myDeterredCall);
+            ap_passive(hybridgainDeterred,hybridgain,DELAYENEMYOPP,ACTREACTUSES_HD,&myDeterredCall,LOGARITHMIC_AUTOSCALE);
 
-    //HoldemFunctionModel * (hybridChoice[2]) =  { &ap_passive, &hybridgainDeterred };
+
 
     StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>
                         , AutoScalingFunction<GainModel,GainModelNoRisk>
                        >
-            ap_aggressive( &myDeterredCall, &ap_passive /*hybridChoice[bGamble]*/ );
+            ap_aggressive( &myDeterredCall, &ap_passive );
 
 
 
@@ -837,9 +837,12 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 ////DEB UG
+/*
+if( ViewTable().GetPotSize() > 1.8 )
+{
 //    const float64 z1 = ap_passive.f(60);
 
-/*
+
 //    const float64 a1 = ap_passive.f_raised(60,90);
 //    const float64 b1 = ap_passive.f_raised(60,150);
     //const float64 z11 = hybridgainDeterred.f(60);
@@ -867,9 +870,16 @@ float64 DeterredGainStrategy::MakeBet()
         //const float64 a12 = hybridgain.f_raised(60,90);
         //const float64 b12 = hybridgain.f_raised(60,150);
     }
+
+    choicemodel.bTraceEnable = true;
+    logFile << endl << "1.62316" << endl;
+	logFile << myDeterredCall.pWin(1.62316) << endl;
+    logFile << choicemodel.f(1.62316) << endl;
+    const float64 bestBet = solveGainModel(&choicemodel);
+    logFile << bestBet << endl;
+    exit(1);
+}
 */
-
-
 
     const float64 bestBet = solveGainModel(&choicemodel);
 
