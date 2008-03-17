@@ -180,18 +180,20 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
     //See if the cache hits
     if( cached_high_index > 0 && cached_high_index < maxsize )
     {
-        low_rank = cumulation[cached_high_index-1].repeated;
-        high_rank = cumulation[cached_high_index].repeated;
+        const float64 cache_low_rank = cumulation[cached_high_index-1].repeated;
+        const float64 cache_high_rank = cumulation[cached_high_index].repeated;
         //High index should be just above the desired rank
         //Low index should be just below
         if( high_rank > rank_toHave )
         {
-            high_index = cached_high_index;
+            high_rank = cache_high_rank;
+			high_index = cached_high_index;
         }
 
         if( low_rank < rank_toHave )
         {//as if guess_rank < rank_toHave
-            low_index = cached_high_index - 1;
+            low_rank = cache_low_rank;
+			low_index = cached_high_index - 1;
         }
     }
 
