@@ -1087,6 +1087,8 @@ float64 ExactCallBluffD::RiskPrice()
     const float64 maxStack = table->GetAllChips();
     const float64 maxShowdown = table->GetMaxShowdown(table->ViewPlayer(playerID)->GetMoney());
 
+	//FG.bTraceEnable = true;
+    
     FG.waitLength.w = ea->nearest_winPCT_given_rank(1.0 - 1.0/Ne); //If you're past the flop, we need definitely consider only the true number of opponents
     FG.waitLength.amountSacrifice = estSacrifice; //rarity() already implies the Ne
     FG.waitLength.bankroll = maxStack;

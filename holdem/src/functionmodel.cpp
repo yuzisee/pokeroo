@@ -631,10 +631,16 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
 
     if( bLeft )
     {
+
         yl = left.f(x);
         fd_yl = left.fd(x,yl);
 
         y = yl; dy = fd_yl;
+
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t\tbLeft" << std::flush;
+        #endif
+
     }else
     {
 
@@ -650,6 +656,10 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
         {
             y = right.f(x);
             dy = right.fd(x, yr);
+
+			#ifdef DEBUG_TRACE_SEARCH
+				if(bTraceEnable) std::cout << "\t\t\tbMax" << std::flush;
+			#endif
         }
         else if( slider <= 0 )
         {
@@ -657,6 +667,10 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
             fd_yl = left.fd(x,yl);
 
             y = yl; dy = fd_yl;
+
+			#ifdef DEBUG_TRACE_SEARCH
+				if(bTraceEnable) std::cout << "\t\t\tbMin" << std::flush;
+			#endif
         }
         else
         {
@@ -671,12 +685,12 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
             {
 				const float64 rightWeight = log1p(slider)/log(2.0);
                 const float64 leftWeight = 1 - rightWeight;
-                
+
                 y = yl*leftWeight+yr*rightWeight;
                 //y = yl*log(2-slider)/log(2)+yr*log(1+slider)/log(2);
 
                 const float64 d_rightWeight_d_slider = 1.0/(slider)/log(2.0);
-                
+
                 dy = fd_yl*leftWeight - yl*autoSlope*d_rightWeight_d_slider   +   fd_yr*rightWeight + yr*autoSlope*d_rightWeight_d_slider;
             }else
             #ifdef DEBUGASSERT
@@ -685,6 +699,11 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
             {
                 y = yl*(1-slider)+yr*slider;
                 dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
+
+			#ifdef DEBUG_TRACE_SEARCH
+				if(bTraceEnable) std::cout << "\t\t\t y = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
+				if(bTraceEnable) std::cout << "\t\t\t dy = " << fd_yl << " * " << (1-slider) << " - " <<  yl << " * " << autoSlope << " + " <<  fd_yr << " * " << slider << " + " <<  yr << " * " << autoSlope << std::endl;
+			#endif
             }
             #ifdef DEBUGASSERT
             else{

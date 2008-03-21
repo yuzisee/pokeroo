@@ -288,9 +288,9 @@ void FoldGainModel::query( const float64 betSize )
     #ifdef DEBUG_TRACE_SEARCH
         if(bTraceEnable)
         {
-             std::cout << "\t\t\t\tBasicSolution n=" << n << " based on rarity " << waitLength.rarity() << std::endl;
-             std::cout << "\t\t\t\tCompare (n_below,gain_below)=" << "(" << n_below << "," << gain_below << ")" << std::endl;
-             std::cout << "\t\t\t\tCompare (n_above,gain_above)=" << "(" << n_above << "," << gain_above << ")" << std::endl;
+             std::cout << std::endl << "\t\t\t\tBasicSolution n(betSize=" << betSize << ")=" << n << " based on rarity " << waitLength.rarity() << std::endl;
+             std::cout << "\t\t\t\tCompare (n_below,gain_below)=" << "(" << n_below << ", " << gain_below << ")" << std::endl;
+             std::cout << "\t\t\t\tCompare (n_above,gain_above)=" << "(" << n_above << ", " << gain_above << ")" << std::endl;
         }
     #endif
 

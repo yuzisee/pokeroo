@@ -656,10 +656,58 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 			std::cerr << "DEBUG QUIT" << endl;
 			exit(0);
 		}
+    
+
+		choicemodel.bTraceEnable = true;
+//		const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
+
+		const float64 y1 = choicemodel.f(0.45);
+		const float64 dy1 = choicemodel.fd(0.45,y1);
+		const float64 y2 = choicemodel.f(115.04);
+		const float64 dy2 = choicemodel.fd(115.04,y1);
+//		logFile << bestBet << endl;
+		std::cout << y1 << " " << y2 << endl;
+		std::cout << dy1 << " " << dy2 << endl;
 
 
-    }
+		std::cout << "riskprice @ " << riskprice << endl;
+hybridgainDeterred_aggressive.bTraceEnable = true;
+
+		const float64 ay1 = ap_right.f(0.45);
+		const float64 ady1 = ap_right.fd(0.45,ay1);
+		
+		const float64 by1 = hybridgainDeterred_aggressive.f(0.45);
+		const float64 bdy1 = hybridgainDeterred_aggressive.fd(0.45,by1);
+
+		const float64 cy1 = hybridgain_aggressive.f(0.45);
+		const float64 cdy1 = hybridgain_aggressive.fd(0.45,by1);
+
+
+		std::cout << ay1 << "   <-- ap_right" << endl;
+		std::cout << ady1 << "   <-- ap_right" << endl;
+		std::cout << by1 << "   <-- lowbet" << endl;
+		std::cout << bdy1 << "   <-- lowbet" << endl;
+		std::cout << cy1 << "   <-- fearbet" << endl;
+		std::cout << cdy1 << "   <-- fearbet" << endl;
+
+		const float64 ey1 = geomModel.f(0.45);
+		const float64 edy1 = geomModel.fd(0.45,ey1);
+		const float64 jy1 = algbModel.f(0.45);
+		const float64 jdy1 = algbModel.fd(0.45,jy1);
+
+
+		std::cout << ey1 << "   <-- geomlow" << endl;
+		std::cout << edy1 << "   <-- geomlow" << endl;
+		std::cout << jy1 << "   <-- algblow" << endl;
+		std::cout << jdy1 << "   <-- algblow" << endl;
+
+		exit(1);
+	}
 */
+
+		
+
+
 
     const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
 

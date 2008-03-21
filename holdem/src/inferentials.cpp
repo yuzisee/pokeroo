@@ -456,7 +456,7 @@ StatResult CallCumulation::oddsAgainstBestTwoHands() const
     {
         //retValA.repeated = 1 - cumulation[cumulation.size()-3].repeated;
         //retValB.repeated = 1 - cumulation[cumulation.size()-3].repeated;
-        retVal.repeated = = 1 - cumulation[cumulation.size()-3].repeated;
+        retVal.repeated = 1 - cumulation[cumulation.size()-3].repeated;
     }else
     {
         retVal.repeated = 1;
