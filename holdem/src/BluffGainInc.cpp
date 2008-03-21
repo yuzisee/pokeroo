@@ -18,10 +18,66 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "functionmodel.h"
 
-//This file is used as a multi-line macro expansion
+#define RAISED_PWIN
 
-last_x = betSize;
+
+template class StateModel<GainModel,GainModelNoRisk>;
+template class StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >;
+template class StateModel<GainModel,GainModel>;
+template class StateModel<GainModelNoRisk,GainModelNoRisk>;
+
+
+template <class LL, class RR>
+StateModel<LL,RR>::~StateModel()
+{
+    if( bSingle && fp != 0 )
+    {
+        delete fp;
+    }
+}
+
+
+template <class LL, class RR>
+float64 StateModel<LL,RR>::g_raised(float64 raisefrom, const float64 betSize)
+{
+    return fp->f_raised(raisefrom, betSize) + e->foldGain();
+}
+
+template <class LL, class RR>
+float64 StateModel<LL,RR>::gd_raised(float64 raisefrom, const float64 betSize, const float64 y)
+{
+    return fp->fd_raised(raisefrom, betSize, y-e->foldGain());
+}
+
+template <class LL, class RR>
+float64 StateModel<LL,RR>::f(const float64 betSize)
+{
+    if( last_x != betSize )
+    {
+
+        query(betSize);
+    }
+    return y;
+}
+
+template <class LL, class RR>
+float64 StateModel<LL,RR>::fd(const float64 betSize, const float64 y)
+{
+    if( last_x != betSize )
+    {
+        query(betSize);
+    }
+    return dy;
+}
+
+template <class LL, class RR>
+void StateModel<LL,RR>::query( const float64 betSize )
+{
+
+
+    last_x = betSize;
     const float64 invisiblePercent = quantum / ea->allChips();
 
 ///Establish [PushGain] values
@@ -132,3 +188,54 @@ last_x = betSize;
         potNormalWinD = 0;
     }
 
+
+
+
+
+///Calculate factors
+	const float64 gainWithFold = pow(potFoldWin , oppFoldChance);
+	const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
+	const float64 gainNormal =  pow( potNormalWin,playChance );
+	float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
+    float64 gainRaised = 1;
+    float64 gainRaisedlnD = 0;
+    for( int32 i=0;i<arraySize;++i )
+    {
+        gainRaised *= pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
+
+        if( raiseAmount_A[i] >= ea->maxBet() )
+        {
+            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g_raised(betSize,raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g_raised(betSize,raiseAmount_A[i]-quantum/2) );
+        }else
+        {
+            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
+        }
+    }
+
+
+	if( betSize >= ea->maxBet() )
+	{
+		gainNormallnD = playChance*potNormalWinD/g_raised(betSize,betSize-quantum/2) + playChanceD*log(g_raised(betSize,betSize-quantum/2));
+	}
+
+
+
+///Store results
+    y = gainWithFold*gainNormal*gainRaised;
+
+    dy = (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
+
+    y -= e->foldGain();
+
+
+    delete [] raiseAmount_A;
+
+    delete [] oppRaisedChance_A;
+    delete [] oppRaisedChanceD_A;
+
+
+    delete [] potRaisedWin_A;
+    delete [] potRaisedWinD_A;
+
+
+}

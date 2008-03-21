@@ -26,7 +26,7 @@
 
 
 #undef DEBUG_TRACE_ZERO
-#undef DEBUG_TRACE_SEARCH
+#define DEBUG_TRACE_SEARCH
 
 #undef SINGLETURNINGPOINT
 #define BYPASS_ANOMALIES
@@ -40,7 +40,7 @@ class ScalarFunctionModel
 {
     private:
         #ifndef SINGLETURNINGPOINT
-        float64 SplitTurningPoint(float64 x1,float64 y1,float64 xb,float64 yb,float64 xn,float64 yn,float64 x2,float64 y2,float64 signDir);
+        float64 SplitTurningPoint(float64 x1, float64 xb, float64 xn, float64 x2, float64 signDir);
         #endif
     protected:
         float64 trisectionStep(float64,float64,float64,float64,float64,float64) const;

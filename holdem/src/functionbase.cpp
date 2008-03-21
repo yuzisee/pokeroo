@@ -122,7 +122,13 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 
 
         #ifdef DEBUG_TRACE_SEARCH
-            if(bTraceEnable) std::cout << "\t\t\t(xb,yb)=" << xb <<","<< yb << endl;
+			if(bTraceEnable)
+			{
+				std::streamsize olprec = std::cout.precision();
+				std::cout.precision(16);
+				std::cout << "\t\t\t(xb,yb)=" << xb <<","<< yb << endl;
+				std::cout.precision(olprec);
+			}
         #endif
 
 	if( yb <= y1 && yb <= y2)
@@ -188,7 +194,7 @@ float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
 	return FindTurningPoint(x1, y1, xb, yb, x2, y2, -1);
 }
 
-float64 ScalarFunctionModel::SplitTurningPoint(float64 x1, float64 y1, float64 xa, float64 ya, float64 xb, float64 yb, float64 x2, float64 y2, float64 signDir)
+float64 ScalarFunctionModel::SplitTurningPoint(float64 x1, float64 xa, float64 xb, float64 x2, float64 signDir)
 {
         #ifdef DEBUG_TRACE_SEARCH
             if(bTraceEnable) std::cout << "\t\tSplit <" << x1 << "," << xa << "," << xb << "," << x2 << ">" << std::endl;
@@ -269,7 +275,7 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 		#else
         xn = trisectionStep(x1,y1,xb,yb,x2,y2);
         yn = f(xn);
-        return SplitTurningPoint(x1,y1,xn,yn,xb,yb,x2,y2,signDir);
+        return SplitTurningPoint(x1, xn, xb ,x2 ,signDir);
 		#endif
 	}
 
@@ -472,7 +478,7 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
                 #endif
             #else
             //Then don't SINGLE_TURNING_POINT
-                return SplitTurningPoint(x1,y1,xn,yn,xb,yb,x2,y2,signDir);
+                return SplitTurningPoint(x1, xn, xb, x2, signDir);
             #endif
 
         }
