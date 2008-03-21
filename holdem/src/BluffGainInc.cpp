@@ -124,7 +124,7 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
                 dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
 
 			#ifdef DEBUG_TRACE_SEARCH
-				if(bTraceEnable) std::cout << "\t\t\t y = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
+				if(bTraceEnable) std::cout << "\t\t\t y(" << x << ") = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
 				if(bTraceEnable) std::cout << "\t\t\t dy = " << fd_yl << " * " << (1-slider) << " - " <<  yl << " * " << autoSlope << " + " <<  fd_yr << " * " << slider << " + " <<  yr << " * " << autoSlope << std::endl;
 			#endif
             }

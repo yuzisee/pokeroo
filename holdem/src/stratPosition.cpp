@@ -606,20 +606,32 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 
 		std::cout << "riskprice @ " << riskprice << endl;
 
-choicemodel.bTraceEnable = true;
+        #ifdef DEBUG_TRACE_DEXF
+//            myDeterredCall_right.traceOut = &(std::cout);
+		#endif
 
+algbModel.bTraceEnable = true;
+ap.bTraceEnable = true;
+hybridgainDeterred_aggressive.bTraceEnable = true;
+
+        const float64 gr1 = choicemodel.g_raised(0.44,0.9);
+		const float64 gdr1 = choicemodel.gd_raised(0.44,0.9, gr1);
+
+
+		std::cout << gdr1 << "  <-- d with raiseamount 0.9" << endl;
+
+
+/*
 		const float64 y1 = choicemodel.f(0.44);
 		const float64 dy1 = choicemodel.fd(0.44,y1);
 		//const float64 y2 = choicemodel.f(115.05);
 		//const float64 dy2 = choicemodel.fd(115.05,y1);
 
-//		const gdr1 = choicemodel.gd_raised(
 
 		std::cout << y1 << " <-- choicemodel.f(0.44)" << endl;
-		std::cout << dy1 << endl;
+		std::cout << dy1 << " <-- d choicemodel.f(0.44)" << endl;
 
 
-/*
 		const float64 ay1 = ap.f(0.44);
 		const float64 ady1 = ap.fd(0.44,ay1);
 

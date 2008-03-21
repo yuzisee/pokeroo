@@ -24,11 +24,18 @@
 
 //#define DEBUG_CALLPRED_FUNCTION
 #undef DEBUG_TRACE_PWIN
+#undef DEBUG_TRACE_DEXF
 
 #include "callPredictionFunctions.h"
 #include "callSituation.h"
 
-#ifdef DEBUG_TRACE_PWIN
+#if defined(DEBUG_TRACE_PWIN) || defined(DEBUG_TRACE_DEXF)
+#define DEBUG_TRACE_EXACTCALL
+#else
+#undef DEBUG_TRACE_EXACTCALL
+#endif
+
+#ifdef DEBUG_TRACE_EXACTCALL
 #include <iostream>
 #endif
 
@@ -91,7 +98,7 @@ class ExactCallD : public virtual ExpectedCallD
         void query(const float64 betSize);
     public:
 
-#ifdef DEBUG_TRACE_PWIN
+#ifdef DEBUG_TRACE_EXACTCALL
 		std::ostream * traceOut;
 #endif
 
@@ -109,7 +116,7 @@ class ExactCallD : public virtual ExpectedCallD
 ,geomFunction(0.5/RAREST_HAND_CHANCE,data)
 #endif
                     ,noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
-#ifdef DEBUG_TRACE_PWIN
+#ifdef DEBUG_TRACE_EXACTCALL
 					,traceOut(0)
 #endif
             {

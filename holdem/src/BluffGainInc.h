@@ -108,9 +108,12 @@ class StateModel : public virtual HoldemFunctionModel
 
 
 
-        float64 gd_raised(float64 raisefrom, float64, const float64);
-
+    #ifdef DEBUG_TRACE_SEARCH
     public:
+    #endif
+    float64 gd_raised(float64 raisefrom, float64, const float64);
+    public:
+
     float64 g_raised(float64 raisefrom, float64);
 
     StateModel(ExactCallBluffD *c, AutoScalingFunction<LL,RR> *function) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)

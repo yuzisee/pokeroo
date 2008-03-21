@@ -497,6 +497,10 @@ void ExactCallD::query(const float64 betSize)
     //float64 lastdexf = totaldexf;
 
 
+    #ifdef DEBUG_TRACE_DEXF
+            if( traceOut != 0 ) *traceOut << "Begin Query with mydexf " << mydexf << endl;
+    #endif
+
 
     noRaiseArraySize = 0;
     while( RaiseAmount(betSize,noRaiseArraySize) < maxBet() )
@@ -527,6 +531,15 @@ void ExactCallD::query(const float64 betSize)
     table->incrIndex(pIndex);
     while( pIndex != playerID )
     {
+
+        #ifdef DEBUG_TRACE_DEXF
+		if( traceOut != 0 )
+		{
+			*traceOut << "totaldexf is " << totaldexf  << endl;
+			*traceOut << "\tPlayer " << (int)pIndex;
+		}
+		#endif
+
         float64 nextexf = 0;
         float64 nextdexf = 0;
 
@@ -622,10 +635,18 @@ void ExactCallD::query(const float64 betSize)
                 const float64 oppBetMake = betSize - oppBetAlready;
 				//To understand the above, consider that totalexf includes already made bets
 
+                #ifdef DEBUG_TRACE_DEXF
+                if( traceOut != 0 )  *traceOut << " to bet " << oppBetMake << "more";
+                #endif
+
                 if( oppBetMake <= 0 )
                 { //Definitely call
                     nextexf = 0;
                     nextdexf = 1;
+
+                    #ifdef DEBUG_TRACE_DEXF
+                    if( traceOut != 0 )  *traceOut << " ALREADY CALLED" << endl ;
+                    #endif
                 }else
                 {
 
@@ -642,6 +663,10 @@ void ExactCallD::query(const float64 betSize)
                     {
                         nearest = oppBetAlready + nextexf;
                     }
+
+                    #ifdef DEBUG_TRACE_DEXF
+                    if( traceOut != 0 )  *traceOut << " nextdexf=" << nextdexf << endl;
+                    #endif
 
                 }
 				//End of else, blocked executed UNLESS oppBetMake <= 0
@@ -665,6 +690,10 @@ void ExactCallD::query(const float64 betSize)
 
                 nextdexf = 0;
 
+                    #ifdef DEBUG_TRACE_DEXF
+                    if( traceOut != 0 )  *traceOut << " Is ALL IN" << endl;
+                    #endif
+
 				//Obviously the opponent won't raise...  ie. NoRaise = 100%
 				// (nextNoRaise , nextNoRaiseD ) is already (1,0)
             }
@@ -673,8 +702,17 @@ void ExactCallD::query(const float64 betSize)
             //lastexf = nextexf;
             totalexf += nextexf;
 
+                    #ifdef DEBUG_TRACE_DEXF
+                    if( traceOut != 0 )  *traceOut << "totaldexf was " << totaldexf;
+                    #endif
+
             //lastdexf = nextdexf;
             totaldexf += nextdexf;
+
+
+                    #ifdef DEBUG_TRACE_DEXF
+                    if( traceOut != 0 )  *traceOut << " is " << totaldexf << ",  last added " << nextdexf << endl;
+                    #endif
 
         }
 
@@ -1088,7 +1126,7 @@ float64 ExactCallBluffD::RiskPrice()
     const float64 maxShowdown = table->GetMaxShowdown(table->ViewPlayer(playerID)->GetMoney());
 
 	//FG.bTraceEnable = true;
-    
+
     FG.waitLength.w = ea->nearest_winPCT_given_rank(1.0 - 1.0/Ne); //If you're past the flop, we need definitely consider only the true number of opponents
     FG.waitLength.amountSacrifice = estSacrifice; //rarity() already implies the Ne
     FG.waitLength.bankroll = maxStack;

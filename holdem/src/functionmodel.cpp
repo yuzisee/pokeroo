@@ -420,6 +420,7 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 
     const float64 adjQuantum = quantum/4;
 
+
 	if( betSize > e->callBet()+adjQuantum && betSize < e->minRaiseTo()-adjQuantum )
 	{
 		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
@@ -457,8 +458,14 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
         }///Else you'd just {savd+=0;} anyways
 	}
 
- 	return
 
+
+			#ifdef DEBUG_TRACE_SEARCH
+				if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
+			#endif
+
+
+ 	return
 	(
 	p_cw*dexf
 	-
