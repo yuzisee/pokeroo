@@ -21,7 +21,7 @@
 #include "functionbase.h"
 #include <iostream>
 #include <math.h>
-
+#include <float.h>
 
 using std::endl;
 
@@ -273,12 +273,17 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 		#endif
 	}
 
-    float64 dy1 = 0;
-    float64 dy2 = 0;
-    float64 dyb = 0;
+	bool bSlopes = false;
+    float64 dy1;
+    float64 dy2;
+    float64 dyb;
+
     while( (y1-yb)*(y2-yb) < 0 && x2 - x1 > quantum/2)
     {   ///(y1-yb) and (y2-yb) have different signs
         ///therefore y1 and y2 are OPPOSITE vertical directions from yb.
+
+        dyb = fd(xb,yb);
+
 		if( y1*signDir > y2*signDir ) ///y1 is closer
 		{
 			x2 = xb;
@@ -294,12 +299,14 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 
         ++stepMode;
         stepMode %= 3;
-        if( stepMode > 0 && dy1 == dyb && dy2 == dyb && dyb == 0)
-        {
-            dy1 = fd(x1,y1);
-            dy2 = fd(x2,y2);
-        }
 
+
+        if( !bSlopes )
+		{
+			dy1 = fd(x1,y1);
+			dy2 = fd(x2,y2);
+			bSlopes = true;
+		}
 
         //Newton step:
         //  f1 = y1 + (x-x1)*dy1
@@ -310,6 +317,11 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
         //Old: const float64 xb = fabs((dy2*x1 - dy1*x2)/(dy2-dy1));
         //Old: if dy2*dy1 <= 0 && fabs((dy2 - dy1)/dy2) >= fabs(quantum/2/(x2 - x1))
 
+
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t\tNewton <newtonxb, dy1,dy2> <" << newtonxb << ", " << dy1 << "," << dy2 << ">" << std::endl;
+        #endif
+
         if( stepMode > 0 && newtonxb < x2 - quantum/2 && newtonxb > x1 + quantum/2 )
         {
             xb = newtonxb;
@@ -319,16 +331,20 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
         }
 
 		yb = f(xb);
-		if(!( dy1 == dyb && dy2 == dyb && dyb == 0 ))
-		{
-		    dyb = fd(xb,yb);
-		}
+
 
         #ifdef DEBUG_TRACE_SEARCH
             if(bTraceEnable) std::cout << "\t\t\tSlide x<" << x1 << "," << xb << "," << x2 << ">  y<" << y1 << "," << yb << "," << y2 << ">" << std::endl;
         #endif
 	}
 
+    if( !bSlopes )
+    {
+        dy1 = fd(x1,y1);
+        dy2 = fd(x2,y2);
+        //bSlopes = true;
+    }
+    dyb = fd(xb,yb);
 
     while(x2 - x1 > quantum/2)
     {
@@ -371,11 +387,11 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
                     const float64 dyb = f(xb);
                     const float64 dyn = f(xn);
 
-                    if( dyb == 0 )
+                    if( fabs(dyb) < DBL_EPSILON )
                     {
                         return xb;
                     }
-                    if( dyn == 0 )
+                    if( fabs(dyn) < DBL_EPSILON )
                     {
                         return yn;
                     }
@@ -605,7 +621,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
             if(bTraceEnable) std::cout << "\t\tSelected <xb,yb> = <" << xb << "," << yb << ">" << std::endl;
         #endif
 
-        if( yb == 0 ) return xb;
+        if( fabs(yb) < DBL_EPSILON ) return xb;
 
         if( yb*y1 > 0 ) //same sign as y1
         {
