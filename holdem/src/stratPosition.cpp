@@ -602,7 +602,7 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 		choicemodel.bTraceEnable = true;
 		const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
 		logFile << bestBet << endl;
-*/		    
+*/
 
 		std::cout << "riskprice @ " << riskprice << endl;
 
@@ -613,14 +613,16 @@ choicemodel.bTraceEnable = true;
 		//const float64 y2 = choicemodel.f(115.05);
 		//const float64 dy2 = choicemodel.fd(115.05,y1);
 
+//		const gdr1 = choicemodel.gd_raised(
+
 		std::cout << y1 << " <-- choicemodel.f(0.44)" << endl;
 		std::cout << dy1 << endl;
 
-		
+
 /*
 		const float64 ay1 = ap.f(0.44);
 		const float64 ady1 = ap.fd(0.44,ay1);
-		
+
 		const float64 by1 = hybridgainDeterred_aggressive.f(0.44);
 		const float64 bdy1 = hybridgainDeterred_aggressive.fd(0.44,by1);
 
@@ -697,7 +699,7 @@ choicemodel.bTraceEnable = true;
 
 hybridgainDeterred_aggressive.bTraceEnable = true;
 
-		
+
 
 		const float64 ey1 = geomModel.f(0.45);
 		const float64 edy1 = geomModel.fd(0.45,ey1);
@@ -714,7 +716,7 @@ hybridgainDeterred_aggressive.bTraceEnable = true;
 	}
 
 
-		
+
 
 
 

@@ -18,15 +18,170 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "functionmodel.h"
+#include "BluffGainInc.h"
 
 #define RAISED_PWIN
+
+
+
+
+template class AutoScalingFunction<GainModel,GainModelNoRisk>;
+template class AutoScalingFunction<GainModel,GainModel>;
+template class AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>;
+
+template class AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >;
+
+template class AutoScalingFunction<   StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
+                                      , StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
+                                    >;
+
+
 
 
 template class StateModel<GainModel,GainModelNoRisk>;
 template class StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >;
 template class StateModel<GainModel,GainModel>;
 template class StateModel<GainModelNoRisk,GainModelNoRisk>;
+
+
+
+template<class LL, class RR>
+void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
+{
+
+    last_x = x;
+    last_sliderx = sliderx;
+
+    if( bLeft )
+    {
+
+        yl = left.f(x);
+        fd_yl = left.fd(x,yl);
+
+        y = yl; dy = fd_yl;
+
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t\tbLeft" << std::flush;
+        #endif
+
+    }else
+    {
+
+
+        const float64 autoSlope = saturate_upto / (saturate_max - saturate_min) ;
+        const float64 slider = (sliderx - saturate_min) * autoSlope ;
+
+        //std::cerr << autoSlope << endl;
+        //std::cerr << slider << endl;
+
+
+        if( slider >= 1 )
+        {
+            y = right.f(x);
+            dy = right.fd(x, yr);
+
+			#ifdef DEBUG_TRACE_SEARCH
+				if(bTraceEnable) std::cout << "\t\t\tbMax" << std::flush;
+			#endif
+        }
+        else if( slider <= 0 )
+        {
+            yl = left.f(x);
+            fd_yl = left.fd(x,yl);
+
+            y = yl; dy = fd_yl;
+
+			#ifdef DEBUG_TRACE_SEARCH
+				if(bTraceEnable) std::cout << "\t\t\tbMin" << std::flush;
+			#endif
+        }
+        else
+        {
+            yl = left.f(x);
+            yr = right.f(x);
+
+            fd_yl = left.fd(x,yl);
+            fd_yr = right.fd(x,yr);
+
+
+            if( AUTOSCALE_TYPE == LOGARITHMIC_AUTOSCALE )
+            {
+				const float64 rightWeight = log1p(slider)/log(2.0);
+                const float64 leftWeight = 1 - rightWeight;
+
+                y = yl*leftWeight+yr*rightWeight;
+                //y = yl*log(2-slider)/log(2)+yr*log(1+slider)/log(2);
+
+                const float64 d_rightWeight_d_slider = 1.0/(slider)/log(2.0);
+
+                dy = fd_yl*leftWeight - yl*autoSlope*d_rightWeight_d_slider   +   fd_yr*rightWeight + yr*autoSlope*d_rightWeight_d_slider;
+            }else
+            #ifdef DEBUGASSERT
+            if( AUTOSCALE_TYPE == ALGEBRAIC_AUTOSCALE )
+            #endif
+            {
+                y = yl*(1-slider)+yr*slider;
+                dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
+
+			#ifdef DEBUG_TRACE_SEARCH
+				if(bTraceEnable) std::cout << "\t\t\t y = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
+				if(bTraceEnable) std::cout << "\t\t\t dy = " << fd_yl << " * " << (1-slider) << " - " <<  yl << " * " << autoSlope << " + " <<  fd_yr << " * " << slider << " + " <<  yr << " * " << autoSlope << std::endl;
+			#endif
+            }
+            #ifdef DEBUGASSERT
+            else{
+                std::cerr << "AutoScale TYPE MUST BE SPECIFIED" << endl;
+				exit(1);
+            }
+            #endif
+        }
+
+
+    }
+}
+
+template<class LL, class RR>
+float64 AutoScalingFunction<LL,RR>::f(const float64 x)
+{
+    if( last_x != x || last_sliderx != x)
+    {
+        query(x,x);
+    }
+    return y;
+}
+
+template<class LL, class RR>
+float64 AutoScalingFunction<LL,RR>::fd(const float64 x, const float64 y_dummy)
+{
+    if( last_x != x || last_sliderx != x)
+    {
+        query(x,x);
+    }
+    return dy;
+}
+
+template<class LL, class RR>
+float64 AutoScalingFunction<LL,RR>::f_raised(float64 sliderx, const float64 x)
+{
+    if( last_x != x || last_sliderx != sliderx)
+    {
+        query(sliderx,x);
+    }
+    return y;
+}
+
+template<class LL, class RR>
+float64 AutoScalingFunction<LL,RR>::fd_raised(float64 sliderx, const float64 x, const float64 y_dummy)
+{
+    if( last_x != x || last_sliderx != sliderx)
+    {
+        query(sliderx,x);
+    }
+    return dy;
+}
+
+
+
 
 
 template <class LL, class RR>
@@ -169,7 +324,7 @@ void StateModel<LL,RR>::query( const float64 betSize )
     float64 potNormalWin = g_raised(betSize,betSize);
     float64 potNormalWinD = gd_raised(betSize,betSize,potNormalWin);
 
-    if( playChance <= 0 ) //roundoff, but {playChance == 0} is push-fold for the opponent
+    if( playChance <= invisiblePercent ) //roundoff, but {playChance == 0} is push-fold for the opponent
     {
         //Correct other odds
         const float64 totalChance = 1 - playChance;
@@ -203,13 +358,20 @@ void StateModel<LL,RR>::query( const float64 betSize )
     {
         gainRaised *= pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
 
-        if( raiseAmount_A[i] >= ea->maxBet() )
-        {
-            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g_raised(betSize,raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g_raised(betSize,raiseAmount_A[i]-quantum/2) );
-        }else
-        {
-            gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
-        }
+		if( oppRaisedChance_A[i] >= invisiblePercent )
+		{
+			#ifdef DEBUG_TRACE_SEARCH
+				if(bTraceEnable) std::cout << "\t\t\t(potRaisedWinD_A[" << i << "] , oppRaisedChanceD_A[" << i << "] , log...) = " << potRaisedWinD_A[i] << " , " << oppRaisedChanceD_A[i] << " , " <<  log( g_raised(betSize,raiseAmount_A[i]-quantum/2) ) << std::endl;
+			#endif
+
+			if( raiseAmount_A[i] >= ea->maxBet()-quantum/2 )
+			{
+				gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g_raised(betSize,raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g_raised(betSize,raiseAmount_A[i]-quantum/2) );
+			}else
+			{
+				gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
+			}
+		}
     }
 
 
@@ -219,6 +381,9 @@ void StateModel<LL,RR>::query( const float64 betSize )
 	}
 
 
+		#ifdef DEBUG_TRACE_SEARCH
+			if(bTraceEnable) std::cout << "\t\t (gainWithFoldlnD+gainNormallnD+gainRaisedlnD) = " << gainWithFoldlnD << " + " << gainNormallnD << " + " <<  gainRaisedlnD << std::endl;
+		#endif
 
 ///Store results
     y = gainWithFold*gainNormal*gainRaised;

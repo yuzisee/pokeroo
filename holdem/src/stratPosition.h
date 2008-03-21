@@ -21,7 +21,7 @@
 #ifndef HOLDEM_PositionalStrat
 #define HOLDEM_PositionalStrat
 
-#include "functionmodel.h"
+#include "BluffGainInc.h"
 #include "stratSearch.h"
 #include "ai.h"
 
