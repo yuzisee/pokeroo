@@ -346,15 +346,15 @@ void FacedOddsCallGeom::query( const float64 w )
     lastW = w;
 
     FG.waitLength.w = w;
-
+//Chip scale
     const float64 fw = pow(w,FG.waitLength.opponents);
     const float64 U = pow(B+pot,fw)*pow(B-outsidebet,1-fw);
 
-    lastF = U - 1 - FG.f(outsidebet);
+    lastF = U - B - FG.f(outsidebet);
 
     const float64 dfw = FG.waitLength.opponents*pow(w,FG.waitLength.opponents-1);
     const float64 dU_dw = dfw*log1p((pot+outsidebet)/(B-outsidebet)) * U;
-    //base = (B+pot)/(B-humanbet); = 1 + (pot+humanbet)/(B-humanbet);
+    
 
     lastFD = dU_dw;
     if( FG.n > 0 )
@@ -383,7 +383,7 @@ void FacedOddsAlgb::query( const float64 w )
     lastW = w;
 
     FG.waitLength.w = w;
-
+//Chip scale
     const float64 fw = pow(w,FG.waitLength.opponents);
     const float64 U = (pot + betSize)*fw;
 
@@ -424,7 +424,7 @@ void FacedOddsRaiseGeom::query( const float64 w )
     lastW = w;
 
     FG.waitLength.w = w;
-
+//Fraction scale
     const float64 fw = pow(w,FG.waitLength.opponents);
 
     const float64 U = pow(1 + pot/FG.waitLength.bankroll  , fw)*pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
