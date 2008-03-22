@@ -24,7 +24,7 @@
 #include <iostream>
 
 
- const float64 HoldemArena::BASE_CHIP_COUNT = 100;
+// const float64 HoldemArena::BASE_CHIP_COUNT = 100;
  const float64 HoldemArena::FOLDED = -1;
  const float64 HoldemArena::INVALID = -2;
 
@@ -278,11 +278,6 @@ void HoldemArena::saveState()
 }
 #endif
 
-int8 HoldemArena::AddHuman(const char* const id, PlayerStrategy* newStrat)
-{
-	return AddHuman(id, BASE_CHIP_COUNT, newStrat);
-}
-
 int8 HoldemArena::AddHuman(const char* const id, const float64 money, PlayerStrategy* newStrat)
 {
     int8 newID = AddPlayer(id, money, newStrat);
@@ -290,11 +285,6 @@ int8 HoldemArena::AddHuman(const char* const id, const float64 money, PlayerStra
     p[newID]->bSync = true;
     #endif
     return newID;
-}
-
-int8 HoldemArena::AddBot(const char* const id, PlayerStrategy* newStrat)
-{
-	return AddBot(id, BASE_CHIP_COUNT, newStrat);
 }
 
 int8 HoldemArena::AddBot(const char* const id, const float64 money, PlayerStrategy* newStrat)

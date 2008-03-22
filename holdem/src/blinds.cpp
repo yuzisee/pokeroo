@@ -52,6 +52,15 @@ bool GeomPlayerBlinds::PlayerEliminated()
     return true;
 }
 
+
+bool StackPlayerBlinds::PlayerEliminated()
+{
+	--playerNum;
+	myBigBlind = (totalChips/playerNum)*blindRatio;
+	mySmallBlind = myBigBlind/2.0;
+    return true;
+}
+
 bool AlgbHandBlinds::HandPlayed(float64 timepassed)
 {
 	++since;

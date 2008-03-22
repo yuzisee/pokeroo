@@ -460,6 +460,8 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         bLoadGame = true;
     }
 
+	const float64 AUTO_CHIP_COUNT = 100.0;
+
     uint32 blindIncrFreq = 40;
     uint32 tokenRandomizer;
     const float64 startingMoney= 1500;
@@ -517,10 +519,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
     }else
     {
-        smallBlindChoice=.05;//0.025;
+        smallBlindChoice=AUTO_CHIP_COUNT/200;
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
-	GeomPlayerBlinds bg(b.SmallBlind(),b.BigBlind(),2.2,2.2);
+	StackPlayerBlinds bg(AUTO_CHIP_COUNT, 9, b.BigBlind() / startingMoney);
     SitAndGoBlinds sg(b.SmallBlind(),b.BigBlind(),blindIncrFreq);
 		#ifdef REGULARINTOLOG
             std::ios::openmode gamelogMode = std::ios::trunc;
@@ -598,7 +600,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }else
     {
         //myTable.AddPlayer("q4", &pushAll);
-        myTable.AddBot("i4", &drainFold);
+        myTable.AddBot("i4", AUTO_CHIP_COUNT, &drainFold);
         //myTable.AddPlayer("X3", &pushFold);
         //myTable.AddPlayer("A3", &tightPushFold);
 
@@ -656,10 +658,10 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                 //myTable.AddPlayer("NormalBotIV", &RankGeomBluff); /* riskymode = 9 */
             break;
         case 'M':
-            myTable.AddBot("M2", &RankGeom); /* riskymode = 0 */
+            myTable.AddBot("M2", AUTO_CHIP_COUNT,  &RankGeom); /* riskymode = 0 */
             break;
         case 'G':
-            myTable.AddBot("G2", &MeanGeom); /* riskymode = 1 */
+            myTable.AddBot("G2",AUTO_CHIP_COUNT, &MeanGeom); /* riskymode = 1 */
             break;
         default:
             //myTable.AddPlayer("RankGeom", &RankGeom); /* riskymode = 0 */
@@ -681,17 +683,17 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 		//myTable.AddPlayer("SpaceBotII", &AutoSetP);
 		//myTable.AddPlayer("TrapIII", &DistrScaleA);
 
-        myTable.AddBot("GearBotV", &MultiTR);
-        myTable.AddBot("MultiBotV", &MultiT);
+        myTable.AddBot("GearBotV", AUTO_CHIP_COUNT, &MultiTR);
+        myTable.AddBot("MultiBotV", AUTO_CHIP_COUNT, &MultiT);
 
-		myTable.AddBot("DangerV", &StrikeFold);
-        myTable.AddBot("ComV", &FutureFoldA);
-        myTable.AddBot("NormV", &XFoldA);
-        myTable.AddBot("TrapV", &ImproveA);
-		myTable.AddBot("AceV", &ReallyImproveA);
+		myTable.AddBot("DangerV", AUTO_CHIP_COUNT, &StrikeFold);
+        myTable.AddBot("ComV", AUTO_CHIP_COUNT, &FutureFoldA);
+        myTable.AddBot("NormV", AUTO_CHIP_COUNT, &XFoldA);
+        myTable.AddBot("TrapV", AUTO_CHIP_COUNT, &ImproveA);
+		myTable.AddBot("AceV", AUTO_CHIP_COUNT, &ReallyImproveA);
 
 
-        myTable.AddBot("SpaceV", &MeanGeomBluff);
+        myTable.AddBot("SpaceV", AUTO_CHIP_COUNT, &MeanGeomBluff);
 
 
         //myTable.AddPlayer("SpaceIV", &AutoSetA);

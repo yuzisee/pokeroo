@@ -221,8 +221,6 @@ class HoldemArena
     friend class HoldemArenaEventBase;
 	private:
 
-		static const float64 BASE_CHIP_COUNT;
-
 		int8 curDealer;
 
 		void incrIndex();
@@ -356,9 +354,9 @@ protected:
 
         //virtual int8 AddHuman(const char* const id, UserConsoleStrategy*);
 		//virtual int8 AddHuman(const char* const id, const float64 money, UserConsoleStrategy*);
-		virtual int8 AddHuman(const char* const id, PlayerStrategy*);
+		//virtual int8 AddHuman(const char* const id, PlayerStrategy*);
 		virtual int8 AddHuman(const char* const id, const float64 money, PlayerStrategy*);
-		virtual int8 AddBot(const char* const, PlayerStrategy*);
+		//virtual int8 AddBot(const char* const, PlayerStrategy*);
 		virtual int8 AddBot(const char* const id, const float64 money, PlayerStrategy* newStrat);
 
         virtual int8 GetNumberInHand() const;

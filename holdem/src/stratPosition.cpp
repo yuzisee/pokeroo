@@ -893,7 +893,7 @@ float64 DeterredGainStrategy::MakeBet()
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>
                         , AutoScalingFunction<GainModel,GainModelNoRisk>
                        >
-            ap_passive(hybridgainDeterred,hybridgain,DELAYENEMYOPP,ACTREACTUSES_HD,&myDeterredCall,LOGARITHMIC_AUTOSCALE);
+            ap_passive(hybridgainDeterred,hybridgain,DELAYENEMYOPP,ACTREACTUSES_HD,&myDeterredCall);
 
 
 

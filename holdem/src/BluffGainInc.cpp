@@ -104,8 +104,10 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
             fd_yr = right.fd(x,yr);
 
 
+          #ifdef TRANSFORMED_AUTOSCALES
             if( AUTOSCALE_TYPE == LOGARITHMIC_AUTOSCALE )
             {
+          #endif
 				const float64 rightWeight = log1p(slider)/log(2.0);
                 const float64 leftWeight = 1 - rightWeight;
 
@@ -115,10 +117,11 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
                 const float64 d_rightWeight_d_slider = 1.0/(slider)/log(2.0);
 
                 dy = fd_yl*leftWeight - yl*autoSlope*d_rightWeight_d_slider   +   fd_yr*rightWeight + yr*autoSlope*d_rightWeight_d_slider;
+		  #ifdef TRANSFORMED_AUTOSCALES
             }else
             #ifdef DEBUGASSERT
             if( AUTOSCALE_TYPE == ALGEBRAIC_AUTOSCALE )
-            #endif
+            #endif // DEBUGASSERT
             {
                 y = yl*(1-slider)+yr*slider;
                 dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
@@ -126,14 +129,15 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
 			#ifdef DEBUG_TRACE_SEARCH
 				if(bTraceEnable) std::cout << "\t\t\t y(" << x << ") = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
 				if(bTraceEnable) std::cout << "\t\t\t dy = " << fd_yl << " * " << (1-slider) << " - " <<  yl << " * " << autoSlope << " + " <<  fd_yr << " * " << slider << " + " <<  yr << " * " << autoSlope << std::endl;
-			#endif
+			#endif // DEBUG_TRACE_SEARCH
             }
             #ifdef DEBUGASSERT
             else{
                 std::cerr << "AutoScale TYPE MUST BE SPECIFIED" << endl;
 				exit(1);
             }
-            #endif
+            #endif // DEBUGASSERT
+          #endif // TRANSFORMED_AUTOSCALES
         }
 
 

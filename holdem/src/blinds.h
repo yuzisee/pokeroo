@@ -46,6 +46,22 @@ class BlindStructure
 }
 ;
 
+
+class StackPlayerBlinds : virtual public BlindStructure
+{
+	protected:
+		const float64 totalChips;
+		const float64 blindRatio;
+		int8 playerNum;
+	public:
+		StackPlayerBlinds(float64 stack, int8 players, float64 ratio)
+	: BlindStructure(stack*ratio/2.0, stack*ratio), totalChips(stack*players), blindRatio(ratio), playerNum(players) {}
+
+		virtual bool PlayerEliminated();
+
+}
+;
+
 class GeomPlayerBlinds : virtual public BlindStructure
 {
 	protected:
