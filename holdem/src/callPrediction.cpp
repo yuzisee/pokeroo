@@ -20,6 +20,7 @@
 
 #include "callPrediction.h"
 #include <math.h>
+#include <float.h>
 #include <algorithm>
 
 
@@ -535,7 +536,7 @@ void ExactCallD::query(const float64 betSize)
         #ifdef DEBUG_TRACE_DEXF
 		if( traceOut != 0 )
 		{
-			*traceOut << "totaldexf is " << totaldexf  << endl;
+			*traceOut << endl << "totaldexf is " << totaldexf << " overdexf is " << overdexf << endl;
 			*traceOut << "\tPlayer " << (int)pIndex;
 		}
 		#endif
@@ -665,7 +666,7 @@ void ExactCallD::query(const float64 betSize)
                     }
 
                     #ifdef DEBUG_TRACE_DEXF
-                    if( traceOut != 0 )  *traceOut << " nextdexf=" << nextdexf << endl;
+                    //if( traceOut != 0 )  *traceOut << " nextdexf=" << nextdexf << endl;
                     #endif
 
                 }
@@ -703,7 +704,7 @@ void ExactCallD::query(const float64 betSize)
             totalexf += nextexf;
 
                     #ifdef DEBUG_TRACE_DEXF
-                    if( traceOut != 0 )  *traceOut << "totaldexf was " << totaldexf;
+                    //if( traceOut != 0 )  *traceOut << "totaldexf was " << totaldexf;
                     #endif
 
             //lastdexf = nextdexf;
@@ -711,8 +712,19 @@ void ExactCallD::query(const float64 betSize)
 
 
                     #ifdef DEBUG_TRACE_DEXF
-                    if( traceOut != 0 )  *traceOut << " is " << totaldexf << ",  last added " << nextdexf << endl;
+                    //if( traceOut != 0 )  *traceOut << " is " << totaldexf << ",  last added " << nextdexf << endl;
+                    //if( traceOut != 0 )  *traceOut << " is " << totaldexf << endl;
+                    //if( traceOut != 0 )  *traceOut << " last added " << nextdexf << endl;
+                    //if( traceOut != 0 )  *traceOut << endl;
                     #endif
+
+
+            const float64 oppInPot = oppBetAlready + nextexf;
+            if( oppInPot - betSize > DBL_EPSILON )
+            {
+                overexf += oppInPot - betSize;
+                overdexf += nextdexf;
+            }
 
         }
 
@@ -729,12 +741,6 @@ void ExactCallD::query(const float64 betSize)
             }
         }
 
-        const float64 oppInPot = oppBetAlready + nextexf;
-        if( oppInPot > betSize )
-        {
-            overexf += oppInPot - betSize;
-            overdexf += nextdexf;
-        }
 
         table->incrIndex(pIndex);
     }
@@ -742,8 +748,12 @@ void ExactCallD::query(const float64 betSize)
     delete [] nextNoRaise_A;
     delete [] nextNoRaiseD_A;
 
+    if( traceOut != 0 )  *traceOut << endl << "Final is " << totaldexf;
+
     totalexf = totalexf - myexf - overexf;
     totaldexf = totaldexf - mydexf - overdexf;
+
+    if( traceOut != 0 )  *traceOut << " adjusted to " << totaldexf << " by mydexf=" << mydexf << " and overdexf=" << overdexf << endl;
 
     if( totalexf < 0 ) totalexf = 0; //Due to rounding error in overexf?
     if( totaldexf < 0 ) totaldexf = 0; //Due to rounding error in overexf?
