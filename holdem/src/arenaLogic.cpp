@@ -1119,6 +1119,12 @@ Player* HoldemArena::PlayTable()
                     scoreboard << "," << (p[i])->GetIdent();
                 }
                 scoreboard << endl;
+                scoreboard << "0";
+                for(int8 i=0;i<nextNewPlayer;++i)
+                {
+                    scoreboard << "," << (p[i])->GetMoney();
+                }
+                scoreboard << endl;
             #endif
         #endif
 
