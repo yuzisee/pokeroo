@@ -594,20 +594,20 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 
 
 //DEBUG //
-
+/*
  //   if( bGamble == 1 && ViewTable().GetPrevPotSize() > 3.0 )
     if( bGamble == 0 )
     {
-/*
+
 		choicemodel.bTraceEnable = true;
 		const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
 		logFile << bestBet << endl;
-*/
+
 
 		std::cout << "riskprice @ " << riskprice << endl;
 
         #ifdef DEBUG_TRACE_DEXF
-//            myDeterredCall_right.traceOut = &(std::cout);
+            myDeterredCall_right.traceOut = &(std::cout);
 		#endif
 
 algbModel.bTraceEnable = true;
@@ -621,7 +621,7 @@ hybridgainDeterred_aggressive.bTraceEnable = true;
 		std::cout << gdr1 << "  <-- d with raiseamount 0.9" << endl;
 
 
-/*
+
 		const float64 y1 = choicemodel.f(0.44);
 		const float64 dy1 = choicemodel.fd(0.44,y1);
 		//const float64 y2 = choicemodel.f(115.05);
@@ -723,10 +723,10 @@ hybridgainDeterred_aggressive.bTraceEnable = true;
 		std::cout << edy1 << "   <-- geomlow" << endl;
 		std::cout << jy1 << "   <-- algblow" << endl;
 		std::cout << jdy1 << "   <-- algblow" << endl;
-*/
+
 		exit(1);
 	}
-
+*/
 
 
 

@@ -748,12 +748,16 @@ void ExactCallD::query(const float64 betSize)
     delete [] nextNoRaise_A;
     delete [] nextNoRaiseD_A;
 
+    #ifdef DEBUG_TRACE_DEXF
     if( traceOut != 0 )  *traceOut << endl << "Final is " << totaldexf;
+    #endif
 
     totalexf = totalexf - myexf - overexf;
     totaldexf = totaldexf - mydexf - overdexf;
 
+    #ifdef DEBUG_TRACE_DEXF
     if( traceOut != 0 )  *traceOut << " adjusted to " << totaldexf << " by mydexf=" << mydexf << " and overdexf=" << overdexf << endl;
+    #endif
 
     if( totalexf < 0 ) totalexf = 0; //Due to rounding error in overexf?
     if( totaldexf < 0 ) totaldexf = 0; //Due to rounding error in overexf?
