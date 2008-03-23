@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+
 #include "callPredictionFunctions.h"
 
 
@@ -65,9 +66,11 @@ const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) con
 
 float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 {
+
+
     if( lastdBetSizeN != n || !bSearching )
     {
-        const float64 rawPCT = lookup(1.0-1.0/(n));
+		const float64 rawPCT = ( n < 1 ) ? 0 : lookup(1.0-1.0/(n));
         if( rawPCT != lastRawPCT || !bSearching )
         {
 #ifdef INLINE_INTEGER_POWERS
