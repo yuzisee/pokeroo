@@ -577,12 +577,18 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
 
     if( y1 > 0 && y2 > 0 ) //x1*x2 > 0
     {
+#ifdef DEBUGASSERT
+		std::cerr << "FindZero called with useless endpoints!" << endl;
+#endif
         if( y1 > y2 ) return x2;
         return x1;
     }
 
     if( y1 < 0 && y2 < 0 ) //x1*x2 > 0
     {
+#ifdef DEBUGASSERT
+		std::cerr << "FindZero called with useless endpoints!" << endl;
+#endif
         if( y1 > y2 ) return x1;
         return x2;
     }
@@ -590,7 +596,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
     float64 yb;
     float64 xb;
 
-    xb = bisectionStep(x1,x2);
+    xb = regularfalsiStep(x1,y1,x2,y2);
     yb = f(xb);
 
         #ifdef DEBUG_TRACE_ZERO
@@ -638,7 +644,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
                     if(bTraceEnable) std::cout << "\t\t\t Shortcut! Switch to xn and xb: new (x1,x2) = (" << x1 << "," << x2 << ")" << std::endl;
                 #endif
 
-                xb = bisectionStep(x1,x2);
+                xb = regularfalsiStep(x1,y1,x2,y2);
                 yb = f(xb);
             }else if(fabs(yn) < fabs(yb)) //Newton is closer than False Position
             {//No shortcut
