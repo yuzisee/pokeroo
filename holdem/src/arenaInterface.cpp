@@ -230,7 +230,8 @@ void HoldemArena::saveState()
 #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
             char handnumtxt/*[12] = "";
             char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
-            sprintf(handnumtxt + strlen(handnumtxt) ,"%lu",handnum);
+            _itoa(handnum,handnumtxt + strlen(handnumtxt),10);//sprintf(handnumtxt + strlen(handnumtxt) ,"%lu",handnum);
+            handnumtxt[23+12-1] = '\0'; //just to be safe
 
             std::ofstream allSaveState( handnumtxt );
 #endif

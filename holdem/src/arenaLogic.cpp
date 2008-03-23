@@ -609,7 +609,7 @@ void HoldemArena::PlayGame()
 
 	if( PlayRound(0) == -1 ) return;
 
-	
+
 
 #ifdef EXTERNAL_DEALER
     std::cerr << "Please enter the flop (no whitespace): " << endl;
@@ -649,7 +649,7 @@ void HoldemArena::PlayGame()
 	roundPlayers = livePlayers;
 	if( PlayRound(3) == -1 ) return;
 
-	
+
     if( bSpectate )
     {
         gamelog << endl;
@@ -690,7 +690,7 @@ void HoldemArena::PlayGame()
 	roundPlayers = livePlayers;
 	if( PlayRound(4) == -1 ) return;
 
-	
+
 
     if( bSpectate )
     {
@@ -731,10 +731,10 @@ void HoldemArena::PlayGame()
 
 	roundPlayers = livePlayers;
 	int8 playerToReveal = PlayRound(5);
-	
+
 	if( playerToReveal == -1 ) return;
 	roundPlayers = livePlayers;
-	
+
 	PlayShowdown(playerToReveal);
 }
 
@@ -898,7 +898,8 @@ void HoldemArena::DealHands()
                 #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
             char handnumtxt/*[12] = "";
             char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
-            sprintf(handnumtxt + strlen(handnumtxt) ,"%lu",handnum);
+            _itoa(handnum , handnumtxt + strlen(handnumtxt) ,10);//sprintf(handnumtxt + strlen(handnumtxt) ,"%lu",handnum);
+            handnumtxt[23+12-1] = '\0'; //just to be safe
 
             shuffleData.open( handnumtxt , std::ios::app );
             dealer.LogDeckState( shuffleData );

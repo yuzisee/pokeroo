@@ -1104,8 +1104,10 @@ float64 CorePositionalStrategy::MakeBet()
         }
     #endif
 
+
     HoldemFunctionModel* (lookup[BGAMBLE_MAX]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom, &hybridAlgb
 		,&rankGeomBluff ,&meanGeomBluff,&worstAlgbBluff,&rankAlgbBluff,&meanAlgbBluff,&hybridGeomBluff	};
+
 
     #ifdef LOGPOSITION
         const float64 improveMod = detailPCT.improve * 2;
@@ -1126,6 +1128,7 @@ float64 CorePositionalStrategy::MakeBet()
 
     #endif
     const float64 bestBet = solveGainModel(lookup[bGamble]);
+
 
 	#ifdef LOGPOSITION
 		if( bGamble >= 9 && bGamble <= 15 )

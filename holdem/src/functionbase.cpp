@@ -577,18 +577,12 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
 
     if( y1 > 0 && y2 > 0 ) //x1*x2 > 0
     {
-#ifdef DEBUGASSERT
-		std::cerr << "FindZero called with useless endpoints!" << endl;
-#endif
         if( y1 > y2 ) return x2;
         return x1;
     }
 
     if( y1 < 0 && y2 < 0 ) //x1*x2 > 0
     {
-#ifdef DEBUGASSERT
-		std::cerr << "FindZero called with useless endpoints!" << endl;
-#endif
         if( y1 > y2 ) return x1;
         return x2;
     }
@@ -613,12 +607,12 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
     {
 
         const float64 xn = newtonStep(xb,yb);
-		
+
 
         #ifdef DEBUG_TRACE_ZERO
             if(bTraceEnable) std::cout << "\t\tPossible xn " << xn << std::endl;
         #endif
-		
+
 		bool bNewtonValid = xn < x2 - quantum/2 && xn > x1 + quantum/2;
 
         if(bNewtonValid)

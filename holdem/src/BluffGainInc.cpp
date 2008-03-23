@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "BluffGainInc.h"
+#include <float.h>
 
 #define RAISED_PWIN
 
@@ -352,20 +353,23 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
 
 ///Calculate factors
-	const float64 gainWithFold = pow(potFoldWin , oppFoldChance);
+	const float64 gainWithFold = (potFoldWin < DBL_EPSILON) ? 0 : pow(potFoldWin , oppFoldChance);
 	const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
-	const float64 gainNormal =  pow( potNormalWin,playChance );
+	const float64 gainNormal =  (potNormalWin < DBL_EPSILON) ? 0 : pow( potNormalWin,playChance );
 	float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
     float64 gainRaised = 1;
     float64 gainRaisedlnD = 0;
     for( int32 i=0;i<arraySize;++i )
     {
-        gainRaised *= pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
+        gainRaised *= (potRaisedWin_A[i] < DBL_EPSILON) ? 0 : pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
 
 		if( oppRaisedChance_A[i] >= invisiblePercent )
 		{
 			#ifdef DEBUG_TRACE_SEARCH
-				if(bTraceEnable) std::cout << "\t\t\t(potRaisedWinD_A[" << i << "] , oppRaisedChanceD_A[" << i << "] , log...) = " << potRaisedWinD_A[i] << " , " << oppRaisedChanceD_A[i] << " , " <<  log( g_raised(betSize,raiseAmount_A[i]-quantum/2) ) << std::endl;
+				if(bTraceEnable)
+				{
+				    std::cout << "\t\t\t(potRaisedWinD_A[" << i << "] , oppRaisedChanceD_A[" << i << "] , log...) = " << potRaisedWinD_A[i] << " , " << oppRaisedChanceD_A[i] << " , " <<  log( g_raised(betSize,raiseAmount_A[i]-quantum/2) ) << std::endl;
+				}
 			#endif
 
 			if( raiseAmount_A[i] >= ea->maxBet()-quantum/2 )
@@ -386,7 +390,12 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
 
 		#ifdef DEBUG_TRACE_SEARCH
-			if(bTraceEnable) std::cout << "\t\t (gainWithFoldlnD+gainNormallnD+gainRaisedlnD) = " << gainWithFoldlnD << " + " << gainNormallnD << " + " <<  gainRaisedlnD << std::endl;
+			if(bTraceEnable)
+			{
+			    std::cout << "\t\t (gainWithFoldlnD+gainNormallnD+gainRaisedlnD) = " << gainWithFoldlnD << " + " << gainNormallnD << " + " <<  gainRaisedlnD << std::endl;
+			    std::cout << "\t\t (gainWithFold   +gainNormal   +gainRaised   ) = " << gainWithFold << " + " << gainNormal << " + " <<  gainRaised << std::endl;
+			    std::cout << "\t\t (potNormalWin , playChance) = " << potNormalWin << " , " << playChance << std::endl;
+			}
 		#endif
 
 ///Store results

@@ -109,7 +109,7 @@ float64 ThresholdStrategy::MakeBet()
 float64 MultiThresholdStrategy::MakeBet()
 {
     if( bCall == 4 ) return ViewTable().GetBetToCall() + ALLBET;
-    if( bCall == 3 ) return (ViewTable().GetPotSize() + ViewTable().GetBigBlind()) / 2.0 + ViewTable().GetBetToCall();
+    if( bCall == 3 ) return (ViewTable().GetDeadPotSize() + ViewTable().GetBigBlind()) / 2.0;
 
     float64 multiThreshhold = pow(w->mean,ViewTable().NumberAtRound()-1+redundancy); //subtract yourself
         #ifdef LOGTHRESHOLD

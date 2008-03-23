@@ -1081,7 +1081,8 @@ float64 ExactCallD::pRaise(const float64 betSize, const int32 step)
         queryinput = betSize;
     }
 
-    if( step < noRaiseArraySize ) return 1-noRaiseChance_A[step];
+	if( RaiseAmount( betSize, step ) >= this->maxBet() - chipDenom()/2 ) return 0; //You don't care about raises if you are all-in
+    else if( step < noRaiseArraySize ) return 1-noRaiseChance_A[step];
     else return -1;
 }
 

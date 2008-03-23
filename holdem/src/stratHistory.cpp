@@ -22,6 +22,7 @@
 
 
 #define LOAD_PAST_HANDS "saves/"
+#define LOAD_PAST_HANDS_LEN 7
 
 #include "stratHistory.h"
 #include <algorithm>
@@ -72,7 +73,7 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * parray, const uint1
     potentialRank = 1;
     lastAboveBelow = parray[num-1].numHandsAboveBelow; //Force a tie to put the best at rank 1
 
-    for( uint8 i=num;i>0;--i )
+    for( uint16 i=num;i>0;--i )
     { //Let i be the index of the element of which you are comparing to, for a tie
       //We iterate from the last (best) element to the first(worst)
         int32 & x = parray[i-1].numHandsAboveBelow;
@@ -97,7 +98,7 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * parray, const uint1
     potentialRank = 1;
     lastWinLose = parray[num-1].nonZeroWinLose; //Force a tie to put the best at rank 1
 
-    for( uint8 i=num;i>0;--i )
+    for( uint16 i=num;i>0;--i )
     { //Let i be the index of the element of which you are comparing to, for a tie
       //We iterate from the last (best) element to the first(worst)
         int32 & x = parray[i-1].nonZeroWinLose;
@@ -134,7 +135,7 @@ void PerformanceHistory::SortAndOffset( PerformanceHistory * parray, const uint1
     potentialRank = 1;
     lastTotalDelta = parray[num-1].totalMoneyDelta; //Force a tie to put the best at rank 1
 
-    for( uint8 i=num;i>0;--i )
+    for( uint16 i=num;i>0;--i )
     { //Let i be the index of the element of which you are comparing to, for a tie
       //We iterate from the last (best) element to the first(worst)
         float64 & x = parray[i-1].totalMoneyDelta;
@@ -259,10 +260,11 @@ void HistoryStrategy::SaveState( )
         #ifdef LOAD_PAST_HANDS
         char handnumbasename[200];
         char handnumstr[20];
-        sprintf(handnumstr,"%lu",handNumber);
-        strcpy(handnumbasename,"./" LOAD_PAST_HANDS);
-        strcat(handnumbasename, (ViewPlayer().GetIdent() + "-").c_str() );
-        strcat(handnumbasename, handnumstr);
+        _itoa(handNumber,handnumstr,10);//sprintf(handnumstr,"%lu",handNumber);
+        handnumstr[19] = '\0'; //Just to be safe
+        strncpy(handnumbasename,"./" LOAD_PAST_HANDS, LOAD_PAST_HANDS_LEN);
+        strncat(handnumbasename, (ViewPlayer().GetIdent() + "-").c_str(), ViewPlayer().GetIdent().length() );
+        strncat(handnumbasename, handnumstr, 20);
 
         saveFile.open( handnumbasename );
         Serialize( saveFile );
