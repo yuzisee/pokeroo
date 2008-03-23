@@ -337,8 +337,8 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
         //  f1 = y1 + (x-x1)*dy1
         //  f2 = y2 + (x-x2)*dy2
         //  Locus f1=f2: y1 + x*dy1 - x1*dy1 = y2 + x*dy2 - x2*dy2
-        //               x(dy1 - dy2) = (x1 - x1) - (x2*dy2 - x1*dy1)
-        const float64 newtonxb = ((x1 - x1) - (x2*dy2 - x1*dy1))/(dy1 - dy2);
+        //               x(dy1 - dy2) = (y2 - y1) - (x2*dy2 - x1*dy1)
+        const float64 newtonxb = ((y2 - y1) - (x2*dy2 - x1*dy1))/(dy1 - dy2);
         //Old: const float64 xb = fabs((dy2*x1 - dy1*x2)/(dy2-dy1));
         //Old: if dy2*dy1 <= 0 && fabs((dy2 - dy1)/dy2) >= fabs(quantum/2/(x2 - x1))
 

@@ -730,7 +730,7 @@ hybridgainDeterred_aggressive.bTraceEnable = true;
 
 		exit(1);
 	}
-	
+
 ap.bTraceEnable = true;
 geomModel.bTraceEnable = true;
 geomModel_fear.bTraceEnable = true;
@@ -1175,7 +1175,9 @@ float64 CorePositionalStrategy::MakeBet()
 
 				//if( oppRaisedFoldGain < lookup[bGamble]->g_raised(betToCall,rAmount) ){ logFile << " [*] "; maxcallStep = raiseStep+1; }
 
-                //logFile << "OppRAISEChance% ... " << myExpectedCall.pRaise(bestBet,raiseStep) << " @ $" << rAmount;
+                logFile << "OppRAISEChance% ... ";
+                //logFile << myExpectedCall.pRaise(bestBet,raiseStep);
+                logFile << " @ $" << rAmount;
                 logFile << "\tBetWouldFold%" << myExpectedCall.pWin(rAmount) << endl;
                 ++raiseStep;
             }
