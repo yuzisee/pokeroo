@@ -236,13 +236,24 @@ const float64 ExactCallD::RiskLoss(float64 alreadyBet, float64 bankroll, float64
     FG.waitLength.bankroll = (allChips() - bankroll)/(N-1);
     FG.waitLength.opponents = 1;
     FG.dw_dbet = 0; //Again, we don't need this
-    const float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrifice;
-    if(out_dPot != 0)
-    {
-        *out_dPot = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1 / (handsIn()-1);
-    }
+    float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrifice;
+	float64 drisk;
 
-    return riskLoss;
+	if( riskLoss < 0 )
+	{//If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
+		drisk = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1 / (handsIn()-1);
+	}else
+    {//If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
+		riskLoss = 0;
+		drisk = 0;
+	}
+
+	if(out_dPot != 0)
+	{
+		*out_dPot = drisk;
+	}
+
+	return riskLoss;
 }
 
 
