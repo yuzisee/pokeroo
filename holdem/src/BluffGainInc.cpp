@@ -108,7 +108,7 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
           #ifdef TRANSFORMED_AUTOSCALES
             if( AUTOSCALE_TYPE == LOGARITHMIC_AUTOSCALE )
             {
-          
+
 				const float64 rightWeight = log1p(slider)/log(2.0);
                 const float64 leftWeight = 1 - rightWeight;
 
@@ -126,12 +126,12 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
 		  #endif
                 y = yl*(1-slider)+yr*slider;
                 dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
-          
+
             #ifdef DEBUG_TRACE_SEARCH
 				if(bTraceEnable) std::cout << "\t\t\t y(" << x << ") = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
 				if(bTraceEnable) std::cout << "\t\t\t dy = " << fd_yl << " * " << (1-slider) << " - " <<  yl << " * " << autoSlope << " + " <<  fd_yr << " * " << slider << " + " <<  yr << " * " << autoSlope << std::endl;
 			#endif // DEBUG_TRACE_SEARCH
-          #ifdef TRANSFORMED_AUTOSCALES          
+          #ifdef TRANSFORMED_AUTOSCALES
 			}
             #ifdef DEBUGASSERT
             else{
@@ -283,17 +283,14 @@ void StateModel<LL,RR>::query( const float64 betSize )
     float64 lastuptoRaisedChanceD = 0;
     float64 newRaisedChance = 0;
     float64 newRaisedChanceD = 0;
-    for( int32 i=arraySize-1;i>=0; --i)
-    {
-        raiseAmount_A[i] = ea->RaiseAmount(betSize,i);
-#ifdef RAISED_PWIN
 
-        newRaisedChance = ea->pRaise(betSize,i);
-        newRaisedChanceD = ea->pRaiseD(betSize,i);
-        oppRaisedChance_A[i] = newRaisedChance - lastuptoRaisedChance;
-        oppRaisedChanceD_A[i] = newRaisedChanceD - lastuptoRaisedChanceD;
-        lastuptoRaisedChance = newRaisedChance;
-        lastuptoRaisedChanceD = newRaisedChanceD;
+	firstFoldToRaise = -1;
+
+	for( int32 i=arraySize-1;i>=0; --i)
+    {
+#ifdef RAISED_PWIN
+        raiseAmount_A[i] = ea->RaiseAmount(betSize,i);
+
 
         potRaisedWin_A[i] = g_raised(betSize,raiseAmount_A[i]);
         potRaisedWinD_A[i] = gd_raised(betSize,raiseAmount_A[i],potRaisedWin_A[i]);
@@ -302,17 +299,37 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
         if( potRaisedWin_A[i] < oppRaisedFoldGain )
         {
+			if( firstFoldToRaise == -1 ) firstFoldToRaise = i;
             potRaisedWin_A[i] = oppRaisedFoldGain;
             potRaisedWinD_A[i] = 0;
         }
 
-    if( oppRaisedChance_A[i] < invisiblePercent )
+    }
+
+    for( int32 i=arraySize-1;i>=0; --i)
+    {
+
+
+        newRaisedChance = ea->pRaise(betSize,i,firstFoldToRaise);
+        newRaisedChanceD = ea->pRaiseD(betSize,i,firstFoldToRaise);
+		if( lastuptoRaisedChance < newRaisedChance )
+		{
+			oppRaisedChance_A[i] = newRaisedChance - lastuptoRaisedChance;
+			oppRaisedChanceD_A[i] = newRaisedChanceD - lastuptoRaisedChanceD;
+			lastuptoRaisedChance = newRaisedChance;
+			lastuptoRaisedChanceD = newRaisedChanceD;
+		}
+
+
+		if( oppRaisedChance_A[i] < invisiblePercent )
 #endif
-	{raiseAmount_A[i] = 0;
-    oppRaisedChance_A[i] = 0;
-    oppRaisedChanceD_A[i] = 0;
-    potRaisedWin_A[i] = 1;
-    potRaisedWinD_A[i] = 0;}
+        {
+	    raiseAmount_A[i] = 0;
+        oppRaisedChance_A[i] = 0;
+        oppRaisedChanceD_A[i] = 0;
+        potRaisedWin_A[i] = 1;
+        potRaisedWinD_A[i] = 0;
+        }
 
     }
 
@@ -355,7 +372,7 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
 ///Calculate factors
 #ifdef VERBOSE_STATEMODEL_INTERFACE
-  #define STATEMODEL_ACCESS 
+  #define STATEMODEL_ACCESS
 #else
   #define STATEMODEL_ACCESS const float64
 #endif

@@ -438,16 +438,35 @@ void FacedOddsRaiseGeom::query( const float64 w )
         excess += FG.f(fold_bet) / FG.waitLength.bankroll;
     }
 
-    lastF = U - excess + riskLoss / FG.waitLength.bankroll;
+	float64 nonRaiseGain = excess - riskLoss / FG.waitLength.bankroll;
+
+	bool bUseCall = false;
+	const float64 callGain = callIncrLoss * pow(callIncrBase,fw);
+	//Test against call AND fold possibilities
+	if( callGain > nonRaiseGain )
+	{
+		nonRaiseGain = callGain;
+		bUseCall = true;
+	}
+
+
+    lastF = U - nonRaiseGain;
+
 
     const float64 dfw = FG.waitLength.opponents*pow(w,FG.waitLength.opponents-1);
     const float64 dU_dw = dfw*log1p((pot+raiseTo)/(FG.waitLength.bankroll-raiseTo)) * U;
 
     lastFD = dU_dw;
-    if( (!bCheckPossible) && FG.n > 0 )
+    if( (!bCheckPossible) && FG.n > 0 && !bUseCall)
     {
         lastFD -= FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
     }
+
+	if( bUseCall )
+	{
+		const float64 dL_dw = dfw*log1p(callIncrBase) * callGain;
+		lastFD -= dL_dw;
+	}
 }
 
 float64 FacedOddsRaiseGeom::f( const float64 w ) { query(w);  return lastF; }

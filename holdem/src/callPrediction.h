@@ -69,6 +69,7 @@ class ExactCallD : public virtual ExpectedCallD
     protected:
         static const float64 UNITIALIZED_QUERY;
         float64 queryinput;
+		int32 querycallSteps;
 
         float64 nearest;
         float64 impliedFactor;
@@ -78,7 +79,7 @@ class ExactCallD : public virtual ExpectedCallD
         float64 facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, bool bRank, float64 wGuess);
 #endif
 
-        int8 noRaiseArraySize;
+        int32 noRaiseArraySize;
         float64 *noRaiseChance_A;
         float64 *noRaiseChanceD_A;
 
@@ -87,15 +88,15 @@ class ExactCallD : public virtual ExpectedCallD
         float64 dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD * useMean);
 
 
-        float64 facedOdds_raise_Geom(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, CallCumulationD * useMean);
-        float64 dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, CallCumulationD * useMean);
+        float64 facedOdds_raise_Geom(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
+        float64 dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
 
 
 		float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
         float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n);
 
 
-        void query(const float64 betSize);
+        void query(const float64 betSize, const int32 callSteps);
     public:
 
 #ifdef DEBUG_TRACE_EXACTCALL
@@ -121,6 +122,7 @@ class ExactCallD : public virtual ExpectedCallD
 #endif
             {
                 queryinput = UNITIALIZED_QUERY;
+				querycallSteps = -1;
             }
 
             ~ExactCallD();
@@ -130,8 +132,8 @@ class ExactCallD : public virtual ExpectedCallD
             virtual float64 dexf(const float64 betSize);
 
 			virtual float64 RaiseAmount(const float64 betSize, int32 step);
-			virtual float64 pRaise(const float64 betSize, const int32 step );
-			virtual float64 pRaiseD(const float64 betSize, const int32 step );
+			virtual float64 pRaise(const float64 betSize, const int32 step, const int32 callSteps  );
+			virtual float64 pRaiseD(const float64 betSize, const int32 step, const int32 callSteps );
 
             virtual void SetImpliedFactor(const float64 bonus);
 

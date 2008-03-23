@@ -119,6 +119,7 @@ class StateModel : public virtual HoldemFunctionModel
     float64 last_x;
     float64 y;
     float64 dy;
+	
 
 
     void query( const float64 );
@@ -136,6 +137,7 @@ class StateModel : public virtual HoldemFunctionModel
     float64 gd_raised(float64 raisefrom, float64, const float64);
     public:
 
+		int32 firstFoldToRaise;
 #ifdef VERBOSE_STATEMODEL_INTERFACE
 		float64 gainWithFold;
 		float64 gainNormal;
@@ -145,14 +147,14 @@ class StateModel : public virtual HoldemFunctionModel
     float64 g_raised(float64 raisefrom, float64);
 
     StateModel(ExactCallBluffD *c, AutoScalingFunction<LL,RR> *function) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
-    ,last_x(-1),ea(c),fp(function),bSingle(false)
+    ,last_x(-1),ea(c),fp(function),bSingle(false),firstFoldToRaise(-1)
     {
         query(0);
     }
 
 
     StateModel(ExactCallBluffD *c, LL & functionL, RR & functionR) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
-    ,last_x(-1),ea(c),bSingle(true)
+    ,last_x(-1),ea(c),bSingle(true),firstFoldToRaise(-1)
     {
         if( (&functionL) != (&functionR) ) //ASSERT: LL == RR !!
         {

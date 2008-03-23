@@ -166,7 +166,7 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
     }
 }
 
-float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 incrRaise, float64 fold_bet, float64 opponents, bool bCheckPossible, CallCumulationD * useMean)
+float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 incrRaise, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
 {
 
     float64 raiseto = cps.alreadyBet + incrRaise; //Assume this is controlled to be less than or equal to bankroll
@@ -183,13 +183,22 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
 
     FacedOddsRaiseGeom a(table->GetChipDenom());
 
-    a.pot = cps.pot;
+	a.pot = cps.pot + (bMyWouldCall ? raiseto-fold_bet : 0);
     a.raiseTo = raiseto;
     a.fold_bet = fold_bet;
     a.bCheckPossible = bCheckPossible;
     a.riskLoss = (bCheckPossible) ? 0 : RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, 0);
 
-
+	if( bMyWouldCall )
+	{
+		a.callIncrLoss = 1 - fold_bet/cps.bankroll;
+		a.callIncrBase = (cps.bankroll + cps.pot)/(cps.bankroll - fold_bet);
+	}else
+	{
+		a.callIncrLoss = 0;
+		a.callIncrBase = 0;
+	}
+		
 
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
@@ -258,7 +267,7 @@ const float64 ExactCallD::RiskLoss(float64 alreadyBet, float64 bankroll, float64
 
 
 //Here, dbetsize/dpot = 0
-float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrRaise, float64 fold_bet, float64 w, float64 opponents, float64 dexf,  bool bCheckPossible, CallCumulationD * useMean)
+float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrRaise, float64 fold_bet, float64 w, float64 opponents, float64 dexf,  bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
 {
     if( w <= 0 ) return 0;
     const float64 raiseto = cps.alreadyBet + incrRaise;
@@ -270,20 +279,21 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
         fold_bet = cps.bankroll;
     }
 
+	const float64 retBet = bMyWouldCall ? raiseto-fold_bet : 0;
 
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
 
     //The pot can't be zero, so base_minus_1 can't be 0, so base can't be 1, so log(base) can't be zero
-    const float64 base_minus_1 = (cps.pot+raiseto)/(cps.bankroll-raiseto);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
+    const float64 base_minus_1 = (cps.pot+bMyWouldCall+raiseto)/(cps.bankroll-raiseto);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
 
     const float64 wN_1 = pow(w,opponents-1);
     float64 fw = wN_1 * w;
     float64 dfw = opponents * wN_1;
 
     const float64 A = dfw * log1p( base_minus_1 );
-    const float64 C = fw/(cps.bankroll+cps.pot) ;
-    const float64 h_times_remaining = pow( (cps.bankroll+cps.pot)/(cps.bankroll-raiseto), fw ) * (cps.bankroll - raiseto);
+    const float64 C = fw/(cps.bankroll+cps.pot+bMyWouldCall) ;
+    const float64 h_times_remaining = pow( (cps.bankroll+cps.pot+bMyWouldCall)/(cps.bankroll-raiseto), fw ) * (cps.bankroll - raiseto);
 
 
 
@@ -489,8 +499,16 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 	return raiseAmount;
 }
 
-void ExactCallD::query(const float64 betSize)
+void ExactCallD::query(const float64 betSize, const int32 callSteps)
 {
+	if( queryinput == betSize && querycallSteps == callSteps )
+    {
+		return;
+	}
+
+	queryinput = betSize;
+	querycallSteps = callSteps;
+
     nearest = (betSize <= callBet() + table->GetChipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
     float64 peopleInHandUpper = table->NumberInHand() - 1; //counting max possibilities
     const float64 opponents = handsToBeat();
@@ -593,8 +611,9 @@ void ExactCallD::query(const float64 betSize)
                             {
 
                                 const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize); //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
-                                float64 w_r_mean = facedOdds_raise_Geom(oppCPS,oppRaiseMake, betSize, opponents,bOppCouldCheck,e);
-                                float64 w_r_rank = facedOdds_raise_Geom(oppCPS,oppRaiseMake, betSize, opponents,bOppCouldCheck,0);
+								const bool bMyWouldCall = i < callSteps;
+                                float64 w_r_mean = facedOdds_raise_Geom(oppCPS,oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,e);
+                                float64 w_r_rank = facedOdds_raise_Geom(oppCPS,oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
                                 #ifdef ANTI_CHECK_PLAY
                                 if( bOppCouldCheck )
                                 {
@@ -605,10 +624,10 @@ void ExactCallD::query(const float64 betSize)
 
 
 
-                                const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck,0);
+                                const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
                                 const float64 noRaiseMean = 1-e->Pr_haveWinPCT_orbetter(w_r_mean);
-                                const float64 noraiseMeanD = -e->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck,e);
+                                const float64 noraiseMeanD = -e->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, e);
 
                                 //nextNoRaise_A[i] = w_r_rank;
                                 //nextNoRaiseD_A[i] = noraiseRankD;
@@ -782,7 +801,15 @@ void ExactCallD::query(const float64 betSize)
 
 void ExactCallBluffD::query(const float64 betSize)
 {
-    ExactCallD::query(betSize);
+    ExactCallD::query(betSize, querycallSteps);
+
+    if( queryinputbluff == betSize )
+    {
+		return;
+	}
+
+	queryinputbluff = betSize;
+
 
     float64 countMayFold = table->NumberInHand() - 1 ;
 
@@ -1051,12 +1078,7 @@ float64 ExactCallBluffD::PushGain()
 float64 ExactCallBluffD::pWin(const float64 betSize)
 {
 
-    if( queryinputbluff != betSize )
-    {
-        query(betSize);
-        queryinput = betSize;
-        queryinputbluff = betSize;
-    }
+    query(betSize);
 
     ///Try pow(,impliedFactor) maybe
     return allFoldChance;//*impliedFactor;
@@ -1064,35 +1086,24 @@ float64 ExactCallBluffD::pWin(const float64 betSize)
 
 float64 ExactCallBluffD::pWinD(const float64 betSize)
 {
-    if( queryinput != betSize )
-    {
-        query(betSize);
-        queryinput = betSize;
-    }
+    query(betSize);
+
     return allFoldChanceD;//*impliedFactor;
 }
 
 
-float64 ExactCallD::pRaise(const float64 betSize, const int32 step)
+float64 ExactCallD::pRaise(const float64 betSize, const int32 step, const int32 callSteps)
 {
-    if( queryinput != betSize )
-    {
-        query(betSize);
-        queryinput = betSize;
-    }
+    query(betSize,callSteps);
 
 	if( RaiseAmount( betSize, step ) >= this->maxBet() - chipDenom()/2 ) return 0; //You don't care about raises if you are all-in
     else if( step < noRaiseArraySize ) return 1-noRaiseChance_A[step];
     else return -1;
 }
 
-float64 ExactCallD::pRaiseD(const float64 betSize, const int32 step)
+float64 ExactCallD::pRaiseD(const float64 betSize, const int32 step, const int32 callSteps)
 {
-    if( queryinput != betSize )
-    {
-        query(betSize);
-        queryinput = betSize;
-    }
+    query(betSize,callSteps);
 
     if( step < noRaiseArraySize ) return -noRaiseChanceD_A[step];
     else return 0;
@@ -1103,23 +1114,17 @@ float64 ExactCallD::pRaiseD(const float64 betSize, const int32 step)
 
 float64 ExactCallD::exf(const float64 betSize)
 {
-    //if( queryinput == UNINITIALIZED_QUERY )
-    if( queryinput != betSize )
-    {
-        query(betSize);
-        queryinput = betSize;
-    }
+    query(betSize,querycallSteps);
+    
     return totalexf*impliedFactor + (betSize - nearest);
 }
 
 float64 ExactCallD::dexf(const float64 betSize)
 {
-//    if( query == UNINITIALIZED_QUERY )
-    if( queryinput != betSize )
-    {
-        query(betSize);
-        queryinput = betSize;
-    }
+
+    query(betSize,querycallSteps);
+
+
     return totaldexf*impliedFactor;
 }
 
