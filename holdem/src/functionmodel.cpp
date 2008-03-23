@@ -231,11 +231,16 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 
 	if( betSize > e->callBet()+adjQuantum && betSize < e->minRaiseTo()-adjQuantum )
 	{
+   	    	#ifdef DEBUG_TRACE_SEARCH
+				if(bTraceEnable) std::cout << "\t\t\tWithin minraise, reevaluate... @ " << e->callBet() << " and " << e->minRaiseTo() << " instead of " << betSize << std::endl;
+			#endif
+
+
 		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
 		return splitDist/(e->minRaiseTo() - e->callBet());
 	}
 	float64 x = e->betFraction(betSize);
- 	if( x == 1 ) x -= fracQuantum; //Approximate extremes to avoide division by zero
+ 	if( x >= 1 ) x = 1.0 - fracQuantum; //Approximate extremes to avoide division by zero
 
 
 
@@ -245,8 +250,12 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 
 
     const float64 minexf = e->minCallFraction(betSize); //Because of say, impliedFactor
-    if( exf < minexf )
+    if( exf < minexf - fracQuantum )
     {
+        #ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t\tvery low exf for now: " << exf << " < " << minexf << std::endl;
+        #endif
+
         return 0; //Incremental decrease is zero, so incremental increase must be zero at the limit
     }
 
@@ -264,6 +273,10 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
             const float64 & t_cw = p_cw;
         #endif
 
+
+    #ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable && betSize < e->callBet()) std::cout << "\t\t\tbetSize would be a fold!" << betSize << std::endl;
+    #endif
 
     if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
@@ -289,6 +302,10 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
         }///Else you'd just {savd+=0;} anyways
 	}
 
+    #ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
+    #endif
+
     //y is passed in as (y+e->foldGain())
  	return
  	(y)*
@@ -307,6 +324,10 @@ float64 GainModel::fd(const float64 betSize, const float64 y)
 
     const float64 efg = e->foldGain();
     const float64 betVal = gd(betSize, y+efg);
+
+    #ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable) std::cout << "\t\tfd figures " << betVal << std::endl;
+    #endif
 
     return betVal;
 }
@@ -423,6 +444,10 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 
 	if( betSize > e->callBet()+adjQuantum && betSize < e->minRaiseTo()-adjQuantum )
 	{
+	    	#ifdef DEBUG_TRACE_SEARCH
+				if(bTraceEnable) std::cout << "\t\t\tWithin minraise, reevaluate... @ " << e->callBet() << " and " << e->minRaiseTo() << " instead of " << betSize << std::endl;
+			#endif
+
 		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
 		return splitDist/(e->minRaiseTo() - e->callBet());
 	}
@@ -434,7 +459,12 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 	//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B
 	const float64 dexf = e->dexf(betSize);
 
+
+#ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable && betSize < e->callBet()) std::cout << "\t\t\tbetSize would be a fold!" << betSize << std::endl;
+#endif
     if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
+
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
     const int8 e_call = e_battle; //Probably manditory if dragCalls is used

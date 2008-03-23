@@ -61,9 +61,9 @@ class MultiStrategy : public virtual HistoryStrategy
         bool bHandShown;
         float64 prevMoney;
         void initM(); //Load file if available
+		void initM(uint32 restoreHandnum); //Load file if available
     public:
-
-
+	
     int8 bGamble;
 
     MultiStrategy(PositionalStrategy** ps, uint8 n) : HistoryStrategy(ps,n), bHandShown(false), prevMoney(-1), bGamble(0)

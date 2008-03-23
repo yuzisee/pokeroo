@@ -95,9 +95,7 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
         {//If there is no previous hand, initialize
             if( handNumber > 0 )
             {//Arena loads game
-                uint32 realHandNumber = handNumber;
-                initM();
-                handNumber = realHandNumber;
+                initM(handNumber);
             }else
             {//Arena new game
                 initM();
@@ -165,6 +163,12 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
 float64 MultiStrategy::MakeBet()
 {
     return strats[picks[currentStrategy].id]->MakeBet();
+}
+
+void MultiStrategy::initM(uint32 restoreHandnum)
+{
+	initM();
+	handNumber = restoreHandnum;
 }
 
 void MultiStrategy::initM()

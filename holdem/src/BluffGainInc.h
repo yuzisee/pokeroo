@@ -23,6 +23,9 @@
 
 #include "functionmodel.h"
 
+#define VERBOSE_STATEMODEL_INTERFACE
+
+
 #undef TRANSFORMED_AUTOSCALES
 
 #ifdef TRANSFORMED_AUTOSCALES
@@ -132,6 +135,12 @@ class StateModel : public virtual HoldemFunctionModel
     #endif
     float64 gd_raised(float64 raisefrom, float64, const float64);
     public:
+
+#ifdef VERBOSE_STATEMODEL_INTERFACE
+		float64 gainWithFold;
+		float64 gainNormal;
+		float64 gainRaised;
+#endif
 
     float64 g_raised(float64 raisefrom, float64);
 

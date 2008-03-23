@@ -22,7 +22,7 @@
 
 
 #define LOAD_PAST_HANDS "saves/"
-#define LOAD_PAST_HANDS_LEN 7
+#define LOAD_PAST_HANDS_LEN 8
 
 #include "stratHistory.h"
 #include <algorithm>
@@ -262,8 +262,8 @@ void HistoryStrategy::SaveState( )
         char handnumstr[20];
         _itoa(handNumber,handnumstr,10);//sprintf(handnumstr,"%lu",handNumber);
         handnumstr[19] = '\0'; //Just to be safe
-        strncpy(handnumbasename,"./" LOAD_PAST_HANDS, LOAD_PAST_HANDS_LEN);
-        strncat(handnumbasename, (ViewPlayer().GetIdent() + "-").c_str(), ViewPlayer().GetIdent().length() );
+        strncpy(handnumbasename,"./" LOAD_PAST_HANDS, 2+LOAD_PAST_HANDS_LEN);
+        strncat(handnumbasename, (ViewPlayer().GetIdent() + "-").c_str(), ViewPlayer().GetIdent().length() + 1);
         strncat(handnumbasename, handnumstr, 20);
 
         saveFile.open( handnumbasename );

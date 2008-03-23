@@ -108,7 +108,7 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
           #ifdef TRANSFORMED_AUTOSCALES
             if( AUTOSCALE_TYPE == LOGARITHMIC_AUTOSCALE )
             {
-          #endif
+          
 				const float64 rightWeight = log1p(slider)/log(2.0);
                 const float64 leftWeight = 1 - rightWeight;
 
@@ -118,20 +118,21 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
                 const float64 d_rightWeight_d_slider = 1.0/(slider)/log(2.0);
 
                 dy = fd_yl*leftWeight - yl*autoSlope*d_rightWeight_d_slider   +   fd_yr*rightWeight + yr*autoSlope*d_rightWeight_d_slider;
-		  #ifdef TRANSFORMED_AUTOSCALES
-            }else
+		    }else
             #ifdef DEBUGASSERT
             if( AUTOSCALE_TYPE == ALGEBRAIC_AUTOSCALE )
             #endif // DEBUGASSERT
             {
+		  #endif
                 y = yl*(1-slider)+yr*slider;
                 dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
-
-			#ifdef DEBUG_TRACE_SEARCH
+          
+            #ifdef DEBUG_TRACE_SEARCH
 				if(bTraceEnable) std::cout << "\t\t\t y(" << x << ") = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
 				if(bTraceEnable) std::cout << "\t\t\t dy = " << fd_yl << " * " << (1-slider) << " - " <<  yl << " * " << autoSlope << " + " <<  fd_yr << " * " << slider << " + " <<  yr << " * " << autoSlope << std::endl;
 			#endif // DEBUG_TRACE_SEARCH
-            }
+          #ifdef TRANSFORMED_AUTOSCALES          
+			}
             #ifdef DEBUGASSERT
             else{
                 std::cerr << "AutoScale TYPE MUST BE SPECIFIED" << endl;
@@ -353,12 +354,23 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
 
 ///Calculate factors
-	const float64 gainWithFold = (potFoldWin < DBL_EPSILON) ? 0 : pow(potFoldWin , oppFoldChance);
+#ifdef VERBOSE_STATEMODEL_INTERFACE
+  #define STATEMODEL_ACCESS 
+#else
+  #define STATEMODEL_ACCESS const float64
+#endif
+
+	STATEMODEL_ACCESS gainWithFold = (potFoldWin < DBL_EPSILON) ? 0 : pow(potFoldWin , oppFoldChance);
 	const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
-	const float64 gainNormal =  (potNormalWin < DBL_EPSILON) ? 0 : pow( potNormalWin,playChance );
+	STATEMODEL_ACCESS gainNormal =  (potNormalWin < DBL_EPSILON) ? 0 : pow( potNormalWin,playChance );
+
+
 	float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
-    float64 gainRaised = 1;
+    STATEMODEL_ACCESS gainRaised = 1;
     float64 gainRaisedlnD = 0;
+
+#undef STATEMODEL_ACCESS
+
     for( int32 i=0;i<arraySize;++i )
     {
         gainRaised *= (potRaisedWin_A[i] < DBL_EPSILON) ? 0 : pow( potRaisedWin_A[i],oppRaisedChance_A[i]);

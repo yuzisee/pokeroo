@@ -522,7 +522,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         smallBlindChoice=AUTO_CHIP_COUNT/200;
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
-	StackPlayerBlinds bg(AUTO_CHIP_COUNT, 9, b.BigBlind() / startingMoney);
+	StackPlayerBlinds bg(AUTO_CHIP_COUNT, 9, b.BigBlind() / AUTO_CHIP_COUNT  / 2);
     SitAndGoBlinds sg(b.SmallBlind(),b.BigBlind(),blindIncrFreq);
 		#ifdef REGULARINTOLOG
             std::ios::openmode gamelogMode = std::ios::trunc;
@@ -715,11 +715,13 @@ if( bLoadGame )
 #ifdef DEBUGSAVE_EXTRATOKEN
     myTable.EXTRATOKEN = ExtraTokenNameBuffer;
 #endif
-std::istream *saveLoc = myTable.LoadState();
-if( saveLoc != 0 ) consolePlay.myFifo = saveLoc;
-
-MultiT.handNumber = myTable.handnum;
-MultiTR.handNumber = myTable.handnum;
+	std::istream *saveLoc = myTable.LoadState();
+	if( saveLoc != 0 )
+	{
+		consolePlay.myFifo = saveLoc;
+		MultiT.handNumber = myTable.handnum;
+		MultiTR.handNumber = myTable.handnum;
+	}
 
 }
 #endif

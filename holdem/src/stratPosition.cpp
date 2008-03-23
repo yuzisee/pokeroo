@@ -527,7 +527,7 @@ float64 ImproveGainStrategy::MakeBet()
     }
 
     StatResult right = statworse;
-    right.repeated = (1 - actOrReact);
+    right.repeated = (1 - actOrReact);//Generally ignored, only base_right.repeated is really used
     base_right.repeated = actOrReact;
 
 
@@ -726,10 +726,18 @@ hybridgainDeterred_aggressive.bTraceEnable = true;
 
 		exit(1);
 	}
+	
+ap.bTraceEnable = true;
+geomModel.bTraceEnable = true;
+geomModel_fear.bTraceEnable = true;
+const float64 y1 = ap.f(betToCall);
+		const float64 dy1 = ap.fd(betToCall,y1);
+
+		std::cout << y1 << " <-- ap.f(betToCall)" << endl;
+		std::cout << dy1 << " <-- d ap.f(betToCall)" << endl;
+exit(1);
+
 */
-
-
-
 
 
     const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
@@ -747,8 +755,23 @@ hybridgainDeterred_aggressive.bTraceEnable = true;
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
         logFile << "\"riskprice\"... " << riskprice << endl;
-        logFile << "Regular("<< bestBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
-        logFile << "Fear("<< bestBet <<")=" << hybridgain_aggressive.f(bestBet) << endl;
+
+#ifdef VERBOSE_STATEMODEL_INTERFACE
+		choicemodel.f(bestBet);
+		logFile << "        Play("<< bestBet <<")=" << choicemodel.gainNormal << endl;
+		logFile << "AgainstRaise("<< bestBet <<")=" << choicemodel.gainRaised << endl;
+		logFile << "        Push("<< bestBet <<")=" << choicemodel.gainWithFold << endl;
+
+		if( bGamble == 0 )
+		{
+			choicemodel_right.f(bestBet);
+			logFile << "        Play OtherDeter("<< bestBet <<")=" << choicemodel_right.gainNormal << endl;
+			logFile << "AgainstRaise OtherDeter("<< bestBet <<")=" << choicemodel_right.gainRaised << endl;
+			logFile << "        Push OtherDeter("<< bestBet <<")=" << choicemodel_right.gainWithFold << endl;
+		}
+#endif
+        logFile << "Call Regular("<< bestBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
+        logFile << "   Call Fear("<< bestBet <<")=" << hybridgain_aggressive.f(bestBet) << endl;
 
     }
 

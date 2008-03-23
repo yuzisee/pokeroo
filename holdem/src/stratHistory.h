@@ -150,7 +150,7 @@ class HistoryStrategy : public virtual PlayerStrategy
 
 
     public:
-        uint32 handNumber; //Should be loaded/saved
+		uint32 handNumber; //Should be loaded/saved
 
         static PerformanceHistory UnserializeOne( std::istream& loadFile );
         static void SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph );
