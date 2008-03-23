@@ -502,7 +502,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
                     const float64 distFromCall = PlayerBet(withP) - highBet;
                     const float64 distFromMinRaise = myTable->GetMinRaise() - distFromCall;
 
-                    if( distFromCall > distFromMinRaise )
+                    if( distFromCall > distFromMinRaise && PlayerMoney(withP) >= highBet + myTable->GetMinRaise() )
                     {
                         PlayerBet(withP) = highBet + myTable->GetMinRaise();
                     }else
