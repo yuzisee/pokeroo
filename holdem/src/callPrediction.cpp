@@ -198,7 +198,7 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
 		a.callIncrLoss = 0;
 		a.callIncrBase = 0;
 	}
-		
+
 
     const int8 N = handsDealt();
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
@@ -285,15 +285,15 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
     const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
 
     //The pot can't be zero, so base_minus_1 can't be 0, so base can't be 1, so log(base) can't be zero
-    const float64 base_minus_1 = (cps.pot+bMyWouldCall+raiseto)/(cps.bankroll-raiseto);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
+    const float64 base_minus_1 = (cps.pot+raiseto+retBet)/(cps.bankroll-raiseto);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
 
     const float64 wN_1 = pow(w,opponents-1);
     float64 fw = wN_1 * w;
     float64 dfw = opponents * wN_1;
 
     const float64 A = dfw * log1p( base_minus_1 );
-    const float64 C = fw/(cps.bankroll+cps.pot+bMyWouldCall) ;
-    const float64 h_times_remaining = pow( (cps.bankroll+cps.pot+bMyWouldCall)/(cps.bankroll-raiseto), fw ) * (cps.bankroll - raiseto);
+    const float64 C = fw/(cps.bankroll+cps.pot+retBet) ;
+    const float64 h_times_remaining = pow( (cps.bankroll+cps.pot+retBet)/(cps.bankroll-raiseto), fw ) * (cps.bankroll - raiseto);
 
 
 
@@ -1115,7 +1115,7 @@ float64 ExactCallD::pRaiseD(const float64 betSize, const int32 step, const int32
 float64 ExactCallD::exf(const float64 betSize)
 {
     query(betSize,querycallSteps);
-    
+
     return totalexf*impliedFactor + (betSize - nearest);
 }
 
