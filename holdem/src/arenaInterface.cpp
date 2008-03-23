@@ -484,9 +484,11 @@ bool HoldemArena::CanStillBet(int8 n) const
 
 bool HoldemArena::CanRaise(int8 n, int8 nowBettor) const
 {
-    bool bHasPlayed = ((curDealer < n) && (n < nowBettor) && (curDealer < nowBettor))
+    bool bHasPlayed = (((curDealer < n) && (n < nowBettor)) && (curDealer < nowBettor))//Between curDealer and newBettor when curDealer is before nowBettor
                         ||
-                      ((curDealer < n) || (n < nowBettor) && (nowBettor < curDealer))
+                      (((curDealer < n) || (n < nowBettor)) && (nowBettor < curDealer))
+					    ||
+				      (nowBettor == curDealer)
                         ;
     bool bCanCheck = (highBet <= 0) && (!bHasPlayed);
     return ( (curHighBlind == n) || (highBet > p[n]->myBetSize) || (bCanCheck) ) && (CanStillBet(n));
