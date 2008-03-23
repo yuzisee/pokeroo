@@ -107,11 +107,11 @@ class GainModel : public virtual HoldemFunctionModel
 		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s)
 		{
 
-		    const int8 totalEnemy = c->handsDealt()-1;
+		    const int8 totalEnemy = c->handsToBeat(); //To beat
 
-		    f_battle = c->callingPlayers();
+		    f_battle = c->callingPlayers(); //Floating point version of totalEnemy, but adjustable by playerStrategy based on expectations
 
-		    e_battle = c->handsIn()-1;
+		    e_battle = c->handsIn()-1; //Who can you split with?
 
 		    if( quantum == 0 ) quantum = 1;
 
@@ -153,7 +153,7 @@ class GainModel : public virtual HoldemFunctionModel
 		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s)
 		{
 
-		    const int8 totalEnemy = c->handsDealt()-1;
+		    const int8 totalEnemy = c->handsToBeat();
 
 		    f_battle = c->callingPlayers();
 

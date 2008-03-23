@@ -182,7 +182,7 @@ void HoldemArenaBetting::startBettingRound()
 								//BUT, it also handles the check-check-check
     curHighBlind = -1;
 
-    if( comSize == 0 && myTable->GetNumberInHand() == 2)
+    if( comSize == 0 && myTable->NumberInHand() == 2)
     {
         do
 		{
@@ -223,7 +223,7 @@ void HoldemArenaBetting::startBettingRound()
 */
 
 	///Weird stuff to simulate blind bets
-	if( comSize == 0 && myTable->GetNumberInHand() >= 2)
+	if( comSize == 0 && myTable->NumberInHand() >= 2)
 	{
         curIndex = bBlinds;
 	    do
@@ -381,7 +381,7 @@ gamelog << p[curIndex]->GetIdent() << " up next... same as before?" << endl;
     }
     else
     {
-        if( myTable->GetNumberInHand() == 1 )
+        if( myTable->NumberInHand() == 1 )
         {
             bBlinds = -1;
         }

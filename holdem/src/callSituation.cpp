@@ -42,7 +42,7 @@ float64 ExpectedCallD::foldGain()
 
 float64 ExpectedCallD::foldGain(const float64 extra, const float64 facedBet)
 {
-    const float64 playerCount = table->GetNumberAtTable();
+    const float64 playerCount = table->NumberAtTable();
 
 
     const float64 bigBlind = table->GetBigBlind() ;
@@ -125,15 +125,19 @@ float64 ExpectedCallD::chipDenom() const
     return table->GetChipDenom();
 }
 
+int8 ExpectedCallD::handsToBeat() const
+{
+    return table->NumberAtRound()-1;  //Number of hands drawn
+}
 
 int8 ExpectedCallD::handsDealt() const
 {
-    return table->GetNumberAtTable();  //Number of live players
+    return table->NumberAtTable();  //Number of live players
 }
 
-int8 ExpectedCallD::handsIn() const
+int8 ExpectedCallD::handsIn() const //In general, used for "who can you split with" type requests as handsIn()-1?
 {
-    return table->GetNumberInHand();  //Number of live players not folded
+    return table->NumberInHand();  //Number of live players not folded
 }
 
 float64 ExpectedCallD::prevpotChips() const

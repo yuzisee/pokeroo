@@ -82,7 +82,7 @@ void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
 
 void HoldemArena::PrintPositions(std::ostream& o)
 {
-    o << "(" << (int)(GetNumberInHand()) << " players" << flush;
+    o << "(" << (int)(NumberInHand()) << " players" << flush;
     int8 tempIndex = curDealer;
     do
     {
@@ -349,13 +349,19 @@ float64 HoldemArena::GetAllChips() const
 	return allChips;
 }
 
-int8 HoldemArena::GetNumberInHand() const
+int8 HoldemArena::NumberAtRound() const
+{
+	return roundPlayers;
+}
+
+
+int8 HoldemArena::NumberInHand() const
 {
 	return playersInHand;
 }
 
-///Number "left" at table
-int8 HoldemArena::GetNumberAtTable() const
+///Number "remaining" at table
+int8 HoldemArena::NumberAtTable() const
 {
 	return livePlayers;
 }

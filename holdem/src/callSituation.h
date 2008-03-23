@@ -71,7 +71,7 @@ public:
     ,FG(base->GetChipDenom()/2),handRarity(1-rankPCT), meanW(meanPCT)
     #endif
     #if defined(ASSUMEFOLDS)
-    ,eFold(base->GetNumberAtTable()-1)
+    ,eFold(base->NumberAtRound()-1)
     #endif
     {}
 
@@ -90,6 +90,7 @@ public:
     virtual float64 chipDenom() const;
     virtual float64 allChips() const;
     virtual float64 maxBet() const;
+    virtual int8 handsToBeat() const;
     virtual int8 handsDealt() const;
     virtual int8 handsIn() const;
     virtual float64 prevpotChips() const;

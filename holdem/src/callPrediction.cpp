@@ -492,8 +492,8 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 void ExactCallD::query(const float64 betSize)
 {
     nearest = (betSize <= callBet() + table->GetChipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
-    float64 peopleInHandUpper = table->GetNumberInHand() - 1;
-    const float64 opponents = handsDealt()-1;
+    float64 peopleInHandUpper = table->NumberInHand() - 1; //counting max possibilities
+    const float64 opponents = handsToBeat();
     const float64 myexf = betSize;
     const float64 mydexf = 1;
 
@@ -784,7 +784,7 @@ void ExactCallBluffD::query(const float64 betSize)
 {
     ExactCallD::query(betSize);
 
-    float64 countMayFold = table->GetNumberInHand() - 1 ;
+    float64 countMayFold = table->NumberInHand() - 1 ;
 
 
     const float64 myexf = betSize;
@@ -1003,8 +1003,8 @@ float64 ExactCallBluffD::PushGain()
     const float64 baseFraction = betFraction(table->GetPotSize() - alreadyBet());
 
 #ifdef BLIND_ADJUSTED_FOLD
-    const float64 rawWinFreq = (1.0 / table->GetNumberAtTable()) ;
-    const float64 blindsPow = rawWinFreq*(1.0 - 1.0 / table->GetNumberAtTable());
+    const float64 rawWinFreq = (1.0 / table->NumberAtTable()) ; //It's raw, so it's defined by NumberAtTable
+    const float64 blindsPow = rawWinFreq*(1.0 - 1.0 / table->NumberAtTable());
 
     const float64 bigBlindFraction = betFraction( table->GetBigBlind() );
     const float64 smallBlindFraction = betFraction( table->GetSmallBlind() );
@@ -1133,16 +1133,15 @@ float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit) co
     //const float64 avgControl = (stagnantPot() + table->GetUnbetBlindsTotal()) / table->GetNumberInHand();
     //const float64 raiseOverBet = (callb + avgControl);// < lastbet) ? 0 : (callb + avgControl - lastbet) ;
 
-    const float64 raiseOverOthers = (table->GetPotSize() - callb) / table->GetNumberInHand();
+    const float64 raiseOverOthers = (table->GetPotSize() - callb) / table->NumberInHand();
     const float64 raiseOver = (raiseOverOthers);// + raiseOverBet)/2;
     const float64 actOrReact = (raiseOver > limit) ? 1 : (raiseOver / limit);
     return actOrReact;
 }
 
 float64 ExactCallBluffD::RiskPrice()
-{
-    //const float64 N = table->GetNumberAtTable();
-	const int8 Ne_int = table->GetNumberInHand() - 1;
+{//At what price is it always profitable to fold the average winning hand?
+	const int8 Ne_int = table->NumberAtRound() - 1;
     const float64 Ne = static_cast<float64>(Ne_int);
 
     const float64 estSacrifice = (table->GetPotSize() - table->ViewPlayer(playerID)->GetBetSize());

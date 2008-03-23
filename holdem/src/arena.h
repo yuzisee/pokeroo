@@ -262,6 +262,7 @@ protected:
 		bool bSpectate;
 
 		int8 livePlayers;
+		int8 roundPlayers;
 		int8 playersInHand;
 		int8 playersAllIn;
 
@@ -359,8 +360,10 @@ protected:
 		//virtual int8 AddBot(const char* const, PlayerStrategy*);
 		virtual int8 AddBot(const char* const id, const float64 money, PlayerStrategy* newStrat);
 
-        virtual int8 GetNumberInHand() const;
-		virtual int8 GetNumberAtTable() const;
+		virtual int8 NumberAtRound() const;
+        virtual int8 NumberInHand() const;
+		virtual int8 NumberAtTable() const;
+
 		virtual int8 GetTotalPlayers() const;
 
 		virtual int8 GetCurPlayer() const;
@@ -444,7 +447,7 @@ class HoldemArenaEventBase
 
 
     int8 GetTotalPlayers() const { return myTable->GetTotalPlayers(); }
-    int8 GetNumberInHand() const { return myTable->GetNumberInHand(); }
+    int8 GetNumberInHand() const { return myTable->NumberInHand(); }
 
     public:
 

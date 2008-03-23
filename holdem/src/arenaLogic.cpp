@@ -602,11 +602,14 @@ void HoldemArena::PlayGame()
     }
 
 	playersInHand = livePlayers;
+	roundPlayers = livePlayers;
 	playersAllIn = 0;
 
 	community.SetEmpty();
 
 	if( PlayRound(0) == -1 ) return;
+
+	
 
 #ifdef EXTERNAL_DEALER
     std::cerr << "Please enter the flop (no whitespace): " << endl;
@@ -643,8 +646,10 @@ void HoldemArena::PlayGame()
     }
 
 
+	roundPlayers = livePlayers;
 	if( PlayRound(3) == -1 ) return;
 
+	
     if( bSpectate )
     {
         gamelog << endl;
@@ -682,9 +687,10 @@ void HoldemArena::PlayGame()
 	}
 
 
-
+	roundPlayers = livePlayers;
 	if( PlayRound(4) == -1 ) return;
 
+	
 
     if( bSpectate )
     {
@@ -723,10 +729,12 @@ void HoldemArena::PlayGame()
     }
 
 
+	roundPlayers = livePlayers;
 	int8 playerToReveal = PlayRound(5);
-
+	
 	if( playerToReveal == -1 ) return;
-
+	roundPlayers = livePlayers;
+	
 	PlayShowdown(playerToReveal);
 }
 
@@ -770,7 +778,7 @@ DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
 
 void HoldemArena::DealHands()
 {
-
+	roundPlayers = livePlayers;
 
     myPot        = 0;
     prevRoundPot = 0;

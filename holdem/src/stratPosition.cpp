@@ -477,8 +477,8 @@ float64 ImproveGainStrategy::MakeBet()
 #endif
 
 
-    const float64 fullVersus = ViewTable().GetNumberAtTable() - 1;
-    const float64 peopleDrawing = (1 - improvePure) * (ViewTable().GetNumberInHand() - 1);
+    const float64 fullVersus = myDeterredCall.callingPlayers();
+    const float64 peopleDrawing = (1 - improvePure) * (ViewTable().NumberInHand() - 1);//You probably don't have to beat the people who folded, especially if you are going to improve your hand
     const float64 newVersus = (fullVersus - peopleDrawing*(1-improvePure)*detailPCT.stdDev);
 
 
