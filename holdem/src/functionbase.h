@@ -42,12 +42,16 @@ class ScalarFunctionModel
         #ifndef SINGLETURNINGPOINT
         float64 SplitTurningPoint(float64 x1, float64 xb, float64 xn, float64 x2, float64 signDir);
         #endif
+
+		bool IsDifferentSign(const float64&,const float64&) const;
+		bool IsSameSignOrZero(const float64&,const float64&) const;
     protected:
         float64 trisectionStep(float64,float64,float64,float64,float64,float64) const;
         float64 searchStep(float64,float64,float64,float64,float64,float64);
         float64 quadraticStep(float64,float64,float64,float64,float64,float64) const;
         float64 newtonStep(float64,float64);
         float64 bisectionStep(float64,float64) const;
+		float64 regularfalsiStep(float64,float64,float64,float64) const;
 		virtual float64 FindTurningPoint(float64 x1,float64 y1,float64 xb,float64 yb,float64 x2,float64 y2,float64 signDir);
     public:
     float64 quantum;

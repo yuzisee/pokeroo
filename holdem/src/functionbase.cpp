@@ -39,6 +39,25 @@ ScalarFunctionModel::~ScalarFunctionModel()
 {
 }
 
+
+bool ScalarFunctionModel::IsSameSignOrZero(const float64 &ya, const float64 &yb) const
+{
+	const bool yaZero = fabs(ya) < DBL_EPSILON;
+	const bool ybZero = fabs(yb) < DBL_EPSILON;
+	const bool yaPositive = ya > 0;
+	const bool ybPositive = yb > 0;
+	return (   yaZero || ybZero || !(yaPositive ^ ybPositive)   );
+}
+
+bool ScalarFunctionModel::IsDifferentSign(const float64 &ya, const float64 &yb) const
+{
+	const bool yaZero = fabs(ya) < DBL_EPSILON;
+	const bool ybZero = fabs(yb) < DBL_EPSILON;
+	const bool yaPositive = ya > 0;
+	const bool ybPositive = yb > 0;
+	return (   (yaPositive ^ ybPositive) && (!yaZero) && (!ybZero)   ); //If yaPositive AND ybPositive, XOR returns false
+}
+
 float64 ScalarFunctionModel::quadraticStep(float64 x1, float64 y1, float64 x2, float64 y2, float64 x3, float64 y3) const
 {
     float64 a1,a2,a3;
@@ -284,7 +303,7 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
     float64 dy2;
     float64 dyb;
 
-    while( (y1-yb)*(y2-yb) < 0 && x2 - x1 > quantum/2)
+    while( IsDifferentSign((y1-yb),(y2-yb)) && x2 - x1 > quantum/2)
     {   ///(y1-yb) and (y2-yb) have different signs
         ///therefore y1 and y2 are OPPOSITE vertical directions from yb.
 
@@ -545,6 +564,11 @@ float64 ScalarFunctionModel::bisectionStep(float64 x1, float64 x2) const
     return (x1+x2)/2;
 }
 
+float64 ScalarFunctionModel::regularfalsiStep(float64 x1, float64 y1, float64 x2, float64 y2) const
+{//A single step from the method of False Positions
+	return (x1*y2 + x2*y1)/(y2 - y1);
+}
+
 float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
 {
 
@@ -564,7 +588,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
     }
 
     float64 yb;
-    float64 xb,xn;
+    float64 xb;
 
     xb = bisectionStep(x1,x2);
     yb = f(xb);
@@ -577,21 +601,25 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
             }
         #endif
 
+
+	int8 stepMode = 0;
     while( x2 - x1 > quantum )
     {
 
-        xn = newtonStep(xb,yb);
+        const float64 xn = newtonStep(xb,yb);
+		
 
         #ifdef DEBUG_TRACE_ZERO
             if(bTraceEnable) std::cout << "\t\tPossible xn " << xn << std::endl;
         #endif
+		
+		bool bNewtonValid = xn < x2 - quantum/2 && xn > x1 + quantum/2;
 
-        if(xn < x2 - quantum/2 && xn > x1 + quantum/2)
+        if(bNewtonValid)
         {
-
-            const float64 yn = f(xn);
+			const float64 yn = f(xn);
             ///Possible shortcut
-            if( yb*yn < 0 ) //different signs
+            if( IsDifferentSign(yb,yn) ) //different signs
             {
                 if( xb < xn )
                 {
@@ -612,7 +640,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
 
                 xb = bisectionStep(x1,x2);
                 yb = f(xb);
-            }else
+            }else if(fabs(yn) < fabs(yb)) //Newton is closer than False Position
             {//No shortcut
                 xb = xn;
                 yb = yn;
@@ -621,7 +649,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
                     if(bTraceEnable) std::cout << "\t\t\t No shortcut" << std::endl;
                 #endif
             }
-        }///Otherwise we stay with xb and yb which is bisection
+        }///Otherwise we stay with xb and yb which is false position or bisection
 
         #ifdef DEBUG_TRACE_ZERO
             if(bTraceEnable) std::cout << "\t\tSelected <xb,yb> = <" << xb << "," << yb << ">" << std::endl;
@@ -629,7 +657,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
 
         if( fabs(yb) < DBL_EPSILON ) return xb;
 
-        if( yb*y1 > 0 ) //same sign as y1
+        if( !IsDifferentSign(yb,y1) ) //same sign as y1
         {
             y1 = yb;
             x1 = xb;
@@ -640,7 +668,15 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
             x2 = xb;
         }
 
-        xb = bisectionStep(x1,x2);
+		++stepMode;
+		stepMode%=2;
+		if( stepMode == 0 )
+		{
+			xb = bisectionStep(x1,x2);
+		}else
+		{
+	        xb = regularfalsiStep(x1,y1,x2,y2);
+		}
         yb = f(xb);
 
         #ifdef DEBUG_TRACE_ZERO
