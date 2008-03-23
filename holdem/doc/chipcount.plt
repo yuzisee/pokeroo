@@ -25,7 +25,8 @@ set key center top horizontal
 #        , chipcountFile using '%*lf,%lf' with lines linewidth 5 title "Hero"
         
 #Hand,i4,GearBotV,MultiBotV,DangerV,ComV,NormV,TrapV,AceV,SpaceV
-plot      chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 5 title "NormV" \
+plot    , chipcountFile using '%*lf,%lf' with lines linewidth 1 title "i4"
+        , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 5 title "NormV" \
         , chipcountFile using '%*lf,%*lf,%lf' with lines linewidth 5 title "GearBotV" \
         , chipcountFile using '%*lf,%*lf,%*lf,%lf' with lines linewidth 5 title "MultiBotV" \
         , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "AceV" \
@@ -33,4 +34,4 @@ plot      chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines lin
         , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 2 title "SpaceV" \
         , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "ComV" \
         , chipcountFile using '%*lf,%*lf,%*lf,%*lf,%lf' with lines linewidth 3 title "DangerV" \
-        , chipcountFile using '%*lf,%lf' with lines linewidth 1 title "i4"
+        
