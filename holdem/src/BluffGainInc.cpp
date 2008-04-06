@@ -203,13 +203,13 @@ StateModel<LL,RR>::~StateModel()
 template <class LL, class RR>
 float64 StateModel<LL,RR>::g_raised(float64 raisefrom, const float64 betSize)
 {
-    return fp->f_raised(raisefrom, betSize) + e->foldGain();
+    return fp->f_raised(raisefrom, betSize) + ea.FoldGain();
 }
 
 template <class LL, class RR>
 float64 StateModel<LL,RR>::gd_raised(float64 raisefrom, const float64 betSize, const float64 y)
 {
-    return fp->fd_raised(raisefrom, betSize, y-e->foldGain());
+    return fp->fd_raised(raisefrom, betSize, y - ea.FoldGain());
 }
 
 template <class LL, class RR>
@@ -239,14 +239,14 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
 
     last_x = betSize;
-    const float64 invisiblePercent = quantum / ea->allChips();
+    const float64 invisiblePercent = quantum / ea.tableinfo->allChips();
 
 ///Establish [PushGain] values
 
-	float64 potFoldWin = ea->PushGain();
+	float64 potFoldWin = ea.tableinfo->PushGain();
 	const float64 potFoldWinD = 0;
-    float64 oppFoldChance = ea->pWin(betSize);
-    float64 oppFoldChanceD = ea->pWinD(betSize);
+    float64 oppFoldChance = ea.pWin(betSize);
+    float64 oppFoldChanceD = ea.pWinD(betSize);
 
 #ifdef DEBUGASSERT
 	if( potFoldWin < 0 || oppFoldChance < invisiblePercent ){
@@ -260,12 +260,12 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
     //Count needed array size
     int32 arraySize = 0;
-    while( ea->RaiseAmount(betSize,arraySize) < ea->maxBet() )
+    while( ea.RaiseAmount(betSize,arraySize) < ea.tableinfo->maxBet() )
     {
         ++arraySize;
     }
     //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
-    if(betSize < ea->maxBet()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
+    if(betSize < ea.tableinfo->maxBet()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
 
 
     //Create arrays
@@ -284,22 +284,22 @@ void StateModel<LL,RR>::query( const float64 betSize )
     float64 newRaisedChance = 0;
     float64 newRaisedChanceD = 0;
 
-	firstFoldToRaise = -1;
+	firstFoldToRaise = arraySize;
 
-	for( int32 i=arraySize-1;i>=0; --i)
+	for( int32 i=0;i<arraySize; ++i)
     {
 #ifdef RAISED_PWIN
-        raiseAmount_A[i] = ea->RaiseAmount(betSize,i);
+        raiseAmount_A[i] = ea.RaiseAmount(betSize,i);
 
 
         potRaisedWin_A[i] = g_raised(betSize,raiseAmount_A[i]);
         potRaisedWinD_A[i] = gd_raised(betSize,raiseAmount_A[i],potRaisedWin_A[i]);
 
-        const float64 oppRaisedFoldGain = e->foldGain(betSize - ea->alreadyBet(),raiseAmount_A[i]); //You would fold the additional (betSize - ea->alreadyBet() )
+        const float64 oppRaisedFoldGain = ea.FoldGain(betSize - ea.tableinfo->alreadyBet(),raiseAmount_A[i]); //You would fold the additional (betSize - ea->alreadyBet() )
 
         if( potRaisedWin_A[i] < oppRaisedFoldGain )
         {
-			if( firstFoldToRaise == -1 ) firstFoldToRaise = i;
+			if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
             potRaisedWin_A[i] = oppRaisedFoldGain;
             potRaisedWinD_A[i] = 0;
         }
@@ -310,18 +310,17 @@ void StateModel<LL,RR>::query( const float64 betSize )
     {
 
 
-        newRaisedChance = ea->pRaise(betSize,i,firstFoldToRaise);
-        newRaisedChanceD = ea->pRaiseD(betSize,i,firstFoldToRaise);
-		if( lastuptoRaisedChance < newRaisedChance )
+        newRaisedChance = ea.pRaise(betSize,i,firstFoldToRaise);
+        newRaisedChanceD = ea.pRaiseD(betSize,i,firstFoldToRaise);
+		if( newRaisedChance - lastuptoRaisedChance > invisiblePercent )
 		{
 			oppRaisedChance_A[i] = newRaisedChance - lastuptoRaisedChance;
 			oppRaisedChanceD_A[i] = newRaisedChanceD - lastuptoRaisedChanceD;
 			lastuptoRaisedChance = newRaisedChance;
 			lastuptoRaisedChanceD = newRaisedChanceD;
 		}
-
-
-		if( oppRaisedChance_A[i] < invisiblePercent )
+		//if( oppRaisedChance_A[i] < invisiblePercent )
+		else
 #endif
         {
 	    raiseAmount_A[i] = 0;
@@ -331,18 +330,29 @@ void StateModel<LL,RR>::query( const float64 betSize )
         potRaisedWinD_A[i] = 0;
         }
 
+            #ifdef DEBUG_TRACE_SEARCH
+                if(bTraceEnable)
+                {
+                    std::cout << "\t\t(oppRaiseChance[" << i << "] , cur, highest) = " << oppRaisedChance_A[i]  << " , "  << newRaisedChance << " , " << lastuptoRaisedChance << std::endl;
+                }
+            #endif
+
     }
 
 
 
 ///Establish [Play] values
+	float64 playChance = 1 - oppFoldChance - lastuptoRaisedChance;
+	float64 playChanceD = - oppFoldChanceD - lastuptoRaisedChanceD;
+    /*
 	float64 playChance = 1 - oppFoldChance;
 	float64 playChanceD = - oppFoldChanceD;
 	for( int32 i=0;i<arraySize;++i )
 	{
         playChance -= oppRaisedChance_A[i];
         playChanceD -= oppRaisedChanceD_A[i];
-	}
+	}*/
+
 
     float64 potNormalWin = g_raised(betSize,betSize);
     float64 potNormalWinD = gd_raised(betSize,betSize,potNormalWin);
@@ -401,7 +411,7 @@ void StateModel<LL,RR>::query( const float64 betSize )
 				}
 			#endif
 
-			if( raiseAmount_A[i] >= ea->maxBet()-quantum/2 )
+			if( raiseAmount_A[i] >= ea.tableinfo->maxBet()-quantum/2 )
 			{
 				gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g_raised(betSize,raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g_raised(betSize,raiseAmount_A[i]-quantum/2) );
 			}else
@@ -412,7 +422,7 @@ void StateModel<LL,RR>::query( const float64 betSize )
     }
 
 
-	if( betSize >= ea->maxBet() )
+	if( betSize >= ea.tableinfo->maxBet() )
 	{
 		gainNormallnD = playChance*potNormalWinD/g_raised(betSize,betSize-quantum/2) + playChanceD*log(g_raised(betSize,betSize-quantum/2));
 	}
@@ -432,7 +442,7 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
     dy = (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
 
-    y -= e->foldGain();
+    y -= ea.FoldGain();
 
 
     delete [] raiseAmount_A;

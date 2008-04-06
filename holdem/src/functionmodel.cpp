@@ -39,9 +39,9 @@ GainModel::~GainModel()
 
 float64 HoldemFunctionModel::FindBestBet()
 {
-    const float64 myMoney = e->maxBet();
-    const float64 betToCall = e->callBet();
-    const float64 minRaiseBetTo = e->minRaiseTo();
+    const float64 myMoney = estat->maxBet();
+    const float64 betToCall = estat->callBet();
+    const float64 minRaiseBetTo = estat->minRaiseTo();
 
     if( myMoney < betToCall ) return myMoney;
 
@@ -108,7 +108,7 @@ float64 HoldemFunctionModel::FindBestBet()
 float64 HoldemFunctionModel::FindFoldBet(const float64 bestBet)
 {
 
-    const float64& myMoney = e->maxBet();
+    const float64& myMoney = estat->maxBet();
     float64 desiredFold = FindZero(bestBet,myMoney);
     ///PURIFY
     float64 nextFold = desiredFold + quantum;
@@ -128,38 +128,33 @@ float64 HoldemFunctionModel::FindFoldBet(const float64 bestBet)
     return desiredFold;
 }
 
-const float64 HoldemFunctionModel::GetFoldGain() const
+float64 HoldemFunctionModel::GetFoldGain(CallCumulationD* const e, float64 * const foldWaitLength_out)
 {
-    return e->foldGain();
-}
-
-const float64 HoldemFunctionModel::GetFoldWaitLength() const
-{
-    return e->foldWaitLength();
+    return estat->foldGain(e,foldWaitLength_out);
 }
 
 
 float64 GainModel::g(float64 betSize)
 {
 
-	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
+	if( betSize > estat->callBet() && betSize < estat->minRaiseTo() )
 	{
-		betSize = e->callBet();
+		betSize = estat->callBet();
 	}
 
-	float64 x = e->betFraction(betSize);
-	float64 exf = e->betFraction(e->exf(betSize));
+	float64 x = estat->betFraction(betSize);
+	float64 exf = estat->betFraction(espec.exf(betSize));
 
-    const float64 minexf = e->minCallFraction(betSize); //Because of say, impliedFactor
+    const float64 minexf = estat->minCallFraction(betSize); //Because of say, impliedFactor
     if( exf < minexf )
     {
         exf = minexf;
     }
 
-    const float64 f_pot = e->betFraction( e->stagnantPot() );
+    const float64 f_pot = estat->betFraction( estat->stagnantPot() );
     const float64 exf_live = exf - f_pot;
 
-    const float64 base = e->handBetBase();
+    const float64 base = estat->handBetBase();
 
     #ifdef DEBUGVIEWINTERMEDIARIES
         const float64& t_w = shape.wins;
@@ -173,7 +168,7 @@ float64 GainModel::g(float64 betSize)
         const float64 t_1lp = pow(t_1l, t_cl);
     #endif
 
-    if( betSize < e->callBet() && betSize < e->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
+    if( betSize < estat->callBet() && betSize < estat->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
 
@@ -214,7 +209,7 @@ float64 GainModel::g(float64 betSize)
 
 float64 GainModel::f(const float64 betSize)
 {
-	const float64 fx = g(betSize) - e->foldGain();
+	const float64 fx = g(betSize) - estat->foldGain(espec.ed);
     return fx;
 }
 
@@ -227,29 +222,29 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 
     const float64 adjQuantum = quantum/4;
 
-    const float64 fracQuantum = e->betFraction(adjQuantum);
+    const float64 fracQuantum = estat->betFraction(adjQuantum);
 
-	if( betSize > e->callBet()+adjQuantum && betSize < e->minRaiseTo()-adjQuantum )
+	if( betSize > estat->callBet()+adjQuantum && betSize < estat->minRaiseTo()-adjQuantum )
 	{
    	    	#ifdef DEBUG_TRACE_SEARCH
-				if(bTraceEnable) std::cout << "\t\t\tWithin minraise, reevaluate... @ " << e->callBet() << " and " << e->minRaiseTo() << " instead of " << betSize << std::endl;
+				if(bTraceEnable) std::cout << "\t\t\tWithin minraise, reevaluate... @ " << estat->callBet() << " and " << estat->minRaiseTo() << " instead of " << betSize << std::endl;
 			#endif
 
 
-		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
-		return splitDist/(e->minRaiseTo() - e->callBet());
+		const float64 splitDist = gd(estat->callBet(),y)*(estat->minRaiseTo()-betSize)+gd(estat->minRaiseTo(),y)*(estat->callBet()-betSize);
+		return splitDist/(estat->minRaiseTo() - estat->callBet());
 	}
-	float64 x = e->betFraction(betSize);
+	float64 x = estat->betFraction(betSize);
  	if( x >= 1 ) x = 1.0 - fracQuantum; //Approximate extremes to avoide division by zero
 
 
 
 
     //const float64 qdenom = (2*x+f_pot);
-	float64 exf = e->betFraction(e->exf(betSize));
+	float64 exf = estat->betFraction(espec.exf(betSize));
 
 
-    const float64 minexf = e->minCallFraction(betSize); //Because of say, impliedFactor
+    const float64 minexf = estat->minCallFraction(betSize); //Because of say, impliedFactor
     if( exf < minexf - fracQuantum )
     {
         #ifdef DEBUG_TRACE_SEARCH
@@ -261,8 +256,8 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 
 
 		//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B  //Note: B is determined by betSize/x
-	const float64 dexf = e->dexf(betSize); ///This is actually e->betFraction( e->dexf(betSize)*betSize/x ) = e->dexf(betSize)
-    const float64 f_pot = e->betFraction(e->stagnantPot());
+	const float64 dexf = espec.dexf(betSize); ///This is actually e->betFraction( e->dexf(betSize)*betSize/x ) = e->dexf(betSize)
+    const float64 f_pot = estat->betFraction(estat->stagnantPot());
     const float64 exf_live = exf - f_pot;
 	//const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;n
     //const int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
@@ -275,10 +270,10 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 
 
     #ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable && betSize < e->callBet()) std::cout << "\t\t\tbetSize would be a fold!" << betSize << std::endl;
+    if(bTraceEnable && betSize < estat->callBet()) std::cout << "\t\t\tbetSize would be a fold!" << betSize << std::endl;
     #endif
 
-    if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
+    if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
     const int8 e_call = e_battle; //Probably manditory if dragCalls is used
@@ -322,7 +317,7 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 float64 GainModel::fd(const float64 betSize, const float64 y)
 {
 
-    const float64 efg = e->foldGain();
+    const float64 efg = estat->foldGain(espec.ed);
     const float64 betVal = gd(betSize, y+efg);
 
     #ifdef DEBUG_TRACE_SEARCH
@@ -358,24 +353,24 @@ StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 float64 GainModelNoRisk::g(float64 betSize)
 {
 
-	if( betSize > e->callBet() && betSize < e->minRaiseTo() )
+	if( betSize > estat->callBet() && betSize < estat->minRaiseTo() )
 	{
-		betSize = e->callBet();
+		betSize = estat->callBet();
 	}
 
-	float64 x = e->betFraction(betSize);
-	float64 exf = e->betFraction(e->exf(betSize));
+	float64 x = estat->betFraction(betSize);
+	float64 exf = estat->betFraction(espec.exf(betSize));
 
-    const float64 minexf = e->minCallFraction(betSize); //Because of say, impliedFactor
+    const float64 minexf = estat->minCallFraction(betSize); //Because of say, impliedFactor
     if( exf < minexf )
     {
         exf = minexf;
     }
 
-    const float64 f_pot = e->betFraction(e->stagnantPot());
+    const float64 f_pot = estat->betFraction(estat->stagnantPot());
     const float64 exf_live = exf - f_pot;
 
-    const float64 base = e->handBetBase();
+    const float64 base = estat->handBetBase();
 
         #ifdef DEBUGVIEWINTERMEDIARIES
 
@@ -391,7 +386,7 @@ float64 GainModelNoRisk::g(float64 betSize)
 
         #endif
 
-    if( betSize < e->callBet() && betSize < e->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
+    if( betSize < estat->callBet() && betSize < estat->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
 
@@ -431,7 +426,7 @@ float64 GainModelNoRisk::g(float64 betSize)
 
 float64 GainModelNoRisk::f(const float64 betSize)
 {
-	const float64 fx = g(betSize) - e->foldGain();
+	const float64 fx = g(betSize) - estat->foldGain(espec.ed);
     return fx;
 }
 
@@ -442,14 +437,14 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
     const float64 adjQuantum = quantum/4;
 
 
-	if( betSize > e->callBet()+adjQuantum && betSize < e->minRaiseTo()-adjQuantum )
+	if( betSize > estat->callBet()+adjQuantum && betSize < estat->minRaiseTo() - adjQuantum )
 	{
 	    	#ifdef DEBUG_TRACE_SEARCH
-				if(bTraceEnable) std::cout << "\t\t\tWithin minraise, reevaluate... @ " << e->callBet() << " and " << e->minRaiseTo() << " instead of " << betSize << std::endl;
+				if(bTraceEnable) std::cout << "\t\t\tWithin minraise, reevaluate... @ " << estat->callBet() << " and " << estat->minRaiseTo() << " instead of " << betSize << std::endl;
 			#endif
 
-		const float64 splitDist = gd(e->callBet(),y)*(e->minRaiseTo()-betSize)+gd(e->minRaiseTo(),y)*(e->callBet()-betSize);
-		return splitDist/(e->minRaiseTo() - e->callBet());
+		const float64 splitDist = gd(estat->callBet(),y)*(estat->minRaiseTo()-betSize)+gd(estat->minRaiseTo(),y)*(estat->callBet()-betSize);
+		return splitDist/(estat->minRaiseTo() - estat->callBet());
 	}
 
 //    const float64 x = e->betFraction(betSize);
@@ -457,13 +452,13 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 //	const float64 exf = e->betFraction(e->exf(betSize));
 
 	//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B
-	const float64 dexf = e->dexf(betSize);
+	const float64 dexf = espec.dexf(betSize);
 
 
 #ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable && betSize < e->callBet()) std::cout << "\t\t\tbetSize would be a fold!" << betSize << std::endl;
+    if(bTraceEnable && betSize < estat->callBet()) std::cout << "\t\t\tbetSize would be a fold!" << betSize << std::endl;
 #endif
-    if( betSize < e->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
+    if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
@@ -508,7 +503,7 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 
 float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
 {
-    return gd(betSize, y+e->foldGain());
+    return gd(betSize, y+estat->foldGain(espec.ed));
 }
 
 

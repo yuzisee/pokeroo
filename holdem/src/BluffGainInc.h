@@ -119,13 +119,13 @@ class StateModel : public virtual HoldemFunctionModel
     float64 last_x;
     float64 y;
     float64 dy;
-	
+
 
 
     void query( const float64 );
 
     protected:
-        ExactCallBluffD * ea;
+        ExactCallBluffD & ea;
         AutoScalingFunction<LL,RR> *fp;
         bool bSingle;
 
@@ -146,14 +146,14 @@ class StateModel : public virtual HoldemFunctionModel
 
     float64 g_raised(float64 raisefrom, float64);
 
-    StateModel(ExactCallBluffD *c, AutoScalingFunction<LL,RR> *function) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
+    StateModel(ExactCallBluffD & c, AutoScalingFunction<LL,RR> *function) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
     ,last_x(-1),ea(c),fp(function),bSingle(false),firstFoldToRaise(-1)
     {
         query(0);
     }
 
 
-    StateModel(ExactCallBluffD *c, LL & functionL, RR & functionR) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c)
+    StateModel(ExactCallBluffD &c, LL & functionL, RR & functionR) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
     ,last_x(-1),ea(c),bSingle(true),firstFoldToRaise(-1)
     {
         if( (&functionL) != (&functionR) ) //ASSERT: LL == RR !!
@@ -161,7 +161,7 @@ class StateModel : public virtual HoldemFunctionModel
             std::cerr << "Static Type Error. Use this constructor only when <class LL>==<class RR>." << endl;
             exit(1);
         }
-        fp = new AutoScalingFunction<LL,RR>(functionL,functionR,0,0,c);
+        fp = new AutoScalingFunction<LL,RR>(functionL,functionR,0,0,c.tableinfo);
         query(0);
     }
 

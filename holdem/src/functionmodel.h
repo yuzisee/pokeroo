@@ -36,16 +36,15 @@
 class HoldemFunctionModel : public virtual ScalarFunctionModel
 {
     protected:
-    ExpectedCallD *e;
+    ExpectedCallD * const estat;
     public:
 
-    HoldemFunctionModel(float64 step,ExpectedCallD *c) : ScalarFunctionModel(step),e(c) {};
+    HoldemFunctionModel(float64 step,ExpectedCallD *c) : ScalarFunctionModel(step),estat(c) {};
 
     virtual float64 FindBestBet();
     virtual float64 FindFoldBet(const float64);
 
-    const float64 GetFoldGain() const;
-    const float64 GetFoldWaitLength() const;
+    virtual float64 GetFoldGain(CallCumulationD* const e, float64 * const foldWaitLength_out);
 
     #ifdef DEBUG_GAIN
         void breakdown(float64 points, std::ostream& target, float64 start=0, float64 end=1)
@@ -89,6 +88,7 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 class GainModel : public virtual HoldemFunctionModel
 {
 	protected:
+	ExactCallD & espec;
 	StatResult shape;
 	float64 f_battle;
 	uint8 e_battle;
@@ -103,15 +103,15 @@ class GainModel : public virtual HoldemFunctionModel
         const StatResult & ViewShape() { return shape; }
 
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
-	GainModel(const StatResult s,ExpectedCallD *c)
-		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s)
+	GainModel(const StatResult s,ExactCallD & c)
+		: ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),espec(c),shape(s)
 		{
 
-		    const int8 totalEnemy = c->handsToBeat(); //To beat
+		    const int8 totalEnemy = c.tableinfo->handsToBeat(); //To beat
 
-		    f_battle = c->callingPlayers(); //Floating point version of totalEnemy, but adjustable by playerStrategy based on expectations
+		    f_battle = c.callingPlayers(); //Floating point version of totalEnemy, but adjustable by playerStrategy based on expectations
 
-		    e_battle = c->handsIn()-1; //Who can you split with?
+		    e_battle = c.tableinfo->handsIn()-1; //Who can you split with?
 
 		    if( quantum == 0 ) quantum = 1;
 
@@ -149,15 +149,15 @@ class GainModel : public virtual HoldemFunctionModel
 		}
 
 ///When the two-StatResult constructor is used, the .repeated properties represent weights
-	GainModel(const StatResult s, const StatResult opportunity,ExpectedCallD *c)
-		: ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),shape(s)
+	GainModel(const StatResult s, const StatResult opportunity,ExactCallD & c)
+		: ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),espec(c),shape(s)
 		{
 
-		    const int8 totalEnemy = c->handsToBeat();
+		    const int8 totalEnemy = c.tableinfo->handsToBeat();
 
-		    f_battle = c->callingPlayers();
+		    f_battle = c.callingPlayers();
 
-		    e_battle = c->handsIn()-1;
+		    e_battle = c.tableinfo->handsIn()-1;
 
 		    if( quantum == 0 ) quantum = 1;
 
@@ -282,8 +282,8 @@ class GainModelNoRisk : public virtual GainModel
         virtual float64 g(float64);
         virtual float64 gd(float64,const float64);
     public:
-	GainModelNoRisk(const StatResult s,ExpectedCallD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,c){}
-	GainModelNoRisk(const StatResult s,const StatResult sk,ExpectedCallD *c) : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel(c->chipDenom(),c),GainModel(s,sk,c){}
+	GainModelNoRisk(const StatResult s,ExactCallD & c) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),GainModel(s,c){}
+	GainModelNoRisk(const StatResult s,const StatResult sk,ExactCallD & c) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),GainModel(s,sk,c){}
 	virtual ~GainModelNoRisk();
 
 	virtual float64 f(const float64);

@@ -292,7 +292,7 @@ void PositionalStrategy::setupPosition()
 
 }
 
-float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
+float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, CallCumulationD* const e)
 {
 
         #ifdef DEBUGSPECIFIC
@@ -356,13 +356,16 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 // #############################################################################
 
         #ifdef LOGPOSITION
+            float64 xw;
+            float64 foldgainVal = (targetModel->GetFoldGain(e, &xw));
 
 
             //logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
 
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
-			logFile << "FoldGain()=" << (targetModel->GetFoldGain()) << " x " << targetModel->GetFoldWaitLength() << "\tvs play:" << (raiseGain + (targetModel->GetFoldGain())) << endl;
+			logFile << "FoldGain()=" << foldgainVal;
+			logFile << " x " << xw << "\tvs play:" << (raiseGain + foldgainVal) << endl;
             logFile << "f("<< betToCall <<")=" << callGain << endl;
 
 
@@ -461,9 +464,10 @@ float64 ImproveGainStrategy::MakeBet()
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &choicecumu, &raisecumu);
-    ExactCallBluffD myDeterredCall_left(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &choicecumu, &raisecumu);
-    ExactCallBluffD myDeterredCall_right(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &choicecumu, &raisecumu);
+    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statranking.pct, statmean.pct);
+    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall_left(&tablestate, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall_right(&tablestate, &choicecumu, &raisecumu);
 #else
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
@@ -532,11 +536,11 @@ float64 ImproveGainStrategy::MakeBet()
 
 
     left.repeated = 1;
-	GainModel geomModel(left,right,&myDeterredCall_left);
-	GainModel geomModel_fear(base_right,right,&myDeterredCall_left);
+	GainModel geomModel(left,right,myDeterredCall_left);
+	GainModel geomModel_fear(base_right,right,myDeterredCall_left);
 	statversus.repeated = 1;
-	GainModelNoRisk algbModel(statversus,right,&myDeterredCall_right);
-	GainModelNoRisk algbModel_fear(base_right,right,&myDeterredCall_right);
+	GainModelNoRisk algbModel(statversus,right,myDeterredCall_right);
+	GainModelNoRisk algbModel_fear(base_right,right,myDeterredCall_right);
 
 
 
@@ -564,16 +568,16 @@ float64 ImproveGainStrategy::MakeBet()
 #endif
 
 ///From geom to algb
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred_aggressive(geomModel,algbModel,0.0,riskprice,left.pct*base_right.pct,&myDeterredCall_left);
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain_aggressive(geomModel_fear,algbModel_fear,0.0,riskprice,left.pct*base_right.pct,&myDeterredCall_right);
+	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred_aggressive(geomModel,algbModel,0.0,riskprice,left.pct*base_right.pct,&tablestate);
+	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain_aggressive(geomModel_fear,algbModel_fear,0.0,riskprice,left.pct*base_right.pct,&tablestate);
 
 
 ///From regular to fear (x2)
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            ap(hybridgainDeterred_aggressive,hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES_RA,&myDeterredCall_left);
+            ap(hybridgainDeterred_aggressive,hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES_RA,&tablestate);
 
 	StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-	        choicemodel( &myDeterredCall_left, &ap );
+	        choicemodel( myDeterredCall_left, &ap );
 #ifdef DEBUG_TRAP_AS_NORMAL
 #ifdef LOGPOSITION
 logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
@@ -583,16 +587,16 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
     StateModel & rolemodel = choicemodel;
 #else
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            ap_right(hybridgainDeterred_aggressive,hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES_RA,&myDeterredCall_right);
+            ap_right(hybridgainDeterred_aggressive,hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES_RA,&tablestate);
     StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            choicemodel_right( &myDeterredCall_right, &ap_right );
+            choicemodel_right( myDeterredCall_right, &ap_right );
 
 
 
     AutoScalingFunction<   StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
                          , StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
                        >
-            rolemodel(choicemodel,choicemodel_right,betToCall,riskprice,&myDeterredCall_left);
+            rolemodel(choicemodel,choicemodel_right,betToCall,riskprice,&tablestate);
 
 
 
@@ -744,7 +748,7 @@ exit(1);
 */
 
 
-    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
+    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel, &callcumu) : solveGainModel(&rolemodel, &callcumu);
 
 #endif
 
@@ -788,7 +792,7 @@ exit(1);
         while( rAmount < bestBet )
         {
             rAmount =  myDeterredCall.RaiseAmount(betToCall,raiseStep);
-            const float64 oppRaisedFoldGain = myDeterredCall_left.foldGain(betToCall - myDeterredCall_right.alreadyBet(),rAmount);
+            const float64 oppRaisedFoldGain = myDeterredCall_left.FoldGain(betToCall - tablestate.alreadyBet(),rAmount);
             logFile << "OppRAISEChance";
             if( oppRaisedFoldGain > choicemodel.g_raised(betToCall,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
@@ -809,7 +813,7 @@ exit(1);
         while( rAmount <= maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-            const float64 oppRaisedFoldGain = myDeterredCall_left.foldGain(bestBet - myDeterredCall_right.alreadyBet(),rAmount);
+            const float64 oppRaisedFoldGain = myDeterredCall_left.FoldGain(bestBet - tablestate.alreadyBet(),rAmount);
             logFile << "OppRAISEChance";
             if( oppRaisedFoldGain > choicemodel.g_raised(bestBet,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
@@ -823,7 +827,7 @@ exit(1);
         }
 	}
 
-        logFile << "Guaranteed $" << myDeterredCall.stagnantPot() << endl;
+        logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
         logFile << "OppFoldChance% ... left " << myDeterredCall_left.pWin(bestBet) << " --" << myDeterredCall_right.pWin(bestBet) << " right" << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
         {
@@ -852,8 +856,8 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), statranking.pct, &choicecumu);
-    ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &choicecumu, &raisecumu);
+    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statranking.pct, statmean.pct);
+    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
 #else
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
@@ -872,18 +876,18 @@ float64 DeterredGainStrategy::MakeBet()
     const float64 certainty = myDeterredCall.ActOrReact(betToCall,myBet,ACTREACTUSESIN);
     //const float64 certainty = (betToCall > maxShowdown) ? 1 : (betToCall / maxShowdown);
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
-    const float64 timeLeft = sqrt(  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
-    const float64 volatilityFactor = 1 - timeLeft;
+    const float64 timeLeft = (  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
+    const float64 nonvolatilityFactor = 1 - timeLeft;
 
-	const float64 futureFold = volatilityFactor*(1-certainty) + certainty;
-
-
+	const float64 nearEndOfBets = nonvolatilityFactor*(1-certainty) + certainty;
 
 
-    myDeterredCall.SetImpliedFactor(futureFold);
+
     if( bGamble < 1 ) //ComBot only, not DangerBot
     {
-        myDeterredCall.insuranceDeterrent = 1-futureFold; //more likely to fold due to uncertainty
+        //small insuranceDeterrent means more likely for opponent to fold vs. call
+        myDeterredCall.SetImpliedFactor( 1 / nearEndOfBets );
+        //myDeterredCall.insuranceDeterrent = ;
     }
 
     StatResult left = statmean;
@@ -894,43 +898,45 @@ float64 DeterredGainStrategy::MakeBet()
     statversus.repeated = 1;
     hybridMagnified.repeated = 1;
 
-	GainModel geomModel(hybridMagnified,right,&myDeterredCall);
-	GainModel geomModel_fear(left,right,&myDeterredCall);
-	GainModelNoRisk algbModel(hybridMagnified,right,&myDeterredCall);
-	GainModelNoRisk algbModel_fear(left,right,&myDeterredCall);
+	GainModel geomModel(hybridMagnified,right,myDeterredCall);
+	GainModel geomModel_fear(left,right,myDeterredCall);
+	GainModelNoRisk algbModel(hybridMagnified,right,myDeterredCall);
+	GainModelNoRisk algbModel_fear(left,right,myDeterredCall);
 
 
 #ifdef LOGPOSITION
     if( bGamble == 0 )
     {
         logFile << " -  Conservative  - " << endl;
-        logFile << "uncertainty      " << uncertainty << endl;
-        logFile << "detailPCT.stdDev " << detailPCT.stdDev << endl;
-        logFile << "V Factor         " << volatilityFactor << endl;
+        logFile << "timeLeft      " << timeLeft << endl;
+        logFile << "  uncertainty      " << uncertainty << endl;
+        logFile << "  detailPCT.stdDev " << detailPCT.stdDev << endl;
+        logFile << "nearEndOfBets         " << nearEndOfBets << endl;
+        logFile << "impliedFactor... " << 1 / nearEndOfBets << endl;
     }else
     {
         logFile << " -  Danger  - " << endl;
     }
     logFile << "BetToCall " << certainty << ", pct " << statmean.pct << " ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << endl;
-    logFile << "impliedFactor... " << futureFold << endl;
+
 #endif
 
     ///Choose from geom to algb
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred(geomModel,algbModel,0.0,riskprice,hybridMagnified.pct*statmean.pct,&myDeterredCall);
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain(geomModel_fear,algbModel_fear,0.0,riskprice,hybridMagnified.pct*statmean.pct,&myDeterredCall);
+	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred(geomModel,algbModel,0.0,riskprice,hybridMagnified.pct*statmean.pct,&tablestate);
+	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain(geomModel_fear,algbModel_fear,0.0,riskprice,hybridMagnified.pct*statmean.pct,&tablestate);
 
     ///Choose from regular to fear (using raisefrom)
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>
                         , AutoScalingFunction<GainModel,GainModelNoRisk>
                        >
-            ap_passive(hybridgainDeterred,hybridgain,DELAYENEMYOPP,ACTREACTUSES_HD,&myDeterredCall);
+            ap_passive(hybridgainDeterred,hybridgain,DELAYENEMYOPP,ACTREACTUSES_HD,&tablestate);
 
 
 
     StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>
                         , AutoScalingFunction<GainModel,GainModelNoRisk>
                        >
-            ap_aggressive( &myDeterredCall, &ap_passive );
+            ap_aggressive( myDeterredCall, &ap_passive );
 
 
 
@@ -939,7 +945,7 @@ float64 DeterredGainStrategy::MakeBet()
 
 ////DEB UG
 /*
-if( ViewTable().GetPotSize() > 1.8 )
+if( ViewTable().NumberInHand() < ViewTable().NumberAtTable() )
 {
 //    const float64 z1 = ap_passive.f(60);
 
@@ -972,24 +978,41 @@ if( ViewTable().GetPotSize() > 1.8 )
         //const float64 b12 = hybridgain.f_raised(60,150);
     }
 
-    choicemodel.bTraceEnable = true;
+
     logFile << endl << "1.62316" << endl;
 	logFile << myDeterredCall.pWin(1.62316) << endl;
     logFile << choicemodel.f(1.62316) << endl;
-    const float64 bestBet = solveGainModel(&choicemodel);
-    logFile << bestBet << endl;
+
+    choicemodel.bTraceEnable = true;
+    //const float64 bestBet = solveGainModel(&choicemodel);
+    //logFile << bestBet << endl;
+    logFile << choicemodel.f(1);
+    std::cout << "        Play("<< 1 <<")=" << ap_aggressive.gainNormal << endl;
+	std::cout << "AgainstRaise("<< 1 <<")=" << ap_aggressive.gainRaised << endl;
+	std::cout << "        Push("<< 1 <<")=" << ap_aggressive.gainWithFold << endl;
     exit(1);
 }
 */
 
-    const float64 bestBet = solveGainModel(&choicemodel);
+    const float64 bestBet = solveGainModel(&choicemodel, &callcumu);
 
 #ifdef LOGPOSITION
+
+
+#ifdef VERBOSE_STATEMODEL_INTERFACE
+const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
+		choicemodel.f(displaybet); //since choicemodel is ap_aggressive
+		logFile << "        Play("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
+		logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
+		logFile << "        Push("<< displaybet <<")=" << ap_aggressive.gainWithFold << endl;
+
+#endif
+
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
         logFile << "\"riskprice\"... " << riskprice << endl;
-        logFile << "Geom("<< bestBet <<")=" << hybridgainDeterred.f(bestBet) << endl;
-        logFile << "Algb("<< bestBet <<")=" << hybridgain.f(bestBet) << endl;
+        logFile << "Geom("<< displaybet <<")=" << hybridgainDeterred.f(displaybet) << endl;
+        logFile << "Algb("<< displaybet <<")=" << hybridgain.f(displaybet) << endl;
     }
 
 
@@ -1001,7 +1024,7 @@ if( ViewTable().GetPotSize() > 1.8 )
         while( rAmount < bestBet )
         {
             rAmount =  myDeterredCall.RaiseAmount(betToCall,raiseStep);
-            const float64 oppRaisedFoldGain = myDeterredCall.foldGain(betToCall - myDeterredCall.alreadyBet(),rAmount);
+            const float64 oppRaisedFoldGain = myDeterredCall.FoldGain(betToCall - tablestate.alreadyBet(),rAmount);
             logFile << "OppRAISEChance";
             if( oppRaisedFoldGain > ap_aggressive.g_raised(betToCall,rAmount) ){ logFile << " [F] "; }else { logFile << " [*] "; maxcallStep = raiseStep+1; }
             logFile << myDeterredCall.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << rAmount;
@@ -1021,7 +1044,7 @@ if( ViewTable().GetPotSize() > 1.8 )
         while( rAmount <= maxShowdown )
         {
             rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-            const float64 oppRaisedFoldGain = myDeterredCall.foldGain(bestBet - myDeterredCall.alreadyBet(),rAmount);
+            const float64 oppRaisedFoldGain = myDeterredCall.FoldGain(bestBet - tablestate.alreadyBet(),rAmount);
             logFile << "OppRAISEChance";
             if( oppRaisedFoldGain > ap_aggressive.g_raised(bestBet,rAmount) ){ logFile << " [F] "; }else { logFile << " [*] "; maxcallStep = raiseStep+1; }
             ///ASSUMPTION: ap_aggressive is choicemodel!
@@ -1034,7 +1057,7 @@ if( ViewTable().GetPotSize() > 1.8 )
             ++raiseStep;
         }
 	}
-    logFile << "Guaranteed $" << myDeterredCall.stagnantPot() << endl;
+    logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
 
         logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
         if( myDeterredCall.pWin(bestBet) > 0 )
@@ -1077,10 +1100,10 @@ float64 CorePositionalStrategy::MakeBet()
 #ifdef ANTI_PRESSURE_FOLDGAIN
 #define HANDRANK_MACRO  statranking.pct,
 #endif
-    ExactCallBluffD myExpectedCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO statmean.pct, &choicecumu, &raisecumu);//foldcumu);
-    ExactCallBluffD myLimitCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO  statmean.pct, &choicecumu, &raisecumu);//foldcumu);
-    const float64 committed = ViewPlayer().GetContribution() + myBet;
-    ExactCallD myCommittalCall(myPositionIndex, &(ViewTable()),HANDRANK_MACRO  statmean.pct, &choicecumu, committed );
+    ExpectedCallD tablestate(myPositionIndex, &(ViewTable()),HANDRANK_MACRO statmean.pct);
+    ExactCallBluffD myExpectedCall(&tablestate, &choicecumu, &raisecumu);//foldcumu);
+    ExactCallBluffD myLimitCall(&tablestate, &choicecumu, &raisecumu);//foldcumu);
+
 #ifdef ANTI_PRESSURE_FOLDGAIN
 #undef HANDRANK_MACRO
 #endif
@@ -1091,7 +1114,7 @@ float64 CorePositionalStrategy::MakeBet()
     }
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-	ExactCallD myVSCall(myPositionIndex, &(ViewTable()), statranking.pct, statmean.pct, &callcumu);
+	ExactCallD myVSCall(&tablestate, &callcumu);
 
 #else
 	ExactCallD myVSCall(myPositionIndex, &(ViewTable()), &callcumu);
@@ -1099,35 +1122,33 @@ float64 CorePositionalStrategy::MakeBet()
     float64 expectedVS = ( myVSCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
     if( expectedVS <= 0 ) //You have no money
     {
-        expectedVS = ( myVSCall.betFraction(ViewTable().GetChipDenom()) ) ;
+        expectedVS = ( tablestate.betFraction(ViewTable().GetChipDenom()) ) ;
     }
 
     myLimitCall.callingPlayers(  expectedVS  );
 
 
 
-    GainModel rankGeom(statversus,&myExpectedCall);
-    GainModel hybridGeom(hybridMagnified,&myExpectedCall);
-    GainModelNoRisk hybridAlgb(hybridMagnified,&myExpectedCall);
-    //GainModelNoRisk choicegain_rnr(statversus,&myExpectedCall);
+    GainModel rankGeom(statversus,myExpectedCall);
+    GainModel hybridGeom(hybridMagnified,myExpectedCall);
+    GainModelNoRisk hybridAlgb(hybridMagnified,myExpectedCall);
+    //GainModelNoRisk choicegain_rnr(statversus,myExpectedCall);
 
 
-    GainModel meanGeom(statmean,&myExpectedCall);
+    GainModel meanGeom(statmean,myExpectedCall);
 
 
-    GainModelNoRisk worstAlgb(statworse,&myLimitCall);
-    GainModelNoRisk rankAlgb(statversus,&myExpectedCall);
-    GainModelNoRisk meanAlgb(statmean,&myExpectedCall);
-    GainModel rankGeomPC(statversus,&myCommittalCall);
-    GainModel meanGeomPC(statmean,&myCommittalCall);
+    GainModelNoRisk worstAlgb(statworse,myLimitCall);
+    GainModelNoRisk rankAlgb(statversus,myExpectedCall);
+    GainModelNoRisk meanAlgb(statmean,myExpectedCall);
 
 
-	StateModel<GainModel,GainModel> rankGeomBluff(&myExpectedCall,rankGeom,rankGeom);
-	StateModel<GainModel,GainModel> meanGeomBluff(&myExpectedCall,meanGeom,meanGeom);
-    StateModel<GainModelNoRisk,GainModelNoRisk> worstAlgbBluff(&myLimitCall,worstAlgb,worstAlgb);
-    StateModel<GainModelNoRisk,GainModelNoRisk> rankAlgbBluff(&myExpectedCall,rankAlgb,rankAlgb);
-    StateModel<GainModelNoRisk,GainModelNoRisk> meanAlgbBluff(&myExpectedCall,meanAlgb,meanAlgb);
-    StateModel<GainModel,GainModel> hybridGeomBluff(&myExpectedCall,hybridGeom,hybridGeom);
+	StateModel<GainModel,GainModel> rankGeomBluff(myExpectedCall,rankGeom,rankGeom);
+	StateModel<GainModel,GainModel> meanGeomBluff(myExpectedCall,meanGeom,meanGeom);
+    StateModel<GainModelNoRisk,GainModelNoRisk> worstAlgbBluff(myLimitCall,worstAlgb,worstAlgb);
+    StateModel<GainModelNoRisk,GainModelNoRisk> rankAlgbBluff(myExpectedCall,rankAlgb,rankAlgb);
+    StateModel<GainModelNoRisk,GainModelNoRisk> meanAlgbBluff(myExpectedCall,meanAlgb,meanAlgb);
+    StateModel<GainModel,GainModel> hybridGeomBluff(myExpectedCall,hybridGeom,hybridGeom);
 
     #ifdef DEBUGASSERT
         if( bGamble >= BGAMBLE_MAX )
@@ -1138,7 +1159,7 @@ float64 CorePositionalStrategy::MakeBet()
     #endif
 
 
-    HoldemFunctionModel* (lookup[BGAMBLE_MAX]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom, &hybridAlgb
+    HoldemFunctionModel* (lookup[BGAMBLE_MAX]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeom, &meanGeom, &hybridGeom, &hybridAlgb
 		,&rankGeomBluff ,&meanGeomBluff,&worstAlgbBluff,&rankAlgbBluff,&meanAlgbBluff,&hybridGeomBluff	};
 
 
@@ -1155,18 +1176,18 @@ float64 CorePositionalStrategy::MakeBet()
         {
             const int8 otherGamble = (bGamble + 5) % 10;
             logFile << "Other {" << (int)(otherGamble) << "}" << endl;
-            solveGainModel(lookup[otherGamble]);
+            solveGainModel(lookup[otherGamble], &callcumu);
             logFile << "Main {" << (int)(bGamble) << "}" << endl;
         }
 
     #endif
-    const float64 bestBet = solveGainModel(lookup[bGamble]);
+    const float64 bestBet = solveGainModel(lookup[bGamble], &callcumu);
 
 
 	#ifdef LOGPOSITION
 		if( bGamble >= 9 && bGamble <= 15 )
 		{
-			int32 maxcallStep = -1;
+//			int32 maxcallStep = -1;
 		    int32 raiseStep = 0;
             float64 rAmount =  myExpectedCall.RaiseAmount(bestBet,raiseStep);
             while( rAmount < maxShowdown )
@@ -1181,7 +1202,7 @@ float64 CorePositionalStrategy::MakeBet()
                 logFile << "\tBetWouldFold%" << myExpectedCall.pWin(rAmount) << endl;
                 ++raiseStep;
             }
-            logFile << "Guaranteed $" << myExpectedCall.stagnantPot() << endl;
+            logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
 			logFile << "OppFoldChance% ... " << myExpectedCall.pWin(bestBet) << "   d\\" << myExpectedCall.pWinD(bestBet) << endl;
 
 			if( myExpectedCall.pWin(bestBet) > 0 )

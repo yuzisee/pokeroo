@@ -25,7 +25,7 @@
 #include "callPredictionFunctions.h"
 
 //#define DEBUG_EXFDEXF
-#define ASSUMEFOLDS
+
 #define ANTI_PRESSURE_FOLDGAIN
 #define CONSISTENT_AGG
 //#define PURE_BLUFF
@@ -43,46 +43,44 @@
 class ExpectedCallD /*: public virtual ExpectedCall*/
 {//NO ASSIGNMENT OPERATOR
 protected:
-    const int8 playerID;
-    const HoldemArena* table;
-    CallCumulationD* e;
-
     const float64 potCommitted;
 
+
+public:
+    const int8 playerID;
+
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    FoldGainModel FG;
     const float64 handRarity;
     const float64 meanW;
 #endif
 
-    #if defined(ASSUMEFOLDS)
-    float64 eFold;
-
-    #endif
-
-public:
+    const HoldemArena* const table;
     ExpectedCallD(const int8 id, const HoldemArena* base
 #ifdef ANTI_PRESSURE_FOLDGAIN
             , const float64 rankPCT, const float64 meanPCT
 #endif
-                    , CallCumulationD* data, const float64 commit = 0)
-    : playerID(id), table(base), e(data), potCommitted(0)
+            )
+    : potCommitted(0)
+
+    , playerID(id)
     #ifdef ANTI_PRESSURE_FOLDGAIN
-    ,FG(base->GetChipDenom()/2),handRarity(1-rankPCT), meanW(meanPCT)
+    ,handRarity(1-rankPCT), meanW(meanPCT)
     #endif
-    #if defined(ASSUMEFOLDS)
-    ,eFold(base->NumberAtRound()-1)
-    #endif
+    , table(base)
     {}
 
     virtual ~ExpectedCallD();
 
     virtual float64 forfeitChips() const;
-    virtual float64 foldGain();
-    virtual float64 foldGain(const float64 extra, const float64 facedBet);
-#ifdef ANTI_PRESSURE_FOLDGAIN
-    virtual float64 foldWaitLength();
-#endif
+    virtual float64 foldGain(CallCumulationD* const e);
+    virtual float64 foldGain(CallCumulationD* const e, float64 * const foldWaitLength_out);
+    virtual float64 foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet);
+    virtual float64 foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out);
+    virtual float64 RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo, CallCumulationD * useMean, float64 * out_dPot = 0);
+    virtual float64 PushGain();
+
+    virtual bool OppCanRaiseMe(int8 oppID) const;
+
     virtual float64 oppBet() const;
     virtual float64 alreadyBet() const;
     virtual float64 callBet() const;
@@ -100,15 +98,10 @@ public:
 	virtual float64 minRaiseTo() const;
 	virtual bool inBlinds() const;
 
-
+/*
     virtual float64 exf(const float64 betSize) = 0;
     virtual float64 dexf(const float64 betSize) = 0;
-
-    #ifdef ASSUMEFOLDS
-    virtual float64 callingPlayers() const;
-    virtual void callingPlayers(float64 n);
-    #endif
-
+*/
 
         #ifdef DEBUG_EXFDEXF
             void breakdown(float64 dist, std::ostream& target)
@@ -129,80 +122,6 @@ public:
 
 }
 ;
-/*
-class AutoScalingExpectedCallD : public virtual ExpectedCallD
-{
-    protected:
-        virtual void query(float64 x);
-        const float64 saturate_min, saturate_max, saturate_upto;
-        float64 last_x;
-        float64 y;
-
-        const ExpectedCallD* left;
-        const ExpectedCallD* right;
-    public:
-
-ExpectedCallD(const int8 id, const HoldemArena* base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-            , const float64 rankPCT
-#endif
-                    , const CallCumulationD* data, const float64 commit = 0)
-
-        AutoScalingExpectedCallD(const ExpectedCallD* e_left,const ExpectedCallD* e_right,const float64 minX, const float64 maxX, const float64 upto)
-        : ExpectedCallD(
-                            (e_left->playerID == e_right->playerID) ? e_left->playerID : -1
-                            , (e_left->table == e_right->table) ? e_left->table : 0
-#ifdef ANTI_PRESSURE_FOLDGAIN
-                            ,sqrt(e_left->handRarity * e_right->handRarity) //Geometric mean here?
-#endif
-                            ,(e_left->e != e_right->e
-                            ,0
-                        )
-        , saturate_min(minX), saturate_max(maxX), saturate_upto(upto), left(e_left), right(e_right)
-        {
-            if( (e_left->playerID != e_right->playerID)
-                || (e_left->table != e_right->table)
-                || (e_left->handRarity != e_right->handRarity)
-                || e_left->
-            query(0);
-        }
-}
-;
-*/
-/*
-class EstimateCallD : public virtual ExpectedCallD
-{
-public:
-
-    EstimateCallD(const int8 id, const HoldemArena* base, const CallCumulationD* data)
-    : ExpectedCallD(id,base,data)
-    {};
-
-    virtual float64 exf(float64 betSize);
-    virtual float64 dexf(float64 betSize);
-}
-;
-*/
-
-
-class ZeroCallD : public virtual ExpectedCallD
-{//NO ASSIGNMENT OPERATOR
-public:
-    ZeroCallD(const int8 id, const HoldemArena* base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-            , const float64 rankPCT, const float64 meanPCT
-#endif
-                    , CallCumulationD* data)
-    : ExpectedCallD(id,base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-            ,rankPCT, meanPCT
-#endif
-                    ,data)
-    {}
-
-    virtual float64 exf(const float64 betSize);
-    virtual float64 dexf(const float64 betSize);
-};
 
 
 #ifdef DEBUGBETMODEL

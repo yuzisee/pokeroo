@@ -22,7 +22,6 @@
 #ifndef HOLDEM_OpponentFunctions
 #define HOLDEM_OpponentFunctions
 
-#undef OLD_PREDICTION_ALGORITHM
 
 #include "functionbase.h"
 #include "inferentials.h"

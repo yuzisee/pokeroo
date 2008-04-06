@@ -35,12 +35,22 @@ float64 ExpectedCallD::forfeitChips() const
     return ( alreadyBet() + stagnantPot() - table->ViewPlayer(playerID)->GetContribution() );
 }
 
-float64 ExpectedCallD::foldGain()
+float64 ExpectedCallD::foldGain(CallCumulationD* const e)
 {
-    return foldGain(0,callBet());
+    return foldGain(e,0);
 }
 
-float64 ExpectedCallD::foldGain(const float64 extra, const float64 facedBet)
+float64 ExpectedCallD::foldGain(CallCumulationD* const e, float64 * const foldWaitLength_out)
+{
+    return foldGain(e,0,callBet(),foldWaitLength_out);
+}
+
+float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet)
+{
+    return foldGain(e,extra, facedBet, 0);
+}
+
+float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out)
 {
     const float64 playerCount = table->NumberAtTable();
 
@@ -55,6 +65,7 @@ float64 ExpectedCallD::foldGain(const float64 extra, const float64 facedBet)
 #endif
 
     const float64 avgBlinds = (bigBlind+smallBlind)*blindsPow;
+    FoldGainModel FG(table->GetChipDenom()/2);
     FG.waitLength.meanConv = e;
     FG.waitLength.w = meanW;
     FG.waitLength.bankroll = table->ViewPlayer(playerID)->GetMoney();
@@ -67,15 +78,21 @@ float64 ExpectedCallD::foldGain(const float64 extra, const float64 facedBet)
 
     const float64 totalFG = 1 + betFraction(  FG.f(facedBet)  );
 
-    if( totalFG < 0 ) return 0;
-    return totalFG;
+    if( totalFG < 0 )
+    {
+        if( foldWaitLength_out != 0 ) *foldWaitLength_out = 0;
+         return 0;
+    }else
+    {
+        if( foldWaitLength_out != 0 ) *foldWaitLength_out = FG.n;
+        return totalFG;
+    }
 
 }
 
-float64 ExpectedCallD::foldWaitLength()
+bool ExpectedCallD::OppCanRaiseMe(int8 oppID) const
 {
-    foldGain();
-    return FG.n;
+    return table->CanRaise(oppID, playerID);
 }
 
 float64 ExpectedCallD::oppBet() const
@@ -171,47 +188,7 @@ bool ExpectedCallD::inBlinds() const
     return ( table->GetUnbetBlindsTotal() > 0 );
 }
 
-#ifdef ASSUMEFOLDS
-void ExpectedCallD::callingPlayers(float64 n)
-{
-    eFold = n;
-}
 
-float64 ExpectedCallD::callingPlayers() const
-{
-    return eFold;
-}
-#endif
-
-/*
-float64 EstimateCallD::exf(float64 betSize)
-{
-    const float64& x = betFraction(betSize);
-    return table->GetNumberInHand() * e->pctWillCall(  x/(2*x+potFraction() )  );
-}
-
-
-float64 EstimateCallD::dexf(float64 betSize)
-{
-    const float64& f_pot = potFraction();
-    const float64& x = betFraction(betSize);
-    return table->GetNumberInHand() * e->pctWillCallD(  x/(2*x+f_pot)  ) * f_pot / (2*x+f_pot) /(2*x+f_pot);
-}
-*/
-
-
-
-float64 ZeroCallD::exf(float64 betSize)
-{///Only money already put into the pot.
-//Recall that GetPotSize == GetDeadPotSize + GetRoundPotSize
-    return table->GetPotSize();
-}
-
-
-float64 ZeroCallD::dexf(float64 betSize)
-{///Expect no-one to call your bet except people who are better than you anyways
-    return 0;
-}
 
 #ifdef DEBUGBETMODEL
 void DebugArena::updatePot()

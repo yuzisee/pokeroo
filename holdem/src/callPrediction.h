@@ -22,6 +22,8 @@
 #define HOLDEM_CallPredict
 
 
+#define ASSUMEFOLDS
+
 //#define DEBUG_CALLPRED_FUNCTION
 #undef DEBUG_TRACE_PWIN
 #undef DEBUG_TRACE_DEXF
@@ -53,18 +55,20 @@ struct ChipPositionState
 }
 ;
 
-class ExactCallD : public virtual ExpectedCallD
+class ExactCallD
 {//NO ASSIGNMENT OPERATOR
     private:
+
         float64 totalexf;
         float64 totaldexf;
 
-#ifdef OLD_PREDICTION_ALGORITHM
-        const float64 percentReact(float64 raisebet, const Player * withP) const;
-        void GeneratePctWithRisk(float64 sig, float64 liveOpp, float64 noraise_prescaled, float64 noraiseD_prescaled, float64 percentReact, float64 & out, float64 & outD) const;
-        void GenerateRaiseChances(float64 noraiseRank, float64 noraiseRankD, float64 noraiseMean, float64 noraiseMeanD, float64 raisedFrom, float64 actGain, float64 & out, float64 & outD) const;
-#endif
-        const float64 RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo, CallCumulationD * useMean, float64 * out_dPot = 0);
+    #if defined(ASSUMEFOLDS)
+    float64 eFold;
+
+    #endif
+
+
+
 
     protected:
         static const float64 UNITIALIZED_QUERY;
@@ -74,10 +78,7 @@ class ExactCallD : public virtual ExpectedCallD
         float64 nearest;
         float64 impliedFactor;
 
-#ifdef OLD_PREDICTION_ALGORITHM
-        ExactCallFunctionModel geomFunction;
-        float64 facedOdds_Algb_step(float64 bankroll, float64 pot, float64 alreadyBet, float64 bet, bool bRank, float64 wGuess);
-#endif
+
 
         int32 noRaiseArraySize;
         float64 *noRaiseChance_A;
@@ -98,25 +99,21 @@ class ExactCallD : public virtual ExpectedCallD
 
         void query(const float64 betSize, const int32 callSteps);
     public:
-
+        CallCumulationD * const ed;
+        ExpectedCallD * const tableinfo;
 #ifdef DEBUG_TRACE_EXACTCALL
 		std::ostream * traceOut;
 #endif
 
-        ExactCallD(const int8 id, const HoldemArena* base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-                , const float64 rankPCT, const float64 meanPCT
-#endif
-                        , CallCumulationD* data, const float64 commit = 0)
-    : ExpectedCallD(id,base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-            ,rankPCT, meanPCT
-#endif
-                    ,data,commit), impliedFactor(1)
-#ifdef OLD_PREDICTION_ALGORITHM
-,geomFunction(0.5/RAREST_HAND_CHANCE,data)
-#endif
+        ExactCallD(ExpectedCallD * const tbase, CallCumulationD* data)
+    :
+    #if defined(ASSUMEFOLDS)
+    eFold(tbase->table->NumberAtRound()-1)
+    #endif
+
+    , impliedFactor(1)
                     ,noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
+                    , ed(data),tableinfo(tbase)
 #ifdef DEBUG_TRACE_EXACTCALL
 					,traceOut(0)
 #endif
@@ -125,7 +122,7 @@ class ExactCallD : public virtual ExpectedCallD
 				querycallSteps = -1;
             }
 
-            ~ExactCallD();
+            virtual ~ExactCallD();
 
 
             virtual float64 exf(const float64 betSize);
@@ -136,6 +133,14 @@ class ExactCallD : public virtual ExpectedCallD
 			virtual float64 pRaiseD(const float64 betSize, const int32 step, const int32 callSteps );
 
             virtual void SetImpliedFactor(const float64 bonus);
+
+
+    #ifdef ASSUMEFOLDS
+    virtual float64 callingPlayers() const;
+    virtual void callingPlayers(float64 n);
+    #endif
+            virtual float64 FoldGain(){ return tableinfo->foldGain(ed);}
+            virtual float64 FoldGain(float64 extra, float64 facedbet){ return tableinfo->foldGain(ed,extra,facedbet);}
 
             float64 ActOrReact(float64 callb, float64 lastbet,float64 limit) const;
 }
@@ -151,41 +156,34 @@ class ExactCallBluffD : public virtual ExactCallD
         float64 topThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const;
         float64 bottomThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const;
     protected:
-        CallCumulationD* ea;
+
         float64 allFoldChance;
         float64 allFoldChanceD;
 
         float64 queryinputbluff;
 
         void query(const float64 betSize);
+        CallCumulationD * const ef;
     public:
         float64 insuranceDeterrent;
 
-        ExactCallBluffD(const int8 id, const HoldemArena* base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-                , const float64 rankPCT, const float64 meanPCT
-#endif
-                        , CallCumulationD* data, CallCumulationD* foldData, const float64 commit = 0)
-    : ExpectedCallD(id,base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-            ,rankPCT, meanPCT
-#endif
-                    ,data,commit),ExactCallD(id,base
-#ifdef ANTI_PRESSURE_FOLDGAIN
-                            ,rankPCT, meanPCT
-#endif
-                                    ,data,commit), ea(foldData), insuranceDeterrent(0)
+        ExactCallBluffD( ExpectedCallD * const tbase
+
+                        , CallCumulationD* data, CallCumulationD* foldData)
+    : ExactCallD(tbase,data), ef(foldData), insuranceDeterrent(0)
                             {
                                 queryinputbluff = UNITIALIZED_QUERY;
                             }
 
 
-                            float64 PushGain();
+
 
                             virtual float64 pWin(const float64 betSize);
                             virtual float64 pWinD(const float64 betSize);
 
             float64 RiskPrice();
+
+            ~ExactCallBluffD();
 
 
 }

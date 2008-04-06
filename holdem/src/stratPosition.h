@@ -77,7 +77,7 @@ class PositionalStrategy : virtual public PlayerStrategy
         #endif
 
         void setupPosition();
-        float64 solveGainModel(HoldemFunctionModel*);
+        float64 solveGainModel(HoldemFunctionModel*, CallCumulationD* const e);
 	public:
 
         void HardOpenLogFile();

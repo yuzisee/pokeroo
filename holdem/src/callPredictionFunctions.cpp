@@ -37,9 +37,6 @@ FoldGainModel::~FoldGainModel(){};
 FoldWaitLengthModel::~FoldWaitLengthModel(){};
 
 
-#ifdef OLD_PREDICTION_ALGORITHM
-ExactCallFunctionModel::~ExactCallFunctionModel(){};
-#endif
 
 const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengthModel & o )
 {
@@ -357,7 +354,7 @@ void FacedOddsCallGeom::query( const float64 w )
 
     const float64 dfw = FG.waitLength.opponents*pow(w,FG.waitLength.opponents-1);
     const float64 dU_dw = dfw*log1p((pot+outsidebet)/(B-outsidebet)) * U;
-    
+
 
     lastFD = dU_dw;
     if( FG.n > 0 )
