@@ -1183,17 +1183,23 @@ float64 ExactCallBluffD::RiskPrice()
     FG.waitLength.amountSacrifice = estSacrifice; //rarity() already implies the Ne
     FG.waitLength.bankroll = maxStack;
     FG.waitLength.opponents = 1;
-    FG.waitLength.meanConv = ef; //TODO: Is this a good idea?
+    FG.waitLength.meanConv = ef;
     const float64 riskprice = FG.FindZero(tableinfo->table->GetMinRaise() + tableinfo->callBet(),maxShowdown);
 
     FG.f(riskprice);
-
     if( FG.n > 0 )
     {
         return riskprice;
     }else
     {
-        return maxShowdown;
+		FG.f(riskprice+tableinfo->chipDenom());
+		if( FG.n > 0 )
+		{
+			return ( riskprice+tableinfo->chipDenom() );
+		}else
+		{
+			return maxShowdown;
+		}
     }
 
 

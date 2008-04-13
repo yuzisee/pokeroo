@@ -24,24 +24,10 @@
 
 //#define DEBUG_TRAP_AS_NORMAL
 
-#define RISKPRICE
-
-#ifdef RISKPRICE
 //#define ACTREACTUSESIN riskprice
 #define ACTREACTUSESIN maxShowdown
-
 //Okay, so riskprice is how you control attitude, e.g. geom to algb, or trap_left to trap_right
 //but ACTREACTUSES is how you control fear.
-
-
-#define ACTREACTUSES_RA (riskprice)
-#define ACTREACTUSES_HD riskprice
-//#define ACTREACTUSES_HD maxShowdown
-#define DELAYENEMYOPP 0.0
-//#define DELAYENEMYOPP riskprice
-#else
-#define ACTREACTUSES maxShowdown
-#endif
 
 
 
@@ -55,7 +41,7 @@
 /// Summary of contained strategies:
 /// 1. ImproveStrategy (This is the old fashioned Geom<-->Algb vs. Rank<-->WorseNextCard)
 /// 2. ImproveGainStrategy (This is Norm/Trap/Ace using empirical data)
-/// 3. DeterredGainStrategy (ComBot: volatility/certainty/uncertainty avoids committals)
+/// 3. DeterredGainStrategy (ComBot: focus more on hybridMagnified to make decisions)
 /// 4. HybridScalingStrategy (SpaceBot, experimental stuff)
 
 /// *RANK variants replace Geom<->Linear(NoRisk) AutoScaling with a Geom ONLY.
@@ -474,11 +460,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 
 
-#ifdef RISKPRICE
     float64 riskprice = myDeterredCall.RiskPrice();
-#else
-    float64 riskprice = maxShowdown;
-#endif
 
 
     const float64 fullVersus = myDeterredCall.callingPlayers();
@@ -493,7 +475,7 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 actOrReact = myDeterredCall.ActOrReact(betToCall,myBet,ACTREACTUSESIN);
 
 //NormalBot uses this setup.
-    StatResult left = statversus;//hybridMagnified;
+    StatResult left = statversus;
     StatResult base_right = statmean;
 
 //TrapBot and ActionBot are based on statversus only
@@ -574,7 +556,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 ///From regular to fear (x2)
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            ap(hybridgainDeterred_aggressive,hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES_RA,&tablestate);
+            ap(hybridgainDeterred_aggressive,hybridgain_aggressive,0.0,riskprice,&tablestate);
 
 	StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
 	        choicemodel( myDeterredCall_left, &ap );
@@ -587,7 +569,7 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
     StateModel & rolemodel = choicemodel;
 #else
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            ap_right(hybridgainDeterred_aggressive,hybridgain_aggressive,DELAYENEMYOPP,ACTREACTUSES_RA,&tablestate);
+            ap_right(hybridgainDeterred_aggressive,hybridgain_aggressive,0.0,riskprice,&tablestate);
     StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
             choicemodel_right( myDeterredCall_right, &ap_right );
 
@@ -865,11 +847,9 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 
-#ifdef RISKPRICE
-    float64 riskprice = myDeterredCall.RiskPrice();
-#else
-    float64 riskprice = maxShowdown;
-#endif
+
+    float64 riskprice = 2*myDeterredCall.RiskPrice();
+	if( riskprice > maxShowdown ) riskprice = maxShowdown;
 
 
 
@@ -883,32 +863,27 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 
-    if( bGamble < 1 ) //ComBot only, not DangerBot
+    if( bGamble == 1 ) //DangerBot only, not ComBot
     {
         //small insuranceDeterrent means more likely for opponent to fold vs. call
         myDeterredCall.SetImpliedFactor( 1 / nearEndOfBets );
-        //myDeterredCall.insuranceDeterrent = ;
     }
 
-    StatResult left = statmean;
-    left.repeated = certainty;
     StatResult right = statworse;
     right.repeated = 1-certainty;
 
     statversus.repeated = 1;
     hybridMagnified.repeated = 1;
 
-	GainModel geomModel(hybridMagnified,right,myDeterredCall);
-	GainModel geomModel_fear(left,right,myDeterredCall);
+	GainModel geomModel(hybridMagnified,myDeterredCall);
 	GainModelNoRisk algbModel(hybridMagnified,right,myDeterredCall);
-	GainModelNoRisk algbModel_fear(left,right,myDeterredCall);
 
 
 #ifdef LOGPOSITION
     if( bGamble == 0 )
     {
         logFile << " -  Conservative  - " << endl;
-        logFile << "timeLeft      " << timeLeft << endl;
+                logFile << "timeLeft      " << timeLeft << endl;
         logFile << "  uncertainty      " << uncertainty << endl;
         logFile << "  detailPCT.stdDev " << detailPCT.stdDev << endl;
         logFile << "nearEndOfBets         " << nearEndOfBets << endl;
@@ -916,27 +891,18 @@ float64 DeterredGainStrategy::MakeBet()
     }else
     {
         logFile << " -  Danger  - " << endl;
+
     }
-    logFile << "BetToCall " << certainty << ", pct " << statmean.pct << " ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << endl;
+    logFile << "BetToCall " << certainty << ", pct " << statmean.pct << " ... " << algbModel.ViewShape().pct << " ... " << statworse.pct << endl;
 
 #endif
 
     ///Choose from geom to algb
 	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred(geomModel,algbModel,0.0,riskprice,hybridMagnified.pct*statmean.pct,&tablestate);
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain(geomModel_fear,algbModel_fear,0.0,riskprice,hybridMagnified.pct*statmean.pct,&tablestate);
-
-    ///Choose from regular to fear (using raisefrom)
-	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>
-                        , AutoScalingFunction<GainModel,GainModelNoRisk>
-                       >
-            ap_passive(hybridgainDeterred,hybridgain,DELAYENEMYOPP,ACTREACTUSES_HD,&tablestate);
 
 
-
-    StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>
-                        , AutoScalingFunction<GainModel,GainModelNoRisk>
-                       >
-            ap_aggressive( myDeterredCall, &ap_passive );
+    StateModel<  GainModel, GainModelNoRisk >
+            ap_aggressive( myDeterredCall, &hybridgainDeterred );
 
 
 
@@ -1010,9 +976,9 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
-        logFile << "\"riskprice\"... " << riskprice << endl;
-        logFile << "Geom("<< displaybet <<")=" << hybridgainDeterred.f(displaybet) << endl;
-        logFile << "Algb("<< displaybet <<")=" << hybridgain.f(displaybet) << endl;
+        logFile << "\"2*riskprice\"... " << riskprice << endl;
+        logFile << "Geom("<< displaybet <<")=" << geomModel.f(displaybet) << endl;
+        logFile << "Algb("<< displaybet <<")=" << algbModel.f(displaybet) << endl;
     }
 
 

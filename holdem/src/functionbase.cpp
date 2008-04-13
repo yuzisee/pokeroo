@@ -378,22 +378,22 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
         #endif
 
         ++stepMode;
-        stepMode %= 5;
+        stepMode %= 2;
         switch(stepMode)
         {
-            case 0:
-            case 3:
-            case 4:
+			case 0:
+                xn = searchStep(x1,y1,xb,yb,x2,y2);
+                break;
             default:
                 xn = quadraticStep(x1,y1,xb,yb,x2,y2);
                 if(!( xb != xn && xn < x2 && xn > x1 ))
                 {
                     xn = searchStep(x1,y1,xb,yb,x2,y2);
                 }
-                break;
-            case 1:
-            case 2:
-                xn = searchStep(x1,y1,xb,yb,x2,y2);
+				else if( fabs(xn - xb) < fabs(xn - x1)/2 && fabs(xn - xb) < fabs(xn - x2)/2 )
+				{//Very close to xb, try to tighten bounds
+					xn += xn - xb;
+				}
                 break;
         }
 
@@ -554,9 +554,9 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 }
 
 
-float64 ScalarFunctionModel::newtonStep(float64 x1, float64 y1)
+float64 ScalarFunctionModel::newtonStep(float64 x1, float64 y1, float64 dy1)
 {
-    return x1 - y1/fd(x1,y1);
+    return x1 - y1/dy1;
 }
 
 float64 ScalarFunctionModel::bisectionStep(float64 x1, float64 x2) const
@@ -606,50 +606,54 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
     while( x2 - x1 > quantum )
     {
 
-        const float64 xn = newtonStep(xb,yb);
+		const float64 projfd = fd(xb,yb);
+		if( fabs(projfd) > DBL_EPSILON )
+		{
+			const float64 xn = newtonStep(xb,yb,projfd);
 
 
-        #ifdef DEBUG_TRACE_ZERO
-            if(bTraceEnable) std::cout << "\t\tPossible xn " << xn << std::endl;
-        #endif
+			#ifdef DEBUG_TRACE_ZERO
+				if(bTraceEnable) std::cout << "\t\tPossible xn " << xn << std::endl;
+			#endif
 
-		bool bNewtonValid = xn < x2 - quantum/2 && xn > x1 + quantum/2;
+			bool bNewtonValid = xn < x2 - quantum/2 && xn > x1 + quantum/2;
 
-        if(bNewtonValid)
-        {
-			const float64 yn = f(xn);
-            ///Possible shortcut
-            if( IsDifferentSign(yb,yn) ) //different signs
-            {
-                if( xb < xn )
-                {
-                    x1 = xb;
-                    y1 = yb;
-                    x2 = xn;
-                    y2 = yn;
-                }else{
-                    x1 = xn;
-                    y1 = yn;
-                    x2 = xb;
-                    y2 = yb;
-                }
+			if(bNewtonValid)
+			{
+				const float64 yn = f(xn);
+				///Possible shortcut
+				if( IsDifferentSign(yb,yn) ) //different signs
+				{
+					if( xb < xn )
+					{
+						x1 = xb;
+						y1 = yb;
+						x2 = xn;
+						y2 = yn;
+					}else{
+						x1 = xn;
+						y1 = yn;
+						x2 = xb;
+						y2 = yb;
+					}
 
-                #ifdef DEBUG_TRACE_ZERO
-                    if(bTraceEnable) std::cout << "\t\t\t Shortcut! Switch to xn and xb: new (x1,x2) = (" << x1 << "," << x2 << ")" << std::endl;
-                #endif
+					#ifdef DEBUG_TRACE_ZERO
+						if(bTraceEnable) std::cout << "\t\t\t Shortcut! Switch to xn and xb: new (x1,x2) = (" << x1 << "," << x2 << ")" << std::endl;
+					#endif
 
-                xb = regularfalsiStep(x1,y1,x2,y2);
-                yb = f(xb);
-            }else if(fabs(yn) < fabs(yb)) //Newton is closer than False Position
-            {//No shortcut
-                xb = xn;
-                yb = yn;
+					xb = regularfalsiStep(x1,y1,x2,y2);
+					yb = f(xb);
+				}else if(fabs(yn) < fabs(yb)) //Newton is closer than False Position
+				{//No shortcut
+					xb = xn;
+					yb = yn;
 
-                #ifdef DEBUG_TRACE_ZERO
-                    if(bTraceEnable) std::cout << "\t\t\t No shortcut" << std::endl;
-                #endif
-            }
-        }///Otherwise we stay with xb and yb which is false position or bisection
+					#ifdef DEBUG_TRACE_ZERO
+						if(bTraceEnable) std::cout << "\t\t\t No shortcut" << std::endl;
+					#endif
+				}
+			}///Otherwise we stay with xb and yb which is false position or bisection
+		}///Newton couldn't have been valid.
 
         #ifdef DEBUG_TRACE_ZERO
             if(bTraceEnable) std::cout << "\t\tSelected <xb,yb> = <" << xb << "," << yb << ">" << std::endl;
@@ -662,7 +666,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
             y1 = yb;
             x1 = xb;
         }
-        else
+        else //same sign as y2
         {
             y2 = yb;
             x2 = xb;

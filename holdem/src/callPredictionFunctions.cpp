@@ -274,7 +274,9 @@ void FoldGainModel::query( const float64 betSize )
     {
         n = waitLength.FindBestLength();
 
-
+		const float64 gain_ref = waitLength.f(n);
+		const float64 FB_ref = waitLength.cached_d_dbetSize;
+/*
 		const float64 m_restored = round(n*waitLength.rarity());
 		const float64 n_restored = m_restored/waitLength.rarity();
 
@@ -305,9 +307,16 @@ void FoldGainModel::query( const float64 betSize )
             lastf = gain_above;
             lastFB = FB_above;
         }
+
+		if( gain_ref > lastf )
+*/
+		{
+			lastf = gain_ref;
+			lastFB = FB_ref;
+		}
     }
 
-    if( concedeGain > lastf )
+    if( concedeGain > lastf || n < 1.0 )
     {
         n = 0;
         lastf = concedeGain;
