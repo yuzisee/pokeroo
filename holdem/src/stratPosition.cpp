@@ -24,8 +24,6 @@
 
 //#define DEBUG_TRAP_AS_NORMAL
 
-//#define ACTREACTUSESIN riskprice
-#define ACTREACTUSESIN maxShowdown
 //Okay, so riskprice is how you control attitude, e.g. geom to algb, or trap_left to trap_right
 //but ACTREACTUSES is how you control fear.
 
@@ -472,7 +470,7 @@ float64 ImproveGainStrategy::MakeBet()
 //bGamble == 1 is TrapBot
 
 
-    const float64 actOrReact = myDeterredCall.ActOrReact(betToCall,myBet,ACTREACTUSESIN);
+    const float64 actOrReact = myDeterredCall.ActOrReact(betToCall,myBet,maxShowdown);
 
 //NormalBot uses this setup.
     StatResult left = statversus;
@@ -518,10 +516,10 @@ float64 ImproveGainStrategy::MakeBet()
 
 
     left.repeated = 1;
-	GainModel geomModel(left,right,myDeterredCall_left);
+	GainModel geomModel(left,right,myDeterredCall_left); //"right" probably doesn't have to be there, since left.repeated is 1.
 	GainModel geomModel_fear(base_right,right,myDeterredCall_left);
 	statversus.repeated = 1;
-	GainModelNoRisk algbModel(statversus,right,myDeterredCall_right);
+	GainModelNoRisk algbModel(statversus,right,myDeterredCall_right); //"right" probably doesn't have to be there, since left.repeated is 1.
 	GainModelNoRisk algbModel_fear(base_right,right,myDeterredCall_right);
 
 
@@ -848,13 +846,13 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 
-    float64 riskprice = 2*myDeterredCall.RiskPrice();
+    float64 riskprice = myDeterredCall.RiskPrice();
 	if( riskprice > maxShowdown ) riskprice = maxShowdown;
 
 
 
-    const float64 certainty = myDeterredCall.ActOrReact(betToCall,myBet,ACTREACTUSESIN);
-    //const float64 certainty = (betToCall > maxShowdown) ? 1 : (betToCall / maxShowdown);
+    const float64 certainty = myDeterredCall.ActOrReact(betToCall,myBet,maxShowdown);
+    
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
     const float64 timeLeft = (  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
     const float64 nonvolatilityFactor = 1 - timeLeft;
@@ -869,13 +867,13 @@ float64 DeterredGainStrategy::MakeBet()
         myDeterredCall.SetImpliedFactor( 1 / nearEndOfBets );
     }
 
+    GainModel geomModel(hybridMagnified,myDeterredCall);
+
     StatResult right = statworse;
     right.repeated = 1-certainty;
 
-    statversus.repeated = 1;
-    hybridMagnified.repeated = 1;
-
-	GainModel geomModel(hybridMagnified,myDeterredCall);
+    hybridMagnified.repeated = certainty;
+	
 	GainModelNoRisk algbModel(hybridMagnified,right,myDeterredCall);
 
 
@@ -883,22 +881,21 @@ float64 DeterredGainStrategy::MakeBet()
     if( bGamble == 0 )
     {
         logFile << " -  Conservative  - " << endl;
-                logFile << "timeLeft      " << timeLeft << endl;
+    }else
+    {
+        logFile << " -  Danger  - " << endl;
+        logFile << "timeLeft      " << timeLeft << endl;
         logFile << "  uncertainty      " << uncertainty << endl;
         logFile << "  detailPCT.stdDev " << detailPCT.stdDev << endl;
         logFile << "nearEndOfBets         " << nearEndOfBets << endl;
         logFile << "impliedFactor... " << 1 / nearEndOfBets << endl;
-    }else
-    {
-        logFile << " -  Danger  - " << endl;
-
     }
-    logFile << "BetToCall " << certainty << ", pct " << statmean.pct << " ... " << algbModel.ViewShape().pct << " ... " << statworse.pct << endl;
+    logFile << "BetToCall " << certainty << ", pct " << hybridMagnified.pct << " ... " << algbModel.ViewShape().pct << " ... " << right.pct << endl;
 
 #endif
 
     ///Choose from geom to algb
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred(geomModel,algbModel,0.0,riskprice,hybridMagnified.pct*statmean.pct,&tablestate);
+	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred(geomModel,algbModel,0.0,riskprice,&tablestate);
 
 
     StateModel<  GainModel, GainModelNoRisk >
@@ -976,7 +973,7 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
-        logFile << "\"2*riskprice\"... " << riskprice << endl;
+        logFile << "\"riskprice\"... " << riskprice << endl;
         logFile << "Geom("<< displaybet <<")=" << geomModel.f(displaybet) << endl;
         logFile << "Algb("<< displaybet <<")=" << algbModel.f(displaybet) << endl;
     }

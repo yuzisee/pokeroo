@@ -1150,7 +1150,7 @@ float64 ExactCallD::dexf(const float64 betSize)
 }
 
 
-float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit) const
+float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit) const //Returns 0 for full act, returns 1 for full react
 {
 //One must consider the possibilities:
 //1. [ACT] The player betting has been folding all this time, and has hit his/her hand ALREADY
