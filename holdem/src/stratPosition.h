@@ -44,6 +44,8 @@
 class PositionalStrategy : virtual public PlayerStrategy
 {
     protected:
+        template< typename T >
+        void printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet);
 
 #ifdef ARBITARY_DISTANCE
         int8 roundNumber[3];
@@ -92,6 +94,7 @@ class PositionalStrategy : virtual public PlayerStrategy
 		virtual void SeeOppHand(const int8, const Hand&){};
         virtual void SeeAction(const HoldemAction&) {};
         virtual void FinishHand(){};
+
 }
 ;
 

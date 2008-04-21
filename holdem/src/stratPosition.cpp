@@ -413,6 +413,50 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
 
 }
 
+template< typename T >
+void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet)
+{
+
+		int32 maxcallStep = -1;
+	    int32 raiseStep = 0;
+        float64 rAmount =  rl.RaiseAmount(betToCall,raiseStep);
+        while( rAmount < separatorBet )
+        {
+            rAmount =  rl.RaiseAmount(betToCall,raiseStep);
+            const float64 oppRaisedFoldGain = rl.FoldGain(betToCall - tablestate.alreadyBet(),rAmount);
+            logFile << "OppRAISEChance";
+            if( oppRaisedFoldGain > m.g_raised(betToCall,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
+
+            logFile << rl.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << rAmount;
+            logFile << "\tfold -- left" << rl.pWin(rAmount) << "  " << rr.pWin(rAmount) << " right" << endl;
+
+
+            if( rAmount >= maxShowdown ) break;
+
+            ++raiseStep;
+        }
+
+		logFile << "\t--" << endl;
+
+		maxcallStep = -1;
+		raiseStep = 0;
+        rAmount =  rl.RaiseAmount(separatorBet,raiseStep);
+        while( rAmount <= maxShowdown )
+        {
+            rAmount =  rl.RaiseAmount(separatorBet,raiseStep);
+            const float64 oppRaisedFoldGain = rl.FoldGain(separatorBet - tablestate.alreadyBet(),rAmount);
+            logFile << "OppRAISEChance";
+            if( oppRaisedFoldGain > m.g_raised(separatorBet,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
+
+            logFile << rl.pRaise(separatorBet,raiseStep,maxcallStep) << " @ $" << rAmount;
+            logFile << "\tfold -- left" << rl.pWin(rAmount) << "  " << rr.pWin(rAmount) << " right" << endl;
+
+
+            if( rAmount >= maxShowdown ) break;
+
+            ++raiseStep;
+        }
+}
 
 float64 ImproveGainStrategy::MakeBet()
 {
@@ -766,45 +810,8 @@ exit(1);
 
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
-		int32 maxcallStep = -1;
-	    int32 raiseStep = 0;
-        float64 rAmount =  myDeterredCall.RaiseAmount(betToCall,raiseStep);
-        while( rAmount < bestBet )
-        {
-            rAmount =  myDeterredCall.RaiseAmount(betToCall,raiseStep);
-            const float64 oppRaisedFoldGain = myDeterredCall_left.FoldGain(betToCall - tablestate.alreadyBet(),rAmount);
-            logFile << "OppRAISEChance";
-            if( oppRaisedFoldGain > choicemodel.g_raised(betToCall,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
-
-            logFile << myDeterredCall.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << rAmount;
-            logFile << "\tfold -- left" << myDeterredCall_left.pWin(rAmount) << "  " << myDeterredCall_right.pWin(rAmount) << " right" << endl;
-
-
-            if( rAmount >= maxShowdown ) break;
-
-            ++raiseStep;
-        }
-
-		logFile << "\t--" << endl;
-
-		maxcallStep = -1;
-		raiseStep = 0;
-        rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-        while( rAmount <= maxShowdown )
-        {
-            rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-            const float64 oppRaisedFoldGain = myDeterredCall_left.FoldGain(bestBet - tablestate.alreadyBet(),rAmount);
-            logFile << "OppRAISEChance";
-            if( oppRaisedFoldGain > choicemodel.g_raised(bestBet,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
-
-            logFile << myDeterredCall.pRaise(bestBet,raiseStep,maxcallStep) << " @ $" << rAmount;
-            logFile << "\tfold -- left" << myDeterredCall_left.pWin(rAmount) << "  " << myDeterredCall_right.pWin(rAmount) << " right" << endl;
-
-
-            if( rAmount >= maxShowdown ) break;
-
-            ++raiseStep;
-        }
+	    printBetGradient< StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  > >
+	                     (myDeterredCall_left, myDeterredCall_right, choicemodel, tablestate, bestBet);
 	}
 
         logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
@@ -852,7 +859,7 @@ float64 DeterredGainStrategy::MakeBet()
 
 
     const float64 certainty = myDeterredCall.ActOrReact(betToCall,myBet,maxShowdown);
-    
+
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
     const float64 timeLeft = (  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
     const float64 nonvolatilityFactor = 1 - timeLeft;
@@ -873,7 +880,7 @@ float64 DeterredGainStrategy::MakeBet()
     right.repeated = 1-certainty;
 
     hybridMagnified.repeated = certainty;
-	
+
 	GainModelNoRisk algbModel(hybridMagnified,right,myDeterredCall);
 
 
@@ -981,44 +988,9 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
 	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
 	{
-		int32 maxcallStep = -1;
-	    int32 raiseStep = 0;
-        float64 rAmount =  myDeterredCall.RaiseAmount(betToCall,raiseStep);
-        while( rAmount < bestBet )
-        {
-            rAmount =  myDeterredCall.RaiseAmount(betToCall,raiseStep);
-            const float64 oppRaisedFoldGain = myDeterredCall.FoldGain(betToCall - tablestate.alreadyBet(),rAmount);
-            logFile << "OppRAISEChance";
-            if( oppRaisedFoldGain > ap_aggressive.g_raised(betToCall,rAmount) ){ logFile << " [F] "; }else { logFile << " [*] "; maxcallStep = raiseStep+1; }
-            logFile << myDeterredCall.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << rAmount;
-            logFile << "\tBetWouldFold%" << myDeterredCall.pWin(rAmount) << endl;
+        printBetGradient< StateModel<  GainModel, GainModelNoRisk > >
+            (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, bestBet);
 
-
-            if( rAmount >= maxShowdown ) break;
-
-            ++raiseStep;
-        }
-
-		logFile << "\t--" << endl;
-
-		maxcallStep = -1;
-		raiseStep = 0;
-        rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-        while( rAmount <= maxShowdown )
-        {
-            rAmount =  myDeterredCall.RaiseAmount(bestBet,raiseStep);
-            const float64 oppRaisedFoldGain = myDeterredCall.FoldGain(bestBet - tablestate.alreadyBet(),rAmount);
-            logFile << "OppRAISEChance";
-            if( oppRaisedFoldGain > ap_aggressive.g_raised(bestBet,rAmount) ){ logFile << " [F] "; }else { logFile << " [*] "; maxcallStep = raiseStep+1; }
-            ///ASSUMPTION: ap_aggressive is choicemodel!
-
-            logFile << myDeterredCall.pRaise(bestBet,raiseStep,maxcallStep) << " @ $" << rAmount;
-            logFile << "\tBetWouldFold%" << myDeterredCall.pWin(rAmount) << endl;
-
-            if( rAmount >= maxShowdown ) break;
-
-            ++raiseStep;
-        }
 	}
     logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
 
