@@ -20,6 +20,7 @@
 
 #include <math.h>
 #include "stratPosition.h"
+#include <float.h>
 
 
 //#define DEBUG_TRAP_AS_NORMAL
@@ -417,45 +418,48 @@ template< typename T >
 void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet)
 {
 
-		int32 maxcallStep = -1;
-	    int32 raiseStep = 0;
-        float64 rAmount =  rl.RaiseAmount(betToCall,raiseStep);
-        while( rAmount < separatorBet )
-        {
-            rAmount =  rl.RaiseAmount(betToCall,raiseStep);
-            const float64 oppRaisedFoldGain = rl.FoldGain(betToCall - tablestate.alreadyBet(),rAmount);
-            logFile << "OppRAISEChance";
-            if( oppRaisedFoldGain > m.g_raised(betToCall,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
+    int32 maxcallStep = -1;
+    int32 raiseStep = 0;
+    float64 rAmount =  rl.RaiseAmount(betToCall,raiseStep);
+    while( rAmount < separatorBet )
+    {
+        rAmount =  rl.RaiseAmount(betToCall,raiseStep);
+        const float64 oppRaisedFoldGain = rl.FoldGain(betToCall - tablestate.alreadyBet(),rAmount);
+        logFile << "OppRAISEChance";
+        if( oppRaisedFoldGain > m.g_raised(betToCall,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
-            logFile << rl.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << rAmount;
-            logFile << "\tfold -- left" << rl.pWin(rAmount) << "  " << rr.pWin(rAmount) << " right" << endl;
+        logFile << rl.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << rAmount;
+        logFile << "\tfold -- left" << rl.pWin(rAmount) << "  " << rr.pWin(rAmount) << " right" << endl;
 
 
-            if( rAmount >= maxShowdown ) break;
+        if( rAmount >= maxShowdown ) break;
 
-            ++raiseStep;
-        }
+        ++raiseStep;
+    }
 
-		logFile << "\t--" << endl;
+    const float64 minNextRaiseTo = (separatorBet*2-betToCall);
+    if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
 
-		maxcallStep = -1;
-		raiseStep = 0;
+    logFile << "\t--" << endl;
+
+    maxcallStep = -1;
+    raiseStep = 0;
+    rAmount =  rl.RaiseAmount(separatorBet,raiseStep);
+    while( rAmount <= maxShowdown )
+    {
         rAmount =  rl.RaiseAmount(separatorBet,raiseStep);
-        while( rAmount <= maxShowdown )
-        {
-            rAmount =  rl.RaiseAmount(separatorBet,raiseStep);
-            const float64 oppRaisedFoldGain = rl.FoldGain(separatorBet - tablestate.alreadyBet(),rAmount);
-            logFile << "OppRAISEChance";
-            if( oppRaisedFoldGain > m.g_raised(separatorBet,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
+        const float64 oppRaisedFoldGain = rl.FoldGain(separatorBet - tablestate.alreadyBet(),rAmount);
+        logFile << "OppRAISEChance";
+        if( oppRaisedFoldGain > m.g_raised(separatorBet,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
-            logFile << rl.pRaise(separatorBet,raiseStep,maxcallStep) << " @ $" << rAmount;
-            logFile << "\tfold -- left" << rl.pWin(rAmount) << "  " << rr.pWin(rAmount) << " right" << endl;
+        logFile << rl.pRaise(separatorBet,raiseStep,maxcallStep) << " @ $" << rAmount;
+        logFile << "\tfold -- left" << rl.pWin(rAmount) << "  " << rr.pWin(rAmount) << " right" << endl;
 
 
-            if( rAmount >= maxShowdown ) break;
+        if( rAmount >= maxShowdown ) break;
 
-            ++raiseStep;
-        }
+        ++raiseStep;
+    }
 }
 
 float64 ImproveGainStrategy::MakeBet()

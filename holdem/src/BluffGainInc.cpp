@@ -267,6 +267,7 @@ void StateModel<LL,RR>::query( const float64 betSize )
     //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
     if(betSize < ea.tableinfo->maxBet()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
 
+    const bool bCallerWillPush = (arraySize == 1); //If arraySize is 1, then minRaise goes over maxbet. Anybody who can call will just reraise over the top.
 
     //Create arrays
     float64 * raiseAmount_A = new float64[arraySize];
@@ -309,9 +310,17 @@ void StateModel<LL,RR>::query( const float64 betSize )
     for( int32 i=arraySize-1;i>=0; --i)
     {
 
+        if( bCallerWillPush )
+        {
+            //ASSERT: i == 0 && arraySize == 1 && lastUptoRaisedChance == 0 && oppFoldChance and oppFoldChanceD have already been determined
+            newRaisedChance = 1 - oppFoldChance;
+            newRaisedChanceD = - oppFoldChanceD;
+        }else{
+            //Standard calculation
+            newRaisedChance = ea.pRaise(betSize,i,firstFoldToRaise);
+            newRaisedChanceD = ea.pRaiseD(betSize,i,firstFoldToRaise);
+        }
 
-        newRaisedChance = ea.pRaise(betSize,i,firstFoldToRaise);
-        newRaisedChanceD = ea.pRaiseD(betSize,i,firstFoldToRaise);
 		if( newRaisedChance - lastuptoRaisedChance > invisiblePercent )
 		{
 			oppRaisedChance_A[i] = newRaisedChance - lastuptoRaisedChance;
