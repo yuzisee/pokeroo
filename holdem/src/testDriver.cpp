@@ -539,6 +539,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     MultiThresholdStrategy pushAll(4,4);
 	MultiThresholdStrategy pushFold(0,2);
 	MultiThresholdStrategy tightPushFold(1,0);
+	/*
 	//ConsoleStepStrategy watchPlay;
 	CorePositionalStrategy RankGeom(0);
 	CorePositionalStrategy MeanGeom(1);
@@ -553,6 +554,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	CorePositionalStrategy MeanGeomBluff(10);
 	CorePositionalStrategy WorseAlgbBluff(11);
 	CorePositionalStrategy HybridGeomBluff(14);
+*/
+    DeterredGainStrategy DeterredRank(2);
+
 
 
     DeterredGainStrategy StrikeFold(1);
@@ -570,7 +574,8 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     ImproveGainStrategy NormT(0), NormTR(0);
     ImproveGainStrategy TrapT(1), TrapTR(1);
     ImproveGainStrategy AceT(2), AceTR(2);
-    CorePositionalStrategy SpaceT(10), SpaceTR(10);
+    DeterredGainStrategy SpaceT(2), SpaceTR(2); //CorePositionalStrategy SpaceT(10), SpaceTR(10);
+
 
 
     PositionalStrategy *(multiT[6]) = {&DangerT, &ComT, &NormT, &TrapT, &AceT , &SpaceT};
@@ -635,7 +640,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                         myTable.AddBot("NormalBotV",startingMoney, &XFoldA);
                         break;
                     case 3:
-                        myTable.AddBot("SpaceBotV", startingMoney, &MeanGeomBluff);
+                        myTable.AddBot("SpaceBotV", startingMoney, &DeterredRank);//&MeanGeomBluff);
                         break;
                     case 4:
                         myTable.AddBot("ActionBotV",startingMoney, &ReallyImproveA);
@@ -657,12 +662,14 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                 //myTable.AddPlayer("NormalBotIV", &MeanGeomBluff); /* riskymode = 10 */
                 //myTable.AddPlayer("NormalBotIV", &RankGeomBluff); /* riskymode = 9 */
             break;
+        /*
         case 'M':
-            myTable.AddBot("M2", AUTO_CHIP_COUNT,  &RankGeom); /* riskymode = 0 */
+            myTable.AddBot("M2", AUTO_CHIP_COUNT,  &RankGeom); // riskymode = 0
             break;
         case 'G':
-            myTable.AddBot("G2",AUTO_CHIP_COUNT, &MeanGeom); /* riskymode = 1 */
+            myTable.AddBot("G2",AUTO_CHIP_COUNT, &MeanGeom); // riskymode = 1
             break;
+        */
         default:
             //myTable.AddPlayer("RankGeom", &RankGeom); /* riskymode = 0 */
             //myTable.AddPlayer("MeanGeom", &MeanGeom); /* riskymode = 1 */
@@ -693,7 +700,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 		myTable.AddBot("AceV", AUTO_CHIP_COUNT, &ReallyImproveA);
 
 
-        myTable.AddBot("SpaceV", AUTO_CHIP_COUNT, &MeanGeomBluff);
+        myTable.AddBot("SpaceV", AUTO_CHIP_COUNT, &DeterredRank);//&MeanGeomBluff);
 
 
         //myTable.AddPlayer("SpaceIV", &AutoSetA);

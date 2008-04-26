@@ -874,7 +874,10 @@ float64 DeterredGainStrategy::MakeBet()
         myDeterredCall.SetImpliedFactor( 1 / nearEndOfBets );
     }
 
-    GainModel geomModel(hybridMagnified,myDeterredCall);
+    StatResult left = hybridMagnified;
+    if( bGamble == 2 ) left = statranking;
+
+    GainModel geomModel(left,myDeterredCall);
 
     StatResult right = statworse;
     right.repeated = 1-certainty;
@@ -888,7 +891,12 @@ float64 DeterredGainStrategy::MakeBet()
     if( bGamble == 0 )
     {
         logFile << " -  Conservative  - " << endl;
-    }else
+    }
+    else if( bGamble == 2 )
+    {
+        logFile << " -  SpaceRank  - " << endl;
+    }
+    else
     {
         logFile << " -  Danger  - " << endl;
         logFile << "timeLeft      " << timeLeft << endl;
