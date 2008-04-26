@@ -512,9 +512,9 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 		}
 	}
 
-    if( raiseAmount > tableinfo->maxBetAtTable() )
+    if( raiseAmount > tableinfo->maxRaiseAmount() )
     {
-        raiseAmount = tableinfo->maxBetAtTable();
+        raiseAmount = tableinfo->maxRaiseAmount();
     }
 
 	return raiseAmount;
@@ -554,7 +554,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
 
     noRaiseArraySize = 0;
-    while( RaiseAmount(betSize,noRaiseArraySize) < tableinfo->maxBetAtTable() )
+    while( RaiseAmount(betSize,noRaiseArraySize) < tableinfo->maxRaiseAmount() )
     {
         ++noRaiseArraySize;
     }

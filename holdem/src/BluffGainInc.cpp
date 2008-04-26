@@ -260,12 +260,12 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
     //Count needed array size
     int32 arraySize = 0;
-    while( ea.RaiseAmount(betSize,arraySize) < ea.tableinfo->maxBetAtTable() )
+    while( ea.RaiseAmount(betSize,arraySize) < ea.tableinfo->maxRaiseAmount() )
     {
         ++arraySize;
     }
     //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
-    if(betSize < ea.tableinfo->maxBetAtTable()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
+    if(betSize < ea.tableinfo->maxRaiseAmount()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
 
     const bool bCallerWillPush = (arraySize == 1); //If arraySize is 1, then minRaise goes over maxbet. Anybody who can call will just reraise over the top.
 

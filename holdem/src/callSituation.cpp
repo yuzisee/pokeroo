@@ -137,6 +137,13 @@ float64 ExpectedCallD::maxBetAtTable() const
 	return table->GetMaxShowdown();
 }
 
+float64 ExpectedCallD::maxRaiseAmount() const
+{
+	const float64 maxShowdown = table->GetMaxShowdown();
+	const float64 maxCall = maxBet();
+	return ((maxCall < maxShowdown) ? (maxCall) : (maxShowdown) );
+}
+
 float64 ExpectedCallD::allChips() const
 {
     return table->GetAllChips();

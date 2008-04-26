@@ -52,8 +52,7 @@ float64 HoldemFunctionModel::FindBestBet()
         desiredBet = myMoney;
     }else
     {
-		float64 maxRaiseBetTo = estat->maxBetAtTable();
-		if( myMoney < maxRaiseBetTo ) maxRaiseBetTo = myMoney; //Avoid confusing the search
+		float64 maxRaiseBetTo = estat->maxRaiseAmount();
 
     	desiredBet = FindMax(minRaiseBetTo,maxRaiseBetTo);
 
@@ -141,6 +140,11 @@ float64 GainModel::g(float64 betSize)
 	if( betSize > estat->callBet() && betSize < estat->minRaiseTo() )
 	{
 		betSize = estat->callBet();
+	}
+
+	if( betSize > estat->maxBet() ) //Because of say, raiseGain
+	{
+		betSize = estat->maxBet();
 	}
 
 	float64 x = estat->betFraction(betSize);
