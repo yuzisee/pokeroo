@@ -800,7 +800,7 @@ exit(1);
 
     if( bGamble != 0 )
     {
-        choicemodel_right.f(bestBet);
+        choicemodel_right.f(viewBet);
         logFile << "        Play OtherDeter("<< viewBet <<")=" << choicemodel_right.gainNormal << endl;
         logFile << "AgainstRaise OtherDeter("<< viewBet <<")=" << choicemodel_right.gainRaised << endl;
         logFile << "        Push OtherDeter("<< viewBet <<")=" << choicemodel_right.gainWithFold << endl;
