@@ -290,7 +290,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
 {
     if( w <= 0 ) return 0;
     const float64 raiseto = cps.alreadyBet + incrRaise;
-    if( raiseto > cps.bankroll ) return 0;
+	if( raiseto >= cps.bankroll - tableinfo->chipDenom()/2 ) return 0;
 
 
     if( fold_bet > cps.bankroll )
