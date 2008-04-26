@@ -788,43 +788,39 @@ exit(1);
 
 
 #ifdef LOGPOSITION
-    //if( bestBet < betToCall + ViewTable().GetChipDenom() )
-    {
-        logFile << "\"riskprice\"... " << riskprice << endl;
+    const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? betToCall : bestBet;
+
+    logFile << "\"riskprice\"... " << riskprice << endl;
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
-		choicemodel.f(bestBet);
-		logFile << "        Play("<< bestBet <<")=" << choicemodel.gainNormal << endl;
-		logFile << "AgainstRaise("<< bestBet <<")=" << choicemodel.gainRaised << endl;
-		logFile << "        Push("<< bestBet <<")=" << choicemodel.gainWithFold << endl;
+    choicemodel.f(viewBet);
+    logFile << "        Play("<< viewBet <<")=" << choicemodel.gainNormal << endl;
+    logFile << "AgainstRaise("<< viewBet <<")=" << choicemodel.gainRaised << endl;
+    logFile << "        Push("<< viewBet <<")=" << choicemodel.gainWithFold << endl;
 
-		if( bGamble != 0 )
-		{
-			choicemodel_right.f(bestBet);
-			logFile << "        Play OtherDeter("<< bestBet <<")=" << choicemodel_right.gainNormal << endl;
-			logFile << "AgainstRaise OtherDeter("<< bestBet <<")=" << choicemodel_right.gainRaised << endl;
-			logFile << "        Push OtherDeter("<< bestBet <<")=" << choicemodel_right.gainWithFold << endl;
-		}
-#endif
-        logFile << "Call Regular("<< bestBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
-        logFile << "   Call Fear("<< bestBet <<")=" << hybridgain_aggressive.f(bestBet) << endl;
-
+    if( bGamble != 0 )
+    {
+        choicemodel_right.f(bestBet);
+        logFile << "        Play OtherDeter("<< viewBet <<")=" << choicemodel_right.gainNormal << endl;
+        logFile << "AgainstRaise OtherDeter("<< viewBet <<")=" << choicemodel_right.gainRaised << endl;
+        logFile << "        Push OtherDeter("<< viewBet <<")=" << choicemodel_right.gainWithFold << endl;
     }
+#endif
+    logFile << "Call Regular("<< viewBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
+    logFile << "   Call Fear("<< viewBet <<")=" << hybridgain_aggressive.f(bestBet) << endl;
 
 
-	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
-	{
-	    printBetGradient< StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  > >
-	                     (myDeterredCall_left, myDeterredCall_right, choicemodel, tablestate, bestBet);
-	}
+    printBetGradient< StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  > >
+                     (myDeterredCall_left, myDeterredCall_right, choicemodel, tablestate, viewBet);
 
-        logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
-        logFile << "OppFoldChance% ... left " << myDeterredCall_left.pWin(bestBet) << " --" << myDeterredCall_right.pWin(bestBet) << " right" << endl;
-        if( myDeterredCall.pWin(bestBet) > 0 )
-        {
-            logFile << "confirm Normal " << choicemodel.f(bestBet) << endl;
-            logFile << "confirm " << rolemodel.f(bestBet) << endl;
-        }
+
+    logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
+    logFile << "OppFoldChance% ... left " << myDeterredCall_left.pWin(viewBet) << " --" << myDeterredCall_right.pWin(viewBet) << " right" << endl;
+    if( myDeterredCall.pWin(bestBet) > 0 )
+    {
+        logFile << "confirm Normal " << choicemodel.f(viewBet) << endl;
+        logFile << "confirm " << rolemodel.f(viewBet) << endl;
+    }
 
 #endif
 
@@ -990,18 +986,16 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
     }
 
 
-	if( bestBet >= betToCall - ViewTable().GetChipDenom() )
-	{
         printBetGradient< StateModel<  GainModel, GainModelNoRisk > >
-            (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, bestBet);
+            (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet);
 
-	}
+
     logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
 
-        logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(bestBet) << "   d\\" << myDeterredCall.pWinD(bestBet) << endl;
-        if( myDeterredCall.pWin(bestBet) > 0 )
+        logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(displaybet) << "   d\\" << myDeterredCall.pWinD(displaybet) << endl;
+        if( myDeterredCall.pWin(displaybet) > 0 )
         {
-            logFile << "confirm " << choicemodel.f(bestBet) << endl;
+            logFile << "confirm " << choicemodel.f(displaybet) << endl;
         }
 
 #endif
@@ -1121,17 +1115,30 @@ float64 CorePositionalStrategy::MakeBet()
 
     #endif
     const float64 bestBet = solveGainModel(lookup[bGamble], &callcumu);
-
+    const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
 	#ifdef LOGPOSITION
+	if( bGamble == 9)
+	{
+
+#ifdef VERBOSE_STATEMODEL_INTERFACE
+
+		rankGeomBluff.f(displaybet); //since choicemodel is ap_aggressive
+		logFile << "        Play("<< displaybet <<")=" << rankGeomBluff.gainNormal << endl;
+		logFile << "AgainstRaise("<< displaybet <<")=" << rankGeomBluff.gainRaised << endl;
+		logFile << "        Push("<< displaybet <<")=" << rankGeomBluff.gainWithFold << endl;
+
+#endif
+	}
+
 		if( bGamble >= 9 && bGamble <= 15 )
 		{
 //			int32 maxcallStep = -1;
 		    int32 raiseStep = 0;
-            float64 rAmount =  myExpectedCall.RaiseAmount(bestBet,raiseStep);
+            float64 rAmount =  myExpectedCall.RaiseAmount(displaybet,raiseStep);
             while( rAmount < maxShowdown )
             {
-                rAmount =  myExpectedCall.RaiseAmount(bestBet,raiseStep);
+                rAmount =  myExpectedCall.RaiseAmount(displaybet,raiseStep);
 
 				//if( oppRaisedFoldGain < lookup[bGamble]->g_raised(betToCall,rAmount) ){ logFile << " [*] "; maxcallStep = raiseStep+1; }
 
@@ -1142,11 +1149,11 @@ float64 CorePositionalStrategy::MakeBet()
                 ++raiseStep;
             }
             logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
-			logFile << "OppFoldChance% ... " << myExpectedCall.pWin(bestBet) << "   d\\" << myExpectedCall.pWinD(bestBet) << endl;
+			logFile << "OppFoldChance% ... " << myExpectedCall.pWin(displaybet) << "   d\\" << myExpectedCall.pWinD(displaybet) << endl;
 
-			if( myExpectedCall.pWin(bestBet) > 0 )
+			if( myExpectedCall.pWin(displaybet) > 0 )
 			{
-				logFile << "confirm " << lookup[bGamble]->f(bestBet) << endl;
+				logFile << "confirm " << lookup[bGamble]->f(displaybet) << endl;
 			}
 		}
 	#endif
