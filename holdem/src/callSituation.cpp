@@ -132,6 +132,11 @@ float64 ExpectedCallD::maxBet() const
     return table->ViewPlayer(playerID)->GetMoney();
 }
 
+float64 ExpectedCallD::maxBetAtTable() const
+{
+	return table->GetMaxShowdown();
+}
+
 float64 ExpectedCallD::allChips() const
 {
     return table->GetAllChips();

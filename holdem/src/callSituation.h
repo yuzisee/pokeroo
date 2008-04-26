@@ -88,6 +88,7 @@ public:
     virtual float64 chipDenom() const;
     virtual float64 allChips() const;
     virtual float64 maxBet() const;
+	virtual float64 maxBetAtTable() const;
     virtual int8 handsToBeat() const;
     virtual int8 handsDealt() const;
     virtual int8 handsIn() const;
