@@ -226,18 +226,18 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     if(bLogRanking)
     {
         logFile << "(Versus) " << statrelation.pct * 100 << "%"  << std::endl;
-        logFile << "(V.s) " << statrelation.splits * 100 << "%"  << std::endl;
+        logFile << "(Re.s) " << statrelation.splits * 100 << "%"  << std::endl;
         logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
-        logFile << "(O.s) " << statranking.splits * 100 << "%"  << std::endl;
+        logFile << "(Ra.s) " << statranking.splits * 100 << "%"  << std::endl;
     }
     if(bLogHybrid)
     {
-		if( !bLogMean ) logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
-		if( !bLogRanking ) logFile << "(Versus) " << statversus.pct * 100 << "%"  << std::endl;
+		//if( !bLogMean ) logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
+		//if( !bLogRanking ) logFile << "(Versus) " << statversus.pct * 100 << "%"  << std::endl;
         logFile << "(Hybrid) " << hybridMagnified.pct * 100 << "%"  << std::endl;
-        logFile << "(H.w) " << hybridMagnified.wins * 100 << "%"  << std::endl;
+        //logFile << "(H.w) " << hybridMagnified.wins * 100 << "%"  << std::endl;
         logFile << "(H.s) " << hybridMagnified.splits * 100 << "%"  << std::endl;
-        logFile << "(H.l) " << hybridMagnified.loss * 100 << "%"  << std::endl;
+        //logFile << "(H.l) " << hybridMagnified.loss * 100 << "%"  << std::endl;
     }
 #endif
 
@@ -868,23 +868,23 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 
-    if( bGamble == 1 ) //DangerBot only, not ComBot
+    if( bGamble <= 1 ) //DangerBot, ComBot, not SpaceBot
     {
         //small insuranceDeterrent means more likely for opponent to fold vs. call
         myDeterredCall.SetImpliedFactor( 1 / nearEndOfBets );
     }
 
-    StatResult left = hybridMagnified;
-    if( bGamble == 2 ) left = statranking;
+    StatResult left = statversus;
+	if( bGamble == 0 ) left = hybridMagnified;
 
     GainModel geomModel(left,myDeterredCall);
 
     StatResult right = statworse;
     right.repeated = 1-certainty;
 
-    hybridMagnified.repeated = certainty;
+    left.repeated = certainty;
 
-	GainModelNoRisk algbModel(hybridMagnified,right,myDeterredCall);
+	GainModelNoRisk algbModel(left,right,myDeterredCall);
 
 
 #ifdef LOGPOSITION
@@ -899,13 +899,17 @@ float64 DeterredGainStrategy::MakeBet()
     else
     {
         logFile << " -  Danger  - " << endl;
+	}
+
+	if( bGamble <= 1 )
+	{
         logFile << "timeLeft      " << timeLeft << endl;
         logFile << "  uncertainty      " << uncertainty << endl;
         logFile << "  detailPCT.stdDev " << detailPCT.stdDev << endl;
         logFile << "nearEndOfBets         " << nearEndOfBets << endl;
         logFile << "impliedFactor... " << 1 / nearEndOfBets << endl;
     }
-    logFile << "BetToCall " << certainty << ", pct " << hybridMagnified.pct << " ... " << algbModel.ViewShape().pct << " ... " << right.pct << endl;
+    logFile << "BetToCall " << certainty << ", pct " << left.pct << " ... " << algbModel.ViewShape().pct << " ... " << right.pct << endl;
 
 #endif
 
