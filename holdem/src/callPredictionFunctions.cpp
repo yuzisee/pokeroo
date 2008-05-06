@@ -27,7 +27,11 @@
 #undef INLINE_INTEGER_POWERS
 
 
+#ifdef MODEL_REACTION
 #define AVG_FOLDWAITPCT 2.0
+#else
+#define AVG_FOLDWAITPCT 1.0
+#endif
 
 
 
@@ -267,7 +271,7 @@ void FoldGainModel::query( const float64 betSize )
     last_dw_dbet = dw_dbet;
     lastWaitLength = waitLength;
 
-	
+
 	const float64 concedeGain = -waitLength.amountSacrificeVoluntary -waitLength.amountSacrificeForced;
 
     if( betSize <= 0 || waitLength.w <= 0 )

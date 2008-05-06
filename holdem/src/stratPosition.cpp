@@ -33,10 +33,6 @@
 
 
 
-
-
-
-
 /// Summary of contained strategies:
 /// 1. ImproveStrategy (This is the old fashioned Geom<-->Algb vs. Rank<-->WorseNextCard)
 /// 2. ImproveGainStrategy (This is Norm/Trap/Ace using empirical data)
@@ -517,8 +513,10 @@ float64 ImproveGainStrategy::MakeBet()
 //bGamble == 1 is TrapBot
 
 //In the future actOrReact should be based on opponent betting patterns
+#ifdef MODEL_REACTION
     float64 actOrReact = myDeterredCall.ActOrReact(betToCall,myBet,maxShowdown);
 	actOrReact = 1 - (1-actOrReact)*(1-actOrReact);
+#endif // MODEL_REACTION
 
 //NormalBot uses this setup.
     StatResult left = statversus;
@@ -527,13 +525,18 @@ float64 ImproveGainStrategy::MakeBet()
 //TrapBot and ActionBot are based on statversus only
     if( bGamble >= 1 )
     {
-        const float64 enemyChances = 0.5;//(ViewTable().GetNumberInHand() - 1.0) / ViewTable().GetNumberInHand() / 2;
+        base_right = statversus;
+        #ifdef MODEL_REACTION
+            const float64 enemyChances = actOrReact;
+        #else
+            const float64 enemyChances = 1.0;//(ViewTable().GetNumberInHand() - 1.0) / ViewTable().GetNumberInHand() / 2;
+        #endif // MODEL_REACTION, with #else
         left = statversus;
         #ifndef DEBUG_TRAP_AS_NORMAL
         //targetWorsenBy is here
-        left.wins -= detailPCT.avgDev*enemyChances;
-        left.loss += detailPCT.avgDev*enemyChances;
-        left.pct -= detailPCT.avgDev*enemyChances;
+        left.wins -= detailPCT.avgDev/2.0*enemyChances;
+        left.loss += detailPCT.avgDev/2.0*enemyChances;
+        left.pct -= detailPCT.avgDev/2.0*enemyChances;
         //Since detailPCT is based on statmean, not statversus, it is possible for zero crossings
         if( left.pct < 0 || left.wins < 0 )
         {
@@ -541,12 +544,20 @@ float64 ImproveGainStrategy::MakeBet()
             left.loss = 1 - left.splits;
             left.genPCT();
         }
-        #endif
         //Need scaling
+        #endif
+
+        //targetWorsenBy is also here
+        base_right.wins += detailPCT.avgDev/2.0;
+        base_right.loss -= detailPCT.avgDev/2.0;
+        base_right.pct += detailPCT.avgDev/2.0;
+
+
+
         myDeterredCall_right.insuranceDeterrent = oppInsuranceBigBet;
 
 
-        base_right = statversus;
+
 
 
         if( bGamble >= 2 )
@@ -559,17 +570,24 @@ float64 ImproveGainStrategy::MakeBet()
     }
 
     StatResult right = statworse;
+#ifdef MODEL_REACTION
     right.repeated = (1 - actOrReact);//Generally ignored, only base_right.repeated is really used
     base_right.repeated = actOrReact;
 
 
     left.repeated = 1;
 	GainModel geomModel(left,right,myDeterredCall_left); //"right" probably doesn't have to be there, since left.repeated is 1.
-	GainModel geomModel_fear(base_right,right,myDeterredCall_left);
+	GainModel geomModel_fear(base_right,right,myDeterredCall_right);
 	statversus.repeated = 1;
-	GainModelNoRisk algbModel(statversus,right,myDeterredCall_right); //"right" probably doesn't have to be there, since left.repeated is 1.
+	GainModelNoRisk algbModel(statversus,right,myDeterredCall_left); //"right" probably doesn't have to be there, since left.repeated is 1.
 	GainModelNoRisk algbModel_fear(base_right,right,myDeterredCall_right);
+#else
+    GainModel geomModel(left,myDeterredCall_left);
+    GainModelNoRisk algbModel(statversus,myDeterredCall_left);
 
+	GainModel geomModel_fear(right,myDeterredCall_right);
+	GainModelNoRisk algbModel_fear(right,myDeterredCall_right);
+#endif // MODEL_REACTION, with #else
 
 
 #ifdef LOGPOSITION
@@ -592,7 +610,11 @@ float64 ImproveGainStrategy::MakeBet()
             if( bGamble >= 2 ) logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << endl; //ACTIONBOT
         #endif
     }
-	logFile << " Act(0%) or React(100%)? " << (actOrReact * 100) << "% --> pct of " << base_right.pct << ":React ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << ":Act" << endl;
+    logFile <<
+    #ifdef MODEL_REACTION
+	 " Act(0%) or React(100%)? " << (actOrReact * 100) << "% --> pct of " << base_right.pct << ":React ... " << algbModel_fear.ViewShape().pct <<
+	#endif // MODEL_REACTION
+	 " ... " << statworse.pct << ":Act" << endl;
 #endif
 
 ///From geom to algb
@@ -884,7 +906,11 @@ float64 DeterredGainStrategy::MakeBet()
 
     left.repeated = certainty;
 
+#ifdef MODEL_REACTION
 	GainModelNoRisk algbModel(left,right,myDeterredCall);
+#else
+	GainModelNoRisk algbModel(right,myDeterredCall);
+#endif // MODEL_REACTION, with #else
 
 
 #ifdef LOGPOSITION

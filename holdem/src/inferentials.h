@@ -34,6 +34,12 @@
 //#define DEBUG_DEXF
 //#include <iostream>
 
+
+
+#undef MODEL_REACTION
+
+
+
 using std::vector;
 
 class StatResult
