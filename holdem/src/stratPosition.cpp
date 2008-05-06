@@ -343,14 +343,14 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
         #ifdef LOGPOSITION
             float64 xw;
             float64 foldgainVal = (targetModel->GetFoldGain(e, &xw));
-
+			float64 numfolds = xw * e->Pr_haveWinPCT_orbetter_continuous(statmean.pct);
 
             //logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
 
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
 			logFile << "FoldGain()=" << foldgainVal;
-			logFile << " x " << xw << "\tvs play:" << (raiseGain + foldgainVal) << endl;
+			logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal) << endl;
             logFile << "f("<< betToCall <<")=" << callGain << endl;
 
 

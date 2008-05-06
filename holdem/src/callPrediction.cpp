@@ -221,7 +221,8 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
     const float64 avgBlind = (tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
     //We don't need to set w, because a.FindZero searches over w
     #ifdef SACRIFICE_COMMITTED
-    a.FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    a.FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
+	a.FG.waitLength.amountSacrificeForced = avgBlind;
     #else
     a.FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
     #endif
@@ -260,11 +261,12 @@ float64 ExpectedCallD::RiskLoss(float64 alreadyBet, float64 bankroll, float64 op
     {
         FG.waitLength.w = useMean->nearest_winPCT_given_rank(1.0 - 1.0/N);
     }
-    FG.waitLength.amountSacrifice = (table->GetPotSize() - stagnantPot() - alreadyBet)/(handsIn()-1) + avgBlind;
+    FG.waitLength.amountSacrificeVoluntary = (table->GetPotSize() - stagnantPot() - alreadyBet)/(handsIn()-1);
+	FG.waitLength.amountSacrificeForced = avgBlind;
     FG.waitLength.bankroll = (allChips() - bankroll)/(N-1);
     FG.waitLength.opponents = 1;
     FG.dw_dbet = 0; //Again, we don't need this
-    float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrifice;
+	float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced;
 	float64 drisk;
 
 	if( riskLoss < 0 )
@@ -331,7 +333,8 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
         myFG.waitLength.meanConv = useMean;
         myFG.waitLength.w = w;
     #ifdef SACRIFICE_COMMITTED
-        myFG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+        myFG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
+		myFG.waitLength.amountSacrificeForced = avgBlind;
     #else
         myFG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
     #endif
@@ -367,7 +370,8 @@ float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 h
     const int8 N = tableinfo->handsDealt();
     const float64 avgBlind = (tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
     #ifdef SACRIFICE_COMMITTED
-    a.FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    a.FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
+	a.FG.waitLength.amountSacrificeForced = avgBlind;
     #else
     a.FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
     #endif
@@ -392,7 +396,8 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
     FoldGainModel FG(tableinfo->chipDenom());
     FG.waitLength.w = w;
     #ifdef SACRIFICE_COMMITTED
-    FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
+	FG.waitLength.amountSacrificeForced = avgBlind;
     #else
     FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
     #endif
@@ -426,7 +431,8 @@ float64 ExactCallD::facedOdds_Algb(const ChipPositionState & cps, float64 betSiz
     const int8 N = tableinfo->handsDealt();
     const float64 avgBlind = (tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
     #ifdef SACRIFICE_COMMITTED
-    a.FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    a.FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
+	a.FG.waitLength.amountSacrificeForced = avgBlind;
     #else
     a.FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
     #endif
@@ -461,7 +467,8 @@ float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incr
     const float64 avgBlind = (tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
     FoldGainModel FG(tableinfo->chipDenom());
     #ifdef SACRIFICE_COMMITTED
-    FG.waitLength.amountSacrifice = cps.alreadyContributed + cps.alreadyBet + avgBlind;
+    FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
+	FG.waitLength.amountSacrificeForced = avgBlind;
     #else
     FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
     #endif
@@ -1172,6 +1179,7 @@ float64 ExactCallBluffD::RiskPrice()
     const float64 Ne = static_cast<float64>(Ne_int);
 
     const float64 estSacrifice = (tableinfo->table->GetPotSize() - tableinfo->alreadyBet());
+    
 
     const float64 maxStack = tableinfo->table->GetAllChips();
     const float64 maxShowdown = tableinfo->table->GetMaxShowdown(tableinfo->maxBet()); //maxBet is GetMoney()
@@ -1180,7 +1188,8 @@ float64 ExactCallBluffD::RiskPrice()
 	//FG.bTraceEnable = true;
 
     FG.waitLength.w = ef->nearest_winPCT_given_rank(1.0 - 1.0/Ne); //If you're past the flop, we need definitely consider only the true number of opponents
-    FG.waitLength.amountSacrifice = estSacrifice; //rarity() already implies the Ne
+    FG.waitLength.amountSacrificeVoluntary = estSacrifice; //rarity() already implies the Ne
+	FG.waitLength.amountSacrificeForced = 0; //estSacrifice*rarity() already implies a forced avgBlinds
     FG.waitLength.bankroll = maxStack;
     FG.waitLength.opponents = 1;
     FG.waitLength.meanConv = ef;

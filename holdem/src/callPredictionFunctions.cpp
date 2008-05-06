@@ -27,7 +27,7 @@
 #undef INLINE_INTEGER_POWERS
 
 
-
+#define AVG_FOLDWAITPCT 1.0
 
 
 
@@ -40,7 +40,8 @@ FoldWaitLengthModel::~FoldWaitLengthModel(){};
 
 const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengthModel & o )
 {
-    this->amountSacrifice = o.amountSacrifice;
+    this->amountSacrificeVoluntary = o.amountSacrificeVoluntary;
+	this->amountSacrificeForced = o.amountSacrificeForced;
     this->bankroll = o.bankroll;
     this->betSize = o.betSize;
     this->opponents = o.opponents;
@@ -52,7 +53,8 @@ const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengt
 const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) const
 {
     return (
-        (o.amountSacrifice == amountSacrifice)
+        (o.amountSacrificeVoluntary == amountSacrificeVoluntary)
+		&& (o.amountSacrificeForced == amountSacrificeForced)
         && (o.bankroll == bankroll)
         && (o.opponents == opponents)
         && (o.betSize == betSize)
@@ -97,27 +99,32 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 
 float64 FoldWaitLengthModel::d_dw( const float64 n )
 {
-    if( meanConv == 0 ) return (n)*amountSacrifice/2;
-    return -(n)*amountSacrifice/2 * meanConv->d_dw_only( w );
+	//CHANGE #1
+	//remove amountSacrificeForced from this expression if it occurs every round, because it doesn't interact with w
+    if( meanConv == 0 ) return (n)*(amountSacrificeForced+amountSacrificeVoluntary)/AVG_FOLDWAITPCT;
+    return -(n)*(amountSacrificeForced+amountSacrificeVoluntary)/AVG_FOLDWAITPCT * meanConv->d_dw_only( w );
 }
 
 
 float64 FoldWaitLengthModel::d_dC( const float64 n )
 {
-    return -(n*rarity())/2;
+    return -(n*rarity())/AVG_FOLDWAITPCT;
 }
 
 
 const float64 FoldWaitLengthModel::dRemainingBet_dn( )
 {
-    return -amountSacrifice*rarity();
+	//CHANGE #2
+	//use forced + voluntary*rarity if forced occurs every round
+    return -(amountSacrificeVoluntary+amountSacrificeForced)*rarity();
 }
 
 
 const float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
 {
+	//CHANGE #3
     const float64 sacrificeCount = n*rarity();
-    const float64 gross = sacrificeCount*amountSacrifice;
+    const float64 gross = sacrificeCount*(amountSacrificeForced+amountSacrificeVoluntary);
     return gross;
 }
 
@@ -158,7 +165,7 @@ float64 FoldWaitLengthModel::f( const float64 n )
         playbet = 0;
     }
 
-    const float64 lastF = playbet*PW - grossSacrifice(n)/2;
+    const float64 lastF = playbet*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
     return lastF;
 }
 
@@ -176,15 +183,15 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
     if(remainingbet < betSize )
     {
         //Since float64 playbet = (remainingbet < betSize ) ? remainingbet : betSize;
-        //And lastF = playbet*PW - grossSacrifice(n)/2;
-        const float64 PW = (y + grossSacrifice(n)/2)/remainingbet; //d_dbetSize(n);
+        //And lastF = playbet*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
+        const float64 PW = (y + grossSacrifice(n)/AVG_FOLDWAITPCT)/remainingbet; //d_dbetSize(n);
         const float64 dRemainingbet = dRemainingBet_dn();
 
-        //d{  remainingbet*PW - n*amountSacrifice/2  }/dn
-        return (dRemainingbet*PW + remainingbet*dPW_dn - grossSacrifice(n)/2);
+        //d{  remainingbet*PW - n*amountSacrifice/AVG_FOLDWAITPCT  }/dn
+        return (dRemainingbet*PW + remainingbet*dPW_dn - grossSacrifice(n)/AVG_FOLDWAITPCT);
 
     }else{
-        return (betSize*dPW_dn - grossSacrifice(n)/2);
+        return (betSize*dPW_dn - grossSacrifice(n)/AVG_FOLDWAITPCT);
     }
 
 }
@@ -198,18 +205,20 @@ float64 FoldWaitLengthModel::FindBestLength()
 
     quantum = 1.0/3.0/rarity();
 
+	const float64 amountSacrificeTotal = (amountSacrificeVoluntary+amountSacrificeForced);
+
     float64 maxTurns[2];
-    maxTurns[0] = bankroll / amountSacrifice / rarity();
+    maxTurns[0] = bankroll / amountSacrificeTotal / rarity();
 
     float64 maxProfit = d_dbetSize( maxTurns[0] ) * betSize ;
-    if ( maxProfit < amountSacrifice )
+    if ( maxProfit < amountSacrificeTotal )
     {
         return 0;
     }
 
 
     maxTurns[1] = maxTurns[0];
-    maxTurns[0] = maxProfit/amountSacrifice/rarity();
+    maxTurns[0] = maxProfit/amountSacrificeTotal/rarity();
 
 
     while( maxTurns[0] < maxTurns[1]/2 )
@@ -217,14 +226,14 @@ float64 FoldWaitLengthModel::FindBestLength()
 
         maxProfit = d_dbetSize(  maxTurns[0] ) * betSize ;
 
-        if ( maxProfit < amountSacrifice )
+        if ( maxProfit < amountSacrificeTotal )
         {
             return 0;
         }
 
 
         maxTurns[1] = maxTurns[0];
-        maxTurns[0] = maxProfit/amountSacrifice/rarity();
+        maxTurns[0] = maxProfit/amountSacrificeTotal/rarity();
 
         if( maxTurns[1] - maxTurns[0] < quantum )
         {
@@ -258,8 +267,8 @@ void FoldGainModel::query( const float64 betSize )
     last_dw_dbet = dw_dbet;
     lastWaitLength = waitLength;
 
-
-    const float64 concedeGain = -waitLength.amountSacrifice;
+	
+	const float64 concedeGain = -waitLength.amountSacrificeVoluntary -waitLength.amountSacrificeForced;
 
     if( betSize <= 0 || waitLength.w <= 0 )
     {//singularity

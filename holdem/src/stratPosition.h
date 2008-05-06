@@ -104,7 +104,7 @@ class ImproveGainStrategy : public PositionalStrategy
 protected:
     int8 bGamble;
 public:
-    ImproveGainStrategy(int8 riskymode =0) : PositionalStrategy(riskymode ? false : true,riskymode ? true : false,riskymode ? true : false,riskymode? false : true), bGamble(riskymode) {}
+    ImproveGainStrategy(int8 riskymode =0) : PositionalStrategy(riskymode ? false : true,true,riskymode ? true : false,false), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }

@@ -55,6 +55,7 @@ float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, c
     const float64 playerCount = table->NumberAtTable();
 
 
+
     const float64 bigBlind = table->GetBigBlind() ;
     const float64 smallBlind = table->GetSmallBlind() ;
 #ifdef SAME_WILL_LOSE_BLIND
@@ -69,14 +70,15 @@ float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, c
     FG.waitLength.meanConv = e;
     FG.waitLength.w = meanW;
     FG.waitLength.bankroll = table->ViewPlayer(playerID)->GetMoney();
-    FG.waitLength.amountSacrifice = table->ViewPlayer(playerID)->GetBetSize()
+    FG.waitLength.amountSacrificeVoluntary = table->ViewPlayer(playerID)->GetBetSize()
     #ifdef SACRIFICE_COMMITTED
                  + table->ViewPlayer(playerID)->GetContribution()
     #endif
-                                    + potCommitted + extra + avgBlinds;
+                                    + potCommitted + extra;
+	FG.waitLength.amountSacrificeForced = avgBlinds;
     FG.waitLength.opponents = playerCount - 1;
 
-    const float64 totalFG = 1 + betFraction(  FG.f(facedBet)  );
+	const float64 totalFG = 1 + betFraction(  FG.f((facedBet > FG.waitLength.bankroll) ? (FG.waitLength.bankroll) : facedBet)  );
 
     if( totalFG < 0 )
     {
