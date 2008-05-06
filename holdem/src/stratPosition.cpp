@@ -522,6 +522,7 @@ float64 ImproveGainStrategy::MakeBet()
     StatResult left = statversus;
     StatResult base_right = statversus;//statmean;
 
+    StatResult right = statworse;
 //TrapBot and ActionBot are based on statversus only
     if( bGamble >= 1 )
     {
@@ -534,7 +535,7 @@ float64 ImproveGainStrategy::MakeBet()
         left = statversus;
         #ifndef DEBUG_TRAP_AS_NORMAL
         //targetWorsenBy is here
-        left.wins -= detailPCT.avgDev/2.0*enemyChances;
+        left.wins -= detailPCT.avgDev/2.0*enemyChances; //2.0 is to estimate median
         left.loss += detailPCT.avgDev/2.0*enemyChances;
         left.pct -= detailPCT.avgDev/2.0*enemyChances;
         //Since detailPCT is based on statmean, not statversus, it is possible for zero crossings
@@ -548,9 +549,29 @@ float64 ImproveGainStrategy::MakeBet()
         #endif
 
         //targetWorsenBy is also here
-        base_right.wins += detailPCT.avgDev/2.0;
-        base_right.loss -= detailPCT.avgDev/2.0;
-        base_right.pct += detailPCT.avgDev/2.0;
+		#ifdef MODEL_REACTION
+			base_right.wins += detailPCT.avgDev/2.0;
+			base_right.loss -= detailPCT.avgDev/2.0;
+			base_right.pct += detailPCT.avgDev/2.0;
+			if( base_right.pct > 1 || base_right.wins > 1-base_right.splits )
+			{
+				base_right.wins = 1 - base_right.splits;
+				base_right.loss = 0;
+				base_right.genPCT();
+			}
+        //Need scaling
+		#else
+			right.wins += detailPCT.avgDev/2.0;
+			right.loss -= detailPCT.avgDev/2.0;
+			right.pct += detailPCT.avgDev/2.0;
+			if( right.pct > 1 || right.wins > 1-right.splits )
+			{
+				right.wins = 1 - right.splits;
+				right.loss = 0;
+				right.genPCT();
+			}
+			//Need scaling
+		#endif
 
 
 
@@ -569,7 +590,6 @@ float64 ImproveGainStrategy::MakeBet()
         }
     }
 
-    StatResult right = statworse;
 #ifdef MODEL_REACTION
     right.repeated = (1 - actOrReact);//Generally ignored, only base_right.repeated is really used
     base_right.repeated = actOrReact;
