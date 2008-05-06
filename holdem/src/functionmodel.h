@@ -139,7 +139,7 @@ class GainModel : public virtual HoldemFunctionModel
                 float64 splitTotal = 0;
                 for( int8 i=1;i<=e_battle;++i )
                 {//Split with i
-                    splitTotal += HoldemUtil::nchoosep<float64>(totalEnemy,i)*pow(shape.wins,totalEnemy-i)*pow(shape.splits,i);
+                    splitTotal += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i);
                 }
 
 				p_cl *= (1-splitTotal)/newTotal;
