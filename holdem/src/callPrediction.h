@@ -142,7 +142,7 @@ class ExactCallD
             virtual float64 FoldGain(){ return tableinfo->foldGain(ed);}
             virtual float64 FoldGain(float64 extra, float64 facedbet){ return tableinfo->foldGain(ed,extra,facedbet);}
 
-            float64 ActOrReact(float64 callb, float64 lastbet,float64 limit) const;
+            float64 ActOrReact(float64 callb, float64 lastbet,float64 tablelimit) const;
 }
 ;
 

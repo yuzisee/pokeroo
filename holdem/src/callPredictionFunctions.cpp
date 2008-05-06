@@ -27,7 +27,7 @@
 #undef INLINE_INTEGER_POWERS
 
 
-#define AVG_FOLDWAITPCT 1.0
+#define AVG_FOLDWAITPCT 2.0
 
 
 

@@ -513,16 +513,16 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 peopleDrawing = (1 - improvePure) * (ViewTable().NumberInHand() - 1);//You probably don't have to beat the people who folded, especially if you are going to improve your hand
     const float64 newVersus = (fullVersus - peopleDrawing*(1-improvePure)*detailPCT.stdDev);
 
-
 //bGamble == 2 is ActionBot
 //bGamble == 1 is TrapBot
 
-
-    const float64 actOrReact = myDeterredCall.ActOrReact(betToCall,myBet,maxShowdown);
+//In the future actOrReact should be based on opponent betting patterns
+    float64 actOrReact = myDeterredCall.ActOrReact(betToCall,myBet,maxShowdown);
+	actOrReact = 1 - (1-actOrReact)*(1-actOrReact);
 
 //NormalBot uses this setup.
     StatResult left = statversus;
-    StatResult base_right = statmean;
+    StatResult base_right = statversus;//statmean;
 
 //TrapBot and ActionBot are based on statversus only
     if( bGamble >= 1 )
@@ -592,7 +592,7 @@ float64 ImproveGainStrategy::MakeBet()
             if( bGamble >= 2 ) logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << endl; //ACTIONBOT
         #endif
     }
-    logFile << " Act or React? React " << (actOrReact * 100) << "% --> pct of " << base_right.pct << " ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << endl;
+	logFile << " Act(0%) or React(100%)? " << (actOrReact * 100) << "% --> pct of " << base_right.pct << ":React ... " << algbModel_fear.ViewShape().pct << " ... " << statworse.pct << ":Act" << endl;
 #endif
 
 ///From geom to algb

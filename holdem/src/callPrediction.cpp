@@ -1164,13 +1164,20 @@ float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit) co
 //2. [ACT] The opponents have not bet yet, and would be the reactors of this hand.
 //3. [REACT] The pot is large from previous rounds, opponents can't fold easily
 
+	const float64 nPlayers = 1+tableinfo->handsToBeat();
+	const float64 mPlayers = 1 - (1 / nPlayers); //We need to scale actOrReact based on how many players are at the table...?
+
+	const float64 mylimit = tableinfo->maxRaiseAmount();
+	float64 tablepot = tableinfo->table->GetPotSize();
+	const float64 maxToShowdownPot = mylimit * (tableinfo->handsIn()-1) + tableinfo->alreadyBet();
+	if( tablepot > maxToShowdownPot ) tablepot = maxToShowdownPot;
+
     //const float64 avgControl = (stagnantPot() + table->GetUnbetBlindsTotal()) / table->GetNumberInHand();
     //const float64 raiseOverBet = (callb + avgControl);// < lastbet) ? 0 : (callb + avgControl - lastbet) ;
-
-    const float64 raiseOverOthers = (tableinfo->table->GetPotSize() - callb) / tableinfo->table->NumberInHand();
+    const float64 raiseOverOthers = (tablepot - callb) / tableinfo->handsIn();
     const float64 raiseOver = (raiseOverOthers);// + raiseOverBet)/2;
-    const float64 actOrReact = (raiseOver > limit) ? 1 : (raiseOver / limit);
-    return actOrReact;
+    const float64 actOrReact = (raiseOver > limit) ? mPlayers : (raiseOver / limit);
+    return actOrReact / mPlayers;
 }
 
 float64 ExactCallBluffD::RiskPrice()
