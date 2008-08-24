@@ -22,6 +22,8 @@
 
 #include "arena.h"
 #include <iostream>
+#include <string.h> //for strlen
+
 
 
 // const float64 HoldemArena::BASE_CHIP_COUNT = 100;
@@ -230,7 +232,8 @@ void HoldemArena::saveState()
 #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
             char handnumtxt/*[12] = "";
             char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
-            _itoa(handnum,handnumtxt + strlen(handnumtxt),10);//sprintf(handnumtxt + strlen(handnumtxt) ,"%lu",handnum);
+
+	    FileNumberString(handnum,handnumtxt + strlen(handnumtxt));
             handnumtxt[23+12-1] = '\0'; //just to be safe
 
             std::ofstream allSaveState( handnumtxt );
@@ -482,7 +485,7 @@ bool HoldemArena::CanStillBet(int8 n) const
     return IsInHand(n) && p[n]->allIn == INVALID && p[n]->GetMoney() > 0;
 }
 
-bool HoldemArena::CanRaise(int8 n, int8 nowBettor) const
+uint8 HoldemArena::RaiseOpportunities(int8 n, int8 nowBettor) const
 {
     bool bHasPlayed = (((curDealer < n) && (n < nowBettor)) && (curDealer < nowBettor))//Between curDealer and newBettor when curDealer is before nowBettor
                         ||
@@ -491,7 +494,16 @@ bool HoldemArena::CanRaise(int8 n, int8 nowBettor) const
 				      (nowBettor == curDealer)
                         ;
     bool bCanCheck = (highBet <= 0) && (!bHasPlayed);
-    return ( (curHighBlind == n) || (highBet > p[n]->myBetSize) || (bCanCheck) ) && (CanStillBet(n));
+    if(
+	    ( (curHighBlind == n) || (highBet > p[n]->myBetSize) || (bCanCheck) ) && (CanStillBet(n))
+    )
+    {
+	    return bettingRoundsRemaining + 1;
+    }
+    else
+    {
+	    return bettingRoundsRemaining;
+    }
 }
 
 float64 HoldemArena::GetBetToCall() const

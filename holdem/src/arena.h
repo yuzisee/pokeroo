@@ -258,6 +258,7 @@ protected:
 
         int8 cardsInCommunity;
 		CommunityPlus community;
+	uint8 bettingRoundsRemaining;
 		bool bVerbose;
 		bool bSpectate;
 
@@ -331,6 +332,16 @@ protected:
 		Player* PlayTable();
 
         static void ToString(const HoldemAction& e, std::ostream& o);
+	static void FileNumberString(int value, char * str)
+	{
+#if defined(itoa)
+		itoa(value,str,10);
+#elif defined(_itoa)
+		_itoa(value,str,10);
+#elif defined(sprintf)
+		sprintf(str,"%lu",value);
+#endif
+	}
 
 		static const float64 FOLDED;
 		static const float64 INVALID;
@@ -375,7 +386,7 @@ protected:
 		virtual bool IsInHand(int8) const;
 		virtual bool HasFolded(int8) const;
 		virtual bool CanStillBet(int8) const; //This will not include players who have pushed all in
-		virtual bool CanRaise(int8,int8) const;
+		virtual uint8 RaiseOpportunities(int8,int8) const;
 
         virtual float64 GetAllChips() const;
         virtual float64 GetFoldedPotSize() const;

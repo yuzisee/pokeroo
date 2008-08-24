@@ -21,7 +21,6 @@
 #ifndef HOLDEM_Porting
 #define HOLDEM_Porting
 
-
 typedef unsigned char uint8;
 typedef signed char int8;
 

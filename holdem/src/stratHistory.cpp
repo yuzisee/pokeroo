@@ -27,6 +27,13 @@
 #include "stratHistory.h"
 #include <algorithm>
 
+
+
+
+
+
+
+
 /*
 const int8 PerformanceHistory::SORT_NUM_WINLOSE = 1;
 const int8 PerformanceHistory::SORT_ABOVE_BELOW = 2;
@@ -260,8 +267,10 @@ void HistoryStrategy::SaveState( )
         #ifdef LOAD_PAST_HANDS
         char handnumbasename[200];
         char handnumstr[20];
-        _itoa(handNumber,handnumstr,10);//sprintf(handnumstr,"%lu",handNumber);
+
+	HoldemArena::FileNumberString(handNumber,handnumstr);
         handnumstr[19] = '\0'; //Just to be safe
+
         strncpy(handnumbasename,"./" LOAD_PAST_HANDS, 2+LOAD_PAST_HANDS_LEN);
         strncat(handnumbasename, (ViewPlayer().GetIdent() + "-").c_str(), ViewPlayer().GetIdent().length() + 1);
         strncat(handnumbasename, handnumstr, 20);

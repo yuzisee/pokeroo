@@ -79,7 +79,7 @@ public:
     virtual float64 RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo, CallCumulationD * useMean, float64 * out_dPot = 0);
     virtual float64 PushGain();
 
-    virtual bool OppCanRaiseMe(int8 oppID) const;
+    virtual uint8 OppRaiseOpportunities(int8 oppID) const;
 
     virtual float64 oppBet() const;
     virtual float64 alreadyBet() const;

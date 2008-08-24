@@ -25,6 +25,7 @@
 #include "portability.h"
 
 #include <iostream>
+#include <stdlib.h> //For exit()
 
 using std::endl;
 using std::flush;

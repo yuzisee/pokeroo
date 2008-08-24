@@ -509,6 +509,7 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 peopleDrawing = (1 - improvePure) * (ViewTable().NumberInHand() - 1);//You probably don't have to beat the people who folded, especially if you are going to improve your hand
     const float64 newVersus = (fullVersus - peopleDrawing*(1-improvePure)*detailPCT.stdDev);
 
+
 //bGamble == 2 is ActionBot
 //bGamble == 1 is TrapBot
 
@@ -603,9 +604,9 @@ float64 ImproveGainStrategy::MakeBet()
 	GainModelNoRisk algbModel_fear(base_right,right,myDeterredCall_right);
 #else
     GainModel geomModel(left,myDeterredCall_left);
-    GainModelNoRisk algbModel(statversus,myDeterredCall_left);
+    GainModelNoRisk algbModel(statversus,myDeterredCall_right);
 
-	GainModel geomModel_fear(right,myDeterredCall_right);
+	GainModel geomModel_fear(right,myDeterredCall_left);
 	GainModelNoRisk algbModel_fear(right,myDeterredCall_right);
 #endif // MODEL_REACTION, with #else
 
@@ -633,8 +634,10 @@ float64 ImproveGainStrategy::MakeBet()
     logFile <<
     #ifdef MODEL_REACTION
 	 " Act(0%) or React(100%)? " << (actOrReact * 100) << "% --> pct of " << base_right.pct << ":React ... " << algbModel_fear.ViewShape().pct <<
+	#else
+	 geomModel.ViewShape().pct << ":React ... " <<
 	#endif // MODEL_REACTION
-	 " ... " << statworse.pct << ":Act" << endl;
+	 " ... " << algbModel_fear.ViewShape().pct << ":Act" << endl;
 #endif
 
 ///From geom to algb
@@ -642,7 +645,7 @@ float64 ImproveGainStrategy::MakeBet()
 	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain_aggressive(geomModel_fear,algbModel_fear,0.0,riskprice,left.pct*base_right.pct,&tablestate);
 
 
-///From regular to fear (x2)
+///From regular to fear A(x2)
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
             ap(hybridgainDeterred_aggressive,hybridgain_aggressive,0.0,riskprice,&tablestate);
 
@@ -656,6 +659,7 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
     const float64 bestBet = solveGainModel(&choicemodel) ;
     StateModel & rolemodel = choicemodel;
 #else
+	///From regular to fear B(x2)
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
             ap_right(hybridgainDeterred_aggressive,hybridgain_aggressive,0.0,riskprice,&tablestate);
     StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >

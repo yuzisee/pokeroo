@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "BluffGainInc.h"
+
 #include <float.h>
 
 #define RAISED_PWIN

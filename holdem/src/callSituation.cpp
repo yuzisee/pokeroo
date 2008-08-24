@@ -92,7 +92,7 @@ float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, c
 
 }
 
-bool ExpectedCallD::OppCanRaiseMe(int8 oppID) const
+bool ExpectedCallD::OppRaiseOpportunties(int8 oppID) const
 {
     return table->CanRaise(oppID, playerID);
 }
