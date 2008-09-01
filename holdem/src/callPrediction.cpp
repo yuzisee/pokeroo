@@ -598,31 +598,35 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 		}
 		#endif
 
+        ///Initialize player-specific callgain
         float64 nextexf = 0;
         float64 nextdexf = 0;
 
+        ///Initialize player-specific (no)raisechange
+        uint8 oppRaiseChances = 0;
         for(int32 i=0;i<noRaiseArraySize;++i)
         {
             nextNoRaise_A[i] = 1; //Won't raise (by default)
             nextNoRaiseD_A[i] = 0;
         }
 
+        ///Initialize player bet state
         const Player * withP = tableinfo->table->ViewPlayer(pIndex);
         const float64 oppBetAlready = withP->GetBetSize();
         const float64 oppPastCommit = withP->GetContribution();
+
 
         if( tableinfo->table->CanStillBet(pIndex) )
         {///Predict how much the bet will be
             const float64 oppBankRoll = withP->GetMoney();
 
-
-
             if( betSize < oppBankRoll )
             {	//Can still call, at least
 
                 ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit);
+                oppRaiseChances = tableinfo->OppRaiseOpportunities(pIndex);
 
-                if( betSize > tableinfo->callBet() || tableinfo->OppCanRaiseMe(pIndex) )
+                if( betSize > tableinfo->callBet() || oppRaiseChances > 0 )
                 { //The player can raise you if he hasn't called yet, OR you're raising
 
                     //if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
@@ -789,13 +793,13 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         for( int32 i=0;i<noRaiseArraySize;++i)
         {
             //At this point, each nextNoRaise is 100% unless otherwise adjusted.
-            noRaiseChance_A[i] *= (nextNoRaise_A[i] < 0) ? 0 : nextNoRaise_A[i];
+            noRaiseChance_A[i] *= (nextNoRaise_A[i] < 0) ? 0 : pow(nextNoRaise_A[i],oppRaiseChances);
             if( noRaiseChance_A[i] == 0 ) //and nextNoRaiseD == 0
             {
                 noRaiseChanceD_A[i] = 0;
             }else
             {
-                noRaiseChanceD_A[i] += nextNoRaiseD_A[i]/nextNoRaise_A[i]; //Logairthmic differentiation
+                noRaiseChanceD_A[i] += nextNoRaiseD_A[i]/nextNoRaise_A[i]  *   oppRaiseChances; //Logairthmic differentiation
             }
         }
 
@@ -1186,7 +1190,7 @@ float64 ExactCallBluffD::RiskPrice()
     const float64 Ne = static_cast<float64>(Ne_int);
 
     const float64 estSacrifice = (tableinfo->table->GetPotSize() - tableinfo->alreadyBet());
-    
+
 
     const float64 maxStack = tableinfo->table->GetAllChips();
     const float64 maxShowdown = tableinfo->table->GetMaxShowdown(tableinfo->maxBet()); //maxBet is GetMoney()
