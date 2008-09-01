@@ -519,9 +519,9 @@ float64 ImproveGainStrategy::MakeBet()
 	actOrReact = 1 - (1-actOrReact)*(1-actOrReact);
 #endif // MODEL_REACTION
 
-//NormalBot uses this setup.
+
     StatResult left = statversus;
-    StatResult base_right = statversus;//statmean;
+    StatResult base_right = statversus;//statmean;  (NormalBot used this setup.)
 
     StatResult right = statworse;
 //TrapBot and ActionBot are based on statversus only
@@ -840,14 +840,14 @@ exit(1);
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     choicemodel.f(viewBet);
-    logFile << "        Play("<< viewBet <<")=" << choicemodel.gainNormal << endl;
+    logFile << " AgainstCall("<< viewBet <<")=" << choicemodel.gainNormal << endl;
     logFile << "AgainstRaise("<< viewBet <<")=" << choicemodel.gainRaised << endl;
     logFile << "        Push("<< viewBet <<")=" << choicemodel.gainWithFold << endl;
 
     if( bGamble != 0 )
     {
         choicemodel_right.f(viewBet);
-        logFile << "        Play OtherDeter("<< viewBet <<")=" << choicemodel_right.gainNormal << endl;
+        logFile << " AgainstCall OtherDeter("<< viewBet <<")=" << choicemodel_right.gainNormal << endl;
         logFile << "AgainstRaise OtherDeter("<< viewBet <<")=" << choicemodel_right.gainRaised << endl;
         logFile << "        Push OtherDeter("<< viewBet <<")=" << choicemodel_right.gainWithFold << endl;
     }
@@ -1019,7 +1019,7 @@ if( ViewTable().NumberInHand() < ViewTable().NumberAtTable() )
     //const float64 bestBet = solveGainModel(&choicemodel);
     //logFile << bestBet << endl;
     logFile << choicemodel.f(1);
-    std::cout << "        Play("<< 1 <<")=" << ap_aggressive.gainNormal << endl;
+    std::cout << " AgainstCall("<< 1 <<")=" << ap_aggressive.gainNormal << endl;
 	std::cout << "AgainstRaise("<< 1 <<")=" << ap_aggressive.gainRaised << endl;
 	std::cout << "        Push("<< 1 <<")=" << ap_aggressive.gainWithFold << endl;
     exit(1);
@@ -1034,7 +1034,7 @@ if( ViewTable().NumberInHand() < ViewTable().NumberAtTable() )
 #ifdef VERBOSE_STATEMODEL_INTERFACE
 const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 		choicemodel.f(displaybet); //since choicemodel is ap_aggressive
-		logFile << "        Play("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
+		logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
 		logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
 		logFile << "        Push("<< displaybet <<")=" << ap_aggressive.gainWithFold << endl;
 
@@ -1186,7 +1186,7 @@ float64 CorePositionalStrategy::MakeBet()
 #ifdef VERBOSE_STATEMODEL_INTERFACE
 
 		rankGeomBluff.f(displaybet); //since choicemodel is ap_aggressive
-		logFile << "        Play("<< displaybet <<")=" << rankGeomBluff.gainNormal << endl;
+		logFile << " AgainstCall("<< displaybet <<")=" << rankGeomBluff.gainNormal << endl;
 		logFile << "AgainstRaise("<< displaybet <<")=" << rankGeomBluff.gainRaised << endl;
 		logFile << "        Push("<< displaybet <<")=" << rankGeomBluff.gainWithFold << endl;
 

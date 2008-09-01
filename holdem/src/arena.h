@@ -387,6 +387,7 @@ protected:
 		virtual bool HasFolded(int8) const;
 		virtual bool CanStillBet(int8) const; //This will not include players who have pushed all in
 		virtual uint8 RaiseOpportunities(int8,int8) const;
+		virtual uint8 FutureRounds() const;
 
         virtual float64 GetAllChips() const;
         virtual float64 GetFoldedPotSize() const;

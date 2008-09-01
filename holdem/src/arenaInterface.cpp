@@ -485,6 +485,11 @@ bool HoldemArena::CanStillBet(int8 n) const
     return IsInHand(n) && p[n]->allIn == INVALID && p[n]->GetMoney() > 0;
 }
 
+uint8 HoldemArena::FutureRounds() const
+{
+    return bettingRoundsRemaining;
+}
+
 uint8 HoldemArena::RaiseOpportunities(int8 n, int8 nowBettor) const
 {
     bool bHasPlayed = (((curDealer < n) && (n < nowBettor)) && (curDealer < nowBettor))//Between curDealer and newBettor when curDealer is before nowBettor
@@ -498,11 +503,11 @@ uint8 HoldemArena::RaiseOpportunities(int8 n, int8 nowBettor) const
 	    ( (curHighBlind == n) || (highBet > p[n]->myBetSize) || (bCanCheck) ) && (CanStillBet(n))
     )
     {
-	    return bettingRoundsRemaining + 1;
+	    return FutureRounds() + 1;
     }
     else
     {
-	    return bettingRoundsRemaining;
+	    return FutureRounds();
     }
 }
 
