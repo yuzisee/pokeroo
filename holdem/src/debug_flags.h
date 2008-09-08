@@ -31,14 +31,14 @@
 
 #ifndef NO_LOG_FILES
 /* Mode Flags (Depends on NO_LOG_FILES) */
-#undef WINRELEASE
 #define LOGPOSITION
+#undef WINRELEASE
 /**********************************/
 //#define DEBUGSPECIFIC 90
 #define GRAPHMONEY "chipcount.csv"
 #define REPRODUCIBLE
 ///COMMENT OUT DEBUGSPECIFIC IF YOU WISH TO GRAPHMONEY
-#define DEBUG_SINGLE_HAND
+#undef DEBUG_SINGLE_HAND
 #endif
 
 
