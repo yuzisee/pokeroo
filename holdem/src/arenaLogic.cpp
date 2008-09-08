@@ -617,7 +617,6 @@ void HoldemArena::PlayGame()
 	if( PlayRound(0) == -1 ) return;
 
 
-
 #ifdef EXTERNAL_DEALER
     std::cerr << "Please enter the flop (no whitespace): " << endl;
     std::cin.sync();

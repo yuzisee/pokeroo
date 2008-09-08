@@ -527,6 +527,12 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 	return raiseAmount;
 }
 
+
+/*
+    ::query generates the values noRaiseChance_A and totalexf along with their corresponding derivatives.
+    ::query is called by exf() and pRaise() (along with their corresponding derivatives)
+    ::query provides a mechanism for caching the result for multiple calls during the same configuration
+*/
 void ExactCallD::query(const float64 betSize, const int32 callSteps)
 {
 	if( queryinput == betSize && querycallSteps == callSteps )
@@ -585,6 +591,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     float64 * nextNoRaiseD_A = new float64[noRaiseArraySize];
 
 
+    /* Loop through each player to accumulate chance of NOT being raised as well
+       as the aggregate chance of being folded against. (conjunctive) */
     int8 pIndex = tableinfo->playerID;
     tableinfo->table->incrIndex(pIndex);
     while( pIndex != tableinfo->playerID )
@@ -614,20 +622,37 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         const Player * withP = tableinfo->table->ViewPlayer(pIndex);
         const float64 oppBetAlready = withP->GetBetSize();
         const float64 oppPastCommit = withP->GetContribution();
+        const float64 oppBankRoll = withP->GetMoney(); //To predict how much the bet will be
 
+        if( oppBankRoll - betSize < DBL_EPSILON ) // oppBankRoll <= betSize
+        {
+            oppRaiseChances = 0; //Not enough to raise more
+        }
+        else
+        {
+            if( betSize > tableinfo->callBet() ) //this bet would be a raise, so anyone is allowed to reraise me
+            {//(provided they have enough chips)
+                oppRaiseChances = 1 + tableinfo->table->FutureRounds(); //this round, or any future round
+            }else
+            {
+                oppRaiseChances = tableinfo->OppRaiseOpportunities(pIndex); //the opponent's only chance to raise is once in each future round
+            }
+        }
 
-        if( tableinfo->table->CanStillBet(pIndex) )
-        {///Predict how much the bet will be
-            const float64 oppBankRoll = withP->GetMoney();
+        if( tableinfo->table->CanStillBet(pIndex) ) //CanStillBet means CanStillPlay
+        {
 
-            if( betSize < oppBankRoll )
+            if( betSize - oppBankRoll < DBL_EPSILON ) // betSize <= oppBankRoll
             {	//Can still call, at least
 
                 ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit);
-                oppRaiseChances = tableinfo->OppRaiseOpportunities(pIndex);
 
-                if( betSize > tableinfo->callBet() || oppRaiseChances > 0 )
-                { //The player can raise you if he hasn't called yet, OR you're raising
+			///=========================
+			///   1. Estimate noRaise
+			///=========================
+
+                if( oppRaiseChances > 0 )
+                { //The player can raise you if he hasn't called yet, OR you're (hypothetically) raising
 
                     //if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
 
@@ -642,7 +667,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                             if(thisRaise <= oppBankRoll)
                             {
 
-                                const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize); //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+                                const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+                                                                                                                                        //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
 								const bool bMyWouldCall = i < callSteps;
                                 float64 w_r_mean = facedOdds_raise_Geom(oppCPS,oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,ed);
                                 float64 w_r_rank = facedOdds_raise_Geom(oppCPS,oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
@@ -692,7 +718,9 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                     }//end of for loop
                 }
 
-
+			///=====================
+			///   2. Estimate exf
+			///=====================
 
 				///Check for most likely call amount
                 const float64 oppBetMake = betSize - oppBetAlready;
@@ -702,7 +730,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                 if( traceOut != 0 )  *traceOut << " to bet " << oppBetMake << "more";
                 #endif
 
-                if( oppBetMake <= 0 )
+                if( oppBetMake <= DBL_EPSILON )
                 { //Definitely call
                     nextexf = 0;
                     nextdexf = 1;
@@ -760,6 +788,10 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 				//Obviously the opponent won't raise...  ie. NoRaise = 100%
 				// (nextNoRaise , nextNoRaiseD ) is already (1,0)
             }
+
+			///===================================
+			///   3. Tally/Aggregate/Accumulate
+			///===================================
 
 
             //lastexf = nextexf;
