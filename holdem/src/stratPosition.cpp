@@ -502,7 +502,8 @@ float64 ImproveGainStrategy::MakeBet()
 
 
 
-    float64 riskprice = myDeterredCall.RiskPrice();
+    const float64 riskprice = myDeterredCall.RiskPrice();
+    const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
 
 
     const float64 fullVersus = myDeterredCall.callingPlayers();
@@ -641,8 +642,8 @@ float64 ImproveGainStrategy::MakeBet()
 #endif
 
 ///From geom to algb
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred_aggressive(geomModel,algbModel,0.0,riskprice,left.pct*base_right.pct,&tablestate);
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain_aggressive(geomModel_fear,algbModel_fear,0.0,riskprice,left.pct*base_right.pct,&tablestate);
+	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred_aggressive(geomModel,algbModel,0.0,geom_algb_scaler,left.pct*base_right.pct,&tablestate);
+	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain_aggressive(geomModel_fear,algbModel_fear,0.0,geom_algb_scaler,left.pct*base_right.pct,&tablestate);
 
 
 ///From regular to fear A(x2)
@@ -860,7 +861,7 @@ exit(1);
                      (myDeterredCall_left, myDeterredCall_right, choicemodel, tablestate, viewBet);
 
 
-    logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
+    logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
     logFile << "OppFoldChance% ... left " << myDeterredCall_left.pWin(viewBet) << " --" << myDeterredCall_right.pWin(viewBet) << " right" << endl;
     if( myDeterredCall.pWin(bestBet) > 0 )
     {
@@ -899,8 +900,8 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 
-    float64 riskprice = myDeterredCall.RiskPrice();
-	if( riskprice > maxShowdown ) riskprice = maxShowdown;
+    const float64 riskprice = myDeterredCall.RiskPrice();
+    const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
 
 
 
@@ -964,7 +965,7 @@ float64 DeterredGainStrategy::MakeBet()
 #endif
 
     ///Choose from geom to algb
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred(geomModel,algbModel,0.0,riskprice,&tablestate);
+	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred(geomModel,algbModel,0.0,geom_algb_scaler,&tablestate);
 
 
     StateModel<  GainModel, GainModelNoRisk >
@@ -1052,7 +1053,7 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
             (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet);
 
 
-    logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
+    logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
 
         logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(displaybet) << "   d\\" << myDeterredCall.pWinD(displaybet) << endl;
         if( myDeterredCall.pWin(displaybet) > 0 )
@@ -1210,7 +1211,7 @@ float64 CorePositionalStrategy::MakeBet()
                 logFile << "\tBetWouldFold%" << myExpectedCall.pWin(rAmount) << endl;
                 ++raiseStep;
             }
-            logFile << "Guaranteed $" << tablestate.stagnantPot() << endl;
+            logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
 			logFile << "OppFoldChance% ... " << myExpectedCall.pWin(displaybet) << "   d\\" << myExpectedCall.pWinD(displaybet) << endl;
 
 			if( myExpectedCall.pWin(displaybet) > 0 )
