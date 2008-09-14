@@ -372,6 +372,7 @@ float64 GainModelNoRisk::g(float64 betSize)
         exf = minexf;
     }
 
+
     const float64 f_pot = estat->betFraction(estat->stagnantPot());
     const float64 exf_live = exf - f_pot;
 
@@ -414,6 +415,15 @@ float64 GainModelNoRisk::g(float64 betSize)
 	}
 
 //    const float64 t_result = t_1wp * t_1lp * sav - 1;
+
+#ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable)
+    {
+         std::cout << "\t\t\tbase+exf " << (base+exf)  << "   *   p_cw "  << p_cw << std::endl;
+         std::cout << "\t\t\tbase-x " << (base-x)  << "   *   p_cl "  << p_cl << std::endl;
+         std::cout << "\t\t\tsav " << (sav)  << std::endl;
+    }
+#endif
 
 	return
 

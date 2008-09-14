@@ -22,16 +22,15 @@
 #define HOLDEM_ScalarFunctions
 
 #include "portability.h"
+#include "debug_flags.h"
 
-
-
-#undef DEBUG_TRACE_ZERO
-#undef DEBUG_TRACE_SEARCH
-
+//------------------------
+//Behaviour
 #undef SINGLETURNINGPOINT
 #define BYPASS_ANOMALIES
 
-
+//------------------------
+//Bookkeeping
 #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
 #include <iostream>
 #endif

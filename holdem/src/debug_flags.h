@@ -43,6 +43,8 @@
 #endif
 
 
+
+
 /* AI Processing Interface */
 
 #undef PROGRESSUPDATE
@@ -57,3 +59,11 @@
 #undef COOLSEEDINGVIEWER
 
 /*****************/
+
+
+
+/* functionbase.h Debugging */
+#undef DEBUG_TRACE_ZERO
+#define DEBUG_TRACE_SEARCH
+
+
