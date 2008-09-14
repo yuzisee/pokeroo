@@ -532,16 +532,21 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
     ::query generates the values noRaiseChance_A and totalexf along with their corresponding derivatives.
     ::query is called by exf() and pRaise() (along with their corresponding derivatives)
     ::query provides a mechanism for caching the result for multiple calls during the same configuration
+
+    Note: callSteps represents firstFoldToRaise and is used in bMyWouldCall
 */
 void ExactCallD::query(const float64 betSize, const int32 callSteps)
 {
+///Check for cache hit
 	if( queryinput == betSize && querycallSteps == callSteps )
     {
 		return;
 	}
 
+///Update cache
 	queryinput = betSize;
 	querycallSteps = callSteps;
+
 
     nearest = (betSize <= tableinfo->callBet() + tableinfo->chipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
     float64 peopleInHandUpper = tableinfo->table->NumberInHand() - 1; //counting max possibilities
@@ -611,7 +616,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         float64 nextdexf = 0;
 
         ///Initialize player-specific (no)raisechange
-        uint8 oppRaiseChances = 0;
+        int8 oppRaiseChances = 0;
+        int8 oppRaiseChancesPessimistic = 0;
         for(int32 i=0;i<noRaiseArraySize;++i)
         {
             nextNoRaise_A[i] = 1; //Won't raise (by default)
@@ -627,15 +633,18 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         if( oppBankRoll - betSize < tableinfo->chipDenom()/4  ) // oppBankRoll <= betSize
         {
             oppRaiseChances = 0; //Not enough to raise more
+            oppRaiseChancesPessimistic = 0;
         }
         else
         {
             if( betSize > tableinfo->callBet() && betSize < tableinfo->maxRaiseAmount() - tableinfo->chipDenom()/4  ) //this bet would be a raise, so anyone is allowed to reraise me
             {//(provided they have enough chips)
                 oppRaiseChances = 1 + tableinfo->table->FutureRounds(); //this round, or any future round
+                oppRaiseChancesPessimistic = 1;
             }else
             {
                 oppRaiseChances = tableinfo->OppRaiseOpportunities(pIndex); //the opponent's only chance to raise is once in each future round
+                oppRaiseChancesPessimistic = oppRaiseChances - tableinfo->table->FutureRounds();
             }
         }
 
@@ -824,14 +833,22 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
         for( int32 i=0;i<noRaiseArraySize;++i)
         {
+            //Always be pessimistic about the opponent's raises.
+            //If being raised against is preferable, then expect an aware opponent not to raise in later rounds
+            //If being raised against is undesirable, expect an aware opponent to
+            const bool bMyWouldCall = (i < callSteps);
+
+            const int8 oppRaiseChancesAware = bMyWouldCall ? oppRaiseChancesPessimistic : oppRaiseChances;
+
+
             //At this point, each nextNoRaise is 100% unless otherwise adjusted.
-            noRaiseChance_A[i] *= (nextNoRaise_A[i] < 0) ? 0 : pow(nextNoRaise_A[i],oppRaiseChances);
+            noRaiseChance_A[i] *= (nextNoRaise_A[i] < 0) ? 0 : pow(nextNoRaise_A[i],oppRaiseChancesAware);
             if( noRaiseChance_A[i] == 0 ) //and nextNoRaiseD == 0
             {
                 noRaiseChanceD_A[i] = 0;
             }else
             {
-                noRaiseChanceD_A[i] += nextNoRaiseD_A[i]/nextNoRaise_A[i]  *   oppRaiseChances; //Logairthmic differentiation
+                noRaiseChanceD_A[i] += nextNoRaiseD_A[i]/nextNoRaise_A[i]  *   oppRaiseChancesAware; //Logairthmic differentiation
             }
         }
 

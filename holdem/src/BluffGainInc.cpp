@@ -249,13 +249,13 @@ void StateModel<LL,RR>::query( const float64 betSize )
     float64 oppFoldChance = ea.pWin(betSize);
     float64 oppFoldChanceD = ea.pWinD(betSize);
 
-#ifdef DEBUGASSERT
+//#ifdef DEBUGASSERT
 	if( potFoldWin < 0 || oppFoldChance < invisiblePercent ){
 		potFoldWin =  1;
 		oppFoldChance = 0;
 		oppFoldChanceD = 0;
 	}
-#endif
+//#endif
 
 ///Establish [Raised] values
 
