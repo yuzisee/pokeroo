@@ -160,8 +160,8 @@ class GainModel : public virtual HoldemFunctionModel
 				p_cw *= (1-splitTotal)/newTotal;
 
                 #ifdef DEBUG_TRACE_SEARCH
-                std::cout << "\t\t\t\t" << p_cl << "   =   p_cl "  << std::endl;
-                std::cout << "\t\t\t\t" << p_cw << "   =   p_cw "  << std::endl;
+                std::cout << "\t\t\t\t" << p_cl << " after totalEnemy is  p_cl "  << std::endl;
+                std::cout << "\t\t\t\t" << p_cw << " after totalEnemy is  p_cw "  << std::endl;
                 #endif
 
 			}

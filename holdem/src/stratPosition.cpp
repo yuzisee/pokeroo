@@ -994,12 +994,12 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 ////DEB UG
-
+/*
 if( ViewTable().FutureRounds() < 2 )
 {
 //    const float64 z1 = ap_passive.f(60);
 
-/*
+
 //    const float64 a1 = ap_passive.f_raised(60,90);
 //    const float64 b1 = ap_passive.f_raised(60,150);
     //const float64 z11 = hybridgainDeterred.f(60);
@@ -1040,12 +1040,12 @@ if( ViewTable().FutureRounds() < 2 )
     std::cout << " AgainstCall("<< 1 <<")=" << ap_aggressive.gainNormal << endl;
 	std::cout << "AgainstRaise("<< 1 <<")=" << ap_aggressive.gainRaised << endl;
 	std::cout << "        Push("<< 1 <<")=" << ap_aggressive.gainWithFold << endl;
-*/
+
     algbModel.bTraceEnable = true;
     logFile << choicemodel.f(26.25);
     exit(1);
 }
-
+*/
 
     const float64 bestBet = solveGainModel(&choicemodel, &callcumu);
 
