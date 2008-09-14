@@ -34,11 +34,12 @@
 #define LOGPOSITION
 #undef WINRELEASE
 /**********************************/
-//#define DEBUGSPECIFIC 90
+#undef DEBUG_GAIN
+
 #define GRAPHMONEY "chipcount.csv"
 #define REPRODUCIBLE
-///COMMENT OUT DEBUGSPECIFIC IF YOU WISH TO GRAPHMONEY
-#undef DEBUG_SINGLE_HAND
+
+#define DEBUG_SINGLE_HAND
 #endif
 
 

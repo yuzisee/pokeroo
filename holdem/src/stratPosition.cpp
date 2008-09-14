@@ -276,16 +276,13 @@ void PositionalStrategy::setupPosition()
 float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, CallCumulationD* const e)
 {
 
-        #ifdef DEBUGSPECIFIC
-        if( ViewTable().handnum == DEBUGSPECIFIC )
-        {
+        #if defined(DEBUG_GAIN) && defined(DEBUG_SINGLE_HAND)
             std::ofstream excel( (ViewPlayer().GetIdent() + ".functionlog.csv").c_str() );
             if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
             targetModel->breakdown(1000,excel,betToCall,maxShowdown);
             //myExpectedCall.breakdown(0.005,excel);
 
             excel.close();
-        }
         #endif
 
 
@@ -457,6 +454,17 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
         ++raiseStep;
     }
 }
+
+
+
+
+
+
+///==============================
+///   AceBot, TrapBot, NormBot
+///==============================
+
+
 
 float64 ImproveGainStrategy::MakeBet()
 {
@@ -877,6 +885,15 @@ exit(1);
 }
 
 
+
+
+
+
+///=================================
+///   DangerBot, SpaceBot, ComBot
+///=================================
+
+
 float64 DeterredGainStrategy::MakeBet()
 {
 	setupPosition();
@@ -1023,6 +1040,9 @@ if( ViewTable().NumberInHand() < ViewTable().NumberAtTable() )
     std::cout << " AgainstCall("<< 1 <<")=" << ap_aggressive.gainNormal << endl;
 	std::cout << "AgainstRaise("<< 1 <<")=" << ap_aggressive.gainRaised << endl;
 	std::cout << "        Push("<< 1 <<")=" << ap_aggressive.gainWithFold << endl;
+
+    algbModel.bTraceEnable = true;
+    logFile << choicemodel.f(26.25);
     exit(1);
 }
 */

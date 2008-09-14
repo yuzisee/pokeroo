@@ -38,7 +38,7 @@ class BlindStructure
             virtual bool HandPlayed(float64 timepassed=0){return false;}; //support time-based blinds
             virtual const float64 BigBlind();
             virtual const float64 SmallBlind();
-            #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+            #if defined(GRAPHMONEY)
             virtual void Reload(const float64 small,const float64 big,const uint32 handnum);
             #else
             virtual void Reload(const float64 small,const float64 big);
@@ -102,7 +102,7 @@ class SitAndGoBlinds : virtual public BlindStructure
     int16 handCount;
 
     public:
-    #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+    #if defined(GRAPHMONEY)
     virtual void Reload(const float64 small,const float64 big,const uint32 handnum);
     #else
     virtual void Reload(const float64 small,const float64 big);
@@ -112,7 +112,7 @@ class SitAndGoBlinds : virtual public BlindStructure
 	: BlindStructure(small, big), handPeriod(afterHands), handCount(afterHands)
     {
         Reload(small,big
-        #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+        #if defined(GRAPHMONEY)
         ,afterHands
         #endif
         );

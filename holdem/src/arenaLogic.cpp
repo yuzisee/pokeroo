@@ -806,19 +806,12 @@ void HoldemArena::DealHands()
 	{
 		gamelog << "================================================================" << endl;
 		gamelog << "============================New Hand" <<
-		#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+		#if defined(GRAPHMONEY)
 		" #"<< handnum <<
 		#else
 		"==" <<
-		#endif
+		#endif //GRAPHMONEY, with #else
 		"========================" << endl;
-
-		#ifdef DEBUGSPECIFIC
-		if (handnum == DEBUGSPECIFIC)
-		{
-		    gamelog << "Monitor situation" << endl;
-		}
-		#endif
 
 	}
 
@@ -834,7 +827,7 @@ void HoldemArena::DealHands()
 
     #ifdef DEBUGHOLECARDS
         holecardsData <<
-        		#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+        		#if defined(GRAPHMONEY)
                 "############ Hand " << handnum << " " <<
                 #endif
         "############" << endl;
@@ -904,7 +897,7 @@ void HoldemArena::DealHands()
             dealer.LoggedShuffle(shuffleData, randRem);
             shuffleData << endl;
             shuffleData.close();
-                #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
+                #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
             char handnumtxt/*[12] = "";
             char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
 
@@ -936,7 +929,7 @@ void HoldemArena::DealHands()
 
     #ifdef DEBUGHOLECARDS
         holecardsData <<
-        		#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+        		#if defined(GRAPHMONEY)
                 "############ Hand " << handnum << " " <<
                 #endif
         "############" << endl;
@@ -1085,13 +1078,10 @@ void HoldemArena::RefreshPlayers()
         }
     }
 
-#ifdef DEBUGSPECIFIC
-    ++handnum;
-#else
+
 #ifdef GRAPHMONEY
     scoreboard << endl;
     ++handnum;
-#endif
 #endif
 
 
@@ -1122,11 +1112,7 @@ Player* HoldemArena::PlayTable()
 #ifndef EXTERNAL_DEALER
         dealer.ShuffleDeck(static_cast<float64>(livePlayers));
 #endif
-        #ifdef DEBUGSPECIFIC
 
-            randRem = 1;
-            handnum = 1;
-        #else
 
             #ifdef GRAPHMONEY
 
@@ -1145,7 +1131,6 @@ Player* HoldemArena::PlayTable()
                 }
                 scoreboard << endl;
             #endif
-        #endif
 
         #ifdef REPRODUCIBLE
             randRem = 1;

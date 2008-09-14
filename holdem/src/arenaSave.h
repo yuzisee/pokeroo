@@ -42,7 +42,7 @@ public:
 
 /*
  Arena must save:
- #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+ #if defined(GRAPHMONEY)
  uint32 handnum
  #endif
  float64 smallestChip;

@@ -174,7 +174,7 @@ std::istream * HoldemArena::LoadState()
     bLoadGame = true;
 
 
-#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+#if defined(GRAPHMONEY)
             loadFile >> handnum ;
             loadFile.ignore(1,'n');
 #endif
@@ -185,7 +185,7 @@ std::istream * HoldemArena::LoadState()
             loadFile.ignore(1,'=');
             blinds->myBigBlind = HoldemUtil::ReadFloat64( loadFile );
             blinds->Reload(blinds->mySmallBlind,blinds->myBigBlind
-            #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+            #if defined(GRAPHMONEY)
             ,handnum
             #endif
             );
@@ -229,7 +229,7 @@ void HoldemArena::saveState()
 {
     if( loadFile.is_open() ) loadFile.close();
 
-#if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
+#if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
             char handnumtxt/*[12] = "";
             char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
 
@@ -240,7 +240,7 @@ void HoldemArena::saveState()
 #endif
 
     std::ofstream newSaveState(DEBUGSAVEGAME);
-    #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+    #if defined(GRAPHMONEY)
     newSaveState << handnum << "n";
         #ifdef DEBUGSAVEGAME_ALL
     allSaveState << handnum << "n";
@@ -250,8 +250,8 @@ void HoldemArena::saveState()
     allSaveState << "@" << (int)curDealer << "@" << flush;
     HoldemUtil::WriteFloat64( allSaveState, smallestChip );
     allSaveState << "^" << flush;
-        #endif
-    #endif
+        #endif //DEBUGSAVEGAME_ALL
+    #endif //GRAPHMONEY
     HoldemUtil::WriteFloat64( newSaveState, blinds->SmallBlind() );
     newSaveState << "=" << flush;
     HoldemUtil::WriteFloat64( newSaveState, blinds->BigBlind() );
@@ -265,18 +265,18 @@ void HoldemArena::saveState()
         float64 pMoney =  p[i]->myMoney;
 		if( pMoney < 0 ) pMoney = 0;
 		HoldemUtil::WriteFloat64( newSaveState, pMoney );
-        #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
+        #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
         HoldemUtil::WriteFloat64( allSaveState, pMoney );
         #endif
     }
 #ifdef DEBUGSAVE_EXTRATOKEN
     newSaveState << EXTRATOKEN << endl;
-    #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
+    #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
     allSaveState << EXTRATOKEN << endl;
     #endif
 #endif
     newSaveState.close();
-    #if defined(DEBUGSAVEGAME_ALL) && (defined(DEBUGSPECIFIC) || defined(GRAPHMONEY))
+    #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
     allSaveState.close();
     #endif
 }

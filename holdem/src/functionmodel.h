@@ -26,9 +26,6 @@
 #include "callPrediction.h"
 #include <math.h>
 
-#ifdef DEBUGSPECIFIC
-#define DEBUG_GAIN
-#endif
 
 
 #define DEFAULT_EPS_STEP 0.001

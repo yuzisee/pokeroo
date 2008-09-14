@@ -317,7 +317,7 @@ protected:
             std::istream* LoadState();
 #endif
 
-	#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+	#if defined(GRAPHMONEY)
         handnum_t handnum;
     #endif
 

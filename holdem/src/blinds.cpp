@@ -36,7 +36,7 @@ const double BlindStructure::BigBlind()
 }
 
 void BlindStructure::Reload(const float64 small,const float64 big
-#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+#if defined(GRAPHMONEY)
 ,const uint32 handnum
 #endif
 )
@@ -77,7 +77,7 @@ bool AlgbHandBlinds::HandPlayed(float64 timepassed)
 }
 
 void SitAndGoBlinds::Reload(const float64 small,const float64 big
-#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+#if defined(GRAPHMONEY)
 ,const uint32 handnum
 #endif
 )
@@ -86,7 +86,7 @@ void SitAndGoBlinds::Reload(const float64 small,const float64 big
         hist[0] = small*rat*rat;
         hist[1] = small*rat;
         hist[2] = hist[0]+hist[1];
-    #if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
+    #if defined(GRAPHMONEY)
     handCount = handPeriod - (handnum % handPeriod);
     if( handCount == 0 ) handCount = handPeriod;
     #endif
