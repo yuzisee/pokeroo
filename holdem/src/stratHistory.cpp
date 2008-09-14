@@ -210,7 +210,7 @@ void HistoryStrategy::SerializeOne( std::ostream& saveFile, const PerformanceHis
     saveFile << ph.score << " Misc." << endl;
     saveFile << (int16)(ph.rank) << " ==Rank" << endl;
     saveFile << ph.nonZeroWinLose << " Non-Zero W/L" << endl;
-    saveFile << ph.numHandsAboveBelow << " Hands Above/Below" << endl;
+    saveFile << ph.numHandsAboveBelow << " Pushed - Revealed" << endl;
     HoldemUtil::WriteFloat64( saveFile, ph.totalMoneyDelta );
     saveFile << " Total Money Delta (" << ph.totalMoneyDelta << ")" << endl;
 }
