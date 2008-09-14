@@ -581,6 +581,15 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     PositionalStrategy *(multiT[6]) = {&DangerT, &ComT, &NormT, &TrapT, &AceT , &SpaceT};
     PositionalStrategy *(multiTR[6]) = {&DangerTR, &ComTR, &NormTR, &TrapTR, &AceTR, &SpaceTR};
 
+        std::ofstream legendOutput("legend.txt");
+        legendOutput << "0\t Danger\r\n" ;
+        legendOutput << "1\t Com\r\n" ;
+        legendOutput << "2\t Norm\r\n" ;
+        legendOutput << "3\t Trap\r\n" ;
+        legendOutput << "4\t Ace\r\n" ;
+        legendOutput << "5\t Space\r\n" ;
+        legendOutput.close();
+
     MultiStrategy MultiT(multiT,6);
     MultiT.bGamble = 0;
     MultiStrategy MultiTR(multiTR,6);
