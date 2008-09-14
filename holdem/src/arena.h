@@ -318,7 +318,7 @@ protected:
 #endif
 
 	#if defined(DEBUGSPECIFIC) || defined(GRAPHMONEY)
-        uint32 handnum;
+        handnum_t handnum;
     #endif
 
 #ifdef DEBUGSAVE_EXTRATOKEN
@@ -332,15 +332,17 @@ protected:
 		Player* PlayTable();
 
         static void ToString(const HoldemAction& e, std::ostream& o);
-	static void FileNumberString(int value, char * str)
+	static void FileNumberString(handnum_t value, char * str)
 	{
-#if defined(itoa)
-		itoa(value,str,10);
-#elif defined(_itoa)
-		_itoa(value,str,10);
-#elif defined(sprintf)
+//#if defined(itoa)
+//		itoa(value,str,10);
+//#elif defined(_itoa)
+//		_itoa(value,str,10);
+//#elif defined(sprintf)
 		sprintf(str,"%lu",value);
-#endif
+//#else
+//	#error "FileNumberString not implemented"
+//#endif
 	}
 
 		static const float64 FOLDED;

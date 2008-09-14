@@ -268,7 +268,8 @@ void HistoryStrategy::SaveState( )
         char handnumbasename[200];
         char handnumstr[20];
 
-	HoldemArena::FileNumberString(handNumber,handnumstr);
+        const handnum_t handNumberToPlayNext = handNumber+1;
+	HoldemArena::FileNumberString(handNumberToPlayNext,handnumstr);
         handnumstr[19] = '\0'; //Just to be safe
 
         strncpy(handnumbasename,"./" LOAD_PAST_HANDS, 2+LOAD_PAST_HANDS_LEN);

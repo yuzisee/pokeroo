@@ -40,6 +40,11 @@ typedef double float64;
 typedef float float32;
 
 
+///========================================================
+
+typedef uint32 handnum_t;
+
+
 class HoldemConstants
 {
 public:
