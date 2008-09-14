@@ -25,6 +25,7 @@
 #include "inferentials.h"
 #include "callPrediction.h"
 #include <math.h>
+#include <float.h>
 
 
 
@@ -84,6 +85,7 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 
 class GainModel : public virtual HoldemFunctionModel
 {
+
 	protected:
 	ExactCallD & espec;
 	StatResult shape;
@@ -97,6 +99,16 @@ class GainModel : public virtual HoldemFunctionModel
         virtual float64 gd(float64, const float64);
 
 	public:
+
+        static inline float64 cleanpow(float64 b, float64 x)
+        {
+            if( b < DBL_EPSILON ) return 0;
+            //if( b > 1 ) return 1;
+            return pow(b,x);
+        }
+
+
+
         const StatResult & ViewShape() { return shape; }
 
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
@@ -121,13 +133,18 @@ class GainModel : public virtual HoldemFunctionModel
 			{
 
 			///Use f_battle instead of e_battle, convert to equivelant totalEnemy
-				p_cl =  1 - pow(1 - shape.loss,f_battle);
-				p_cw = pow(shape.wins,f_battle);
+				p_cl =  1 - cleanpow(1 - shape.loss,f_battle);
+				p_cw = cleanpow(shape.wins,f_battle);
+
+                #ifdef DEBUG_TRACE_SEARCH
+                std::cout << "\t\t\t(1 -  " << shape.loss  << ")^" << f_battle << "   =   p_cl "  << p_cl << std::endl;
+                std::cout << "\t\t\t" << shape.wins  << "^fbattle   =   p_cw "  << p_cw << std::endl;
+                #endif
 
 				const float64 newTotal = p_cl + p_cw;
 
-				shape.wins = pow(p_cw,1.0/totalEnemy);
-				shape.loss = 1 - pow(1 - p_cl,1.0/totalEnemy);
+				shape.wins = cleanpow(p_cw,1.0/totalEnemy);
+				shape.loss = 1 - cleanpow(1 - p_cl,1.0/totalEnemy);
 			///Normalize, total possibility must add up to 1
                 const float64 hundredTotal = shape.wins + shape.loss + shape.splits;
                 shape = shape * (1.0/hundredTotal);
@@ -169,11 +186,11 @@ class GainModel : public virtual HoldemFunctionModel
                 shape.splits = s.splits * s.repeated + opportunity.splits * (1 - s.repeated);
 
 			///Use f_battle instead of e_battle, convert to equivelant totalEnemy
-				p_cl =  1 - pow(1 - shape.loss,f_battle);
-				p_cw = pow(shape.wins,f_battle);
+				p_cl =  1 - cleanpow(1 - shape.loss,f_battle);
+				p_cw = cleanpow(shape.wins,f_battle);
 
-                const float64 p_cl_draw = 1 - pow(1 - opportunity.loss,e_battle);
-                const float64 p_cw_draw = pow(opportunity.wins,e_battle);
+                const float64 p_cl_draw = 1 - cleanpow(1 - opportunity.loss,e_battle);
+                const float64 p_cw_draw = cleanpow(opportunity.wins,e_battle);
 
                 if( p_cw_draw > p_cw && p_cl_draw < p_cl )
                 {
@@ -188,8 +205,8 @@ class GainModel : public virtual HoldemFunctionModel
 
 				const float64 newTotal = p_cl + p_cw;
 
-				shape.wins = pow(p_cw,1.0/totalEnemy);
-				shape.loss = 1 - pow(1 - p_cl,1.0/totalEnemy);
+				shape.wins = cleanpow(p_cw,1.0/totalEnemy);
+				shape.loss = 1 - cleanpow(1 - p_cl,1.0/totalEnemy);
 			///Normalize, total possibility must add up to 1
                 const float64 hundredTotal = shape.wins + shape.loss;
                 shape.wins *= (1-shape.splits)/hundredTotal;
