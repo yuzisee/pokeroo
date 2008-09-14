@@ -39,6 +39,8 @@
 #undef MODEL_REACTION
 
 
+#define COMPENSATE_FOR_BAD_ROUNDING
+
 
 using std::vector;
 
@@ -132,25 +134,27 @@ class StatResult
 
 	void genPCT()
 	{
-		pct = wins + splits/2;
-	}
-	/*
-	void genPeripheral()
-	{
-		if( loss == 0 && wins == 0 )
-		{ //All split maybe?
-			wlr = 0;
-			pyth = 0;
-		}else
+
+		#ifdef COMPENSATE_FOR_BAD_ROUNDING
+		bool bRenorm = false;
+		if( wins < 0 ){ wins = 0; bRenorm = true; }
+		if( loss < 0 ){ loss = 0; bRenorm = true; }
+		if( splits < 0 ){ splits = 0; bRenorm = true; }
+
+		if( bRenorm )
 		{
-			wlr = wins*wins; //temporary storage!!
-			pyth = wlr / ( wlr + loss * loss);
-			wlr = wins / (wins + loss);
+		    float64 nt = wins + loss + splits;
+		    wins /= nt;
+		    loss /= nt;
+		    splits /= nt;
 		}
-		wlr *= (wins+loss+splits);
-		pyth *= (wins+loss+splits);
+		#endif
+
+		pct = wins + splits/2;
+
 	}
-	*/
+
+
 	float64 genPeripheral() const
 	{
 		if( loss == 0 && wins == 0 )
