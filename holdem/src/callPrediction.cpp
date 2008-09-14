@@ -624,13 +624,13 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         const float64 oppPastCommit = withP->GetContribution();
         const float64 oppBankRoll = withP->GetMoney(); //To predict how much the bet will be
 
-        if( oppBankRoll - betSize < DBL_EPSILON ) // oppBankRoll <= betSize
+        if( oppBankRoll - betSize < tableinfo->chipDenom()/4  ) // oppBankRoll <= betSize
         {
             oppRaiseChances = 0; //Not enough to raise more
         }
         else
         {
-            if( betSize > tableinfo->callBet() ) //this bet would be a raise, so anyone is allowed to reraise me
+            if( betSize > tableinfo->callBet() && betSize < tableinfo->maxRaiseAmount() - tableinfo->chipDenom()/4  ) //this bet would be a raise, so anyone is allowed to reraise me
             {//(provided they have enough chips)
                 oppRaiseChances = 1 + tableinfo->table->FutureRounds(); //this round, or any future round
             }else
@@ -642,7 +642,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         if( tableinfo->table->CanStillBet(pIndex) ) //CanStillBet means CanStillPlay
         {
 
-            if( betSize - oppBankRoll < DBL_EPSILON ) // betSize <= oppBankRoll
+            if( betSize - oppBankRoll < tableinfo->chipDenom()/4  ) // betSize <= oppBankRoll
             {	//Can still call, at least
 
                 ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit);
@@ -1237,6 +1237,7 @@ float64 ExactCallBluffD::RiskPrice()
     FG.waitLength.opponents = 1;
     FG.waitLength.meanConv = ef;
     const float64 riskprice = FG.FindZero(tableinfo->table->GetMinRaise() + tableinfo->callBet(),maxShowdown);
+
 
     FG.f(riskprice);
     if( FG.n > 0 )
