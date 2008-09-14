@@ -39,7 +39,8 @@
 #define GRAPHMONEY "chipcount.csv"
 #define REPRODUCIBLE
 
-#define DEBUG_SINGLE_HAND
+/* Savegame debugging */
+#undef DEBUG_SINGLE_HAND
 #endif
 
 

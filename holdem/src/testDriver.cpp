@@ -528,7 +528,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             std::ios::openmode gamelogMode = std::ios::trunc;
             if( bLoadGame ) gamelogMode = std::ios::app;
 			std::ofstream gameOutput("gamelog.txt",gamelogMode);
-			HoldemArena myTable(&bg, gameOutput,true, true);
+			HoldemArena myTable(&sg, gameOutput,true, true);
 		#else
 	HoldemArena myTable(&sg, gameLog,true, true);
 		#endif
