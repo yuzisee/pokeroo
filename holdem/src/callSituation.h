@@ -76,7 +76,7 @@ public:
     virtual float64 foldGain(CallCumulationD* const e, float64 * const foldWaitLength_out);
     virtual float64 foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet);
     virtual float64 foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out);
-    virtual float64 RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo, CallCumulationD * useMean, float64 * out_dPot = 0);
+    virtual float64 RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo, CallCumulationD * useMean, float64 * out_dPot = 0) const;
     virtual float64 PushGain();
 
     virtual uint8 OppRaiseOpportunities(int8 oppID) const;

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 by Joseph Huang                                    *
+ *   Copyright (C) 2008 by Joseph Huang                                    *
  *                                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -22,6 +22,7 @@
 #include "stratPosition.h"
 #include <float.h>
 
+#include "stratFear.h"
 
 //#define DEBUG_TRAP_AS_NORMAL
 
@@ -914,7 +915,7 @@ float64 DeterredGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
 
-
+    OpponentFoldWait myFearControl(&tablestate);
 
 
     const float64 riskprice = myDeterredCall.RiskPrice();
@@ -922,7 +923,7 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 
-    const float64 certainty = myDeterredCall.ActOrReact(betToCall,myBet,maxShowdown);
+    const float64 certainty = myFearControl.ActOrReact(betToCall,myBet,maxShowdown);
 
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
     const float64 timeLeft = (  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );

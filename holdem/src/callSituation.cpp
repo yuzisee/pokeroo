@@ -204,6 +204,48 @@ bool ExpectedCallD::inBlinds() const
 
 
 
+float64 ExpectedCallD::RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot) const
+{
+
+    const int8 N = handsDealt();
+    const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
+
+    FoldGainModel FG(table->GetChipDenom()/2);
+    FG.waitLength.meanConv = useMean;
+
+    if(useMean == 0)
+    {
+        FG.waitLength.w = 1.0 - 1.0/N;
+    }else
+    {
+        FG.waitLength.w = useMean->nearest_winPCT_given_rank(1.0 - 1.0/N);
+    }
+    FG.waitLength.amountSacrificeVoluntary = (table->GetPotSize() - stagnantPot() - alreadyBet)/(handsIn()-1);
+	FG.waitLength.amountSacrificeForced = avgBlind;
+    FG.waitLength.bankroll = (allChips() - bankroll)/(N-1);
+    FG.waitLength.opponents = 1;
+    FG.dw_dbet = 0; //Again, we don't need this
+	float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced;
+	float64 drisk;
+
+	if( riskLoss < 0 )
+	{//If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
+		drisk = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1 / (handsIn()-1);
+	}else
+    {//If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
+		riskLoss = 0;
+		drisk = 0;
+	}
+
+	if(out_dPot != 0)
+	{
+		*out_dPot = drisk;
+	}
+
+	return riskLoss;
+}
+
+
 #ifdef DEBUGBETMODEL
 void DebugArena::updatePot()
 {
@@ -271,7 +313,11 @@ void DebugArena::AssignHandNum(uint32 n)
 {
     handnum = n;
 }
+#endif //DEBUGBETMODEL
 
-#endif
+
+
+
+
 
 

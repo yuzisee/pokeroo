@@ -245,47 +245,6 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
 
 }
 
-float64 ExpectedCallD::RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot)
-{
-
-    const int8 N = handsDealt();
-    const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
-
-    FoldGainModel FG(table->GetChipDenom()/2);
-    FG.waitLength.meanConv = useMean;
-
-    if(useMean == 0)
-    {
-        FG.waitLength.w = 1.0 - 1.0/N;
-    }else
-    {
-        FG.waitLength.w = useMean->nearest_winPCT_given_rank(1.0 - 1.0/N);
-    }
-    FG.waitLength.amountSacrificeVoluntary = (table->GetPotSize() - stagnantPot() - alreadyBet)/(handsIn()-1);
-	FG.waitLength.amountSacrificeForced = avgBlind;
-    FG.waitLength.bankroll = (allChips() - bankroll)/(N-1);
-    FG.waitLength.opponents = 1;
-    FG.dw_dbet = 0; //Again, we don't need this
-	float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced;
-	float64 drisk;
-
-	if( riskLoss < 0 )
-	{//If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
-		drisk = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1 / (handsIn()-1);
-	}else
-    {//If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
-		riskLoss = 0;
-		drisk = 0;
-	}
-
-	if(out_dPot != 0)
-	{
-		*out_dPot = drisk;
-	}
-
-	return riskLoss;
-}
-
 
 //Here, dbetsize/dpot = 0
 float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrRaise, float64 fold_bet, float64 w, float64 opponents, float64 dexf,  bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
@@ -1210,30 +1169,8 @@ float64 ExactCallD::dexf(const float64 betSize)
 }
 
 
-float64 ExactCallD::ActOrReact(float64 callb, float64 lastbet, float64 limit) const //Returns 0 for full act, returns 1 for full react
-{
-//One must consider the possibilities:
-//1. [ACT] The player betting has been folding all this time, and has hit his/her hand ALREADY
-//2. [ACT] The opponents have not bet yet, and would be the reactors of this hand.
-//3. [REACT] The pot is large from previous rounds, opponents can't fold easily
 
-	const float64 nPlayers = 1+tableinfo->handsToBeat();
-	const float64 mPlayers = 1 - (1 / nPlayers); //We need to scale actOrReact based on how many players are at the table...?
-
-	const float64 mylimit = tableinfo->maxRaiseAmount();
-	float64 tablepot = tableinfo->table->GetPotSize();
-	const float64 maxToShowdownPot = mylimit * (tableinfo->handsIn()-1) + tableinfo->alreadyBet();
-	if( tablepot > maxToShowdownPot ) tablepot = maxToShowdownPot;
-
-    //const float64 avgControl = (stagnantPot() + table->GetUnbetBlindsTotal()) / table->GetNumberInHand();
-    //const float64 raiseOverBet = (callb + avgControl);// < lastbet) ? 0 : (callb + avgControl - lastbet) ;
-    const float64 raiseOverOthers = (tablepot - callb) / tableinfo->handsIn();
-    const float64 raiseOver = (raiseOverOthers);// + raiseOverBet)/2;
-    const float64 actOrReact = (raiseOver > limit) ? mPlayers : (raiseOver / limit);
-    return actOrReact / mPlayers;
-}
-
-float64 ExactCallBluffD::RiskPrice()
+float64 ExactCallBluffD::RiskPrice() const
 {//At what price is it always profitable to fold the average winning hand?
 	const int8 Ne_int = tableinfo->table->NumberAtRound() - 1;
     const float64 Ne = static_cast<float64>(Ne_int);
