@@ -509,10 +509,12 @@ float64 ImproveGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
 
+    OpponentFoldWait myFearControl(&tablestate);
 
 
     const float64 riskprice = myDeterredCall.RiskPrice();
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
+    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall,statworse.repeated,riskprice);
 
 
     const float64 fullVersus = myDeterredCall.callingPlayers();
@@ -657,7 +659,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 ///From regular to fear A(x2)
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            ap(hybridgainDeterred_aggressive,hybridgain_aggressive,0.0,riskprice,&tablestate);
+            ap(hybridgainDeterred_aggressive,hybridgain_aggressive,min_worst_scaler,riskprice,&tablestate);
 
 	StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
 	        choicemodel( myDeterredCall_left, &ap );
@@ -671,7 +673,7 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 #else
 	///From regular to fear B(x2)
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            ap_right(hybridgainDeterred_aggressive,hybridgain_aggressive,0.0,riskprice,&tablestate);
+            ap_right(hybridgainDeterred_aggressive,hybridgain_aggressive,min_worst_scaler,riskprice,&tablestate);
     StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
             choicemodel_right( myDeterredCall_right, &ap_right );
 
@@ -846,7 +848,8 @@ exit(1);
 #ifdef LOGPOSITION
     const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? betToCall : bestBet;
 
-    logFile << "\"riskprice\"... " << riskprice << endl;
+    logFile << "\"riskprice\"... " << riskprice << "(" << geom_algb_scaler << ")" << endl;
+    logFile << "When betting " << min_worst_scaler << ", oppFoldChance is first " << statworse.repeated << endl;
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     choicemodel.f(viewBet);
@@ -920,7 +923,7 @@ float64 DeterredGainStrategy::MakeBet()
 
     const float64 riskprice = myDeterredCall.RiskPrice();
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
-
+    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall,statworse.repeated,geom_algb_scaler);
 
 
     const float64 certainty = myFearControl.ActOrReact(betToCall,myBet,maxShowdown);
@@ -983,7 +986,7 @@ float64 DeterredGainStrategy::MakeBet()
 #endif
 
     ///Choose from geom to algb
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred(geomModel,algbModel,0.0,geom_algb_scaler,&tablestate);
+	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred(geomModel,algbModel,min_worst_scaler,geom_algb_scaler,&tablestate);
 
 
     StateModel<  GainModel, GainModelNoRisk >
@@ -1064,7 +1067,9 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
-        logFile << "\"riskprice\"... " << riskprice << endl;
+        logFile << "\"riskprice\"... " << riskprice << "(" << geom_algb_scaler << ")" << endl;
+        logFile << "When betting " << min_worst_scaler << ", oppFoldChance is first " << statworse.repeated << endl;
+
         logFile << "Geom("<< displaybet <<")=" << geomModel.f(displaybet) << endl;
         logFile << "Algb("<< displaybet <<")=" << algbModel.f(displaybet) << endl;
     }
