@@ -846,12 +846,20 @@ exit(1);
 
 
 #ifdef LOGPOSITION
-    const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? betToCall : bestBet;
+    const float64 nextBet = betToCall + ViewTable().GetMinRaise();
+    const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? nextBet : bestBet;
 
     logFile << "\"riskprice\"... " << riskprice << "(" << geom_algb_scaler << ")" << endl;
     logFile << "When betting " << min_worst_scaler << ", oppFoldChance is first " << statworse.repeated << endl;
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
+    choicemodel.f(betToCall);
+    logFile << " AgainstCall("<< betToCall <<")=" << choicemodel.gainNormal << endl;
+    logFile << "AgainstRaise("<< betToCall <<")=" << choicemodel.gainRaised << endl;
+    logFile << "        Push("<< betToCall <<")=" << choicemodel.gainWithFold << endl;
+
+
+
     choicemodel.f(viewBet);
     logFile << " AgainstCall("<< viewBet <<")=" << choicemodel.gainNormal << endl;
     logFile << "AgainstRaise("<< viewBet <<")=" << choicemodel.gainRaised << endl;

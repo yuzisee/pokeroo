@@ -299,9 +299,9 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 	}
 
 	bool bSlopes = false;
-    float64 dy1;
-    float64 dy2;
-    float64 dyb;
+    float64 dy1 = 0.0;
+    float64 dy2 = 0.0;
+    float64 dyb = 0.0;
 
     while( IsDifferentSign((y1-yb),(y2-yb)) && x2 - x1 > quantum/2)
     {   ///(y1-yb) and (y2-yb) have different signs

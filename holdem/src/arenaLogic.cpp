@@ -990,6 +990,9 @@ void HoldemArena::RefreshPlayers()
         }
 
         gamelog << "\n\n==========\nCHIP COUNT" << endl;
+    }else
+    {
+        leaderboard = 0 ;
     }
 #ifdef GRAPHMONEY
     scoreboard << handnum << flush;
