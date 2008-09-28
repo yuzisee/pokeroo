@@ -19,9 +19,8 @@
  ***************************************************************************/
 
 #include "portability.h"
-#include <string>
 
-using std::string;
+#include "arena.h"
 
 
 /*****************************************************************************
@@ -29,38 +28,45 @@ using std::string;
 	Betting round accessors
 *****************************************************************************/
 
+///Call this to determine if the big blind has changed
+void GetBigBlind(void * table_ptr)
+{}
+
+///Call this to determine if the small blind has changed
+void GetSmalllind(void * table_ptr)
+{}
 
 ///Get the amount of money playerNumber has in front of him
-extern "C" float64 GetMoney(int8 playerNumber);
+float64 GetMoney(void * table_ptr, int8 playerNumber);
 //TODO: If the player is all in, make sure this returns the correct value
 
 
 
 //Override the amount of money playerNumber has in front of him
-//void SetMoney(int8 playerNumber, float64 money);
+void SetMoney(void * table_ptr, int8 playerNumber, float64 money);
 
 
 
 ///Get the amount of money playerNumber has bet so far this round
-extern "C" float64 GetBet(int8 playerNumber);
+float64 GetCurrentBet(void * table_ptr, int8 playerNumber);
 ///TODO: If the player is all in, make sure this returns the correct value
 
 
 
 ///Get the amount of money that is in the pot
-extern "C" float64 GetPotSize();
+float64 GetPotSize(void * table_ptr);
 
 
 ///Get the amount of money that was in the pot at the BEGINNING of the current betting round
-extern "C" float64 GetLastRoundPotsize();
+float64 GetLastRoundPotsize(void * table_ptr);
 
 
 ///Get the size of the highest bet so far
-extern "C" float64 GetBetToCall();
+float64 GetBetToCall(void * table_ptr);
 
 
 //Get the playerNumber of the player who's turn it is
-extern "C" int8 WhoIsNext();
+int8 WhoIsNext(void * table_ptr);
 
 /*****************************************************************************
 	Betting round accessors
@@ -74,14 +80,7 @@ extern "C" int8 WhoIsNext();
 /*****************************************************************************
 	BEGIN
 	Event functions
-
-Note: If AutoPlayGame() is called, bAutoMode is set to 1, you never
-need to use any of the Start______() functions.
 *****************************************************************************/
-int8 bAutoMode = 0;
-
-///Use this to start the game and set bAutoMode = 1; See the note above.
-extern "C" void AutoPlayGame();
 
 
 ///Call NewCommunityCard for each card that is dealt to the table during flop/turn/river
@@ -110,51 +109,45 @@ cardSuit can be any of:
 'D' for Diamonds
 */
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
-extern "C" void NewCommunityCard(char cardValue,char cardSuit);
+void NewCommunityCard(void * table_ptr, char cardValue,char cardSuit);
 
 
 
 
 
 ///Call this when the betting begins
-extern "C" void StartBetting();
+void StartBetting(void * table_ptr);
 
 ///Call these functions when playerNumber Raises, Folds, or Calls
-extern "C" void PlayerCalls(int8 playerNumber);
-extern "C" void PlayerFolds(int8 playerNumber);
-extern "C" void PlayerRaisesTo(int8 playerNumber, float64 amount);
-extern "C" void PlayerRaisesBy(int8 playerNumber, float64 amount);
+void PlayerCalls(void * table_ptr, int8 playerNumber);
+void PlayerFolds(void * table_ptr, int8 playerNumber);
+void PlayerRaisesTo(void * table_ptr, int8 playerNumber, float64 amount);
+void PlayerRaisesBy(void * table_ptr, int8 playerNumber, float64 amount);
 ///Question: If a player doesn't call any of these, which is the default action?
 
 
 ///GetBetAmount is useful for asking a bot what to bet
-extern "C" float64 GetBetAmount(int8 playerNumber);
-
-///GetAction returns a string descfribing what playerNumber wants to do in this situation
-///This is particularly useful for bots
-extern "C" string GetAction(int8 playerNumber);
-
-
+float64 GetBetDecision(void * table_ptr, int8 playerNumber);
 
 
 
 ///Call this when (if) the showdown begins
-extern "C" void StartShowdown();
+void StartShowdown(void * table_ptr);
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
-extern "C" void PlayerShowsCard(int8 playerNumber, char cardValue, char cardSuit);
+void PlayerShowsCard(void * table_ptr, int8 playerNumber, char cardValue, char cardSuit);
 
 ///Call this when playerNumber mucks his/her hand during the showdown.
 ///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
-extern "C" void PlayerMucksHand(int8 playerNumber);
+void PlayerMucksHand(void * table_ptr, int8 playerNumber);
 
 
 
 
 
 ///Call this when new hands are dealt
-extern "C" void StartDealNewHands();
+void StartDealNewHands(void * table_ptr);
 
 /*****************************************************************************
 	Event functions
@@ -172,22 +165,64 @@ Note: SetBigBlind() and SetSmallBlind() can be called between
 hands anytime the blind size changes during the game
 *****************************************************************************/
 
+void * NewTable()
+{
+    // new SitAndGoBlinds(b.SmallBlind(),b.BigBlind(),blindIncrFreq);
+    BlindStructure* b = new GeomPlayerBlinds(1, 2, 1, 1);
+    bool illustrate = true;
+    bool spectate = true;
+    bool externalDealer = true;
+
+
+    return reinterpret_cast<void *>(new HoldemArena(b, std::cout ,illustrate,spectate, externalDealer));
+}
+
+void DeleteTable(void * table_ptr)
+{
+    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
+    table->free_members();
+    delete table;
+}
+
 ///Choose playerNumber to be the dealer for the first hand
-extern "C" void InitChooseDealer(int8 playerNumber);
+void InitChooseDealer(void * table_ptr, int8 playerNumber)
+{
+    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
+}
 
 ///Set the amount of money that the SMALLEST chip is worth
-extern "C" void InitSmallestChipSize(float64 money);
+void InitSmallestChipSize(void * table_ptr, float64 money)
+{
+    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
+}
 
 ///Call this when the big blind has changed
-extern "C" void SetBigBlind();
+void SetBigBlind(void * table_ptr, float64 money)
+{
+    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
+}
 
 ///Call this when the small blind has changed
-extern "C" void SetSmallBlind();
+void SetSmallBlind(void * table_ptr, float64 money)
+{
+    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
+}
 
 ///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
 ///The function returns a playerNumber to identify this player in your code
-extern "C" int8 AddHumanOpponent(string playerName);
-extern "C" int8 AddStrategyBot(string playerName, char botType);
+int8 AddHumanOpponent(void * table_ptr, char * playerName)
+{
+    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
+    //table->AddHuman(playerName, money,
+    //p[newID]->bSync = true;
+
+}
+
+int8 AddStrategyBot(void * table_ptr, char *playerName, char botType)
+{
+    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
+
+}
 
 
 /*****************************************************************************

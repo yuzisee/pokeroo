@@ -44,7 +44,7 @@ typedef float float32;
 
 typedef uint32 handnum_t;
 
-
+#ifdef __cplusplus
 class HoldemConstants
 {
 public:
@@ -86,6 +86,7 @@ public:
     static const uint32
     INCR_KING=16777216,INCR_ACEHIGH=67108864,INCR_MISC=268435456;
 };
+#endif // __cplusplus
 
 #endif
 

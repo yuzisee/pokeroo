@@ -77,17 +77,13 @@ class Player
 		float64 handBetTotal; //Sum of bets made during COMPLETED betting rounds
 		float64 myBetSize; //Within a betting round, the current bet on the table
 		float64 lastBetSize; //Within a betting round, the bet before myBetSize
-#ifdef EXTERNAL_DEALER
-		bool bSync;
-#endif
 
 
-		Player( float64 money, const std::string name, PlayerStrategy* strat, float64 init_play, bool syncHuman = false)
-		: myStrat(strat),  allIn(init_play), myMoney(money),
-		 handBetTotal(0), myBetSize(0), lastBetSize(init_play)
-#ifdef EXTERNAL_DEALER
-, bSync(syncHuman)
-#endif
+
+		Player( float64 money, const std::string name, PlayerStrategy* strat, float64 init_play, bool syncHuman)
+		: myStrat(strat),  allIn(init_play), myMoney(money)
+		 , handBetTotal(0), myBetSize(0), lastBetSize(init_play)
+         , bSync(syncHuman)
 		{
 			myName = name;
 			myHand.SetEmpty();
@@ -99,6 +95,7 @@ class Player
 		const Hand& GetHand() const { return myHand; }
 
 	public:
+        const bool bSync;
 
 		const std::string & GetIdent() const
 		{	return myName;	}
@@ -116,6 +113,7 @@ class Player
 		float64 GetLastBet() const
 		{	return lastBetSize;	}
 
+        void free_members();
 }
 ;
 
@@ -167,6 +165,8 @@ class PlayerStrategy
 		virtual void SeeAction(const HoldemAction&) = 0;
 
 		virtual void FinishHand() = 0;
+
+		void free_members(){};
 }
 ;
 
@@ -251,16 +251,16 @@ protected:
             std::ofstream scoreboard;
         #endif
 
-#ifndef EXTERNAL_DEALER
 		SerializeRandomDeck dealer;
-#endif
 		float64 randRem;
 
         int8 cardsInCommunity;
 		CommunityPlus community;
 	uint8 bettingRoundsRemaining;
-		bool bVerbose;
-		bool bSpectate;
+		const bool bVerbose;
+		const bool bSpectate;
+
+		const bool bExternalDealer;
 
 		int8 livePlayers;
 		int8 roundPlayers;
@@ -301,16 +301,16 @@ protected:
 		void PlayShowdown(const int8);
 			void compareAllHands(const int8, vector<ShowdownRep>& );
 			double* organizeWinnings(int8&, vector<ShowdownRep>&, vector<ShowdownRep>&);
-#ifdef EXTERNAL_DEALER
+
         DeckLocation ExternalQueryCard(std::istream& s);
-#endif
+
 		void DealHands();
 
 		void prepareRound(const int8);
 		int8 PlayRound(const int8);
 			//returns the first person to reveal cards (-1 if all fold)
 
-        virtual int8 AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
+        virtual int8 AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat, bool externalDealer);
 	public:
 
 #ifdef DEBUGSAVEGAME
@@ -348,13 +348,14 @@ protected:
 		static const float64 FOLDED;
 		static const float64 INVALID;
 
-		HoldemArena(BlindStructure* b, std::ostream& targetout, bool illustrate, bool spectate)
+		HoldemArena(BlindStructure* b, std::ostream& targetout, bool illustrate, bool spectate, bool allSync)
 		: curIndex(-1),  nextNewPlayer(0)
 #ifdef DEBUGSAVEGAME
         ,bLoadGame(false)
 #endif
         ,gamelog(targetout)
-        ,bVerbose(illustrate),bSpectate(spectate),livePlayers(0),curHighBlind(-1),blinds(b),allChips(0)
+        ,bVerbose(illustrate),bSpectate(spectate),bExternalDealer(allSync)
+        ,livePlayers(0),curHighBlind(-1),blinds(b),allChips(0)
 		,lastRaise(0),highBet(0), myPot(0), myFoldedPot(0), myBetSum(0), prevRoundFoldedPot(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)
 		#ifdef GLOBAL_AICACHE_SPEEDUP
 		,communityBuffer(0)
@@ -363,6 +364,7 @@ protected:
 		    smallestChip = b->SmallBlind(); ///This INITIAL small blind should be assumed to be one chip.
         }
 
+        virtual void free_members();
 		virtual ~HoldemArena();
 
 

@@ -30,6 +30,26 @@
  const float64 HoldemArena::FOLDED = -1;
  const float64 HoldemArena::INVALID = -2;
 
+void HoldemArena::free_members()
+{
+    delete blinds;
+    while( !p.empty() )
+    {
+        Player * x = p.back();
+        x->free_members();
+        delete x;
+        p.pop_back();
+    }
+}
+
+void Player::free_members()
+{
+    myStrat->free_members();
+    delete myStrat;
+}
+
+
+
 void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
 {
     if ( e.IsFold() )
@@ -216,10 +236,9 @@ std::istream * HoldemArena::LoadState()
             #endif
 
 
-#ifndef EXTERNAL_DEALER
-            //Save state of deck
-            dealer.Unserialize( loadFile );
-#endif
+            if( !bExternalDealer )  dealer.Unserialize( loadFile ); //Save state of deck
+
+
 
             return &loadFile;
 }
@@ -284,25 +303,22 @@ void HoldemArena::saveState()
 
 int8 HoldemArena::AddHuman(const char* const id, const float64 money, PlayerStrategy* newStrat)
 {
-    int8 newID = AddPlayer(id, money, newStrat);
-    #ifdef EXTERNAL_DEALER
-    p[newID]->bSync = true;
-    #endif
+    int8 newID = AddPlayer(id, money, newStrat,bExternalDealer);
     return newID;
 }
 
 int8 HoldemArena::AddBot(const char* const id, const float64 money, PlayerStrategy* newStrat)
 {
-    return AddPlayer(id, money, newStrat);
+    return AddPlayer(id, money, newStrat, false);
 }
 
-int8 HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat)
+int8 HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat, bool bExternalDealer)
 {
 	if( curIndex != -1 || newStrat->game != 0 || newStrat->me != 0) return -1;
 
     newStrat->myPositionIndex = nextNewPlayer;
 	newStrat->game = this;
-    Player* newP = new Player(money, id,newStrat, INVALID);
+    Player* newP = new Player(money, id,newStrat, INVALID, bExternalDealer);
 	newStrat->me = newP;
 	newStrat->myHand = &(newP->myHand);
 	p.push_back( newP );

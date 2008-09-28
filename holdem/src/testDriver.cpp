@@ -446,6 +446,12 @@ cout << endl << "AVG "  << myWins.loss << " l + "
 
 std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
+    #ifdef EXTERNAL_DEALER
+    bool ext_dealer = true;
+    #else
+    bool ext_dealer = false;
+    #endif
+
     #ifdef DEBUGSAVE_EXTRATOKEN
     char ExtraTokenNameBuffer[DEBUGSAVE_EXTRATOKEN] = "P";
 #endif
@@ -528,7 +534,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             std::ios::openmode gamelogMode = std::ios::trunc;
             if( bLoadGame ) gamelogMode = std::ios::app;
 			std::ofstream gameOutput("gamelog.txt",gamelogMode);
-			HoldemArena myTable(&sg, gameOutput,true, true);
+			HoldemArena myTable(&sg, gameOutput,true, true, ext_dealer);
 		#else
 	HoldemArena myTable(&sg, gameLog,true, true);
 		#endif

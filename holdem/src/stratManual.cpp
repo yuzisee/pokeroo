@@ -97,20 +97,22 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
 void UserConsoleStrategy::SeeCommunity(const Hand& h, const int8 n)
 {
-#ifndef EXTERNAL_DEALER
-	ConsoleStrategy::SeeCommunity(h,n);
-	if ( !bNoPrint ){ printCommunity(); }
+    if( !(ViewPlayer().bSync) )
+    {
+        ConsoleStrategy::SeeCommunity(h,n);
+        if ( !bNoPrint ){ printCommunity(); }
 
-	#ifdef INFOASSIST
-        bComSize = n;
-	#endif
+        #ifdef INFOASSIST
+            bComSize = n;
+        #endif
 
-	#if defined(SPACE_UI) && !defined(USER_DELAY_HANDS)
-	UI_DESCRIPTOR << endl;
-	UI_DESCRIPTOR << endl;
-	UI_DESCRIPTOR << endl;
-	#endif
-#endif
+        #if defined(SPACE_UI) && !defined(USER_DELAY_HANDS)
+        UI_DESCRIPTOR << endl;
+        UI_DESCRIPTOR << endl;
+        UI_DESCRIPTOR << endl;
+        #endif
+    }
+
 }
 
 void UserConsoleStrategy::FinishHand()
@@ -450,9 +452,8 @@ float64 UserConsoleStrategy::queryAction()
 	inputBuf[0] = 0;
 	float64 returnMe;
 
-#ifndef EXTERNAL_DEALER
-	showSituation();
-#endif
+    if( !(ViewPlayer().bSync) ) showSituation();
+
 
 
 	while( bExtraTry != 0 )
@@ -492,11 +493,7 @@ float64 UserConsoleStrategy::queryAction()
         }else
         {
             UI_DESCRIPTOR << endl << endl;
-            #ifdef EXTERNAL_DEALER
-            UI_DESCRIPTOR << "== " << ViewPlayer().GetIdent().c_str() << " ==";
-            #else
-            UI_DESCRIPTOR << "==ENTER ACTION==";
-            #endif
+            UI_DESCRIPTOR << "== ENTER ACTION: " << ViewPlayer().GetIdent().c_str() << " ==";
             UI_DESCRIPTOR << "      (press only [Enter] for check/fold)" << endl;
             if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
             {
