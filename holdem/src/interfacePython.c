@@ -18,10 +18,15 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "portability.h"
-#include <string>
+#include "Python.h"
 
-using std::string;
+typedef double float64;
+typedef unsigned char int8;
+
+//#include "portability.h"
+//#include <string.h>
+
+//using std::string;
 
 
 /*****************************************************************************
@@ -31,36 +36,52 @@ using std::string;
 
 
 ///Get the amount of money playerNumber has in front of him
-float64 GetMoney(int8 playerNumber);
-//TODO: If the player is all in, make sure this returns the correct value
-
+static PyObject * GetMoney (PyObject *self, PyObject *args) //float64 (int8 playerNumber);
+{
+    //TODO: If the player is all in, make sure this returns the correct value
+}
 
 
 //Override the amount of money playerNumber has in front of him
-//void SetMoney(int8 playerNumber, float64 money);
+static PyObject * SetMoney (PyObject *self, PyObject *args) ////void (int8 playerNumber, float64 money);
+{
+}
 
 
 
 ///Get the amount of money playerNumber has bet so far this round
-float64 GetBet(int8 playerNumber);
-///TODO: If the player is all in, make sure this returns the correct value
+static PyObject * GetBet (PyObject *self, PyObject *args) //float64 (int8 playerNumber);
+{
+    //TODO: If the player is all in, make sure this returns the correct value
+}
+
 
 
 
 ///Get the amount of money that is in the pot
-float64 GetPotSize();
+static PyObject * GetPotSize (PyObject *self, PyObject *args) //float64 ();
+{
+}
 
 
-///Get the amount of money that was in the pot at the BEGINNING of the current betting round 
-float64 GetLastRoundPotsize();
+///Get the amount of money that was in the pot at the BEGINNING of the current betting round
+static PyObject * GetLastRoundPotsize (PyObject *self, PyObject *args) //float64 ();
+{
+}
 
 
 ///Get the size of the highest bet so far
-float64 GetBetToCall();
+static PyObject * GetBetToCall (PyObject *self, PyObject *args) //float64 ();
+{
+}
+
 
 
 //Get the playerNumber of the player who's turn it is
-int8 WhoIsNext();
+static PyObject * WhoIsNext (PyObject *self, PyObject *args) //int8 ();
+{
+}
+
 
 /*****************************************************************************
 	Betting round accessors
@@ -74,14 +95,17 @@ int8 WhoIsNext();
 /*****************************************************************************
 	BEGIN
 	Event functions
-	
+
 Note: If AutoPlayGame() is called, bAutoMode is set to 1, you never
 need to use any of the Start______() functions.
 *****************************************************************************/
 int8 bAutoMode = 0;
 
 ///Use this to start the game and set bAutoMode = 1; See the note above.
-void AutoPlayGame();
+static PyObject * AutoPlayGame (PyObject *self, PyObject *args) //void ();
+{
+}
+
 
 
 ///Call NewCommunityCard for each card that is dealt to the table during flop/turn/river
@@ -110,51 +134,72 @@ cardSuit can be any of:
 'D' for Diamonds
 */
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
-void NewCommunityCard(char cardValue,char cardSuit);
+static PyObject * NewCommunityCard (PyObject *self, PyObject *args) //void (char cardValue,char cardSuit);
+{
+}
 
 
 
 
 
 ///Call this when the betting begins
-void StartBetting();
+static PyObject * StartBetting (PyObject *self, PyObject *args) //void ();
+{
+}
+
 
 ///Call these functions when playerNumber Raises, Folds, or Calls
-void PlayerCalls(int8 playerNumber);
-void PlayerFolds(int8 playerNumber);
-void PlayerRaisesTo(int8 playerNumber, float64 amount);
-void PlayerRaisesBy(int8 playerNumber, float64 amount);
+static PyObject * PlayerCalls (PyObject *self, PyObject *args) //void (int8 playerNumber);
+{}
+
+static PyObject * PlayerFolds (PyObject *self, PyObject *args) //void (int8 playerNumber);
+{}
+
+static PyObject * PlayerRaisesTo (PyObject *self, PyObject *args) //void (int8 playerNumber, float64 amount);
+{}
+
+static PyObject * PlayerRaisesBy (PyObject *self, PyObject *args) //void (int8 playerNumber, float64 amount);
+{}
 ///Question: If a player doesn't call any of these, which is the default action?
 
 
+
 ///GetBetAmount is useful for asking a bot what to bet
-float64 GetBetAmount(int8 playerNumber);
+static PyObject * GetBetAmount (PyObject *self, PyObject *args) //float64 (int8 playerNumber);
+{
+}
 
 ///GetAction returns a string descfribing what playerNumber wants to do in this situation
 ///This is particularly useful for bots
-string GetAction(int8 playerNumber);
-
-
+static PyObject * GetAction (PyObject *self, PyObject *args) //string (int8 playerNumber);
+{
+}
 
 
 
 ///Call this when (if) the showdown begins
-void StartShowdown();
+static PyObject * StartShowdown (PyObject *self, PyObject *args) //void ();
+{
+}
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
-void PlayerShowsCard(int8 playerNumber, char cardValue, char cardSuit);
+static PyObject * PlayerShowsCard (PyObject *self, PyObject *args) //void (int8 playerNumber, char cardValue, char cardSuit);
+{
+}
 
 ///Call this when playerNumber mucks his/her hand during the showdown.
 ///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
-void PlayerMucksHand(int8 playerNumber);
-
-
+static PyObject * PlayerMucksHand (PyObject *self, PyObject *args) //void (int8 playerNumber);
+{
+}
 
 
 
 ///Call this when new hands are dealt
-void StartDealNewHands();
+static PyObject * StartDealNewHands (PyObject *self, PyObject *args) //void ();
+{
+}
 
 /*****************************************************************************
 	Event functions
@@ -167,30 +212,48 @@ void StartDealNewHands();
 /*****************************************************************************
 	BEGIN
 	Initial setup functions
-	
-Note: SetBigBlind() and SetSmallBlind() can be called between
+
+static PyObject * SetBigBlind (PyObject *self, PyObject *args) //Note: () and SetSmallBlind() can be called between
 hands anytime the blind size changes during the game
 *****************************************************************************/
 
 ///Choose playerNumber to be the dealer for the first hand
-void InitChooseDealer(int8 playerNumber);
+static PyObject * InitChooseDealer (PyObject *self, PyObject *args) //void (int8 playerNumber);
+{
+}
 
 ///Set the amount of money that the SMALLEST chip is worth
-void InitSmallestChipSize(float64 money);
+static PyObject * InitSmallestChipSize (PyObject *self, PyObject *args) //void (float64 money);
+{
+}
 
 ///Call this when the big blind has changed
-void SetBigBlind();
+static PyObject * SetBigBlind (PyObject *self, PyObject *args) //void ();
+{
+}
 
 ///Call this when the small blind has changed
-void SetSmallBlind();
+static PyObject * SetSmallBlind (PyObject *self, PyObject *args) //void ();
+{
+}
 
 ///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
 ///The function returns a playerNumber to identify this player in your code
-int8 AddHumanOpponent(string playerName, float64 initialMoney);
-int8 AddStrategyBot_ConservativeDefence(string playerName, float64 initialMoney);
-int8 AddStrategyBot_GambleDefence(string playerName, float64 initialMoney);
-int8 AddStrategyBot_ConservativeOffence(string playerName, float64 initialMoney);
-int8 AddStrategyBot_GambleOffence(string playerName, float64 initialMoney);
+static PyObject * AddHumanOpponent (PyObject *self, PyObject *args) //int8 (string playerName, float64 initialMoney);
+{}
+
+static PyObject * AddStrategyBot_ConservativeDefence (PyObject *self, PyObject *args) //int8 (string playerName, float64 initialMoney);
+{}
+
+static PyObject * AddStrategyBot_GambleDefence (PyObject *self, PyObject *args) //int8 (string playerName, float64 initialMoney);
+{}
+
+static PyObject * AddStrategyBot_ConservativeOffence (PyObject *self, PyObject *args) //int8 (string playerName, float64 initialMoney);
+{}
+
+static PyObject * AddStrategyBot_GambleOffence (PyObject *self, PyObject *args) //int8 (string playerName, float64 initialMoney);
+{}
+
 
 
 /*****************************************************************************
