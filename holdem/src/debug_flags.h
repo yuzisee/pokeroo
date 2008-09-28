@@ -40,7 +40,7 @@
 #define REPRODUCIBLE
 
 /* Savegame debugging */
-#define DEBUG_SINGLE_HAND
+#undef DEBUG_SINGLE_HAND
 #endif
 
 

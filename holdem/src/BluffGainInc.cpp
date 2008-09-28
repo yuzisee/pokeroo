@@ -54,16 +54,25 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
     last_x = x;
     last_sliderx = sliderx;
 
-    if( bLeft )
-    {
+    if( bNoRange )
+    {//Either over or under, completely.
+        if( sliderx >= saturate_min )
+        {
+            yr = right.f(x);
+            fd_yr = right.fd(x,yr);
 
-        yl = left.f(x);
-        fd_yl = left.fd(x,yl);
+            y = yr; dy = fd_yr;
+        }
+        else
+        {
+            yl = left.f(x);
+            fd_yl = left.fd(x,yl);
 
-        y = yl; dy = fd_yl;
+            y = yl; dy = fd_yl;
+        }
 
         #ifdef DEBUG_TRACE_SEARCH
-            if(bTraceEnable) std::cout << "\t\t\tbLeft" << std::flush;
+            if(bTraceEnable) std::cout << "\t\t\tbNoRange" << std::flush;
         #endif
 
     }else

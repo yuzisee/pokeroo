@@ -62,7 +62,7 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
         const AutoScaleType AUTOSCALE_TYPE;
 #endif
 
-        const bool bLeft;
+        const bool bNoRange;
         LL & left;
         RR & right;
 
@@ -77,7 +77,7 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
 			#ifdef TRANSFORMED_AUTOSCALES
             , AUTOSCALE_TYPE(type)
 			#endif
-			, bLeft( maxX <= minX ), left(f_left), right(f_right){
+			, bNoRange( maxX <= minX ), left(f_left), right(f_right){
                 last_x = -1;
                 last_sliderx = -1;
                 //query(0,0);
@@ -93,7 +93,7 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
             #ifdef TRANSFORMED_AUTOSCALES
             , AUTOSCALE_TYPE(type)
 			#endif
-			, bLeft( maxX <= minX ), left(f_left), right(f_right){
+			, bNoRange( maxX <= minX ), left(f_left), right(f_right){
                 last_x = -1;
                 last_sliderx = -1;
                 //query(0,0);

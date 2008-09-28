@@ -654,12 +654,12 @@ float64 ImproveGainStrategy::MakeBet()
 
 ///From geom to algb
 	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred_aggressive(geomModel,algbModel,0.0,geom_algb_scaler,left.pct*base_right.pct,&tablestate);
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain_aggressive(geomModel_fear,algbModel_fear,0.0,geom_algb_scaler,left.pct*base_right.pct,&tablestate);
+	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain_fear(geomModel_fear,algbModel_fear,0.0,geom_algb_scaler,left.pct*base_right.pct,&tablestate);
 
 
 ///From regular to fear A(x2)
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            ap(hybridgainDeterred_aggressive,hybridgain_aggressive,min_worst_scaler,riskprice,&tablestate);
+            ap(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate);
 
 	StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
 	        choicemodel( myDeterredCall_left, &ap );
@@ -673,7 +673,7 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 #else
 	///From regular to fear B(x2)
 	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            ap_right(hybridgainDeterred_aggressive,hybridgain_aggressive,min_worst_scaler,riskprice,&tablestate);
+            ap_right(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate);
     StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
             choicemodel_right( myDeterredCall_right, &ap_right );
 
@@ -690,7 +690,7 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 //DEBUG //
 /*
  //   if( bGamble == 1 && ViewTable().GetPrevPotSize() > 3.0 )
-    if( bGamble == 0 )
+    if( bGamble == 2 )
     {
 
 		choicemodel.bTraceEnable = true;
@@ -726,14 +726,11 @@ hybridgainDeterred_aggressive.bTraceEnable = true;
 		std::cout << dy1 << " <-- d choicemodel.f(0.44)" << endl;
 
 
-		const float64 ay1 = ap.f(0.44);
-		const float64 ady1 = ap.fd(0.44,ay1);
+
+
 
 		const float64 by1 = hybridgainDeterred_aggressive.f(0.44);
-		const float64 bdy1 = hybridgainDeterred_aggressive.fd(0.44,by1);
 
-		const float64 cy1 = hybridgain_aggressive.f(0.44);
-		const float64 cdy1 = hybridgain_aggressive.fd(0.44,by1);
 
 
 		//std::cout << ay1 << "   <-- ap" << endl;
@@ -741,7 +738,7 @@ hybridgainDeterred_aggressive.bTraceEnable = true;
 		//std::cout << by1 << "   <-- lowbet" << endl;
 		std::cout << bdy1 << "   <-- lowbet" << endl;
 		//std::cout << cy1 << "   <-- fearbet" << endl;
-		std::cout << cdy1 << "   <-- fearbet" << endl;
+
 
 
         #ifdef DEBUG_TRACE_PWIN
@@ -755,51 +752,6 @@ hybridgainDeterred_aggressive.bTraceEnable = true;
 
         exit(1);
 
-		if(betToCall > 0.9 || bestBet > 0.3)
-		{
-
-
-        const float64 b21 = geomModel_fear.f(.9500001);
-        const float64 b22 = algbModel_fear.f(.9500001);
-        const float64 b11 = geomModel.f(.9500001);
-        const float64 b12 = algbModel.f(.9500001);
-
-        const float64 c21 = hybridgain_aggressive.left.f(.9500001);
-        const float64 c22 = hybridgain_aggressive.right.f(.9500001);
-        const float64 c11 = hybridgainDeterred_aggressive.left.f(.9500001);
-        const float64 c12 = hybridgainDeterred_aggressive.right.f(.9500001);
-
-        const float64 b1 = hybridgainDeterred_aggressive.f(.9500001);
-        const float64 b2 = hybridgain_aggressive.f(.9500001);
-
-        const float64 a0 = ap.f(.9500001);
-        //const float64 a1 = ap.f(.5);
-        const float64 a2 = ap_right.f(.9500001);
-
-        //const float64 theyfold = myDeterredCall_left.pWin( .95 );
-        //const float64 z = 0;
-
-
-
-
-        //HEY! NormBot only uses a0 anyways, and z0/z2 don't apply
-		logFile << a0 << " " << " " << a2 << " <--- " << (ap.bLeft ? "N/A " : "Auto") << "Scaling from (" << DELAYENEMYOPP << "," << ACTREACTUSES_RA << "]" << endl;
-        logFile << b1 << " " << b2  << " <--- Should be between these two values" << endl;
-        logFile << c11 << " " << c12 << " <-- which should be between --> " << c21 << " " << c22 << endl;
-        logFile << b11 << " " << b12 << " <-- which equals --> " << b21 << " " << b22 << endl;
-
-
-
-
-
-			logFile << bestBet << endl;
-			const float64 z0 = choicemodel.f(.9500001);
-			const float64 z2 = choicemodel_right.f(.9500001);
-            logFile << z0 << "  " << z2 << " State of autoscale." << endl;
-
-			std::cerr << "DEBUG QUIT" << endl;
-			exit(0);
-		}
 
 
 
@@ -807,20 +759,24 @@ hybridgainDeterred_aggressive.bTraceEnable = true;
 
 
 
-		const float64 ey1 = geomModel.f(0.45);
-		const float64 edy1 = geomModel.fd(0.45,ey1);
-		const float64 jy1 = algbModel.f(0.45);
-		const float64 jdy1 = algbModel.fd(0.45,jy1);
 
 
-		std::cout << ey1 << "   <-- geomlow" << endl;
-		std::cout << edy1 << "   <-- geomlow" << endl;
-		std::cout << jy1 << "   <-- algblow" << endl;
-		std::cout << jdy1 << "   <-- algblow" << endl;
+        const float64 ady1 = hybridgainDeterred_aggressive.f(65);
+        const float64 c11 = hybridgain_fear.f(65);
+        const float64 ay1 = ap_right.f(65);
+
+        const float64 z0 = rolemodel.f(65);
+        const float64 bdy1 = choicemodel_right.f(65);
+
+        std::cout << ady1 << "   <-- regular" << endl;
+        std::cout << c11 << "   <-- fear" << endl;
+        std::cout << ay1 << "   (should pick fear)" << endl;
+        std::cout << bdy1 << "   with state!" << endl;
+        std::cout << z0 << "  @ ultimate" << endl;
 
 		exit(1);
 	}
-
+	*//*
 ap.bTraceEnable = true;
 geomModel.bTraceEnable = true;
 geomModel_fear.bTraceEnable = true;
@@ -830,8 +786,8 @@ const float64 y1 = ap.f(betToCall);
 		std::cout << y1 << " <-- ap.f(betToCall)" << endl;
 		std::cout << dy1 << " <-- d ap.f(betToCall)" << endl;
 exit(1);
-
 */
+
 
 
     const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel, &callcumu) : solveGainModel(&rolemodel, &callcumu);
@@ -874,7 +830,7 @@ exit(1);
     }
 #endif
     logFile << "Call Regular("<< viewBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
-    logFile << "   Call Fear("<< viewBet <<")=" << hybridgain_aggressive.f(bestBet) << endl;
+    logFile << "   Call Fear("<< viewBet <<")=" << hybridgain_fear.f(bestBet) << endl;
 
 
     printBetGradient< StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  > >
