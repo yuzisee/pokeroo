@@ -511,7 +511,7 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
                 {
 
                     ///RECURSION HERE
-
+                    totalRuns += executeRecursive(deckState, lastStats, moreCards - 1) * dOcc;
                 }
                 else
                 {
