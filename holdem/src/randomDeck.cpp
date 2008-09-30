@@ -18,8 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-//#define DEBUGRANDOMDEAL
-//#include <iostream>
+
 #include "debug_flags.h"
 
 #include "randomDeck.h"
@@ -27,11 +26,6 @@
 #include <ctime>
 
 
-/*
-	dealer.dealtValue = HoldemUtil::CARDORDER[ (rand() % 13) + 1 ];
-	dealer.dealtSuit = rand() % 4;
-
-*/
 
 void RandomDeck::ShuffleDeck()
 {
@@ -149,9 +143,6 @@ float64 RandomDeck::DealCard(Hand& h)
 
 
 
-#ifdef DEBUGRANDOMDEAL
-	cout << "DEAL!\tSuit=" << HoldemUtil::CardSuit(deckOrder[lastDealtPos])<< ":" << dealtSuit << "\tCard=" << (HoldemUtil::CardRank(deckOrder[lastDealtPos])+1) <<":"<< dealtValue << endl;
-#endif
 
 	h.AddToHand(dealt);
 
