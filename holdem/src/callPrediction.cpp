@@ -36,12 +36,6 @@
 
 //#define ANTI_CHECK_PLAY
 
-
-//#define DEBUGWATCHPARMS
-#ifdef DEBUGWATCHPARAMS
-#include <iostream>
-#endif
-
 const float64 ExactCallD::UNITIALIZED_QUERY = -1;
 
 ExactCallD::~ExactCallD()

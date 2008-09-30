@@ -19,15 +19,6 @@
  ***************************************************************************/
 
 
-//#define DEBUGLEAK
-//#define DEBUGGROUPING
-//#define DEBUGNEW
-//#define DEBUGDROP
-//#define DEBUGCALC
-//#define DEBUGCOMPARE
-//#define DEBUGFINALCALC
-
-
 
 #include <algorithm>
 #include <math.h>
@@ -39,91 +30,43 @@ using std::sort;
 
 void PlayStats::Compare(const float64 occ)
 {
-#ifdef DEBUGCOMPARE
-        myStrength.DisplayHandBig(std::cout);
-        std::cout << "\nvs (" << occ << ")" << endl;
-        oppStrength.DisplayHandBig(std::cout);
-        std::cout << endl << endl;
-#endif
 
 	if ( myStrength.strength > oppStrength.strength )
 	{
-		//myWins[statGroup].wins += occ/myOcc[statGroup];
 		countWin(occ);
 	}
 	else if (myStrength.strength < oppStrength.strength)
 	{
-		//myWins[statGroup].loss += occ/myOcc[statGroup];
 		countLoss(occ);
 	}
 	else
 	{
 		if ( myStrength.valueset > oppStrength.valueset )
 		{
-			//myWins[statGroup].wins += occ/myOcc[statGroup];
 			countWin(occ);
 		}
 		else if (myStrength.valueset == oppStrength.valueset)
 		{
-			//myWins[statGroup].splits += (occ/myOcc[statGroup]);
 			countSplit(occ);
 		}
 		else
 		{
-			//myWins[statGroup].loss += occ/myOcc[statGroup];
 			countLoss(occ);
 		}
 	}
-
-#ifdef DEBUGCALC
-float64 ttt = myWins[statGroup].loss+myWins[statGroup].splits+myWins[statGroup].wins;
-if( ttt >= myChancesEach - 2 || ttt == 0 )
-		std::cout << endl << "{" << statGroup << "}" << myWins[statGroup].loss << " l + " <<
-		myWins[statGroup].splits << " s + " << myWins[statGroup].wins << " w = " <<
-		myWins[statGroup].loss+myWins[statGroup].splits+myWins[statGroup].wins
-			<< endl;
-#endif
 
 }
 
 void PlayStats::countWin(const float64 occ)
 {
-#ifdef DEBUG_AA
-    if( bDEBUG )
-    {
-        myStrength.DisplayHand(std::cout);
-        std::cout << "\tbeats vs (" << occ << ")" << flush;
-        oppStrength.DisplayHand(std::cout);
-        std::cout << endl << endl;
-
-        myStrength.DisplayHandBig(std::cout);
-        std::cout << "\tbeats vs (" << occ << ")" << flush;
-        oppStrength.DisplayHandBig(std::cout);
-        std::cout << endl << endl;
-    }
-#endif
-
-
 	myWins[statGroup].wins += occ;
-	//myWins[statGroup].pct += occ;
 }
 void PlayStats::countSplit(const float64 occ)
 {
 	myWins[statGroup].splits += occ;
-	//myWins[statGroup].pct += occ/2;
 }
 void PlayStats::countLoss(const float64 occ)
 {
-#ifdef DEBUG_AA
-    if( bDEBUG )
-    {
-        myStrength.DisplayHand(std::cout);
-        std::cout << "\tloses vs (" << occ << ")" << flush;
-        oppStrength.DisplayHand(std::cout);
-        std::cout << endl << endl;
-    }
-#endif
-
 	myWins[statGroup].loss += occ;
 }
 
@@ -131,39 +74,25 @@ void WinStats::countSplit(const float64 occ)
 {
     float64 dOccRep = oppReps * occ;
 	PlayStats::countSplit(dOccRep);
-	myAvg.splits += dOccRep * myWins[statGroup].repeated;// / myTotalChances;
+	myAvg.splits += dOccRep * myWins[statGroup].repeated;
 
 }
 void WinStats::countLoss(const float64 occ)
 {
     float64 dOccRep = oppReps * occ;
 	PlayStats::countLoss(dOccRep);
-	myAvg.loss += dOccRep * myWins[statGroup].repeated;// / myTotalChances;
+	myAvg.loss += dOccRep * myWins[statGroup].repeated;
 }
 void WinStats::countWin(const float64 occ)
 {
     float64 dOccRep = oppReps * occ;
 	PlayStats::countWin(dOccRep);
-	myAvg.wins += dOccRep * myWins[statGroup].repeated;// / myTotalChances;
+	myAvg.wins += dOccRep * myWins[statGroup].repeated;
 
 }
 
 void WinStats::Analyze()
 {
-
-
-#ifdef DEBUGFINALCALC
-	cout << endl << statCount << " with " << myChancesEach << "'s each" << endl;
-	for(int32 i=0;i<statCount;i++)
-	{
-		cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
-				<< myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
-				myWins[i].loss+myWins[i].splits+myWins[i].wins
-				<< "\tx;"<< myWins[i].repeated   <<endl;
-	}
-
-
-#endif
 
 	clearDistr();
 	myAvg.wins /= myTotalChances;
@@ -178,52 +107,13 @@ void WinStats::Analyze()
 	{
 		StatResult& wr = myWins[i];
 		wr.genPCT();
-			#ifdef DEBUGFINALCALC
-				cout << wr.pct * wr.repeated << "\t (x" << wr.repeated << ")" << endl;
-			#endif
 		myDistrPCT->AddVal( wr.pct, wr.repeated );
 		myDistrWL->AddVal( wr.genPeripheral(), wr.repeated );
 
-#ifdef DEBUGFINALCALC
-	//cout << "= " << myPCTStdDev << endl;
-//	cout << "W.P.L. = " << myWPLStdDev << endl;
-#endif
-
 	}
 
-//	myDistrPCT->Complete();
- //   	myDistrWL->Complete();
     myDistrPCT->Complete(myChancesEach);
     myDistrWL->Complete(myChancesEach);
-
-
-
-
-
-//	myWPLStdDev /= myTotalChances;
-//	myWPLStdDev = sqrt(myWPLStdDev);
-//	myImproveChance /= 2;
-//That line needs to be uncommented (I forgot TO comment it when removing WPL)
-
-
-
-
-#ifdef DEBUGFINALCALC
-
-	cout << endl << "AVG " << myAvg.loss << " l + "
-				<< myAvg.splits << " s + " << myAvg.wins << " w = " <<
-				myAvg.loss+myAvg.splits+myAvg.wins << "\tx;"<< myAvg.repeated <<endl;
-
-    cout << "myAvg.genPCT " << myAvg.pct << "!"  << endl;
-    cout << "(Mean) " << myDistrPCT->mean * 100 << "%"  << endl;
-	cout << endl << "Adjusted improve? " << myDistrPCT->improve * 100 << "%"  << endl;
-	cout << "Worst:" << myDistrPCT->worst *100 << "%" << endl;
-	cout << "Standard Deviations:" << myDistrPCT->stdDev*100 << "%" << endl;
-	cout << "Average Absolute Fluctuation:" << myDistrPCT->avgDev*100 << "%" << endl;
-	cout << "Skew:" << myDistrPCT->skew*100 << "%" << endl;
-	cout << "Kurtosis:" << (myDistrPCT->kurtosis)*100 << "%" << endl;
-	//cout << "W.P.L. = " << myWPLStdDev << endl;
-#endif
 
 }
 
@@ -261,11 +151,6 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 		}
 		#endif
 
-		#ifdef DEBUGNEW
-			cout << endl << "adding brings to " << currentCard << endl;
-			cout << endl << "cardsToNextBet = " << cardsToNextBet << "\t" << flush;
-			cout << endl << "cardsLeft = " << moreCards - currentCard + 1 << endl;
-		#endif
 
 	if (currentCard <= cardsToNextBet )
 		//That is, we're dealing deal out the first batch (counting the upcoming card as dealt)
@@ -288,20 +173,6 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 				#ifdef PROGRESSUPDATE
                 if (statGroup == 0 ) std::cerr << endl << endl;
                 std::cerr << "\rW: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
-				#endif
-
-				#ifdef DEBUGLEAK
-				if(statGroup >= statCount)
-				{
-					cout << endl<<endl << "{"<< statGroup << "}1x2x3x4x5xstatGroup >= statCount"
-							<< endl << endl;
-					statGroup = 0;
-					return r;
-				}
-				else
-				{
-					cout << endl << "statGroup = " << statGroup << endl;
-				}
 				#endif
 
 
@@ -330,10 +201,6 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 		oppUndo[currentCard-1].SetUnique(oppStrength);
 		oppStrength.AddToHand(deck);
 
-#ifdef DEBUGNEW
-	HandPlus u;
-	u.FillShowHand(oppHand.cardset,false);cout << endl;
-#endif
 
 		if( cardsLeft >= 3 )
 		{
@@ -343,19 +210,11 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 			{
                 //You just dealt the last community card
 				myStrength.evaluateStrength();
-#ifdef DEBUGNEW
-				myStrength.DisplayHandBig(cout);
-#endif
+
                 oppReps = occ;
                 r.bNewSet = true;
-                //return r;
 			}
-			/*else if (cardsLeft == 1)
-			{
-				oppStrength.evaluateStrength();
-			}*/
-            //r.bTareOcc = false;
-			//r.bNewHand = false;
+
 			return r;
 		}
 		else //only add to oppHand
@@ -365,8 +224,6 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 
 				oppStrength.evaluateStrength();
 			}
-            //r.bTareOcc = false;
-            //r.bNewHand = false;
             return r;
         }
 	}
@@ -375,55 +232,21 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 void WinStats::DropCard(const DeckLocation deck)
 {
 
-
-
-	///TODO: Confirms...
-	//oppStrength.RemoveFromHand(deck);
 	oppStrength.SetUnique(oppUndo[currentCard-1]);
 
 
 	short cardsLeft = moreCards - currentCard;
 	if (cardsLeft >= 2)
 	{
-		///TODO: Confirms
 		myStrength.SetUnique(myUndo[currentCard-1]);
-		//myStrength.RemoveFromHand(deck);
 	}
 
-
-
-		#ifdef DEBUGDROP
-		   if( currentCard == cardsToNextBet )
-		   {
-		       const StatResult & xd = myWins[statGroup];
-		        std::cout << endl << "TOTAL "  << xd.loss << " l + "
-                << xd.splits << " s + " << xd.wins << " w = " <<
-                xd.loss+xd.splits+xd.wins
-                << "\tx;"<< xd.repeated  << " w" << oppReps <<endl;
-
-		   }
-			//u.FillShowHand(oppHand.cardset,false);cout << endl;
-			//u.FillShowHand(myHand.cardset,false);cout << "---" << cardsLeft << endl;
-		#endif
 
 
 
 
 	--currentCard;
 
-#ifdef DEBUGDROP
-		   if( currentCard == cardsToNextBet )
-		   {
-		       const StatResult & xd = myWins[statGroup];
-		        std::cout << endl << "CUMUL "  << xd.loss << " l + "
-                << xd.splits << " s + " << xd.wins << " w = " <<
-                xd.loss+xd.splits+xd.wins
-                << "\tx;"<< xd.repeated  << " w" << oppReps <<endl;
-
-		   }
-			//u.FillShowHand(oppHand.cardset,false);cout << endl;
-			//u.FillShowHand(myHand.cardset,false);cout << "---" << cardsLeft << endl;
-		#endif
 
 
 }
@@ -495,9 +318,7 @@ void WinStats::initW(const int8 cardsInCommunity)
 		myStrength.evaluateStrength();
 		myWins = new StatResult[1];
 
-#ifdef DEBUGLEAK
-		cout << "ALLOCATED 1" << endl;
-#endif
+
 		myWins[0].repeated = 1;
 		statGroup = 0;
 		myTotalChances = 1;
@@ -515,10 +336,6 @@ void WinStats::initW(const int8 cardsInCommunity)
 		myWins = new StatResult[statCount];
 
 
-#ifdef DEBUGLEAK
-		cout << "ALLOCATED " << statCount << endl;
-#endif
-
 		cardsDealt += cardsToNextBet;
 		//moreCards is the number of cards to be dealt to table + opponent
 		myChancesEach = HoldemUtil::nchoosep<float64>(52 - cardsDealt,moreCards-cardsToNextBet-2);
@@ -533,27 +350,6 @@ void WinStats::initW(const int8 cardsInCommunity)
 void CallStats::Analyze()
 {
 
-#ifdef DEBUGCALLPCT
-    std::cout << endl << statCount << " with " << myChancesEach << "'s each" << endl;
-	for(int32 i=0;i<statCount;i++)
-	{
-		std::cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
-				<< myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
-        myWins[i].loss+myWins[i].splits+myWins[i].wins << "(" << myWins[i].pct << ")"
-				<< "\tx;"<< myWins[i].repeated <<flush;
-	}
-
-    std::cout << endl << statCount << " with " << myChancesEach << "'s each" << endl;
-	for(int32 i=0;i<statCount;i++)
-	{
-	    float64 px = myWins[i].loss+myWins[i].splits+myWins[i].wins;
-		std::cout << endl << "{" << i << "}" << ((myWins[i].loss)/px) << "% l + "
-				<< ((myWins[i].splits)/px) << "% s + " << ((myWins[i].wins)/px) << "% w = " <<
-        1 << "(" << ((myWins[i].pct)/px) << ")"
-				<< "\tx;"<< myWins[i].repeated <<flush;
-	}
-
-#endif
 
 	for(int32 k=0;k<statCount;++k)
 	{
@@ -570,16 +366,7 @@ void CallStats::Analyze()
 
 	sort(myWins,myWins+statCount);//Ascending by default
                                 //  http://www.ddj.com/dept/cpp/184403792
-#ifdef DEBUGCALLPCT
-	std::cout << endl << "=============SORT!=============" << endl;
-	for(int32 i=0;i<statCount;i++)
-	{
-		std::cout << endl << "{" << i << "}" << myWins[i].loss << " l + "
-				<< myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
-				myWins[i].loss+myWins[i].splits+myWins[i].wins << "(" << myWins[i].pct << ")"
-				<< "\tx;"<< myWins[i].repeated <<flush;
-	}
-#endif
+
 
 //populate cumulation
 	int32 count=1;
@@ -648,18 +435,7 @@ void CallStats::Analyze()
     b.loss /= lastStreak;
 
                                //  http://www.ddj.com/dept/cpp/184403792
-#ifdef DEBUGCALLPCT
-	std::cout << endl << "======= C O M B I N E D =======" << endl;
-	for(size_t j=0;j<vectorLast;++j)
-	{
-		std::cout << endl << "{" << j << "}" << calc->cumulation[j].loss << " l + "
-				<< calc->cumulation[j].splits << " s + " << calc->cumulation[j].wins << " w =\t" << flush;
-				std::cout.precision(8);
-				std::cout << calc->cumulation[j].pct
-				//<< " pct\tx;"<< calc->cumulation[i].repeated <<flush;
-				<< " \t"<< calc->cumulation[j].repeated << "\ttocall" << flush;
-	}
-#endif
+
 
 #ifdef DEBUGASSERT
     if( cumulate != myTotalChances )
@@ -672,10 +448,6 @@ void CallStats::Analyze()
 
 	for(size_t k=0;k<=vectorLast;++k)
 	{
-            #ifdef DEBUGCALLPCT
-                const float64 & t_myChancesEach = myChancesEach;
-                const float64 & t_myTotalChances = myTotalChances;
-            #endif
 
 	    StatResult& temptarget = calc->cumulation[k];
 
@@ -694,21 +466,6 @@ void CallStats::Analyze()
 		temptarget.repeated /= myTotalChances;
 	}
 
-
-#ifdef DEBUGCALLPCT
-std::cout << endl << "=============Reduced=============" << endl;
-	std::cout.precision(2);
-	for(size_t j=0;j<=vectorLast;++j)
-	{
-		std::cout << endl << "{" << j << "}" << calc->cumulation[j].loss << " l + "
-				<< calc->cumulation[j].splits << " s + " << calc->cumulation[j].wins << " w =\t" << flush;
-				std::cout.precision(8);
-				std::cout << calc->cumulation[j].pct
-				//<< " pct\tx;"<< calc->cumulation[i].repeated <<flush;
-				<< " \t"<< calc->cumulation[j].repeated << "\ttocall" << flush;
-	}
-	std::cout << endl;
-#endif
 
 //How many of them would call a bet of x?
 //It's the number of myWins elements that have a PCT above the pot odds implied by x.
@@ -747,47 +504,11 @@ void CallStats::showProgressUpdate() const
 void CallStats::DropCard(const DeckLocation deck)
 {
 
-/*
-        #ifdef DEBUGCALLPCT
-            if( currentCard == 2 )
-            {
-
-                myStrength.DisplayHand(std::cout);
-                oppStrength.DisplayHand(std::cout);
-
-
-                const int32 & i = statGroup;
-                std::cout << endl << "{" << i << "}";
-
-                HoldemUtil::PrintCard(std::cout,namecorrelate[0].GetIndex());
-                HoldemUtil::PrintCard(std::cout,namecorrelate[1].GetIndex());
-
-
-
-
-                std::cout << myWins[i].loss << " l + "
-                        << myWins[i].splits << " s + " << myWins[i].wins << " w = " <<
-                myWins[i].loss+myWins[i].splits+myWins[i].wins << "(" << myWins[i].pct << ")"
-                        << "\tx;"<< myWins[i].repeated <<flush;
-
-                std::cout << endl << ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,," ;
-                std::cout << endl;
-                std::cout << endl;
-                std::cout << endl;
-
-            }
-        #endif
-*/
-
-	///TODO: Confirm
-	//oppStrength.RemoveFromHand(deck);
 	oppStrength.SetUnique(oppUndo[currentCard-1]);
 
 	if (currentCard > 2)
 	{
-		///TODO: Confirm...
 		myRevert(currentCard-3);
-		//myStrength.RemoveFromHand(deck);
 	}
 
 
@@ -837,11 +558,6 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 	    if ( currentCard == 2 )
         {
 
-#ifdef DEBUG_AA
-        //bDEBUG = ( oppStrength.SeeCards(2) == HoldemConstants::CARD_ACEHIGH && oppStrength.SeeCards(3) == HoldemConstants::CARD_ACEHIGH );
-        bDEBUG = ( oppStrength.SeeCards(1) == HoldemConstants::CARD_TREY + HoldemConstants::CARD_DEUCE + HoldemConstants::CARD_FOUR + HoldemConstants::CARD_SIX );
-
-#endif
 
             if( moreCards == 2) oppStrength.evaluateStrength();
 
@@ -860,29 +576,9 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
 #ifdef PROGRESSUPDATE
             showProgressUpdate();
-            #ifdef DEBUG_AA
-            if( !bDEBUG )
-            {
-                std::cout << "SKIP: " << flush;
-                oppStrength.DisplayHand(std::cout);
-                std::cout << endl << endl;
-            }
-            #endif
 #endif
 
         }
-
-        #ifdef DEBUGCALLPCT
-            if( currentCard == 1 ){ namecorrelate = deck; }
-            else
-            {
-                const int32 & i = statGroup;
-                std::cout << endl << "{" << i << "}";
-
-                HoldemUtil::PrintCard(std::cout,namecorrelate.GetIndex());
-                HoldemUtil::PrintCard(std::cout,deck.GetIndex());
-            }
-        #endif
 
 	}
 
@@ -956,36 +652,3 @@ PlayStats::~PlayStats()
 
 
 
-
-/*	int32 i=statCount-1;
-	float64 cumulate = myWins[i].repeated/myTotalChances;
-
-	myWins[i].wins /= myChancesEach;
-	myWins[i].loss /= myChancesEach;
-	myWins[i].splits /= myChancesEach;
-	myWins[i].pct /= myChancesEach;
-
-	cumulation.reserve(statCount);
-
-	cumulation.push_back(myWins[i]);
-	size_t vectorLast = cumulation.size()-1;
-
-	while(i > 0)
-	{
-
-		--i;
-		myWins[i].wins /= myChancesEach;
-		myWins[i].loss /= myChancesEach;
-		myWins[i].splits /= myChancesEach;
-		myWins[i].pct /= myChancesEach;
-		cumulate += myWins[i].repeated/myTotalChances;
-		if (!( myWins[i].bIdenticalTo( myWins[i+1]) ))
-		{	//add new StatResult
-			cumulation.push_back(myWins[i]);
-			++vectorLast;
-		}
-		//cumulation[vectorLa`st].repeated = cumulate;
-		cumulation.back().repeated = cumulate;
-
-	}
-*/

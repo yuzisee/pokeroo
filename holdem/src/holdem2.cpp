@@ -20,9 +20,6 @@
 
 
 
-
-//#define DEBUGFLUSH
-
 #include <iostream>
 #include "holdem2.h"
 
@@ -102,7 +99,7 @@ void CommunityPlus::PrintInterpretHand(std::ostream& targetFile) const
         int16 tempSum = -1;
         int16 tempbestpair=1;
         int16 tempnextbestpair=0;
-        //for (int16 i=1;(i*i+i+2)/2<=tempv;++i);
+
         while(tempSum+tempbestpair<=tempStrength)
         {
             tempSum = tempSum + tempbestpair;
@@ -185,14 +182,12 @@ void CommunityPlus::cleanLastTwo()
 void CommunityPlus::evaluateStrength()
 {
 
-	//unsigned long tempcardset[4];
 
     //The (1st) 2nd to 14th bit must be the ONLY ones with data...
     //outer bits stay zero please
 
 
     //Pre-emptive STRAIGHT
-    //uint32 straights = cardset[0] | cardset[1] | cardset[2] | cardset[3];
     uint32 straights = prestraight;
     straights |= straights >> 13;
     straights &= straights << 1;
@@ -210,8 +205,7 @@ void CommunityPlus::evaluateStrength()
     {
         if( bFlushSuit >= 0 ) //(bFlushSuit != -1) implies bFlushSuit == 0 .. 3
         {
-        //if  (flushCount[i] >= 0)
-        //{
+
             uint32 sflush;
 
 
@@ -233,8 +227,8 @@ void CommunityPlus::evaluateStrength()
                 valueset = sflush;
                 return;
             }
-            //		flushCount[i] = -5;
-        //}
+
+
         }
     }
 
@@ -261,9 +255,7 @@ void CommunityPlus::evaluateStrength()
 		{
 			--valueset;
             prestraight <<= 1;
-				#ifdef DEBUGASSERT
-				//std::cerr << "INFINTE LOOP: Quad-no-kicker!" << endl;
-				#endif
+
 		}
 
         return;
@@ -282,11 +274,7 @@ void CommunityPlus::evaluateStrength()
 	///ASSUMPTION: You can't have two flushes
     if( bFlushSuit >= 0 ) //(bFlushSuit != -1) implies bFlushSuit == 0 .. 3
     {
-        //if  (flushCount[i] >= 0)
-        //{
-				#ifdef DEBUGFLUSH
-        cout << "f" << flushCount[bFlushSuit] << endl;
-				#endif
+
             //There is a flush
             strength = HoldemConstants::FLUSH;
             valueset = cardset[bFlushSuit];
@@ -308,11 +296,7 @@ void CommunityPlus::evaluateStrength()
             }
             valueset <<= shiftCount;
 
-            #ifdef DEBUGFLUSH
-				DisplayHandBig(cout);
-            #endif
             return;
-        //}
     }
 
     //TEST STRAIGHT
@@ -688,36 +672,5 @@ CommunityPlus::CommunityPlus()
 {
 	SetEmpty();
 }
-/*
-CommunityPlus::CommunityPlus(const uint32 tempcardset[4])
-{
-    Refill(tempcardset);
-}
 
-void CommunityPlus::Refill(const uint32 tempcardset[4])
-{
-	threeOfAKind = 0;
-	bestPair = 0;
-	nextbestPair = 0;
-
-    unsigned long flush[4];
-    for(int i=0;i<4;++i)
-    {
-        flushCount[i] = -5;
-        flush[i] = (cardset[i] = (*(this->tempcardset + i) = tempcardset[i]));
-    }
-    for(int i=1;i<=13;++i)
-    {
-        //check for flushes
-        flushCount[0] += flush[0] & 1;
-        flush[0] >>= 1;
-        flushCount[1] += flush[1] & 1;
-        flush[1] >>= 1;
-        flushCount[2] += flush[2] & 1;
-        flush[2] >>= 1;
-        flushCount[3] += flush[3] & 1;
-        flush[3] >>= 1;
-    }
-    evaluateStrength();
-}*/
 

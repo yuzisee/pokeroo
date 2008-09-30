@@ -18,7 +18,6 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-//#define DEBUGALLINS
 
 #define NO_REDUNDANT_SEECOMMUNITY
 #define RELOAD_LAST_HAND
@@ -118,9 +117,6 @@ Legend:
 	///Populate moneyWon
 	int8 i=1;int8 j=0;
 
-#ifdef DEBUGALLINS
-gamelog << "Moneywon " << potDistrSize << endl;
-#endif
 
 	moneyWon[0] = potDistr[0].revtiebreak;
 	if( bVerbose )
@@ -144,9 +140,6 @@ gamelog << "Moneywon " << potDistrSize << endl;
 		++i;++j;
 	}
 
-#ifdef DEBUGALLINS
-gamelog << "^^^^^^^^^^^^^^^" << endl;
-#endif
 
 	return moneyWon;
 }
@@ -259,12 +252,7 @@ void HoldemArena::PlayShowdown(const int8 called)
     //Ascending by default:  http://www.ddj.com/dept/cpp/184403792
     sort(winners.begin(), winners.end());
 	//Perfect, we start at the back, and that's the best hand
-#ifdef DEBUGALLINS
-if (winners.size() > 1)
-{
-	gamelog << winners[0].strength << "\t" << winners[1].strength << endl;
-}
-#endif
+
 
 	int8 potDistrSize = 0;
 	vector<ShowdownRep> potDistr;
@@ -278,11 +266,7 @@ if (winners.size() > 1)
 	int8 j = potDistrSize - 1;
 	int8 i = j-1;
 
-#ifdef DEBUGALLINS
-gamelog << p[potDistr[j].playerIndex]->GetIdent() << "\t"
-<< potDistr[j].revtiebreak << "\t" << moneyWon[j] << "\t"
-<< 1 << endl;
-#endif
+
 
 	randRem *= myPot+potDistrSize*p[potDistr[j].playerIndex]->handBetTotal;
 	randRem /= -potDistr[j].playerIndex;
@@ -320,12 +304,6 @@ gamelog << p[potDistr[j].playerIndex]->GetIdent() << "\t"
 		{
 			splitCount = 1;
 		}
-
-#ifdef DEBUGALLINS
-gamelog << p[potDistr[i].playerIndex]->GetIdent() << "\t"
-<< potDistr[i].revtiebreak << "\t" << moneyWon[i] << "\t"
-<< splitCount << endl;
-#endif
 
 
 		randRem /= p[potDistr[i].playerIndex]->handBetTotal;
@@ -412,14 +390,9 @@ void HoldemArena::prepareRound(const int8 comSize)
 
 void HoldemArena::defineSidePotsFor(Player& allInP, const int8 id)
 {
-	//allInP.myBetSize = allInP.allIn - allInP.handBetTotal;
 		allInP.allIn = myPot - myBetSum; ///Bets from previous rounds
 
-#ifdef DEBUGALLINS
-gamelog << allInP.GetIdent() << " determined to be all in." << endl;
-gamelog << "This round bet: " << allInP.myBetSize << endl;
-gamelog << "Past round pots " << allInP.allIn << endl;
-#endif
+
 			curIndex = id;
 			incrIndex();
 
@@ -461,9 +434,6 @@ gamelog << "Past round pots " << allInP.allIn << endl;
 					matchedAmount = 0;
 				}
 
-#ifdef DEBUGALLINS
-gamelog << "Adding " << matchedAmount << ", " << withP.GetIdent() << endl;
-#endif
 
 //Why did I comment this out? (See below)
 /*				if ( matchedAmount > allInP.handBetTotal )
@@ -477,19 +447,12 @@ gamelog << "Adding " << matchedAmount << ", " << withP.GetIdent() << endl;
 //Why did I comment this out? I couldn't see the need for handBetTotal to be considered at all in this situation
 //The subroutine begins with [allIn = myPot - myBetSum] which should take care of all action before this round
 /*
-#ifdef DEBUGALLINS
-gamelog << "And of course " << allInP.handBetTotal << " of money was bet... " << endl;
-#endif
 
-		allInP.allIn += allInP.handBetTotal; //Account for you own bet
-
-#ifdef DEBUGALLINS
-gamelog << "Ultimately, allIn=" << allInP.allIn << endl;
-#endif
+		allInP.allIn += allInP.handBetTotal; //Account for your own bet
 
 		allInP.myMoney -= allInP.handBetTotal;
 */
-//The following lines were added as a (working) substitute for the above block
+//The following line was added as a (working) substitute for the above block
 //During resolveActions handBetTotal is usually updated...
 //resolveActions is the next thing to happen after calling defineSidePotsFor
     allInP.allIn += allInP.myBetSize; ///You are able to win back your own bet.
@@ -518,16 +481,9 @@ void HoldemArena::resolveActions(Player& withP)
 			}
 			else
 			{
-
-
-
-
-				//gamelog << " clear";
 				withP.myBetSize = 0;
 			}
 		}
-
-		//gamelog << endl;
 }
 
 

@@ -27,11 +27,6 @@ ExpectedCallD::~ExpectedCallD()
 
 float64 ExpectedCallD::forfeitChips() const
 {
-#ifdef DEBUGWATCHPARMS
-    const float64 a = alreadyBet();
-    const float64 r = prevpotChips();
-    const float64 hc = table->ViewPlayer(playerID)->GetContribution();
-#endif
     return ( alreadyBet() + stagnantPot() - table->ViewPlayer(playerID)->GetContribution() );
 }
 
