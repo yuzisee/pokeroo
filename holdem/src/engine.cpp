@@ -18,12 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-//#define DEBUGTARE
-//#define DEBUGDEAL
-//#define DEBUGSORTSUITS
 
-//#include <iostream>
-//#define NULL 0
 
 #include "engine.h"
 #include "holdem2.h"
@@ -61,13 +56,6 @@ void OrderedDeck::sortSuits()
     int8 s2 = nextSuit[s1];
     int8 s3 = nextSuit[s2];
 
-#ifdef DEBUGSORTSUITS
-	std::cout << "Before: ";
-	std::cout << HoldemUtil::SUITKEY[s0];
-	std::cout << HoldemUtil::SUITKEY[s1];
-	std::cout << HoldemUtil::SUITKEY[s2];
-	std::cout << HoldemUtil::SUITKEY[s3];
-#endif
 
 	//Mergesort, stable
 
@@ -150,24 +138,15 @@ void OrderedDeck::sortSuits()
 
 	curSuit = firstSuit;
 
-#ifdef DEBUGSORTSUITS
-	std::cout << "\tAfter: ";
-#endif
 
 //Assign all the prevsuits
 	while(nextSuit[curSuit] != HoldemConstants::NO_SUIT)
 	{
-			#ifdef DEBUGSORTSUITS
-				std::cout << HoldemUtil::SUITKEY[curSuit];
-			#endif
+
 		prevSuit[nextSuit[curSuit]] = curSuit;
 		curSuit=nextSuit[curSuit];
 	}
 
-#ifdef DEBUGSORTSUITS
-	std::cout << HoldemUtil::SUITKEY[curSuit];
-	std::cout << std::endl;
-#endif
 
 }
 
@@ -183,29 +162,6 @@ void OrderedDeck::AssignSuitsFrom(const OrderedDeck & suitorder)
     }
 }
 
-/*
-void DealRemainder::sortSuitsCascade()
-{
-
-    OrderedDeck nextSorter;
-
-    for(int8 n=0;n<addendNum;++n)
-    {
-        //Sort the (smallest) addends, first. This order will act as the tiebreaker for the real suit sorting
-        nextSorter.SetEmpty();
-//        nextSorted.AssignSuitsFrom( *this ); //Redundant
-        nextSorter.OmitCards(addendSet[n]);
-        nextSorter.sortSuits();
-
-//        AssignSuitsFrom( nextSorter ); //Can be moved outside the loop, if the redundant line is removed
-
-    }
-    AssignSuitsFrom( nextSorter );
-
-    sortSuits();
-
-}
-*/
 
 
 void DealableOrderedDeck::UndealCard(const DeckLocation& deck)
@@ -256,16 +212,8 @@ float64 DealRemainder::DealCard(Hand& h)
 
 		const uint32 hHere=h.SeeCards(dealt.Suit);
 		const uint32 hBack=h.SeeCards(qprevSuit);
-//		const uint32 & allHere = dealtHand[dealt.Suit];
-//		const uint32 & allBack = dealtHand[qprevSuit];
-//		const uint32 oldHere = (allHere&~hHere);
-//		const uint32 oldBack = (allBack&~hBack);
 
 
-		//bMatchesOld = (allHere >= allBack);
-
-
-        //const bool bPreviouslyIdentical = ( oldHere == oldBack );
         const bool bPreviouslyIdentical = addendSameSuit[dealt.Suit][qprevSuit];
 
 		if(
@@ -295,16 +243,6 @@ float64 DealRemainder::DealCard(Hand& h)
 
 	uint32 baseInto = dealtHand[dealt.Suit]; ///This is prior to {dealtHand[dealt.Suit] |= dealt.Value;}
 
-	//if (bMatchesOld) //and implies hBack!=hHere
-//	if( dealtHand[dealt.Suit] >= dealtHand[qprevSuit] )
-//	{
-//		occBase=1;
-		//This is to deal with a situation where we are dealing into the later of an identical suit, which is actually not identical only because the hHere/dealtHand[dealt.Suit] boundaries
-		//Due to an inability to account for these situations, EACH of the later identical suits will necessarily be traversed. Therefore, we have to un-un-duplicate them...
-		//However, with the addition of addendSameSuit, this compensation is no longer necessary!
-//	}
-//	else
-//	{
 		for( int8 i=dealt.Suit;i!=HoldemConstants::NO_SUIT;i = nextSuit[i])
 		{//Although we could check all four here, it is assumed that you would only deal into the first of identical suits, plus it may help sort out the 2/2/2 corner case
 
@@ -315,7 +253,7 @@ float64 DealRemainder::DealCard(Hand& h)
 			else
 				break;
 		}
-//	}
+
 
 	dealtHand[dealt.Suit] |= dealt.Value;
 
@@ -396,15 +334,8 @@ DealRemainder::~DealRemainder()
 {
 	CleanStats();
 }
-/*
-void DealRemainder::DeOmitCards(const Hand& h)
-{
-	OrderedDeck::dealtHand[0] &= ~( h.SeeCards(0) );
-	OrderedDeck::dealtHand[1] &= ~( h.SeeCards(1) );
-	OrderedDeck::dealtHand[2] &= ~( h.SeeCards(2) );
-	OrderedDeck::dealtHand[3] &= ~( h.SeeCards(3) );
-}
-*/
+
+
 void DealRemainder::CleanStats()
 {
 }
@@ -414,7 +345,7 @@ void DealRemainder::OmitSet(const CommunityPlus& setOne, const CommunityPlus& se
 {//Note: Sorting is done by OmitCards
 
 
-	
+
 
     if( setOne.IsEmpty() )
     {//This is used especially by aiInformation
@@ -459,15 +390,12 @@ float64 DealRemainder::AnalyzeComplete(PlayStats* lastStats)
 	pos.Value = BaseDealtValue();
 	pos.Suit = BaseDealtSuit();
 
-//	deals=0;
 
 	CleanStats();
 	float64 returnResult;
-//	if ( bRecursive )
 
     const int16 & moreCards = lastStats->moreCards;
 
-//    sortSuitsCascade(); //Should be implicit now, do we need sorting at all here?
 
 	if( moreCards == 0 )
 	{
@@ -475,15 +403,7 @@ float64 DealRemainder::AnalyzeComplete(PlayStats* lastStats)
 		returnResult = 1;
 	}else
 	{
-
-
-//        int8 curDepth = 0;
-//        int16 maxDepth = moreCards;
-
 		returnResult = executeRecursive(*this,lastStats,lastStats->moreCards);
-		//returnResult = executeRecursive(dealtSuit,dealtValue,1);
-//	else
-		//returnResult = executeIterative(lastStats);
 	}
 
 	lastStats->Analyze();
@@ -530,9 +450,7 @@ float64 DealRemainder::executeComparison(const DealRemainder & refDeck, PlayStat
 
     }
 
-#ifdef DEBUGDEAL
-//                cout << "C" << totalRuns << endl;
-#endif
+
     return totalRuns;
 }
 
@@ -549,7 +467,7 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
 	StatRequest r;
 	float64 dOcc;
 
-		//justDealt.SetEmpty();
+
     DeckLocation lastDealt;
 
 
@@ -566,11 +484,7 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
 ///Note: You can use lastDealt to see which card was dealt
                 lastDealt = deckState.dealt;
 
-#ifdef DEBUGDEAL
-                for( int sn=0;sn<moreCards;++sn ) cout << "   ";
-                HoldemUtil::PrintCard(cout, lastDealt.GetIndex());
-                cout << " ×" << dOcc/fromRuns << "*" << fromRuns << "=  " << dOcc << "  \t\t" << "@lvl" << moreCards << endl;
-#endif
+
 
 /// ====================
 ///    Check Validity
@@ -580,8 +494,6 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
             {//We couldn't deal a card, this is termination
                 return totalRuns;
             }///EARLY RETURN
-            //else //not required in presence of early return
-			//{
 
 
 
@@ -598,24 +510,13 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
                 if (r.bNewSet)
                 {
 
-//                    fromRuns = 1;
                     ///RECURSION HERE
-#ifdef DEBUGDEAL
- cout << "(" << dOcc << ")" << endl;
-#endif
-                    totalRuns += executeRecursive(deckState, lastStats, moreCards - 1) * dOcc;
-#ifdef DEBUGDEAL
-cout.precision(16);
- cout << "~" << dOcc << "~ ................ " << totalRuns << endl;
-#endif
-                        //totalRuns+=executeRecursive(BaseDealtSuit(),BaseDealtValue(),1)*dOcc[thisDepth];
+
                 }
                 else
                 {
-//                    fromRuns = dOcc;
                     ///RECURSION HERE
                         totalRuns += executeDealing(deckState, lastStats, moreCards - 1, dOcc);
-                        //totalRuns+=executeRecursive(BaseDealtSuit(),BaseDealtValue(),dOcc[thisDepth]);
                 }
 
 
@@ -648,22 +549,6 @@ float64 DealRemainder::executeRecursive(const DealRemainder & refDeck, PlayStats
     deckState.justDealt.SetEmpty();
 
     ///We used to store suitorder here, but we keep a stack during deckState traversal now.
-
-    //newhand sortSuitsCascade();
-
-
-//else
-//{
-    //justDealt[curDepth].SetUnique(justDealt[thisDepth]);
-    //lastDealt[curDepth] = lastDealt[thisDepth];
-//}
-
-
-//this->dealt = lastDealt[curDepth];
-
-        #ifdef DEBUGCALLPART
-            cout << "TARE" << endl;
-        #endif
 
     return executeDealing(deckState, lastStats, moreCards, 1);
 

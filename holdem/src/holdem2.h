@@ -22,8 +22,6 @@
 #define HOLDEM_Community
 
 
-//#define DEBUG_TWOPAIR
-//#define DEBUG_SIGSEGV
 
 #include "holdemutil.h"
 #include <iostream>
@@ -38,19 +36,15 @@ private:
     int8 bFlushSuit;//In order to cleanlasttwo of a flush, we need to know the number of surplus cards in the flush suit
                     //Therefore, BOTH bFlushSuit AND flushCount need to be accurate at all times
     int8 flushCount[4]; //number of cards in that suit
-    
-	uint8 threeOfAKind;
-    
-    
 
-#ifdef DEBUG_TWOPAIR
-public:
-#endif
+	uint8 threeOfAKind;
+
+
+
+
 	uint8 bestPair;
 	uint8 nextbestPair;
-#ifdef DEBUG_TWOPAIR
-private:
-#endif
+
 
 	void preEvalStrength();
     void cleanLastTwo();
@@ -166,16 +160,7 @@ class ShowdownRep
 	}
 	bool operator== (const ShowdownRep& x) const
 	{
-		#ifdef DEBUG_SIGSEGV
-		const bool bEqualStrength = (strength == x.strength);
-		std::cout << "s:" << (int)(strength) << " <=> " << (int)(x.strength) << std::endl;
-		const bool bEqualValueset = (valueset == x.valueset);
-		std::cout << "v:" << (int)(valueset) << " <=> " << (int)(x.valueset) << std::endl;
-		const bool bEqual = bEqualStrength && bEqualValueset;
-		return bEqual;
-		#else
 		return ((strength == x.strength) && (valueset == x.valueset));
-		#endif
 	}
 
     const ShowdownRep & operator=(const ShowdownRep& a)
@@ -190,21 +175,12 @@ class ShowdownRep
 
     bool bIdenticalTo (const ShowdownRep& x) const
     {
-		#ifdef DEBUG_SIGSEGV
-		const bool bEqualStrength = (strength == x.strength);
-		std::cout << "s_" << (int)(strength) << " <=> " << (int)(x.strength) << std::endl;
-		const bool bEqualValueset = (valueset == x.valueset);
-		std::cout << "v_" << (int)(valueset) << " <=> " << (int)(x.valueset) << std::endl;
-		const bool bEqual = bEqualStrength && bEqualValueset;
-		return (  bEqual && (playerIndex == x.playerIndex) && (revtiebreak == x.revtiebreak)  );
-		#else
         return (
         (strength == x.strength)
         && (valueset == x.valueset)
         && (playerIndex == x.playerIndex)
         && (revtiebreak == x.revtiebreak)
         );
-		#endif
     }
 
 	void DisplayHandBig(std::ostream& o) const { comp.DisplayHandBig(o); }

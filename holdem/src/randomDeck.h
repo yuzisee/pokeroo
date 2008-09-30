@@ -67,21 +67,6 @@ class RandomDeck : virtual public GameDeck
 }
 ;
 
-class LiveDeck : virtual public GameDeck
-{
-    protected:
-    vector<DeckLocation> nextDeal;
-    public:
-    virtual void ShuffleDeck(){}
-    virtual void ShuffleDeck(float64){}
-
-    virtual float64 DealCard(Hand&)=0;
-
-    void SetTopCard(const DeckLocation &d);
-
-    LiveDeck() {}
-}
-;
 
 
 #endif

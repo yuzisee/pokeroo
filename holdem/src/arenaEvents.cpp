@@ -25,14 +25,6 @@ using std::sort;
 
 void HoldemArenaBetting::finishBettingRound()
 {
-/*
-    float64 & highBet = myTable->highBet;
-    int8 & playersInHand = myTable->playersInHand;
-    int8 & playersAllIn = myTable->playersAllIn;
-    int8 & curIndex = myTable->curIndex;
-    float64 & myPot = myTable->myPot;
-    vector<Player*> &p = myTable->p;
-*/
 
 ///If the round goes check-check-check, it technically makes/means the dealer (is) the higher better. We want the NEXT person.
 /*
@@ -100,71 +92,65 @@ If everyone checks (or is all-in) on the final betting round, the player who act
         bBetState = 'C';
 		return;
 	}
-//	else ///End hand if all folded
-	{
-		if( GetNumberInHand() == 1 )
-		{
+
+
+    ///End hand if all folded
+    if( GetNumberInHand() == 1 )
+    {
 
 
 
-		    ///What if the player that folds is the highest better at the moment?
-            ///This can happen on blinds
-            //std::cout << p[highestBetter]->GetIdent() << " bet the most first, but now is " << p[highestBetter]->GetBetSize() << endl;
-            //if( myTable->HasFolded(highestBetter) )
-            if( PlayerBet(*p[highestBetter]) != highBet ) //We would check HasFolded, except resolveActions() changes myBet to INVALID if it was FOLDED. This is safer, I think.
-            {///If it's due to blinds, figure out who really wins.
-                int8 findHighestBetter = highestBetter;
+        ///What if the player that folds is the highest better at the moment?
+        ///This can happen on blinds
+        //std::cout << p[highestBetter]->GetIdent() << " bet the most first, but now is " << p[highestBetter]->GetBetSize() << endl;
+        //if( myTable->HasFolded(highestBetter) )
+        if( PlayerBet(*p[highestBetter]) != highBet ) //We would check HasFolded, except resolveActions() changes myBet to INVALID if it was FOLDED. This is safer, I think.
+        {///If it's due to blinds, figure out who really wins.
+            int8 findHighestBetter = highestBetter;
 
-                incrIndex(findHighestBetter);
-                while(findHighestBetter != curIndex)
+            incrIndex(findHighestBetter);
+            while(findHighestBetter != curIndex)
+            {
+                if( PlayerBet(*(p[findHighestBetter])) == highBet )
                 {
-                    if( PlayerBet(*(p[findHighestBetter])) == highBet )
-                    {
-                        highestBetter = findHighestBetter;
-                    }
-                    incrIndex(findHighestBetter);
+                    highestBetter = findHighestBetter;
                 }
+                incrIndex(findHighestBetter);
             }
-
-            /*if(handnum == 9 )
-            {
-                gamelog << "POT << " << myPot << endl;
-                gamelog << "money before << " << p[highestBetter]->myMoney << endl;
-                gamelog << "handBetTotal << " << p[highestBetter]->handBetTotal << endl;
-                gamelog << "allIn << " << p[highestBetter]->allIn << endl;
-            }*/
-
-            ///When the highest better is allIn, it skips preparations on certain resolveActions
-            if( PlayerAllIn(*(p[highestBetter])) >= 0 )
-            {
-                myPot = PlayerAllIn(*(p[highestBetter]));
-            }
-
-
-            const float64 highContribution = PlayerHandBetTotal(*(p[highestBetter]));
-			//What if you fold to an all-in? I think it will work just fine.
-			if( bVerbose )
-			{
-			    gamelog << endl;
-				gamelog << "All fold! " << p[highestBetter]->GetIdent() <<
-				" wins $" << (   myPot - highContribution   ) << endl;
-			}
-			float64 rh = static_cast<float64>(highestBetter)+2;
-			randRem /= myPot*highContribution+rh;
-			randRem *= rh;
-			PlayerMoney(*(p[highestBetter]))+= myPot;
-#ifdef DEBUGASSERT
-		}else
-		{
-            std::cerr << "Too many people folded! (Even the winner!?)" << endl;
-            gamelog << "Too many people folded! (Even the winner!?)" << endl;
-            exit(1);
-#endif
         }
-		//playerCalled = -1;
-		bBetState = 'F';
-		return;
-	}
+
+
+        ///When the highest better is allIn, it skips preparations on certain resolveActions
+        if( PlayerAllIn(*(p[highestBetter])) >= 0 )
+        {
+            myPot = PlayerAllIn(*(p[highestBetter]));
+        }
+
+
+        const float64 highContribution = PlayerHandBetTotal(*(p[highestBetter]));
+        //What if you fold to an all-in? I think it will work just fine.
+        if( bVerbose )
+        {
+            gamelog << endl;
+            gamelog << "All fold! " << p[highestBetter]->GetIdent() <<
+            " wins $" << (   myPot - highContribution   ) << endl;
+        }
+        float64 rh = static_cast<float64>(highestBetter)+2;
+        randRem /= myPot*highContribution+rh;
+        randRem *= rh;
+        PlayerMoney(*(p[highestBetter]))+= myPot;
+#ifdef DEBUGASSERT
+    }else
+    {
+        std::cerr << "Too many people folded! (Even the winner!?)" << endl;
+        gamelog << "Too many people folded! (Even the winner!?)" << endl;
+        exit(1);
+#endif
+    }
+    //playerCalled = -1;
+    bBetState = 'F';
+    return;
+
 
 }
 
@@ -214,13 +200,8 @@ void HoldemArenaBetting::startBettingRound()
 
 	allInsNow = new int8[GetTotalPlayers()];
 	allInsNowCount = 0;
-/*
-    const bool bVerbose = myTable->bVerbose;
 
-    int8 & curIndex = myTable->curIndex;
-    int8 & playersAllIn = myTable->playersAllIn;
-    vector<Player*> &p = myTable->p;
-*/
+
 
 	///Weird stuff to simulate blind bets
 	if( comSize == 0 && myTable->NumberInHand() >= 2)
@@ -302,15 +283,10 @@ void HoldemArenaBetting::startBettingRound()
         #endif
 
 	}
-/*	else
-	{
-		//bBlinds = -1;
-		incrIndex(highestBetter);
-	}*/
+
 
 	incrIndex();
 
-    //if( playersAllIn > 0 ) gamelog << "<GetNumberInHand(),playersAllIn,allInsNowCount>=<" << (int)(GetNumberInHand()) << "," << (int)playersAllIn << "," << (int)allInsNowCount << ">" << endl;
     if( !(GetNumberInHand() - playersAllIn + allInsNowCount > 1) )
     {
         finishBettingRound();
@@ -337,29 +313,6 @@ void HoldemArenaBetting::startBettingRound()
 
 void HoldemArenaBetting::incrPlayerNumber(Player& currentPlayer)
 {
-    /*
-    int8 & curIndex = myTable->curIndex;
-    */
-#ifdef DEBUGALLINS
-gamelog << p[highestBetter]->GetIdent() << " last to raise" << endl;
-#endif
-
-
-#ifdef DEBUGALLINS
-gamelog << curIndex << " == " << bBlinds << endl;
-if ( bBlinds != -1 )
-{
-	gamelog << "Why is bBlinds " << p[bBlinds]->GetIdent() <<
-	"? Is it comSize = " << comSize << endl;
-}
-#endif
-
-
-
-#ifdef DEBUGALLINS
-gamelog << p[curIndex]->GetIdent() << " up next... same as before?" << endl;
-#endif
-
 
 
     if( curIndex == bBlinds )
@@ -412,14 +365,6 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 
     if( bBetState != 'b' ) return;
 
-/*
-    int8 & curIndex = myTable->curIndex;
-    float64 & highBet = myTable->highBet;
-    int8 & playersAllIn = myTable->playersAllIn;
-    int8 & playersInHand = myTable->playersInHand;
-    vector<Player*> &p = myTable->p;
-    float64 & randRem = myTable->randRem;
-*/
 
 	///---------------------------------
 	///Action time!
@@ -434,9 +379,6 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 			There is one player left in the hand
 		*/
 
-#ifdef DEBUGALLINS
-gamelog << IsInHand(curIndex) << " && " << (p[curIndex]->allIn == INVALID) << endl;
-#endif
 
 
         Player& withP = *(p[curIndex]);
@@ -453,10 +395,6 @@ gamelog << IsInHand(curIndex) << " && " << (p[curIndex]->allIn == INVALID) << en
 			{
 				PlayerBet(withP) = betSize;
 			}
-
-#ifdef DEBUGALLINS
-gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
-#endif
 
 			///Decide what to do with the bet
 			if( PlayerBet(withP) >= PlayerMoney(withP) )
@@ -543,9 +481,7 @@ gamelog << "Entered, " << PlayerBet(withP) << " vs " << highBet << endl;
                     randRem *= (myBetSum)/(curIndex+2.5);
 			}
 
-#ifdef DEBUGALLINS
-gamelog << p[curIndex]->GetIdent() << " up now" << endl;
-#endif
+
 
 
         do
@@ -607,8 +543,7 @@ void HoldemArenaShowdown::startAllIns()
 	{
 	    Player& withP = *(p[curIndex]);
 
-        //gamelog << p[curIndex]->GetIdent() << "\t now " << p[curIndex]->allIn << endl;
-		if ( PlayerAllIn(withP) >= 0 && !IsInHand(curIndex)) //If all in with no money remaining
+        if ( PlayerAllIn(withP) >= 0 && !IsInHand(curIndex)) //If all in with no money remaining
 		{
             ShowdownRep comp(curIndex);
             comp.valueset=0;
@@ -677,26 +612,9 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp)
         }
         winners.push_back(comp);
         best = comp;
-        //topAllIn = withP.allIn;
     }
     ///His hand was worse, but since he is all-in he MUST show his hand.
     else
-        /*if( withP.allIn > topAllIn )
-    {///May qualify for a side pot! (maybe)
-            broadcastHand(withP.myHand);
-            if( bVerbose )
-            {
-                gamelog << endl << withP.GetIdent() << flush;
-                gamelog << " is ahead with: " << flush;
-                HandPlus viewHand;
-                viewHand.SetUnique(withP.myHand);
-                viewHand.ShowHand(false);
-                gamelog << endl << "Trying to stay alive, makes" << flush;
-                comp.DisplayHandBig(gamelog);
-            }
-            winners.push_back(comp);
-    }
-        else*/
     {///Distinctly defeated
      //  http://www.texasholdem-poker.com/holdem_rules.php
         broadcastHand(PlayerHand(withP),curIndex);
@@ -734,10 +652,7 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
 ///At this point curIndex is STILL IN THE HAND (not all in)
 
 
-//gamelog << p[curIndex]->GetIdent() << "\tallIn=" << p[curIndex]->allIn << endl;
-
 		    Player& withP = *p[curIndex];
-            //const ShowdownRep comp(&(withP.myHand), &community, curIndex);
 
 			if( comp > best ) //best hand yet
 			{
@@ -763,7 +678,6 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
 					//#endif
 				}
 
-				//winnerCount = 1;
 				winners.clear();
 				winners.push_back(comp);
 				best = comp;

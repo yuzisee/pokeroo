@@ -126,32 +126,7 @@ public:
 ;
 
 
-#ifdef DEBUGBETMODEL
 
-class DebugArena : public virtual HoldemArena
-{
-private:
-    void updatePot();
-protected:
-    float64 deadPot;
-public:
-
-    DebugArena(BlindStructure* b,std::ostream& target, bool illustrate) : HoldemArena(b,target,illustrate,false), deadPot(0)
-    {}
-
-    void InitGame();
-    const float64 PeekCallBet();
-    void SetBlindPot(float64 amount);
-    void SetDeadPot(float64 amount);
-    void SetBet(int8 playerNum, float64 amount);
-
-    void GiveCards(int8 playerNum, CommunityPlus h);
-    void SetCommunity(const CommunityPlus h, const int8 cardsInComunity);
-
-    void AssignHandNum( uint32 n );
-}
-;
-#endif
 
 
 #endif

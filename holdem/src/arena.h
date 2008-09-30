@@ -30,7 +30,6 @@
 
 #ifndef NO_LOG_FILES
 
-//#define DEBUGBETMODEL
 #define DEBUGSAVEGAME "savegame"
 #define DEBUGSAVEGAME_ALL "saves"
 //#define DEBUGSAVE_EXTRATOKEN 32
@@ -61,9 +60,7 @@ class PlayerStrategy;
 
 class Player
 {
-#ifdef DEBUGBETMODEL
-    friend class DebugArena;
-#endif
+
 	friend class HoldemArena;
 
 	private:

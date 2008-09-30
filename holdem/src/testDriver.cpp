@@ -238,16 +238,6 @@ void testC()
     genC(h1,h2);
 }
 
-#ifdef DEBUG_TWOPAIR
-void printPairStuff(const CommunityPlus &hx, const char* strName)
-{
-cout << strName << endl;
-hx.DisplayHand( cout );
-cout << (int)(hx.bestPair) << " then " << (int)(hx.nextbestPair) << endl;
-}
-
-
-#endif
 
 
 void genCMD(uint16 procnum)

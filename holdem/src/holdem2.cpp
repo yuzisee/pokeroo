@@ -22,8 +22,6 @@
 
 
 //#define DEBUGFLUSH
-//#define DEBUGBOAT
-//#define DEBUGPAIR
 
 #include <iostream>
 #include "holdem2.h"
@@ -192,7 +190,7 @@ void CommunityPlus::evaluateStrength()
     //The (1st) 2nd to 14th bit must be the ONLY ones with data...
     //outer bits stay zero please
 
-    
+
     //Pre-emptive STRAIGHT
     //uint32 straights = cardset[0] | cardset[1] | cardset[2] | cardset[3];
     uint32 straights = prestraight;
@@ -201,11 +199,11 @@ void CommunityPlus::evaluateStrength()
     straights &= straights << 1;
     straights &= straights << 1;
     straights &= straights << 1; //the high card of any straight remains
-    
+
     strength = 0;
     //EVALUATE STRAIGHT FLUSHE
-    
-    
+
+
 	///ASSUMPTION: You can't have two straight flushes
 	///Valueset must not be used in the detection of straight flushes
     if( straights > 0 )
@@ -215,22 +213,22 @@ void CommunityPlus::evaluateStrength()
         //if  (flushCount[i] >= 0)
         //{
             uint32 sflush;
-            
-            
+
+
             sflush = cardset[bFlushSuit];
-            
+
             sflush |= sflush >> 13;//first add ace-low if ace-high exists
-    
+
             sflush &= sflush << 1;
             sflush &= sflush << 1;
             sflush &= sflush << 1;
             sflush &= sflush << 1; //the high card of any straight remains
-    
+
             if (sflush > 0)
             {
                 //in case there is a 6 card straight or whatever:
                 sflush &= ~((sflush >> 1) & sflush);
-    
+
                 strength = HoldemConstants::ROYAL;
                 valueset = sflush;
                 return;
@@ -240,7 +238,7 @@ void CommunityPlus::evaluateStrength()
         }
     }
 
-    
+
     //EVALUATE QUAD
     uint32 quads = cardset[0] & cardset[1] & cardset[2] & cardset[3];
 
@@ -316,7 +314,7 @@ void CommunityPlus::evaluateStrength()
             return;
         //}
     }
-    
+
     //TEST STRAIGHT
     if (straights > 0)
     {
@@ -385,24 +383,17 @@ void CommunityPlus::AddToHand(
 {
 	HandPlus::AddToHand(aSuit,aIndex,aCard);
     prestraight |= aCard;
-    
+
 	++flushCount[aSuit];
     //ASSUMPTION: You can have at most one flush
     if( flushCount[aSuit] >= 0 )
     {
         bFlushSuit = aSuit;
     }
-    
+
 	if(HoldemUtil::VALUEORDER[aIndex] == (HoldemUtil::VALUEORDER[aIndex] & valueset))
 	{//Three of a kind
-			#ifdef DEBUGBOAT
-				if( aIndex == 1 )
-				{
-					cout << "b" << bestPair << " n" << nextbestPair << endl;
-					cout << threeOfAKind << endl;
-					HandPlus::DisplayHandBig(cout);
-				}
-			#endif
+
 
 		if( aIndex > threeOfAKind )
 		{
@@ -433,29 +424,7 @@ void CommunityPlus::AddToHand(
 			threeOfAKind = aIndex;
 
 		}
-		/*
-		else
-		{
-            ///This addition formed a worse three-of-a-kind
-            ///aIndex used to be paired, so we must un-pair it...
-            if( aIndex == bestPair )
-            {
-                bestPair = nextbestPair;
-                nextbestPair = 0;
-            }
-            else if( aIndex == nextbestPair )
-            {
-                nextbestPair = 0;
-            }
-		}*/
 
-			#ifdef DEBUGBOAT
-				if( aIndex == 1 )
-				{
-					cout << "b" << bestPair << " n" << nextbestPair << endl;
-					cout << threeOfAKind << endl;
-				}
-			#endif
 	}
 	else
 	{///Not three of a kind, but we are adding one of aIndex (valueset already updated)
@@ -465,12 +434,6 @@ void CommunityPlus::AddToHand(
 
 		if( HoldemUtil::INCRORDER[aIndex] != (HoldemUtil::VALUEORDER[aIndex] & valueset) )
 		{///This card matches another! (It couldn't be a trip because of above)
-
-				#ifdef DEBUGPAIR
-					cout << "b" << bestPair << " n" << nextbestPair << endl;
-					cout << threeOfAKind << endl;
-					HandPlus::DisplayHandBig(cout);
-				#endif
 
 
 			if( aIndex > bestPair )
@@ -483,10 +446,6 @@ void CommunityPlus::AddToHand(
 				nextbestPair = aIndex;
 			}
 
-				#ifdef DEBUGPAIR
-					cout << "b" << bestPair << " n" << nextbestPair << endl;
-					cout << threeOfAKind << endl;
-				#endif
 		}
 
 	}
@@ -521,9 +480,9 @@ void CommunityPlus::AppendUnique(const HandPlus& h)
 void CommunityPlus::AppendUnique(const CommunityPlus& h)
 {
 	HandPlus::AppendUnique(h);
-    
+
     prestraight |= h.prestraight;
-    
+
 	for(int8 cd=0;cd<4;++cd)
 	{
 		flushCount[cd] += h.flushCount[cd] + 5;
@@ -690,13 +649,13 @@ void CommunityPlus::preEvalStrength()
         flushCount[3] += static_cast<int8>(tempforflush[3] & 1);
 
     }
-    
+
     //This is slightly less efficient than it could be, but use of this function at all is discouraged anyway
     if( 0 <= flushCount[0] ) bFlushSuit = 0;
     if( 0 <= flushCount[1] ) bFlushSuit = 1;
     if( 0 <= flushCount[2] ) bFlushSuit = 2;
     if( 0 <= flushCount[3] ) bFlushSuit = 3;
-    
+
     prestraight = cardset[0] | cardset[1] | cardset[2] | cardset[3];
 }
 

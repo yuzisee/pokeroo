@@ -29,7 +29,6 @@
 
 
 #define RANK_CALL_CUMULATION
-//#define ARBITARY_DISTANCE
 
 
 #define BGAMBLE_MAX 16
@@ -46,9 +45,7 @@ class PositionalStrategy : virtual public PlayerStrategy
         template< typename T >
         void printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet);
 
-#ifdef ARBITARY_DISTANCE
-        int8 roundNumber[3];
-#endif
+
         DistrShape detailPCT;
         StatResult statmean;
         StatResult statworse;
