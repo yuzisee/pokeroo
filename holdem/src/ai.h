@@ -24,11 +24,6 @@
 #include "debug_flags.h"
 
 
-//#define DEBUGCALLPART
-//#define DEBUGCALLPCT
-//#define DEBUG_AA
-
-
 #include "holdem2.h"
 
 #include "inferentials.h"
@@ -38,9 +33,8 @@
 struct StatRequest
 {
     StatRequest() : bNewSet(false)
-    {}//, bTareOcc(false) {}
+    {}
     bool bNewSet;
-    //bool bTareOcc;
 }
 ;
 
@@ -67,13 +61,7 @@ class PlayStats
 
     public:
 
-#ifdef DEBUGCALLPCT
-DeckLocation namecorrelate;
-#endif
 
-#ifdef DEBUG_AA
-        bool bDEBUG;
-#endif
 		int16 moreCards;
 		int32 statGroup;
 
@@ -102,11 +90,6 @@ DeckLocation namecorrelate;
 		virtual void DropCard(const DeckLocation) = 0;
         virtual ~PlayStats();
 
-
-			#ifdef DEBUGCALLPART
-				void virtual debugPrint() {}
-				const virtual DeckLocation* debugViewD(int8 i) { return 0;}
-			#endif
 }
 ;
 
@@ -146,14 +129,7 @@ public:
 	}
 	~CallStats();
 
-		#ifdef DEBUGCALLPART
-			void debugPrint()
-			{
-				cout << endl << "CallStats repeated=" << myWins[statGroup].repeated;
-				oppStrength.DisplayHandBig(cout);
-				myStrength.DisplayHandBig(cout);
-			}
-		#endif
+
 }
 ;
 
@@ -191,68 +167,10 @@ public:
 	}
     ~WinStats();
 
-//	float64 myImproveChance;
-
-
-//	StatResult myWorst;
-//	StatResult myBest;
 
 }
 ;
 
-
-#ifdef DEBUG_TESTDEALINTERFACE
-
-class DummyStats : virtual public PlayStats
-{
-	public:
-		virtual void Analyze(){};
-		virtual StatRequest NewCard(const DeckLocation dk, const float64 occ)
-		{
-		    ++currentCard;
-            //cout << "@" << currentCard << "\t" << (int)(dk.GetIndex()) << endl;
-		    if( currentCard == 1 )
-		    {
-		        myStrength.SetUnique(oppStrength);
-		        myStrength.AddToHand(dk);
-		    }
-		    else if ( currentCard == 2 )
-		    {
-		        CommunityPlus viewer;
-		        viewer.SetUnique(myStrength);
-		        viewer.AddToHand(dk);
-		        viewer.evaluateStrength();
-		        viewer.DisplayHandBig(cout);
-		    }
-			StatRequest a;
-			a.bNewHand = false;
-			a.bTareOcc = false;
-			return a;
-		};
-		virtual void DropCard(const DeckLocation)
-		{
-		    --currentCard;
-
-		};
-		DummyStats(const CommunityPlus& holeCards, const CommunityPlus& community, const int8 cardsInCommunity)
-				: PlayStats(holeCards, community)
-		{
-			moreCards = 7 - cardsInCommunity;
-			statGroup = 0;
-			myWins = new StatResult[1];
-			myWins[0].wins = 0;
-			myWins[0].loss = 0;
-			myWins[0].splits = 0;
-			myWins[0].repeated = 0;
-            oppStrength.SetEmpty();
-            oppStrength.SetUnique(community);
-            oppStrength.DisplayHandBig(cout);
-            currentCard=0;
-		}
-
-}
-;
-#endif
 
 
 
