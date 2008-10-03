@@ -206,7 +206,7 @@ void HistoryStrategy::FinishHand()
 
 void HistoryStrategy::SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph )
 {
-    saveFile << (int16)(ph.id) << endl;
+    saveFile << ph.id << endl;
     saveFile << ph.score << " Misc." << endl;
     saveFile << (int16)(ph.rank) << " ==Rank" << endl;
     saveFile << ph.nonZeroWinLose << " Non-Zero W/L" << endl;

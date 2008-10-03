@@ -37,8 +37,7 @@
 /// Summary of contained strategies:
 /// 1. ImproveStrategy (This is the old fashioned Geom<-->Algb vs. Rank<-->WorseNextCard)
 /// 2. ImproveGainStrategy (This is Norm/Trap/Ace using empirical data)
-/// 3. DeterredGainStrategy (ComBot: focus more on hybridMagnified to make decisions)
-/// 4. HybridScalingStrategy (SpaceBot, experimental stuff)
+/// 3. DeterredGainStrategy (DangerBot: focus more on hybridMagnified to make decisions)
 
 /// *RANK variants replace Geom<->Linear(NoRisk) AutoScaling with a Geom ONLY.
 
@@ -178,30 +177,22 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     statranking.genPCT();
 
 //Pick the better one for hybrid
+    StatResult statHybridR;
     if( statranking.pct > statrelation.pct )
     {
-        statversus = statranking;
+        statHybridR = statranking;
     }else
     {
-        statversus = statrelation;
+        statHybridR = statrelation;
     }
 
-    hybridMagnified.wins = sqrt(statmean.wins*statversus.wins);
-    hybridMagnified.splits = sqrt(statmean.splits*statversus.splits);
-    hybridMagnified.loss = sqrt(statmean.loss*statversus.loss);
+    hybridMagnified.wins = sqrt(statmean.wins*statHybridR.wins);
+    hybridMagnified.splits = sqrt(statmean.splits*statHybridR.splits);
+    hybridMagnified.loss = sqrt(statmean.loss*statHybridR.loss);
     hybridMagnified.genPCT();
     const float64 adjust = hybridMagnified.wins + hybridMagnified.splits + hybridMagnified.loss;
     hybridMagnified = hybridMagnified * ( 1.0 / adjust );
     hybridMagnified.repeated = 0; ///.repeated WILL otherwise ACCUMULATE!
-
-//Pick the safer one for play
-    if( statranking.pct < statrelation.pct )
-    {
-        statversus = statranking;
-    }else
-    {
-        statversus = statrelation;
-    }
 
 
 
@@ -222,15 +213,13 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     }
     if(bLogRanking)
     {
-        logFile << "(Versus) " << statrelation.pct * 100 << "%"  << std::endl;
+        logFile << "(All-in) " << statrelation.pct * 100 << "%"  << std::endl;
         logFile << "(Re.s) " << statrelation.splits * 100 << "%"  << std::endl;
         logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
         logFile << "(Ra.s) " << statranking.splits * 100 << "%"  << std::endl;
     }
     if(bLogHybrid)
     {
-		//if( !bLogMean ) logFile << "(Mean) " << statmean.pct * 100 << "%"  << std::endl;
-		//if( !bLogRanking ) logFile << "(Versus) " << statversus.pct * 100 << "%"  << std::endl;
         logFile << "(Hybrid) " << hybridMagnified.pct * 100 << "%"  << std::endl;
         //logFile << "(H.w) " << hybridMagnified.wins * 100 << "%"  << std::endl;
         logFile << "(H.s) " << hybridMagnified.splits * 100 << "%"  << std::endl;
@@ -482,18 +471,10 @@ float64 ImproveGainStrategy::MakeBet()
     //const float64 oppInsuranceSmallBet = (1 - statmean.pct + targetWorsenBy) / (1 - statmean.pct);
     const float64 oppInsuranceBigBet = (improveMod>0)?(improveMod/2):0;
 
-/*
-    const float64 minWin = pow(statworse.pct,expectedVS);
-    const float64 improveDev = detailPCT.stdDev * (1-improvePure) + detailPCT.avgDev * improvePure;
 
-
-    float64 distrScale = improveMod+minWin+1 ;
-    if( bGamble >= 2 )
-    {
-        distrScale = (-improveMod/2)+minWin+1 ;
-    }
-*/
-
+    const float64 awayFromDrawingHands = 1.0 / (ViewTable().GetNumberInHand() - 1);
+    StatResult statversus = (statrelation * (awayFromDrawingHands)) + (statranking * (1.0-awayFromDrawingHands));
+    statversus.genPCT();
 
 
     CallCumulationD &choicecumu = callcumu;
@@ -869,6 +850,9 @@ float64 DeterredGainStrategy::MakeBet()
 	if( maxShowdown <= 0 ) return 0;
 
 
+    const float64 awayFromDrawingHands = 1.0 / (ViewTable().GetNumberInHand() - 1);
+    StatResult statversus = (statrelation * (awayFromDrawingHands)) + (statranking * (1.0-awayFromDrawingHands));
+    statversus.genPCT();
 
     CallCumulationD &choicecumu = callcumu;
     CallCumulationD &raisecumu = foldcumu;
@@ -1070,14 +1054,8 @@ float64 CorePositionalStrategy::MakeBet()
 
     ///VARIABLE: the slider can move due to avgDev too, maybe....
 
-//#ifdef RANK_CALL_CUMULATION
-//	CallCumulationD &choicecumu = foldcumu;
-//#else
     CallCumulationD &choicecumu = callcumu;
     CallCumulationD &raisecumu = foldcumu;
-//#endif
-
-
 
     //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, timing[DT]/2 );
     //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, detailPct.avgDev*2 );

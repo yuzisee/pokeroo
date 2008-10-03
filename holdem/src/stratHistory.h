@@ -44,7 +44,7 @@ class PerformanceHistory
         int8 sortMode; //Sorting arrays with varying sortmodes is not allowed.
         int32 score;
 
-        char id;
+        int16 id;
 
         PerformanceHistory() : nonZeroWinLose(0), numHandsAboveBelow(0), totalMoneyDelta(0), rank(0), sortMode(0), score(0)
         {}
@@ -140,7 +140,7 @@ class HistoryStrategy : public virtual PlayerStrategy
     protected:
         PositionalStrategy ** strats; //Generated at construction (constant during a game load)
         PerformanceHistory * picks; //Must be loaded/saved
-        int8 currentStrategy; //May need to be loaded/saved
+        int16 currentStrategy; //May need to be loaded/saved
         uint8 stratcount; //Generated at construction...
 
 

@@ -28,9 +28,7 @@
 #include "debug_flags.h"
 
 
-#define RANK_CALL_CUMULATION
-
-
+//BGAMBLE_MAX is for more convenient printf
 #define BGAMBLE_MAX 16
 
 ///RULE OF THUMB?
@@ -50,7 +48,6 @@ class PositionalStrategy : virtual public PlayerStrategy
         StatResult statmean;
         StatResult statworse;
         StatResult statranking;
-        StatResult statversus;
         StatResult statrelation;
         StatResult hybridMagnified;
         CallCumulationD foldcumu;

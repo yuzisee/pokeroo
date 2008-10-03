@@ -21,12 +21,13 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#undef TREND_STRAT_ENABLE
+
 #ifndef HOLDEM_CombinedStrategy
 #define HOLDEM_CombinedStrategy
 
 #include "stratHistory.h"
 
-#undef TREND_STRAT_ENABLE
 
 #ifdef TREND_STRAT_ENABLE
 class TrendStrategy : public virtual HistoryStrategy
@@ -61,7 +62,7 @@ class MultiStrategy : public virtual HistoryStrategy
         bool bHandShown;
         float64 prevMoney;
         void initM(); //Load file if available
-		void initM(uint32 restoreHandnum); //Load file if available
+	void initM(uint32 restoreHandnum); //Load file if available
     public:
 	
     int8 bGamble;
