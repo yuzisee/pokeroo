@@ -39,14 +39,6 @@
 /// 2. ImproveGainStrategy (This is Norm/Trap/Ace using empirical data)
 /// 3. DeterredGainStrategy (DangerBot: focus more on hybridMagnified to make decisions)
 
-/// *RANK variants replace Geom<->Linear(NoRisk) AutoScaling with a Geom ONLY.
-
-const bool CorePositionalStrategy::lkupLogMean[BGAMBLE_MAX] = {false,true,false,false,true,false,true,true,false ,false,true,false,false,true,true,false};
-const bool CorePositionalStrategy::lkupLogRanking[BGAMBLE_MAX] = {true,false,false,true,false,true,false,true,false ,true,false,false,true,false,true,false};
-const bool CorePositionalStrategy::lkupLogWorse[BGAMBLE_MAX] = {false,false,true,false,false,false,true,false,false ,false,false,true,false,false,false,false};
-const bool CorePositionalStrategy::lkupLogHybrid[BGAMBLE_MAX] = {false,false,false,false,false,false,false,true,true ,false,false,false,false,false,true,true};
-
-// &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeomPC, &meanGeomPC, &hybridGeom
 
 PositionalStrategy::~PositionalStrategy()
 {
@@ -472,7 +464,7 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 oppInsuranceBigBet = (improveMod>0)?(improveMod/2):0;
 
 
-    const float64 awayFromDrawingHands = 1.0 / (ViewTable().GetNumberInHand() - 1);
+    const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHand() - 1);
     StatResult statversus = (statrelation * (awayFromDrawingHands)) + (statranking * (1.0-awayFromDrawingHands));
     statversus.genPCT();
 
@@ -850,7 +842,7 @@ float64 DeterredGainStrategy::MakeBet()
 	if( maxShowdown <= 0 ) return 0;
 
 
-    const float64 awayFromDrawingHands = 1.0 / (ViewTable().GetNumberInHand() - 1);
+    const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHand() - 1);
     StatResult statversus = (statrelation * (awayFromDrawingHands)) + (statranking * (1.0-awayFromDrawingHands));
     statversus.genPCT();
 
@@ -1047,149 +1039,3 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
 
 
-float64 CorePositionalStrategy::MakeBet()
-{
-    setupPosition();
-
-
-    ///VARIABLE: the slider can move due to avgDev too, maybe....
-
-    CallCumulationD &choicecumu = callcumu;
-    CallCumulationD &raisecumu = foldcumu;
-
-    //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, timing[DT]/2 );
-    //SlidingPairCallCumulationD choicecumu( &callcumu, &foldcumu, detailPct.avgDev*2 );
-
-
-#ifdef ANTI_PRESSURE_FOLDGAIN
-#define HANDRANK_MACRO  statranking.pct,
-#endif
-    ExpectedCallD tablestate(myPositionIndex, &(ViewTable()),HANDRANK_MACRO statmean.pct);
-    ExactCallBluffD myExpectedCall(&tablestate, &choicecumu, &raisecumu);//foldcumu);
-    ExactCallBluffD myLimitCall(&tablestate, &choicecumu, &raisecumu);//foldcumu);
-
-#ifdef ANTI_PRESSURE_FOLDGAIN
-#undef HANDRANK_MACRO
-#endif
-    float64 raiseBattle = ViewTable().GetChipDenom();
-    if( betToCall > raiseBattle )
-    {
-        raiseBattle = betToCall;
-    }
-
-#ifdef ANTI_PRESSURE_FOLDGAIN
-	ExactCallD myVSCall(&tablestate, &callcumu);
-
-#else
-	ExactCallD myVSCall(myPositionIndex, &(ViewTable()), &callcumu);
-#endif
-    float64 expectedVS = ( myVSCall.exf(raiseBattle) - ViewTable().GetPotSize() + ViewTable().GetUnbetBlindsTotal() + ViewTable().GetRoundBetsTotal() ) /raiseBattle;
-    if( expectedVS <= 0 ) //You have no money
-    {
-        expectedVS = ( tablestate.betFraction(ViewTable().GetChipDenom()) ) ;
-    }
-
-    myLimitCall.callingPlayers(  expectedVS  );
-
-
-
-    GainModel rankGeom(statversus,myExpectedCall);
-    GainModel hybridGeom(hybridMagnified,myExpectedCall);
-    GainModelNoRisk hybridAlgb(hybridMagnified,myExpectedCall);
-    //GainModelNoRisk choicegain_rnr(statversus,myExpectedCall);
-
-
-    GainModel meanGeom(statmean,myExpectedCall);
-
-
-    GainModelNoRisk worstAlgb(statworse,myLimitCall);
-    GainModelNoRisk rankAlgb(statversus,myExpectedCall);
-    GainModelNoRisk meanAlgb(statmean,myExpectedCall);
-
-
-	StateModel<GainModel,GainModel> rankGeomBluff(myExpectedCall,rankGeom,rankGeom);
-	StateModel<GainModel,GainModel> meanGeomBluff(myExpectedCall,meanGeom,meanGeom);
-    StateModel<GainModelNoRisk,GainModelNoRisk> worstAlgbBluff(myLimitCall,worstAlgb,worstAlgb);
-    StateModel<GainModelNoRisk,GainModelNoRisk> rankAlgbBluff(myExpectedCall,rankAlgb,rankAlgb);
-    StateModel<GainModelNoRisk,GainModelNoRisk> meanAlgbBluff(myExpectedCall,meanAlgb,meanAlgb);
-    StateModel<GainModel,GainModel> hybridGeomBluff(myExpectedCall,hybridGeom,hybridGeom);
-
-    #ifdef DEBUGASSERT
-        if( bGamble >= BGAMBLE_MAX )
-        {
-                std::cout << "Incorrect bGAMBLE" << endl;
-                exit(1);
-        }
-    #endif
-
-
-    HoldemFunctionModel* (lookup[BGAMBLE_MAX]) = { &rankGeom, &meanGeom, &worstAlgb, &rankAlgb, &meanAlgb, &rankGeom, &meanGeom, &hybridGeom, &hybridAlgb
-		,&rankGeomBluff ,&meanGeomBluff,&worstAlgbBluff,&rankAlgbBluff,&meanAlgbBluff,&hybridGeomBluff	};
-
-
-    #ifdef LOGPOSITION
-        const float64 improveMod = detailPCT.improve * 2;
-        const float64 improvePure = (improveMod+1)/2;
-
-        logFile << "raw improval " << improvePure << endl;
-        logFile << "doublePlay(" << expectedVS << ")" << endl;
-    #endif
-
-    #ifdef LOGPOSITION
-        if( bGamble == 0 || bGamble == 1 || bGamble == 5 || bGamble == 6 )
-        {
-            const int8 otherGamble = (bGamble + 5) % 10;
-            logFile << "Other {" << (int)(otherGamble) << "}" << endl;
-            solveGainModel(lookup[otherGamble], &callcumu);
-            logFile << "Main {" << (int)(bGamble) << "}" << endl;
-        }
-
-    #endif
-    const float64 bestBet = solveGainModel(lookup[bGamble], &callcumu);
-    const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
-
-	#ifdef LOGPOSITION
-	if( bGamble == 9)
-	{
-
-#ifdef VERBOSE_STATEMODEL_INTERFACE
-
-		rankGeomBluff.f(displaybet); //since choicemodel is ap_aggressive
-		logFile << " AgainstCall("<< displaybet <<")=" << rankGeomBluff.gainNormal << endl;
-		logFile << "AgainstRaise("<< displaybet <<")=" << rankGeomBluff.gainRaised << endl;
-		logFile << "        Push("<< displaybet <<")=" << rankGeomBluff.gainWithFold << endl;
-
-#endif
-	}
-
-		if( bGamble >= 9 && bGamble <= 15 )
-		{
-//			int32 maxcallStep = -1;
-		    int32 raiseStep = 0;
-            float64 rAmount =  myExpectedCall.RaiseAmount(displaybet,raiseStep);
-            while( rAmount < maxShowdown )
-            {
-                rAmount =  myExpectedCall.RaiseAmount(displaybet,raiseStep);
-
-				//if( oppRaisedFoldGain < lookup[bGamble]->g_raised(betToCall,rAmount) ){ logFile << " [*] "; maxcallStep = raiseStep+1; }
-
-                logFile << "OppRAISEChance% ... ";
-                //logFile << myExpectedCall.pRaise(bestBet,raiseStep);
-                logFile << " @ $" << rAmount;
-                logFile << "\tBetWouldFold%" << myExpectedCall.pWin(rAmount) << endl;
-                ++raiseStep;
-            }
-            logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
-			logFile << "OppFoldChance% ... " << myExpectedCall.pWin(displaybet) << "   d\\" << myExpectedCall.pWinD(displaybet) << endl;
-
-			if( myExpectedCall.pWin(displaybet) > 0 )
-			{
-				logFile << "confirm " << lookup[bGamble]->f(displaybet) << endl;
-			}
-		}
-	#endif
-
-    return bestBet;
-
-
-}

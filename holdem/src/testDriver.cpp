@@ -515,7 +515,8 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
     }else
     {
-        smallBlindChoice=AUTO_CHIP_COUNT/200;
+//        smallBlindChoice=AUTO_CHIP_COUNT/200;
+        smallBlindChoice=AUTO_CHIP_COUNT/30;
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
 	StackPlayerBlinds bg(AUTO_CHIP_COUNT, 9, b.BigBlind() / AUTO_CHIP_COUNT  / 2);
@@ -535,23 +536,8 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     MultiThresholdStrategy pushAll(4,4);
 	MultiThresholdStrategy pushFold(0,2);
 	MultiThresholdStrategy tightPushFold(1,0);
-	/*
-	//ConsoleStepStrategy watchPlay;
-	CorePositionalStrategy RankGeom(0);
-	CorePositionalStrategy MeanGeom(1);
-	CorePositionalStrategy WorseAlgb(2);
-	CorePositionalStrategy RankAlgb(3);
-	CorePositionalStrategy MeanAlgb(4);
-	CorePositionalStrategy PotCommittalRankGeom(5);
-	CorePositionalStrategy PotCommittalMeanGeom(6);
-	CorePositionalStrategy HybridGeom(7);
-	CorePositionalStrategy HybridAlgb(8);
-	CorePositionalStrategy RankGeomBluff(9);
-	CorePositionalStrategy MeanGeomBluff(10);
-	CorePositionalStrategy WorseAlgbBluff(11);
-	CorePositionalStrategy HybridGeomBluff(14);
-*/
-    DeterredGainStrategy DeterredRank(2);
+	
+	DeterredGainStrategy DeterredRank(2);
 
 
 
@@ -617,8 +603,8 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }
 
 	const uint32 NUM_OPPONENTS = 8;
-    const uint32 rand765 = 1 + (blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer);
-    const uint32 rand8432 = 1 + labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer);
+    const uint32 rand765 = 1 + ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer));
+    const uint32 rand8432 = 1 + (labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer));
     const uint32 rand8 = rand8432%8;
     const uint32 rand432 = rand8432/8;
     const uint32 randSeed = rand8 + (rand765%(7*6*5))*8 + (rand432%(4*3*2))*(8*7*6*5);

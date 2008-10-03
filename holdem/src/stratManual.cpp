@@ -29,7 +29,7 @@
 
 #include "stratManual.h"
 #include <iostream>
-#include <string>
+#include <string.h>
 
 #ifdef INFOASSIST
 #include "functionmodel.h"

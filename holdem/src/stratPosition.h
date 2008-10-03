@@ -28,8 +28,6 @@
 #include "debug_flags.h"
 
 
-//BGAMBLE_MAX is for more convenient printf
-#define BGAMBLE_MAX 16
 
 ///RULE OF THUMB?
 ///It looks like increasing winPCT loosens up the player
@@ -114,45 +112,6 @@ class DeterredGainStrategy : public PositionalStrategy
     virtual float64 MakeBet();
 }
 ;
-
-
-
-
-class CorePositionalStrategy : public PositionalStrategy
-{
-    private:
-    const static bool lkupLogMean[BGAMBLE_MAX];
-    const static bool lkupLogRanking[BGAMBLE_MAX];
-    const static bool lkupLogWorse[BGAMBLE_MAX];
-    const static bool lkupLogHybrid[BGAMBLE_MAX];
-    protected:
-    int8 bGamble;
-    public:
-    CorePositionalStrategy(int8 riskymode) : PositionalStrategy(lkupLogMean[riskymode],lkupLogRanking[riskymode],lkupLogWorse[riskymode],lkupLogHybrid[riskymode]), bGamble(riskymode) {}
-
-    virtual float64 MakeBet();
-}
-;
-/*
-0   statranking, Geom <-- needs to prevent pot committal: {Use this when high chance to improve}
-1   statmean, Geom <-- needs to prevent pot committal: {Use this when high chance to improve}
-2   statworst, Algb <-- needs to play more hands
-3   statranking, Algb <-- Callstation-ish, needs to play tighter
-4   statmean, Algb <-- Callstation-ish, needs to play tighter
-5   statranking, Geom, potCommit <-- PotCommit doesn't help when all in, and you need 100% anyways
-6   statmean, Geom, potCommit
-7   hybridMagnified, Geom
-8   hybridMagnified, Algb
-9   statranking, GeomBluff
-10  statmean, GeomBluff
-11  statworst, AlgbBluff
-12  statranking, AlgbBluff
-13  statmean, AlgbBluff
-14  hybridMagnified, GeomBluff
-//15  hybridMagnified, AlgbBluff
-
-
-*/
 
 
 
