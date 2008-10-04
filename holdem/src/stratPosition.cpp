@@ -129,7 +129,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     //else{
 
     //}
-    ViewTable().CachedQueryOffense(callcumu,withCommunity);
+    ViewTable().CachedQueryOffense(callcumu,onlyCommunity, withCommunity);
     //StatsManager::QueryOffense(callcumu,withCommunity,onlyCommunity,cardsInCommunity );
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
     statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);

@@ -323,7 +323,7 @@ int8 HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStr
 }
 
 #ifdef GLOBAL_AICACHE_SPEEDUP
-void HoldemArena::CachedQueryOffense(CallCumulation& q, const CommunityPlus& withCommunity) const
+void HoldemArena::CachedQueryOffense(CallCumulation& q, const CommunityPlus& community, const CommunityPlus& withCommunity) const
 {
     StatsManager::QueryOffense(q,withCommunity,community,cardsInCommunity,&communityBuffer);
 }

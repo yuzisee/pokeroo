@@ -144,7 +144,7 @@ Legend:
 	return moneyWon;
 }
 
-void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winners)
+void HoldemArena::compareAllHands(const CommunityPlus & community, const int8 called, vector<ShowdownRep>& winners)
 {
     HoldemArenaShowdown w(this,called,winners);
 
@@ -209,7 +209,7 @@ void HoldemArena::compareAllHands(const int8 called, vector<ShowdownRep>& winner
 }
 
 
-void HoldemArena::PlayShowdown(const int8 called)
+void HoldemArena::PlayShowdown(const CommunityPlus & community, const int8 called)
 {
 	if( bVerbose )
 	{
@@ -229,7 +229,7 @@ void HoldemArena::PlayShowdown(const int8 called)
 	vector<ShowdownRep> winners;
 	///------------------------------------
 	///  GENERATE A LIST OF WINNERS
-	compareAllHands(called, winners);
+	compareAllHands(community, called, winners);
 	///------------------------------------
 
 
@@ -339,7 +339,7 @@ void HoldemArena::PlayShowdown(const int8 called)
 	delete [] moneyWon;
 }
 
-void HoldemArena::prepareRound(const int8 comSize)
+void HoldemArena::prepareRound(const CommunityPlus& community, const int8 comSize)
 {
     cardsInCommunity = comSize;
 
@@ -501,9 +501,9 @@ void HoldemArena::resolveActions(Player& withP)
 ///			Finally, the round pot and round bets are moved into hand bets/pot
 
 
-int8 HoldemArena::PlayRound(const int8 comSize)
+int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize)
 {
-    HoldemArenaBetting b(this, comSize);
+    HoldemArenaBetting b( this, community, comSize );
 
 
     while(b.bBetState == 'b')

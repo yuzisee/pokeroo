@@ -156,9 +156,7 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 
 void HoldemArenaBetting::startBettingRound()
 {
-    ///----------
-    prepareRound(comSize);
-    ///----------
+
 
 
     forcedBetSum = 0;

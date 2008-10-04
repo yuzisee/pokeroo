@@ -77,7 +77,7 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
         winMean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 
 
-        ViewTable().CachedQueryOffense(possibleHands,withCommunity);
+        ViewTable().CachedQueryOffense(possibleHands,onlyCommunity,withCommunity);
 
         rarity = possibleHands.Pr_haveWinPCT_orbetter(winMean.pct);
 

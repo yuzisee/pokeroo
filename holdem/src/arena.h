@@ -251,7 +251,6 @@ protected:
 		float64 randRem;
 
         int8 cardsInCommunity;
-		CommunityPlus community;
 	uint8 bettingRoundsRemaining;
 		const bool bVerbose;
 		const bool bSpectate;
@@ -290,18 +289,25 @@ protected:
 		void broadcastHand(const Hand&,const int8 broadcaster);
 		void broadcastCurrentMove(const int8& playerID, const float64& theBet, const float64 theIncrBet
                                 , const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn);
-			void defineSidePotsFor(Player&, const int8);
-			void resolveActions(Player&);
-		void PlayShowdown(const int8);
-			void compareAllHands(const int8, vector<ShowdownRep>& );
-			double* organizeWinnings(int8&, vector<ShowdownRep>&, vector<ShowdownRep>&);
+		void defineSidePotsFor(Player&, const int8);
+		void resolveActions(Player&);
+		void PlayShowdown(const CommunityPlus &,const int8);
+		void compareAllHands(const CommunityPlus & , const int8, vector<ShowdownRep>& );
+		double* organizeWinnings(int8&, vector<ShowdownRep>&, vector<ShowdownRep>&);
 
         DeckLocation ExternalQueryCard(std::istream& s);
+		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &);
+		DeckLocation RequestCard(SerializeRandomDeck *);
 
 
-		void prepareRound(const int8);
-		int8 PlayRound(const int8);
-			//returns the first person to reveal cards (-1 if all fold)
+		void prepareRound(const CommunityPlus &, const int8);
+		int8 PlayRound(const CommunityPlus &, const int8);
+		int8 PlayRound_BeginHand();
+		int8 PlayRound_Flop(const CommunityPlus & flop);
+		int8 PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn);
+		int8 PlayRound_River(const CommunityPlus & flop, const DeckLocation & turn, const DeckLocation & river);
+		//returns the first person to reveal cards (-1 if all fold)
+
 
         virtual int8 AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat, bool externalDealer);
 	public:
@@ -315,7 +321,7 @@ protected:
     #endif
 
     #ifdef GLOBAL_AICACHE_SPEEDUP
-        void CachedQueryOffense(CallCumulation& q, const CommunityPlus& withCommunity) const;
+        void CachedQueryOffense(CallCumulation& q, const CommunityPlus& community, const CommunityPlus& withCommunity) const;
     #endif
 
 		void incrIndex(int8&) const;
@@ -352,6 +358,7 @@ protected:
 		virtual Player * FinalizeReportWinner();
 
 		void DealHands();
+		void PlayGame();
                 void RefreshPlayers();
 
 		virtual int8 AddHuman(const char* const id, const float64 money, PlayerStrategy*);
@@ -417,7 +424,6 @@ class HoldemArenaEventBase
     const vector<Player*> &p;
     const bool & bVerbose;
     float64 & randRem;
-    const CommunityPlus & community;
 
 
     void incrIndex(){ myTable->incrIndex(); }
@@ -441,7 +447,7 @@ class HoldemArenaEventBase
                                 {
                                     myTable->broadcastCurrentMove(playerID,theBet,theIncrBet,toCall,bBlind,isBlindCheck,isAllIn);
                                 }
-    void prepareRound(const int8 comSize){ myTable->prepareRound(comSize); };
+    void prepareRound(const CommunityPlus & community, const int8 comSize){ myTable->prepareRound(community, comSize); };
 
 
     int8 GetTotalPlayers() const { return myTable->GetTotalPlayers(); }
@@ -457,7 +463,6 @@ class HoldemArenaEventBase
     , curIndex(table->curIndex), curDealer(table->curDealer)
     , myPot(table->myPot), myFoldedPot(table->myFoldedPot), prevRoundFoldedPot(table->prevRoundFoldedPot), myBetSum(table->myBetSum), p(table->p)
     , bVerbose(table->bVerbose), randRem(table->randRem)
-    , community(table->community)
     {
 
     }
@@ -484,11 +489,12 @@ class HoldemArenaBetting : public HoldemArenaEventBase
 
 
     public:
-    HoldemArenaBetting(HoldemArena * table, int8 communitySize)
+    HoldemArenaBetting(HoldemArena * table, const CommunityPlus & community, int8 communitySize)
      : HoldemArenaEventBase(table), comSize(communitySize)
 
 	,  playerCalled(-1), bBetState('b')
     {
+    	prepareRound(community, comSize);
         startBettingRound();
     }
 
