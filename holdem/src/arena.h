@@ -353,7 +353,6 @@ protected:
 
 		void DealHands();
                 void RefreshPlayers();
-                void PlayGame();
 
 		virtual int8 AddHuman(const char* const id, const float64 money, PlayerStrategy*);
 		virtual int8 AddBot(const char* const id, const float64 money, PlayerStrategy* newStrat);
