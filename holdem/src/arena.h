@@ -32,7 +32,6 @@
 
 #define DEBUGSAVEGAME "savegame"
 #define DEBUGSAVEGAME_ALL "saves"
-//#define DEBUGSAVE_EXTRATOKEN 32
 #define DEBUGHOLECARDS "holecards.txt"
 #endif
 
@@ -291,8 +290,6 @@ protected:
 		void broadcastHand(const Hand&,const int8 broadcaster);
 		void broadcastCurrentMove(const int8& playerID, const float64& theBet, const float64 theIncrBet
                                 , const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn);
-            void RefreshPlayers();
-        void PlayGame();
 			void defineSidePotsFor(Player&, const int8);
 			void resolveActions(Player&);
 		void PlayShowdown(const int8);
@@ -301,7 +298,6 @@ protected:
 
         DeckLocation ExternalQueryCard(std::istream& s);
 
-		void DealHands();
 
 		void prepareRound(const int8);
 		int8 PlayRound(const int8);
@@ -318,28 +314,16 @@ protected:
         handnum_t handnum;
     #endif
 
-#ifdef DEBUGSAVE_EXTRATOKEN
-        char * EXTRATOKEN;
-#endif
     #ifdef GLOBAL_AICACHE_SPEEDUP
         void CachedQueryOffense(CallCumulation& q, const CommunityPlus& withCommunity) const;
     #endif
 
 		void incrIndex(int8&) const;
-		Player* PlayTable();
 
         static void ToString(const HoldemAction& e, std::ostream& o);
 	static void FileNumberString(handnum_t value, char * str)
 	{
-//#if defined(itoa)
-//		itoa(value,str,10);
-//#elif defined(_itoa)
-//		_itoa(value,str,10);
-//#elif defined(sprintf)
 		sprintf(str,"%lu",value);
-//#else
-//	#error "FileNumberString not implemented"
-//#endif
 	}
 
 		static const float64 FOLDED;
@@ -361,15 +345,17 @@ protected:
 		    smallestChip = b->SmallBlind(); ///This INITIAL small blind should be assumed to be one chip.
         }
 
-        virtual void free_members();
+        	virtual void free_members();
 		virtual ~HoldemArena();
 
+		virtual bool BeginInitialState();
+		virtual Player * FinalizeReportWinner();
 
-        //virtual int8 AddHuman(const char* const id, UserConsoleStrategy*);
-		//virtual int8 AddHuman(const char* const id, const float64 money, UserConsoleStrategy*);
-		//virtual int8 AddHuman(const char* const id, PlayerStrategy*);
+		void DealHands();
+                void RefreshPlayers();
+                void PlayGame();
+
 		virtual int8 AddHuman(const char* const id, const float64 money, PlayerStrategy*);
-		//virtual int8 AddBot(const char* const, PlayerStrategy*);
 		virtual int8 AddBot(const char* const id, const float64 money, PlayerStrategy* newStrat);
 
 		virtual int8 NumberAtRound() const;

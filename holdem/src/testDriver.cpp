@@ -50,389 +50,43 @@ using std::cout;
 using std::endl;
 using std::flush;
 
-#define LARGESTPROCNUM 675
-
-//FIRST_DEAL = 6 expects 46
-//FIRST_DEAL = 5 expects 1081
-//FIRST_DEAL = 4 expects 17296
-//Linux DEBUG_SEED = 4 and FIRST_DEAL = 4 yields 17296 (deals 18472)
-
-const int FIRST_DEAL = 5;
 
 char * myPlayerName = 0;
 
-void genW(CommunityPlus& h1, CommunityPlus& h2)
+
+
+
+
+
+
+
+Player* PlayGameLoop(HoldemArena & my)
 {
+	my.BeginInitialState();
 
-#ifdef DEBUGSITUATION
-	cout << "Cards available to me" << endl;
-	h1.DisplayHand(cout);
-	cout << endl;
-#endif
-
-#ifdef DEBUGSITUATION
-	cout << "Cards in community" << endl;
-	h2.DisplayHand(cout);
-	cout << endl;
-
-	cout << endl;
-#endif
-
-    cout << "position" << endl;
-    NamedTriviaDeck td;
-    td.OmitCards(h1);
-    td.DiffHand(h2);
-    td.sortSuits();
-    cout << td.NamePockets() << endl;
-
-    //WinStats ds(h1, h2,FIRST_DEAL-2);
-    StatResult myWins;
-    DistrShape myDistrPCT(0);
-    StatsManager::Query( &myWins,&myDistrPCT,0,h1, h2,0);
-
-cout.precision(10);
-
-    cout << endl << "AVG "  << myWins.loss << " l + "
-            << myWins.splits << " s + " << myWins.wins << " w = " <<
-            myWins.loss+myWins.splits+myWins.wins
-            << "\tx;"<< myWins.repeated   <<endl;
-
-    cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;
-    cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
-    cout << endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << endl;
-    cout << "Worst:" << myDistrPCT.worst *100 << "%" << endl;
-    cout << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << endl;
-    cout << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << endl;
-    cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
-    cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
-
-    cout << endl;
-
-cout << "Finish." << endl;
-}
-
-
-void genW(CommunityPlus& h1)
-{
-    CommunityPlus h2;
-    genW(h1,h2);
-}
-
-void testW()
-{
-
-    	RandomDeck rd;
-    	rd.ShuffleDeck();
-    CommunityPlus h1, h2;
-    	short cardcount=2;
-    while(cardcount > 0)
+	while(my.NumberAtTable() > 1)
 	{
 
-		if (rd.DealCard(h1) > 0)
-		{
-			if (cardcount > 2)	h2.AddToHand(rd.dealt);
-			--cardcount;
-		}
-		printf("%d %lu\n",rd.dealt.Suit,rd.dealt.Value);
-
-
-    }
-    genW(h1,h2);
-}
-
-
-
-void genC(CommunityPlus& h1, CommunityPlus& h2)
-{
-
-#ifdef DEBUGSITUATION
-	cout << "Cards available to me" << endl;
-	h1.DisplayHand(cout);
-	cout << endl;
+		my.DealHands();
+		my.PlayGame();
+#ifdef DEBUG_SINGLE_HAND
+		exit(0);
 #endif
+		my.RefreshPlayers(); ///New Hand
 
-#ifdef DEBUGSITUATION
-	cout << "Cards in community" << endl;
-	h2.DisplayHand(cout);
-	cout << endl;
-
-	cout << endl;
-#endif
-
-    cout << "position" << endl;
-    NamedTriviaDeck td;
-    td.OmitCards(h1);
-    td.DiffHand(h2);
-    td.sortSuits();
-    cout << td.NamePockets() << endl;
-
-    //WinStats ds(h1, h2,FIRST_DEAL-2);
-    CallCumulationD calc;
-    //StatsManager::QueryOffense( calc,h1, h2,0);
-    StatsManager::QueryDefense( calc,h1, h2,0);
-
-
-    cout << endl << "=============Reduced=============" << endl;
-	cout.precision(16);
-	size_t vectorLast = calc.cumulation.size();
-	for(size_t i=0;i<vectorLast;i++)
-	{
-		cout << endl << "{" << i << "}" << calc.cumulation[i].loss << " l +\t"
-				<< calc.cumulation[i].splits << " s +\t" << calc.cumulation[i].wins << " w =\t" <<
-				calc.cumulation[i].pct
-				<< " pct\tx;"<< calc.cumulation[i].repeated <<flush;
 	}
 
-/*
-	cout << endl << "Confirm that -0.5:1 odds receives " << calc.pctWillCall(2) <<  endl;
-	cout << endl << "Confirm that .0101:1 odds receives " << calc.pctWillCall(.99) << endl;
-	cout << endl << "Confirm that .333:1 odds receives " << calc.pctWillCall(.75) <<  endl;
-	cout << endl << "Confirm that 1:1 odds receives " << calc.pctWillCall(.5) << endl;
-	cout << endl << "Confirm that heads up 1.333x pot odds receives " << calc.pctWillCall(.3)  << endl;
-	cout << endl << "Confirm that heads up 98x pot odds (ie. I bet 1/98th of the pot) receives " << calc.pctWillCall(.01) << endl;
-	cout << endl << "Confirm that inf:1 odds receives " << calc.pctWillCall(0) <<  endl;
-	cout << endl << "Confirm that -2:1 odds receives " << calc.pctWillCall(-1) << endl;
-
-	cout << endl << "Confirm that -0.5:1 odds slope " << calc.pctWillCallD(2) <<  endl;
-	cout << endl << "Confirm that .0101:1 odds slope " << calc.pctWillCallD(.99) << endl;
-	cout << endl << "Confirm that .333:1 odds slope " << calc.pctWillCallD(.75) <<  endl;
-	cout << endl << "Confirm that 1:1 odds slope " << calc.pctWillCallD(.5) << endl;
-	cout << endl << "Confirm that heads up 1.333x pot odds slope " << calc.pctWillCallD(.3)  << endl;
-	cout << endl << "Confirm that heads up 98x pot odds (ie. I bet 1/98th of the pot) slope " << calc.pctWillCallD(.01) << endl;
-	cout << endl << "Confirm that inf:1 odds slope " << calc.pctWillCallD(0) <<  endl;
-	cout << endl << "Confirm that -2:1 odds slope " << calc.pctWillCallD(-1) << endl;
-
-
-	cout << endl << "Confirm that -0.5:1 odds receives " << calc.pctWillCallDEBUG(2,.5) <<  endl;
-	cout << endl << "Confirm that .0101:1 odds receives " << calc.pctWillCallDEBUG(.99,.5) << endl;
-	cout << endl << "Confirm that .333:1 odds receives " << calc.pctWillCallDEBUG(.75,.5) <<  endl;
-	cout << endl << "Confirm that 1:1 odds receives " << calc.pctWillCallDEBUG(.5,.5) << endl;
-	cout << endl << "Confirm that heads up 1.333x pot odds receives " << calc.pctWillCallDEBUG(.3,.5)  << endl;
-	cout << endl << "Confirm that heads up 98x pot odds (ie. I bet 1/98th of the pot) receives " << calc.pctWillCallDEBUG(.01,.5) << endl;
-	cout << endl << "Confirm that inf:1 odds receives " << calc.pctWillCallDEBUG(0,.5) <<  endl;
-	cout << endl << "Confirm that -2:1 odds receives " << calc.pctWillCallDEBUG(-1,.5) << endl;
-*/
-
-cout << "Finish." << endl;
-}
-void genC(CommunityPlus& h1)
-{
-    CommunityPlus h2;
-    genC(h1,h2);
-}
-
-void testC()
-{
-
-    RandomDeck rd;
-    rd.ShuffleDeck();
-    CommunityPlus h1, h2;
-    short cardcount=2;
-    while(cardcount > 0){
-		if (rd.DealCard(h1) > 0){
-			if (cardcount > 2)	h2.AddToHand(rd.dealt);
-			--cardcount;
-		}
-		printf("%d %lu\n",rd.dealt.Suit,rd.dealt.Value);
-    }
-    genC(h1,h2);
-}
-
-
-
-void genCMD(uint16 procnum)
-{
-
-        uint16 handnum = procnum % 338;///procnum is 0 .. 675 , handnum is 0 .. 337
-	    procnum = procnum/338;///0 or 1
-
-	    uint16 card1 = handnum / 26; ///0 to 12
-	    uint16 card2 = handnum % 26; ///0 to 25
-
-
-	    ///accomodate the suit-major ordering of HoldemUtil
-	    card1 *= 4;
-	    card2 *= 2;
-
-        if( card1 != card2 )
-        {
-            cout << "Cache generate: " << handnum << " " << procnum << endl;
-
-            DeckLocation hands[2];
-
-            hands[0].Suit = 0;
-            hands[1].Suit = HoldemUtil::CardSuit( card2 )/2;
-
-            hands[0].Rank = HoldemUtil::CardRank( card1 )+1;
-            hands[1].Rank = HoldemUtil::CardRank( card2 )+1;
-
-            if( hands[0].Rank <= hands[1].Rank )
-            {
-                hands[0].Value = HoldemUtil::CARDORDER[hands[0].Rank];
-                hands[1].Value = HoldemUtil::CARDORDER[hands[1].Rank];
-
-                cout << (int)(hands[0].Suit) << "\t" << (int)(hands[0].Rank) << "\t" << hands[0].Value << endl;
-                cout << (int)(hands[1].Suit) << "\t" << (int)(hands[1].Rank) << "\t" << hands[1].Value << endl;
-
-
-                CommunityPlus h1;
-                h1.AddToHand(hands[0]);
-                h1.AddToHand(hands[1]);
-
-
-
-                if( procnum == 0 )
-                {
-                    h1.DisplayHand(cout);
-                    genC(h1);
-                    h1.DisplayHand(cout);
-                    return;
-                }
-
-                if( procnum == 1 )
-                {
-                    h1.DisplayHandBig(cout);
-                    genW(h1);
-                    h1.DisplayHandBig(cout);
-                    return;
-                }
-            }
-        }
+	return my.FinalizeReportWinner();
 
 }
 
-void goCMD(char* str, int lastGen)
-{
-    int genNum = atoi(str);
-    while(genNum <= lastGen)
-    {
-        genCMD(genNum);
-        ++genNum;
-    }
-}
-
-
-
-void testAnything()
-{
-
-    DeckLocation acecard;
-
-/*
-
-
-    CommunityPlus smokes, holysmokes;
-    acecard.SetByIndex(HoldemUtil::ParseCard('2','s'));
-    smokes.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('3','s'));
-    smokes.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('4','s'));
-    smokes.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('3','h'));
-    smokes.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('3','c'));
-    smokes.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('2','h'));
-    smokes.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('2','c'));
-    smokes.AddToHand(acecard);
-
-    smokes.evaluateStrength();
-    smokes.DisplayHandBig(std::cout);
-
-    exit(1);
-//2s 3s 4s
-//2s 3s 4s : 3c3h
-//2s 3s 4s 2h 2c : 3c3h
-
-//  2s 2h 2c 3s 4s : 3c3h
-
-
-*/
-/*    genCMD(200); */
-
-    CommunityPlus withCommunity;
-    CommunityPlus onlyCommunity;
-//Ks Kd
-    acecard.SetByIndex(HoldemUtil::ParseCard('7','s'));
-    withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('J','h'));
-    withCommunity.AddToHand(acecard);
-
-//const int num_in_community = 0;
-
-const int num_in_community = 3;
-    ////4h 6h Kc
-
-    acecard.SetByIndex(HoldemUtil::ParseCard('2','d'));
-    onlyCommunity.AddToHand(acecard);
-    withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('6','c'));
-    onlyCommunity.AddToHand(acecard);
-    withCommunity.AddToHand(acecard);
-    acecard.SetByIndex(HoldemUtil::ParseCard('9','h'));
-    onlyCommunity.AddToHand(acecard);
-    withCommunity.AddToHand(acecard);
-
-
-    CallCumulationD calc;
-    StatsManager::QueryOffense(calc,withCommunity,onlyCommunity,num_in_community);
-/*
-    StatsManager::QueryDefense( calc,withCommunity, onlyCommunity,num_in_community);
-
-
-    cout << endl << "=============Reduced=============" << endl;
-	cout.precision(10);
-	size_t vectorLast = calc.cumulation.size();
-	StatResult myWins;
-	for(size_t i=0;i<vectorLast;i++)
-	{
-	    float64 nn = (calc.cumulation[i].repeated - (i ? calc.cumulation[i-1].repeated : 0));
-	    myWins = myWins + (calc.cumulation[i] * nn);
-		cout << endl << "{" << i << "}" << calc.cumulation[i].loss * nn * 2097572400.0 << " l +\t"
-				<< calc.cumulation[i].splits * nn * 2097572400.0 << " s +\t" << calc.cumulation[i].wins * nn * 2097572400.0 << " w =\t" <<
-				calc.cumulation[i].pct
-				<< " pct\tx;"<< nn * 2097572400.0 <<flush;
-	}
-    myWins.repeated = 0;
-*/
-/*
-    StatResult myWins;
-    DistrShape myDistrPCT(0);
-    StatsManager::Query( &myWins,&myDistrPCT,0,withCommunity, onlyCommunity,num_in_community);
 
 
 
 
 
-    cout << "myAvg.genPCT " << myWins.pct << "!"  << endl;
-    cout << "(Mean) " << myDistrPCT.mean * 100 << "%"  << endl;
-    cout << endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << endl;
-    cout << "Worst:" << myDistrPCT.worst *100 << "%" << endl;
-    cout << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << endl;
-    cout << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << endl;
-    cout << "Skew:" << myDistrPCT.skew*100 << "%" << endl;
-    cout << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << endl;
-
-    cout << endl;
-
-cout << "Finish." << endl;
-*/
-/*
-cout << endl << "AVG "  << myWins.loss << " l + "
-            << myWins.splits << " s + " << myWins.wins << " w = " <<
-            myWins.loss+myWins.splits+myWins.wins
-            << "\tx;"<< myWins.repeated   <<endl;
-*/
-
-    exit(1);
-
-       	    //testNewCallStats();
-	    //testDeal();
 
 
-	    //testC();
-}
 
 std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
@@ -442,9 +96,6 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     bool ext_dealer = false;
     #endif
 
-    #ifdef DEBUGSAVE_EXTRATOKEN
-    char ExtraTokenNameBuffer[DEBUGSAVE_EXTRATOKEN] = "P";
-#endif
     #ifdef AUTOEXTRATOKEN
     char ExtraTokenNameBuffer[32] = "P1";
     #endif
@@ -475,7 +126,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
         bLoadGame = true;
         headsUp = 'P';
-#if defined(DEBUGSAVE_EXTRATOKEN) || defined(AUTOEXTRATOKEN)
+#if defined(AUTOEXTRATOKEN)
         myPlayerName = ExtraTokenNameBuffer;
 #endif
     }
@@ -578,8 +229,6 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     MultiTR.bGamble = 1;
 
 
-    //TournamentStrategy asterisk;
-    //TournamentStrategy gruff(1);
 
     if( headsUp == 'P' )
     {
@@ -589,9 +238,6 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         if( myPlayerName == 0 ){ myTable.AddHuman("P1", startingMoney, &consolePlay); }
         else{
             myTable.AddHuman(myPlayerName, startingMoney, &consolePlay);
-#ifdef DEBUGSAVE_EXTRATOKEN
-            myTable.EXTRATOKEN = myPlayerName;
-#endif
         }
     }else
     {
@@ -650,36 +296,11 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             }//End of for(i...
 
             delete [] opponentorder;
-                //myTable.AddPlayer("NormalBotIV", &MeanGeomBluff); /* riskymode = 10 */
-                //myTable.AddPlayer("NormalBotIV", &RankGeomBluff); /* riskymode = 9 */
+                
             break;
-        /*
-        case 'M':
-            myTable.AddBot("M2", AUTO_CHIP_COUNT,  &RankGeom); // riskymode = 0
-            break;
-        case 'G':
-            myTable.AddBot("G2",AUTO_CHIP_COUNT, &MeanGeom); // riskymode = 1
-            break;
-        */
-        default:
-            //myTable.AddPlayer("RankGeom", &RankGeom); /* riskymode = 0 */
-            //myTable.AddPlayer("MeanGeom", &MeanGeom); /* riskymode = 1 */
-            //myTable.AddPlayer("WorseAlgb", &WorseAlgb); /* riskymode = 2 */
-            //myTable.AddPlayer("RankAlgb", &RankAlgb); /* riskymode = 3 */
-            //myTable.AddPlayer("MeanAlgb", &MeanAlgb); /* riskymode = 4 */
-            //myTable.AddPlayer("RankGeomPC", &PotCommittalRankGeom); /* riskymode = 5 */
-            //myTable.AddPlayer("MeanGeomPC", &PotCommittalMeanGeom); /* riskymode = 6 */
-            //myTable.AddPlayer("HybridGeom", &HybridGeom); /* riskymode = 7 */
-            //myTable.AddPlayer("HybridAlgb", &HybridAlgb); /* riskymode = 8 */
-			//myTable.AddPlayer("RankGeomBluff", &RankGeomBluff); /* riskymode = 9 */
-			//myTable.AddPlayer("MeanGeomBluff", &MeanGeomBluff); /* riskymode = 10 */
-			//myTable.AddPlayer("WorseAlgbBluff", &WorseAlgbBluff); /* riskymode = 11 */
-			//myTable.AddPlayer("HybridGeomBluff", &HybridGeomBluff); /* riskymode = 14 */
 
-            //myTable.AddPlayer("TrapBotII", &DistrScaleP);
-            //myTable.AddPlayer("ComBotII", &FutureFoldP);
-		//myTable.AddPlayer("SpaceBotII", &AutoSetP);
-		//myTable.AddPlayer("TrapIII", &DistrScaleA);
+
+        default:
 
         myTable.AddBot("GearBotV", AUTO_CHIP_COUNT, &MultiTR);
         myTable.AddBot("MultiBotV", AUTO_CHIP_COUNT, &MultiT);
@@ -694,14 +315,6 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
         myTable.AddBot("SpaceV", AUTO_CHIP_COUNT, &DeterredRank);//&MeanGeomBluff);
 
 
-        //myTable.AddPlayer("SpaceIV", &AutoSetA);
-/*
-        myTable.AddPlayer("ComR", &FutureFoldA_R);
-        myTable.AddPlayer("NormR", &XFoldA_R);
-        myTable.AddPlayer("TrapR", &ImproveA_R);
-		myTable.AddPlayer("AceR", &ReallyImproveA_R);
-
-*/
             break;
 
     }
@@ -710,9 +323,6 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
 if( bLoadGame )
 {
-#ifdef DEBUGSAVE_EXTRATOKEN
-    myTable.EXTRATOKEN = ExtraTokenNameBuffer;
-#endif
 	std::istream *saveLoc = myTable.LoadState();
 	if( saveLoc != 0 )
 	{
@@ -727,7 +337,7 @@ if( bLoadGame )
 
 
 
-    Player* iWin = (myTable.PlayTable());
+    Player* iWin = PlayGameLoop(myTable);
 
 #ifdef REGULARINTOLOG
 gameOutput.close();
@@ -811,7 +421,6 @@ int main(int argc, char* argv[])
 #endif
     {
 
-    int maxGo=LARGESTPROCNUM;
     int n=1;
     cout << "Parsing Command Line Options..." << flush;
     while(n<argc)
@@ -828,24 +437,6 @@ int main(int argc, char* argv[])
 					++n;
                     testPlay(atoi(argv[n]));
                     #endif
-                    exit(0);
-                    break;
-                case 'x':
-                    ++n;
-                    maxGo = atoi(argv[n]);
-                    break;
-                case 'e':
-                case 'E':
-                case 'g':
-                case 'G':
-                    cout << "goCMD()" << flush;
-                    ++n;
-                    if( n == argc )
-                    {
-                        cout << "Please specify a number between 0 and " << LARGESTPROCNUM << " inclusive." << endl;
-                        exit(1);
-                    }
-                    goCMD(argv[n],maxGo);
                     exit(0);
                     break;
             }

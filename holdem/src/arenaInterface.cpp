@@ -231,10 +231,6 @@ std::istream * HoldemArena::LoadState()
 					p[i]->myMoney = pMoney;
 				}
             }
-            #ifdef DEBUGSAVE_EXTRATOKEN
-            loadFile.getline(EXTRATOKEN, DEBUGSAVE_EXTRATOKEN);
-            #endif
-
 
             if( !bExternalDealer )  dealer.Unserialize( loadFile ); //Save state of deck
 
@@ -288,12 +284,7 @@ void HoldemArena::saveState()
         HoldemUtil::WriteFloat64( allSaveState, pMoney );
         #endif
     }
-#ifdef DEBUGSAVE_EXTRATOKEN
-    newSaveState << EXTRATOKEN << endl;
-    #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
-    allSaveState << EXTRATOKEN << endl;
-    #endif
-#endif
+
     newSaveState.close();
     #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
     allSaveState.close();

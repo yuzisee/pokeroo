@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 by Joseph Huang                                    *
+ *   Copyright (C) 2008 by Joseph Huang                                    *
  *                                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -863,103 +863,17 @@ void HoldemArena::RefreshPlayers()
         curDealer %= nextNewPlayer;
     }while(!IsAlive(curDealer));
 
-}
 
 
-Player* HoldemArena::PlayTable()
-{
-	if( p.empty() ) return 0;
-
-#ifdef DEBUGSAVEGAME
-    if( !bLoadGame )
-#endif
-    {
-        curIndex = 0;
-        curDealer = 0;
-
-        if( !bExternalDealer )
-        {
-            dealer.ShuffleDeck(static_cast<float64>(livePlayers));
-        }
-
-
-            #ifdef GRAPHMONEY
-
-                handnum = 1;
-                scoreboard.open(GRAPHMONEY);
-                scoreboard << "#Hand";
-                for(int8 i=0;i<nextNewPlayer;++i)
-                {
-                    scoreboard << "," << (p[i])->GetIdent();
-                }
-                scoreboard << endl;
-                scoreboard << "0";
-                for(int8 i=0;i<nextNewPlayer;++i)
-                {
-                    scoreboard << "," << (p[i])->GetMoney();
-                }
-                scoreboard << endl;
-            #endif
-
-        #ifdef REPRODUCIBLE
-            randRem = 1;
-        #endif
-
-        #ifdef DEBUGHOLECARDS
-        holecardsData.open( DEBUGHOLECARDS );
-        #endif
-            /*
-#ifdef DEBUGSAVEGAME
-             std::ofstream killfile(DEBUGSAVEGAME,std::ios::out | std::ios::trunc);
-             killfile.close();
-#endif
-             */
-#ifdef DEBUGSAVEGAME
-            saveState();
-#endif
-    }
-
-#if defined(GRAPHMONEY) && defined(DEBUGSAVEGAME)
-    else
-    {
-        scoreboard.open(GRAPHMONEY , std::ios::app);
-        #ifdef DEBUGHOLECARDS
-        holecardsData.open( DEBUGHOLECARDS, std::ios::app );
-        #endif
-    }
-#endif
-
-
-	while(livePlayers > 1)
-	{
-
-        DealHands();
-		PlayGame();
-#ifdef DEBUG_SINGLE_HAND
-        exit(0);
-#endif
-        RefreshPlayers(); ///New Hand
 #ifdef DEBUGSAVEGAME
     #ifdef RELOAD_LAST_HAND
-        if( livePlayers > 1 )
+	        if( NumberAtTable() > 1 )
     #endif
-        {  saveState();  }
-#endif
-	}
-
-#ifdef GRAPHMONEY
-    scoreboard.close();
+        	{  saveState();  }
 #endif
 
-
-
-    for(int8 i=0;i<nextNewPlayer;++i)
-    {
-        Player *withP = (p[i]);
-        if( withP->myMoney > 0 ) return withP;
-    }
-	return 0;
 
 }
+
 
 
