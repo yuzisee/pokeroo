@@ -58,17 +58,16 @@ char * myPlayerName = 0;
 
 
 
-
-
-Player* PlayGameLoop(HoldemArena & my)
+Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer)
 {
+
 	my.BeginInitialState();
 
 	while(my.NumberAtTable() > 1)
 	{
 
-		my.DealHands();
-		my.PlayGame();
+		my.DealHands(tableDealer);
+		my.PlayGame(tableDealer);
 #ifdef DEBUG_SINGLE_HAND
 		exit(0);
 #endif
@@ -90,11 +89,6 @@ Player* PlayGameLoop(HoldemArena & my)
 
 std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
-    #ifdef EXTERNAL_DEALER
-    bool ext_dealer = true;
-    #else
-    bool ext_dealer = false;
-    #endif
 
     #ifdef AUTOEXTRATOKEN
     char ExtraTokenNameBuffer[32] = "P1";
@@ -176,9 +170,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             std::ios::openmode gamelogMode = std::ios::trunc;
             if( bLoadGame ) gamelogMode = std::ios::app;
 			std::ofstream gameOutput("gamelog.txt",gamelogMode);
-			HoldemArena myTable(&sg, gameOutput,true, true, ext_dealer);
+			HoldemArena myTable(&sg, gameOutput,true, true);
 		#else
-	HoldemArena myTable(&sg, gameLog,true, true, ext_dealer);
+	HoldemArena myTable(&sg, gameLog,true, true);
 		#endif
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;
@@ -235,14 +229,17 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
 
 
-        if( myPlayerName == 0 ){ myTable.AddHuman("P1", startingMoney, &consolePlay); }
-        else{
-            myTable.AddHuman(myPlayerName, startingMoney, &consolePlay);
+        if( myPlayerName == 0 )
+		{
+			myTable.AddPlayer("P1", startingMoney, &consolePlay);
+		}else
+		{
+            myTable.AddPlayer(myPlayerName, startingMoney, &consolePlay);
         }
     }else
     {
         //myTable.AddPlayer("q4", &pushAll);
-        myTable.AddBot("i4", AUTO_CHIP_COUNT, &drainFold);
+        myTable.AddPlayer("i4", AUTO_CHIP_COUNT, &drainFold);
         //myTable.AddPlayer("X3", &pushFold);
         //myTable.AddPlayer("A3", &tightPushFold);
 
@@ -268,28 +265,28 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                 switch(opponentorder[i])
                 {
                     case 0:
-                        myTable.AddBot("TrapBotV", startingMoney, &ImproveA);
+                        myTable.AddPlayer("TrapBotV", startingMoney, &ImproveA);
                         break;
                     case 1:
-                        myTable.AddBot("ConservativeBotV", startingMoney, &FutureFoldA);
+                        myTable.AddPlayer("ConservativeBotV", startingMoney, &FutureFoldA);
                         break;
                     case 2:
-                        myTable.AddBot("NormalBotV",startingMoney, &XFoldA);
+                        myTable.AddPlayer("NormalBotV",startingMoney, &XFoldA);
                         break;
                     case 3:
-                        myTable.AddBot("SpaceBotV", startingMoney, &DeterredRank);//&MeanGeomBluff);
+                        myTable.AddPlayer("SpaceBotV", startingMoney, &DeterredRank);//&MeanGeomBluff);
                         break;
                     case 4:
-                        myTable.AddBot("ActionBotV",startingMoney, &ReallyImproveA);
+                        myTable.AddPlayer("ActionBotV",startingMoney, &ReallyImproveA);
                         break;
                     case 5:
-                        myTable.AddBot("DangerBotV",startingMoney, &StrikeFold);
+                        myTable.AddPlayer("DangerBotV",startingMoney, &StrikeFold);
                         break;
                     case 6:
-                        myTable.AddBot("MultiBotV", startingMoney, &MultiT);
+                        myTable.AddPlayer("MultiBotV", startingMoney, &MultiT);
                         break;
                     case 7:
-                        myTable.AddBot("GearBotV", startingMoney, &MultiTR);
+                        myTable.AddPlayer("GearBotV", startingMoney, &MultiTR);
                         break;
                 }
 
@@ -302,28 +299,40 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
         default:
 
-        myTable.AddBot("GearBotV", AUTO_CHIP_COUNT, &MultiTR);
-        myTable.AddBot("MultiBotV", AUTO_CHIP_COUNT, &MultiT);
+        myTable.AddPlayer("GearBotV", AUTO_CHIP_COUNT, &MultiTR);
+        myTable.AddPlayer("MultiBotV", AUTO_CHIP_COUNT, &MultiT);
 
-		myTable.AddBot("DangerV", AUTO_CHIP_COUNT, &StrikeFold);
-        myTable.AddBot("ComV", AUTO_CHIP_COUNT, &FutureFoldA);
-        myTable.AddBot("NormV", AUTO_CHIP_COUNT, &XFoldA);
-        myTable.AddBot("TrapV", AUTO_CHIP_COUNT, &ImproveA);
-		myTable.AddBot("AceV", AUTO_CHIP_COUNT, &ReallyImproveA);
+		myTable.AddPlayer("DangerV", AUTO_CHIP_COUNT, &StrikeFold);
+        myTable.AddPlayer("ComV", AUTO_CHIP_COUNT, &FutureFoldA);
+        myTable.AddPlayer("NormV", AUTO_CHIP_COUNT, &XFoldA);
+        myTable.AddPlayer("TrapV", AUTO_CHIP_COUNT, &ImproveA);
+		myTable.AddPlayer("AceV", AUTO_CHIP_COUNT, &ReallyImproveA);
 
 
-        myTable.AddBot("SpaceV", AUTO_CHIP_COUNT, &DeterredRank);//&MeanGeomBluff);
+        myTable.AddPlayer("SpaceV", AUTO_CHIP_COUNT, &DeterredRank);//&MeanGeomBluff);
 
 
             break;
 
     }
 
+
+	SerializeRandomDeck * tableDealer = 0;
+	SerializeRandomDeck internalDealer;
+
+	#ifndef EXTERNAL_DEALER
+		internalDealer.ShuffleDeck(static_cast<float64>(   myTable.NumberAtTable()   ));
+		tableDealer = &internalDealer;
+	#endif
+
+
+
+
 #ifdef DEBUGSAVEGAME
 
 if( bLoadGame )
 {
-	std::istream *saveLoc = myTable.LoadState();
+	std::istream *saveLoc = myTable.LoadState(tableDealer);
 	if( saveLoc != 0 )
 	{
 		consolePlay.myFifo = saveLoc;
@@ -337,7 +346,7 @@ if( bLoadGame )
 
 
 
-    Player* iWin = PlayGameLoop(myTable);
+    Player* iWin = PlayGameLoop(myTable,tableDealer);
 
 #ifdef REGULARINTOLOG
 gameOutput.close();

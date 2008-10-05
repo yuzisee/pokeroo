@@ -76,22 +76,16 @@ class Player
 
 
 
-		Player( float64 money, const std::string name, PlayerStrategy* strat, float64 init_play, bool syncHuman)
+		Player( float64 money, const std::string name, PlayerStrategy* strat, float64 init_play)
 		: myStrat(strat),  allIn(init_play), myMoney(money)
 		 , handBetTotal(0), myBetSize(0), lastBetSize(init_play)
-         , bSync(syncHuman)
 		{
 			myName = name;
-			myHand.SetEmpty();
 		}
 
-	protected:
-
-		CommunityPlus myHand;
-		const Hand& GetHand() const { return myHand; }
-
 	public:
-        const bool bSync;
+
+		bool IsBot(){ return (myStrat != 0); }
 
 		const std::string & GetIdent() const
 		{	return myName;	}
@@ -121,16 +115,16 @@ class PlayerStrategy
 	friend class HoldemArena;
 	private:
 
-		Hand* myHand;
+		CommunityPlus myDealtHand;
 		Player* me;
 		HoldemArena* game;
     protected:
 
         int8 myPositionIndex;
+		const CommunityPlus& ViewDealtHand() const { return myDealtHand; }
 
 	public:
 
-		const Hand& ViewHand() const { return *myHand; }
 		const Player& ViewPlayer() const {return *me;}
 		const HoldemArena& ViewTable() const {return *game; }
 
@@ -139,18 +133,14 @@ class PlayerStrategy
 
         virtual void Link(PlayerStrategy* o)
         {
-            myHand = (o->myHand);
             me = (o->me);
             game = (o->game);
             myPositionIndex = o->myPositionIndex;
         }
 
 		virtual void SeeCommunity(const Hand&, const int8) = 0;
-				/*
-		double myBetsIn; //(fraction)
-		double p; //dead money in pot (fraction)
-		double BetToCall; //(fraction)
-				*/
+
+
 		virtual float64 MakeBet() = 0;
 			// 0 for check/fold
 			// -1 will definately fold
@@ -228,7 +218,6 @@ class HoldemArena
 		float64 & PlayerAllIn(Player& target){ return target.allIn; }
 		float64 & PlayerHandBetTotal(Player& target){ return target.handBetTotal; }
 		float64 & PlayerMoney(Player& target){ return target.myMoney; }
-		CommunityPlus & PlayerHand(Player& target){ return target.myHand; }
 
 #ifdef DEBUGSAVEGAME
         std::ifstream loadFile;
@@ -247,7 +236,6 @@ protected:
             std::ofstream scoreboard;
         #endif
 
-		SerializeRandomDeck dealer;
 		float64 randRem;
 
         int8 cardsInCommunity;
@@ -255,7 +243,6 @@ protected:
 		const bool bVerbose;
 		const bool bSpectate;
 
-		const bool bExternalDealer;
 
 		int8 livePlayers;
 		int8 roundPlayers;
@@ -309,11 +296,10 @@ protected:
 		//returns the first person to reveal cards (-1 if all fold)
 
 
-        virtual int8 AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat, bool externalDealer);
 	public:
 
 #ifdef DEBUGSAVEGAME
-            std::istream* LoadState();
+            std::istream* LoadState(SerializeRandomDeck * extDealer);
 #endif
 
 	#if defined(GRAPHMONEY)
@@ -335,13 +321,13 @@ protected:
 		static const float64 FOLDED;
 		static const float64 INVALID;
 
-		HoldemArena(BlindStructure* b, std::ostream& targetout, bool illustrate, bool spectate, bool allSync)
+		HoldemArena(BlindStructure* b, std::ostream& targetout, bool illustrate, bool spectate)
 		: curIndex(-1),  nextNewPlayer(0)
 #ifdef DEBUGSAVEGAME
         ,bLoadGame(false)
 #endif
         ,gamelog(targetout)
-        ,bVerbose(illustrate),bSpectate(spectate),bExternalDealer(allSync)
+        ,bVerbose(illustrate),bSpectate(spectate)
         ,livePlayers(0),curHighBlind(-1),blinds(b),allChips(0)
 		,lastRaise(0),highBet(0), myPot(0), myFoldedPot(0), myBetSum(0), prevRoundFoldedPot(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)
 		#ifdef GLOBAL_AICACHE_SPEEDUP
@@ -351,18 +337,17 @@ protected:
 		    smallestChip = b->SmallBlind(); ///This INITIAL small blind should be assumed to be one chip.
         }
 
-        	virtual void free_members();
+        virtual void free_members();
 		virtual ~HoldemArena();
 
 		virtual bool BeginInitialState();
 		virtual Player * FinalizeReportWinner();
 
-		void DealHands();
-		void PlayGame();
-                void RefreshPlayers();
+		void DealHands(SerializeRandomDeck * );
+		void PlayGame(SerializeRandomDeck * );
+        void RefreshPlayers();
 
-		virtual int8 AddHuman(const char* const id, const float64 money, PlayerStrategy*);
-		virtual int8 AddBot(const char* const id, const float64 money, PlayerStrategy* newStrat);
+        virtual int8 AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
 
 		virtual int8 NumberAtRound() const;
         virtual int8 NumberInHand() const;
@@ -437,7 +422,6 @@ class HoldemArenaEventBase
     float64 & PlayerAllIn(Player& target){ return myTable->PlayerAllIn(target); }
     float64 & PlayerLastBet(Player& target){ return myTable->PlayerLastBet(target); }
     float64 & PlayerHandBetTotal(Player& target){ return myTable->PlayerHandBetTotal(target); }
-    const CommunityPlus & PlayerHand(Player& target){ return myTable->PlayerHand(target); }
 
     void defineSidePotsFor(Player& allInP, const int8 id){myTable->defineSidePotsFor(allInP,id);}
     void resolveActions(Player& withP){myTable->resolveActions(withP);}
@@ -531,8 +515,8 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
         void finishShowdown();
         void ShowdownHand(const ShowdownRep& comp);
 
-        void RevealHandMain(const ShowdownRep& comp);
-        void RevealHandAllIns(const ShowdownRep& comp);
+        void RevealHandMain(const ShowdownRep& comp, const CommunityPlus & playerHand);
+        void RevealHandAllIns(const ShowdownRep& comp, const CommunityPlus & playerHand);
     public:
 
     vector<ShowdownRep>& winners;
@@ -549,7 +533,7 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
     ///'w' if there are still people left to reveal/muck their hands "IN TURN"
     ///'a' if only all-in hands are to be revealed now
     ///'!' if winners have been determined and the showdown is complete
-    void RevealHand(const ShowdownRep& comp);
+    void RevealHand(const ShowdownRep& comp, const CommunityPlus & playerHand);
     ///ShowHand reveals the hand of myTable->p[curIndex]
     void MuckHand();
     ///MuckHand mucks the hand of myTable->p[curIndex]

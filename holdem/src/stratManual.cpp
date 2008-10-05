@@ -69,7 +69,7 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
         onlyCommunity.SetUnique(h);
 
         CommunityPlus withCommunity;
-        withCommunity.SetUnique(ViewHand());
+        withCommunity.SetUnique(ViewDealtHand());
         withCommunity.AppendUnique(onlyCommunity);
 
         DistrShape w_wl(0);
@@ -97,21 +97,19 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
 void UserConsoleStrategy::SeeCommunity(const Hand& h, const int8 n)
 {
-    if( !(ViewPlayer().bSync) )
-    {
-        ConsoleStrategy::SeeCommunity(h,n);
-        if ( !bNoPrint ){ printCommunity(); }
 
-        #ifdef INFOASSIST
-            bComSize = n;
-        #endif
+	ConsoleStrategy::SeeCommunity(h,n);
+	if ( !bNoPrint ){ printCommunity(); }
 
-        #if defined(SPACE_UI) && !defined(USER_DELAY_HANDS)
-        UI_DESCRIPTOR << endl;
-        UI_DESCRIPTOR << endl;
-        UI_DESCRIPTOR << endl;
-        #endif
-    }
+	#ifdef INFOASSIST
+		bComSize = n;
+	#endif
+
+	#if defined(SPACE_UI) && !defined(USER_DELAY_HANDS)
+	UI_DESCRIPTOR << endl;
+	UI_DESCRIPTOR << endl;
+	UI_DESCRIPTOR << endl;
+	#endif
 
 }
 
@@ -386,7 +384,7 @@ void ConsoleStrategy::showSituation()
 
 
 	HandPlus u;
-	u.SetUnique(ViewHand());
+	u.SetUnique(ViewDealtHand());
 	u.DisplayHand(UI_DESCRIPTOR);
 
 #ifdef INFOASSIST
@@ -452,7 +450,7 @@ float64 UserConsoleStrategy::queryAction()
 	inputBuf[0] = 0;
 	float64 returnMe;
 
-    if( !(ViewPlayer().bSync) ) showSituation();
+    showSituation();
 
 
 

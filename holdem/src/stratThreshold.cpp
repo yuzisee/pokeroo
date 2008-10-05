@@ -54,7 +54,7 @@ void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
     onlyCommunity.SetUnique(h);
 
     CommunityPlus withCommunity;
-    withCommunity.SetUnique(ViewHand());
+    withCommunity.SetUnique(ViewDealtHand());
     withCommunity.AppendUnique(onlyCommunity);
 
 
@@ -131,7 +131,7 @@ float64 MultiThresholdStrategy::MakeBet()
 
 
             HandPlus convertOutput;
-            convertOutput.SetUnique(ViewHand());
+            convertOutput.SetUnique(ViewDealtHand());
             convertOutput.DisplayHand(logFile);
             logFile << "ThresholdAI" << endl;
 

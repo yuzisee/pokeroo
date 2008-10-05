@@ -150,59 +150,67 @@ void HoldemArena::compareAllHands(const CommunityPlus & community, const int8 ca
 
     while(w.bRoundState != '!')
     {
-        if( bExternalDealer )
-        {
-            bool bMuck = p[curIndex]->bSync;
+        Player& withP = *(p[curIndex]);
 
-            if(bMuck) //then you must be human player, what's your hand?
-            {
-                const int16 INPUTLEN = 5;
-                char inputBuf[INPUTLEN];
+		if( withP.IsBot() )
+		{
+            CommunityPlus withHandP;
+	        withHandP.SetUnique( withP.myStrat->ViewDealtHand() );
+
+			ShowdownRep comp(&withHandP, &community, curIndex);
+			w.RevealHand(comp, withHandP);
+		}else
+		{
+			const int16 INPUTLEN = 5;
+			char inputBuf[INPUTLEN];
 
 
-                std::cerr << p[curIndex]->GetIdent().c_str() << ", enter your cards (no whitespace)" << endl;
-                std::cerr << "or enter nothing to muck: " << endl;
-                std::cin.sync();
-                std::cin.clear();
+			std::cerr << p[curIndex]->GetIdent().c_str() << ", enter your cards (no whitespace)" << endl;
+			std::cerr << "or enter nothing to muck: " << endl;
+			std::cin.sync();
+			std::cin.clear();
 
-                if( std::cin.getline( inputBuf, INPUTLEN ) != 0 )
-                {
-                    if( 0 != inputBuf[0] )
-                    {
-                        bMuck = false;
-                        p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
-                        p[curIndex]->myHand.AddToHand(ExternalQueryCard(std::cin));
-                        #ifdef DEBUGSAVEGAME
-                        if( !bLoadGame )
-                        {
-                            std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-                            p[curIndex]->myHand.HandPlus::DisplayHand(saveFile);
-                            saveFile.close();
-                        }
-                        #endif
-                    }
-                }//else, error on input
 
-                std::cin.sync();
-                std::cin.clear();
-            }
+
+
+
+            CommunityPlus showHandP;
+			showHandP.SetEmpty();
+
+
+            bool bMuck = true;
+			if( std::cin.getline( inputBuf, INPUTLEN ) != 0 )
+			{
+				if( 0 != inputBuf[0] )
+				{
+					bMuck = false;
+					showHandP.AddToHand(ExternalQueryCard(std::cin));
+					showHandP.AddToHand(ExternalQueryCard(std::cin));
+					#ifdef DEBUGSAVEGAME
+					if( !bLoadGame )
+					{
+						std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+						showHandP.HandPlus::DisplayHand(saveFile);
+						saveFile.close();
+					}
+					#endif
+				}
+			}//else, error on input
+
+			std::cin.sync();
+			std::cin.clear();
 
             if( bMuck )
             {
                 ShowdownRep comp(curIndex);
                 comp.SetMuck();
-                w.RevealHand(comp);
+                w.RevealHand(comp,CommunityPlus::EMPTY_COMPLUS);
             }
             else
             {
-                ShowdownRep comp(&(p[curIndex]->myHand), &community, curIndex);
-                w.RevealHand(comp);
+                ShowdownRep comp(&showHandP, &community, curIndex);
+                w.RevealHand(comp,showHandP);
             }
-        }
-        else
-        {
-            ShowdownRep comp(&(p[curIndex]->myHand), &community, curIndex);
-            w.RevealHand(comp);
         }
 
     }
@@ -553,7 +561,9 @@ DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
     return userCard;
 }
 
-void HoldemArena::DealHands()
+
+//If tableDealer is null, you may specify dealt cards using the console.
+void HoldemArena::DealHands(SerializeRandomDeck * tableDealer)
 {
 	roundPlayers = livePlayers;
 
@@ -587,7 +597,7 @@ void HoldemArena::DealHands()
 
 
 
-    if( bExternalDealer )
+    if( !tableDealer )
     {
 
 
@@ -610,13 +620,14 @@ void HoldemArena::DealHands()
             if(withP.myMoney > 0)
             {
 
-                if(!(withP.bSync))
+                if( withP.IsBot() )
                 {
+					CommunityPlus & dealHandP = withP.myStrat->myDealtHand;
                     std::cerr << withP.GetIdent().c_str() << ", enter your cards (no whitespace): " << endl;
                     std::cin.sync();
                     std::cin.clear();
-                    withP.myHand.AddToHand(ExternalQueryCard(std::cin));
-                    withP.myHand.AddToHand(ExternalQueryCard(std::cin));
+                    dealHandP.AddToHand(ExternalQueryCard(std::cin));
+                    dealHandP.AddToHand(ExternalQueryCard(std::cin));
                     std::cin.sync();
                     std::cin.clear();
 
@@ -624,12 +635,12 @@ void HoldemArena::DealHands()
                     if( !bLoadGame )
                     {
                         std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-                        (withP.myHand).HandPlus::DisplayHand(saveFile);
+                        dealHandP.HandPlus::DisplayHand(saveFile);
                         saveFile.close();
                     }
                     #endif
 
-                    (withP.myHand).HandPlus::DisplayHand(holecardsData);
+                    dealHandP.HandPlus::DisplayHand(holecardsData);
                     holecardsData << withP.GetIdent().c_str() << endl;
                 }
             }
@@ -646,6 +657,7 @@ void HoldemArena::DealHands()
     else
     {
 
+		SerializeRandomDeck & dealer = *tableDealer;
 
         int8 dealtEach = 0;
 
@@ -712,16 +724,29 @@ void HoldemArena::DealHands()
 
             if(withP.myMoney > 0)
             {
-                if (!dealer.DealCard(withP.myHand)) gamelog << "OUT OF CARDS ERROR" << endl;
+				if( withP.IsBot() )
+				{
+					CommunityPlus & dealHandP = withP.myStrat->myDealtHand;
 
-                    #ifdef DEBUGHOLECARDS
-                        if( dealtEach == 1 )
-                        {
-                            (withP.myHand).HandPlus::DisplayHand(holecardsData);
-                            holecardsData << withP.GetIdent().c_str() << endl;
-            //                holecardsData << endl << endl;
-                        }
-                    #endif
+					if( dealtEach == 0 )
+					{
+						dealHandP.SetEmpty();
+					}
+
+
+					if (!dealer.DealCard(dealHandP))
+					{
+						gamelog << "OUT OF CARDS ERROR" << endl;
+					}
+
+						#ifdef DEBUGHOLECARDS
+							if( dealtEach == 1 ) //Already one dealt, this must be the second
+							{
+								dealHandP.HandPlus::DisplayHand(holecardsData);
+								holecardsData << withP.GetIdent().c_str() << endl;
+							}
+						#endif
+				}
 
             }
             else
@@ -819,7 +844,10 @@ void HoldemArena::RefreshPlayers()
         withP.handBetTotal = 0;
         withP.allIn = INVALID;
 
-        withP.myHand.SetEmpty();
+		if( withP.IsBot() )
+		{
+	        withP.myStrat->myDealtHand.SetEmpty();
+		}
 
 
     }

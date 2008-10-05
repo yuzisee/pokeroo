@@ -580,17 +580,17 @@ void HoldemArenaShowdown::finishShowdown()
 void HoldemArenaShowdown::MuckHand()
 {
     ShowdownRep worstHand(curIndex); ///worstHand defaults to the worst hand. You only need to initialize playerIndex
-    RevealHand(worstHand);
+    RevealHand(worstHand, CommunityPlus::EMPTY_COMPLUS);
 }
 
-void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp)
+void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const CommunityPlus & playerHand)
 {
     Player& withP = *p[curIndex];
 
 
     if( comp > best || comp == best ) //Better hand or tie
     {
-        broadcastHand(PlayerHand(withP),curIndex);
+        broadcastHand(playerHand,curIndex);
         if( bVerbose )
         {
             gamelog << endl << withP.GetIdent() << flush;
@@ -599,7 +599,7 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp)
             else
                 gamelog << " is ahead with: " << flush;
             HandPlus viewHand;
-            viewHand.SetUnique(PlayerHand(withP));
+            viewHand.SetUnique(playerHand);
             viewHand.DisplayHand(gamelog);
             gamelog << endl << "Trying to stay alive, makes " << flush;
             //#ifdef OLD_DISPLAY_STYLE
@@ -615,13 +615,13 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp)
     else
     {///Distinctly defeated
      //  http://www.texasholdem-poker.com/holdem_rules.php
-        broadcastHand(PlayerHand(withP),curIndex);
+        broadcastHand(playerHand,curIndex);
         if( bVerbose )
         {
             gamelog << endl << withP.GetIdent() << flush;
             gamelog << " turns over " << flush;
             HandPlus viewHand;
-            viewHand.SetUnique(PlayerHand(withP));
+            viewHand.SetUnique(playerHand);
             viewHand.DisplayHand(gamelog);
             gamelog << endl << "Is eliminated after making only" << flush;
             //#ifdef OLD_DISPLAY_STYLE
@@ -644,7 +644,7 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp)
 
 }
 
-void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
+void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const CommunityPlus & playerHand)
 {
 
 ///At this point curIndex is STILL IN THE HAND (not all in)
@@ -658,15 +658,15 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
 				///We set the allIn, since this player "IsInHand()"
 				PlayerAllIn(withP) = myPot;
 
-				broadcastHand(PlayerHand(withP),curIndex);
+				broadcastHand(playerHand,curIndex);
 				if( bVerbose )
 				{
 
 
 					gamelog << endl << withP.GetIdent() << flush;
 					gamelog << " reveals: " << flush;
-                    HandPlus viewHand;
-					viewHand.SetUnique(PlayerHand(withP));
+                    			HandPlus viewHand;
+					viewHand.SetUnique(playerHand);
 					viewHand.DisplayHand(gamelog);
 					gamelog << endl << "Making," << flush;
 					//#ifdef OLD_DISPLAY_STYLE
@@ -684,14 +684,14 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
 			else if( comp == best ) //can only split, if not beaten later
 			{
 
-				broadcastHand(PlayerHand(withP),curIndex);
+				broadcastHand(playerHand,curIndex);
 				if( bVerbose )
 				{
 					HandPlus viewHand;
 
 					gamelog << endl << withP.GetIdent() << flush;
 					gamelog << " turns up: ";
-					viewHand.SetUnique(PlayerHand(withP));
+					viewHand.SetUnique(playerHand);
 					#ifdef OLD_DISPLAY_STYLE
 					viewHand.DisplayHandBig(gamelog);
 					#else
@@ -728,17 +728,17 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp)
 
 }
 
-void HoldemArenaShowdown::RevealHand(const ShowdownRep& comp)
+void HoldemArenaShowdown::RevealHand(const ShowdownRep& comp, const CommunityPlus & playerHand)
 {
     if( bRoundState == '!' ) return;
 
     switch( bRoundState )
     {
         case 'w':
-            RevealHandMain(comp);
+            RevealHandMain(comp, playerHand);
             break;
         case 'a':
-            RevealHandAllIns(comp);
+            RevealHandAllIns(comp, playerHand);
             break;
     }
 }

@@ -146,7 +146,7 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
             }
         }
 
-        //Pick the top strategy
+        //Pick the top strategy by sorting and selecting the favourite
         PerformanceHistory::SortAndOffset( picks, stratcount );
         currentStrategy = 0;
 

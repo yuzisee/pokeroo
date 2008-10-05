@@ -118,7 +118,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     onlyCommunity.SetUnique(h);
 
     CommunityPlus withCommunity;
-    withCommunity.SetUnique(ViewHand());
+    withCommunity.SetUnique(ViewDealtHand());
     withCommunity.AppendUnique(onlyCommunity);
 
     //if(bLogWorse)
@@ -228,7 +228,7 @@ void PositionalStrategy::setupPosition()
         #ifdef LOGPOSITION
             logFile << endl;
             HandPlus convertOutput;
-            convertOutput.SetUnique(ViewHand());
+            convertOutput.SetUnique(ViewDealtHand());
             convertOutput.DisplayHand(logFile);
         #endif
 

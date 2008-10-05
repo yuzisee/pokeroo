@@ -184,7 +184,7 @@ void HoldemArena::broadcastHand(const Hand& h, const int8 broadcaster)
 }
 
 #ifdef DEBUGSAVEGAME
-std::istream * HoldemArena::LoadState()
+std::istream * HoldemArena::LoadState(SerializeRandomDeck * extDealer)
 {
     loadFile.open(DEBUGSAVEGAME);
     if( ! (loadFile.is_open()) )
@@ -232,7 +232,7 @@ std::istream * HoldemArena::LoadState()
 				}
             }
 
-            if( !bExternalDealer )  dealer.Unserialize( loadFile ); //Save state of deck
+            if( extDealer )  extDealer->Unserialize( loadFile ); //Save state of deck
 
 
 
@@ -292,26 +292,22 @@ void HoldemArena::saveState()
 }
 #endif
 
-int8 HoldemArena::AddHuman(const char* const id, const float64 money, PlayerStrategy* newStrat)
-{
-    int8 newID = AddPlayer(id, money, newStrat,bExternalDealer);
-    return newID;
-}
 
-int8 HoldemArena::AddBot(const char* const id, const float64 money, PlayerStrategy* newStrat)
+int8 HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat)
 {
-    return AddPlayer(id, money, newStrat, false);
-}
+//newStrat is now legally null.
+//	if( curIndex != -1 || newStrat->game != 0 || newStrat->me != 0) return -1;
 
-int8 HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat, bool bExternalDealer)
-{
-	if( curIndex != -1 || newStrat->game != 0 || newStrat->me != 0) return -1;
-
-    newStrat->myPositionIndex = nextNewPlayer;
-	newStrat->game = this;
-    Player* newP = new Player(money, id,newStrat, INVALID, bExternalDealer);
-	newStrat->me = newP;
-	newStrat->myHand = &(newP->myHand);
+	if( newStrat )
+	{
+	    newStrat->myPositionIndex = nextNewPlayer;
+		newStrat->game = this;
+	}
+    Player* newP = new Player(money, id,newStrat, INVALID);
+	if( newStrat )
+	{
+		newStrat->me = newP;
+	}
 	p.push_back( newP );
 
     allChips += money;

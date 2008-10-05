@@ -174,7 +174,7 @@ void * NewTable()
     bool externalDealer = true;
 
 
-    return reinterpret_cast<void *>(new HoldemArena(b, std::cout ,illustrate,spectate, externalDealer));
+    return reinterpret_cast<void *>(new HoldemArena(b, std::cout ,illustrate,spectate));
 }
 
 void DeleteTable(void * table_ptr)

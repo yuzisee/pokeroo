@@ -21,6 +21,59 @@
 
 #include "arena.h"
 
+
+
+/* Application flow  
+ *
+ * BeginInitialState()
+ * loop{
+ *     DealHands();
+ *     repeat
+ *     {
+ *         ~ShowCardsToBots(Cards, Flop, Turn, River) for each Strat
+ *         BeginBettingRound();
+ *         loop{
+ *             ~GetBetFromBot()
+ *             MakeBet();
+ *         }
+ *     }
+ *     RefreshPlayers();
+ * }
+ * FinalizeReportWinner();
+ *
+ */
+
+
+void HoldemArena::PlayGame(SerializeRandomDeck * tableDealer)
+{
+
+	if( PlayRound_BeginHand() == -1 ) return;
+
+	CommunityPlus myFlop;
+	RequestCards(tableDealer,3,myFlop);
+    if( PlayRound_Flop(myFlop) == -1 ) return;
+
+
+	DeckLocation myTurn = RequestCard(tableDealer);
+    if( PlayRound_Turn(myFlop,myTurn) == -1 ) return;
+
+	DeckLocation myRiver = RequestCard(tableDealer);
+    int8 playerToReveal = PlayRound_River(myFlop,myTurn,myRiver);
+    if( playerToReveal == -1 ) return;
+
+
+	CommunityPlus finalCommunity;
+	finalCommunity.SetUnique(myFlop);
+	finalCommunity.AddToHand(myTurn);
+	finalCommunity.AddToHand(myRiver);
+
+	roundPlayers = livePlayers;
+	PlayShowdown(finalCommunity,playerToReveal);
+}
+
+
+
+
 bool HoldemArena::BeginInitialState()
 {
 	if( p.empty() ) return false;
@@ -31,12 +84,6 @@ bool HoldemArena::BeginInitialState()
     {
         curIndex = 0;
         curDealer = 0;
-
-        if( !bExternalDealer )
-        {
-            dealer.ShuffleDeck(static_cast<float64>(livePlayers));
-        }
-
 
             #ifdef GRAPHMONEY
 
@@ -280,36 +327,5 @@ DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
 
 }
 
-
-void HoldemArena::PlayGame()
-{
-	SerializeRandomDeck * tableDealer = 0;
-	if( bExternalDealer ) tableDealer = &dealer;
-
-
-
-	if( PlayRound_BeginHand() == -1 ) return;
-
-	CommunityPlus myFlop;
-	RequestCards(tableDealer,3,myFlop);
-    if( PlayRound_Flop(myFlop) == -1 ) return;
-
-
-	DeckLocation myTurn = RequestCard(tableDealer);
-    if( PlayRound_Turn(myFlop,myTurn) == -1 ) return;
-
-	DeckLocation myRiver = RequestCard(tableDealer);
-    int8 playerToReveal = PlayRound_River(myFlop,myTurn,myRiver);
-    if( playerToReveal == -1 ) return;
-
-
-	CommunityPlus finalCommunity;
-	finalCommunity.SetUnique(myFlop);
-	finalCommunity.AddToHand(myTurn);
-	finalCommunity.AddToHand(myRiver);
-
-	roundPlayers = livePlayers;
-	PlayShowdown(finalCommunity,playerToReveal);
-}
 
 
