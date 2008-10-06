@@ -219,6 +219,8 @@ void HoldemArena::compareAllHands(const CommunityPlus & community, const int8 ca
 
 void HoldemArena::PlayShowdown(const CommunityPlus & community, const int8 called)
 {
+    roundPlayers = livePlayers;
+
 	if( bVerbose )
 	{
 		gamelog << endl;

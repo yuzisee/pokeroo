@@ -273,35 +273,6 @@ void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
 
 
 
-void HoldemArena::PlayGame(SerializeRandomDeck * tableDealer)
-{
-
-	if( PlayRound_BeginHand() == -1 ) return;
-
-	CommunityPlus myFlop;
-	RequestCards(tableDealer,3,myFlop, "Please enter the flop (no whitespace): ");
-    if( PlayRound_Flop(myFlop) == -1 ) return;
-
-
-	DeckLocation myTurn = RequestCard(tableDealer);
-    if( PlayRound_Turn(myFlop,myTurn) == -1 ) return;
-
-	DeckLocation myRiver = RequestCard(tableDealer);
-    int8 playerToReveal = PlayRound_River(myFlop,myTurn,myRiver);
-    if( playerToReveal == -1 ) return;
-
-
-	CommunityPlus finalCommunity;
-	finalCommunity.SetUnique(myFlop);
-	finalCommunity.AddToHand(myTurn);
-	finalCommunity.AddToHand(myRiver);
-
-	roundPlayers = livePlayers;
-	PlayShowdown(finalCommunity,playerToReveal);
-}
-
-
-
 
 bool HoldemArena::BeginInitialState()
 {

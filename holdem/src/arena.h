@@ -278,22 +278,16 @@ protected:
                                 , const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn);
 		void defineSidePotsFor(Player&, const int8);
 		void resolveActions(Player&);
-		void PlayShowdown(const CommunityPlus &,const int8);
+
 		void compareAllHands(const CommunityPlus & , const int8, vector<ShowdownRep>& );
 		double* organizeWinnings(int8&, vector<ShowdownRep>&, vector<ShowdownRep>&);
 
         DeckLocation ExternalQueryCard(std::istream& s);
-		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &, const char * request_str);
-		DeckLocation RequestCard(SerializeRandomDeck *);
+
 
 
 		void prepareRound(const CommunityPlus &, const int8);
-		int8 PlayRound(const CommunityPlus &, const int8);
-		int8 PlayRound_BeginHand();
-		int8 PlayRound_Flop(const CommunityPlus & flop);
-		int8 PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn);
-		int8 PlayRound_River(const CommunityPlus & flop, const DeckLocation & turn, const DeckLocation & river);
-		//returns the first person to reveal cards (-1 if all fold)
+
 
 
 	public:
@@ -345,8 +339,21 @@ protected:
 
 		void BeginNewHands(SerializeRandomDeck * );
             void DealAllHands(SerializeRandomDeck * );
-		void PlayGame(SerializeRandomDeck * );
+
+        //returns the first person to reveal cards (-1 if all fold)
+        int8 PlayRound(const CommunityPlus &, const int8);
+		int8 PlayRound_BeginHand();
+		int8 PlayRound_Flop(const CommunityPlus & flop);
+		int8 PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn);
+		int8 PlayRound_River(const CommunityPlus & flop, const DeckLocation & turn, const DeckLocation & river);
+
+		void PlayShowdown(const CommunityPlus &,const int8);
+
+		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &, const char * request_str);
+		DeckLocation RequestCard(SerializeRandomDeck *);
         void RefreshPlayers();
+
+
 
         virtual int8 AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
 
