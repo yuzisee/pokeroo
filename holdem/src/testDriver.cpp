@@ -66,7 +66,7 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer)
 	while(my.NumberAtTable() > 1)
 	{
 
-		my.DealHands(tableDealer);
+		my.BeginNewHands(tableDealer);
 		my.PlayGame(tableDealer);
 #ifdef DEBUG_SINGLE_HAND
 		exit(0);
@@ -181,7 +181,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     MultiThresholdStrategy pushAll(4,4);
 	MultiThresholdStrategy pushFold(0,2);
 	MultiThresholdStrategy tightPushFold(1,0);
-	
+
 	DeterredGainStrategy DeterredRank(2);
 
 
@@ -293,7 +293,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             }//End of for(i...
 
             delete [] opponentorder;
-                
+
             break;
 
 

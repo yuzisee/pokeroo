@@ -283,7 +283,7 @@ protected:
 		double* organizeWinnings(int8&, vector<ShowdownRep>&, vector<ShowdownRep>&);
 
         DeckLocation ExternalQueryCard(std::istream& s);
-		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &);
+		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &, const char * request_str);
 		DeckLocation RequestCard(SerializeRandomDeck *);
 
 
@@ -343,7 +343,9 @@ protected:
 		virtual bool BeginInitialState();
 		virtual Player * FinalizeReportWinner();
 
-		void DealHands(SerializeRandomDeck * );
+		void BeginNewHands(SerializeRandomDeck * );
+            void DealHands(SerializeRandomDeck * );
+                void DealAllHands(SerializeRandomDeck * );
 		void PlayGame(SerializeRandomDeck * );
         void RefreshPlayers();
 

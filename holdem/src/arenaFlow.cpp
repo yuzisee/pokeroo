@@ -23,7 +23,7 @@
 
 
 
-/* Application flow  
+/* Application flow
  *
  * BeginInitialState()
  * loop{
@@ -44,13 +44,237 @@
  */
 
 
+
+void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, CommunityPlus & intoCards, const char * request_str)
+{
+	if( myDealer )
+    {
+
+		for(uint8 n=0;n<numCards;++n)					{
+			if (!(  myDealer->DealCard(intoCards)  ))		{
+				std::cerr << "OUT OF CARDS ERROR" << endl; exit(1);		}}
+
+	}
+	else
+	{
+        std::cerr << request_str << endl;
+        std::cin.sync();
+        std::cin.clear();
+
+        intoCards.SetEmpty();
+		for(uint8 n=0;n<numCards;++n) intoCards.AddToHand(ExternalQueryCard(std::cin));
+
+
+        std::cin.sync();
+        std::cin.clear();
+        #ifdef DEBUGSAVEGAME
+        if( !bLoadGame )
+        {
+            std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+            intoCards.HandPlus::DisplayHand(saveFile);
+            saveFile.close();
+        }
+        #endif
+    }
+
+}
+
+DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
+{
+    DeckLocation intoCard;
+
+	if( myDealer )
+	{
+		Hand newCard;
+        if (!(  myDealer->DealCard(newCard)  ))
+		{
+			std::cerr << "OUT OF CARDS ERROR" << endl;
+			exit(1);
+		}
+
+        intoCard = myDealer->dealt;
+	}
+	else
+    {
+        std::cerr << "Please enter the next community card (no whitespace): " << endl;
+        std::cin.sync();
+        std::cin.clear();
+        intoCard = ExternalQueryCard(std::cin);
+        std::cin.sync();
+        std::cin.clear();
+        #ifdef DEBUGSAVEGAME
+        if( !bLoadGame )
+        {
+            std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+            HoldemUtil::PrintCard( saveFile, intoCard.GetIndex() );
+            saveFile.close();
+        }
+        #endif
+    }
+
+	return intoCard;
+
+}
+
+
+
+void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
+{
+
+    do
+    {
+        incrIndex();
+
+        Player& withP = *(p[curIndex]);
+
+        if(withP.myMoney > 0)
+        {
+
+            if( withP.IsBot() )
+            {
+                CommunityPlus & dealHandP = withP.myStrat->myDealtHand;
+
+                std::cerr << withP.GetIdent().c_str() << std::flush;
+                RequestCards(tableDealer,2,dealHandP,", enter your cards (no whitespace): ");
+
+
+                dealHandP.HandPlus::DisplayHand(holecardsData);
+                holecardsData << withP.GetIdent().c_str() << endl;
+            }
+        }
+        else
+        {
+            withP.lastBetSize = INVALID;
+            withP.myBetSize = INVALID;
+        }
+
+
+
+    }while(curDealer != curIndex);
+}
+
+void HoldemArena::DealHands(SerializeRandomDeck * tableDealer)
+{
+
+
+    if( tableDealer )
+    {
+        SerializeRandomDeck & dealer = *tableDealer;
+
+
+
+        #ifdef DEBUGSAVEGAME
+        if( bLoadGame )
+        {
+            bLoadGame = false;
+        }else
+        #endif
+        {
+            //Shuffle the deck here
+            dealer.UndealAll();
+            if(randRem != 0)
+            {
+                #ifdef DEBUGSAVEGAME
+                std::ofstream shuffleData( DEBUGSAVEGAME, std::ios::app );
+                dealer.LoggedShuffle(shuffleData, randRem);
+                shuffleData << endl;
+                shuffleData.close();
+                    #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
+                char handnumtxt/*[12] = "";
+                char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
+
+                FileNumberString( handnum , handnumtxt + strlen(handnumtxt) );
+                handnumtxt[23+12-1] = '\0'; //just to be safe
+
+                shuffleData.open( handnumtxt , std::ios::app );
+                dealer.LogDeckState( shuffleData );
+                shuffleData << endl;
+                shuffleData.close();
+                    #endif
+                #else
+                dealer.ShuffleDeck( randRem );
+                #endif
+
+
+        #ifdef DEBUGASSERT
+            }
+            else
+            {
+                std::cerr << "YOU DIDN'T SHUFFLE" << endl;
+                gamelog << "YOU DIDN'T SHUFFLE" << endl;
+                exit(1);
+        #endif
+            }
+        }
+
+
+    }
+
+    #ifdef DEBUGHOLECARDS
+        holecardsData <<
+                #if defined(GRAPHMONEY)
+                "############ Hand " << handnum << " " <<
+                #endif
+        "############" << endl;
+
+    #endif
+
+
+        DealAllHands(tableDealer);
+
+}
+
+//If tableDealer is null, you may specify dealt cards using the console.
+void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
+{
+	roundPlayers = livePlayers;
+
+    myPot        = 0;
+    prevRoundPot = 0;
+    prevRoundFoldedPot = 0;
+    myFoldedPot  = 0;
+
+    curIndex = curDealer;
+
+    if( bVerbose && bSpectate )
+    {
+        gamelog << endl << "Next Dealer is " << p[curDealer]->GetIdent() << endl;
+    }
+
+
+	if( bVerbose )
+	{
+		gamelog << "================================================================" << endl;
+		gamelog << "============================New Hand" <<
+		#if defined(GRAPHMONEY)
+		" #"<< handnum <<
+		#else
+		"==" <<
+		#endif //GRAPHMONEY, with #else
+		"========================" << endl;
+
+	}
+
+
+
+
+    DealHands(tableDealer);
+
+
+
+randRem = 1;
+
+}
+
+
+
 void HoldemArena::PlayGame(SerializeRandomDeck * tableDealer)
 {
 
 	if( PlayRound_BeginHand() == -1 ) return;
 
 	CommunityPlus myFlop;
-	RequestCards(tableDealer,3,myFlop);
+	RequestCards(tableDealer,3,myFlop, "Please enter the flop (no whitespace): ");
     if( PlayRound_Flop(myFlop) == -1 ) return;
 
 
@@ -140,7 +364,7 @@ bool HoldemArena::BeginInitialState()
 
 Player * HoldemArena::FinalizeReportWinner()
 {
-	
+
 #ifdef GRAPHMONEY
     scoreboard.close();
 #endif
@@ -175,17 +399,17 @@ int8 HoldemArena::PlayRound_BeginHand()
 	bettingRoundsRemaining = 4;
 	playersAllIn = 0;
 
-	
-	
+
+
 	--bettingRoundsRemaining;
-	
+
 	return PlayRound(CommunityPlus::EMPTY_COMPLUS,0);
 
 }
 
 int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop)
 {
-    
+
 
     if( bSpectate )
     {
@@ -209,7 +433,7 @@ int8 HoldemArena::PlayRound_Turn(const CommunityPlus & flop, const DeckLocation 
 	CommunityPlus community;
 	community.SetUnique(flop);
 	community.AddToHand(turn);
-	
+
     if( bSpectate )
     {
         gamelog << endl;
@@ -223,7 +447,7 @@ int8 HoldemArena::PlayRound_Turn(const CommunityPlus & flop, const DeckLocation 
 
 	roundPlayers = livePlayers;
 	--bettingRoundsRemaining;
-	
+
 	return PlayRound(community,4);
 
 }
@@ -239,7 +463,7 @@ int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation
     {
         gamelog << endl;
         gamelog << "River:\t" << flush;
-    
+
         flop.HandPlus::DisplayHand(gamelog);
         HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
         gamelog << " " << flush;
@@ -255,77 +479,6 @@ int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation
 	return PlayRound(community,5);
 }
 
-
-void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, CommunityPlus & intoCards)
-{
-	if( myDealer )
-    {
-
-		for(uint8 n=0;n<numCards;++n)					{
-			if (!(  myDealer->DealCard(intoCards)  ))		{
-				std::cerr << "OUT OF CARDS ERROR" << endl; exit(1);		}}
-
-	}
-	else
-	{
-        std::cerr << "Please enter the flop (no whitespace): " << endl;
-        std::cin.sync();
-        std::cin.clear();
-
-		intoCards.SetEmpty();
-		for(uint8 n=0;n<numCards;++n) intoCards.AddToHand(ExternalQueryCard(std::cin));
-	        
-		
-        std::cin.sync();
-        std::cin.clear();
-        #ifdef DEBUGSAVEGAME
-        if( !bLoadGame )
-        {
-            std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-            intoCards.HandPlus::DisplayHand(saveFile);
-            saveFile.close();
-        }
-        #endif
-    }
-
-}
-
-DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
-{
-    DeckLocation intoCard;
-
-	if( myDealer ) 
-	{
-		Hand newCard;
-        if (!(  myDealer->DealCard(newCard)  ))
-		{
-			std::cerr << "OUT OF CARDS ERROR" << endl;
-			exit(1);
-		}
-
-        intoCard = myDealer->dealt;
-	}
-	else
-    {
-        std::cerr << "Please enter the next community card (no whitespace): " << endl;
-        std::cin.sync();
-        std::cin.clear();
-        intoCard = ExternalQueryCard(std::cin);
-        std::cin.sync();
-        std::cin.clear();
-        #ifdef DEBUGSAVEGAME
-        if( !bLoadGame )
-        {
-            std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-            HoldemUtil::PrintCard( saveFile, intoCard.GetIndex() );
-            saveFile.close();
-        }
-        #endif
-    }
-
-	return intoCard;
-
-}
 
 
 
