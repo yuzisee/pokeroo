@@ -197,10 +197,7 @@ void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
 
 
         #ifdef DEBUGSAVEGAME
-        if( bLoadGame )
-        {
-            bLoadGame = false;
-        }else
+        if( !bLoadGame )
         #endif
         {
             //Shuffle the deck here
@@ -212,9 +209,11 @@ void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
                 dealer.LoggedShuffle(shuffleData, randRem);
                 shuffleData << endl;
                 shuffleData.close();
+
+
+
                     #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
-                char handnumtxt/*[12] = "";
-                char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
+                char handnumtxt[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
 
                 FileNumberString( handnum , handnumtxt + strlen(handnumtxt) );
                 handnumtxt[23+12-1] = '\0'; //just to be safe
@@ -224,6 +223,9 @@ void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
                 shuffleData << endl;
                 shuffleData.close();
                     #endif
+
+
+
                 #else
                 dealer.ShuffleDeck( randRem );
                 #endif
@@ -240,6 +242,14 @@ void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
             }
         }
 
+
+        ///Note: If tableDealer is defined,
+        ///ExternalQueryCard won't manage bLoadGame for us.
+        ///We need to clear it here.
+        if( bLoadGame )
+        {
+            bLoadGame = false;
+        }
 
     }
 
