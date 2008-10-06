@@ -67,6 +67,7 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer)
 	{
 
 		my.BeginNewHands(tableDealer);
+        my.DealAllHands(tableDealer);
 		my.PlayGame(tableDealer);
 #ifdef DEBUG_SINGLE_HAND
 		exit(0);

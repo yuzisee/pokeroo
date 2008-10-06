@@ -344,8 +344,7 @@ protected:
 		virtual Player * FinalizeReportWinner();
 
 		void BeginNewHands(SerializeRandomDeck * );
-            void DealHands(SerializeRandomDeck * );
-                void DealAllHands(SerializeRandomDeck * );
+            void DealAllHands(SerializeRandomDeck * );
 		void PlayGame(SerializeRandomDeck * );
         void RefreshPlayers();
 

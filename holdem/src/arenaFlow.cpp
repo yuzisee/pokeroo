@@ -153,8 +153,41 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
     }while(curDealer != curIndex);
 }
 
-void HoldemArena::DealHands(SerializeRandomDeck * tableDealer)
+
+
+//If tableDealer is null, you may specify dealt cards using the console.
+void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
 {
+	roundPlayers = livePlayers;
+
+    myPot        = 0;
+    prevRoundPot = 0;
+    prevRoundFoldedPot = 0;
+    myFoldedPot  = 0;
+
+    curIndex = curDealer;
+
+    if( bVerbose && bSpectate )
+    {
+        gamelog << endl << "Next Dealer is " << p[curDealer]->GetIdent() << endl;
+    }
+
+
+	if( bVerbose )
+	{
+		gamelog << "================================================================" << endl;
+		gamelog << "============================New Hand" <<
+		#if defined(GRAPHMONEY)
+		" #"<< handnum <<
+		#else
+		"==" <<
+		#endif //GRAPHMONEY, with #else
+		"========================" << endl;
+
+	}
+
+
+
 
 
     if( tableDealer )
@@ -220,49 +253,11 @@ void HoldemArena::DealHands(SerializeRandomDeck * tableDealer)
     #endif
 
 
-        DealAllHands(tableDealer);
-
-}
-
-//If tableDealer is null, you may specify dealt cards using the console.
-void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
-{
-	roundPlayers = livePlayers;
-
-    myPot        = 0;
-    prevRoundPot = 0;
-    prevRoundFoldedPot = 0;
-    myFoldedPot  = 0;
-
-    curIndex = curDealer;
-
-    if( bVerbose && bSpectate )
-    {
-        gamelog << endl << "Next Dealer is " << p[curDealer]->GetIdent() << endl;
-    }
-
-
-	if( bVerbose )
-	{
-		gamelog << "================================================================" << endl;
-		gamelog << "============================New Hand" <<
-		#if defined(GRAPHMONEY)
-		" #"<< handnum <<
-		#else
-		"==" <<
-		#endif //GRAPHMONEY, with #else
-		"========================" << endl;
-
-	}
+        randRem = 1;
 
 
 
 
-    DealHands(tableDealer);
-
-
-
-randRem = 1;
 
 }
 
