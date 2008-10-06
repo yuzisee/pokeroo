@@ -43,6 +43,7 @@ typedef float float32;
 ///========================================================
 
 typedef uint32 handnum_t;
+typedef int8 playernumber_t;
 
 #ifdef __cplusplus
 class HoldemConstants

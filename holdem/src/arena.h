@@ -20,6 +20,8 @@
 
 
 
+
+
 #ifndef HOLDEM_Arena
 #define HOLDEM_Arena
 
@@ -38,7 +40,6 @@
 #include "engine.h"
 #include "arenaSave.h"
 #include "blinds.h"
-#include <vector>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -201,17 +202,18 @@ class HoldemAction
 ;
 
 
+
 class HoldemArena
 {
     ///These friend classes are used to handle game loops in a trigger/event based model
     friend class HoldemArenaEventBase;
 	private:
 
-		int8 curDealer;
+		playernumber_t curDealer;
 
 		void incrIndex();
-		int8 curIndex;
-		int8 nextNewPlayer;
+		playernumber_t curIndex;
+		playernumber_t nextNewPlayer;
 
 		float64 & PlayerBet(Player& target){ return target.myBetSize; }
 		float64 & PlayerLastBet(Player& target){ return target.lastBetSize; }
@@ -244,12 +246,12 @@ protected:
 		const bool bSpectate;
 
 
-		int8 livePlayers;
-		int8 roundPlayers;
-		int8 playersInHand;
-		int8 playersAllIn;
+		playernumber_t livePlayers;
+		playernumber_t roundPlayers;
+		playernumber_t playersInHand;
+		playernumber_t playersAllIn;
 
-        int8 curHighBlind;
+        playernumber_t curHighBlind;
 		BlindStructure* blinds;
 		float64 smallestChip;
 		float64 allChips;
@@ -265,7 +267,7 @@ protected:
 		float64 prevRoundPot;
 		float64 forcedBetSum; //Folded bets this round and bets that have been made blind before the player has had a chance to make another bet
 		float64 blindOnlySum; //Bets that have been made blind before the player has had a chance to make another bet
-        vector<Player*> p;
+        Player *(p[SEATS_AT_TABLE]);
 
 
     #ifdef GLOBAL_AICACHE_SPEEDUP
@@ -274,9 +276,9 @@ protected:
 
         void PrintPositions(std::ostream& o);
 		void broadcastHand(const Hand&,const int8 broadcaster);
-		void broadcastCurrentMove(const int8& playerID, const float64& theBet, const float64 theIncrBet
+		void broadcastCurrentMove(const playernumber_t& playerID, const float64& theBet, const float64 theIncrBet
                                 , const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn);
-		void defineSidePotsFor(Player&, const int8);
+		void defineSidePotsFor(Player&, const playernumber_t);
 		void resolveActions(Player&);
 
 		void compareAllHands(const CommunityPlus & , const int8, vector<ShowdownRep>& );
@@ -304,7 +306,7 @@ protected:
         void CachedQueryOffense(CallCumulation& q, const CommunityPlus& community, const CommunityPlus& withCommunity) const;
     #endif
 
-		void incrIndex(int8&) const;
+		void incrIndex(playernumber_t&) const;
 
         static void ToString(const HoldemAction& e, std::ostream& o);
 	static void FileNumberString(handnum_t value, char * str)
@@ -328,6 +330,8 @@ protected:
 		,communityBuffer(0)
         #endif
 		{
+		    //p = new Player * [SEATS_AT_TABLE];
+		    for(playernumber_t n=0;n<SEATS_AT_TABLE;++n){ p[n] = 0; }
 		    smallestChip = b->SmallBlind(); ///This INITIAL small blind should be assumed to be one chip.
         }
 
@@ -341,13 +345,13 @@ protected:
             void DealAllHands(SerializeRandomDeck * );
 
         //returns the first person to reveal cards (-1 if all fold)
-        int8 PlayRound(const CommunityPlus &, const int8);
-		int8 PlayRound_BeginHand();
-		int8 PlayRound_Flop(const CommunityPlus & flop);
-		int8 PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn);
-		int8 PlayRound_River(const CommunityPlus & flop, const DeckLocation & turn, const DeckLocation & river);
+        playernumber_t PlayRound(const CommunityPlus &, const int8);
+		playernumber_t PlayRound_BeginHand();
+		playernumber_t PlayRound_Flop(const CommunityPlus & flop);
+		playernumber_t PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn);
+		playernumber_t PlayRound_River(const CommunityPlus & flop, const DeckLocation & turn, const DeckLocation & river);
 
-		void PlayShowdown(const CommunityPlus &,const int8);
+		void PlayShowdown(const CommunityPlus &,const playernumber_t );
 
 		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &, const char * request_str);
 		DeckLocation RequestCard(SerializeRandomDeck *);
@@ -355,18 +359,18 @@ protected:
 
 
 
-        virtual int8 AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
+        virtual playernumber_t AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
 
-		virtual int8 NumberAtRound() const;
-        virtual int8 NumberInHand() const;
-		virtual int8 NumberAtTable() const;
+		virtual playernumber_t NumberAtRound() const;
+        virtual playernumber_t NumberInHand() const;
+		virtual playernumber_t NumberAtTable() const;
 
-		virtual int8 GetTotalPlayers() const;
+		virtual playernumber_t GetTotalPlayers() const;
 
-		virtual int8 GetCurPlayer() const;
-		virtual int8 GetDealer() const;
+		virtual playernumber_t GetCurPlayer() const;
+		virtual playernumber_t GetDealer() const;
 
-		virtual const Player* ViewPlayer(int8) const;
+		virtual const Player* ViewPlayer(playernumber_t) const;
 
 		virtual bool IsAlive(int8) const;
 		virtual bool IsInHand(int8) const;
@@ -414,7 +418,7 @@ class HoldemArenaEventBase
     float64 & myFoldedPot;
     float64 & prevRoundFoldedPot;
     float64 & myBetSum;
-    const vector<Player*> &p;
+    Player* ((&p)[SEATS_AT_TABLE]);
     const bool & bVerbose;
     float64 & randRem;
 

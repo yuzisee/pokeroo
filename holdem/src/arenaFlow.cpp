@@ -276,7 +276,28 @@ void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
 
 bool HoldemArena::BeginInitialState()
 {
-	if( p.empty() ) return false;
+    #ifdef DEBUGASSERT
+
+    bool bPlayersWithMoney = false;
+	for(playernumber_t t=0;t<SEATS_AT_TABLE;++t)
+    {
+        if( p[t] != 0 )
+        {
+            if( p[t]->myMoney > 0 )
+            {
+                bPlayersWithMoney = true;
+                break;
+            }
+        }
+    }
+
+    if( livePlayers == 0 || nextNewPlayer == 0 || !bPlayersWithMoney)
+    {
+        std::cerr << "Add players before playing";
+        exit(1);
+    }
+
+	#endif
 
 #ifdef DEBUGSAVEGAME
     if( !bLoadGame )

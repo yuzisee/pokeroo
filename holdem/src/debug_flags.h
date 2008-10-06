@@ -61,7 +61,7 @@
 
 /*****************/
 
-
+#define SEATS_AT_TABLE 10
 
 /* functionbase.h Debugging */
 #undef DEBUG_TRACE_ZERO

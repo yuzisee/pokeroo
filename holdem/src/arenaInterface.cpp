@@ -33,12 +33,13 @@
 void HoldemArena::free_members()
 {
     delete blinds;
-    while( !p.empty() )
+    for(int8 n=0;n<SEATS_AT_TABLE;++n)
     {
-        Player * x = p.back();
-        x->free_members();
-        delete x;
-        p.pop_back();
+        Player * x = p[n];
+        if( x )
+        {
+            x->free_members();
+        }
     }
 }
 
@@ -293,10 +294,16 @@ void HoldemArena::saveState()
 #endif
 
 
-int8 HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat)
+playernumber_t HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat)
 {
-//newStrat is now legally null.
-//	if( curIndex != -1 || newStrat->game != 0 || newStrat->me != 0) return -1;
+
+#ifdef DEBUGASSERT
+	if( curIndex != -1 || nextNewPlayer == SEATS_AT_TABLE)
+	{
+	    std::cerr << "Cannot add more players" << endl;
+	    exit(1);
+	}
+#endif
 
 	if( newStrat )
 	{
@@ -308,7 +315,8 @@ int8 HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStr
 	{
 		newStrat->me = newP;
 	}
-	p.push_back( newP );
+	p[nextNewPlayer] = newP;  //p.push_back( newP );
+
 
     allChips += money;
 
@@ -327,6 +335,8 @@ void HoldemArena::CachedQueryOffense(CallCumulation& q, const CommunityPlus& com
 
 HoldemArena::~HoldemArena()
 {
+
+
 #ifdef GLOBAL_AICACHE_SPEEDUP
     if( communityBuffer != 0 )
     {
@@ -334,11 +344,10 @@ HoldemArena::~HoldemArena()
         communityBuffer = 0;
     }
 #endif
-	while(! (p.empty()) )
-	{
-		delete p.back();
-		p.pop_back();
-	}
+
+    for(int8 n=0;n<SEATS_AT_TABLE;++n){ if(p[n]){ delete p[n]; }}
+
+	//delete [] p;
 }
 
 int8 HoldemArena::GetCurPlayer() const
