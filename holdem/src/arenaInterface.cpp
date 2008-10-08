@@ -298,7 +298,7 @@ playernumber_t HoldemArena::AddPlayer(const char* const id, const float64 money,
 {
 
 #ifdef DEBUGASSERT
-	if( curIndex != -1 || nextNewPlayer == SEATS_AT_TABLE)
+	if( curIndex != -1 || nextNewPlayer >= SEATS_AT_TABLE)
 	{
 	    std::cerr << "Cannot add more players" << endl;
 	    exit(1);

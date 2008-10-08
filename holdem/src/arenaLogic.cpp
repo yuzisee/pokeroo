@@ -386,6 +386,7 @@ void HoldemArena::prepareRound(const CommunityPlus& community, const int8 comSiz
 #endif
 		{
 			Player& withP = *(p[curIndex]);
+
 			withP.myStrat->SeeCommunity(community, comSize);
 		}
 	}while( curIndex != curDealer);

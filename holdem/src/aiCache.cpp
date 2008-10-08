@@ -590,6 +590,10 @@ string NamedTriviaDeck::NamePockets() const
 
         }
     }
+#ifdef DEBUGASSERT
+	std::cerr << "Invalid NamePockets()";
+	exit(1);
+#endif
     ss << "?";
     return ss.str();
 }
