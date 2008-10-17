@@ -132,11 +132,12 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
 
             if( withP.IsBot() )
             {
-                CommunityPlus & dealHandP = withP.myStrat->myDealtHand;
+                CommunityPlus dealHandP;
 
                 if( tableDealer ) std::cerr << withP.GetIdent().c_str() << std::flush;
                 RequestCards(tableDealer,2,dealHandP,", enter your cards (no whitespace): ");
 
+                withP.myStrat->StoreDealtHand(dealHandP);
 
                 dealHandP.HandPlus::DisplayHand(holecardsData);
                 holecardsData << withP.GetIdent().c_str() << endl;

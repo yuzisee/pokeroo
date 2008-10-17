@@ -113,7 +113,6 @@ class Player
 
 class PlayerStrategy
 {
-	friend class HoldemArena;
 	private:
 
 		CommunityPlus myDealtHand;
@@ -122,9 +121,12 @@ class PlayerStrategy
     protected:
 
         int8 myPositionIndex;
-		const CommunityPlus& ViewDealtHand() const { return myDealtHand; }
+
 
 	public:
+        const CommunityPlus& ViewDealtHand() const { return myDealtHand; }
+        virtual void StoreDealtHand(const CommunityPlus & o){ myDealtHand.SetUnique(o); }
+        virtual void ClearDealtHand(){ myDealtHand.SetEmpty(); }
 
 		const Player& ViewPlayer() const {return *me;}
 		const HoldemArena& ViewTable() const {return *game; }
@@ -132,11 +134,20 @@ class PlayerStrategy
 		PlayerStrategy() : me(0), game(0), myPositionIndex(0) {}
 		virtual ~PlayerStrategy(){};
 
-        virtual void Link(PlayerStrategy* o)
+        virtual void Link(PlayerStrategy * o)
         {
-            me = (o->me);
-            game = (o->game);
+            me = o->me;
+            game = o->game;
             myPositionIndex = o->myPositionIndex;
+
+			StoreDealtHand(o->ViewDealtHand());
+        }
+
+        virtual void Link(Player * const p, HoldemArena * const g, const int8 & i)
+        {
+            me = p;
+            game = g;
+            myPositionIndex = i;
         }
 
 		virtual void SeeCommunity(const Hand&, const int8) = 0;

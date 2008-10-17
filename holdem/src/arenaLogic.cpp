@@ -647,7 +647,7 @@ void HoldemArena::RefreshPlayers()
 
 		if( withP.IsBot() )
 		{
-	        withP.myStrat->myDealtHand.SetEmpty();
+	        withP.myStrat->ClearDealtHand();
 		}
 
 

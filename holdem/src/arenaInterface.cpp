@@ -305,16 +305,14 @@ playernumber_t HoldemArena::AddPlayer(const char* const id, const float64 money,
 	}
 #endif
 
-	if( newStrat )
-	{
-	    newStrat->myPositionIndex = nextNewPlayer;
-		newStrat->game = this;
-	}
+
     Player* newP = new Player(money, id,newStrat, INVALID);
+
 	if( newStrat )
 	{
-		newStrat->me = newP;
+	    newStrat->Link(newP, this, nextNewPlayer);
 	}
+
 	p[nextNewPlayer] = newP;  //p.push_back( newP );
 
 
