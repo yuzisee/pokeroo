@@ -241,7 +241,7 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
 
 
 //Here, dbetsize/dpot = 0
-float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrRaise, float64 fold_bet, float64 w, float64 opponents, float64 dexf,  bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
+float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrRaise, float64 fold_bet, float64 w, float64 opponents, float64 dexfy,  bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
 {
     if( w <= 0 ) return 0;
     const float64 raiseto = cps.alreadyBet + incrRaise;
@@ -273,7 +273,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
 
     if(bCheckPossible)
     {
-        return (h_times_remaining*C*dexf) / (h_times_remaining*A);
+        return (h_times_remaining*C*dexfy) / (h_times_remaining*A);
     }else
     {
     //USE FG for riskLoss
@@ -296,7 +296,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
         myFG.dw_dbet = 0; //Again, we don't need this
 
 
-        return (h_times_remaining*C*dexf - myFG.F_b(fold_bet) + dRiskLoss_pot*dexf) / (myFG.F_a(fold_bet) - h_times_remaining*A);
+        return (h_times_remaining*C*dexfy - myFG.F_b(fold_bet) + dRiskLoss_pot*dexfy) / (myFG.F_a(fold_bet) - h_times_remaining*A);
     }
 
 

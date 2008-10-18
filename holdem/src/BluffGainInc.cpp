@@ -217,9 +217,9 @@ float64 StateModel<LL,RR>::g_raised(float64 raisefrom, const float64 betSize)
 }
 
 template <class LL, class RR>
-float64 StateModel<LL,RR>::gd_raised(float64 raisefrom, const float64 betSize, const float64 y)
+float64 StateModel<LL,RR>::gd_raised(float64 raisefrom, const float64 betSize, const float64 yval)
 {
-    return fp->fd_raised(raisefrom, betSize, y - ea.FoldGain());
+    return fp->fd_raised(raisefrom, betSize, yval - ea.FoldGain());
 }
 
 template <class LL, class RR>
@@ -234,7 +234,7 @@ float64 StateModel<LL,RR>::f(const float64 betSize)
 }
 
 template <class LL, class RR>
-float64 StateModel<LL,RR>::fd(const float64 betSize, const float64 y)
+float64 StateModel<LL,RR>::fd(const float64 betSize, const float64 yval)
 {
     if( last_x != betSize )
     {

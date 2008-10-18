@@ -36,9 +36,9 @@
 
 
 
-FoldGainModel::~FoldGainModel(){};
+FoldGainModel::~FoldGainModel(){}
 
-FoldWaitLengthModel::~FoldWaitLengthModel(){};
+FoldWaitLengthModel::~FoldWaitLengthModel(){}
 
 
 

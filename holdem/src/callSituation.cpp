@@ -199,7 +199,7 @@ bool ExpectedCallD::inBlinds() const
 
 
 
-float64 ExpectedCallD::RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot) const
+float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot) const
 {
 
     const int8 N = handsDealt();
@@ -215,7 +215,7 @@ float64 ExpectedCallD::RiskLoss(float64 alreadyBet, float64 bankroll, float64 op
     {
         FG.waitLength.w = useMean->nearest_winPCT_given_rank(1.0 - 1.0/N);
     }
-    FG.waitLength.amountSacrificeVoluntary = (table->GetPotSize() - stagnantPot() - alreadyBet)/(handsIn()-1);
+    FG.waitLength.amountSacrificeVoluntary = (table->GetPotSize() - stagnantPot() - rpAlreadyBet)/(handsIn()-1);
 	FG.waitLength.amountSacrificeForced = avgBlind;
     FG.waitLength.bankroll = (allChips() - bankroll)/(N-1);
     FG.waitLength.opponents = 1;
