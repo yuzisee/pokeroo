@@ -1173,7 +1173,6 @@ float64 ExactCallBluffD::RiskPrice() const
 
 
     const float64 maxStack = tableinfo->table->GetAllChips();
-    const float64 maxShowdown = tableinfo->table->GetMaxShowdown(tableinfo->maxBet()); //maxBet is GetMoney()
 
     FoldGainModel FG(tableinfo->chipDenom());
 	//FG.bTraceEnable = true;
@@ -1184,7 +1183,7 @@ float64 ExactCallBluffD::RiskPrice() const
     FG.waitLength.bankroll = maxStack;
     FG.waitLength.opponents = 1;
     FG.waitLength.meanConv = ef;
-    const float64 riskprice = FG.FindZero(tableinfo->table->GetMinRaise() + tableinfo->callBet(),maxShowdown);
+    const float64 riskprice = FG.FindZero(tableinfo->table->GetMinRaise() + tableinfo->callBet(),maxStack/2);
 
 
     FG.f(riskprice);
@@ -1199,7 +1198,7 @@ float64 ExactCallBluffD::RiskPrice() const
 			return ( riskprice+tableinfo->chipDenom() );
 		}else
 		{
-			return maxShowdown;
+			return maxStack;
 		}
     }
 

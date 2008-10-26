@@ -20,7 +20,7 @@
 
 
 #include "arena.h"
-
+#include <string.h>
 
 
 /* Application flow
@@ -47,22 +47,22 @@
 
 void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, CommunityPlus & intoCards, const char * request_str)
 {
-	if( myDealer )
+    if( myDealer )
     {
 
-		for(uint8 n=0;n<numCards;++n)					{
-			if (!(  myDealer->DealCard(intoCards)  ))		{
-				std::cerr << "OUT OF CARDS ERROR" << endl; exit(1);		}}
+        for(uint8 n=0;n<numCards;++n)                    {
+            if (!(  myDealer->DealCard(intoCards)  ))        {
+                std::cerr << "OUT OF CARDS ERROR" << endl; exit(1);        }}
 
-	}
-	else
-	{
+    }
+    else
+    {
         std::cerr << request_str << endl;
         std::cin.sync();
         std::cin.clear();
 
         intoCards.SetEmpty();
-		for(uint8 n=0;n<numCards;++n) intoCards.AddToHand(ExternalQueryCard(std::cin));
+        for(uint8 n=0;n<numCards;++n) intoCards.AddToHand(ExternalQueryCard(std::cin));
 
 
         std::cin.sync();
@@ -83,18 +83,18 @@ DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
 {
     DeckLocation intoCard;
 
-	if( myDealer )
-	{
-		Hand newCard;
+    if( myDealer )
+    {
+        Hand newCard;
         if (!(  myDealer->DealCard(newCard)  ))
-		{
-			std::cerr << "OUT OF CARDS ERROR" << endl;
-			exit(1);
-		}
+        {
+            std::cerr << "OUT OF CARDS ERROR" << endl;
+            exit(1);
+        }
 
         intoCard = myDealer->dealt;
-	}
-	else
+    }
+    else
     {
         std::cerr << "Please enter the next community card (no whitespace): " << endl;
         std::cin.sync();
@@ -112,7 +112,7 @@ DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
         #endif
     }
 
-	return intoCard;
+    return intoCard;
 
 }
 
@@ -134,7 +134,7 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
             {
                 CommunityPlus dealHandP;
 
-                if( tableDealer ) std::cerr << withP.GetIdent().c_str() << std::flush;
+                if( !tableDealer ) std::cerr << withP.GetIdent().c_str() << std::flush;
                 RequestCards(tableDealer,2,dealHandP,", enter your cards (no whitespace): ");
 
                 withP.myStrat->StoreDealtHand(dealHandP);
@@ -159,7 +159,7 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
 //If tableDealer is null, you may specify dealt cards using the console.
 void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
 {
-	roundPlayers = livePlayers;
+    roundPlayers = livePlayers;
 
     myPot        = 0;
     prevRoundPot = 0;
@@ -174,18 +174,18 @@ void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
     }
 
 
-	if( bVerbose )
-	{
-		gamelog << "================================================================" << endl;
-		gamelog << "============================New Hand" <<
-		#if defined(GRAPHMONEY)
-		" #"<< handnum <<
-		#else
-		"==" <<
-		#endif //GRAPHMONEY, with #else
-		"========================" << endl;
+    if( bVerbose )
+    {
+        gamelog << "================================================================" << endl;
+        gamelog << "============================New Hand" <<
+        #if defined(GRAPHMONEY)
+        " #"<< handnum <<
+        #else
+        "==" <<
+        #endif //GRAPHMONEY, with #else
+        "========================" << endl;
 
-	}
+    }
 
 
 
@@ -280,7 +280,7 @@ bool HoldemArena::BeginInitialState()
     #ifdef DEBUGASSERT
 
     bool bPlayersWithMoney = false;
-	for(playernumber_t t=0;t<SEATS_AT_TABLE;++t)
+    for(playernumber_t t=0;t<SEATS_AT_TABLE;++t)
     {
         if( p[t] != 0 )
         {
@@ -298,7 +298,7 @@ bool HoldemArena::BeginInitialState()
         exit(1);
     }
 
-	#endif
+    #endif
 
 #ifdef DEBUGSAVEGAME
     if( !bLoadGame )
@@ -351,7 +351,7 @@ bool HoldemArena::BeginInitialState()
         holecardsData.open( DEBUGHOLECARDS, std::ios::app );
         #endif
 
-	return false;
+    return false;
     }
 #endif
 
@@ -374,7 +374,7 @@ Player * HoldemArena::FinalizeReportWinner()
         Player *withP = (p[i]);
         if( withP->myMoney > 0 ) return withP;
     }
-	return 0;
+    return 0;
 }
 
 
@@ -384,7 +384,7 @@ int8 HoldemArena::PlayRound_BeginHand()
 
 
 
-	if( blinds->HandPlayed(0) )
+    if( blinds->HandPlayed(0) )
     {
         if( bVerbose )
         {
@@ -392,16 +392,16 @@ int8 HoldemArena::PlayRound_BeginHand()
         }
     }
 
-	playersInHand = livePlayers;
-	roundPlayers = livePlayers;
-	bettingRoundsRemaining = 4;
-	playersAllIn = 0;
+    playersInHand = livePlayers;
+    roundPlayers = livePlayers;
+    bettingRoundsRemaining = 4;
+    playersAllIn = 0;
 
 
 
-	--bettingRoundsRemaining;
+    --bettingRoundsRemaining;
 
-	return PlayRound(CommunityPlus::EMPTY_COMPLUS,0);
+    return PlayRound(CommunityPlus::EMPTY_COMPLUS,0);
 
 }
 
@@ -419,43 +419,43 @@ int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop)
     }
 
 
-	roundPlayers = livePlayers;
-	--bettingRoundsRemaining;
+    roundPlayers = livePlayers;
+    --bettingRoundsRemaining;
 
 
-	return PlayRound(flop,3);
+    return PlayRound(flop,3);
 }
 
 int8 HoldemArena::PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn)
 {
-	CommunityPlus community;
-	community.SetUnique(flop);
-	community.AddToHand(turn);
+    CommunityPlus community;
+    community.SetUnique(flop);
+    community.AddToHand(turn);
 
     if( bSpectate )
     {
         gamelog << endl;
         gamelog << "Turn:\t" << flush;
 
-	    flop.HandPlus::DisplayHand(gamelog);
+        flop.HandPlus::DisplayHand(gamelog);
         HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
         gamelog << "   " << flush;
-	}
+    }
 
 
-	roundPlayers = livePlayers;
-	--bettingRoundsRemaining;
+    roundPlayers = livePlayers;
+    --bettingRoundsRemaining;
 
-	return PlayRound(community,4);
+    return PlayRound(community,4);
 
 }
 
 int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation & turn, const DeckLocation & river)
 {
-	CommunityPlus community;
-	community.SetUnique(flop);
-	community.AddToHand(turn);
-	community.AddToHand(river);
+    CommunityPlus community;
+    community.SetUnique(flop);
+    community.AddToHand(turn);
+    community.AddToHand(river);
 
     if( bSpectate )
     {
@@ -471,10 +471,10 @@ int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation
     }
 
 
-	roundPlayers = livePlayers;
-	--bettingRoundsRemaining;
+    roundPlayers = livePlayers;
+    --bettingRoundsRemaining;
 
-	return PlayRound(community,5);
+    return PlayRound(community,5);
 }
 
 

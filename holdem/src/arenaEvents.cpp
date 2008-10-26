@@ -432,7 +432,7 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 
                         if( bVerbose )
                         {
-                            gamelog << "The minimum raise bet is by " << myTable->GetMinRaise() << " to " << highBet + myTable->GetMinRaise() << endl;
+                            gamelog << "The minimum raise bet is by " << myTable->GetMinRaise() << " to " << highBet + myTable->GetMinRaise() << ": " << highBet + myTable->GetMinRaise() - PlayerBet(withP) << " more" << endl;
                         }
 
                     const float64 distFromCall = PlayerBet(withP) - highBet;

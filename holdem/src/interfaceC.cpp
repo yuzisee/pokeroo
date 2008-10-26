@@ -33,7 +33,7 @@ void GetBigBlind(void * table_ptr)
 {}
 
 ///Call this to determine if the small blind has changed
-void GetSmalllind(void * table_ptr)
+void GetSmallBlind(void * table_ptr)
 {}
 
 ///Get the amount of money playerNumber has in front of him

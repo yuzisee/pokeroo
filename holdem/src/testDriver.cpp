@@ -29,6 +29,7 @@
 #include "functionmodel.h"
 #include "aiInformation.h"
 #include <algorithm>
+//#include <direct.h>
 
 
 #define AUTOEXTRATOKEN "restore.txt"
@@ -120,6 +121,8 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer)
 std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
 
+    //mkdir("saves");
+
     #ifdef AUTOEXTRATOKEN
     char ExtraTokenNameBuffer[32] = "P1";
     #endif
@@ -180,7 +183,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
                 storePlayerName.close();
             }else
             {
-                //If you try to load a game without the savegame file, what's the default?
+                //If you try to load a game without the savegame file, this is the default?
                 smallBlindChoice=startingMoney/tokenRandomizer;
             }
         #else
@@ -191,7 +194,7 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     }else
     {
 //        smallBlindChoice=AUTO_CHIP_COUNT/200;
-        smallBlindChoice=AUTO_CHIP_COUNT/30;
+        smallBlindChoice=AUTO_CHIP_COUNT/35;
     }
 	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
 	StackPlayerBlinds bg(AUTO_CHIP_COUNT, 9, b.BigBlind() / AUTO_CHIP_COUNT  / 2);
@@ -200,8 +203,9 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             std::ios::openmode gamelogMode = std::ios::trunc;
             if( bLoadGame ) gamelogMode = std::ios::app;
 			std::ofstream gameOutput("gamelog.txt",gamelogMode);
-			HoldemArena myTable(&sg, gameOutput,true, true);
+			HoldemArena myTable(&bg, gameOutput,true, true);
 		#else
+			//This is the default WINRELEASE
 	HoldemArena myTable(&sg, gameLog,true, true);
 		#endif
 	//ThresholdStrategy stagStrat(0.5);
