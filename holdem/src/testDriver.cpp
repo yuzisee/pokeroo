@@ -55,6 +55,34 @@ using std::flush;
 char * myPlayerName = 0;
 
 
+void InitGameLoop(HoldemArena & my)
+{
+
+#ifdef DEBUGASSERT
+	my.AssertInitialState();
+#endif
+
+	
+#ifdef DEBUGSAVEGAME
+	if( !my.bLoadGame )
+#endif
+	{
+		my.BeginInitialState();
+#ifdef DEBUGSAVEGAME
+		my.saveState();
+#endif
+	}
+#if defined(GRAPHMONEY) && defined(DEBUGSAVEGAME)
+    else
+    {
+	    my.LoadBeginInitialState();
+    }
+#endif
+
+
+}
+
+
 
 
 void PlayGameInner(HoldemArena & my,SerializeRandomDeck * tableDealer)
@@ -85,13 +113,10 @@ void PlayGameInner(HoldemArena & my,SerializeRandomDeck * tableDealer)
 }
 
 
-
-
-
 Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer)
 {
 
-	my.BeginInitialState();
+	InitGameLoop(my);
 
 	while(my.NumberAtTable() > 1)
 	{
@@ -103,6 +128,15 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer)
 		exit(0);
 #endif
 		my.RefreshPlayers(); ///New Hand
+
+
+#ifdef DEBUGSAVEGAME
+    #ifdef RELOAD_LAST_HAND
+	        if( NumberAtTable() > 1 )
+    #endif
+        	{  my.saveState();  }
+#endif
+
 
 	}
 

@@ -185,44 +185,65 @@ void HoldemArena::broadcastHand(const Hand& h, const int8 broadcaster)
 }
 
 #ifdef DEBUGSAVEGAME
+
 std::istream * HoldemArena::LoadState(SerializeRandomDeck * extDealer)
 {
     loadFile.open(DEBUGSAVEGAME);
     if( ! (loadFile.is_open()) )
     {
         return 0;
-    }
-    bLoadGame = true;
+    }else
+    {
+   	bLoadGame = true;
 
+	bool bHandNum = false;
 
 #if defined(GRAPHMONEY)
-            loadFile >> handnum ;
-            loadFile.ignore(1,'n');
+	bHandNum = true;
 #endif
-            int16 numericValue;
+
+ 	UnserializeRoundStart(loadFile,bHandNum);
+
+            if( extDealer )  extDealer->Unserialize( loadFile ); //Save state of deck
+            return &loadFile;
+    }
+}
+
+void HoldemArena::UnserializeRoundStart(std::ifstream & fileLoadState, bool bHandNum)
+{
+
+if( bHandNum )
+{
+            fileLoadState >> handnum ;
+            fileLoadState.ignore(1,'n');
+}
+
+	    int16 numericValue;
 
 
-            blinds->mySmallBlind = HoldemUtil::ReadFloat64( loadFile );
-            loadFile.ignore(1,'=');
-            blinds->myBigBlind = HoldemUtil::ReadFloat64( loadFile );
-            blinds->Reload(blinds->mySmallBlind,blinds->myBigBlind
+            blinds->mySmallBlind = HoldemUtil::ReadFloat64( fileLoadState );
+            fileLoadState.ignore(1,'=');
+            blinds->myBigBlind = HoldemUtil::ReadFloat64( fileLoadState );
+            
+        blinds->Reload(blinds->mySmallBlind,blinds->myBigBlind
             #if defined(GRAPHMONEY)
             ,handnum
             #endif
             );
-            loadFile.ignore(1,'@');
-            loadFile >> numericValue;
-
-            curDealer = static_cast<int8>(numericValue);
-            loadFile.ignore(1,'@');
-
-            smallestChip = HoldemUtil::ReadFloat64( loadFile );
-            loadFile.ignore(1,'^');
+            
+	    fileLoadState.ignore(1,'@');
+            fileLoadState >> numericValue;
+            
+	    curDealer = static_cast<int8>(numericValue);
+            
+	    fileLoadState.ignore(1,'@');
+            smallestChip = HoldemUtil::ReadFloat64( fileLoadState );
+            fileLoadState.ignore(1,'^');
 
 
             for( int8 i=0;i<nextNewPlayer;++i )
             {
-                float64 pMoney = HoldemUtil::ReadFloat64( loadFile );
+                float64 pMoney = HoldemUtil::ReadFloat64( fileLoadState );
                 p[i]->myMoney = pMoney;
 				if( pMoney <= 0 ){
 					--livePlayers;
@@ -233,63 +254,62 @@ std::istream * HoldemArena::LoadState(SerializeRandomDeck * extDealer)
 				}
             }
 
-            if( extDealer )  extDealer->Unserialize( loadFile ); //Save state of deck
 
 
 
-            return &loadFile;
 }
-
 
 void HoldemArena::saveState()
 {
-    if( loadFile.is_open() ) loadFile.close();
+
+	std::ofstream newSaveState(DEBUGSAVEGAME);
+
+ if( loadFile.is_open() ) loadFile.close();
+
+
+        bool bHandNumNew = false;
+        #if defined(GRAPHMONEY)
+	    	bHandNumNew = true;
+	#endif
+
+  	SerializeRoundStart(newSaveState,bHandNumNew);
+	newSaveState.close();
 
 #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
-            char handnumtxt/*[12] = "";
-            char namebase*/[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
+            char handnumtxt
+//[12] = "";            char namebase//
+[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
 
 	    FileNumberString(handnum,handnumtxt + strlen(handnumtxt));
             handnumtxt[23+12-1] = '\0'; //just to be safe
 
             std::ofstream allSaveState( handnumtxt );
+	SerializeRoundStart(allSaveState,true);
+	allSaveState.close();
 #endif
 
-    std::ofstream newSaveState(DEBUGSAVEGAME);
-    #if defined(GRAPHMONEY)
-    newSaveState << handnum << "n";
-        #ifdef DEBUGSAVEGAME_ALL
-    allSaveState << handnum << "n";
-    HoldemUtil::WriteFloat64( allSaveState, blinds->SmallBlind() );
-    allSaveState << "=" << flush;
-    HoldemUtil::WriteFloat64( allSaveState, blinds->BigBlind() );
-    allSaveState << "@" << (int)curDealer << "@" << flush;
-    HoldemUtil::WriteFloat64( allSaveState, smallestChip );
-    allSaveState << "^" << flush;
-        #endif //DEBUGSAVEGAME_ALL
-    #endif //GRAPHMONEY
-    HoldemUtil::WriteFloat64( newSaveState, blinds->SmallBlind() );
-    newSaveState << "=" << flush;
-    HoldemUtil::WriteFloat64( newSaveState, blinds->BigBlind() );
-    newSaveState << "@" << (int)curDealer << "@" << flush;
-    HoldemUtil::WriteFloat64( newSaveState, smallestChip );
-    newSaveState << "^" << flush;
+}
 
+void HoldemArena::SerializeRoundStart(std::ofstream & fileSaveState, bool bHandNum)
+{
+    if( bHandNum )
+    {
+    	fileSaveState << handnum << "n";
+    }
+    HoldemUtil::WriteFloat64( fileSaveState, blinds->SmallBlind() );
+    fileSaveState << "=" << flush;
+    HoldemUtil::WriteFloat64( fileSaveState, blinds->BigBlind() );
+    fileSaveState << "@" << (int)curDealer << "@" << flush;
+    HoldemUtil::WriteFloat64( fileSaveState, smallestChip );
+    fileSaveState << "^" << flush;
 
     for( int8 i=0;i<nextNewPlayer;++i )
     {
         float64 pMoney =  p[i]->myMoney;
-		if( pMoney < 0 ) pMoney = 0;
-		HoldemUtil::WriteFloat64( newSaveState, pMoney );
-        #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
-        HoldemUtil::WriteFloat64( allSaveState, pMoney );
-        #endif
+	if( pMoney < 0 ) pMoney = 0;
+	HoldemUtil::WriteFloat64( fileSaveState, pMoney );
     }
 
-    newSaveState.close();
-    #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
-    allSaveState.close();
-    #endif
 }
 #endif
 

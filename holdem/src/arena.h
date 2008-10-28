@@ -232,11 +232,6 @@ class HoldemArena
 		float64 & PlayerHandBetTotal(Player& target){ return target.handBetTotal; }
 		float64 & PlayerMoney(Player& target){ return target.myMoney; }
 
-#ifdef DEBUGSAVEGAME
-        std::ifstream loadFile;
-        bool bLoadGame;
-        void saveState();
-#endif
 
 #ifdef DEBUGHOLECARDS
         std::ofstream holecardsData;
@@ -306,7 +301,15 @@ protected:
 	public:
 
 #ifdef DEBUGSAVEGAME
+        std::ifstream loadFile;
+        bool bLoadGame;
+        void saveState();
+        void SerializeRoundStart(std::ofstream & fileSaveState, bool bHandNum);
+#endif
+
+#ifdef DEBUGSAVEGAME
             std::istream* LoadState(SerializeRandomDeck * extDealer);
+            void UnserializeRoundStart(std::ifstream & fileSaveState, bool bHandNum);
 #endif
 
 	#if defined(GRAPHMONEY)
@@ -330,9 +333,6 @@ protected:
 
 		HoldemArena(BlindStructure* b, std::ostream& targetout, bool illustrate, bool spectate)
 		: curIndex(-1),  nextNewPlayer(0)
-#ifdef DEBUGSAVEGAME
-        ,bLoadGame(false)
-#endif
         ,gamelog(targetout)
         ,bVerbose(illustrate),bSpectate(spectate)
         ,livePlayers(0),curHighBlind(-1),blinds(b),allChips(0)
@@ -340,6 +340,9 @@ protected:
 		#ifdef GLOBAL_AICACHE_SPEEDUP
 		,communityBuffer(0)
         #endif
+#ifdef DEBUGSAVEGAME
+        ,bLoadGame(false)
+#endif
 		{
 		    //p = new Player * [SEATS_AT_TABLE];
 		    for(playernumber_t n=0;n<SEATS_AT_TABLE;++n){ p[n] = 0; }
@@ -349,7 +352,9 @@ protected:
         virtual void free_members();
 		virtual ~HoldemArena();
 
-		virtual bool BeginInitialState();
+		virtual void AssertInitialState();
+		virtual void LoadBeginInitialState();
+		virtual void BeginInitialState();
 		virtual Player * FinalizeReportWinner();
 
 		void BeginNewHands(SerializeRandomDeck * );

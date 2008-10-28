@@ -694,14 +694,6 @@ void HoldemArena::RefreshPlayers()
 
 
 
-#ifdef DEBUGSAVEGAME
-    #ifdef RELOAD_LAST_HAND
-	        if( NumberAtTable() > 1 )
-    #endif
-        	{  saveState();  }
-#endif
-
-
 }
 
 

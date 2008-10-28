@@ -25,7 +25,7 @@
 
 /* Application flow
  *
- * BeginInitialState()
+ * BeginInitialStateLOGIC
  * loop{
  *     DealHands();
  *     repeat
@@ -272,12 +272,9 @@ void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
 
 }
 
-
-
-
-bool HoldemArena::BeginInitialState()
-{
-    #ifdef DEBUGASSERT
+void HoldemArena::AssertInitialState()
+{ 
+#ifdef DEBUGASSERT
 
     bool bPlayersWithMoney = false;
     for(playernumber_t t=0;t<SEATS_AT_TABLE;++t)
@@ -300,10 +297,24 @@ bool HoldemArena::BeginInitialState()
 
     #endif
 
-#ifdef DEBUGSAVEGAME
-    if( !bLoadGame )
-#endif
-    {
+
+}
+
+void HoldemArena::LoadBeginInitialState()
+{
+
+        scoreboard.open(GRAPHMONEY , std::ios::app);
+        #ifdef DEBUGHOLECARDS
+        holecardsData.open( DEBUGHOLECARDS, std::ios::app );
+        #endif
+
+
+}
+
+void HoldemArena::BeginInitialState()
+{
+
+
         curIndex = 0;
         curDealer = 0;
 
@@ -332,30 +343,6 @@ bool HoldemArena::BeginInitialState()
         #ifdef DEBUGHOLECARDS
         holecardsData.open( DEBUGHOLECARDS );
         #endif
-            /*
-#ifdef DEBUGSAVEGAME
-             std::ofstream killfile(DEBUGSAVEGAME,std::ios::out | std::ios::trunc);
-             killfile.close();
-#endif
-             */
-#ifdef DEBUGSAVEGAME
-            saveState();
-#endif
-    }
-
-#if defined(GRAPHMONEY) && defined(DEBUGSAVEGAME)
-    else
-    {
-        scoreboard.open(GRAPHMONEY , std::ios::app);
-        #ifdef DEBUGHOLECARDS
-        holecardsData.open( DEBUGHOLECARDS, std::ios::app );
-        #endif
-
-    return false;
-    }
-#endif
-
-    return true;
 
 }
 
