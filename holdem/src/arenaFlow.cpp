@@ -20,7 +20,6 @@
 
 
 #include "arena.h"
-#include <string.h>
 
 
 /* Application flow
@@ -148,13 +147,13 @@ void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, C
 
         std::cin.sync();
         std::cin.clear();
-        #ifdef DEBUGSAVEGAME
+        /*
         if( saveCards )
         {
             intoCards.HandPlus::DisplayHand(*saveCards);
             saveCards->flush();
         }
-        #endif
+        */
     }
 
 }
@@ -182,13 +181,13 @@ DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer, std::ofstr
         intoCard = ExternalQueryCard(std::cin);
         std::cin.sync();
         std::cin.clear();
-        #ifdef DEBUGSAVEGAME
+        /*
         if( saveCards )
         {
             HoldemUtil::PrintCard( *saveCards, intoCard.GetIndex() );
             saveCards->flush();
         }
-        #endif
+        */
     }
 
     return intoCard;
@@ -199,6 +198,15 @@ DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer, std::ofstr
 
 void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer, ofstream *saveCardsPtr)
 {
+
+    #ifdef DEBUGHOLECARDS
+        holecardsData <<
+                #if defined(GRAPHMONEY)
+                "############ Hand " << handnum << " " <<
+                #endif
+        "############" << endl;
+
+    #endif
 
     do
     {
@@ -236,7 +244,7 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer, ofstream *save
 
 
 //If tableDealer is null, you may specify dealt cards using the console.
-void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
+void HoldemArena::BeginNewHands()
 {
     roundPlayers = livePlayers;
 
@@ -265,25 +273,6 @@ void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
         "========================" << endl;
 
     }
-
-
-
-
-
-    #ifdef DEBUGHOLECARDS
-        holecardsData <<
-                #if defined(GRAPHMONEY)
-                "############ Hand " << handnum << " " <<
-                #endif
-        "############" << endl;
-
-    #endif
-
-
-        randRem = 1;
-
-
-
 
 
 }
@@ -327,6 +316,16 @@ void HoldemArena::LoadBeginInitialState()
 
 }
 
+void HoldemArena::ResetDRseed()
+{
+    randRem = 1;
+}
+
+float64 HoldemArena::GetDRseed()
+{
+    return randRem;
+}
+
 void HoldemArena::BeginInitialState()
 {
 
@@ -351,11 +350,6 @@ void HoldemArena::BeginInitialState()
                 }
                 scoreboard << endl;
             #endif
-
-        #ifdef REPRODUCIBLE
-            randRem = 1;
-        #endif
-
         #ifdef DEBUGHOLECARDS
         holecardsData.open( DEBUGHOLECARDS );
         #endif

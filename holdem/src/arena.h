@@ -304,6 +304,7 @@ protected:
 
 #ifdef DEBUGSAVEGAME
         std::ifstream loadFile;
+	void openSaveFile(std::ifstream & unopenedFile);
         void saveState();
         void SerializeRoundStart(std::ofstream & fileSaveState, bool bHandNum);
 #endif
@@ -355,8 +356,12 @@ protected:
 		virtual void BeginInitialState();
 		virtual Player * FinalizeReportWinner();
 
-		void BeginNewHands(SerializeRandomDeck * );
-            void DealAllHands(SerializeRandomDeck *, std::ofstream * );
+		// HoldemArenaBetting events and PlayShowdown will both update the deterministic-random-seed assistant
+        void ResetDRseed(); //You may reset the seed here (recommended at the beginning of each hand, before the first HoldemArenaBetting event
+        float64 GetDRseed(); //You may get a seed at any time, but it is best to do so after PlayShowdown or when no more HoldemArenaBetting events will take place
+
+		void BeginNewHands();
+        void DealAllHands(SerializeRandomDeck *, std::ofstream * );
 
         //returns the first person to reveal cards (-1 if all fold)
         playernumber_t PlayRound(const CommunityPlus &, const int8);

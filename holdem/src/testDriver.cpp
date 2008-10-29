@@ -29,6 +29,7 @@
 #include "functionmodel.h"
 #include "aiInformation.h"
 #include <algorithm>
+#include <string.h>
 //#include <direct.h>
 
 
@@ -68,6 +69,9 @@ void InitGameLoop(HoldemArena & my, bool bLoadGame)
 #endif
 	{
 		my.BeginInitialState();
+#ifdef REPRODUCIBLE
+		my.ResetDRseed();
+#endif
 #ifdef DEBUGSAVEGAME
 		my.saveState();
 #endif
@@ -112,7 +116,7 @@ void PlayGameInner(HoldemArena & my,SerializeRandomDeck * tableDealer, std::ofst
 	my.PlayShowdown(finalCommunity,playerToReveal);
 }
 
-void InitShuffleDeck(SerializeRandomDeck & dealer)
+void LoggedShuffleDeck(SerializeRandomDeck & dealer, float64 randRem)
 {
 
 			#ifdef DEBUGSAVEGAME
@@ -150,7 +154,7 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer, bool bL
     ofstream *saveCardsPtr = 0;
     if( !bLoadGame )
     {
-        saveCardsToFile(DEBUGSAVEGAME,std::ios::app);
+        saveCardsToFile.open(DEBUGSAVEGAME,std::ios::app);
 		saveCardsPtr = *saveCardsToFile;
     }
 
@@ -160,28 +164,31 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer, bool bL
 
     if( tableDealer && !bLoadGame )
 	{
-		//Shuffle the deck here
-		tableDealer->UndealAll();
-		if(randRem != 0)
-		{
+    	tableDealer->UndealAll();
 
-            InitShuffleDeck( *tableDealer );
-      #ifdef DEBUGASSERT
-		}
-		else
-		{
-			std::cerr << "YOU DIDN'T SHUFFLE" << endl;
-			gamelog << "YOU DIDN'T SHUFFLE" << endl;
-			exit(1);
-      #endif
-		}
+		//Shuffle the deck here with an arbitrary seed
+		float64 randRem = time(0);
+
+        LoggedShuffleDeck( *tableDealer, randRem ); 
 	}
 
 	while(my.NumberAtTable() > 1)
 	{
 
 		my.BeginNewHands(tableDealer);
+
+
         my.DealAllHands(tableDealer,saveCardsPtr);
+
+#ifdef DEBUGASSERT
+		if( my.GetDRseed() != 1 )
+		{
+			std::cerr << "randRem is out of control!" << endl;
+			std::cerr << "We ResetDRseed at the end of this while loop, and it's never expected to change until PlayGameInner. What happenned?" << endl;
+			exit(1);
+		}
+#endif
+		my.ResetDRseed();
 		PlayGameInner(my,tableDealer);
 #ifdef DEBUG_SINGLE_HAND
 		exit(0);
@@ -193,9 +200,19 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer, bool bL
     #ifdef RELOAD_LAST_HAND
 	        if( NumberAtTable() > 1 )
     #endif
-        	{  my.saveState();  }
+        	{
+				my.saveState(); //First save the round state
+				//Then shuffle the deck, and append it's state to the savegame file.
+        		if( tableDealer )
+		        {
+					tableDealer->UndealAll();
+					LoggedShuffleDeck( *tableDealer, my.GetDRseed() ); 
+				}
+	            my.ResetDRseed(); 
+			}
 #endif
-
+        
+		bLoadGame = false;
 
 	}
 

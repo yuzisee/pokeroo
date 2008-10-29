@@ -209,6 +209,39 @@ std::istream * HoldemArena::LoadState(SerializeRandomDeck * extDealer)
     }
 }
 
+
+void HoldemArena::saveState()
+{
+
+	std::ofstream newSaveState(DEBUGSAVEGAME);
+
+ if( loadFile.is_open() ) loadFile.close();
+
+
+        bool bHandNumNew = false;
+        #if defined(GRAPHMONEY)
+	    	bHandNumNew = true;
+	#endif
+
+  	SerializeRoundStart(newSaveState,bHandNumNew);
+	newSaveState.close();
+
+#if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
+            char handnumtxt
+//[12] = "";            char namebase//
+[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
+
+	    FileNumberString(handnum,handnumtxt + strlen(handnumtxt));
+            handnumtxt[23+12-1] = '\0'; //just to be safe
+
+            std::ofstream allSaveState( handnumtxt );
+	SerializeRoundStart(allSaveState,true);
+	allSaveState.close();
+#endif
+
+}
+#endif //DEBUGSAVESTATE
+
 void HoldemArena::UnserializeRoundStart(std::ifstream & fileLoadState, bool bHandNum)
 {
 
@@ -259,36 +292,6 @@ if( bHandNum )
 
 }
 
-void HoldemArena::saveState()
-{
-
-	std::ofstream newSaveState(DEBUGSAVEGAME);
-
- if( loadFile.is_open() ) loadFile.close();
-
-
-        bool bHandNumNew = false;
-        #if defined(GRAPHMONEY)
-	    	bHandNumNew = true;
-	#endif
-
-  	SerializeRoundStart(newSaveState,bHandNumNew);
-	newSaveState.close();
-
-#if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
-            char handnumtxt
-//[12] = "";            char namebase//
-[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
-
-	    FileNumberString(handnum,handnumtxt + strlen(handnumtxt));
-            handnumtxt[23+12-1] = '\0'; //just to be safe
-
-            std::ofstream allSaveState( handnumtxt );
-	SerializeRoundStart(allSaveState,true);
-	allSaveState.close();
-#endif
-
-}
 
 void HoldemArena::SerializeRoundStart(std::ofstream & fileSaveState, bool bHandNum)
 {
@@ -311,7 +314,6 @@ void HoldemArena::SerializeRoundStart(std::ofstream & fileSaveState, bool bHandN
     }
 
 }
-#endif
 
 
 playernumber_t HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat)

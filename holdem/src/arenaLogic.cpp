@@ -24,9 +24,7 @@
 
 #include "arena.h"
 #include "stratHistory.h"
-#include <fstream>
 #include <algorithm>
-#include <string.h>
 
 
 
