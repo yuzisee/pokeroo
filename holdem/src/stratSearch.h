@@ -35,6 +35,7 @@ class SearchStrategy : public PlayerStrategy
 		SearchStrategy() : PlayerStrategy(),w(0){}
         virtual ~SearchStrategy();
 
+
 		virtual void SeeCommunity(const Hand&, const int8);
 
 }

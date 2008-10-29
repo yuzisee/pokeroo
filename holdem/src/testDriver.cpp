@@ -55,7 +55,7 @@ using std::flush;
 char * myPlayerName = 0;
 
 
-void InitGameLoop(HoldemArena & my)
+void InitGameLoop(HoldemArena & my, bool bLoadGame)
 {
 
 #ifdef DEBUGASSERT
@@ -64,7 +64,7 @@ void InitGameLoop(HoldemArena & my)
 
 	
 #ifdef DEBUGSAVEGAME
-	if( !my.bLoadGame )
+	if( !bLoadGame )
 #endif
 	{
 		my.BeginInitialState();
@@ -85,20 +85,20 @@ void InitGameLoop(HoldemArena & my)
 
 
 
-void PlayGameInner(HoldemArena & my,SerializeRandomDeck * tableDealer)
+void PlayGameInner(HoldemArena & my,SerializeRandomDeck * tableDealer, std::ofstream * saveCardFile)
 {
 
 	if( my.PlayRound_BeginHand() == -1 ) return;
 
 	CommunityPlus myFlop;
-	my.RequestCards(tableDealer,3,myFlop, "Please enter the flop (no whitespace): ");
+	my.RequestCards(tableDealer,3,myFlop, "Please enter the flop (no whitespace): ", saveCardFile);
     if( my.PlayRound_Flop(myFlop) == -1 ) return;
 
 
-	DeckLocation myTurn = my.RequestCard(tableDealer);
+	DeckLocation myTurn = my.RequestCard(tableDealer, saveCardFile);
     if( my.PlayRound_Turn(myFlop,myTurn) == -1 ) return;
 
-	DeckLocation myRiver = my.RequestCard(tableDealer);
+	DeckLocation myRiver = my.RequestCard(tableDealer, saveCardFile);
     int8 playerToReveal = my.PlayRound_River(myFlop,myTurn,myRiver);
     if( playerToReveal == -1 ) return;
 
@@ -112,17 +112,76 @@ void PlayGameInner(HoldemArena & my,SerializeRandomDeck * tableDealer)
 	my.PlayShowdown(finalCommunity,playerToReveal);
 }
 
-
-Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer)
+void InitShuffleDeck(SerializeRandomDeck & dealer)
 {
 
-	InitGameLoop(my);
+			#ifdef DEBUGSAVEGAME
+			std::ofstream shuffleData( DEBUGSAVEGAME, std::ios::app );
+			dealer.LoggedShuffle(shuffleData, randRem);
+			shuffleData << endl;
+			shuffleData.close();
+
+
+
+				#if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
+			char handnumtxt[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
+
+			FileNumberString( handnum , handnumtxt + strlen(handnumtxt) );
+			handnumtxt[23+12-1] = '\0'; //just to be safe
+
+			shuffleData.open( handnumtxt , std::ios::app );
+			dealer.LogDeckState( shuffleData );
+			shuffleData << endl;
+			shuffleData.close();
+				#endif
+
+
+
+			#else
+			dealer.ShuffleDeck( randRem );
+			#endif
+
+
+}
+
+Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer, bool bLoadGame)
+{
+    ofstream saveCardsToFile;
+    ofstream *saveCardsPtr = 0;
+    if( !bLoadGame )
+    {
+        saveCardsToFile(DEBUGSAVEGAME,std::ios::app);
+		saveCardsPtr = *saveCardsToFile;
+    }
+
+
+
+	InitGameLoop(my, bLoadGame);
+
+    if( tableDealer && !bLoadGame )
+	{
+		//Shuffle the deck here
+		tableDealer->UndealAll();
+		if(randRem != 0)
+		{
+
+            InitShuffleDeck( *tableDealer );
+      #ifdef DEBUGASSERT
+		}
+		else
+		{
+			std::cerr << "YOU DIDN'T SHUFFLE" << endl;
+			gamelog << "YOU DIDN'T SHUFFLE" << endl;
+			exit(1);
+      #endif
+		}
+	}
 
 	while(my.NumberAtTable() > 1)
 	{
 
 		my.BeginNewHands(tableDealer);
-        my.DealAllHands(tableDealer);
+        my.DealAllHands(tableDealer,saveCardsPtr);
 		PlayGameInner(my,tableDealer);
 #ifdef DEBUG_SINGLE_HAND
 		exit(0);
@@ -139,6 +198,9 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer)
 
 
 	}
+
+
+	if( saveCardsPtr ) saveCardsPtr->close();
 
 	return my.FinalizeReportWinner();
 
@@ -414,7 +476,7 @@ if( bLoadGame )
 
 
 
-    Player* iWin = PlayGameLoop(myTable,tableDealer);
+    Player* iWin = PlayGameLoop(myTable,tableDealer, bLoadGame);
 
 #ifdef REGULARINTOLOG
 gameOutput.close();

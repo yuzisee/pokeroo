@@ -162,6 +162,7 @@ class HistoryStrategy : public virtual PlayerStrategy
 
         ~HistoryStrategy();
 
+
     virtual void SeeOppHand(const int8, const Hand&) = 0;
     virtual void SeeAction(const HoldemAction&) {};
     virtual void FinishHand();

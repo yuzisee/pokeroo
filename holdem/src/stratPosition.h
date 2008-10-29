@@ -80,6 +80,7 @@ class PositionalStrategy : virtual public PlayerStrategy
 		PositionalStrategy( bool bMean=false,bool bRanking=false,bool bWorse=true,bool bHybrid=false ) : PlayerStrategy(), detailPCT(0), bLogMean(bMean), bLogRanking(bRanking), bLogWorse(bWorse), bLogHybrid(bHybrid) {}
 		virtual ~PositionalStrategy();
 
+
 		virtual void SeeCommunity(const Hand&, const int8);
 		virtual float64 MakeBet() = 0;
 		virtual void SeeOppHand(const int8, const Hand&){};

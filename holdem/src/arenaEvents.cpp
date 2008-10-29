@@ -577,10 +577,10 @@ void HoldemArenaShowdown::finishShowdown()
     curIndex = called;
 }
 
-void HoldemArenaShowdown::MuckHand()
+void HoldemArenaShowdown::MuckHand(const CommunityPlus & community)
 {
     ShowdownRep worstHand(curIndex); ///worstHand defaults to the worst hand. You only need to initialize playerIndex
-    RevealHand(worstHand, CommunityPlus::EMPTY_COMPLUS);
+    RevealHand(CommunityPlus::EMPTY_COMPLUS, community);
 }
 
 void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const CommunityPlus & playerHand)
@@ -611,7 +611,7 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const Commun
         winners.push_back(comp);
         best = comp;
     }
-    ///His hand was worse, but since he is all-in he MUST show his hand.
+    ///His hand was worse, but since he is all-in he MUST show his hand (unless we don't know it)
     else
     {///Distinctly defeated
      //  http://www.texasholdem-poker.com/holdem_rules.php
@@ -728,9 +728,23 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Communit
 
 }
 
-void HoldemArenaShowdown::RevealHand(const ShowdownRep& comp, const CommunityPlus & playerHand)
+void HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community)
 {
     if( bRoundState == '!' ) return;
+
+    ShowdownRep comp(curIndex);
+
+    CommunityPlus withHandP;
+    withHandP.SetUnique( playerHand );
+
+    if( playerHand.IsEmpty() )
+    {
+        comp.SetMuck();
+    }else
+    {
+        withHandP.AppendUnique(community);
+        comp.Reset(&withHandP);
+    }
 
     switch( bRoundState )
     {

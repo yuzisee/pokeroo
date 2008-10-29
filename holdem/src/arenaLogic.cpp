@@ -150,69 +150,8 @@ void HoldemArena::compareAllHands(const CommunityPlus & community, const int8 ca
 
     while(w.bRoundState != '!')
     {
-        Player& withP = *(p[curIndex]);
-
-		if( withP.IsBot() )
-		{
-            CommunityPlus withHandP;
-	        withHandP.SetUnique( withP.myStrat->ViewDealtHand() );
-
-			ShowdownRep comp(&withHandP, &community, curIndex);
-			w.RevealHand(comp, withHandP);
-		}else
-		{
-			const int16 INPUTLEN = 5;
-			char inputBuf[INPUTLEN];
-
-
-			std::cerr << p[curIndex]->GetIdent().c_str() << ", enter your cards (no whitespace)" << endl;
-			std::cerr << "or enter nothing to muck: " << endl;
-			std::cin.sync();
-			std::cin.clear();
-
-
-
-
-
-            CommunityPlus showHandP;
-			showHandP.SetEmpty();
-
-
-            bool bMuck = true;
-			if( std::cin.getline( inputBuf, INPUTLEN ) != 0 )
-			{
-				if( 0 != inputBuf[0] )
-				{
-					bMuck = false;
-					showHandP.AddToHand(ExternalQueryCard(std::cin));
-					showHandP.AddToHand(ExternalQueryCard(std::cin));
-					#ifdef DEBUGSAVEGAME
-					if( !bLoadGame )
-					{
-						std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-						showHandP.HandPlus::DisplayHand(saveFile);
-						saveFile.close();
-					}
-					#endif
-				}
-			}//else, error on input
-
-			std::cin.sync();
-			std::cin.clear();
-
-            if( bMuck )
-            {
-                ShowdownRep comp(curIndex);
-                comp.SetMuck();
-                w.RevealHand(comp,CommunityPlus::EMPTY_COMPLUS);
-            }
-            else
-            {
-                ShowdownRep comp(&showHandP, &community, curIndex);
-                w.RevealHand(comp,showHandP);
-            }
-        }
-
+        //Player& withP = *(p[curIndex]);
+	w.RevealHand(p[curIndex]->myStrat->ViewDealtHand(), community);
     }
 }
 
@@ -527,42 +466,6 @@ int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize)
 
 
 
-
-
-DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
-{
-    DeckLocation userCard;
-    #ifdef DEBUGSAVEGAME
-    bool bNextCardSaved;
-    bNextCardSaved = bLoadGame && (!loadFile.eof());
-    bNextCardSaved = bNextCardSaved && (loadFile.rdbuf()->in_avail() > 0);
-    bNextCardSaved = bNextCardSaved && (loadFile.is_open());
-
-
-    while( bNextCardSaved )
-    {
-        int16 upcomingChar = loadFile.peek();
-        if( upcomingChar == '\n' || upcomingChar == '\r'  || upcomingChar == ' ' )
-        {
-            loadFile.ignore(1);
-            bNextCardSaved = bLoadGame && (loadFile.is_open()) && (!loadFile.eof()) && (loadFile.rdbuf()->in_avail() > 0);
-        }else
-        {
-            bNextCardSaved = true;
-            break;
-        }
-    }
-    if( bNextCardSaved )
-    {
-        userCard.SetByIndex( HoldemUtil::ReadCard( loadFile ) );
-    }else
-    #endif
-    {
-        bLoadGame = false;
-        userCard.SetByIndex( HoldemUtil::ReadCard( s ) );
-    }
-    return userCard;
-}
 
 
 void HoldemArena::RefreshPlayers()

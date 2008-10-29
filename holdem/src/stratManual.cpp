@@ -55,6 +55,7 @@ void UserConsoleStrategy::SeeAction(const HoldemAction& e)
 #endif
 }
 
+
 void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 {
 	bNoPrint = (cardsInCommunity <= 0);

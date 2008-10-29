@@ -124,6 +124,8 @@ class PlayerStrategy
 
 
 	public:
+
+
         const CommunityPlus& ViewDealtHand() const { return myDealtHand; }
         virtual void StoreDealtHand(const CommunityPlus & o){ myDealtHand.SetUnique(o); }
         virtual void ClearDealtHand(){ myDealtHand.SetEmpty(); }
@@ -150,21 +152,21 @@ class PlayerStrategy
             myPositionIndex = i;
         }
 
-		virtual void SeeCommunity(const Hand&, const int8) = 0;
+	virtual void SeeCommunity(const Hand&, const int8) = 0;
 
 
-		virtual float64 MakeBet() = 0;
-			// 0 for check/fold
-			// -1 will definately fold
-			// this is the bet SINCE ROUND
+	virtual float64 MakeBet() = 0;
+		// 0 for check/fold
+		// -1 will definately fold
+		// this is the bet SINCE ROUND
 
-		virtual void SeeOppHand(const int8, const Hand&) = 0;
+	virtual void SeeOppHand(const int8, const Hand&) = 0;
 
-		virtual void SeeAction(const HoldemAction&) = 0;
+	virtual void SeeAction(const HoldemAction&) = 0;
 
-		virtual void FinishHand() = 0;
+	virtual void FinishHand() = 0;
 
-		void free_members(){};
+	void free_members(){};
 }
 ;
 
@@ -302,7 +304,6 @@ protected:
 
 #ifdef DEBUGSAVEGAME
         std::ifstream loadFile;
-        bool bLoadGame;
         void saveState();
         void SerializeRoundStart(std::ofstream & fileSaveState, bool bHandNum);
 #endif
@@ -340,9 +341,6 @@ protected:
 		#ifdef GLOBAL_AICACHE_SPEEDUP
 		,communityBuffer(0)
         #endif
-#ifdef DEBUGSAVEGAME
-        ,bLoadGame(false)
-#endif
 		{
 		    //p = new Player * [SEATS_AT_TABLE];
 		    for(playernumber_t n=0;n<SEATS_AT_TABLE;++n){ p[n] = 0; }
@@ -358,7 +356,7 @@ protected:
 		virtual Player * FinalizeReportWinner();
 
 		void BeginNewHands(SerializeRandomDeck * );
-            void DealAllHands(SerializeRandomDeck * );
+            void DealAllHands(SerializeRandomDeck *, std::ofstream * );
 
         //returns the first person to reveal cards (-1 if all fold)
         playernumber_t PlayRound(const CommunityPlus &, const int8);
@@ -369,8 +367,8 @@ protected:
 
 		void PlayShowdown(const CommunityPlus &,const playernumber_t );
 
-		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &, const char * request_str);
-		DeckLocation RequestCard(SerializeRandomDeck *);
+		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &, const char * request_str, std::ofstream * saveCards);
+		DeckLocation RequestCard(SerializeRandomDeck *, std::ofstream *);
         void RefreshPlayers();
 
 
@@ -561,9 +559,9 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
     ///'w' if there are still people left to reveal/muck their hands "IN TURN"
     ///'a' if only all-in hands are to be revealed now
     ///'!' if winners have been determined and the showdown is complete
-    void RevealHand(const ShowdownRep& comp, const CommunityPlus & playerHand);
+    void RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community);
     ///ShowHand reveals the hand of myTable->p[curIndex]
-    void MuckHand();
+    void MuckHand(const CommunityPlus & community);
     ///MuckHand mucks the hand of myTable->p[curIndex]
 
 }

@@ -45,7 +45,88 @@
 
 
 
-void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, CommunityPlus & intoCards, const char * request_str)
+
+DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
+{
+    DeckLocation userCard;
+	/*
+    #ifdef DEBUGSAVEGAME
+    bool bNextCardSaved;
+    bNextCardSaved = bLoadGame && (!loadFile.eof());
+    bNextCardSaved = bNextCardSaved && (loadFile.rdbuf()->in_avail() > 0);
+    bNextCardSaved = bNextCardSaved && (loadFile.is_open());
+
+
+    while( bNextCardSaved )
+    {
+        int16 upcomingChar = loadFile.peek();
+        if( upcomingChar == '\n' || upcomingChar == '\r'  || upcomingChar == ' ' )
+        {
+            loadFile.ignore(1);
+            bNextCardSaved = bLoadGame && (loadFile.is_open()) && (!loadFile.eof()) && (loadFile.rdbuf()->in_avail() > 0);
+        }else
+        {
+            bNextCardSaved = true;
+            break;
+        }
+    }
+    if( bNextCardSaved )
+    {
+        userCard.SetByIndex( HoldemUtil::ReadCard( loadFile ) );
+    }else
+    #endif
+    {
+        bLoadGame = false;
+	*/
+        userCard.SetByIndex( HoldemUtil::ReadCard( s ) );
+    //}
+    return userCard;
+}
+/*
+ 
+   const int16 INPUTLEN = 5;
+	char inputBuf[INPUTLEN];
+
+
+	std::cerr << p[curIndex]->GetIdent().c_str() << ", enter your cards (no whitespace)\r\n";
+	std::cerr << "or enter nothing to muck: " << endl;
+	std::cin.sync();
+	std::cin.clear();
+
+
+
+
+
+	CommunityPlus showHandP;
+	showHandP.SetEmpty();
+
+
+	bool bMuck = true;
+	if( std::cin.getline( inputBuf, INPUTLEN ) != 0 )
+	{
+		if( 0 != inputBuf[0] )
+		{
+			bMuck = false;
+			showHandP.AddToHand(ExternalQueryCard(std::cin));
+			showHandP.AddToHand(ExternalQueryCard(std::cin));
+			#ifdef DEBUGSAVEGAME
+			if( !bLoadGame )
+			{
+				std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
+				showHandP.HandPlus::DisplayHand(saveFile);
+				saveFile.close();
+			}
+				#endif
+			}
+		}//else, error on input
+
+		std::cin.sync();
+		std::cin.clear();
+
+
+ */
+
+void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, CommunityPlus & intoCards, const char * request_str, std::ofstream *saveCards)
 {
     if( myDealer )
     {
@@ -68,18 +149,17 @@ void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, C
         std::cin.sync();
         std::cin.clear();
         #ifdef DEBUGSAVEGAME
-        if( !bLoadGame )
+        if( saveCards )
         {
-            std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-            intoCards.HandPlus::DisplayHand(saveFile);
-            saveFile.close();
+            intoCards.HandPlus::DisplayHand(*saveCards);
+            saveCards->flush();
         }
         #endif
     }
 
 }
 
-DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
+DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer, std::ofstream * saveCards)
 {
     DeckLocation intoCard;
 
@@ -103,11 +183,10 @@ DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
         std::cin.sync();
         std::cin.clear();
         #ifdef DEBUGSAVEGAME
-        if( !bLoadGame )
+        if( saveCards )
         {
-            std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-            HoldemUtil::PrintCard( saveFile, intoCard.GetIndex() );
-            saveFile.close();
+            HoldemUtil::PrintCard( *saveCards, intoCard.GetIndex() );
+            saveCards->flush();
         }
         #endif
     }
@@ -118,7 +197,7 @@ DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
 
 
 
-void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
+void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer, ofstream *saveCardsPtr)
 {
 
     do
@@ -135,7 +214,7 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
                 CommunityPlus dealHandP;
 
                 if( !tableDealer ) std::cerr << withP.GetIdent().c_str() << std::flush;
-                RequestCards(tableDealer,2,dealHandP,", enter your cards (no whitespace): ");
+                RequestCards(tableDealer,2,dealHandP,", enter your cards (no whitespace): ", saveCardsPtr);
 
                 withP.myStrat->StoreDealtHand(dealHandP);
 
@@ -190,69 +269,6 @@ void HoldemArena::BeginNewHands(SerializeRandomDeck * tableDealer)
 
 
 
-
-    if( tableDealer )
-    {
-        SerializeRandomDeck & dealer = *tableDealer;
-
-
-
-        #ifdef DEBUGSAVEGAME
-        if( !bLoadGame )
-        #endif
-        {
-            //Shuffle the deck here
-            dealer.UndealAll();
-            if(randRem != 0)
-            {
-                #ifdef DEBUGSAVEGAME
-                std::ofstream shuffleData( DEBUGSAVEGAME, std::ios::app );
-                dealer.LoggedShuffle(shuffleData, randRem);
-                shuffleData << endl;
-                shuffleData.close();
-
-
-
-                    #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
-                char handnumtxt[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
-
-                FileNumberString( handnum , handnumtxt + strlen(handnumtxt) );
-                handnumtxt[23+12-1] = '\0'; //just to be safe
-
-                shuffleData.open( handnumtxt , std::ios::app );
-                dealer.LogDeckState( shuffleData );
-                shuffleData << endl;
-                shuffleData.close();
-                    #endif
-
-
-
-                #else
-                dealer.ShuffleDeck( randRem );
-                #endif
-
-
-        #ifdef DEBUGASSERT
-            }
-            else
-            {
-                std::cerr << "YOU DIDN'T SHUFFLE" << endl;
-                gamelog << "YOU DIDN'T SHUFFLE" << endl;
-                exit(1);
-        #endif
-            }
-        }
-
-
-        ///Note: If tableDealer is defined,
-        ///ExternalQueryCard won't manage bLoadGame for us.
-        ///We need to clear it here.
-        if( bLoadGame )
-        {
-            bLoadGame = false;
-        }
-
-    }
 
     #ifdef DEBUGHOLECARDS
         holecardsData <<

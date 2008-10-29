@@ -90,10 +90,10 @@ class ShowdownRep
 {
 	public:
 
-		ShowdownRep(int8 playerID) : strength(0), valueset(0), playerIndex(playerID), revtiebreak(0) {}
+		ShowdownRep(const playernumber_t playerID) : strength(0), valueset(0), playerIndex(playerID), revtiebreak(0) {}
 
 
-		ShowdownRep(const CommunityPlus* h, const CommunityPlus* h2, const int8 pIndex)
+		ShowdownRep(const CommunityPlus* h, const CommunityPlus* h2, const playernumber_t pIndex)
 			: playerIndex(pIndex), revtiebreak(0)
 		{
 			CommunityPlus utilHand;
@@ -107,7 +107,7 @@ class ShowdownRep
 		}
 
 
-		ShowdownRep(const CommunityPlus* h, const int8 pIndex)
+		ShowdownRep(const CommunityPlus* h, const playernumber_t pIndex)
 			: playerIndex(pIndex), revtiebreak(0)
 		{
 			comp.SetUnique(*h);
@@ -211,14 +211,14 @@ class ShowdownRep
 	CommunityPlus comp;
 	uint8 strength;
 	uint32 valueset;
-	int8 playerIndex;
+	playernumber_t playerIndex;
 	double revtiebreak;
 	/*	What is revtiebreak? Well, it's an interesting multiuse variable.
 		The first reason is it remembers the amount a player can win. But the
 		second reason is that it is used as a comparable when you > or <.
 		Why you ask? When we sort a vector of ShowdownReps, we want them to be
 		in JUST the right order, such that our organizeWinnings() can process
-		them in O(n) time. Have a look!
+		them in O(n) time. Have a look at organizeWinnings() for more!
 	*/
 }
 ;

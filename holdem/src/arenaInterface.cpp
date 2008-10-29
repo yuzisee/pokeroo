@@ -194,7 +194,7 @@ std::istream * HoldemArena::LoadState(SerializeRandomDeck * extDealer)
         return 0;
     }else
     {
-   	bLoadGame = true;
+   	//bLoadGame = true;
 
 	bool bHandNum = false;
 
