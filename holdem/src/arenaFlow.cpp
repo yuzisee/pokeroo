@@ -125,7 +125,8 @@ DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
 
  */
 
-void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, CommunityPlus & intoCards, const char * request_str, std::ofstream *saveCards)
+void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, CommunityPlus & intoCards, const char * request_str)
+//, std::ofstream *saveCards)
 {
     if( myDealer )
     {
@@ -158,7 +159,8 @@ void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, C
 
 }
 
-DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer, std::ofstream * saveCards)
+DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
+//, std::ofstream * saveCards)
 {
     DeckLocation intoCard;
 
@@ -196,14 +198,12 @@ DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer, std::ofstr
 
 
 
-void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer, ofstream *saveCardsPtr)
+void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
 {
 
     #ifdef DEBUGHOLECARDS
         holecardsData <<
-                #if defined(GRAPHMONEY)
-                "############ Hand " << handnum << " " <<
-                #endif
+        "############ Hand " << handnum << " " <<
         "############" << endl;
 
     #endif
@@ -222,7 +222,7 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer, ofstream *save
                 CommunityPlus dealHandP;
 
                 if( !tableDealer ) std::cerr << withP.GetIdent().c_str() << std::flush;
-                RequestCards(tableDealer,2,dealHandP,", enter your cards (no whitespace): ", saveCardsPtr);
+                RequestCards(tableDealer,2,dealHandP,", enter your cards (no whitespace): ");
 
                 withP.myStrat->StoreDealtHand(dealHandP);
 
@@ -265,11 +265,7 @@ void HoldemArena::BeginNewHands()
     {
         gamelog << "================================================================" << endl;
         gamelog << "============================New Hand" <<
-        #if defined(GRAPHMONEY)
         " #"<< handnum <<
-        #else
-        "==" <<
-        #endif //GRAPHMONEY, with #else
         "========================" << endl;
 
     }
@@ -308,7 +304,9 @@ void HoldemArena::AssertInitialState()
 void HoldemArena::LoadBeginInitialState()
 {
 
+	#ifdef GRAPHMONEY
         scoreboard.open(GRAPHMONEY , std::ios::app);
+	#endif
         #ifdef DEBUGHOLECARDS
         holecardsData.open( DEBUGHOLECARDS, std::ios::app );
         #endif
@@ -333,9 +331,9 @@ void HoldemArena::BeginInitialState()
         curIndex = 0;
         curDealer = 0;
 
+        handnum = 1;
             #ifdef GRAPHMONEY
 
-                handnum = 1;
                 scoreboard.open(GRAPHMONEY);
                 scoreboard << "#Hand";
                 for(int8 i=0;i<nextNewPlayer;++i)
@@ -349,7 +347,7 @@ void HoldemArena::BeginInitialState()
                     scoreboard << "," << (p[i])->GetMoney();
                 }
                 scoreboard << endl;
-            #endif
+            #endif // GRAPHMONEY
         #ifdef DEBUGHOLECARDS
         holecardsData.open( DEBUGHOLECARDS );
         #endif

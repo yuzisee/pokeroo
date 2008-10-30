@@ -303,20 +303,12 @@ protected:
 	public:
 
 #ifdef DEBUGSAVEGAME
-        std::ifstream loadFile;
-	void openSaveFile(std::ifstream & unopenedFile);
-        void saveState();
-        void SerializeRoundStart(std::ofstream & fileSaveState, bool bHandNum);
+        void SerializeRoundStart(std::ofstream & fileSaveState);
+        void UnserializeRoundStart(std::ifstream & fileSaveState);
 #endif
 
-#ifdef DEBUGSAVEGAME
-            std::istream* LoadState(SerializeRandomDeck * extDealer);
-            void UnserializeRoundStart(std::ifstream & fileSaveState, bool bHandNum);
-#endif
 
-	#if defined(GRAPHMONEY)
-        handnum_t handnum;
-    #endif
+     handnum_t handnum;
 
     #ifdef GLOBAL_AICACHE_SPEEDUP
         void CachedQueryOffense(CallCumulation& q, const CommunityPlus& community, const CommunityPlus& withCommunity) const;
@@ -361,7 +353,7 @@ protected:
         float64 GetDRseed(); //You may get a seed at any time, but it is best to do so after PlayShowdown or when no more HoldemArenaBetting events will take place
 
 		void BeginNewHands();
-        void DealAllHands(SerializeRandomDeck *, std::ofstream * );
+        void DealAllHands(SerializeRandomDeck *);
 
         //returns the first person to reveal cards (-1 if all fold)
         playernumber_t PlayRound(const CommunityPlus &, const int8);
@@ -372,8 +364,8 @@ protected:
 
 		void PlayShowdown(const CommunityPlus &,const playernumber_t );
 
-		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &, const char * request_str, std::ofstream * saveCards);
-		DeckLocation RequestCard(SerializeRandomDeck *, std::ofstream *);
+		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &, const char * request_str);//, std::ofstream * saveCards);
+		DeckLocation RequestCard(SerializeRandomDeck *);//, std::ofstream *);
         void RefreshPlayers();
 
 

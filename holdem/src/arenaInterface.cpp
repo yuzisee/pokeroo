@@ -184,72 +184,12 @@ void HoldemArena::broadcastHand(const Hand& h, const int8 broadcaster)
 	(*p[broadcaster]).myStrat->SeeOppHand(broadcaster, h);
 }
 
-#ifdef DEBUGSAVEGAME
 
-std::istream * HoldemArena::LoadState(SerializeRandomDeck * extDealer)
-{
-    loadFile.open(DEBUGSAVEGAME);
-    if( ! (loadFile.is_open()) )
-    {
-        return 0;
-    }else
-    {
-   	//bLoadGame = true;
-
-	bool bHandNum = false;
-
-#if defined(GRAPHMONEY)
-	bHandNum = true;
-#endif
-
- 	UnserializeRoundStart(loadFile,bHandNum);
-
-            if( extDealer )  extDealer->Unserialize( loadFile ); //Save state of deck
-            return &loadFile;
-    }
-}
-
-
-void HoldemArena::saveState()
+void HoldemArena::UnserializeRoundStart(std::ifstream & fileLoadState)
 {
 
-	std::ofstream newSaveState(DEBUGSAVEGAME);
-
- if( loadFile.is_open() ) loadFile.close();
-
-
-        bool bHandNumNew = false;
-        #if defined(GRAPHMONEY)
-	    	bHandNumNew = true;
-	#endif
-
-  	SerializeRoundStart(newSaveState,bHandNumNew);
-	newSaveState.close();
-
-#if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
-            char handnumtxt
-//[12] = "";            char namebase//
-[23+12] = "./" DEBUGSAVEGAME_ALL "/" DEBUGSAVEGAME "-";
-
-	    FileNumberString(handnum,handnumtxt + strlen(handnumtxt));
-            handnumtxt[23+12-1] = '\0'; //just to be safe
-
-            std::ofstream allSaveState( handnumtxt );
-	SerializeRoundStart(allSaveState,true);
-	allSaveState.close();
-#endif
-
-}
-#endif //DEBUGSAVESTATE
-
-void HoldemArena::UnserializeRoundStart(std::ifstream & fileLoadState, bool bHandNum)
-{
-
-if( bHandNum )
-{
             fileLoadState >> handnum ;
             fileLoadState.ignore(1,'n');
-}
 
 	    int16 numericValue;
 
@@ -258,11 +198,7 @@ if( bHandNum )
             fileLoadState.ignore(1,'=');
             blinds->myBigBlind = HoldemUtil::ReadFloat64( fileLoadState );
             
-        blinds->Reload(blinds->mySmallBlind,blinds->myBigBlind
-            #if defined(GRAPHMONEY)
-            ,handnum
-            #endif
-            );
+        blinds->Reload(blinds->mySmallBlind,blinds->myBigBlind,handnum);
             
 	    fileLoadState.ignore(1,'@');
             fileLoadState >> numericValue;
@@ -293,12 +229,10 @@ if( bHandNum )
 }
 
 
-void HoldemArena::SerializeRoundStart(std::ofstream & fileSaveState, bool bHandNum)
+void HoldemArena::SerializeRoundStart(std::ofstream & fileSaveState)
 {
-    if( bHandNum )
-    {
     	fileSaveState << handnum << "n";
-    }
+
     HoldemUtil::WriteFloat64( fileSaveState, blinds->SmallBlind() );
     fileSaveState << "=" << flush;
     HoldemUtil::WriteFloat64( fileSaveState, blinds->BigBlind() );

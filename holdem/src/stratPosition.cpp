@@ -100,13 +100,11 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
             convertOutput.DisplayHand(logFile);
             logFile << "community" << endl;
 
-            #ifdef GRAPHMONEY
         }
 
         else
         {
             logFile << "==========#" << ViewTable().handnum << "==========" << endl;
-            #endif
         }
     #endif
 

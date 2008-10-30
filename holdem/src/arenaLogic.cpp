@@ -578,8 +578,8 @@ void HoldemArena::RefreshPlayers()
 
 #ifdef GRAPHMONEY
     scoreboard << endl;
-    ++handnum;
 #endif
+    ++handnum;
 
 
     if( bPlayerElimBlindUp && bVerbose )

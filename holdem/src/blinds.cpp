@@ -35,11 +35,7 @@ const double BlindStructure::BigBlind()
 	return myBigBlind;
 }
 
-void BlindStructure::Reload(const float64 small,const float64 big
-#if defined(GRAPHMONEY)
-,const uint32 handnum
-#endif
-)
+void BlindStructure::Reload(const float64 small,const float64 big,const uint32 handnum)
 {
     mySmallBlind = small;
     myBigBlind = big;
@@ -76,20 +72,16 @@ bool AlgbHandBlinds::HandPlayed(float64 timepassed)
     }
 }
 
-void SitAndGoBlinds::Reload(const float64 small,const float64 big
-#if defined(GRAPHMONEY)
-,const uint32 handnum
-#endif
-)
+void SitAndGoBlinds::Reload(const float64 small,const float64 big,const uint32 handnum)
 {
     const float64 rat = small/big;
         hist[0] = small*rat*rat;
         hist[1] = small*rat;
         hist[2] = hist[0]+hist[1];
-    #if defined(GRAPHMONEY)
+
     handCount = handPeriod - (handnum % handPeriod);
     if( handCount == 0 ) handCount = handPeriod;
-    #endif
+
 }
 
 float64 SitAndGoBlinds::fibIncr(float64 a, float64 b)
