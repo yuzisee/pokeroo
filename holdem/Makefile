@@ -13,13 +13,10 @@ BUILD_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(BUILD_DIR)%.o,$(BUILD_SRC))
 BUILT_OBJS := $(wildcard $(BUILD_DIR)*.o)
 BUILD_DEPS = $(patsubst $(BUILD_DIR)%.o,$(BUILD_DIR)%.d,$(BUILT_OBJS))
 
-BUILD_EXE = holdem
-RELEASE_DIR = bin
-	
 all:
 	make tags
 	echo "Building project"
-	make $(RELEASE_DIR)/$(BUILD_EXE)
+	make bin/holdem
 
 test:
 	echo $(BUILD_OBJS)
@@ -43,11 +40,7 @@ $(BUILD_DIR)%.d: $(SRC_DIR)%.cpp
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -MM -MF $@ -MT $(BUILD_DIR)$*.o $<
 
-$(RELEASE_DIR)/$(BUILD_EXE): $(BUILD_OBJS)
-	@mkdir -p $(RELEASE_DIR)
-	$(CXX) $(CXXFLAGS) -o $@ $^
-	
-	
+
 $(BUILD_DIR)%.o: $(SRC_DIR)%.cpp
 	@mkdir -p $(BUILD_DIR)
 	@echo
@@ -56,4 +49,9 @@ $(BUILD_DIR)%.o: $(SRC_DIR)%.cpp
 
 
 
-
+bin/holdem: $(BUILD_OBJS)
+	@mkdir -p bin
+	$(CXX) $(CXXFLAGS) -o $@ $^
+	@mkdir -p lib
+	ar rcs lib/libholdem.a $^
+	$(CXX) -shared -o lib/libholdem.so  -Wl,-soname,libholdem.so $^

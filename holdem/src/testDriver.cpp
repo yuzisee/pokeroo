@@ -178,6 +178,10 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer, bool bL
 		SaveStateShuffleNextHand(my, tableDealer, randRem);
 	}
 
+#ifdef DEBUGASSERT
+	            my.ResetDRseed(); 
+#endif
+
 	while(my.NumberAtTable() > 1)
 	{
 
