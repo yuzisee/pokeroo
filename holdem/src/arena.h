@@ -40,7 +40,6 @@
 #include "engine.h"
 #include "arenaSave.h"
 #include "blinds.h"
-#include <iostream>
 #include <fstream>
 #include <string>
 
@@ -325,11 +324,8 @@ class HoldemArena
 		void incrIndex(playernumber_t&) const;
 
         static void ToString(const HoldemAction& e, std::ostream& o);
-        static void FileNumberString(handnum_t value, char * str)
-        {
-            sprintf(str,"%lu",value);
-        }
-
+        static void FileNumberString(handnum_t value, char * str);
+        
 		static const float64 FOLDED;
 		static const float64 INVALID;
 
@@ -374,6 +370,7 @@ class HoldemArena
 		void BeginNewHands(const struct BlindUpdate & roundBlinds);
         void DealAllHands(SerializeRandomDeck *);
 
+		void PrepBettingRound(const int8);
         //returns the first person to reveal cards (-1 if all fold)
         playernumber_t PlayRound(const CommunityPlus &, const int8);
 		playernumber_t PlayRound_BeginHand();

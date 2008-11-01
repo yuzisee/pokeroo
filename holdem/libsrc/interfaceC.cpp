@@ -19,8 +19,8 @@
  ***************************************************************************/
 
 
-#include "arena.h"
-#include "../inc/holdemDLL.h"
+#include "../src/arena.h"
+#include "holdemDLL.h"
 
 struct return_money DEFAULT_RETURN_VALUE = { 0.0 , SUCCESS };
 
@@ -33,43 +33,6 @@ struct return_money DEFAULT_RETURN_VALUE = { 0.0 , SUCCESS };
 	Betting round accessors
 *****************************************************************************/
 
-///Call this to determine if the big blind has changed
-C_DLL_FUNCTION
-struct return_money GetBigBlind(void * table_ptr)
-{
-	struct return_money retval = DEFAULT_RETURN_VALUE;
-
-	if( !table_ptr )
-	{
-		retval.error_code = NULL_TABLE_PTR;
-	}else
-	{
-		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
-
-		retval.money = myTable->GetBigBlind();
-	}
-
-	return retval;
-}
-
-///Call this to determine if the small blind has changed
-C_DLL_FUNCTION
-struct return_money GetSmallBlind(void * table_ptr)
-{
-	struct return_money retval = DEFAULT_RETURN_VALUE;
-
-	if( !table_ptr )
-	{
-		retval.error_code = NULL_TABLE_PTR;
-	}else
-	{
-		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
-
-		retval.money = myTable->GetSmallBlind();
-	}
-
-	return retval;
-}
 
 ///Get the amount of money playerNumber has in front of him
 C_DLL_FUNCTION
@@ -158,7 +121,10 @@ enum return_status SetMoney(void * table_ptr, int8 playerNumber, float64 money)
 
 ///Get the amount of money playerNumber has bet so far this round
 C_DLL_FUNCTION
-struct return_money GetCurrentBet(void * table_ptr, int8 playerNumber);
+struct return_money GetCurrentBet(void * table_ptr, int8 playerNumber)
+{
+
+}
 ///TODO: If the player is all in, make sure this returns the correct value
 
 
@@ -174,6 +140,7 @@ struct return_money GetLastRoundPotsize(void * table_ptr);
 
 
 ///Get the size of the highest bet so far
+C_DLL_FUNCTION
 struct return_money GetBetToCall(void * table_ptr);
 
 
@@ -187,11 +154,9 @@ int8 WhoIsNext(void * table_ptr);
 
 
 
-
-
 /*****************************************************************************
 	BEGIN
-	Event functions
+	Card functions
 *****************************************************************************/
 
 
@@ -221,14 +186,82 @@ cardSuit can be any of:
 'D' for Diamonds
 */
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
-void NewCommunityCard(void * table_ptr, char cardValue,char cardSuit);
 
+C_DLL_FUNCTION
+struct holdem_cardset NewCardset()
+{
+	CommunityPlus * newHand = new CommunityPlus();
+
+	struct holdem_cardset c;
+	c.card_count = 0;
+	c.hand_ptr = reinterpret_cast<void *>(newHand);
+
+	return c;
+}
+
+C_DLL_FUNCTION
+enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit)
+{
+	enum return_status error_code = SUCCESS;
+
+	if( !c || !(c->hand_ptr) )
+	{
+		error_code = INVALID_PARAMETERS;
+	}else
+	{
+		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(c->hand_ptr);
+		
+		int8 newCardIndex = HoldemUtil::ParseCard(cardValue,cardSuit);
+		if( newCardIndex < 0 )
+		{
+			error_code = INVALID_PARAMETERS;
+		}else
+		{
+			DeckLocation newCard;
+			newCard.SetByIndex(newCardIndex);
+			
+			myHand->AddToHand( newCard );
+			++(c->card_count);
+		}
+	}
+
+	return error_code;
+}
+
+C_DLL_FUNCTION
+enum return_status DeleteCardset(struct holdem_cardset c)
+{
+	enum return_status error_code = SUCCESS;
+
+	if( !(c.hand_ptr) )
+	{
+		error_code = INVALID_PARAMETERS;
+	}else
+	{
+		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(c.hand_ptr);
+		delete myHand;
+	}
+
+	return error_code;
+}
+
+/*****************************************************************************
+	END
+	Card functions
+*****************************************************************************/
+
+
+
+/*****************************************************************************
+	BEGIN
+	Event functions
+*****************************************************************************/
 
 
 
 
 ///Call this when the betting begins
-void StartBetting(void * table_ptr);
+C_DLL_FUNCTION enum return_status StartBetting(void * table_ptr, struct holdem_cardset community );
 
 ///Call these functions when playerNumber Raises, Folds, or Calls
 C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, int8 playerNumber);
@@ -279,23 +312,24 @@ hands anytime the blind size changes during the game
 
 //WARNING ignored for now: seatsAtTable (it's defined as SEATS_AT_TABLE in debug_flags.h)
 C_DLL_FUNCTION
-void * NewTable(playernumber_t seatsAtTable)
+void * NewTable(playernumber_t seatsAtTable, float64 chipDenomination)
 {
-    // new SitAndGoBlinds(b.SmallBlind(),b.BigBlind(),blindIncrFreq);
-    BlindStructure* b = new GeomPlayerBlinds(1, 2, 1, 1);
     bool illustrate = true;
     bool spectate = true;
     bool externalDealer = true;
 
-    return reinterpret_cast<void *>(new HoldemArena(b, std::cout ,illustrate,spectate));
+    return reinterpret_cast<void *>(new HoldemArena(chipDenomination, std::cout ,illustrate,spectate));
 }
 
 C_DLL_FUNCTION 
 enum return_status DeleteTable(void * table_ptr)
 {
+	enum return_status error_code = SUCCESS;
+
     HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
-    //table->free_members();
     delete table;
+
+	return error_code;
 }
 
 ///Choose playerNumber to be the dealer for the first hand

@@ -31,6 +31,11 @@
  const float64 HoldemArena::INVALID = -2;
 
 
+ void HoldemArena::FileNumberString(handnum_t value, char * str)
+ {
+	sprintf(str,"%lu",value);
+ }
+
 
 
 void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)

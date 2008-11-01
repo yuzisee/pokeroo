@@ -138,14 +138,17 @@ public:
             }
         }
 
-#ifdef DEBUGASSERT
+
         if( valNum == -1 || suitNum == -1 )
         {
+			#ifdef DEBUGASSERT
             std::cout << "Could not identify the card, v=" << valchar << " s=" << suitchar << endl;
-            exit(1);
-//            return -1;
+			exit(1);
+			#else
+			return -1;
+			#endif
         }
-#endif
+
         return suitNum + valNum*4;
 
     }

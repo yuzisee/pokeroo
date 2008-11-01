@@ -28,7 +28,7 @@
 //http://sig9.com/node/35
 //http://www.flounder.com/ultimateheaderfile.htm
 
-#include "portability.h"
+#include "../src/portability.h"
 
 
 
@@ -102,20 +102,16 @@ struct return_money
 }
 ;
 
+struct holdem_cardset
+{
+	void * hand_ptr;
+	int card_count;
+}
+;
 
 //=========================
 //   List your functions
 //=========================
-
-
-///Call this to determine if the big blind has changed
-C_DLL_FUNCTION
-struct return_money GetBigBlind(void * table_ptr);
-
-///Call this to determine if the small blind has changed
-C_DLL_FUNCTION
-struct return_money GetSmallBlind(void * table_ptr);
-
 
 ///Get the amount of money playerNumber has in front of him
 C_DLL_FUNCTION
@@ -168,7 +164,7 @@ C_DLL_FUNCTION int8 WhoIsNext_Showdown(void * table_ptr);
 
 /*****************************************************************************
 	BEGIN
-	Event functions
+	Card functions
 *****************************************************************************/
 
 
@@ -197,17 +193,30 @@ cardSuit can be any of:
 'C' for Clubs
 'D' for Diamonds
 */
+
+C_DLL_FUNCTION struct holdem_cardset NewCardset();
+
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
-C_DLL_FUNCTION
-void NewCommunityCard(void * table_ptr, char cardValue,char cardSuit);
+C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
+
+/*****************************************************************************
+	END
+	Card functions
+*****************************************************************************/
+
+
+
+/*****************************************************************************
+	BEGIN
+	Event functions
+*****************************************************************************/
 
 
 
 
 
 ///Call this when the betting begins
-C_DLL_FUNCTION
-void StartBetting(void * table_ptr);
+C_DLL_FUNCTION enum return_status StartBetting(void * table_ptr, struct holdem_cardset community );
 
 ///Call these functions when playerNumber Raises, Folds, or Calls
 C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, int8 playerNumber);
@@ -259,7 +268,7 @@ Note: SetBigBlind() and SetSmallBlind() can be called between
 hands anytime the blind size changes during the game
 *****************************************************************************/
 C_DLL_FUNCTION
-void * NewTable(playernumber_t seatsAtTable);
+void * NewTable(playernumber_t seatsAtTable, float64 chipDenomination);
 
 C_DLL_FUNCTION
 enum return_status DeleteTable(void * table_ptr);

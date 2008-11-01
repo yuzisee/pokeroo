@@ -451,6 +451,7 @@ void HoldemArena::resolveActions(Player& withP)
 
 int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize)
 {
+
     HoldemArenaBetting b( this, community, comSize );
 
 
