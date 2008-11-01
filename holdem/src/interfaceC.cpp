@@ -18,7 +18,15 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "holdemDLL.h"
+
+#include "arena.h"
+#include "../inc/holdemDLL.h"
+
+struct return_money DEFAULT_RETURN_VALUE = { 0.0 , SUCCESS };
+
+
+
+
 
 /*****************************************************************************
 	BEGIN
@@ -26,46 +34,147 @@
 *****************************************************************************/
 
 ///Call this to determine if the big blind has changed
-void GetBigBlind(void * table_ptr)
-{}
+C_DLL_FUNCTION
+struct return_money GetBigBlind(void * table_ptr)
+{
+	struct return_money retval = DEFAULT_RETURN_VALUE;
+
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		retval.money = myTable->GetBigBlind();
+	}
+
+	return retval;
+}
 
 ///Call this to determine if the small blind has changed
-void GetSmallBlind(void * table_ptr)
-{}
+C_DLL_FUNCTION
+struct return_money GetSmallBlind(void * table_ptr)
+{
+	struct return_money retval = DEFAULT_RETURN_VALUE;
+
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		retval.money = myTable->GetSmallBlind();
+	}
+
+	return retval;
+}
 
 ///Get the amount of money playerNumber has in front of him
-float64 GetMoney(void * table_ptr, int8 playerNumber)
+C_DLL_FUNCTION
+struct return_money GetMoney(void * table_ptr, int8 playerNumber)
 {
-	withP.GetMoney() - withP.GetBetSize()
+	struct return_money retval = DEFAULT_RETURN_VALUE;
+
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		const Player * ptrP = myTable->ViewPlayer(playerNumber);
+
+		if( !ptrP )
+		{
+			retval.error_code = INTERNAL_INCONSISTENCY;
+		}else
+		{
+			const Player & withP = *ptrP;
+
+			float64 playerMoney = withP.GetMoney() - withP.GetBetSize();
+
+			if( playerMoney < 0 )
+			{
+				playerMoney = 0.0;
+				retval.error_code = INPUT_CLEANED;
+			}
+			
+			retval.money = playerMoney;
+		}
+	}
+
+	return retval;
 }
-//TODO: If the player is all in, make sure this returns the correct value
+// According to resolveActions, if the player is all in once a round has 
+// completed, myMoney becomes -1 at the same time that myBetSize becomes 0.
+// But we're fine because if( playerMoney < 0 ) return 0;
 
 
 
 //Override the amount of money playerNumber has in front of him
-void SetMoney(void * table_ptr, int8 playerNumber, float64 money)
+C_DLL_FUNCTION
+enum return_status SetMoney(void * table_ptr, int8 playerNumber, float64 money)
 {
-	//withP.GetMoney() - withP.GetBetSize()
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		const Player * ptrP = myTable->ViewPlayer(playerNumber);
+
+		if( !ptrP )
+		{
+			error_code = INVALID_PARAMETERS;
+		}else
+		{
+			const Player & withP = *ptrP;
+
+			float64 accountedFor = withP.GetBetSize();
+			float64 newMoney = money - accountedFor;
+	
+			if( newMoney < 0 )
+			{
+				newMoney = 0.0;
+				error_code = INPUT_CLEANED;
+			}
+
+			if( myTable->OverridePlayerMoney(playerNumber,newMoney) )
+			{
+				error_code = INTERNAL_INCONSISTENCY;
+			}
+		}
+	}
+
+	return error_code;
 }
 
 
 
 ///Get the amount of money playerNumber has bet so far this round
-float64 GetCurrentBet(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION
+struct return_money GetCurrentBet(void * table_ptr, int8 playerNumber);
 ///TODO: If the player is all in, make sure this returns the correct value
 
 
 
 ///Get the amount of money that is in the pot
-float64 GetPotSize(void * table_ptr);
+C_DLL_FUNCTION
+struct return_money GetPotSize(void * table_ptr);
 
 
 ///Get the amount of money that was in the pot at the BEGINNING of the current betting round
-float64 GetLastRoundPotsize(void * table_ptr);
+C_DLL_FUNCTION
+struct return_money GetLastRoundPotsize(void * table_ptr);
 
 
 ///Get the size of the highest bet so far
-float64 GetBetToCall(void * table_ptr);
+struct return_money GetBetToCall(void * table_ptr);
 
 
 //Get the playerNumber of the player who's turn it is
@@ -122,35 +231,35 @@ void NewCommunityCard(void * table_ptr, char cardValue,char cardSuit);
 void StartBetting(void * table_ptr);
 
 ///Call these functions when playerNumber Raises, Folds, or Calls
-void PlayerCalls(void * table_ptr, int8 playerNumber);
-void PlayerFolds(void * table_ptr, int8 playerNumber);
-void PlayerRaisesTo(void * table_ptr, int8 playerNumber, float64 amount);
-void PlayerRaisesBy(void * table_ptr, int8 playerNumber, float64 amount);
+C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION enum return_status PlayerFolds(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION enum return_status PlayerRaisesTo(void * table_ptr, int8 playerNumber, float64 amount);
+C_DLL_FUNCTION enum return_status PlayerRaisesBy(void * table_ptr, int8 playerNumber, float64 amount);
 ///Question: If a player doesn't call any of these, which is the default action?
 
 
 ///GetBetAmount is useful for asking a bot what to bet
-float64 GetBetDecision(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, int8 playerNumber);
 
 
 
 ///Call this when (if) the showdown begins
-void StartShowdown(void * table_ptr);
+C_DLL_FUNCTION enum return_status StartShowdown(void * table_ptr);
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
-void PlayerShowsCard(void * table_ptr, int8 playerNumber, char cardValue, char cardSuit);
+C_DLL_FUNCTION enum return_status PlayerShowsCard(void * table_ptr, int8 playerNumber, char cardValue, char cardSuit);
 
 ///Call this when playerNumber mucks his/her hand during the showdown.
 ///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
-void PlayerMucksHand(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION enum return_status PlayerMucksHand(void * table_ptr, int8 playerNumber);
 
 
 
 
 
 ///Call this when new hands are dealt
-void StartDealNewHands(void * table_ptr);
+C_DLL_FUNCTION enum return_status StartDealNewHands(void * table_ptr);
 
 /*****************************************************************************
 	Event functions
@@ -168,7 +277,9 @@ Note: SetBigBlind() and SetSmallBlind() can be called between
 hands anytime the blind size changes during the game
 *****************************************************************************/
 
-void * NewTable()
+//WARNING ignored for now: seatsAtTable (it's defined as SEATS_AT_TABLE in debug_flags.h)
+C_DLL_FUNCTION
+void * NewTable(playernumber_t seatsAtTable)
 {
     // new SitAndGoBlinds(b.SmallBlind(),b.BigBlind(),blindIncrFreq);
     BlindStructure* b = new GeomPlayerBlinds(1, 2, 1, 1);
@@ -176,37 +287,41 @@ void * NewTable()
     bool spectate = true;
     bool externalDealer = true;
 
-
     return reinterpret_cast<void *>(new HoldemArena(b, std::cout ,illustrate,spectate));
 }
 
-void DeleteTable(void * table_ptr)
+C_DLL_FUNCTION 
+enum return_status DeleteTable(void * table_ptr)
 {
     HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
-    table->free_members();
+    //table->free_members();
     delete table;
 }
 
 ///Choose playerNumber to be the dealer for the first hand
-void InitChooseDealer(void * table_ptr, int8 playerNumber)
+C_DLL_FUNCTION 
+enum return_status InitChooseDealer(void * table_ptr, int8 playerNumber)
 {
     HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
 }
 
 ///Set the amount of money that the SMALLEST chip is worth
-void InitSmallestChipSize(void * table_ptr, float64 money)
+C_DLL_FUNCTION 
+enum return_status InitSmallestChipSize(void * table_ptr, float64 money)
 {
     HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
 }
 
 ///Call this when the big blind has changed
-void SetBigBlind(void * table_ptr, float64 money)
+C_DLL_FUNCTION
+enum return_status SetBigBlind(void * table_ptr, float64 money)
 {
     HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
 }
 
 ///Call this when the small blind has changed
-void SetSmallBlind(void * table_ptr, float64 money)
+C_DLL_FUNCTION enum 
+return_status SetSmallBlind(void * table_ptr, float64 money)
 {
     HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
 }

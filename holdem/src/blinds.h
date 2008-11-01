@@ -27,6 +27,10 @@
 
 class BlindStructure
 {
+	protected:
+	        virtual bool PlayerEliminated(){return false;};
+            virtual bool HandPlayed(float64 timepassed=0){return false;}; //support time-based blinds
+
 	public:
         float64 myBigBlind;
         float64 mySmallBlind;
@@ -34,10 +38,10 @@ class BlindStructure
             BlindStructure(float64 small, float64 big)
     : myBigBlind(big), mySmallBlind(small) {};
             virtual ~BlindStructure();
-            virtual bool PlayerEliminated(){return false;};
-            virtual bool HandPlayed(float64 timepassed=0){return false;}; //support time-based blinds
+
             virtual const float64 BigBlind();
             virtual const float64 SmallBlind();
+
             virtual void Reload(const float64 small,const float64 big,const uint32 handnum);
 }
 ;

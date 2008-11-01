@@ -30,24 +30,6 @@
  const float64 HoldemArena::FOLDED = -1;
  const float64 HoldemArena::INVALID = -2;
 
-void HoldemArena::free_members()
-{
-    delete blinds;
-    for(int8 n=0;n<SEATS_AT_TABLE;++n)
-    {
-        Player * x = p[n];
-        if( x )
-        {
-            x->free_members();
-        }
-    }
-}
-
-void Player::free_members()
-{
-    myStrat->free_members();
-    delete myStrat;
-}
 
 
 
@@ -514,3 +496,11 @@ float64 HoldemArena::GetMaxShowdown(const float64 myMoney) const
 }
 
 
+
+bool HoldemArena::OverridePlayerMoney(playernumber_t n, float64 m)
+{
+	if( !p[n] ) return false;
+	
+	p[n]->myMoney = m;
+	return true;
+}

@@ -104,7 +104,7 @@ class Player
 		float64 GetLastBet() const
 		{	return lastBetSize;	}
 
-        void free_members();
+
 }
 ;
 
@@ -166,7 +166,6 @@ class PlayerStrategy
 
 	virtual void FinishHand() = 0;
 
-	void free_members(){};
 }
 ;
 
@@ -340,7 +339,6 @@ protected:
 		    smallestChip = b->SmallBlind(); ///This INITIAL small blind should be assumed to be one chip.
         }
 
-        virtual void free_members();
 		virtual ~HoldemArena();
 
 		virtual void AssertInitialState();
@@ -407,6 +405,8 @@ protected:
 		virtual float64 GetBigBlind() const;
 		virtual float64 GetSmallBlind() const;
 		virtual float64 GetChipDenom() const;
+
+		virtual bool OverridePlayerMoney(playernumber_t n, float64 m);
 }
 ;
 

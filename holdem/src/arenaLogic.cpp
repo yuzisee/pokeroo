@@ -418,7 +418,7 @@ void HoldemArena::resolveActions(Player& withP)
 		if( withP.myBetSize != INVALID )
 		{
 
-			withP.lastBetSize = INVALID;
+			withP.lastBetSize = INVALID; //Since lastBetSize is for the same betting round as myBetSize, it doesn't make sense once the round is over
 
 				withP.handBetTotal += withP.GetBetSize();
 				withP.myMoney -= withP.GetBetSize();
