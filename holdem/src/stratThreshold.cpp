@@ -106,11 +106,14 @@ float64 ThresholdStrategy::MakeBet()
 
 float64 MultiThresholdStrategy::MakeBet()
 {
+    const float64 bb = ViewTable().GetBlindValues().GetBigBlind();
+
     if( bCall == 4 ) return ViewTable().GetBetToCall() + ALLBET;
     if( bCall == 3 )
     {
         //if( w->mean < 1.0/220.0 ) return ViewPlayer().GetBetSize();
-        const float64 defaultBetUp = ((ViewTable().GetDeadPotSize() + ViewTable().GetBigBlind()) / 2.0 + ViewTable().GetBigBlind()*3); // /w->mean;
+
+        const float64 defaultBetUp = ((ViewTable().GetDeadPotSize() + bb) / 2.0 + bb*3); // /w->mean;
 
         const bool bRiver = (ViewTable().FutureRounds() == 0);
         const bool bHandSucks = (w->mean < 0.5);
@@ -147,7 +150,7 @@ float64 MultiThresholdStrategy::MakeBet()
 	    #endif
         if( bCall == 2 )
 	    {
-	        if( ThresholdStrategy::MakeBet() > ViewPlayer().GetBetSize() ) return ViewTable().GetBigBlind()*2;
+	        if( ThresholdStrategy::MakeBet() > ViewPlayer().GetBetSize() ) return bb*2;
         }
 		if( bCall == 1 ) return ThresholdStrategy::MakeBet();
 		return ViewPlayer().GetBetSize();

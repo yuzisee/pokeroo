@@ -238,7 +238,7 @@ class HoldemArena
         std::ofstream holecardsData;
 #endif
 
-protected:
+    protected:
 
         std::ostream& gamelog;
         #ifdef GRAPHMONEY
@@ -248,7 +248,7 @@ protected:
 		float64 randRem;
 
         int8 cardsInCommunity;
-	uint8 bettingRoundsRemaining;
+        uint8 bettingRoundsRemaining;
 		const bool bVerbose;
 		const bool bSpectate;
 
@@ -259,7 +259,8 @@ protected:
 		playernumber_t playersAllIn;
 
         playernumber_t curHighBlind;
-		BlindStructure* blinds;
+
+        BlindValues myBlinds;
 		float64 smallestChip;
 		float64 allChips;
 
@@ -301,13 +302,21 @@ protected:
 
 	public:
 
+
+//===========================
+//   Marshalling Functions
+//===========================
+
 #ifdef DEBUGSAVEGAME
         void SerializeRoundStart(std::ofstream & fileSaveState);
         void UnserializeRoundStart(std::ifstream & fileSaveState);
 #endif
 
 
-     handnum_t handnum;
+//=================
+//   Bookkeeping
+//=================
+        handnum_t handnum;
 
     #ifdef GLOBAL_AICACHE_SPEEDUP
         void CachedQueryOffense(CallCumulation& q, const CommunityPlus& community, const CommunityPlus& withCommunity) const;
@@ -316,19 +325,26 @@ protected:
 		void incrIndex(playernumber_t&) const;
 
         static void ToString(const HoldemAction& e, std::ostream& o);
-	static void FileNumberString(handnum_t value, char * str)
-	{
-		sprintf(str,"%lu",value);
-	}
+        static void FileNumberString(handnum_t value, char * str)
+        {
+            sprintf(str,"%lu",value);
+        }
 
 		static const float64 FOLDED;
 		static const float64 INVALID;
 
-		HoldemArena(BlindStructure* b, std::ostream& targetout, bool illustrate, bool spectate)
+
+
+//============================
+//   Constructor/Destructor
+//============================
+
+
+		HoldemArena(float64 smallestChipAmount, std::ostream& targetout, bool illustrate, bool spectate)
 		: curIndex(-1),  nextNewPlayer(0)
         ,gamelog(targetout)
         ,bVerbose(illustrate),bSpectate(spectate)
-        ,livePlayers(0),curHighBlind(-1),blinds(b),allChips(0)
+        ,livePlayers(0),curHighBlind(-1),smallestChip(smallestChipAmount),allChips(0)
 		,lastRaise(0),highBet(0), myPot(0), myFoldedPot(0), myBetSum(0), prevRoundFoldedPot(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)
 		#ifdef GLOBAL_AICACHE_SPEEDUP
 		,communityBuffer(0)
@@ -336,21 +352,26 @@ protected:
 		{
 		    //p = new Player * [SEATS_AT_TABLE];
 		    for(playernumber_t n=0;n<SEATS_AT_TABLE;++n){ p[n] = 0; }
-		    smallestChip = b->SmallBlind(); ///This INITIAL small blind should be assumed to be one chip.
+
         }
 
-		virtual ~HoldemArena();
+		~HoldemArena();
 
-		virtual void AssertInitialState();
-		virtual void LoadBeginInitialState();
-		virtual void BeginInitialState();
-		virtual Player * FinalizeReportWinner();
+
+//============================
+//   Flow Control Functions
+//============================
+
+		void AssertInitialState();
+		void LoadBeginInitialState();
+		void BeginInitialState();
+		Player * FinalizeReportWinner();
 
 		// HoldemArenaBetting events and PlayShowdown will both update the deterministic-random-seed assistant
         void ResetDRseed(); //You may reset the seed here (recommended at the beginning of each hand, before the first HoldemArenaBetting event
         float64 GetDRseed(); //You may get a seed at any time, but it is best to do so after PlayShowdown or when no more HoldemArenaBetting events will take place
 
-		void BeginNewHands();
+		void BeginNewHands(const struct BlindUpdate & roundBlinds);
         void DealAllHands(SerializeRandomDeck *);
 
         //returns the first person to reveal cards (-1 if all fold)
@@ -367,46 +388,58 @@ protected:
         void RefreshPlayers();
 
 
+//==============================
+//   Initialization Functions
+//==============================
 
-        virtual playernumber_t AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
+        playernumber_t AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
 
-		virtual playernumber_t NumberAtRound() const;
-        virtual playernumber_t NumberInHand() const;
-		virtual playernumber_t NumberAtTable() const;
+//===================================
+//   In-Game Information Accessors
+//===================================
 
-		virtual playernumber_t GetTotalPlayers() const;
+		playernumber_t NumberAtRound() const;
+        playernumber_t NumberInHand() const;
+		playernumber_t NumberAtTable() const;
 
-		virtual playernumber_t GetCurPlayer() const;
-		virtual playernumber_t GetDealer() const;
+		playernumber_t GetTotalPlayers() const;
 
-		virtual const Player* ViewPlayer(playernumber_t) const;
+		playernumber_t GetCurPlayer() const;
+		playernumber_t GetDealer() const;
 
-		virtual bool IsAlive(int8) const;
-		virtual bool IsInHand(int8) const;
-		virtual bool HasFolded(int8) const;
-		virtual bool CanStillBet(int8) const; //This will not include players who have pushed all in
-		virtual uint8 RaiseOpportunities(int8,int8) const;
-		virtual uint8 FutureRounds() const;
+		const Player* ViewPlayer(playernumber_t) const;
 
-        virtual float64 GetAllChips() const;
-        virtual float64 GetFoldedPotSize() const;
-        virtual float64 GetUnfoldedPotSize() const;
-		virtual float64 GetDeadPotSize() const; //That's pot - betSum;
-		virtual float64 GetLivePotSize() const;
-		virtual float64 GetRoundPotSize() const; //ThisRound pot size
-		virtual float64 GetPrevPotSize() const; //Pot size from previous rounds
-   		virtual float64 GetPrevFoldedRetroactive() const;
-   		virtual float64 GetRoundBetsTotal() const; //Bets made this round by players still in hand, excludes blind bets
-   		virtual float64 GetUnbetBlindsTotal() const; //blindOnlySum
-		virtual float64 GetPotSize() const;
-		virtual float64 GetBetToCall() const; //since ROUND start
-		virtual float64 GetMaxShowdown(const float64 myMoney = -1) const;
-		virtual float64 GetMinRaise() const;
-		virtual float64 GetBigBlind() const;
-		virtual float64 GetSmallBlind() const;
-		virtual float64 GetChipDenom() const;
+		bool IsAlive(int8) const;
+		bool IsInHand(int8) const;
+		bool HasFolded(int8) const;
+		bool CanStillBet(int8) const; //This will not include players who have pushed all in
+		uint8 RaiseOpportunities(int8,int8) const;
+		uint8 FutureRounds() const;
 
-		virtual bool OverridePlayerMoney(playernumber_t n, float64 m);
+        float64 GetAllChips() const;
+        float64 GetFoldedPotSize() const;
+        float64 GetUnfoldedPotSize() const;
+		float64 GetDeadPotSize() const; //That's pot - betSum;
+		float64 GetLivePotSize() const;
+		float64 GetRoundPotSize() const; //ThisRound pot size
+		float64 GetPrevPotSize() const; //Pot size from previous rounds
+   		float64 GetPrevFoldedRetroactive() const;
+   		float64 GetRoundBetsTotal() const; //Bets made this round by players still in hand, excludes blind bets
+   		float64 GetUnbetBlindsTotal() const; //blindOnlySum
+		float64 GetPotSize() const;
+		float64 GetBetToCall() const; //since ROUND start
+		float64 GetMaxShowdown(const float64 myMoney = -1) const;
+		float64 GetMinRaise() const;
+		float64 GetChipDenom() const;
+		const BlindValues & GetBlindValues() const{ return myBlinds; }
+
+
+
+//======================
+//   In-Game Mutators
+//======================
+
+		bool OverridePlayerMoney(playernumber_t n, float64 m);
 }
 ;
 

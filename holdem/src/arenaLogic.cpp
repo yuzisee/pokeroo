@@ -498,8 +498,6 @@ void HoldemArena::RefreshPlayers()
         }
     }
 
-    bool bPlayerElimBlindUp = false;
-
 
     for(int8 i=0;i<nextNewPlayer;++i)
     {
@@ -509,7 +507,7 @@ void HoldemArena::RefreshPlayers()
             --livePlayers;
             withP.myMoney = -1;
             withP.myBetSize = INVALID;
-            bPlayerElimBlindUp |= blinds->PlayerEliminated();
+//            bPlayerElimBlindUp |= blinds->PlayerEliminated();
 
 #ifdef GRAPHMONEY
             scoreboard << ",0";
@@ -580,12 +578,6 @@ void HoldemArena::RefreshPlayers()
     scoreboard << endl;
 #endif
     ++handnum;
-
-
-    if( bPlayerElimBlindUp && bVerbose )
-    {
-        gamelog << "Blinds increased to " << blinds->mySmallBlind << "/" << blinds->myBigBlind << endl;
-    }
 
 
     do{

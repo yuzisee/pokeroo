@@ -114,7 +114,7 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
         float64 nowMoney = ViewPlayer().GetMoney();
         if( prevMoney > -1 )
         {
-            const float64 avgBlind = (ViewTable().GetBigBlind() + ViewTable().GetSmallBlind()) / ViewTable().NumberAtTable();
+            const float64 avgBlind = ViewTable().GetBlindValues().AverageForcedBetPerHand(ViewTable().NumberAtTable());
             if( bGamble > 0 )
             {
                 picks[currentStrategy].totalMoneyDelta -= avgBlind;

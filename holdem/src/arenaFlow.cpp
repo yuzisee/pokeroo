@@ -82,7 +82,7 @@ DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
     return userCard;
 }
 /*
- 
+
    const int16 INPUTLEN = 5;
 	char inputBuf[INPUTLEN];
 
@@ -244,7 +244,7 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
 
 
 //If tableDealer is null, you may specify dealt cards using the console.
-void HoldemArena::BeginNewHands()
+void HoldemArena::BeginNewHands(const struct BlindUpdate & roundBlinds)
 {
     roundPlayers = livePlayers;
 
@@ -270,11 +270,22 @@ void HoldemArena::BeginNewHands()
 
     }
 
+    myBlinds = roundBlinds.b;
+
+    if( roundBlinds.bNew )
+    {
+        if( bVerbose )
+        {
+            gamelog << "Blinds increased to " << myBlinds.GetSmallBlind() << "/" << myBlinds.GetBigBlind() << endl;
+        }
+    }
+
+
 
 }
 
 void HoldemArena::AssertInitialState()
-{ 
+{
 #ifdef DEBUGASSERT
 
     bool bPlayersWithMoney = false;
@@ -377,15 +388,6 @@ int8 HoldemArena::PlayRound_BeginHand()
 {
     gamelog << "BEGIN" << endl;
 
-
-
-    if( blinds->HandPlayed(0) )
-    {
-        if( bVerbose )
-        {
-            gamelog << "Blinds increased to " << blinds->mySmallBlind << "/" << blinds->myBigBlind << endl;
-        }
-    }
 
     playersInHand = livePlayers;
     roundPlayers = livePlayers;

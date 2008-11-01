@@ -211,8 +211,8 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
 	}
 
 
-    const int8 N = tableinfo->handsDealt();
-    const float64 avgBlind = (tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
+    const playernumber_t N = tableinfo->handsDealt();
+    const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     //We don't need to set w, because a.FindZero searches over w
     #ifdef SACRIFICE_COMMITTED
     a.FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
@@ -256,7 +256,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
 	const float64 retBet = bMyWouldCall ? (raiseto-fold_bet) : 0;
 
     const int8 N = tableinfo->handsDealt();
-    const float64 avgBlind = (tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
+    const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
 
     //The pot can't be zero, so base_minus_1 can't be 0, so base can't be 1, so log(base) can't be zero
     const float64 base_minus_1 = (cps.pot+raiseto+retBet)/(cps.bankroll-raiseto);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
@@ -321,7 +321,7 @@ float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 h
     a.opponents = opponents;
 
     const int8 N = tableinfo->handsDealt();
-    const float64 avgBlind = (tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
+    const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     #ifdef SACRIFICE_COMMITTED
     a.FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
 	a.FG.waitLength.amountSacrificeForced = avgBlind;
@@ -343,7 +343,7 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
 
 
     const int8 N = tableinfo->handsDealt();
-    const float64 avgBlind = (tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
+    const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     const float64 base_minus_1 = (cps.pot+humanbet)/(cps.bankroll-humanbet);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
 
     FoldGainModel FG(tableinfo->chipDenom());
@@ -382,7 +382,7 @@ float64 ExactCallD::facedOdds_Algb(const ChipPositionState & cps, float64 betSiz
     a.betSize = betSize;
 
     const int8 N = tableinfo->handsDealt();
-    const float64 avgBlind = (tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
+    const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     #ifdef SACRIFICE_COMMITTED
     a.FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
 	a.FG.waitLength.amountSacrificeForced = avgBlind;
@@ -417,7 +417,7 @@ float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incr
 
 
     const int8 N = tableinfo->handsDealt();
-    const float64 avgBlind = (tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
+    const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     FoldGainModel FG(tableinfo->chipDenom());
     #ifdef SACRIFICE_COMMITTED
     FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
@@ -1067,8 +1067,8 @@ float64 ExpectedCallD::PushGain()
     const float64 rawWinFreq = (1.0 / table->NumberAtTable()) ; //It's raw, so it's defined by NumberAtTable
     const float64 blindsPow = rawWinFreq*(1.0 - 1.0 / table->NumberAtTable());
 
-    const float64 bigBlindFraction = betFraction( table->GetBigBlind() );
-    const float64 smallBlindFraction = betFraction( table->GetSmallBlind() );
+    const float64 bigBlindFraction = betFraction( table->GetBlindValues().GetBigBlind() );
+    const float64 smallBlindFraction = betFraction( table->GetBlindValues().GetSmallBlind() );
 #ifdef CONSISTENT_AGG
     const float64 handFreq = 1+handRarity;//1/(1-handRarity);
     if( handRarity >= 1 ) //all hands are better than this one

@@ -22,72 +22,163 @@
 #ifndef HOLDEM_Blinds
 #define HOLDEM_Blinds
 
-#include "portability.h"
+#include "holdemutil.h"
 #include "debug_flags.h"
 
-class BlindStructure
+
+
+#define PLAYERS_IN_BLIND 2
+
+class BlindValues
 {
-	protected:
-	        virtual bool PlayerEliminated(){return false;};
-            virtual bool HandPlayed(float64 timepassed=0){return false;}; //support time-based blinds
+    public:
+        const static playernumber_t playersInBlind;
+        float64 anteSize;
+        float64 blindSize[PLAYERS_IN_BLIND];
 
-	public:
-        float64 myBigBlind;
-        float64 mySmallBlind;
+        BlindValues()
+        {
+            anteSize = 0;
+            for(playernumber_t n=0;n<PLAYERS_IN_BLIND;++n)
+            {
+                blindSize[n] = 0;
+            }
+        }
 
-            BlindStructure(float64 small, float64 big)
-    : myBigBlind(big), mySmallBlind(small) {};
-            virtual ~BlindStructure();
+        BlindValues(const BlindValues & o)
+        {
+            *this = o;
+        }
 
-            virtual const float64 BigBlind();
-            virtual const float64 SmallBlind();
+        BlindValues & operator=(const BlindValues & o)
+        {
+            anteSize = o.anteSize;
+            for(playernumber_t n=0;n<PLAYERS_IN_BLIND;++n)
+            {
+                blindSize[n] = o.blindSize[n];
+            }
 
-            virtual void Reload(const float64 small,const float64 big,const uint32 handnum);
+            return *this;
+        }
+
+
+        const float64 & GetSmallBlind() const { return blindSize[0]; } //Small Blind
+        const float64 & GetBigBlind() const { return blindSize[1]; } //Big Blind
+
+        float64 AverageForcedBetPerHand(const playernumber_t livePlayers) const
+        {
+            float64 blindsPerButton = 0;
+            for(playernumber_t n=0;n<PLAYERS_IN_BLIND;++n)
+            {
+                blindsPerButton += blindSize[n];
+            }
+
+            const float64 averageBlind = blindsPerButton / livePlayers;
+            const float64 averageForced = averageBlind + anteSize;
+
+            return averageForced;
+        }
+
+        float64 OpportunityPerHand(const playernumber_t livePlayers) const
+        {
+            const float64 averageForced = AverageForcedBetPerHand(livePlayers);
+            //Each round is worth averageForced of opportunity cost.
+            //Flat odds to win each hand before cards are dealt, is 1.0/livePlayers.
+            // That's one hand on average each time the button goes around.
+            // Your EV/equity here is +averageForced/livePlayers.
+            //Likewise, someone else is going to win the other livePlayers-1 hands.
+            // That's gives you an EV/equity of -averageForced*(livePlayers-1)/livePlayers
+            //Adding these together means the net opportunity of each hand is:
+            // + averageForced/livePlayers - averageForced*(livePlayers-1)/livePlayers
+            // = averageForced*(1.0-livePlayers+1)/livePlayers
+            // = averageForced*(2.0-livePlayers)/livePlayers
+
+            //Opportunity cost is the negative of net opportunity
+            const float64 averageOpporunityCost = (averageForced*(livePlayers - 2))/livePlayers;
+            return averageOpporunityCost;
+
+
+        }
+        //(tableinfo->table->GetBigBlind() + tableinfo->table->GetSmallBlind()) * ( N - 2 )/ N / N;
+
+
+        void SetSmallBigBlind(float64 small) { blindSize[0] = small; blindSize[1] = small*2.0; }
+
+        const BlindValues operator*(const float64& fx) const
+        {
+            BlindValues a(*this);
+            a *= fx;
+            return a;
+        }
+
+
+        const BlindValues & operator*=(const float64& fx)
+        {
+            this->anteSize *= fx;
+            for(playernumber_t n=0;n<PLAYERS_IN_BLIND;++n)
+            {
+                this->blindSize[n] *= fx;
+            }
+
+            return *this;
+        }
 }
 ;
 
+struct BlindUpdate
+{
+    playernumber_t playersLeft;
+    handnum_t handNumber;
+    float64 timeSoFar;
+
+    BlindValues b;
+    bool bNew;
+}
+;
+
+class BlindStructure
+{
+	public:
+        virtual struct BlindUpdate UpdateSituation(struct BlindUpdate currentBlinds, struct BlindUpdate updateSituation) = 0;
+        virtual void Serialize(std::ostream & saveToFile) = 0;
+        virtual void UnSerialize(std::istream & restoreFromFile) = 0;
+}
+;
+
+/*
+class FixedBlinds : virtual public BlindStructure
+{
+	public:
+    virtual struct BlindUpdate UpdateSituation(struct BlindUpdate currentBlinds, struct BlindUpdate updateSituation);
+}
+;
+*/
 
 class StackPlayerBlinds : virtual public BlindStructure
 {
 	protected:
 		const float64 totalChips;
-		const float64 blindRatio;
-		int8 playerNum;
+		const float64 smallBlindRatio;
 	public:
-		StackPlayerBlinds(float64 stack, int8 players, float64 ratio)
-	: BlindStructure(stack*ratio/2.0, stack*ratio), totalChips(stack*players), blindRatio(ratio), playerNum(players) {}
+		StackPlayerBlinds(float64 allstack, float64 sbratio) : totalChips(allstack), smallBlindRatio(sbratio) {}
 
-		virtual bool PlayerEliminated();
-
+    virtual struct BlindUpdate UpdateSituation(struct BlindUpdate currentBlinds, struct BlindUpdate updateSituation);
+    virtual void Serialize(std::ostream & saveToFile){}
+    virtual void UnSerialize(std::istream & restoreFromFile){}
 }
 ;
 
 class GeomPlayerBlinds : virtual public BlindStructure
 {
 	protected:
-		float64 bigRatio;
-		float64 smallRatio;
+		const float64 incrRatio;
 	public:
-		GeomPlayerBlinds(float64 small, float64 big, float64 smallIncr, float64 bigIncr)
-	: BlindStructure(small, big), bigRatio(bigIncr), smallRatio(smallIncr) {}
+		GeomPlayerBlinds(float64 ratio)
+	: incrRatio(ratio) {}
 
-		virtual bool PlayerEliminated();
-
-}
-;
-
-class AlgbHandBlinds : virtual public BlindStructure
-{
-	protected:
-
-		float64 bigPlus, smallPlus;
-		int16 freq,since;
-	public:
-		AlgbHandBlinds(float64 small, float64 big, float64 smallIncr, float64 bigIncr, int16 afterHands)
-	: BlindStructure(small, big), bigPlus(bigIncr), smallPlus(smallIncr), freq(afterHands),since(0) {}
-
-		virtual bool HandPlayed(float64 timepassed=0); //support time-based blinds
-
+    virtual struct BlindUpdate UpdateSituation(struct BlindUpdate currentBlinds, struct BlindUpdate updateSituation);
+    virtual void Serialize(std::ostream & saveToFile){}
+    virtual void UnSerialize(std::istream & restoreFromFile){}
 }
 ;
 
@@ -96,21 +187,25 @@ class SitAndGoBlinds : virtual public BlindStructure
     private:
     static float64 fibIncr(float64 a, float64 b);
 
+    void InitializeHist(const float64 small,const float64 big);
+
     protected:
     float64 hist[3];
-    int16 handPeriod;
-    int16 handCount;
+    const handnum_t handPeriod;
+    handnum_t nextUpdate;
 
     public:
-    virtual void Reload(const float64 small,const float64 big,const uint32 handnum);
+
 
     SitAndGoBlinds(float64 small, float64 big, const int16 afterHands)
-	: BlindStructure(small, big), handPeriod(afterHands), handCount(afterHands)
+	: handPeriod(afterHands)
     {
-        Reload(small,big,afterHands);
+        InitializeHist(small,big);
     }
 
-    virtual bool HandPlayed(float64 timepassed=0);
+    virtual struct BlindUpdate UpdateSituation(struct BlindUpdate currentBlinds, struct BlindUpdate updateSituation);
+    virtual void Serialize(std::ostream & saveToFile);
+    virtual void UnSerialize(std::istream & restoreFromFile);
 }
 ;
 

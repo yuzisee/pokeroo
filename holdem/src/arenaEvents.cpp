@@ -179,7 +179,7 @@ void HoldemArenaBetting::startBettingRound()
 	highestBetter = bBlinds;
 
 
-	lastRaise = myTable->GetBigBlind();
+	lastRaise = myTable->GetBlindValues().GetBigBlind();
 
 
 
@@ -212,7 +212,7 @@ void HoldemArenaBetting::startBettingRound()
 
         int8 smallBlindIndex = curIndex;
         Player& withP1 = *p[curIndex];
-        PlayerBet(withP1) = myTable->GetSmallBlind();
+        PlayerBet(withP1) = myTable->GetBlindValues().GetSmallBlind();
 
         if( PlayerBet(withP1) > PlayerMoney(withP1) )
         {
@@ -237,7 +237,7 @@ void HoldemArenaBetting::startBettingRound()
 		}while( ! IsInHand(curIndex) );
 
 		Player& withP2 = *p[curIndex];
-		PlayerBet(withP2) = myTable->GetBigBlind();
+		PlayerBet(withP2) = myTable->GetBlindValues().GetBigBlind();
 
         if( PlayerBet(withP2) > PlayerMoney(withP2) )
         {

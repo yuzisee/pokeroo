@@ -51,8 +51,8 @@ float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, c
 
 
 
-    const float64 bigBlind = table->GetBigBlind() ;
-    const float64 smallBlind = table->GetSmallBlind() ;
+    const float64 bigBlind = table->GetBlindValues().GetBigBlind() ;
+    const float64 smallBlind = table->GetBlindValues().GetSmallBlind();
 #ifdef SAME_WILL_LOSE_BLIND
     const float64 blindsPow = 1.0 / (playerCount);
 #else
@@ -151,17 +151,17 @@ float64 ExpectedCallD::chipDenom() const
     return table->GetChipDenom();
 }
 
-int8 ExpectedCallD::handsToBeat() const
+playernumber_t ExpectedCallD::handsToBeat() const
 {
     return table->NumberAtRound()-1;  //Number of hands drawn
 }
 
-int8 ExpectedCallD::handsDealt() const
+playernumber_t ExpectedCallD::handsDealt() const
 {
     return table->NumberAtTable();  //Number of live players
 }
 
-int8 ExpectedCallD::handsIn() const //In general, used for "who can you split with" type requests as handsIn()-1?
+playernumber_t ExpectedCallD::handsIn() const //In general, used for "who can you split with" type requests as handsIn()-1?
 {
     return table->NumberInHand();  //Number of live players not folded
 }
@@ -203,7 +203,7 @@ float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 
 {
 
     const int8 N = handsDealt();
-    const float64 avgBlind = (table->GetBigBlind() + table->GetSmallBlind()) * ( N - 2 )/ N / N;
+    const float64 avgBlind = table->GetBlindValues().OpportunityPerHand(N);
 
     FoldGainModel FG(table->GetChipDenom()/2);
     FG.waitLength.meanConv = useMean;

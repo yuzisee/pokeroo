@@ -175,18 +175,19 @@ void HoldemArena::UnserializeRoundStart(std::ifstream & fileLoadState)
 
 	    int16 numericValue;
 
-
+/*
             blinds->mySmallBlind = HoldemUtil::ReadFloat64( fileLoadState );
             fileLoadState.ignore(1,'=');
             blinds->myBigBlind = HoldemUtil::ReadFloat64( fileLoadState );
-            
+
         blinds->Reload(blinds->mySmallBlind,blinds->myBigBlind,handnum);
-            
+
 	    fileLoadState.ignore(1,'@');
+*/
             fileLoadState >> numericValue;
-            
+
 	    curDealer = static_cast<int8>(numericValue);
-            
+
 	    fileLoadState.ignore(1,'@');
             smallestChip = HoldemUtil::ReadFloat64( fileLoadState );
             fileLoadState.ignore(1,'^');
@@ -214,11 +215,13 @@ void HoldemArena::UnserializeRoundStart(std::ifstream & fileLoadState)
 void HoldemArena::SerializeRoundStart(std::ofstream & fileSaveState)
 {
     	fileSaveState << handnum << "n";
-
+/*
     HoldemUtil::WriteFloat64( fileSaveState, blinds->SmallBlind() );
     fileSaveState << "=" << flush;
     HoldemUtil::WriteFloat64( fileSaveState, blinds->BigBlind() );
-    fileSaveState << "@" << (int)curDealer << "@" << flush;
+    fileSaveState << "@" << flush;
+*/
+    fileSaveState << (int)curDealer << "@" << flush;
     HoldemUtil::WriteFloat64( fileSaveState, smallestChip );
     fileSaveState << "^" << flush;
 
@@ -408,16 +411,6 @@ float64 HoldemArena::GetMinRaise() const
 	//return 0;
 }
 
-float64 HoldemArena::GetBigBlind() const
-{
-	return blinds->BigBlind();
-}
-
-float64 HoldemArena::GetSmallBlind() const
-{
-	return blinds->SmallBlind();
-}
-
 float64 HoldemArena::GetChipDenom() const
 {
     return smallestChip;
@@ -500,7 +493,7 @@ float64 HoldemArena::GetMaxShowdown(const float64 myMoney) const
 bool HoldemArena::OverridePlayerMoney(playernumber_t n, float64 m)
 {
 	if( !p[n] ) return false;
-	
+
 	p[n]->myMoney = m;
 	return true;
 }

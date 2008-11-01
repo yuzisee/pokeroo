@@ -19,15 +19,15 @@
  ***************************************************************************/
 
 
-#include "stratCombined.h"
-#include "stratPosition.h"
-//#include "stratTournament.h"
-#include "stratManual.h"
-#include "stratThreshold.h"
-#include "arena.h"
-#include "aiCache.h"
-#include "functionmodel.h"
-#include "aiInformation.h"
+#include "../src/stratCombined.h"
+#include "../src/stratPosition.h"
+#include "../src/stratManual.h"
+#include "../src/stratThreshold.h"
+#include "../src/arena.h"
+#include "../src/aiCache.h"
+#include "../src/functionmodel.h"
+#include "../src/aiInformation.h"
+
 #include <algorithm>
 #include <string.h>
 //#include <direct.h>
@@ -66,12 +66,12 @@ void InitGameLoop(HoldemArena & my, bool bLoadGame)
 	my.AssertInitialState();
 #endif
 
-	
+
 #ifdef DEBUGSAVEGAME
 	if( !bLoadGame )
 #endif
 	{
-		my.BeginInitialState();
+		my.BeginInitialState(); //handnum is set to 1 here
 #ifdef REPRODUCIBLE
 		my.ResetDRseed();
 #endif
@@ -90,7 +90,7 @@ void InitGameLoop(HoldemArena & my, bool bLoadGame)
 
 
 
-void PlayGameInner(HoldemArena & my,SerializeRandomDeck * tableDealer)
+void PlayGameInner(HoldemArena & my, SerializeRandomDeck * tableDealer)
 {
 
 	if( my.PlayRound_BeginHand() == -1 ) return;
@@ -118,13 +118,13 @@ void PlayGameInner(HoldemArena & my,SerializeRandomDeck * tableDealer)
 }
 
 
-void SaveStateShuffleNextHand(HoldemArena & my,SerializeRandomDeck * d, float64 randRem)
+void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindController, SerializeRandomDeck * d, float64 randRem)
 {
 
 
 #ifndef DEBUGSAVEGAME
 	if( d ) d->ShuffleDeck( randRem );
-	
+
 
 	return;
 #endif
@@ -133,6 +133,7 @@ void SaveStateShuffleNextHand(HoldemArena & my,SerializeRandomDeck * d, float64 
 		//First save the round state
 		//Then shuffle the deck, and append it's state to the savegame file.
   	my.SerializeRoundStart(newSaveState);
+    blindController.Serialize(newSaveState);
 	if( d )
 	{
 		d->UndealAll();
@@ -153,6 +154,7 @@ void SaveStateShuffleNextHand(HoldemArena & my,SerializeRandomDeck * d, float64 
     std::ofstream allSaveState( handnumtxt );
 		//Rewrite into a second file
 	my.SerializeRoundStart(allSaveState);
+	blindController.Serialize(allSaveState);
 	if( d )
 	{
 		d->LogDeckState( allSaveState );
@@ -165,27 +167,66 @@ void SaveStateShuffleNextHand(HoldemArena & my,SerializeRandomDeck * d, float64 
 
 }
 
-Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer, bool bLoadedGame, ifstream & closeFile)
+
+struct BlindUpdate UninitializedBlinds()
+{
+    struct BlindUpdate b;
+    b.bNew = false;
+
+    b.handNumber = 0;
+    b.timeSoFar = 0.0;
+
+    return b;
+}
+
+struct BlindUpdate myBlindState(HoldemArena & my)
+{
+    struct BlindUpdate b;
+    b.bNew = false;
+
+    b.timeSoFar = 0.0;
+
+    b.handNumber = my.handnum;
+    b.playersLeft = my.NumberAtTable();
+
+    return b;
+}
+
+Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, BlindValues firstBlind, SerializeRandomDeck * tableDealer, bool bLoadedGame, ifstream & closeFile)
 {
 
 
-	InitGameLoop(my, bLoadedGame);
+    struct BlindUpdate thisRoundBlinds;
 
+
+
+    InitGameLoop(my, bLoadedGame); //handnum is now 1
+
+
+    // Blinds and deck order are restored during a bLoadedGame.
+    // When starting fresh, we initialize these objects here.
     if( !bLoadedGame )
-	{	
+	{
 		//Shuffle the deck here with an arbitrary seed
 		float64 randRem = time(0);
-		SaveStateShuffleNextHand(my, tableDealer, randRem);
+		SaveStateShuffleNextHand(my, blindController, tableDealer, randRem);
+
+		//Initialize the blinds with a starting value
+		thisRoundBlinds = UninitializedBlinds();
+		thisRoundBlinds.b = firstBlind;
+        thisRoundBlinds.playersLeft = my.NumberAtTable();
 	}
 
 #ifdef DEBUGASSERT
-	            my.ResetDRseed(); 
+	            my.ResetDRseed();
 #endif
 
 	while(my.NumberAtTable() > 1)
 	{
+	    struct BlindUpdate lastRoundBlinds = thisRoundBlinds;
+        thisRoundBlinds = blindController.UpdateSituation( lastRoundBlinds , myBlindState(my) );
 
-		my.BeginNewHands();
+		my.BeginNewHands(thisRoundBlinds);
 
 
         my.DealAllHands(tableDealer);
@@ -199,11 +240,12 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer, bool bL
 		}
 #endif
 		my.ResetDRseed();
-		PlayGameInner(my,tableDealer);
+
+		PlayGameInner(my, tableDealer);
 #ifdef DEBUG_SINGLE_HAND
 		exit(0);
 #endif
-		my.RefreshPlayers(); ///New Hand
+		my.RefreshPlayers(); ///New Hand (handnum is also incremented now)
 
 
 		if( closeFile.is_open() ) closeFile.close();
@@ -212,11 +254,11 @@ Player* PlayGameLoop(HoldemArena & my,SerializeRandomDeck * tableDealer, bool bL
 	        if( NumberAtTable() > 1 )
     #endif
         	{
-				SaveStateShuffleNextHand(my, tableDealer, my.GetDRseed() );
-	            my.ResetDRseed(); 
+				SaveStateShuffleNextHand(my, blindController, tableDealer, my.GetDRseed() );
+	            my.ResetDRseed();
 			}
 #endif
-        
+
 	}
 
 
@@ -310,17 +352,18 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 //        smallBlindChoice=AUTO_CHIP_COUNT/200;
         smallBlindChoice=AUTO_CHIP_COUNT/35;
     }
-	BlindStructure b(smallBlindChoice,smallBlindChoice*2.0);
-	StackPlayerBlinds bg(AUTO_CHIP_COUNT, 9, b.BigBlind() / AUTO_CHIP_COUNT  / 2);
-    SitAndGoBlinds sg(b.SmallBlind(),b.BigBlind(),blindIncrFreq);
+    BlindValues b;
+    b.SetSmallBigBlind(smallBlindChoice);
+
+	StackPlayerBlinds bg(AUTO_CHIP_COUNT*9, smallBlindChoice / AUTO_CHIP_COUNT);
+    SitAndGoBlinds sg(b.GetSmallBlind(),b.GetBigBlind(),blindIncrFreq);
 		#ifdef REGULARINTOLOG
             std::ios::openmode gamelogMode = std::ios::trunc;
             if( bLoadGame ) gamelogMode = std::ios::app;
 			std::ofstream gameOutput("gamelog.txt",gamelogMode);
-			HoldemArena myTable(&bg, gameOutput,true, true);
+			HoldemArena myTable(smallBlindChoice, gameOutput,true, true);
 		#else
-			//This is the default WINRELEASE
-	HoldemArena myTable(&sg, gameLog,true, true);
+            HoldemArena myTable(smallBlindChoice, gameLog,true, true);
 		#endif
 	//ThresholdStrategy stagStrat(0.5);
 	UserConsoleStrategy consolePlay;
@@ -474,6 +517,11 @@ std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	#endif
 
 
+#ifdef WINRELEASE
+    #define SELECTED_BLIND_MODEL bg
+#else
+    #define SELECTED_BLIND_MODEL sg
+#endif
 
 std::ifstream loadFile;
 #ifdef DEBUGSAVEGAME
@@ -489,6 +537,7 @@ if( bLoadGame )
 	}
 
  	myTable.UnserializeRoundStart(loadFile);
+ 	SELECTED_BLIND_MODEL.UnSerialize( loadFile );
     if( tableDealer )  tableDealer->Unserialize( loadFile ); //Restore state of deck as well
 
 
@@ -507,8 +556,7 @@ if( bLoadGame )
 
 
 
-
-    Player* iWin = PlayGameLoop(myTable,tableDealer, bLoadGame, loadFile);
+    Player* iWin = PlayGameLoop(myTable,SELECTED_BLIND_MODEL, b,tableDealer, bLoadGame, loadFile);
 
 #ifdef REGULARINTOLOG
 gameOutput.close();
