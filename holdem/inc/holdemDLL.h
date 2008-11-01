@@ -30,7 +30,6 @@
 
 #include "portability.h"
 
-#include "arena.h"
 
 
 #ifdef _WINDLL
@@ -79,53 +78,78 @@
 
 
 
+//======================
+//   Basic data types
+//======================
+
+enum return_status {
+
+//OK
+   SUCCESS,
+   INPUT_CLEANED,
+
+//FAIL
+   NULL_TABLE_PTR,
+   INVALID_PARAMETERS,
+   INTERNAL_INCONSISTENCY
+};
+
+
+struct return_money
+{
+	float64 money;
+	enum return_status error_code;
+}
+;
+
+
 //=========================
 //   List your functions
 //=========================
 
 
 ///Call this to determine if the big blind has changed
-void GetBigBlind(void * table_ptr)
-{}
+C_DLL_FUNCTION
+struct return_money GetBigBlind(void * table_ptr);
 
 ///Call this to determine if the small blind has changed
-void GetSmallBlind(void * table_ptr)
-{}
+C_DLL_FUNCTION
+struct return_money GetSmallBlind(void * table_ptr);
 
 
 ///Get the amount of money playerNumber has in front of him
 C_DLL_FUNCTION
-float64 GetMoney(void * table_ptr, int8 playerNumber);
+struct return_money GetMoney(void * table_ptr, int8 playerNumber);
 //TODO: If the player is all in, make sure this returns the correct value
 
 
 
 //Override the amount of money playerNumber has in front of him
 C_DLL_FUNCTION
-void SetMoney(void * table_ptr, int8 playerNumber, float64 money);
+enum return_status SetMoney(void * table_ptr, int8 playerNumber, float64 money);
 
 
 
 ///Get the amount of money playerNumber has bet so far this round
 C_DLL_FUNCTION
-float64 GetCurrentBet(void * table_ptr, int8 playerNumber);
+struct return_money GetCurrentBet(void * table_ptr, int8 playerNumber);
 ///TODO: If the player is all in, make sure this returns the correct value
 
 
 
 ///Get the amount of money that is in the pot
 C_DLL_FUNCTION
-float64 GetPotSize(void * table_ptr);
+struct return_money GetPotSize(void * table_ptr);
 
 
 ///Get the amount of money that was in the pot at the BEGINNING of the current betting round
 C_DLL_FUNCTION
-float64 GetLastRoundPotsize(void * table_ptr);
+struct return_money GetLastRoundPotsize(void * table_ptr);
 
 
 ///Get the size of the highest bet so far
 C_DLL_FUNCTION
-float64 GetBetToCall(void * table_ptr);
+struct return_money GetBetToCall(void * table_ptr);
 
 
 //Get the playerNumber of the player who's turn it is
@@ -186,38 +210,38 @@ C_DLL_FUNCTION
 void StartBetting(void * table_ptr);
 
 ///Call these functions when playerNumber Raises, Folds, or Calls
-C_DLL_FUNCTION void PlayerCalls(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, int8 playerNumber);
 
-C_DLL_FUNCTION void PlayerFolds(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION enum return_status PlayerFolds(void * table_ptr, int8 playerNumber);
 
-C_DLL_FUNCTION void PlayerRaisesTo(void * table_ptr, int8 playerNumber, float64 amount);
+C_DLL_FUNCTION enum return_status PlayerRaisesTo(void * table_ptr, int8 playerNumber, float64 amount);
 
-C_DLL_FUNCTION void PlayerRaisesBy(void * table_ptr, int8 playerNumber, float64 amount);
+C_DLL_FUNCTION enum return_status PlayerRaisesBy(void * table_ptr, int8 playerNumber, float64 amount);
 ///Question: If a player doesn't call any of these, which is the default action?
 
 
 ///GetBetAmount is useful for asking a bot what to bet
-C_DLL_FUNCTION float64 GetBetDecision(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, int8 playerNumber);
 
 
 
 ///Call this when (if) the showdown begins
-C_DLL_FUNCTION void StartShowdown(void * table_ptr);
+C_DLL_FUNCTION enum return_status StartShowdown(void * table_ptr);
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
-C_DLL_FUNCTION void PlayerShowsCard(void * table_ptr, int8 playerNumber, char cardValue, char cardSuit);
+C_DLL_FUNCTION enum return_status PlayerShowsCard(void * table_ptr, int8 playerNumber, char cardValue, char cardSuit);
 
 ///Call this when playerNumber mucks his/her hand during the showdown.
 ///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
-C_DLL_FUNCTION void PlayerMucksHand(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION enum return_status PlayerMucksHand(void * table_ptr, int8 playerNumber);
 
 
 
 
 
 ///Call this when new hands are dealt
-void StartDealNewHands(void * table_ptr);
+C_DLL_FUNCTION enum return_status StartDealNewHands(void * table_ptr);
 
 /*****************************************************************************
 	Event functions
@@ -235,26 +259,26 @@ Note: SetBigBlind() and SetSmallBlind() can be called between
 hands anytime the blind size changes during the game
 *****************************************************************************/
 C_DLL_FUNCTION
-void * NewTable();
+void * NewTable(playernumber_t seatsAtTable);
 
 C_DLL_FUNCTION
-void DeleteTable(void * table_ptr);
+enum return_status DeleteTable(void * table_ptr);
 
 ///Choose playerNumber to be the dealer for the first hand
 C_DLL_FUNCTION
-void InitChooseDealer(void * table_ptr, int8 playerNumber);
+enum return_status InitChooseDealer(void * table_ptr, int8 playerNumber);
 
 ///Set the amount of money that the SMALLEST chip is worth
 C_DLL_FUNCTION
-void InitSmallestChipSize(void * table_ptr, float64 money);
+enum return_status InitSmallestChipSize(void * table_ptr, float64 money);
 
 ///Call this when the big blind has changed
 C_DLL_FUNCTION
-void SetBigBlind(void * table_ptr, float64 money);
+enum return_status SetBigBlind(void * table_ptr, float64 money);
 
 ///Call this when the small blind has changed
 C_DLL_FUNCTION
-void SetSmallBlind(void * table_ptr, float64 money);
+enum return_status SetSmallBlind(void * table_ptr, float64 money);
 
 ///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
 ///The function returns a playerNumber to identify this player in your code
