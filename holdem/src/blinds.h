@@ -190,6 +190,7 @@ class SitAndGoBlinds : virtual public BlindStructure
     void InitializeHist(const float64 small,const float64 big);
 
     protected:
+    float64 cur;
     float64 hist[3];
     const handnum_t handPeriod;
     handnum_t nextUpdate;

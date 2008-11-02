@@ -58,6 +58,8 @@ void SitAndGoBlinds::InitializeHist(const float64 small,const float64 big)
         hist[1] = small*rat;
         hist[2] = hist[0]+hist[1];
 
+    cur = small;
+
     nextUpdate = 1+handPeriod;
 }
 
@@ -75,7 +77,7 @@ struct BlindUpdate SitAndGoBlinds::UpdateSituation(struct BlindUpdate currentBli
     {
         nextUpdate = updateSituation.handNumber + handPeriod;
 
-        updateSituation.b.SetSmallBigBlind(hist[0] + hist[1] + hist[2]);
+        cur = hist[0] + hist[1] + hist[2];
 
         const float64 newHist = fibIncr(hist[2],hist[1]);
 
@@ -84,6 +86,8 @@ struct BlindUpdate SitAndGoBlinds::UpdateSituation(struct BlindUpdate currentBli
         hist[2] = newHist;
     }
 
+    updateSituation.b.SetSmallBigBlind(cur);
+
     return updateSituation;
 
 }
@@ -91,12 +95,10 @@ struct BlindUpdate SitAndGoBlinds::UpdateSituation(struct BlindUpdate currentBli
 void SitAndGoBlinds::Serialize(std::ostream & saveToFile)
 {
     HoldemUtil::WriteFloat64( saveToFile, hist[0] );
-    saveToFile << "$";
-
     HoldemUtil::WriteFloat64( saveToFile, hist[1] );
-    saveToFile << "$";
-
     HoldemUtil::WriteFloat64( saveToFile, hist[2] );
+    saveToFile << "$";
+    HoldemUtil::WriteFloat64( saveToFile, cur );
     saveToFile << "=";
 
     saveToFile << nextUpdate << ";";
@@ -105,12 +107,10 @@ void SitAndGoBlinds::Serialize(std::ostream & saveToFile)
 void SitAndGoBlinds::UnSerialize(std::istream & restoreFromFile)
 {
     hist[0] = HoldemUtil::ReadFloat64( restoreFromFile );
-    restoreFromFile.ignore(1,'$');
-
     hist[1] = HoldemUtil::ReadFloat64( restoreFromFile );
-    restoreFromFile.ignore(1,'$');
-
     hist[2] = HoldemUtil::ReadFloat64( restoreFromFile );
+    restoreFromFile.ignore(1,'$');
+    cur = HoldemUtil::ReadFloat64( restoreFromFile );
     restoreFromFile.ignore(1,'=');
 
     restoreFromFile >> nextUpdate;
