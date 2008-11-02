@@ -171,7 +171,7 @@ struct return_table
 ///Get the amount of money playerNumber has in front of him
 C_DLL_FUNCTION
 struct return_money GetMoney(void * table_ptr, playernumber_t);
-//TODO: If the player is all in, make sure this returns the correct value
+
 
 
 
@@ -182,9 +182,10 @@ enum return_status SetMoney(void * table_ptr, playernumber_t, float64);
 
 
 ///Get the amount of money playerNumber has bet so far this round
-C_DLL_FUNCTION
-struct return_money GetCurrentBet(void * table_ptr, playernumber_t);
-///TODO: If the player is all in, make sure this returns the correct value
+C_DLL_FUNCTION struct return_money GetCurrentRoundBet(void * table_ptr, playernumber_t playerNumber);
+
+///Get the amount of money playerNumber has bet so far in all previous rounds
+C_DLL_FUNCTION struct return_money GetPrevRoundsBet(void * table_ptr, playernumber_t playerNumber);
 
 
 
@@ -259,8 +260,9 @@ C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char car
 
 //This function reports who made first high bet that was called
 //If nobody called the high bet, then you will get -1 here.
-//Use this result to determine who is going to act first in the showdown.
-C_DLL_FUNCTION struct return_betting_result DeleteFinishBettingRound(void * event_ptr, struct holdem_cardset community );
+//CreateNewShowdown will need this value to determine who
+//is going to act first in the showdown.
+C_DLL_FUNCTION struct return_betting_result DeleteFinishBettingRound(void * event_ptr);
 
 
 ///Call this when the betting begins

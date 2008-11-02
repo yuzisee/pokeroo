@@ -511,9 +511,12 @@ HoldemArenaBetting::~HoldemArenaBetting()
 
 void HoldemArenaShowdown::startShowdown()
 {
-    curIndex = called;
+    curIndex = called; 
 
-
+	//The player who was called may be all in.
+	// If so, that player won't be IsInHand(curIndex).
+	//We need to loop just to find the first IsInHand player.
+	//Obviously if it goes all the way around, we build the allIns order, and start from there. (Decreasing chip stack)
     while ( !IsInHand(curIndex) )
     {
         incrIndex();

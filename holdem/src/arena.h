@@ -382,6 +382,9 @@ class HoldemArena
         void RefreshPlayers();
 
 
+		void PrepShowdownRound(const CommunityPlus & community);
+		void ProcessShowdownResults(vector<ShowdownRep> & winners);
+
 //==============================
 //   Initialization Functions
 //==============================
@@ -403,10 +406,10 @@ class HoldemArena
 
 		const Player* ViewPlayer(playernumber_t) const;
 
-		bool IsAlive(int8) const;
-		bool IsInHand(int8) const;
-		bool HasFolded(int8) const;
-		bool CanStillBet(int8) const; //This will not include players who have pushed all in
+		bool IsAlive(playernumber_t) const;
+		bool IsInHand(playernumber_t) const;
+		bool HasFolded(playernumber_t) const;
+		bool CanStillBet(playernumber_t) const; //This will not include players who have pushed all in
 		uint8 RaiseOpportunities(int8,int8) const;
 		uint8 FutureRounds() const;
 
@@ -571,15 +574,20 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
         void RevealHandAllIns(const ShowdownRep& comp, const CommunityPlus & playerHand);
     public:
 
-    vector<ShowdownRep>& winners;
+    vector<ShowdownRep> winners;
 
-    HoldemArenaShowdown(HoldemArena * table, const int8 firstPlayer, vector<ShowdownRep>& breakdown_out)
-     : HoldemArenaEventBase(table), called(firstPlayer), best(-1) , winners(breakdown_out), bRoundState('w')
+    HoldemArenaShowdown(HoldemArena * table, const int8 firstPlayer)
+     : HoldemArenaEventBase(table), called(firstPlayer), best(-1), bRoundState('w')
      {
          startShowdown();
      }
 
     char bRoundState;
+
+	//HoldemArenaShowdown will populate winners with a list of winning hands.
+	//Generally, this vector will just contain one item. When there is a split or
+	//side pots, you have have more players here.
+	//This list is ordered and is used by ProcessShowdownResults()
 
     ///ShowHand and MuckHand will set bRoundState to one of the following characters:
     ///'w' if there are still people left to reveal/muck their hands "IN TURN"

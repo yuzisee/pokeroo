@@ -61,7 +61,7 @@ struct return_money GetMoney(void * table_ptr, playernumber_t playerNumber)
 
 		if( !ptrP )
 		{
-			retval.error_code = INTERNAL_INCONSISTENCY;
+			retval.error_code = PARAMETER_INVALID;
 		}else
 		{
 			const Player & withP = *ptrP;
@@ -119,7 +119,7 @@ enum return_status SetMoney(void * table_ptr, playernumber_t playerNumber, float
 
 			if( ! myTable->OverridePlayerMoney(playerNumber,newMoney) )
 			{
-				error_code = INTERNAL_INCONSISTENCY;
+				error_code = PARAMETER_INVALID;
 			}
 		}
 	}
@@ -131,11 +131,81 @@ enum return_status SetMoney(void * table_ptr, playernumber_t playerNumber, float
 
 ///Get the amount of money playerNumber has bet so far this round
 C_DLL_FUNCTION
-struct return_money GetCurrentBet(void * table_ptr, playernumber_t playerNumber)
+struct return_money GetCurrentRoundBet(void * table_ptr, playernumber_t playerNumber)
 {
+	struct return_money retval = DEFAULT_RETURN_MONEY;
 
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		const Player * ptrP = myTable->ViewPlayer(playerNumber);
+
+		if( !ptrP )
+		{
+			retval.error_code = PARAMETER_INVALID;
+		}else
+		{
+			const Player & withP = *ptrP;
+
+			float64 playerBet = withP.GetBetSize();
+
+			if( playerBet < 0 )
+			{
+				playerBet = 0.0;
+				retval.error_code = INPUT_CLEANED;
+			}
+			
+			retval.money = playerBet;
+		}
+	}
+
+	return retval;
 }
-///TODO: If the player is all in, make sure this returns the correct value
+///resolveActions will make GetBetSize invalid. However, at that point the round is over anyways.
+
+
+
+///Get the amount of money playerNumber has bet so far in all previous rounds
+C_DLL_FUNCTION
+struct return_money GetPrevRoundsBet(void * table_ptr, playernumber_t playerNumber)
+{
+	struct return_money retval = DEFAULT_RETURN_MONEY;
+
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		const Player * ptrP = myTable->ViewPlayer(playerNumber);
+
+		if( !ptrP )
+		{
+			retval.error_code = PARAMETER_INVALID;
+		}else
+		{
+			const Player & withP = *ptrP;
+
+			float64 playerHandBetTotal = withP.GetContribution();
+
+			if( playerHandBetTotal < 0 )
+			{
+				playerHandBetTotal = 0.0;
+				retval.error_code = INPUT_CLEANED;
+			}
+			
+			retval.money = playerHandBetTotal;
+		}
+	}
+
+	return retval;
+}
+///Looking at resolveActions, handBetTotal is not used for any special purpose regarding allIns
 
 
 
@@ -339,7 +409,7 @@ struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardse
 
 
 C_DLL_FUNCTION
-struct return_betting_result DeleteFinishBettingRound(void * event_ptr, struct holdem_cardset community )
+struct return_betting_result DeleteFinishBettingRound(void * event_ptr)
 {
 	struct return_betting_result retval = DEFAULT_RETURN_BETTING_RESULT;
 
@@ -436,7 +506,6 @@ enum return_status PlayerMakesBetTo(void * event_ptr, playernumber_t playerNumbe
 	
 }
 
-//p[curIndex]->myStrat->MakeBet()
 
 ///GetBetAmount is useful for asking a bot what to bet
 C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, struct holdem_player player)
@@ -489,11 +558,80 @@ C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, struct holde
 
 
 
-///Call this when (if) the showdown begins
-C_DLL_FUNCTION enum return_status StartShowdown(void * table_ptr);
+///Call this when betting begins
+C_DLL_FUNCTION
+struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer)
+{
+	struct return_event retval = DEFAULT_RETURN_EVENT;
 
-//Get the playerNumber of the player who's turn it is
-C_DLL_FUNCTION struct return_betting_result WhoIsNext_Showdown(void * event_ptr);
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		HoldemArenaShowdown * bettingEvent = new HoldemArenaShowdown( myTable, calledPlayer );
+	}
+
+	return retval;
+}
+
+
+
+C_DLL_FUNCTION
+enum return_status DeleteFinishShowdown(void * event_ptr )
+{
+	enum return_status error_code = SUCCESS;
+
+	if( !event_ptr )
+	{
+		error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArenaShowdown * bettingEvent = reinterpret_cast<HoldemArenaShowdown *>(event_ptr);
+
+		//If we're in the middle of a showdown that hasn't concluded,
+		// we will report an error but still delete bettingEvent anyways.
+		//It's possible that the user could be quitting the program and needs
+		// to delete things in the middle of a betting round.
+		if( bettingEvent->bRoundState != '!' ) error_code = UNRELIABLE_RESULT;
+
+		delete bettingEvent;
+	}
+
+	return error_code;
+}
+
+
+
+//Get the seat of the player who's turn it is.
+//Players who aren't all-in first reveal/muck in order.
+//Then players who are all-in show their cards starting with the largest stack.
+C_DLL_FUNCTION
+struct return_betting_result WhoIsNext_Showdown(void * event_ptr)
+{
+	struct return_betting_result retval = DEFAULT_RETURN_BETTING_RESULT;
+
+	if( !event_ptr )
+	{
+		retval.error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArenaShowdown * bettingEvent = reinterpret_cast<HoldemArenaShowdown *>(event_ptr);
+
+		if( bettingEvent->bRoundState == '!' ) //if the round has already finished,
+		{
+			retval.error_code = NOT_IMPLEMENTED; 
+		}else
+		{
+			retval.seat_number = bettingEvent->WhoIsNext();
+		}
+	}
+
+	return retval;
+}
+
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit

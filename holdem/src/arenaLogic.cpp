@@ -144,19 +144,20 @@ Legend:
 
 void HoldemArena::compareAllHands(const CommunityPlus & community, const int8 called, vector<ShowdownRep>& winners)
 {
-    HoldemArenaShowdown w(this,called,winners);
+    HoldemArenaShowdown w(this,called);
 
     while(w.bRoundState != '!')
     {
         //Player& withP = *(p[curIndex]);
-	w.RevealHand(p[curIndex]->myStrat->ViewDealtHand(), community);
+		w.RevealHand(p[curIndex]->myStrat->ViewDealtHand(), community);
     }
+
+	winners.assign(w.winners.begin(),w.winners.end());
 }
 
-
-void HoldemArena::PlayShowdown(const CommunityPlus & community, const int8 called)
+void HoldemArena::PrepShowdownRound(const CommunityPlus & community)
 {
-    roundPlayers = livePlayers;
+	roundPlayers = livePlayers;
 
 	if( bVerbose )
 	{
@@ -172,13 +173,10 @@ void HoldemArena::PlayShowdown(const CommunityPlus & community, const int8 calle
         displayCom.HandPlus::DisplayHand(gamelog);
         gamelog << endl << endl << endl;
 	}
+}
 
-	vector<ShowdownRep> winners;
-	///------------------------------------
-	///  GENERATE A LIST OF WINNERS
-	compareAllHands(community, called, winners);
-	///------------------------------------
-
+void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners)
+{
 
 	size_t vectorSize=winners.size();
 	double winnable;
@@ -284,6 +282,20 @@ void HoldemArena::PlayShowdown(const CommunityPlus & community, const int8 calle
 	}
 
 	delete [] moneyWon;
+}
+
+
+void HoldemArena::PlayShowdown(const CommunityPlus & community, const int8 called)
+{
+    PrepShowdownRound(community);
+
+	vector<ShowdownRep> winners;
+	///------------------------------------
+	///  GENERATE A LIST OF WINNERS
+	compareAllHands(community, called, winners);
+	///------------------------------------
+
+	ProcessShowdownResults(winners);
 }
 
 void HoldemArena::prepareRound(const CommunityPlus& community, const int8 comSize)
@@ -392,18 +404,19 @@ void HoldemArena::defineSidePotsFor(Player& allInP, const int8 id)
 
 				incrIndex();
 			}while( curIndex != id );
-//Why did I comment this out? I couldn't see the need for handBetTotal to be considered at all in this situation
-//The subroutine begins with [allIn = myPot - myBetSum] which should take care of all action before this round
+//QUESTION: Why did I comment this out?
+//  ANSWER: I couldn't see the need for handBetTotal to be considered at all in this situation
+//          The subroutine begins with [allIn = myPot - myBetSum] which should take care of all action before this round
 /*
 
 		allInP.allIn += allInP.handBetTotal; //Account for your own bet
 
 		allInP.myMoney -= allInP.handBetTotal;
 */
-//The following line was added as a (working) substitute for the above block
-//During resolveActions handBetTotal is usually updated...
-//resolveActions is the next thing to happen after calling defineSidePotsFor
-    allInP.allIn += allInP.myBetSize; ///You are able to win back your own bet.
+//ALSO: The following line was added as a (working) substitute for the above block
+//      During resolveActions handBetTotal is usually updated...
+//      resolveActions is the next thing to happen after calling defineSidePotsFor
+    allInP.allIn += allInP.myBetSize; ///You are able to win back your own bet amount.
 }
 
 void HoldemArena::resolveActions(Player& withP)
