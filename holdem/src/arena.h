@@ -595,7 +595,7 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
     ///'!' if winners have been determined and the showdown is complete
     void RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community);
     ///ShowHand reveals the hand of myTable->p[curIndex]
-    void MuckHand(const CommunityPlus & community);
+    void MuckHand();
     ///MuckHand mucks the hand of myTable->p[curIndex]
 
 }

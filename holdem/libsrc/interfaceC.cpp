@@ -589,15 +589,15 @@ enum return_status DeleteFinishShowdown(void * event_ptr )
 		error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
-		HoldemArenaShowdown * bettingEvent = reinterpret_cast<HoldemArenaShowdown *>(event_ptr);
+		HoldemArenaShowdown * showdownEvent = reinterpret_cast<HoldemArenaShowdown *>(event_ptr);
 
 		//If we're in the middle of a showdown that hasn't concluded,
 		// we will report an error but still delete bettingEvent anyways.
 		//It's possible that the user could be quitting the program and needs
 		// to delete things in the middle of a betting round.
-		if( bettingEvent->bRoundState != '!' ) error_code = UNRELIABLE_RESULT;
+		if( showdownEvent->bRoundState != '!' ) error_code = UNRELIABLE_RESULT;
 
-		delete bettingEvent;
+		delete showdownEvent;
 	}
 
 	return error_code;
@@ -618,14 +618,14 @@ struct return_betting_result WhoIsNext_Showdown(void * event_ptr)
 		retval.error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
-		HoldemArenaShowdown * bettingEvent = reinterpret_cast<HoldemArenaShowdown *>(event_ptr);
+		HoldemArenaShowdown * showdownEvent = reinterpret_cast<HoldemArenaShowdown *>(event_ptr);
 
-		if( bettingEvent->bRoundState == '!' ) //if the round has already finished,
+		if( showdownEvent->bRoundState == '!' ) //if the round has already finished,
 		{
 			retval.error_code = NOT_IMPLEMENTED; 
 		}else
 		{
-			retval.seat_number = bettingEvent->WhoIsNext();
+			retval.seat_number = showdownEvent->WhoIsNext();
 		}
 	}
 
@@ -635,11 +635,65 @@ struct return_betting_result WhoIsNext_Showdown(void * event_ptr)
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
-C_DLL_FUNCTION enum return_status PlayerShowsCard(void * table_ptr, int8 playerNumber, char cardValue, char cardSuit);
+C_DLL_FUNCTION enum return_status PlayerShowsHand(void * event_ptr, int8 playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community)
+{
+	enum return_status error_code = SUCCESS;
+
+	if( !event_ptr )
+	{
+		error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArenaShowdown * showdownEvent = reinterpret_cast<HoldemArenaShowdown *>(event_ptr);
+
+		if( showdownEvent->bRoundState == '!' ) //if the round has already finished,
+		{
+			error_code = NOT_IMPLEMENTED;
+		}else if( showdownEvent->WhoIsNext() != playerNumber )
+		{
+			error_code = PARAMETER_INVALID;
+		}else if( !playerHand.card_count || !playerHand.cards_ptr || !community.card_count || !community.cards_ptr )
+		{
+			error_code = PARAMETER_DATA_ERROR;
+		}else
+		{
+			CommunityPlus * dealtHand = reinterpret_cast<CommunityPlus *>(playerHand.cards_ptr);
+			CommunityPlus * dealtCommunity = reinterpret_cast<CommunityPlus *>(community.cards_ptr);
+
+			showdownEvent->RevealHand(*dealtHand,*dealtCommunity);
+		}
+	}
+
+	return error_code;
+}
 
 ///Call this when playerNumber mucks his/her hand during the showdown.
 ///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
-C_DLL_FUNCTION enum return_status PlayerMucksHand(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, int8 playerNumber)
+{
+	enum return_status error_code = SUCCESS;
+
+	if( !event_ptr )
+	{
+		error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArenaShowdown * showdownEvent = reinterpret_cast<HoldemArenaShowdown *>(event_ptr);
+
+		if( showdownEvent->bRoundState == '!' ) //if the round has already finished,
+		{
+			error_code = NOT_IMPLEMENTED;
+		}else if( showdownEvent->WhoIsNext() != playerNumber )
+		{
+			error_code = PARAMETER_INVALID;
+		}else
+		{
+			showdownEvent->MuckHand();
+		}
+	}
+
+	return error_code;
+}
 
 
 /*****************************************************************************

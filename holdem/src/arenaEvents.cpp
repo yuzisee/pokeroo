@@ -580,10 +580,10 @@ void HoldemArenaShowdown::finishShowdown()
     curIndex = called;
 }
 
-void HoldemArenaShowdown::MuckHand(const CommunityPlus & community)
+void HoldemArenaShowdown::MuckHand()
 {
     ShowdownRep worstHand(curIndex); ///worstHand defaults to the worst hand. You only need to initialize playerIndex
-    RevealHand(CommunityPlus::EMPTY_COMPLUS, community);
+    RevealHand(CommunityPlus::EMPTY_COMPLUS, CommunityPlus::EMPTY_COMPLUS);
 }
 
 void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const CommunityPlus & playerHand)
@@ -738,13 +738,13 @@ void HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const Com
     ShowdownRep comp(curIndex);
 
     CommunityPlus withHandP;
-    withHandP.SetUnique( playerHand );
-
+    
     if( playerHand.IsEmpty() )
     {
         comp.SetMuck();
     }else
     {
+		withHandP.SetUnique( playerHand );
         withHandP.AppendUnique(community);
         comp.Reset(&withHandP);
     }

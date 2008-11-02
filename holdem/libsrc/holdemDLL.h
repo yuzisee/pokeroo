@@ -290,16 +290,14 @@ C_DLL_FUNCTION struct return_betting_result WhoIsNext_Betting(void * event_ptr);
 
 C_DLL_FUNCTION struct return_betting_result WhoIsNext_Showdown(void * event_ptr);
 
-///Call this when (if) the showdown begins
-C_DLL_FUNCTION enum return_status StartShowdown(void * table_ptr);
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
-C_DLL_FUNCTION enum return_status PlayerShowsCard(void * table_ptr, playernumber_t playerNumber, char cardValue, char cardSuit);
+C_DLL_FUNCTION enum return_status PlayerShowsCard(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community);
 
 ///Call this when playerNumber mucks his/her hand during the showdown.
 ///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
-C_DLL_FUNCTION enum return_status PlayerMucksHand(void * table_ptr, playernumber_t playerNumber);
+C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber);
 
 
 
