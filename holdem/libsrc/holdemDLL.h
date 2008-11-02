@@ -107,8 +107,7 @@ struct holdem_cardset
 
 struct holdem_player
 {
-	void * pstrat_ptr;
-	void ** pstrat_children;
+	char player_type;
 	playernumber_t seat_number;
 }
 ;

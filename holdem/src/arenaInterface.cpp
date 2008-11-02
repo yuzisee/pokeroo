@@ -304,7 +304,7 @@ bool HoldemArena::IsInHand(int8 n) const
 }
 
 
-const Player* HoldemArena::ViewPlayer(int8 n) const
+const Player* HoldemArena::ViewPlayer(playernumber_t n) const
 {
 	if (n >= 0 && n < nextNewPlayer )
 	{
@@ -312,6 +312,19 @@ const Player* HoldemArena::ViewPlayer(int8 n) const
 	}
 	return 0;
 }
+
+float64 HoldemArena::GetBetDecision(playernumber_t n)
+{
+	if (n >= 0 && n < nextNewPlayer )
+	{
+		if( p[n]->IsBot() )
+		{
+			return p[n]->myStrat->MakeBet();
+		}
+	}
+	return 0;
+}
+
 
 
 float64 HoldemArena::GetPotSize() const

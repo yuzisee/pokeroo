@@ -414,6 +414,7 @@ class HoldemArena
 		playernumber_t GetDealer() const;
 
 		const Player* ViewPlayer(playernumber_t) const;
+		float64 GetBetDecision(playernumber_t);
 
 		bool IsAlive(playernumber_t) const;
 		bool IsInHand(playernumber_t) const;
@@ -440,6 +441,7 @@ class HoldemArena
 		const BlindValues & GetBlindValues() const{ return myBlinds; }
 
 
+		
 
 //======================
 //   In-Game Mutators
