@@ -93,12 +93,8 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
     {
         if( prevMoney < 0 )
         {//If there is no previous hand, initialize
-            if( handNumber > 0 )
-            {//Arena loads game
-                initM(handNumber);
-            }else
+            if( !initM() )
             {//Arena new game
-                initM();
                 handNumber = 1;
                 prevMoney = -1;
             }
@@ -165,19 +161,16 @@ float64 MultiStrategy::MakeBet()
     return strats[picks[currentStrategy].id]->MakeBet();
 }
 
-void MultiStrategy::initM(uint32 restoreHandnum)
-{
-	initM();
-	handNumber = restoreHandnum;
-}
 
-void MultiStrategy::initM()
+bool MultiStrategy::initM()
 {
-    LoadState();
+    bool bLoadedState = LoadState();
+    if( bLoadedState ) handNumber = ViewTable().handnum;
     currentStrategy = 0;
     strats[0]->Link(this);
     strats[0]->HardOpenLogFile();
     strats[0]->ReleaseLogFile();
+    return bLoadedState;
 }
 
 void MultiStrategy::Unserialize( std::istream& loadFile )

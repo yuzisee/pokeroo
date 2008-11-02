@@ -223,6 +223,7 @@ class HoldemArena
 		playernumber_t curIndex;
 		playernumber_t nextNewPlayer;
 
+
 		float64 & PlayerBet(Player& target){ return target.myBetSize; }
 		float64 & PlayerLastBet(Player& target){ return target.lastBetSize; }
 		float64 & PlayerAllIn(Player& target){ return target.allIn; }
@@ -303,6 +304,8 @@ class HoldemArena
 //   Marshalling Functions
 //===========================
 
+        char pTypes[SEATS_AT_TABLE];
+
 #ifdef DEBUGSAVEGAME
         void SerializeRoundStart(std::ofstream & fileSaveState);
         void UnserializeRoundStart(std::ifstream & fileSaveState);
@@ -322,7 +325,7 @@ class HoldemArena
 
         static void ToString(const HoldemAction& e, std::ostream& o);
         static void FileNumberString(handnum_t value, char * str);
-        
+
 		static const float64 FOLDED;
 		static const float64 INVALID;
 
@@ -344,7 +347,10 @@ class HoldemArena
         #endif
 		{
 		    //p = new Player * [SEATS_AT_TABLE];
-		    for(playernumber_t n=0;n<SEATS_AT_TABLE;++n){ p[n] = 0; }
+		    for(playernumber_t n=0;n<SEATS_AT_TABLE;++n){
+                pTypes[n] = '\0';
+		        p[n] = 0;
+            }
 
         }
 
@@ -389,8 +395,11 @@ class HoldemArena
 //   Initialization Functions
 //==============================
 
-        playernumber_t AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
+        playernumber_t AddHumanOpponent(const char* const id, float64 money);
+        playernumber_t AddStrategyBot(const char* const id, float64 money, char botType);
 
+        playernumber_t AddPlayerManual(const char* const id, float64 money, PlayerStrategy* newStrat);
+        void FreePlayer(Player* playerToDelete, char botType);
 //===================================
 //   In-Game Information Accessors
 //===================================
@@ -491,7 +500,7 @@ class HoldemArenaEventBase
     playernumber_t GetNumberInHand() const { return myTable->NumberInHand(); }
 
     public:
-	
+
 		const playernumber_t WhoIsNext(){ return curIndex; }
 
     HoldemArenaEventBase(HoldemArena * table) : myTable(table)
@@ -499,7 +508,7 @@ class HoldemArenaEventBase
     , curHighBlind(table->curHighBlind)
     , highBet(table->highBet), lastRaise(table->lastRaise), forcedBetSum(myTable->forcedBetSum), blindOnlySum(myTable->blindOnlySum)
     , playersInHand(table->playersInHand),playersAllIn(table->playersAllIn)
-	, curIndex(table->curIndex) , curDealer(table->curDealer)
+	, curDealer(table->curDealer) , curIndex(table->curIndex)
     , myPot(table->myPot), myFoldedPot(table->myFoldedPot), prevRoundFoldedPot(table->prevRoundFoldedPot), myBetSum(table->myBetSum), p(table->p)
     , bVerbose(table->bVerbose), randRem(table->randRem)
     {

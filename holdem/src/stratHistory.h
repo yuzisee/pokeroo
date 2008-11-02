@@ -138,10 +138,10 @@ class PerformanceHistory
 class HistoryStrategy : public virtual PlayerStrategy
 {
     protected:
-        PositionalStrategy ** strats; //Generated at construction (constant during a game load)
+
         PerformanceHistory * picks; //Must be loaded/saved
         int16 currentStrategy; //May need to be loaded/saved
-        uint8 stratcount; //Generated at construction...
+
 
 
         void init(PositionalStrategy** ps, uint8 n);
@@ -150,12 +150,16 @@ class HistoryStrategy : public virtual PlayerStrategy
 
 
     public:
+    //Exposed for memory management only
+        PositionalStrategy ** strats; //Generated at construction (constant during a game load)
+        uint8 stratcount; //Generated at construction...
+
 		handnum_t handNumber; //Should be loaded/saved
 
         static PerformanceHistory UnserializeOne( std::istream& loadFile );
         static void SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph );
 
-        HistoryStrategy(PositionalStrategy** ps, uint8 n) : strats(0), picks(0), currentStrategy(-1), stratcount(n), handNumber(0)
+        HistoryStrategy(PositionalStrategy** ps, uint8 n) :   picks(0), currentStrategy(-1) , strats(0), stratcount(n), handNumber(0)
         {
             init(ps,n);
         }
@@ -171,7 +175,6 @@ class HistoryStrategy : public virtual PlayerStrategy
     virtual bool LoadState();
     virtual void Serialize( std::ostream& saveFile ) = 0;
     virtual void Unserialize( std::istream& loadFile ) = 0;
-
 }
 ;
 

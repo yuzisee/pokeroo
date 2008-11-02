@@ -267,6 +267,39 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 }
 
 
+void PermuteExisting(int8 * array, uint8 count, uint32 seed)
+{
+    //For example, say count is 8
+    for(uint8 i=0;i<=count-2;++i) //We'd only loop until sourceIndex, which is i, reaches the second last index
+    {
+        int8 swaptemp;
+        const uint8& sourceIndex = i; //For example, this would be index 0
+        const uint8 seedComponent = seed % (count-i); //For example, this would be (seed%8) which is from 0 to 7
+
+        //Now we swap 0 with seed-value between 0 and 7.
+        if( seedComponent != 0  )
+        {
+            const uint8 destIndex = i + seedComponent;
+
+            swaptemp = array[sourceIndex];
+            array[sourceIndex] = array[destIndex];
+            array[destIndex] = swaptemp;
+        }
+
+        seed = seed / (count-i); //Divide out the 8
+    }
+}
+
+int8 * Permute(uint8 count, uint32 seed)
+{
+    int8 * permutation = new int8[count];
+    for( int8 i=count-1;i>=0;--i )
+    {
+        permutation[i] = i;
+    }
+    PermuteExisting(permutation,count,seed);
+    return permutation;
+}
 
 
 
@@ -373,45 +406,7 @@ static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	MultiThresholdStrategy pushFold(0,2);
 	MultiThresholdStrategy tightPushFold(1,0);
 
-	DeterredGainStrategy DeterredRank(2);
 
-
-
-    DeterredGainStrategy StrikeFold(1);
-    //Set 1
-	DeterredGainStrategy FutureFoldA;
-  	ImproveGainStrategy XFoldA(0);
-  	ImproveGainStrategy ImproveA(1);
-	ImproveGainStrategy ReallyImproveA(2);
-
-
-
-    //TrendStrategies
-    DeterredGainStrategy DangerT(1), DangerTR(1);
-    DeterredGainStrategy ComT, ComTR;
-    ImproveGainStrategy NormT(0), NormTR(0);
-    ImproveGainStrategy TrapT(1), TrapTR(1);
-    ImproveGainStrategy AceT(2), AceTR(2);
-    DeterredGainStrategy SpaceT(2), SpaceTR(2); //CorePositionalStrategy SpaceT(10), SpaceTR(10);
-
-
-
-    PositionalStrategy *(multiT[6]) = {&DangerT, &ComT, &NormT, &TrapT, &AceT , &SpaceT};
-    PositionalStrategy *(multiTR[6]) = {&DangerTR, &ComTR, &NormTR, &TrapTR, &AceTR, &SpaceTR};
-
-        std::ofstream legendOutput("legend.txt");
-        legendOutput << "0\t Danger\r\n" ;
-        legendOutput << "1\t Com\r\n" ;
-        legendOutput << "2\t Norm\r\n" ;
-        legendOutput << "3\t Trap\r\n" ;
-        legendOutput << "4\t Ace\r\n" ;
-        legendOutput << "5\t Space\r\n" ;
-        legendOutput.close();
-
-    MultiStrategy MultiT(multiT,6);
-    MultiT.bGamble = 0;
-    MultiStrategy MultiTR(multiTR,6);
-    MultiTR.bGamble = 1;
 
 
 
@@ -422,15 +417,15 @@ static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
         if( myPlayerName == 0 )
 		{
-			myTable.AddPlayer("P1", startingMoney, &consolePlay);
+			myTable.AddPlayerManual("P1", startingMoney, &consolePlay);
 		}else
 		{
-            myTable.AddPlayer(myPlayerName, startingMoney, &consolePlay);
+            myTable.AddPlayerManual(myPlayerName, startingMoney, &consolePlay);
         }
     }else
     {
         //myTable.AddPlayer("q4", &pushAll);
-        myTable.AddPlayer("i4", AUTO_CHIP_COUNT, &drainFold);
+        myTable.AddPlayerManual("i4", AUTO_CHIP_COUNT, &drainFold);
         //myTable.AddPlayer("X3", &pushFold);
         //myTable.AddPlayer("A3", &tightPushFold);
 
@@ -449,35 +444,35 @@ static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
     {
         case 'P':
             //cout << randNum << "+" << randStep << "i" << endl;
-            opponentorder = HoldemUtil::Permute(NUM_OPPONENTS,randSeed);
+            opponentorder = Permute(NUM_OPPONENTS,randSeed);
             for(i=0;i<NUM_OPPONENTS;++i)
             {
                 //cout << i << endl;
                 switch(opponentorder[i])
                 {
                     case 0:
-                        myTable.AddPlayer("TrapBotV", startingMoney, &ImproveA);
+                        myTable.AddStrategyBot("TrapBotV", startingMoney, 'T');
                         break;
                     case 1:
-                        myTable.AddPlayer("ConservativeBotV", startingMoney, &FutureFoldA);
+                        myTable.AddStrategyBot("ConservativeBotV", startingMoney, 'C');
                         break;
                     case 2:
-                        myTable.AddPlayer("NormalBotV",startingMoney, &XFoldA);
+                        myTable.AddStrategyBot("NormalBotV",startingMoney, 'N');
                         break;
                     case 3:
-                        myTable.AddPlayer("SpaceBotV", startingMoney, &DeterredRank);//&MeanGeomBluff);
+                        myTable.AddStrategyBot("SpaceBotV", startingMoney, 'S');//&MeanGeomBluff);
                         break;
                     case 4:
-                        myTable.AddPlayer("ActionBotV",startingMoney, &ReallyImproveA);
+                        myTable.AddStrategyBot("ActionBotV",startingMoney, 'A');
                         break;
                     case 5:
-                        myTable.AddPlayer("DangerBotV",startingMoney, &StrikeFold);
+                        myTable.AddStrategyBot("DangerBotV",startingMoney, 'D');
                         break;
                     case 6:
-                        myTable.AddPlayer("MultiBotV", startingMoney, &MultiT);
+                        myTable.AddStrategyBot("MultiBotV", startingMoney, 'M');
                         break;
                     case 7:
-                        myTable.AddPlayer("GearBotV", startingMoney, &MultiTR);
+                        myTable.AddStrategyBot("GearBotV", startingMoney, 'G');
                         break;
                 }
 
@@ -490,17 +485,17 @@ static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
         default:
 
-        myTable.AddPlayer("GearBotV", AUTO_CHIP_COUNT, &MultiTR);
-        myTable.AddPlayer("MultiBotV", AUTO_CHIP_COUNT, &MultiT);
+        myTable.AddStrategyBot("GearBotV", AUTO_CHIP_COUNT, 'G');
+        myTable.AddStrategyBot("MultiBotV", AUTO_CHIP_COUNT, 'M');
 
-		myTable.AddPlayer("DangerV", AUTO_CHIP_COUNT, &StrikeFold);
-        myTable.AddPlayer("ComV", AUTO_CHIP_COUNT, &FutureFoldA);
-        myTable.AddPlayer("NormV", AUTO_CHIP_COUNT, &XFoldA);
-        myTable.AddPlayer("TrapV", AUTO_CHIP_COUNT, &ImproveA);
-		myTable.AddPlayer("AceV", AUTO_CHIP_COUNT, &ReallyImproveA);
+		myTable.AddStrategyBot("DangerV", AUTO_CHIP_COUNT, 'D');
+        myTable.AddStrategyBot("ComV", AUTO_CHIP_COUNT, 'C');
+        myTable.AddStrategyBot("NormV", AUTO_CHIP_COUNT, 'N');
+        myTable.AddStrategyBot("TrapV", AUTO_CHIP_COUNT, 'T');
+		myTable.AddStrategyBot("AceV", AUTO_CHIP_COUNT, 'A');
 
 
-        myTable.AddPlayer("SpaceV", AUTO_CHIP_COUNT, &DeterredRank);//&MeanGeomBluff);
+        myTable.AddStrategyBot("SpaceV", AUTO_CHIP_COUNT, 's');//&MeanGeomBluff);
 
 
             break;
@@ -547,8 +542,6 @@ if( bLoadGame )
 	if( saveLoc != 0 )
 	{
 		consolePlay.myFifo = saveLoc;
-		MultiT.handNumber = myTable.handnum;
-		MultiTR.handNumber = myTable.handnum;
 	}
 
 }

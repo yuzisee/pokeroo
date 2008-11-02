@@ -18,16 +18,14 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <sstream>
+
 
 #include "../src/arena.h"
 #include "../src/stratCombined.h"
 #include "../src/stratPosition.h"
 
 #include "holdemDLL.h"
-
-#define NUMBER_OF_BOTS_COMBINED 6
-
-typedef PositionalStrategy * stratPtr;
 
 
 struct return_money DEFAULT_RETURN_MONEY = { 0.0 , SUCCESS };
@@ -762,6 +760,8 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 }
 
 
+
+
 C_DLL_FUNCTION
 struct return_player CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money)
 {
@@ -802,11 +802,6 @@ struct return_player CreateNewHumanOpponent(struct holdem_table add_to_table, ch
 }
 
 
-//
-//Player objects are allocated and freed by the HoldemArena class
-//PlayerStrategy objects (only exist for bots) must be allocated and freed here.
-//MultiStrategy objects also require a separate array of other PlayerStrategy objects.
-//
 C_DLL_FUNCTION
 struct return_player CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType)
 {

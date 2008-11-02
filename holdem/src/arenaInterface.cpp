@@ -18,9 +18,11 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+//Cosmetic effect of leaving the table is you don't receive broadcasts anymore
 //#define LEAVE_TABLE_WHEN_LOSING
 
 #include "arena.h"
+
 #include <iostream>
 #include <string.h> //for strlen
 
@@ -240,59 +242,12 @@ void HoldemArena::SerializeRoundStart(std::ofstream & fileSaveState)
 }
 
 
-playernumber_t HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat)
-{
-
-#ifdef DEBUGASSERT
-	if( curIndex != -1 || nextNewPlayer >= SEATS_AT_TABLE)
-	{
-	    std::cerr << "Cannot add more players" << endl;
-	    exit(1);
-	}
-#endif
-
-
-    Player* newP = new Player(money, id,newStrat, INVALID);
-
-	if( newStrat )
-	{
-	    newStrat->Link(newP, this, nextNewPlayer);
-	}
-
-	p[nextNewPlayer] = newP;  //p.push_back( newP );
-
-
-    allChips += money;
-
-	++nextNewPlayer;
-	++livePlayers;
-
-	return (nextNewPlayer-1);
-}
-
 #ifdef GLOBAL_AICACHE_SPEEDUP
 void HoldemArena::CachedQueryOffense(CallCumulation& q, const CommunityPlus& community, const CommunityPlus& withCommunity) const
 {
     StatsManager::QueryOffense(q,withCommunity,community,cardsInCommunity,&communityBuffer);
 }
 #endif
-
-HoldemArena::~HoldemArena()
-{
-
-
-#ifdef GLOBAL_AICACHE_SPEEDUP
-    if( communityBuffer != 0 )
-    {
-        delete communityBuffer;
-        communityBuffer = 0;
-    }
-#endif
-
-    for(int8 n=0;n<SEATS_AT_TABLE;++n){ if(p[n]){ delete p[n]; }}
-
-	//delete [] p;
-}
 
 playernumber_t HoldemArena::GetCurPlayer() const
 {
