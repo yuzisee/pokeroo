@@ -258,6 +258,14 @@ float64 HoldemArena::GetBetDecision(playernumber_t n)
 	return 0;
 }
 
+char HoldemArena::GetPlayerBotType(playernumber_t n) const
+{
+	if (n >= 0 && n < nextNewPlayer )
+	{
+		return pTypes[n];
+	}
+	return 0;
+}
 
 
 float64 HoldemArena::GetPotSize() const

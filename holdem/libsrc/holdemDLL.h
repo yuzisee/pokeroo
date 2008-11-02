@@ -105,18 +105,11 @@ struct holdem_cardset
 }
 ;
 
-struct holdem_player
-{
-	char player_type;
-	playernumber_t seat_number;
-}
-;
 
 
 struct holdem_table
 {
 	void * table_ptr;
-	struct holdem_player * seats_array;
 	playernumber_t seat_count;
 }
 ;
@@ -149,7 +142,7 @@ struct return_money
 }
 ;
 
-struct return_betting_result
+struct return_seat
 {
 	playernumber_t seat_number;
 	enum return_status error_code;
@@ -164,12 +157,6 @@ struct return_event
 }
 ;
 
-struct return_player
-{
-	struct holdem_player player;
-	enum return_status error_code;
-}
-;
 
 struct return_table
 {
@@ -276,7 +263,7 @@ C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char car
 //If nobody called the high bet, then you will get -1 here.
 //CreateNewShowdown will need this value to determine who
 //is going to act first in the showdown.
-C_DLL_FUNCTION struct return_betting_result DeleteFinishBettingRound(void * event_ptr);
+C_DLL_FUNCTION struct return_seat DeleteFinishBettingRound(void * event_ptr);
 
 
 ///Call this when the betting begins
@@ -288,7 +275,7 @@ C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, playernumber_t p
 
 
 ///GetBetAmount is useful for asking a bot what to bet
-C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, struct holdem_player player);
+C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, playernumber_t playerNumber);
 
 
 
@@ -300,9 +287,9 @@ struct return_money GetBetToCall(void * table_ptr);
 
 
 //Get the playerNumber of the player who's turn it is
-C_DLL_FUNCTION struct return_betting_result WhoIsNext_Betting(void * event_ptr);
+C_DLL_FUNCTION struct return_seat WhoIsNext_Betting(void * event_ptr);
 
-C_DLL_FUNCTION struct return_betting_result WhoIsNext_Showdown(void * event_ptr);
+C_DLL_FUNCTION struct return_seat WhoIsNext_Showdown(void * event_ptr);
 
 
 ///Call this for each card playerNumber reveals during the showdown
@@ -341,8 +328,8 @@ enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete);
 
 ///Add a player/bot to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER
 //The first player added to the table (seat #0) will have the button in the first hand
-C_DLL_FUNCTION struct return_player CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money);
-C_DLL_FUNCTION struct return_player CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType);
+C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money);
+C_DLL_FUNCTION struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType);
 
 
 /*****************************************************************************

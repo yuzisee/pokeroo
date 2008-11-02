@@ -419,6 +419,7 @@ class HoldemArena
 
 		const Player* ViewPlayer(playernumber_t) const;
 		float64 GetBetDecision(playernumber_t);
+		char GetPlayerBotType(playernumber_t) const;
 
 		bool IsAlive(playernumber_t) const;
 		bool IsInHand(playernumber_t) const;

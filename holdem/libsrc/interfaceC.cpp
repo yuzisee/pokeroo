@@ -29,10 +29,9 @@
 
 
 struct return_money DEFAULT_RETURN_MONEY = { 0.0 , SUCCESS };
-struct return_betting_result DEFAULT_RETURN_BETTING_RESULT = { -1, SUCCESS };
+struct return_seat DEFAULT_RETURN_SEAT = { -1, SUCCESS };
 struct return_event DEFAULT_RETURN_EVENT = { 0 , SUCCESS };
-struct return_player DEFAULT_RETURN_PLAYER = { {'\0',-1} , SUCCESS };
-struct return_table DEFAULT_RETURN_TABLE = { {0,0,-1} , SUCCESS };
+struct return_table DEFAULT_RETURN_TABLE = { {0,-1} , SUCCESS };
 
 
 
@@ -407,9 +406,9 @@ struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardse
 
 
 C_DLL_FUNCTION
-struct return_betting_result DeleteFinishBettingRound(void * event_ptr)
+struct return_seat DeleteFinishBettingRound(void * event_ptr)
 {
-	struct return_betting_result retval = DEFAULT_RETURN_BETTING_RESULT;
+	struct return_seat retval = DEFAULT_RETURN_SEAT;
 
 	if( !event_ptr )
 	{
@@ -450,9 +449,9 @@ struct return_betting_result DeleteFinishBettingRound(void * event_ptr)
 
 //Get the seat of the player who's turn it is
 C_DLL_FUNCTION
-struct return_betting_result WhoIsNext_Betting(void * event_ptr)
+struct return_seat WhoIsNext_Betting(void * event_ptr)
 {
-	struct return_betting_result retval = DEFAULT_RETURN_BETTING_RESULT;
+	struct return_seat retval = DEFAULT_RETURN_SEAT;
 
 	if( !event_ptr )
 	{
@@ -506,33 +505,36 @@ enum return_status PlayerMakesBetTo(void * event_ptr, playernumber_t playerNumbe
 
 
 ///GetBetAmount is useful for asking a bot what to bet
-C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, struct holdem_player player)
+C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, playernumber_t playerNumber)
 {
 	struct return_money retval = DEFAULT_RETURN_MONEY;
 
 	if( !table_ptr )
 	{
 		retval.error_code = NULL_TABLE_PTR;
-	}else if( player.seat_number == -1 || player.player_type == ' ' )
-	{
-		retval.error_code = PARAMETER_INVALID;
-	}else if( !player.player_type )
-	{
-		retval.error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
 		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
-
-		//If you're asking a bot what it would bet even though there are
-		// players ahead of it that haven't bet yet.
-		//I don't know if the more complicated bots can handle being out of turn.
-		if( myTable->GetCurPlayer() != player.seat_number )
+		char t = myTable->GetPlayerBotType(playerNumber);
+		if( !t )
 		{
-			retval.error_code = UNRELIABLE_RESULT;
-		}
-		else
+			retval.error_code = PARAMETER_DATA_ERROR;
+		}else if( t == '~' || t == ' ' )
 		{
-			retval.money = myTable->GetBetDecision(player.seat_number);
+			retval.error_code = PARAMETER_INVALID;
+		}else
+		{
+			//If you're asking a bot what it would bet even though there are
+			// players ahead of it that haven't bet yet.
+			//I don't know if the more complicated bots can handle being out of turn.
+			if( myTable->GetCurPlayer() != playerNumber )
+			{
+				retval.error_code = UNRELIABLE_RESULT;
+			}
+			else
+			{
+				retval.money = myTable->GetBetDecision(playerNumber);
+			}
 		}
 	}
 
@@ -606,9 +608,9 @@ enum return_status DeleteFinishShowdown(void * event_ptr )
 //Players who aren't all-in first reveal/muck in order.
 //Then players who are all-in show their cards starting with the largest stack.
 C_DLL_FUNCTION
-struct return_betting_result WhoIsNext_Showdown(void * event_ptr)
+struct return_seat WhoIsNext_Showdown(void * event_ptr)
 {
-	struct return_betting_result retval = DEFAULT_RETURN_BETTING_RESULT;
+	struct return_seat retval = DEFAULT_RETURN_SEAT;
 
 	if( !event_ptr )
 	{
@@ -745,13 +747,8 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 		bool externalDealer = true;
 
 		retval.table.table_ptr = reinterpret_cast<void *>(new HoldemArena(chipDenomination, std::cout ,illustrate,spectate));
-		retval.table.seats_array = new struct holdem_player[seatsAtTable];
 		retval.table.seat_count = seatsAtTable;
 
-		for(playernumber_t i=0;i<seatsAtTable;++i)
-		{
-			retval.table.seats_array[i].seat_number = -1; //Mark as empty. This is the only way we can tell if a seat has no player (refB)
-		}
 	}
 
 	return retval;
@@ -762,10 +759,10 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 
 
 C_DLL_FUNCTION
-struct return_player CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money)
+struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money)
 {
 	//A human opponent is treated the same as a bot, except it has no strat (and therefore no children)
-	struct return_player retval = DEFAULT_RETURN_PLAYER;
+	struct return_seat retval = DEFAULT_RETURN_SEAT;
 
 	if( !add_to_table.table_ptr )
 	{
@@ -775,25 +772,23 @@ struct return_player CreateNewHumanOpponent(struct holdem_table add_to_table, ch
 		retval.error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
-		playernumber_t final_seat = add_to_table.seat_count - 1;
-		if( add_to_table.seats_array[final_seat].seat_number != -1 ) //Already a player in the last seat, the table is full
+		
+		//====================
+		//  Create a Player
+		//====================
+
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(add_to_table.table_ptr);
+
+		playernumber_t pIndex = myTable->AddHumanOpponent(playerName, money);
+
+		if( pIndex == -1 )
 		{
 			retval.error_code = NOT_IMPLEMENTED;
 		}else
 		{
-			//====================
-			//  Create a Player
-			//====================
-
-			HoldemArena * myTable = reinterpret_cast<HoldemArena *>(add_to_table.table_ptr);
-
-			playernumber_t pIndex = myTable->AddHumanOpponent(playerName, money);
-
-			retval.player.player_type = ' ';
-			retval.player.seat_number = pIndex;
-			//The only field that is always populated for a valid player is seat_number (refB)
-			add_to_table.seats_array[pIndex] = retval.player;		
+			retval.seat_number = pIndex;
 		}
+		
 	}
 
 	return retval;
@@ -801,9 +796,9 @@ struct return_player CreateNewHumanOpponent(struct holdem_table add_to_table, ch
 
 
 C_DLL_FUNCTION
-struct return_player CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType)
+struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType)
 {
-	struct return_player retval = DEFAULT_RETURN_PLAYER;
+	struct return_seat retval = DEFAULT_RETURN_SEAT;
 
 	if( !add_to_table.table_ptr )
 	{
@@ -813,30 +808,20 @@ struct return_player CreateNewStrategyBot(struct holdem_table add_to_table, char
 		retval.error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
-		playernumber_t final_seat = add_to_table.seat_count - 1;
-		if( add_to_table.seats_array[final_seat].seat_number != -1 ) //Already a player in the last seat, the table is full
+		//==================
+		//  Create a Bot
+		//==================
+
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(add_to_table.table_ptr);
+
+		playernumber_t pIndex = myTable->AddStrategyBot(playerName, money, botType);
+
+		if( pIndex == -1 )
 		{
 			retval.error_code = NOT_IMPLEMENTED;
 		}else
 		{
-			//==================
-			//  Create a Bot
-			//==================
-
-			HoldemArena * myTable = reinterpret_cast<HoldemArena *>(add_to_table.table_ptr);
-
-			playernumber_t pIndex = myTable->AddStrategyBot(playerName, money, botType);
-
-			if( pIndex == -1 )
-			{
-				retval.error_code = PARAMETER_INVALID;
-			}else
-			{
-				retval.player.player_type = botType;
-				retval.player.seat_number = pIndex;
-				
-				add_to_table.seats_array[pIndex] = retval.player;
-			}
+			retval.seat_number = pIndex;
 		}
 	}
 
@@ -846,15 +831,6 @@ struct return_player CreateNewStrategyBot(struct holdem_table add_to_table, char
 
 
 
-//
-//Things we need to clean up here:
-//  +  table_to_delete has a pointer to the table and a list of players
-// (1) We need to delete the actual table
-//  +  For each player in the list HoldemArena will delete the player and any playerstrategy it might have
-// (2) We need to delete[] the list of players
-//
-//Note: If not every seat of the table is occupied, not all of the (2) will be required
-//
 C_DLL_FUNCTION 
 enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete)
 {
@@ -866,9 +842,7 @@ enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete)
 	}else
 	{
 		HoldemArena * table = reinterpret_cast<HoldemArena *>(table_to_delete.table_ptr);
-		delete table; //(1) deleted
-
-		delete [] table_to_delete.seats_array; //(2) deleted
+		delete table;
 	}
 
 	return error_code;
