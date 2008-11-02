@@ -307,20 +307,7 @@ void HoldemArena::AssertInitialState()
         exit(1);
     }
 
-    #endif
-
-
-}
-
-void HoldemArena::LoadBeginInitialState()
-{
-
-	#ifdef GRAPHMONEY
-        scoreboard.open(GRAPHMONEY , std::ios::app);
-	#endif
-        #ifdef DEBUGHOLECARDS
-        holecardsData.open( DEBUGHOLECARDS, std::ios::app );
-        #endif
+#endif
 
 
 }
@@ -333,6 +320,20 @@ void HoldemArena::ResetDRseed()
 float64 HoldemArena::GetDRseed()
 {
     return randRem;
+}
+
+
+void HoldemArena::LoadBeginInitialState()
+{
+
+	#ifdef GRAPHMONEY
+        scoreboard.open(GRAPHMONEY , std::ios::app);
+	#endif
+    #ifdef DEBUGHOLECARDS
+        holecardsData.open( DEBUGHOLECARDS, std::ios::app );
+    #endif
+
+
 }
 
 void HoldemArena::BeginInitialState()

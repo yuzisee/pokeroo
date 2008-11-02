@@ -73,9 +73,7 @@ static void InitGameLoop(HoldemArena & my, bool bLoadGame)
 #endif
 	{
 		my.BeginInitialState(); //handnum is set to 1 here
-#ifdef REPRODUCIBLE
-		my.ResetDRseed();
-#endif
+
 
 	}
 #if defined(GRAPHMONEY) && defined(DEBUGSAVEGAME)
@@ -85,6 +83,7 @@ static void InitGameLoop(HoldemArena & my, bool bLoadGame)
     }
 #endif
 
+		my.ResetDRseed();
 
 }
 

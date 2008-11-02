@@ -287,7 +287,6 @@ struct return_money GetBetToCall(void * table_ptr)
 C_DLL_FUNCTION enum return_status StartDealNewHands(void * table_ptr);
 
 
-
 /*****************************************************************************
 	Flow control functions
 	END
@@ -808,11 +807,33 @@ enum return_status RestoreTableState(char * state_str, void * table_ptr)
 		std::istringstream strBufState(strState);
 
 		myTable->UnserializeRoundStart(strBufState);
+
+		//InitGameLoop calls:
+		myTable->LoadBeginInitialState(); //opens some logfile handles
 	}
 
 	return error_code;
 }
 
+C_DLL_FUNCTION
+enum return_status InitializeNewTableState(void * table_ptr)
+{
+//A human opponent is treated the same as a bot, except it has no strat (and therefore no children)
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		//InitGameLoop calls:
+		myTable->BeginInitialState(); //sets handnum=1, opens logfile handles,
+	}
+
+	return error_code;
+}
 
 C_DLL_FUNCTION
 struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money)

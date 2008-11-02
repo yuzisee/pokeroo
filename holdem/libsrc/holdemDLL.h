@@ -224,8 +224,8 @@ struct return_money GetPrevRoundsPotsize(void * table_ptr);
 
 
 
-C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * table_ptr)
-C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr)
+C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * table_ptr);
+C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr);
 
 
 
