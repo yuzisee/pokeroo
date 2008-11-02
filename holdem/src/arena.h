@@ -223,6 +223,7 @@ class HoldemArena
 		playernumber_t curIndex;
 		playernumber_t nextNewPlayer;
 
+        playernumber_t AddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
 
 		float64 & PlayerBet(Player& target){ return target.myBetSize; }
 		float64 & PlayerLastBet(Player& target){ return target.lastBetSize; }
@@ -307,8 +308,8 @@ class HoldemArena
         char pTypes[SEATS_AT_TABLE];
 
 #ifdef DEBUGSAVEGAME
-        void SerializeRoundStart(std::ofstream & fileSaveState);
-        void UnserializeRoundStart(std::ifstream & fileSaveState);
+        void SerializeRoundStart(std::ostream & fileSaveState);
+        void UnserializeRoundStart(std::istream & fileSaveState);
 #endif
 
 
@@ -398,7 +399,10 @@ class HoldemArena
         playernumber_t AddHumanOpponent(const char* const id, float64 money);
         playernumber_t AddStrategyBot(const char* const id, float64 money, char botType);
 
-        playernumber_t AddPlayerManual(const char* const id, float64 money, PlayerStrategy* newStrat);
+        ///Be very careful with AddPlayerManual
+        ///All manual adds must take place prior to AddHumanOpponent or AddStrategyBot calls.
+        ///When saving and loading, addPlayerManual players will not be restored
+        playernumber_t ManuallyAddPlayer(const char* const id, float64 money, PlayerStrategy* newStrat);
         void FreePlayer(Player* playerToDelete, char botType);
 //===================================
 //   In-Game Information Accessors
@@ -441,7 +445,7 @@ class HoldemArena
 		const BlindValues & GetBlindValues() const{ return myBlinds; }
 
 
-		
+
 
 //======================
 //   In-Game Mutators

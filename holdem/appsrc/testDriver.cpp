@@ -398,109 +398,6 @@ static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 		#else
             HoldemArena myTable(smallBlindChoice, gameLog,true, true);
 		#endif
-	//ThresholdStrategy stagStrat(0.5);
-	UserConsoleStrategy consolePlay;
-	//ConsoleStrategy manPlay[3];
-    MultiThresholdStrategy drainFold(3,3);
-    MultiThresholdStrategy pushAll(4,4);
-	MultiThresholdStrategy pushFold(0,2);
-	MultiThresholdStrategy tightPushFold(1,0);
-
-
-
-
-
-    if( headsUp == 'P' )
-    {
-
-
-
-        if( myPlayerName == 0 )
-		{
-			myTable.AddPlayerManual("P1", startingMoney, &consolePlay);
-		}else
-		{
-            myTable.AddPlayerManual(myPlayerName, startingMoney, &consolePlay);
-        }
-    }else
-    {
-        //myTable.AddPlayer("q4", &pushAll);
-        myTable.AddPlayerManual("i4", AUTO_CHIP_COUNT, &drainFold);
-        //myTable.AddPlayer("X3", &pushFold);
-        //myTable.AddPlayer("A3", &tightPushFold);
-
-    }
-
-	const uint32 NUM_OPPONENTS = 8;
-    const uint32 rand765 = 1 + ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer));
-    const uint32 rand8432 = 1 + (labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer));
-    const uint32 rand8 = rand8432%8;
-    const uint32 rand432 = rand8432/8;
-    const uint32 randSeed = rand8 + (rand765%(7*6*5))*8 + (rand432%(4*3*2))*(8*7*6*5);
-    uint8 i;
-    int8 * opponentorder;
-
-	switch(headsUp)
-    {
-        case 'P':
-            //cout << randNum << "+" << randStep << "i" << endl;
-            opponentorder = Permute(NUM_OPPONENTS,randSeed);
-            for(i=0;i<NUM_OPPONENTS;++i)
-            {
-                //cout << i << endl;
-                switch(opponentorder[i])
-                {
-                    case 0:
-                        myTable.AddStrategyBot("TrapBotV", startingMoney, 'T');
-                        break;
-                    case 1:
-                        myTable.AddStrategyBot("ConservativeBotV", startingMoney, 'C');
-                        break;
-                    case 2:
-                        myTable.AddStrategyBot("NormalBotV",startingMoney, 'N');
-                        break;
-                    case 3:
-                        myTable.AddStrategyBot("SpaceBotV", startingMoney, 'S');//&MeanGeomBluff);
-                        break;
-                    case 4:
-                        myTable.AddStrategyBot("ActionBotV",startingMoney, 'A');
-                        break;
-                    case 5:
-                        myTable.AddStrategyBot("DangerBotV",startingMoney, 'D');
-                        break;
-                    case 6:
-                        myTable.AddStrategyBot("MultiBotV", startingMoney, 'M');
-                        break;
-                    case 7:
-                        myTable.AddStrategyBot("GearBotV", startingMoney, 'G');
-                        break;
-                }
-
-            }//End of for(i...
-
-            delete [] opponentorder;
-
-            break;
-
-
-        default:
-
-        myTable.AddStrategyBot("GearBotV", AUTO_CHIP_COUNT, 'G');
-        myTable.AddStrategyBot("MultiBotV", AUTO_CHIP_COUNT, 'M');
-
-		myTable.AddStrategyBot("DangerV", AUTO_CHIP_COUNT, 'D');
-        myTable.AddStrategyBot("ComV", AUTO_CHIP_COUNT, 'C');
-        myTable.AddStrategyBot("NormV", AUTO_CHIP_COUNT, 'N');
-        myTable.AddStrategyBot("TrapV", AUTO_CHIP_COUNT, 'T');
-		myTable.AddStrategyBot("AceV", AUTO_CHIP_COUNT, 'A');
-
-
-        myTable.AddStrategyBot("SpaceV", AUTO_CHIP_COUNT, 's');//&MeanGeomBluff);
-
-
-            break;
-
-    }
 
 
 	SerializeRandomDeck * tableDealer = 0;
@@ -511,6 +408,46 @@ static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 		tableDealer = &internalDealer;
 	#endif
 
+
+///==========================
+///   Begin adding players...
+///==========================
+    //ThresholdStrategy stagStrat(0.5);
+    UserConsoleStrategy consolePlay;
+    //ConsoleStrategy manPlay[3];
+
+        MultiThresholdStrategy drainFold(3,3);
+        MultiThresholdStrategy pushAll(4,4);
+        MultiThresholdStrategy pushFold(0,2);
+        MultiThresholdStrategy tightPushFold(1,0);
+
+
+
+
+        if( headsUp == 'P' )
+        {
+
+
+
+            if( myPlayerName == 0 )
+            {
+                myTable.ManuallyAddPlayer("P1", startingMoney, &consolePlay);
+            }else
+            {
+                myTable.ManuallyAddPlayer(myPlayerName, startingMoney, &consolePlay);
+            }
+        }else
+        {
+            //myTable.AddPlayer("q4", &pushAll);
+            myTable.ManuallyAddPlayer("i4", AUTO_CHIP_COUNT, &drainFold);
+            //myTable.AddPlayer("X3", &pushFold);
+            //myTable.AddPlayer("A3", &tightPushFold);
+
+        }
+
+///======================
+///   ...and load them
+///======================
 
 #ifdef WINRELEASE
     #define SELECTED_BLIND_MODEL bg
@@ -525,27 +462,116 @@ if( bLoadGame )
 {
     //We want to load the game, so open the file and load state
     loadFile.open(DEBUGSAVEGAME);
-    if( ! (loadFile.is_open()) )
+    //
+    if( loadFile.is_open() )
     {
-		std::cerr << "Load state requested, couldn't open file" << endl;
-		exit(1);
+		myTable.UnserializeRoundStart(loadFile);
+        SELECTED_BLIND_MODEL.UnSerialize( loadFile );
+        if( tableDealer )  tableDealer->Unserialize( loadFile ); //Restore state of deck as well
+
+
+        std::istream *saveLoc = &loadFile;
+        if( saveLoc != 0 )
+        {
+            consolePlay.myFifo = saveLoc;
+        }
+
 	}
-
- 	myTable.UnserializeRoundStart(loadFile);
- 	SELECTED_BLIND_MODEL.UnSerialize( loadFile );
-    if( tableDealer )  tableDealer->Unserialize( loadFile ); //Restore state of deck as well
-
-
-
-
-	std::istream *saveLoc = &loadFile;
-	if( saveLoc != 0 )
+	else if( headsUp == 1 ) {
+	    bLoadGame = false; //Autodetect bLoadGame
+	}
+	else
 	{
-		consolePlay.myFifo = saveLoc;
-	}
+        std::cerr << "Load state requested, couldn't open file" << endl;
+		exit(1);
+    }
+
+
+
 
 }
 #endif
+
+    if( !bLoadGame )
+    {
+
+
+
+        const uint32 NUM_OPPONENTS = 8;
+        const uint32 rand765 = 1 + ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer));
+        const uint32 rand8432 = 1 + (labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer));
+        const uint32 rand8 = rand8432%8;
+        const uint32 rand432 = rand8432/8;
+        const uint32 randSeed = rand8 + (rand765%(7*6*5))*8 + (rand432%(4*3*2))*(8*7*6*5);
+        uint8 i;
+        int8 * opponentorder;
+
+        switch(headsUp)
+        {
+            case 'P':
+                //cout << randNum << "+" << randStep << "i" << endl;
+                opponentorder = Permute(NUM_OPPONENTS,randSeed);
+                for(i=0;i<NUM_OPPONENTS;++i)
+                {
+                    //cout << i << endl;
+                    switch(opponentorder[i])
+                    {
+                        case 0:
+                            myTable.AddStrategyBot("TrapBotV", startingMoney, 'T');
+                            break;
+                        case 1:
+                            myTable.AddStrategyBot("ConservativeBotV", startingMoney, 'C');
+                            break;
+                        case 2:
+                            myTable.AddStrategyBot("NormalBotV",startingMoney, 'N');
+                            break;
+                        case 3:
+                            myTable.AddStrategyBot("SpaceBotV", startingMoney, 'S');//&MeanGeomBluff);
+                            break;
+                        case 4:
+                            myTable.AddStrategyBot("ActionBotV",startingMoney, 'A');
+                            break;
+                        case 5:
+                            myTable.AddStrategyBot("DangerBotV",startingMoney, 'D');
+                            break;
+                        case 6:
+                            myTable.AddStrategyBot("MultiBotV", startingMoney, 'M');
+                            break;
+                        case 7:
+                            myTable.AddStrategyBot("GearBotV", startingMoney, 'G');
+                            break;
+                    }
+
+                }//End of for(i...
+
+                delete [] opponentorder;
+
+                break;
+
+
+            default:
+
+            myTable.AddStrategyBot("GearBotV", AUTO_CHIP_COUNT, 'G');
+            myTable.AddStrategyBot("MultiBotV", AUTO_CHIP_COUNT, 'M');
+
+            myTable.AddStrategyBot("DangerV", AUTO_CHIP_COUNT, 'D');
+            myTable.AddStrategyBot("ComV", AUTO_CHIP_COUNT, 'C');
+            myTable.AddStrategyBot("NormV", AUTO_CHIP_COUNT, 'N');
+            myTable.AddStrategyBot("TrapV", AUTO_CHIP_COUNT, 'T');
+            myTable.AddStrategyBot("AceV", AUTO_CHIP_COUNT, 'A');
+
+
+            myTable.AddStrategyBot("SpaceV", AUTO_CHIP_COUNT, 'S');//&MeanGeomBluff);
+
+
+                break;
+
+        }
+    }
+///===========================
+///   Finish adding players
+///===========================
+
 
 
 
@@ -659,9 +685,8 @@ int main(int argc, char* argv[])
 
 
 #ifndef WINRELEASE
-testPlay(1);
+testPlay(1); //Will autodetect bLoadGame
 exit(0);
-//   testAnything();
 
 
 #endif

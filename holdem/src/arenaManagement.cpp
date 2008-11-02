@@ -10,10 +10,104 @@ typedef PositionalStrategy * stratPtr;
 
 
 
+void HoldemArena::UnserializeRoundStart(std::istream & fileLoadState)
+{
+
+int16 numericValue;
+
+
+
+            fileLoadState >> numericValue;
+
+	    playernumber_t playersToLoad = static_cast<int8>(numericValue);
+
+            fileLoadState.ignore(1,'\n');
+
+
+            for( int8 i=0;i<playersToLoad;++i )
+            {
+                float64 pMoney = HoldemUtil::ReadFloat64( fileLoadState );
+
+                char botType;
+                fileLoadState >> botType;
+                fileLoadState.ignore(1,'_');
+
+                std::string playerName;
+                //http://www.cplusplus.com/reference/string/getline.html
+                //If the delimiter is found, it is extracted and discarded, i.e. it is not stored and the next input operation will begin after it.
+                std::getline(fileLoadState,playerName,'\n');
+
+                if( botType == '~' )
+                {
+                    p[i]->myMoney = pMoney;
+                    if( pMoney <= 0 ){
+                        --livePlayers;
+                        p[i]->myMoney = -1;
+                    }else
+                    {
+                        p[i]->myMoney = pMoney;
+                    }
+                }
+                else if( botType == ' ' )
+                {
+                    AddHumanOpponent(playerName.c_str(),pMoney);
+                }
+                else
+                {
+                    AddStrategyBot(playerName.c_str(),pMoney,botType);
+                }
+            }
+
+
+            fileLoadState.ignore(1,'n');
+            fileLoadState >> handnum ;
+
+
+
+
+            fileLoadState.ignore(1,'@');
+            fileLoadState >> numericValue;
+
+	    curDealer = static_cast<int8>(numericValue);
+
+            fileLoadState.ignore(1,'^');
+            smallestChip = HoldemUtil::ReadFloat64( fileLoadState );
+
+
+
+
+
+}
+
+
+void HoldemArena::SerializeRoundStart(std::ostream & fileSaveState)
+{
+    fileSaveState << (int)nextNewPlayer << "\n";
+
+    for( int8 i=0;i<nextNewPlayer;++i )
+    {
+        float64 pMoney =  p[i]->myMoney;
+        if( pMoney < 0 ) pMoney = 0;
+        HoldemUtil::WriteFloat64( fileSaveState, pMoney );
+        fileSaveState << pTypes[i];
+        fileSaveState << "_" << p[i]->GetIdent() <<  endl;
+    }
+
+   	fileSaveState << "n" << handnum;
+
+    fileSaveState << "@" << (int)curDealer;
+
+    fileSaveState << "^" << flush;
+    HoldemUtil::WriteFloat64( fileSaveState, smallestChip );
+
+
+
+}
+
 playernumber_t HoldemArena::AddHumanOpponent(const char* const id, float64 money)
 {
 
-    playernumber_t addedIndex = AddPlayerManual(id, money, 0);
+    playernumber_t addedIndex = AddPlayer(id, money, 0);
     if( addedIndex >= 0 )
     {
         pTypes[addedIndex] = ' ';
@@ -65,6 +159,10 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
         botStrat = combined; //This is an upcast. We will require a dynamic_cast later (refA)
         break;
     default:
+        #ifdef DEBUGASSERT
+            std::cerr << "Unknown bot type being added!";
+            exit(1);
+        #endif
         botStrat = 0;
         break;
     }
@@ -72,7 +170,7 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
     playernumber_t addedIndex = -1;
     if( botStrat )
     {
-        addedIndex = AddPlayerManual(id, money, 0);
+        addedIndex = AddPlayer(id, money, botStrat);
         if( addedIndex >= 0 )
         {
             pTypes[addedIndex] = botType;
@@ -81,8 +179,17 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
     return addedIndex;
 }
 
+playernumber_t HoldemArena::ManuallyAddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat)
+{
+    playernumber_t addedIndex = AddPlayer(id, money, newStrat);
+    if( addedIndex >= 0 )
+    {
+        pTypes[addedIndex] = '~';
+    }
+    return addedIndex;
+}
 
-playernumber_t HoldemArena::AddPlayerManual(const char* const id, const float64 money, PlayerStrategy* newStrat)
+playernumber_t HoldemArena::AddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat)
 {
 
 #ifdef DEBUGASSERT
@@ -107,7 +214,8 @@ playernumber_t HoldemArena::AddPlayerManual(const char* const id, const float64 
     allChips += money;
 
 	++nextNewPlayer;
-	++livePlayers;
+
+	if( money > 0 ) ++livePlayers;
 
 	return (nextNewPlayer-1);
 }
