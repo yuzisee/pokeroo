@@ -20,33 +20,48 @@
 
 
 
+
 #ifndef HOLDEM_HeaderDLL
 #define HOLDEM_HeaderDLL
-
-//http://www.flipcode.com/archives/Creating_And_Using_DLLs.shtml
-//http://www.parashift.com/c++-faq-lite/mixing-c-and-cpp.html
-//http://sig9.com/node/35
-//http://www.flounder.com/ultimateheaderfile.htm
 
 #include "../src/portability.h"
 
 
+//Predefined Macros: What architecture are we compiling for?
+//http://predef.sourceforge.net/preos.html
+//http://blogs.msdn.com/oldnewthing/archive/2006/09/06/742710.aspx
 
-#ifdef _WINDLL
-// Microsoft Visual Studio conveniently defines the _WINDLL define when you're in a project that's
-// building a DLL. The __declspec(dllexport) tells the compiler that this function is part of
-// the API exported by the DLL.
+#if defined(_WIN32)
 
-	/* DLL export */
-	#define DLL_FUNCTION __declspec(dllexport)
+	//http://www.flipcode.com/archives/Creating_And_Using_DLLs.shtml
+	//http://www.parashift.com/c++-faq-lite/mixing-c-and-cpp.html
+	//http://sig9.com/node/35
+	//http://www.flounder.com/ultimateheaderfile.htm
+
+	#ifdef _WINDLL
+	// Microsoft Visual Studio conveniently defines the _WINDLL define when you're in a project that's
+	// building a DLL. The __declspec(dllexport) tells the compiler that this function is part of
+	// the API exported by the DLL.
+
+		/* DLL export */
+		#define DLL_FUNCTION __declspec(dllexport)
+	#else
+	// In most cases, you will want to use this file as a header file.
+	// The __declspec(dllimport) tells the compiler that the code for this function will NOT be
+	// linked, and that it should be imported later from a DLL.
+
+		/* EXE import */
+		#define DLL_FUNCTION __declspec(dllimport)
+	#endif
+#elif defined(__linux)
+	//In Linux your functions will just be included as any other object file, nothing special.
+	#define DLL_FUNCTION
 #else
-// In most cases, you will want to use this file as a header file.
-// The __declspec(dllimport) tells the compiler that the code for this function will NOT be
-// linked, and that it should be imported later from a DLL.
-
-	/* EXE import */
-	#define DLL_FUNCTION __declspec(dllimport)
+	#error "Not yet implemented on your target operating system?"
 #endif
+
+
+
 
 #ifdef __cplusplus
 // As part of the C++ specification, all compilers must define __cplusplus if they are compiling
