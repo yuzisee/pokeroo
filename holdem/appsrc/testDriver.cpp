@@ -59,7 +59,7 @@ char * myPlayerName = 0;
 
 
 
-void InitGameLoop(HoldemArena & my, bool bLoadGame)
+static void InitGameLoop(HoldemArena & my, bool bLoadGame)
 {
 
 #ifdef DEBUGASSERT
@@ -90,7 +90,7 @@ void InitGameLoop(HoldemArena & my, bool bLoadGame)
 
 
 
-void PlayGameInner(HoldemArena & my, SerializeRandomDeck * tableDealer)
+static void PlayGameInner(HoldemArena & my, SerializeRandomDeck * tableDealer)
 {
 
 	if( my.PlayRound_BeginHand() == -1 ) return;
@@ -118,7 +118,7 @@ void PlayGameInner(HoldemArena & my, SerializeRandomDeck * tableDealer)
 }
 
 
-void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindController, SerializeRandomDeck * d, float64 randRem)
+static void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindController, SerializeRandomDeck * d, float64 randRem)
 {
 
 
@@ -168,7 +168,7 @@ void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindController,
 }
 
 
-struct BlindUpdate UninitializedBlinds()
+static struct BlindUpdate UninitializedBlinds()
 {
     struct BlindUpdate b;
     b.bNew = false;
@@ -179,7 +179,7 @@ struct BlindUpdate UninitializedBlinds()
     return b;
 }
 
-struct BlindUpdate myBlindState(HoldemArena & my)
+static struct BlindUpdate myBlindState(HoldemArena & my)
 {
     struct BlindUpdate b;
     b.bNew = false;
@@ -192,7 +192,7 @@ struct BlindUpdate myBlindState(HoldemArena & my)
     return b;
 }
 
-Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, BlindValues firstBlind, SerializeRandomDeck * tableDealer, bool bLoadedGame, ifstream & closeFile)
+static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, BlindValues firstBlind, SerializeRandomDeck * tableDealer, bool bLoadedGame, ifstream & closeFile)
 {
 
 
@@ -274,7 +274,7 @@ Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, BlindVal
 
 
 
-std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
+static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 {
 
     //mkdir("saves");
@@ -572,7 +572,7 @@ gameOutput.close();
 }
 
 
-void superGame(char headsUp = 0)
+static void superGame(char headsUp = 0)
 {
 
     #ifdef SUPERINTOLOG

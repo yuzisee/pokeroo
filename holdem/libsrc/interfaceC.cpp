@@ -433,12 +433,14 @@ Note: SetBigBlind() and SetSmallBlind() can be called between
 hands anytime the blind size changes during the game
 *****************************************************************************/
 
-//WARNING ignored for now: seatsAtTable (it's defined as SEATS_AT_TABLE in debug_flags.h)
+
 C_DLL_FUNCTION
 struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination)
 {
 	struct return_table retval = DEFAULT_RETURN_TABLE;
 
+	//WARNING seatsAtTable is ignored for now
+	//it's defined as SEATS_AT_TABLE in debug_flags.h, and can only have one value
 	if( seatsAtTable != SEATS_AT_TABLE )
 	{
 		retval.error_code = NOT_IMPLEMENTED;
@@ -449,12 +451,12 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 		bool externalDealer = true;
 
 		retval.table.table_ptr = reinterpret_cast<void *>(new HoldemArena(chipDenomination, std::cout ,illustrate,spectate));
-		retval.table.players_array = new struct holdem_player[seatsAtTable];
+		retval.table.seats_array = new struct holdem_player[seatsAtTable];
 		retval.table.seat_count = seatsAtTable;
 
 		for(playernumber_t i=0;i<seatsAtTable;++i)
 		{
-			retval.table.players_array[i].seat_number = -1; //Mark as empty
+			retval.table.seats_array[i].seat_number = -1; //Mark as empty. This is the only way we can tell if a seat has no player (refB)
 		}
 	}
 
@@ -492,19 +494,52 @@ return_status SetSmallBlind(void * table_ptr, float64 money)
     HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
 }
 
-///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
-C_DLL_FUNCTION
-struct holdem_player CreateNewHumanOpponent(void * table_ptr, char * playerName)
-{
-    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
-    //table->AddHuman(playerName, money,
-    //p[newID]->bSync = true;
 
+C_DLL_FUNCTION
+struct holdem_player CreateNewHumanOpponent(void * table_ptr, char * playerName, float64 money)
+{
+	//A human opponent is treated the same as a bot, except it has no strat (and therefore no children)
+	struct return_player retval = DEFAULT_RETURN_PLAYER;
+
+	if( !add_to_table.table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else if( !playerName || add_to_table.seat_count <= 0 )
+	{
+		retval.error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		playernumber_t final_seat = add_to_table.seat_count - 1;
+		if( add_to_table.seats_array[final_seat].seat_number != -1 ) //Already a player in the last seat, the table is full
+		{
+			retval.error_code = NOT_IMPLEMENTED;
+		}else
+		{
+			//====================
+			//  Create a Player
+			//====================
+
+			HoldemArena * myTable = reinterpret_cast<HoldemArena *>(add_to_table.table_ptr);
+
+			playernumber_t pIndex = myTable->AddPlayer(playerName, money, 0);
+
+			retval.player.pstrat_children = 0;
+			retval.player.pstrat_ptr = 0;
+			retval.player.seat_number = pIndex;
+			//The only field that is always populated for a valid player is seat_number (refB)
+			add_to_table.seats_array[pIndex] = retval.player;		
+		}
+	}
+
+	return retval;
 }
 
 
+//
 //Player objects are allocated and freed by the HoldemArena class
 //PlayerStrategy objects (only exist for bots) must be allocated and freed here.
+//MultiStrategy objects also require a separate array of other PlayerStrategy objects.
+//
 C_DLL_FUNCTION
 struct return_player CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType)
 {
@@ -513,76 +548,85 @@ struct return_player CreateNewStrategyBot(struct holdem_table add_to_table, char
 	if( !add_to_table.table_ptr )
 	{
 		retval.error_code = NULL_TABLE_PTR;
-	}else if( !playerName )
+	}else if( !playerName || add_to_table.seat_count <= 0 )
 	{
 		retval.error_code = PARAMETER_DATA_ERROR;
-	}else if( add_to_table.players_array[add_to_table.seat_count-1].seat_number != -1 ) //Already a player in the last seat
-	{
-		retval.error_code = NOT_IMPLEMENTED;
 	}else
 	{
-		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(add_to_table.table_ptr);
-
-		PlayerStrategy * botStrat = 0;
-		PositionalStrategy **children = 0;
-		switch( botType )
+		playernumber_t final_seat = add_to_table.seat_count - 1;
+		if( add_to_table.seats_array[final_seat].seat_number != -1 ) //Already a player in the last seat, the table is full
 		{
-		case 'A':
-			botStrat = new ImproveGainStrategy(2);
-			break;
-		case 'C':
-			botStrat = new DeterredGainStrategy();
-			break;
-		case 'D':
-			botStrat = new DeterredGainStrategy(1);
-			break;
-		case 'N':
-			botStrat = new ImproveGainStrategy(0);
-			break;
-		case 'S':
-			botStrat = new DeterredGainStrategy(2);
-			break;
-		case 'T':
-			botStrat = new ImproveGainStrategy(1);
-			break;
-		case 'G':
-		case 'M':
-			children = new stratPtr[NUMBER_OF_BOTS_COMBINED];
-			
-			children[0] = new ImproveGainStrategy(0); //Norm
-			children[1] = new ImproveGainStrategy(1); //Trap
-			children[2] = new ImproveGainStrategy(2); //Action
-			children[3] = new DeterredGainStrategy(); //Com
-			children[4] = new DeterredGainStrategy(1);//Danger
-			children[5] = new DeterredGainStrategy(2);//Space
-
-			{
-				MultiStrategy * combined = new MultiStrategy(children,NUMBER_OF_BOTS_COMBINED);
-				if( botType == 'M' ) combined->bGamble = 0;
-				if( botType == 'G' ) combined->bGamble = 1;
-				
-				botStrat = combined;
-			}
-
-			break;
-		default:
-			botStrat = 0;
-			break;
-		}
-
-		if( !botStrat )
-		{
-			retval.error_code = PARAMETER_INVALID;
+			retval.error_code = NOT_IMPLEMENTED;
 		}else
 		{
-			playernumber_t pIndex = myTable->AddPlayer(playerName, money, botStrat);
+			//==================
+			//  Create a Bot
+			//==================
 
-			retval.player.pstrat_children = reinterpret_cast<void **>(children);
+			HoldemArena * myTable = reinterpret_cast<HoldemArena *>(add_to_table.table_ptr);
 
-			retval.player.pstrat_ptr = reinterpret_cast<void *>(botStrat);
-			retval.player.seat_number = pIndex;
-			
-			add_to_table.players_array[pIndex] = retval.player;
+			PlayerStrategy * botStrat = 0;
+			PositionalStrategy **children = 0;
+			switch( botType )
+			{
+			case 'A':
+				botStrat = new ImproveGainStrategy(2);
+				break;
+			case 'C':
+				botStrat = new DeterredGainStrategy();
+				break;
+			case 'D':
+				botStrat = new DeterredGainStrategy(1);
+				break;
+			case 'N':
+				botStrat = new ImproveGainStrategy(0);
+				break;
+			case 'S':
+				botStrat = new DeterredGainStrategy(2);
+				break;
+			case 'T':
+				botStrat = new ImproveGainStrategy(1);
+				break;
+			case 'G':
+			case 'M':
+				children = new stratPtr[NUMBER_OF_BOTS_COMBINED];
+				
+				children[0] = new ImproveGainStrategy(0); //Norm
+				children[1] = new ImproveGainStrategy(1); //Trap
+				children[2] = new ImproveGainStrategy(2); //Action
+				children[3] = new DeterredGainStrategy(); //Com
+				children[4] = new DeterredGainStrategy(1);//Danger
+				children[5] = new DeterredGainStrategy(2);//Space
+
+				{
+					MultiStrategy * combined = new MultiStrategy(children,NUMBER_OF_BOTS_COMBINED);
+					if(      botType == 'M' ) combined->bGamble = 0;
+					else if( botType == 'G' ) combined->bGamble = 1;
+					else                      retval.error_code = INTERNAL_INCONSISTENCY;
+					
+					botStrat = combined; //This is an upcast. We will require a dynamic_cast later (refA)
+				}
+
+				break;
+			default:
+				botStrat = 0;
+				break;
+			}
+
+			if( !botStrat )
+			{
+				retval.error_code = PARAMETER_INVALID;
+			}else
+			{
+				playernumber_t pIndex = myTable->AddPlayer(playerName, money, botStrat);
+
+				retval.player.pstrat_children = reinterpret_cast<void **>(children);
+
+				retval.player.pstrat_ptr = reinterpret_cast<void *>(botStrat);
+				retval.player.seat_number = pIndex;
+				
+				add_to_table.seats_array[pIndex] = retval.player;
+			}
 		}
 	}
 
@@ -590,8 +634,58 @@ struct return_player CreateNewStrategyBot(struct holdem_table add_to_table, char
 
 }
 
+
+
+//Things we need to clean up here:
+//  +  The player has an optional strat, and if that strat is a MultiStrategy, it has a list of children strats
+// (1) We need to delete the strat if it exists
+// (2) For each child strat, we need to delete it
+// (3) We need to delete the children strat list if it exists
+//
+//Note: If a player is not a bot, it won't need any of (1) or (2) or (3).
+//      If a player is a bot but not a MultiStrategy, it won't have (2)
+static void DeletePlayer(struct holdem_player player_to_delete)
+{
+	void ** children = player_to_delete.pstrat_children; //...2
+	void * strat = player_to_delete.pstrat_ptr; //...1
+
+	if( strat ) //if the player is a bot,
+	{
+		PlayerStrategy * pStrat = reinterpret_cast<PlayerStrategy *>(strat); //...1
+		if( !children )
+		{
+			delete pStrat; //(1) deleted
+		}else
+		{
+			PositionalStrategy ** mChildren = reinterpret_cast<PositionalStrategy **>(children); //...2
+
+			MultiStrategy * mStrat = dynamic_cast<MultiStrategy *>(pStrat); //This is the downcast for (refA).
+																			//We're casting further down the inheritance tree toward children/subclasses.
+																			//Actually, as long as the destructors are virtual, we don't need to downcast just to delete.
+			delete mStrat; //(1) deleted
+
+			for(playernumber_t n=0;n<NUMBER_OF_BOTS_COMBINED;++n)
+			{
+				delete mChildren[n]; //(2) deleted
+			}
+
+			delete [] mChildren; //(3) deleted
+		}
+	}
+	
+}
+
+//
+//Things we need to clean up here:
+//  +  table_to_delete has a pointer to the table and a list of players
+// (1) We need to delete the actual table
+// (2) For each player in the list we need to delete the player
+// (3) We need to delete[] the list of players
+//
+//Note: If not every seat of the table is occupied, not all of the (2) will be required
+//
 C_DLL_FUNCTION 
-enum return_status DeleteTable(struct holdem_table table_to_delete)
+enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete)
 {
 	enum return_status error_code = SUCCESS;
 
@@ -601,37 +695,17 @@ enum return_status DeleteTable(struct holdem_table table_to_delete)
 	}else
 	{
 		HoldemArena * table = reinterpret_cast<HoldemArena *>(table_to_delete.table_ptr);
-		delete table;
+		delete table; //(1) deleted
 
 		for(playernumber_t i=0;i<table_to_delete.seat_count;++i)
 		{
-			void ** children = table_to_delete.players_array[i].pstrat_children;
-			void * strat = table_to_delete.players_array[i].pstrat_ptr;
-
-			if( strat )
+			if( table_to_delete.seats_array[i].seat_number != -1 ) //We don't delete players for empty seats (refB)
 			{
-				PlayerStrategy * pStrat = reinterpret_cast<PlayerStrategy *>(strat);
-				if( !children )
-				{
-					delete pStrat;
-				}else
-				{
-					PositionalStrategy ** mChildren = reinterpret_cast<PositionalStrategy **>(children);
-
-					MultiStrategy * mStrat = dynamic_cast<MultiStrategy *>(pStrat);
-					delete mStrat;
-
-					for(playernumber_t n=0;n<NUMBER_OF_BOTS_COMBINED;++n)
-					{
-						delete mChildren[n];
-					}
-
-					delete [] mChildren;
-				}
+				DeletePlayer(table_to_delete.seats_array[i]); //(2) deleted
 			}
-			table_to_delete.players_array[i].seat_number = -1;
+			table_to_delete.seats_array[i].seat_number = -1;
 		}
-		delete [] table_to_delete.players_array;
+		delete [] table_to_delete.seats_array; //(3) deleted
 	}
 
 	return error_code;

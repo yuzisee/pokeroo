@@ -102,7 +102,7 @@ struct holdem_player
 struct holdem_table
 {
 	void * table_ptr;
-	struct holdem_player * players_array;
+	struct holdem_player * seats_array;
 	playernumber_t seat_count;
 }
 ;
@@ -318,7 +318,7 @@ C_DLL_FUNCTION
 struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination);
 
 C_DLL_FUNCTION
-enum return_status DeleteTable(struct holdem_table table_to_delete);
+enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete);
 
 ///Choose playerNumber to be the dealer for the first hand
 C_DLL_FUNCTION
@@ -340,6 +340,7 @@ enum return_status SetSmallBlind(void * table_ptr, float64 money);
 C_DLL_FUNCTION
 struct return_player AddHumanOpponent(void * table_ptr, char * playerName);
 
+///Add a bot to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
 C_DLL_FUNCTION
 struct return_player AddStrategyBot(void * table_ptr, char *playerName, char botType);
 
