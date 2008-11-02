@@ -222,12 +222,22 @@ struct return_money GetPrevRoundsPotsize(void * table_ptr);
 	Flow control functions
 *****************************************************************************/
 
+/*
+
+1. Restore or InitializeNew the TableState
+2. -----
+	2.1 BeginNewHand
+	2.2 ShowHoleCards to all bots which need to know their hand
+*/
 
 
 C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * table_ptr);
+C_DLL_FUNCTION enum return_status InitializeNewTableState(void * table_ptr);
+
+C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind);
+C_DLL_FUNCTION enum return_status ShowHoleCards(void * table_ptr, playernumber_t , struct holdem_cardset );
+
 C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr);
-
-
 
 
 /*****************************************************************************

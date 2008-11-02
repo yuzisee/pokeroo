@@ -84,7 +84,7 @@ class Player
 
 	public:
 
-		bool IsBot(){ return (myStrat != 0); }
+		bool IsBot() const { return (myStrat != 0); }
 
 		const std::string & GetIdent() const
 		{	return myName;	}
@@ -371,7 +371,7 @@ class HoldemArena
         void ResetDRseed(); //You may reset the seed here (recommended at the beginning of each hand, before the first HoldemArenaBetting event
         float64 GetDRseed(); //You may get a seed at any time, but it is best to do so after PlayShowdown or when no more HoldemArenaBetting events will take place
 
-		void BeginNewHands(const struct BlindUpdate & roundBlinds);
+		void BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues);
         void DealAllHands(SerializeRandomDeck *);
 
 		void PrepBettingRound(const int8);
@@ -418,6 +418,7 @@ class HoldemArena
 		playernumber_t GetDealer() const;
 
 		const Player* ViewPlayer(playernumber_t) const;
+		bool ShowHoleCards(const Player & withP, const CommunityPlus & dealHandP);
 		float64 GetBetDecision(playernumber_t);
 		char GetPlayerBotType(playernumber_t) const;
 

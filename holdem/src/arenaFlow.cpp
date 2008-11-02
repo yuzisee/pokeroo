@@ -196,17 +196,23 @@ DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
 
 }
 
+bool HoldemArena::ShowHoleCards(const Player & withP, const CommunityPlus & dealHandP)
+{
+	if( withP.myMoney > 0 )
+	{
+		if( withP.IsBot() )
+		{
+			withP.myStrat->StoreDealtHand(dealHandP);
+			return true;
+		}
+	}
 
+	return false;
+}
 
 void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
 {
 
-    #ifdef DEBUGHOLECARDS
-        holecardsData <<
-        "############ Hand " << handnum << " " <<
-        "############" << endl;
-
-    #endif
 
     do
     {
@@ -224,27 +230,30 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
                 if( !tableDealer ) std::cerr << withP.GetIdent().c_str() << std::flush;
                 RequestCards(tableDealer,2,dealHandP,", enter your cards (no whitespace): ");
 
-                withP.myStrat->StoreDealtHand(dealHandP);
+				#ifdef DEBUGASSERT
+				if(!
+				#endif
+				ShowHoleCards(withP,dealHandP)
+				#ifdef DEBUGASSERT
+				){
+					std::cerr << "Dealing card to player who doesn't request them?" << endl;
+					exit(1);
+				}
+				#endif
+				;;
 
                 dealHandP.HandPlus::DisplayHand(holecardsData);
                 holecardsData << withP.GetIdent().c_str() << endl;
             }
         }
-        else
-        {
-            withP.lastBetSize = INVALID;
-            withP.myBetSize = INVALID;
-        }
-
-
-
+        
     }while(curDealer != curIndex);
 }
 
 
 
 //If tableDealer is null, you may specify dealt cards using the console.
-void HoldemArena::BeginNewHands(const struct BlindUpdate & roundBlinds)
+void HoldemArena::BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues)
 {
     roundPlayers = livePlayers;
 
@@ -270,9 +279,9 @@ void HoldemArena::BeginNewHands(const struct BlindUpdate & roundBlinds)
 
     }
 
-    myBlinds = roundBlinds.b;
+    myBlinds = roundBlindValues;
 
-    if( roundBlinds.bNew )
+    if( bNewBlindValues )
     {
         if( bVerbose )
         {
@@ -280,6 +289,28 @@ void HoldemArena::BeginNewHands(const struct BlindUpdate & roundBlinds)
         }
     }
 
+    #ifdef DEBUGHOLECARDS
+        holecardsData <<
+        "############ Hand " << handnum << " " <<
+        "############" << endl;
+
+    #endif
+
+	do
+    {
+        incrIndex();
+
+        Player& withP = *(p[curIndex]);
+
+        if(withP.myMoney <= 0)
+        {
+            withP.lastBetSize = INVALID;
+            withP.myBetSize = INVALID;
+        }
+
+
+
+    }while(curDealer != curIndex);
 
 
 }

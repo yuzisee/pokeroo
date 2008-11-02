@@ -283,9 +283,143 @@ struct return_money GetBetToCall(void * table_ptr)
 
 
 
-///Call this when new hands are dealt
-C_DLL_FUNCTION enum return_status StartDealNewHands(void * table_ptr);
+C_DLL_FUNCTION
+enum return_status ShowHoleCards(void * table_ptr, playernumber_t playerNumber, struct holdem_cardset holecards)
+{
 
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else if( !holecards.card_count )
+	{
+		error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(holecards.cards_ptr);
+
+		if( !myTable->IsAlive( playerNumber ) )
+		{
+			error_code = PARAMETER_INVALID;
+		}else
+		{
+			const Player * myPlayer = myTable->ViewPlayer(playerNumber);
+			myTable->ShowHoleCards( *myPlayer , *myHand );
+		}
+
+	}
+
+	return error_code;
+}
+
+
+C_DLL_FUNCTION
+enum return_status BeginNewHands(void * table_ptr, float64 smallBlind)
+{
+
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		BlindValues b;
+		b.SetSmallBigBlind(smallBlind);
+
+		myTable->BeginNewHands(b,false); //bNewBlindValues is always false when calling through DLL because notification of blind changes is redundant.
+	}
+
+	return error_code;
+}
+
+
+//Serializes the table state into a single string.
+//Actions performed during betting events and showdown events will not be saved properly.
+C_DLL_FUNCTION
+enum return_status SaveTableState(char * state_str, void * table_ptr)
+{
+	
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else if( !state_str )
+	{
+		error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		std::ostringstream strBufState;
+
+		myTable->SerializeRoundStart(strBufState);
+
+		strcpy( state_str , strBufState.str().c_str() );
+	}
+
+	return error_code;
+}
+
+
+//Unserializes the table state from a single string.
+//Players and PlayerStrategies will be automatically added back into their correct seats.
+//Actions performed during betting events and showdown events will not be restored properly.
+C_DLL_FUNCTION
+enum return_status RestoreTableState(char * state_str, void * table_ptr)
+{
+	
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else if( !state_str )
+	{
+		error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		std::string strState(state_str);
+		std::istringstream strBufState(strState);
+
+		myTable->UnserializeRoundStart(strBufState);
+
+		//InitGameLoop calls:
+		myTable->LoadBeginInitialState(); //opens some logfile handles
+		myTable->ResetDRseed();
+	}
+
+	return error_code;
+}
+
+C_DLL_FUNCTION
+enum return_status InitializeNewTableState(void * table_ptr)
+{
+
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		//InitGameLoop calls:
+		myTable->BeginInitialState(); //sets handnum=1, opens logfile handles,
+		myTable->ResetDRseed();
+	}
+
+	return error_code;
+}
 
 /*****************************************************************************
 	Flow control functions
@@ -754,86 +888,6 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 	
 }
 
-
-//Serializes the table state into a single string.
-//Actions performed during betting events and showdown events will not be saved properly.
-C_DLL_FUNCTION
-enum return_status SaveTableState(char * state_str, void * table_ptr)
-{
-	//A human opponent is treated the same as a bot, except it has no strat (and therefore no children)
-	enum return_status error_code = SUCCESS;
-
-	if( !table_ptr )
-	{
-		error_code = NULL_TABLE_PTR;
-	}else if( !state_str )
-	{
-		error_code = PARAMETER_DATA_ERROR;
-	}else
-	{
-		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
-
-		std::ostringstream strBufState;
-
-		myTable->SerializeRoundStart(strBufState);
-
-		strcpy( state_str , strBufState.str().c_str() );
-	}
-
-	return error_code;
-}
-
-
-//Unserializes the table state from a single string.
-//Players and PlayerStrategies will be automatically added back into their correct seats.
-//Actions performed during betting events and showdown events will not be restored properly.
-C_DLL_FUNCTION
-enum return_status RestoreTableState(char * state_str, void * table_ptr)
-{
-	//A human opponent is treated the same as a bot, except it has no strat (and therefore no children)
-	enum return_status error_code = SUCCESS;
-
-	if( !table_ptr )
-	{
-		error_code = NULL_TABLE_PTR;
-	}else if( !state_str )
-	{
-		error_code = PARAMETER_DATA_ERROR;
-	}else
-	{
-		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
-
-		std::string strState(state_str);
-		std::istringstream strBufState(strState);
-
-		myTable->UnserializeRoundStart(strBufState);
-
-		//InitGameLoop calls:
-		myTable->LoadBeginInitialState(); //opens some logfile handles
-	}
-
-	return error_code;
-}
-
-C_DLL_FUNCTION
-enum return_status InitializeNewTableState(void * table_ptr)
-{
-//A human opponent is treated the same as a bot, except it has no strat (and therefore no children)
-	enum return_status error_code = SUCCESS;
-
-	if( !table_ptr )
-	{
-		error_code = NULL_TABLE_PTR;
-	}else
-	{
-		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
-
-		//InitGameLoop calls:
-		myTable->BeginInitialState(); //sets handnum=1, opens logfile handles,
-	}
-
-	return error_code;
-}
 
 C_DLL_FUNCTION
 struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money)
