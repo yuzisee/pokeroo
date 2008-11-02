@@ -119,40 +119,6 @@ void HoldemUtil::WriteFloat64( std::ostream& saveFile, const float64 v )
     saveFile << *pMoneyU << "x" << *(pMoneyU+1) << ":" << flush;
 }
 
-void HoldemUtil::PermuteExisting(int8 * array, uint8 count, uint32 seed)
-{
-    //For example, say count is 8
-    for(uint8 i=0;i<=count-2;++i) //We'd only loop until sourceIndex, which is i, reaches the second last index
-    {
-        int8 swaptemp;
-        const uint8& sourceIndex = i; //For example, this would be index 0
-        const uint8 seedComponent = seed % (count-i); //For example, this would be (seed%8) which is from 0 to 7
-
-        //Now we swap 0 with seed-value between 0 and 7.
-        if( seedComponent != 0  )
-        {
-            const uint8 destIndex = i + seedComponent;
-
-            swaptemp = array[sourceIndex];
-            array[sourceIndex] = array[destIndex];
-            array[destIndex] = swaptemp;
-        }
-
-        seed = seed / (count-i); //Divide out the 8
-    }
-}
-
-int8 * HoldemUtil::Permute(uint8 count, uint32 seed)
-{
-    int8 * permutation = new int8[count];
-    for( int8 i=count-1;i>=0;--i )
-    {
-        permutation[i] = i;
-    }
-    PermuteExisting(permutation,count,seed);
-    return permutation;
-}
-
 
 ///Convert single digit to character, where '-' is for 0
 const uint8 HoldemUtil::cleanz(const uint32 j)

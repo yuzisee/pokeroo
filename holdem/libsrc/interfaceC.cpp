@@ -20,12 +20,20 @@
 
 
 #include "../src/arena.h"
+#include "../src/stratCombined.h"
+#include "../src/stratPosition.h"
+
 #include "holdemDLL.h"
 
-struct return_money DEFAULT_RETURN_VALUE = { 0.0 , SUCCESS };
+#define NUMBER_OF_BOTS_COMBINED 6
+
+typedef PositionalStrategy * stratPtr;
 
 
-
+struct return_money DEFAULT_RETURN_MONEY = { 0.0 , SUCCESS };
+struct return_event DEFAULT_RETURN_EVENT = { 0 , SUCCESS };
+struct return_player DEFAULT_RETURN_PLAYER = { {0,0,-1} , SUCCESS };
+struct return_table DEFAULT_RETURN_TABLE = { {0,0,-1} , SUCCESS };
 
 
 /*****************************************************************************
@@ -38,7 +46,7 @@ struct return_money DEFAULT_RETURN_VALUE = { 0.0 , SUCCESS };
 C_DLL_FUNCTION
 struct return_money GetMoney(void * table_ptr, int8 playerNumber)
 {
-	struct return_money retval = DEFAULT_RETURN_VALUE;
+	struct return_money retval = DEFAULT_RETURN_MONEY;
 
 	if( !table_ptr )
 	{
@@ -93,7 +101,7 @@ enum return_status SetMoney(void * table_ptr, int8 playerNumber, float64 money)
 
 		if( !ptrP )
 		{
-			error_code = INVALID_PARAMETERS;
+			error_code = PARAMETER_DATA_ERROR;
 		}else
 		{
 			const Player & withP = *ptrP;
@@ -131,17 +139,62 @@ struct return_money GetCurrentBet(void * table_ptr, int8 playerNumber)
 
 ///Get the amount of money that is in the pot
 C_DLL_FUNCTION
-struct return_money GetPotSize(void * table_ptr);
+struct return_money GetPotSize(void * table_ptr)
+{
+	struct return_money retval = DEFAULT_RETURN_MONEY;
+
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		retval.money = myTable->GetPotSize();
+	}
+
+	return retval;
+}
 
 
 ///Get the amount of money that was in the pot at the BEGINNING of the current betting round
 C_DLL_FUNCTION
-struct return_money GetLastRoundPotsize(void * table_ptr);
+struct return_money GetPrevRoundsPotsize(void * table_ptr)
+{
+	struct return_money retval = DEFAULT_RETURN_MONEY;
+
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		retval.money = myTable->GetPrevPotSize();
+	}
+
+	return retval;
+}
 
 
-///Get the size of the highest bet so far
+///Get the size of the highest bet so far this round
 C_DLL_FUNCTION
-struct return_money GetBetToCall(void * table_ptr);
+struct return_money GetBetToCall(void * table_ptr)
+{
+	struct return_money retval = DEFAULT_RETURN_MONEY;
+
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		retval.money = myTable->GetBetToCall();
+	}
+
+	return retval;
+}
 
 
 //Get the playerNumber of the player who's turn it is
@@ -188,13 +241,13 @@ cardSuit can be any of:
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
 
 C_DLL_FUNCTION
-struct holdem_cardset NewCardset()
+struct holdem_cardset CreateNewCardset()
 {
 	CommunityPlus * newHand = new CommunityPlus();
 
 	struct holdem_cardset c;
 	c.card_count = 0;
-	c.hand_ptr = reinterpret_cast<void *>(newHand);
+	c.cards_ptr = reinterpret_cast<void *>(newHand);
 
 	return c;
 }
@@ -204,17 +257,17 @@ enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char car
 {
 	enum return_status error_code = SUCCESS;
 
-	if( !c || !(c->hand_ptr) )
+	if( !c || !(c->cards_ptr) )
 	{
-		error_code = INVALID_PARAMETERS;
+		error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
-		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(c->hand_ptr);
+		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(c->cards_ptr);
 		
 		int8 newCardIndex = HoldemUtil::ParseCard(cardValue,cardSuit);
 		if( newCardIndex < 0 )
 		{
-			error_code = INVALID_PARAMETERS;
+			error_code = PARAMETER_INVALID;
 		}else
 		{
 			DeckLocation newCard;
@@ -233,12 +286,12 @@ enum return_status DeleteCardset(struct holdem_cardset c)
 {
 	enum return_status error_code = SUCCESS;
 
-	if( !(c.hand_ptr) )
+	if( !(c.cards_ptr) )
 	{
-		error_code = INVALID_PARAMETERS;
+		error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
-		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(c.hand_ptr);
+		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(c.cards_ptr);
 		delete myHand;
 	}
 
@@ -261,10 +314,80 @@ enum return_status DeleteCardset(struct holdem_cardset c)
 
 
 ///Call this when the betting begins
-C_DLL_FUNCTION enum return_status StartBetting(void * table_ptr, struct holdem_cardset community );
+C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community )
+{
+	struct return_event retval = DEFAULT_RETURN_EVENT;
+
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else if( !community.cards_ptr )
+	{
+		retval.error_code = PARAMETER_INVALID;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(community.cards_ptr);
+
+		HoldemArenaBetting * bettingEvent = new HoldemArenaBetting( myTable, *myHand, community.card_count );
+
+	}
+
+	return retval;
+}
+
+
+/*
+    while(b.bBetState == 'b')
+    {
+        b.MakeBet(p[curIndex]->myStrat->MakeBet());
+    }
+
+    return b.playerCalled;
+*/
 
 ///Call these functions when playerNumber Raises, Folds, or Calls
-C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, int8 playerNumber)
+{
+	/*
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		const Player * ptrP = myTable->ViewPlayer(curIndex);
+
+		if( !ptrP )
+		{
+			error_code = PARAMETER_DATA_ERROR;
+		}else
+		{
+			const Player & withP = *ptrP;
+
+			float64 accountedFor = withP.GetBetSize();
+			float64 newMoney = money - accountedFor;
+	
+			if( newMoney < 0 )
+			{
+				newMoney = 0.0;
+				error_code = INPUT_CLEANED;
+			}
+
+			if( myTable->OverridePlayerMoney(playerNumber,newMoney) )
+			{
+				error_code = INTERNAL_INCONSISTENCY;
+			}
+		}
+	}
+
+	return error_code;
+	*/
+}
 C_DLL_FUNCTION enum return_status PlayerFolds(void * table_ptr, int8 playerNumber);
 C_DLL_FUNCTION enum return_status PlayerRaisesTo(void * table_ptr, int8 playerNumber, float64 amount);
 C_DLL_FUNCTION enum return_status PlayerRaisesBy(void * table_ptr, int8 playerNumber, float64 amount);
@@ -312,25 +435,34 @@ hands anytime the blind size changes during the game
 
 //WARNING ignored for now: seatsAtTable (it's defined as SEATS_AT_TABLE in debug_flags.h)
 C_DLL_FUNCTION
-void * NewTable(playernumber_t seatsAtTable, float64 chipDenomination)
+struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination)
 {
-    bool illustrate = true;
-    bool spectate = true;
-    bool externalDealer = true;
+	struct return_table retval = DEFAULT_RETURN_TABLE;
 
-    return reinterpret_cast<void *>(new HoldemArena(chipDenomination, std::cout ,illustrate,spectate));
+	if( seatsAtTable != SEATS_AT_TABLE )
+	{
+		retval.error_code = NOT_IMPLEMENTED;
+	}else
+	{
+		bool illustrate = true;
+		bool spectate = true;
+		bool externalDealer = true;
+
+		retval.table.table_ptr = reinterpret_cast<void *>(new HoldemArena(chipDenomination, std::cout ,illustrate,spectate));
+		retval.table.players_array = new struct holdem_player[seatsAtTable];
+		retval.table.seat_count = seatsAtTable;
+
+		for(playernumber_t i=0;i<seatsAtTable;++i)
+		{
+			retval.table.players_array[i].seat_number = -1; //Mark as empty
+		}
+	}
+
+	return retval;
+	
 }
 
-C_DLL_FUNCTION 
-enum return_status DeleteTable(void * table_ptr)
-{
-	enum return_status error_code = SUCCESS;
 
-    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
-    delete table;
-
-	return error_code;
-}
 
 ///Choose playerNumber to be the dealer for the first hand
 C_DLL_FUNCTION 
@@ -361,8 +493,8 @@ return_status SetSmallBlind(void * table_ptr, float64 money)
 }
 
 ///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
-///The function returns a playerNumber to identify this player in your code
-int8 AddHumanOpponent(void * table_ptr, char * playerName)
+C_DLL_FUNCTION
+struct holdem_player CreateNewHumanOpponent(void * table_ptr, char * playerName)
 {
     HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
     //table->AddHuman(playerName, money,
@@ -370,12 +502,140 @@ int8 AddHumanOpponent(void * table_ptr, char * playerName)
 
 }
 
-int8 AddStrategyBot(void * table_ptr, char *playerName, char botType)
+
+//Player objects are allocated and freed by the HoldemArena class
+//PlayerStrategy objects (only exist for bots) must be allocated and freed here.
+C_DLL_FUNCTION
+struct return_player CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType)
 {
-    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
+	struct return_player retval = DEFAULT_RETURN_PLAYER;
+
+	if( !add_to_table.table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else if( !playerName )
+	{
+		retval.error_code = PARAMETER_DATA_ERROR;
+	}else if( add_to_table.players_array[add_to_table.seat_count-1].seat_number != -1 ) //Already a player in the last seat
+	{
+		retval.error_code = NOT_IMPLEMENTED;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(add_to_table.table_ptr);
+
+		PlayerStrategy * botStrat = 0;
+		PositionalStrategy **children = 0;
+		switch( botType )
+		{
+		case 'A':
+			botStrat = new ImproveGainStrategy(2);
+			break;
+		case 'C':
+			botStrat = new DeterredGainStrategy();
+			break;
+		case 'D':
+			botStrat = new DeterredGainStrategy(1);
+			break;
+		case 'N':
+			botStrat = new ImproveGainStrategy(0);
+			break;
+		case 'S':
+			botStrat = new DeterredGainStrategy(2);
+			break;
+		case 'T':
+			botStrat = new ImproveGainStrategy(1);
+			break;
+		case 'G':
+		case 'M':
+			children = new stratPtr[NUMBER_OF_BOTS_COMBINED];
+			
+			children[0] = new ImproveGainStrategy(0); //Norm
+			children[1] = new ImproveGainStrategy(1); //Trap
+			children[2] = new ImproveGainStrategy(2); //Action
+			children[3] = new DeterredGainStrategy(); //Com
+			children[4] = new DeterredGainStrategy(1);//Danger
+			children[5] = new DeterredGainStrategy(2);//Space
+
+			{
+				MultiStrategy * combined = new MultiStrategy(children,NUMBER_OF_BOTS_COMBINED);
+				if( botType == 'M' ) combined->bGamble = 0;
+				if( botType == 'G' ) combined->bGamble = 1;
+				
+				botStrat = combined;
+			}
+
+			break;
+		default:
+			botStrat = 0;
+			break;
+		}
+
+		if( !botStrat )
+		{
+			retval.error_code = PARAMETER_INVALID;
+		}else
+		{
+			playernumber_t pIndex = myTable->AddPlayer(playerName, money, botStrat);
+
+			retval.player.pstrat_children = reinterpret_cast<void **>(children);
+
+			retval.player.pstrat_ptr = reinterpret_cast<void *>(botStrat);
+			retval.player.seat_number = pIndex;
+			
+			add_to_table.players_array[pIndex] = retval.player;
+		}
+	}
+
+	return retval;
 
 }
 
+C_DLL_FUNCTION 
+enum return_status DeleteTable(struct holdem_table table_to_delete)
+{
+	enum return_status error_code = SUCCESS;
+
+	if( !(table_to_delete.table_ptr) )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * table = reinterpret_cast<HoldemArena *>(table_to_delete.table_ptr);
+		delete table;
+
+		for(playernumber_t i=0;i<table_to_delete.seat_count;++i)
+		{
+			void ** children = table_to_delete.players_array[i].pstrat_children;
+			void * strat = table_to_delete.players_array[i].pstrat_ptr;
+
+			if( strat )
+			{
+				PlayerStrategy * pStrat = reinterpret_cast<PlayerStrategy *>(strat);
+				if( !children )
+				{
+					delete pStrat;
+				}else
+				{
+					PositionalStrategy ** mChildren = reinterpret_cast<PositionalStrategy **>(children);
+
+					MultiStrategy * mStrat = dynamic_cast<MultiStrategy *>(pStrat);
+					delete mStrat;
+
+					for(playernumber_t n=0;n<NUMBER_OF_BOTS_COMBINED;++n)
+					{
+						delete mChildren[n];
+					}
+
+					delete [] mChildren;
+				}
+			}
+			table_to_delete.players_array[i].seat_number = -1;
+		}
+		delete [] table_to_delete.players_array;
+	}
+
+	return error_code;
+}
 
 /*****************************************************************************
 	Initial setup functions

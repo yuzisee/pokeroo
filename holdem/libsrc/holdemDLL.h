@@ -82,6 +82,32 @@
 //   Basic data types
 //======================
 
+
+struct holdem_cardset
+{
+	void * cards_ptr;
+	int card_count;
+}
+;
+
+struct holdem_player
+{
+	void * pstrat_ptr;
+	void ** pstrat_children;
+	playernumber_t seat_number;
+}
+;
+
+
+struct holdem_table
+{
+	void * table_ptr;
+	struct holdem_player * players_array;
+	playernumber_t seat_count;
+}
+;
+
+
 enum return_status {
 
 //OK
@@ -90,9 +116,13 @@ enum return_status {
 
 //FAIL
    NULL_TABLE_PTR,
-   INVALID_PARAMETERS,
+   NOT_IMPLEMENTED,
+   PARAMETER_INVALID,
+   PARAMETER_DATA_ERROR,
    INTERNAL_INCONSISTENCY
 };
+
+
 
 
 struct return_money
@@ -102,10 +132,24 @@ struct return_money
 }
 ;
 
-struct holdem_cardset
+struct return_event
 {
-	void * hand_ptr;
-	int card_count;
+	void * event_ptr;
+	enum return_status error_code;
+}
+;
+
+struct return_player
+{
+	struct holdem_player player;
+	enum return_status error_code;
+}
+;
+
+struct return_table
+{
+	struct holdem_table table;
+	enum return_status error_code;
 }
 ;
 
@@ -140,13 +184,16 @@ struct return_money GetPotSize(void * table_ptr);
 
 ///Get the amount of money that was in the pot at the BEGINNING of the current betting round
 C_DLL_FUNCTION
-struct return_money GetLastRoundPotsize(void * table_ptr);
+struct return_money GetPrevRoundsPotsize(void * table_ptr);
 
 
 ///Get the size of the highest bet so far
 C_DLL_FUNCTION
 struct return_money GetBetToCall(void * table_ptr);
 
+///Get the size of the highest bet so far
+C_DLL_FUNCTION
+struct return_money GetBetToCall(void * table_ptr);
 
 //Get the playerNumber of the player who's turn it is
 C_DLL_FUNCTION int8 WhoIsNext_Betting(void * table_ptr);
@@ -194,7 +241,7 @@ cardSuit can be any of:
 'D' for Diamonds
 */
 
-C_DLL_FUNCTION struct holdem_cardset NewCardset();
+C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
 
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
 C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
@@ -268,10 +315,10 @@ Note: SetBigBlind() and SetSmallBlind() can be called between
 hands anytime the blind size changes during the game
 *****************************************************************************/
 C_DLL_FUNCTION
-void * NewTable(playernumber_t seatsAtTable, float64 chipDenomination);
+struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination);
 
 C_DLL_FUNCTION
-enum return_status DeleteTable(void * table_ptr);
+enum return_status DeleteTable(struct holdem_table table_to_delete);
 
 ///Choose playerNumber to be the dealer for the first hand
 C_DLL_FUNCTION
@@ -289,13 +336,12 @@ enum return_status SetBigBlind(void * table_ptr, float64 money);
 C_DLL_FUNCTION
 enum return_status SetSmallBlind(void * table_ptr, float64 money);
 
-///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
-///The function returns a playerNumber to identify this player in your code
+///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER
 C_DLL_FUNCTION
-int8 AddHumanOpponent(void * table_ptr, char * playerName);
+struct return_player AddHumanOpponent(void * table_ptr, char * playerName);
 
 C_DLL_FUNCTION
-int8 AddStrategyBot(void * table_ptr, char *playerName, char botType);
+struct return_player AddStrategyBot(void * table_ptr, char *playerName, char botType);
 
 
 
