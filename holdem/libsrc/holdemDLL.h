@@ -114,6 +114,9 @@ enum return_status {
    SUCCESS,
    INPUT_CLEANED,
 
+//WARNING
+   UNRELIABLE_RESULT,
+
 //FAIL
    NULL_TABLE_PTR,
    NOT_IMPLEMENTED,
@@ -131,6 +134,14 @@ struct return_money
 	enum return_status error_code;
 }
 ;
+
+struct return_betting_result
+{
+	playernumber_t seat_number;
+	enum return_status error_code;
+}
+;
+
 
 struct return_event
 {
@@ -159,20 +170,20 @@ struct return_table
 
 ///Get the amount of money playerNumber has in front of him
 C_DLL_FUNCTION
-struct return_money GetMoney(void * table_ptr, int8 playerNumber);
+struct return_money GetMoney(void * table_ptr, playernumber_t);
 //TODO: If the player is all in, make sure this returns the correct value
 
 
 
 //Override the amount of money playerNumber has in front of him
 C_DLL_FUNCTION
-enum return_status SetMoney(void * table_ptr, int8 playerNumber, float64 money);
+enum return_status SetMoney(void * table_ptr, playernumber_t, float64);
 
 
 
 ///Get the amount of money playerNumber has bet so far this round
 C_DLL_FUNCTION
-struct return_money GetCurrentBet(void * table_ptr, int8 playerNumber);
+struct return_money GetCurrentBet(void * table_ptr, playernumber_t);
 ///TODO: If the player is all in, make sure this returns the correct value
 
 
@@ -186,19 +197,6 @@ struct return_money GetPotSize(void * table_ptr);
 C_DLL_FUNCTION
 struct return_money GetPrevRoundsPotsize(void * table_ptr);
 
-
-///Get the size of the highest bet so far
-C_DLL_FUNCTION
-struct return_money GetBetToCall(void * table_ptr);
-
-///Get the size of the highest bet so far
-C_DLL_FUNCTION
-struct return_money GetBetToCall(void * table_ptr);
-
-//Get the playerNumber of the player who's turn it is
-C_DLL_FUNCTION int8 WhoIsNext_Betting(void * table_ptr);
-
-C_DLL_FUNCTION int8 WhoIsNext_Showdown(void * table_ptr);
 
 /*****************************************************************************
 	Betting round accessors
@@ -259,38 +257,47 @@ C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char car
 *****************************************************************************/
 
 
-
+//This function reports who made first high bet that was called
+//If nobody called the high bet, then you will get -1 here.
+//Use this result to determine who is going to act first in the showdown.
+C_DLL_FUNCTION struct return_betting_result DeleteFinishBettingRound(void * event_ptr, struct holdem_cardset community );
 
 
 ///Call this when the betting begins
 C_DLL_FUNCTION enum return_status StartBetting(void * table_ptr, struct holdem_cardset community );
 
 ///Call these functions when playerNumber Raises, Folds, or Calls
-C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, playernumber_t playerNumber);
 
-C_DLL_FUNCTION enum return_status PlayerFolds(void * table_ptr, int8 playerNumber);
-
-C_DLL_FUNCTION enum return_status PlayerRaisesTo(void * table_ptr, int8 playerNumber, float64 amount);
-
-C_DLL_FUNCTION enum return_status PlayerRaisesBy(void * table_ptr, int8 playerNumber, float64 amount);
-///Question: If a player doesn't call any of these, which is the default action?
 
 
 ///GetBetAmount is useful for asking a bot what to bet
-C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, struct holdem_player player);
 
 
+
+
+///Get the size of the highest bet so far
+C_DLL_FUNCTION
+struct return_money GetBetToCall(void * table_ptr);
+
+
+
+//Get the playerNumber of the player who's turn it is
+C_DLL_FUNCTION struct return_betting_result WhoIsNext_Betting(void * event_ptr);
+
+C_DLL_FUNCTION struct return_betting_result WhoIsNext_Showdown(void * event_ptr);
 
 ///Call this when (if) the showdown begins
 C_DLL_FUNCTION enum return_status StartShowdown(void * table_ptr);
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
-C_DLL_FUNCTION enum return_status PlayerShowsCard(void * table_ptr, int8 playerNumber, char cardValue, char cardSuit);
+C_DLL_FUNCTION enum return_status PlayerShowsCard(void * table_ptr, playernumber_t playerNumber, char cardValue, char cardSuit);
 
 ///Call this when playerNumber mucks his/her hand during the showdown.
 ///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
-C_DLL_FUNCTION enum return_status PlayerMucksHand(void * table_ptr, int8 playerNumber);
+C_DLL_FUNCTION enum return_status PlayerMucksHand(void * table_ptr, playernumber_t playerNumber);
 
 
 
@@ -309,10 +316,7 @@ C_DLL_FUNCTION enum return_status StartDealNewHands(void * table_ptr);
 
 /*****************************************************************************
 	BEGIN
-	Initial setup functions
-
-Note: SetBigBlind() and SetSmallBlind() can be called between
-hands anytime the blind size changes during the game
+	Initial setup and final destructor functions
 *****************************************************************************/
 C_DLL_FUNCTION
 struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination);
@@ -320,30 +324,17 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 C_DLL_FUNCTION
 enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete);
 
-///Choose playerNumber to be the dealer for the first hand
-C_DLL_FUNCTION
-enum return_status InitChooseDealer(void * table_ptr, int8 playerNumber);
 
-///Set the amount of money that the SMALLEST chip is worth
-C_DLL_FUNCTION
-enum return_status InitSmallestChipSize(void * table_ptr, float64 money);
+///Add a player/bot to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER
+//The first player added to the table (seat #0) will have the button in the first hand
+C_DLL_FUNCTION struct return_player CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money);
+C_DLL_FUNCTION struct return_player CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType);
 
-///Call this when the big blind has changed
-C_DLL_FUNCTION
-enum return_status SetBigBlind(void * table_ptr, float64 money);
 
-///Call this when the small blind has changed
-C_DLL_FUNCTION
-enum return_status SetSmallBlind(void * table_ptr, float64 money);
-
-///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER
-C_DLL_FUNCTION
-struct return_player AddHumanOpponent(void * table_ptr, char * playerName);
-
-///Add a bot to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
-C_DLL_FUNCTION
-struct return_player AddStrategyBot(void * table_ptr, char *playerName, char botType);
-
+/*****************************************************************************
+	Initial setup and final destructor functions
+	END
+*****************************************************************************/
 
 
 

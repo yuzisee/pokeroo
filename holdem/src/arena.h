@@ -63,7 +63,6 @@ class Player
 	friend class HoldemArena;
 
 	private:
-		static const int16 NAMECHARS = 40;
 		PlayerStrategy* myStrat;
 		string myName;
 
@@ -102,8 +101,6 @@ class Player
 
 		float64 GetLastBet() const
 		{	return lastBetSize;	}
-
-
 }
 ;
 
@@ -446,15 +443,15 @@ class HoldemArenaEventBase
     HoldemArena * myTable;
     std::ostream& gamelog;
 
-    int8 & curHighBlind;
+    playernumber_t & curHighBlind;
     float64 & highBet;
     float64 & lastRaise;
     float64 & forcedBetSum;
     float64 & blindOnlySum;
-    int8 & playersInHand;
-    int8 & playersAllIn;
-    int8 & curIndex;
-    int8 & curDealer;
+    playernumber_t & playersInHand;
+    playernumber_t & playersAllIn;
+    const playernumber_t & curDealer;
+	playernumber_t & curIndex;
     float64 & myPot;
     float64 & myFoldedPot;
     float64 & prevRoundFoldedPot;
@@ -487,17 +484,19 @@ class HoldemArenaEventBase
     void prepareRound(const CommunityPlus & community, const int8 comSize){ myTable->prepareRound(community, comSize); };
 
 
-    int8 GetTotalPlayers() const { return myTable->GetTotalPlayers(); }
-    int8 GetNumberInHand() const { return myTable->NumberInHand(); }
+    playernumber_t GetTotalPlayers() const { return myTable->GetTotalPlayers(); }
+    playernumber_t GetNumberInHand() const { return myTable->NumberInHand(); }
 
     public:
+	
+		const playernumber_t WhoIsNext(){ return curIndex; }
 
     HoldemArenaEventBase(HoldemArena * table) : myTable(table)
     , gamelog(myTable->gamelog)
     , curHighBlind(table->curHighBlind)
     , highBet(table->highBet), lastRaise(table->lastRaise), forcedBetSum(myTable->forcedBetSum), blindOnlySum(myTable->blindOnlySum)
     , playersInHand(table->playersInHand),playersAllIn(table->playersAllIn)
-    , curIndex(table->curIndex), curDealer(table->curDealer)
+	, curIndex(table->curIndex) , curDealer(table->curDealer)
     , myPot(table->myPot), myFoldedPot(table->myFoldedPot), prevRoundFoldedPot(table->prevRoundFoldedPot), myBetSum(table->myBetSum), p(table->p)
     , bVerbose(table->bVerbose), randRem(table->randRem)
     {

@@ -294,12 +294,12 @@ HoldemArena::~HoldemArena()
 	//delete [] p;
 }
 
-int8 HoldemArena::GetCurPlayer() const
+playernumber_t HoldemArena::GetCurPlayer() const
 {
 	return curIndex;
 }
 
-int8 HoldemArena::GetDealer() const
+playernumber_t HoldemArena::GetDealer() const
 {
     return curDealer;
 }
@@ -309,25 +309,25 @@ float64 HoldemArena::GetAllChips() const
 	return allChips;
 }
 
-int8 HoldemArena::NumberAtRound() const
+playernumber_t HoldemArena::NumberAtRound() const
 {
 	return roundPlayers;
 }
 
 
-int8 HoldemArena::NumberInHand() const
+playernumber_t HoldemArena::NumberInHand() const
 {
 	return playersInHand;
 }
 
 ///Number "remaining" at table
-int8 HoldemArena::NumberAtTable() const
+playernumber_t HoldemArena::NumberAtTable() const
 {
 	return livePlayers;
 }
 
 
-int8 HoldemArena::GetTotalPlayers() const
+playernumber_t HoldemArena::GetTotalPlayers() const
 {
 	return nextNewPlayer;
 }

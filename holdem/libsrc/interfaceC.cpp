@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by Joseph Huang                                    *
+ *   Copyright (C) 2008 by Joseph Huang                                    *
  *                                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -31,9 +31,11 @@ typedef PositionalStrategy * stratPtr;
 
 
 struct return_money DEFAULT_RETURN_MONEY = { 0.0 , SUCCESS };
+struct return_betting_result DEFAULT_RETURN_BETTING_RESULT = { -1, SUCCESS };
 struct return_event DEFAULT_RETURN_EVENT = { 0 , SUCCESS };
 struct return_player DEFAULT_RETURN_PLAYER = { {0,0,-1} , SUCCESS };
 struct return_table DEFAULT_RETURN_TABLE = { {0,0,-1} , SUCCESS };
+
 
 
 /*****************************************************************************
@@ -44,7 +46,7 @@ struct return_table DEFAULT_RETURN_TABLE = { {0,0,-1} , SUCCESS };
 
 ///Get the amount of money playerNumber has in front of him
 C_DLL_FUNCTION
-struct return_money GetMoney(void * table_ptr, int8 playerNumber)
+struct return_money GetMoney(void * table_ptr, playernumber_t playerNumber)
 {
 	struct return_money retval = DEFAULT_RETURN_MONEY;
 
@@ -86,7 +88,7 @@ struct return_money GetMoney(void * table_ptr, int8 playerNumber)
 
 //Override the amount of money playerNumber has in front of him
 C_DLL_FUNCTION
-enum return_status SetMoney(void * table_ptr, int8 playerNumber, float64 money)
+enum return_status SetMoney(void * table_ptr, playernumber_t playerNumber, float64 money)
 {
 	enum return_status error_code = SUCCESS;
 
@@ -115,7 +117,7 @@ enum return_status SetMoney(void * table_ptr, int8 playerNumber, float64 money)
 				error_code = INPUT_CLEANED;
 			}
 
-			if( myTable->OverridePlayerMoney(playerNumber,newMoney) )
+			if( ! myTable->OverridePlayerMoney(playerNumber,newMoney) )
 			{
 				error_code = INTERNAL_INCONSISTENCY;
 			}
@@ -129,7 +131,7 @@ enum return_status SetMoney(void * table_ptr, int8 playerNumber, float64 money)
 
 ///Get the amount of money playerNumber has bet so far this round
 C_DLL_FUNCTION
-struct return_money GetCurrentBet(void * table_ptr, int8 playerNumber)
+struct return_money GetCurrentBet(void * table_ptr, playernumber_t playerNumber)
 {
 
 }
@@ -197,8 +199,6 @@ struct return_money GetBetToCall(void * table_ptr)
 }
 
 
-//Get the playerNumber of the player who's turn it is
-int8 WhoIsNext(void * table_ptr);
 
 /*****************************************************************************
 	Betting round accessors
@@ -307,14 +307,15 @@ enum return_status DeleteCardset(struct holdem_cardset c)
 
 /*****************************************************************************
 	BEGIN
-	Event functions
+	Betting round functions
 *****************************************************************************/
 
 
 
 
-///Call this when the betting begins
-C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community )
+///Call this when betting begins
+C_DLL_FUNCTION
+struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community )
 {
 	struct return_event retval = DEFAULT_RETURN_EVENT;
 
@@ -331,6 +332,141 @@ C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struc
 		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(community.cards_ptr);
 
 		HoldemArenaBetting * bettingEvent = new HoldemArenaBetting( myTable, *myHand, community.card_count );
+	}
+
+	return retval;
+}
+
+
+C_DLL_FUNCTION
+struct return_betting_result DeleteFinishBettingRound(void * event_ptr, struct holdem_cardset community )
+{
+	struct return_betting_result retval = DEFAULT_RETURN_BETTING_RESULT;
+
+	if( !event_ptr )
+	{
+		retval.error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArenaBetting * bettingEvent = reinterpret_cast<HoldemArenaBetting *>(event_ptr);
+
+		retval.seat_number = bettingEvent->playerCalled;
+
+		//If we're in the middle of a betting round that hasn't concluded,
+		// we will report an error but still delete bettingEvent anyways.
+		//It's possible that the user could be quitting the program and needs
+		// to delete things in the middle of a betting round.
+		if( bettingEvent->bBetState == 'b' ) retval.error_code = UNRELIABLE_RESULT;
+
+		//The 'F' state reports that everybody folded to one player.
+		//Make sure that this is a consistent result.
+		if( bettingEvent->bBetState == 'F' && retval.seat_number != -1 )
+		{
+			retval.error_code = INTERNAL_INCONSISTENCY;
+		}
+
+		//The 'C' state reports that someone called the high bet.
+		//Make sure that this is a consistent result.
+		if( bettingEvent->bBetState == 'C' && retval.seat_number == -1 )
+		{
+			retval.error_code = INTERNAL_INCONSISTENCY;
+		}
+
+		delete bettingEvent;
+	}
+
+	return retval;
+}
+
+
+
+//Get the seat of the player who's turn it is
+C_DLL_FUNCTION
+struct return_betting_result WhoIsNext_Betting(void * event_ptr)
+{
+	struct return_betting_result retval = DEFAULT_RETURN_BETTING_RESULT;
+
+	if( !event_ptr )
+	{
+		retval.error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArenaBetting * bettingEvent = reinterpret_cast<HoldemArenaBetting *>(event_ptr);
+
+		if( bettingEvent->bBetState != 'b' ) //if the round has already finished,
+		{
+			retval.error_code = NOT_IMPLEMENTED; 
+		}else
+		{
+			retval.seat_number = bettingEvent->WhoIsNext();
+		}
+	}
+
+	return retval;
+}
+
+
+///Call these functions when playerNumber Raises, Folds, or Calls
+C_DLL_FUNCTION
+enum return_status PlayerMakesBetTo(void * event_ptr, playernumber_t playerNumber, float64 money)
+{
+
+	enum return_status error_code = SUCCESS;
+
+	if( !event_ptr )
+	{
+		error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArenaBetting * bettingEvent = reinterpret_cast<HoldemArenaBetting *>(event_ptr);
+
+		if( bettingEvent->bBetState != 'b' ) //if the round has already finished,
+		{
+			error_code = NOT_IMPLEMENTED;
+		}else if( bettingEvent->WhoIsNext() != playerNumber )
+		{
+			error_code = PARAMETER_INVALID;
+		}else
+		{
+			bettingEvent->MakeBet(money);
+		}
+	}
+
+	return error_code;
+	
+}
+
+//p[curIndex]->myStrat->MakeBet()
+
+///GetBetAmount is useful for asking a bot what to bet
+C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, struct holdem_player player)
+{
+	struct return_money retval = DEFAULT_RETURN_MONEY;
+
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else if( player.seat_number == -1 )
+	{
+		retval.error_code = PARAMETER_INVALID;
+	}else if( !player.pstrat_ptr )
+	{
+		retval.error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		PlayerStrategy * pStrat = reinterpret_cast<PlayerStrategy *>(player.pstrat_ptr);
+
+		//If you're asking a bot what it would bet even though there are
+		// players ahead of it that haven't bet yet.
+		//I don't know if the more complicated bots can handle being out of turn.
+		if( myTable->GetCurPlayer() != player.seat_number )
+		{
+			retval.error_code = UNRELIABLE_RESULT;
+		}
+
+		retval.money = pStrat->MakeBet();
 
 	}
 
@@ -338,69 +474,26 @@ C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struc
 }
 
 
-/*
-    while(b.bBetState == 'b')
-    {
-        b.MakeBet(p[curIndex]->myStrat->MakeBet());
-    }
-
-    return b.playerCalled;
-*/
-
-///Call these functions when playerNumber Raises, Folds, or Calls
-C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, int8 playerNumber)
-{
-	/*
-	enum return_status error_code = SUCCESS;
-
-	if( !table_ptr )
-	{
-		error_code = NULL_TABLE_PTR;
-	}else
-	{
-		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
-
-		const Player * ptrP = myTable->ViewPlayer(curIndex);
-
-		if( !ptrP )
-		{
-			error_code = PARAMETER_DATA_ERROR;
-		}else
-		{
-			const Player & withP = *ptrP;
-
-			float64 accountedFor = withP.GetBetSize();
-			float64 newMoney = money - accountedFor;
-	
-			if( newMoney < 0 )
-			{
-				newMoney = 0.0;
-				error_code = INPUT_CLEANED;
-			}
-
-			if( myTable->OverridePlayerMoney(playerNumber,newMoney) )
-			{
-				error_code = INTERNAL_INCONSISTENCY;
-			}
-		}
-	}
-
-	return error_code;
-	*/
-}
-C_DLL_FUNCTION enum return_status PlayerFolds(void * table_ptr, int8 playerNumber);
-C_DLL_FUNCTION enum return_status PlayerRaisesTo(void * table_ptr, int8 playerNumber, float64 amount);
-C_DLL_FUNCTION enum return_status PlayerRaisesBy(void * table_ptr, int8 playerNumber, float64 amount);
-///Question: If a player doesn't call any of these, which is the default action?
+/*****************************************************************************
+	Betting round functions
+	END
+*****************************************************************************/
 
 
-///GetBetAmount is useful for asking a bot what to bet
-C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, int8 playerNumber);
+
+
+/*****************************************************************************
+	BEGIN
+	Showdown functions
+*****************************************************************************/
 
 
 
 ///Call this when (if) the showdown begins
 C_DLL_FUNCTION enum return_status StartShowdown(void * table_ptr);
+
+//Get the playerNumber of the player who's turn it is
+C_DLL_FUNCTION struct return_betting_result WhoIsNext_Showdown(void * event_ptr);
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
@@ -411,14 +504,29 @@ C_DLL_FUNCTION enum return_status PlayerShowsCard(void * table_ptr, int8 playerN
 C_DLL_FUNCTION enum return_status PlayerMucksHand(void * table_ptr, int8 playerNumber);
 
 
+/*****************************************************************************
+	Showdown functions
+	END
+*****************************************************************************/
+
+
+
+
+/*****************************************************************************
+	BEGIN	
+	Flow control functions
+*****************************************************************************/
+
 
 
 
 ///Call this when new hands are dealt
 C_DLL_FUNCTION enum return_status StartDealNewHands(void * table_ptr);
 
+
+
 /*****************************************************************************
-	Event functions
+	Flow control functions
 	END
 *****************************************************************************/
 
@@ -427,10 +535,7 @@ C_DLL_FUNCTION enum return_status StartDealNewHands(void * table_ptr);
 
 /*****************************************************************************
 	BEGIN
-	Initial setup functions
-
-Note: SetBigBlind() and SetSmallBlind() can be called between
-hands anytime the blind size changes during the game
+	Initial setup and final destructor functions
 *****************************************************************************/
 
 
@@ -465,38 +570,8 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 }
 
 
-
-///Choose playerNumber to be the dealer for the first hand
-C_DLL_FUNCTION 
-enum return_status InitChooseDealer(void * table_ptr, int8 playerNumber)
-{
-    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
-}
-
-///Set the amount of money that the SMALLEST chip is worth
-C_DLL_FUNCTION 
-enum return_status InitSmallestChipSize(void * table_ptr, float64 money)
-{
-    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
-}
-
-///Call this when the big blind has changed
 C_DLL_FUNCTION
-enum return_status SetBigBlind(void * table_ptr, float64 money)
-{
-    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
-}
-
-///Call this when the small blind has changed
-C_DLL_FUNCTION enum 
-return_status SetSmallBlind(void * table_ptr, float64 money)
-{
-    HoldemArena * table = reinterpret_cast<HoldemArena *>(table_ptr);
-}
-
-
-C_DLL_FUNCTION
-struct holdem_player CreateNewHumanOpponent(void * table_ptr, char * playerName, float64 money)
+struct return_player CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money)
 {
 	//A human opponent is treated the same as a bot, except it has no strat (and therefore no children)
 	struct return_player retval = DEFAULT_RETURN_PLAYER;
@@ -712,7 +787,7 @@ enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete)
 }
 
 /*****************************************************************************
-	Initial setup functions
+	Initial setup and final destructor functions
 	END
 *****************************************************************************/
 
