@@ -169,6 +169,15 @@ struct return_table
 //   List your functions
 //=========================
 
+
+
+/*****************************************************************************
+	BEGIN
+	Betting round functions
+*****************************************************************************/
+
+
+
 ///Get the amount of money playerNumber has in front of him
 C_DLL_FUNCTION
 struct return_money GetMoney(void * table_ptr, playernumber_t);
@@ -201,11 +210,30 @@ struct return_money GetPrevRoundsPotsize(void * table_ptr);
 
 
 /*****************************************************************************
-	Betting round accessors
+	Betting round functions
 	END
 *****************************************************************************/
 
 
+
+
+/*****************************************************************************
+	BEGIN	
+	Flow control functions
+*****************************************************************************/
+
+
+
+C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * table_ptr)
+C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr)
+
+
+
+
+/*****************************************************************************
+	Flow control functions
+	END
+*****************************************************************************/
 
 
 
@@ -246,6 +274,8 @@ C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
 C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
 
+C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
+
 /*****************************************************************************
 	END
 	Card functions
@@ -258,6 +288,8 @@ C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char car
 	Event functions
 *****************************************************************************/
 
+C_DLL_FUNCTION
+struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community );
 
 //This function reports who made first high bet that was called
 //If nobody called the high bet, then you will get -1 here.
@@ -266,11 +298,8 @@ C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char car
 C_DLL_FUNCTION struct return_seat DeleteFinishBettingRound(void * event_ptr);
 
 
-///Call this when the betting begins
-C_DLL_FUNCTION enum return_status StartBetting(void * table_ptr, struct holdem_cardset community );
-
-///Call these functions when playerNumber Raises, Folds, or Calls
-C_DLL_FUNCTION enum return_status PlayerCalls(void * table_ptr, playernumber_t playerNumber);
+///Call this function when playerNumber Raises, Folds, or Calls
+C_DLL_FUNCTION enum return_status PlayerMakesBetTo(void * event_ptr, playernumber_t playerNumber, float64 money);
 
 
 
@@ -300,12 +329,9 @@ C_DLL_FUNCTION enum return_status PlayerShowsCard(void * event_ptr, playernumber
 ///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
 C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber);
 
+C_DLL_FUNCTION struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer);
+C_DLL_FUNCTION enum return_status DeleteFinishShowdown(void * event_ptr );
 
-
-
-
-///Call this when new hands are dealt
-C_DLL_FUNCTION enum return_status StartDealNewHands(void * table_ptr);
 
 /*****************************************************************************
 	Event functions

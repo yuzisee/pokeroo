@@ -42,7 +42,7 @@ int16 numericValue;
                     #ifdef DEBUASSERT
                     if( botType != pTypes[i] )
                     {
-                        std::cerr << "Manually added players need to match saved player types!";
+                        std::cerr << "Players added manually must match their saved player types!";
                         exit(1);
                     }
                     #endif

@@ -274,6 +274,28 @@ struct return_money GetBetToCall(void * table_ptr)
 
 
 
+
+/*****************************************************************************
+	BEGIN	
+	Flow control functions
+*****************************************************************************/
+
+
+
+
+///Call this when new hands are dealt
+C_DLL_FUNCTION enum return_status StartDealNewHands(void * table_ptr);
+
+
+
+/*****************************************************************************
+	Flow control functions
+	END
+*****************************************************************************/
+
+
+
+
 /*****************************************************************************
 	BEGIN
 	Card functions
@@ -557,7 +579,7 @@ C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, playernumber
 
 
 
-///Call this when betting begins
+///Call this when the showdown begins
 C_DLL_FUNCTION
 struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer)
 {
@@ -634,7 +656,7 @@ struct return_seat WhoIsNext_Showdown(void * event_ptr)
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
-C_DLL_FUNCTION enum return_status PlayerShowsHand(void * event_ptr, int8 playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community)
+C_DLL_FUNCTION enum return_status PlayerShowsHand(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community)
 {
 	enum return_status error_code = SUCCESS;
 
@@ -668,7 +690,7 @@ C_DLL_FUNCTION enum return_status PlayerShowsHand(void * event_ptr, int8 playerN
 
 ///Call this when playerNumber mucks his/her hand during the showdown.
 ///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
-C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, int8 playerNumber)
+C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber)
 {
 	enum return_status error_code = SUCCESS;
 
@@ -699,28 +721,6 @@ C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, int8 playerN
 	Showdown functions
 	END
 *****************************************************************************/
-
-
-
-
-/*****************************************************************************
-	BEGIN	
-	Flow control functions
-*****************************************************************************/
-
-
-
-
-///Call this when new hands are dealt
-C_DLL_FUNCTION enum return_status StartDealNewHands(void * table_ptr);
-
-
-
-/*****************************************************************************
-	Flow control functions
-	END
-*****************************************************************************/
-
 
 
 
@@ -756,6 +756,62 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 }
 
 
+//Serializes the table state into a single string.
+//Actions performed during betting events and showdown events will not be saved properly.
+C_DLL_FUNCTION
+enum return_status SaveTableState(char * state_str, void * table_ptr)
+{
+	//A human opponent is treated the same as a bot, except it has no strat (and therefore no children)
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else if( !state_str )
+	{
+		error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		std::ostringstream strBufState;
+
+		myTable->SerializeRoundStart(strBufState);
+
+		strcpy( state_str , strBufState.str().c_str() );
+	}
+
+	return error_code;
+}
+
+
+//Unserializes the table state from a single string.
+//Players and PlayerStrategies will be automatically added back into their correct seats.
+//Actions performed during betting events and showdown events will not be restored properly.
+C_DLL_FUNCTION
+enum return_status RestoreTableState(char * state_str, void * table_ptr)
+{
+	//A human opponent is treated the same as a bot, except it has no strat (and therefore no children)
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else if( !state_str )
+	{
+		error_code = PARAMETER_DATA_ERROR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		std::string strState(state_str);
+		std::istringstream strBufState(strState);
+
+		myTable->UnserializeRoundStart(strBufState);
+	}
+
+	return error_code;
+}
 
 
 C_DLL_FUNCTION
