@@ -39,7 +39,13 @@ int16 numericValue;
 
                 if( botType == '~' )
                 {
-                    p[i]->myMoney = pMoney;
+                    #ifdef DEBUASSERT
+                    if( botType != pTypes[i] )
+                    {
+                        std::cerr << "Manually added players need to match saved player types!";
+                        exit(1);
+                    }
+                    #endif
                     if( pMoney <= 0 ){
                         --livePlayers;
                         p[i]->myMoney = -1;
@@ -87,7 +93,7 @@ void HoldemArena::SerializeRoundStart(std::ostream & fileSaveState)
     for( int8 i=0;i<nextNewPlayer;++i )
     {
         float64 pMoney =  p[i]->myMoney;
-        if( pMoney < 0 ) pMoney = 0;
+        if( pMoney < 0 ) pMoney = -1; //When Unserializing money less than 0, it is set to -1 already. To assist the AddPlayer function, we do that here.
         HoldemUtil::WriteFloat64( fileSaveState, pMoney );
         fileSaveState << pTypes[i];
         fileSaveState << "_" << p[i]->GetIdent() <<  endl;

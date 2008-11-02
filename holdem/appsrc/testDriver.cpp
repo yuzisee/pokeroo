@@ -28,6 +28,7 @@
 #include "../src/functionmodel.h"
 #include "../src/aiInformation.h"
 
+#include <ctime>
 #include <algorithm>
 #include <string.h>
 //#include <direct.h>
