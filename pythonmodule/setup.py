@@ -15,7 +15,7 @@ if (linkstatically and linkdynamically) or (not linkstatically and not linkdynam
 	raise Exception,  "Link dynamically or statically?? Choose only one please"
 
 packagename = 'Holdem'
-extensionname = 'Holdem._holdem'
+extensionname = '_holdem'
 sourcefiles = ['holdemmodule.c']
 
 # What OS am I? http://docs.python.org/library/sys.html#sys.platform
@@ -42,9 +42,11 @@ else:
 	
 #Possible options to Extension contstructor: http://docs.python.org/distutils/apiref.html?highlight=extension#distutils.core.Extension
 
-import os
-import shutil
-shutil.copy ('../holdem/holdemdll/Release/holdemDLL.dll', './holdemDLL.dll')
+
+#http://docs.python.org/distutils/setupscript.html?highlight=data_files#installing-additional-files
+#import os
+#import shutil
+#shutil.copy ('../holdem/holdemdll/Release/holdemDLL.dll', 'DLLs/holdemDLL.dll')
 					
 #Building in Windows: http://boodebr.org/main/python/build-windows-extensions
 
@@ -54,8 +56,8 @@ setup(name=packagename,
       author='Joseph Huang',
       author_email='yuzisee@gmail.com',
       url='http://opensvn.csie.org/traccgi/Yuzisee/holdemmodule',
-	  data_files = ['holdemDLL.dll'],
-	  py_modules = ['holdem'],
+	  data_files = [('.',['../holdem/holdemdll/Release/holdemDLL.dll'])],
+#	  py_modules = ['holdem'],
       ext_modules = [module1])
 
 	  
