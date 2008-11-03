@@ -4,7 +4,7 @@
 from distutils.core import setup, Extension
 import sys
 
-#Choose
+#Choose (getting MinGW and VCC to work together via DLLs, do we need this? http://www.mingw.org/phpwiki-1.3.14/index.php/MSVC-MinGW-DLL)
 linkstatically = False
 linkdynamically = True
 
@@ -18,11 +18,10 @@ sourcefiles = ['holdemmodule.c']
 if sys.platform[:3] == 'win':
     #But we'll use MinGW anyways.
     if linkstatically:
-        module1 = Extension('holdem',
-                    extra_objects = ['../holdem/holdemdll/Release/holdemDLL.dll'],
-                    sources = sourcefiles)
+        raise Exception,  "Not sure where the VC++ static objects are yet"
     elif linkdynamically:
         module1 = Extension('holdem',
+#                    extra_objects = ['../holdem/holdemdll/Release/holdemDLL.dll'],  # MinGW is smart enough to figure this out
                     extra_objects = ['../holdem/holdemdll/Release/holdemDLL.lib'],
                     sources = sourcefiles)
 else:
