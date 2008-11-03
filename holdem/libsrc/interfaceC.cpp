@@ -553,6 +553,8 @@ struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardse
 
 		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(community.cards_ptr);
 
+		myTable->PrepBettingRound(community.card_count);
+
 		HoldemArenaBetting * bettingEvent = new HoldemArenaBetting( myTable, *myHand, community.card_count );
 	}
 
@@ -714,16 +716,23 @@ C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, playernumber
 
 ///Call this when the showdown begins
 C_DLL_FUNCTION
-struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer)
+struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer, struct holdem_cardset final_community)
 {
 	struct return_event retval = DEFAULT_RETURN_EVENT;
 
 	if( !table_ptr )
 	{
 		retval.error_code = NULL_TABLE_PTR;
+	}else if( !final_community.cards_ptr )
+	{
+		retval.error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
 		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		CommunityPlus * myCommunity = reinterpret_cast<CommunityPlus *>(final_community.cards_ptr);
+
+		myTable->PrepShowdownRound(*myCommunity);
 
 		HoldemArenaShowdown * bettingEvent = new HoldemArenaShowdown( myTable, calledPlayer );
 	}
@@ -734,15 +743,20 @@ struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPla
 
 
 C_DLL_FUNCTION
-enum return_status DeleteFinishShowdown(void * event_ptr )
+enum return_status DeleteFinishShowdown(void * table_ptr, void * event_ptr)
 {
 	enum return_status error_code = SUCCESS;
 
-	if( !event_ptr )
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else if( !event_ptr )
 	{
 		error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
 		HoldemArenaShowdown * showdownEvent = reinterpret_cast<HoldemArenaShowdown *>(event_ptr);
 
 		//If we're in the middle of a showdown that hasn't concluded,
@@ -750,6 +764,8 @@ enum return_status DeleteFinishShowdown(void * event_ptr )
 		//It's possible that the user could be quitting the program and needs
 		// to delete things in the middle of a betting round.
 		if( showdownEvent->bRoundState != '!' ) error_code = UNRELIABLE_RESULT;
+
+		myTable->ProcessShowdownResults(showdownEvent->winners);
 
 		delete showdownEvent;
 	}

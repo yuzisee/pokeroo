@@ -214,9 +214,6 @@ struct return_money GetPrevRoundsPotsize(void * table_ptr);
 	END
 *****************************************************************************/
 
-
-
-
 /*****************************************************************************
 	BEGIN	
 	Flow control functions
@@ -224,10 +221,34 @@ struct return_money GetPrevRoundsPotsize(void * table_ptr);
 
 /*
 
-1. Restore or InitializeNew the TableState
-2. -----
+1. Create a New Table
+2. Add Players and InitializeNew the TableState, or RestoreTableState
+3. -----
 	2.1 BeginNewHand
-	2.2 ShowHoleCards to all bots which need to know their hand
+	2.2 ShowHoleCards to all bots who need to know their hand
+	2.3 If you would like to use the deterministic random seed generator, reset it here: ResetDeterministicSeed().
+	2.4 -----
+		 2.4.1a CreateNewCardset() a blank hand to represent the pre-flop and CreateNewBettingRound() with it
+		 2.4.1b Make bets for WhoIsNext_Betting() with PlayerMakesBetTo(), while querying your bots through GetBetDecision()
+		 2.4.1c DeleteFinishBettingRound() and it will report if the high bet was called.
+
+		 2.4.2a If the preflop high bet was called, AppendCard() your flop to the holdem_cardset and then CreateNewBettingRound() with it
+		 2.4.2b Make bets ...
+		 2.4.2c DeleteFinishBettingRound() ...
+
+		 2.4.3 ... If the postflop high-bet was called, play the Turn ... and it will report if the high bet is called.
+
+		 2.4.4 ... If the high-bet was called after the turn, play the River ... and it will report if the high bet is called.
+
+		 2.4.5a If the high-bet was called after the river, CreateNewShowdown()
+		 2.4.5b Each WhoIsNext_Showdown can PlayerShowsHand() or PlayerMucksHand()
+		 2.4.5c DeleteFinishShowdown() will calculate side pots and move money from the pot to the winners. Compare GetMoney() before and after to determine winners.
+
+	2.5 Call FinishHandRefreshPlayers() to complete any final bookkeeping that needs to take place to prepare data structures for the next hand
+	2.6 Here is a good time to shuffle the deck. Retrieve a deterministic seed with GetDeterministicSeed() if you would like.
+	2.7 If you would like to save the game, now is the best time to do so. Call SaveTableState()
+	2.8 [Go back to step 2.1]
+
 */
 
 
@@ -238,6 +259,35 @@ C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallB
 C_DLL_FUNCTION enum return_status ShowHoleCards(void * table_ptr, playernumber_t , struct holdem_cardset );
 
 C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr);
+
+
+
+
+/*
+Reference PlayGameInner is:
+	if( my.PlayRound_BeginHand() == -1 ) return;
+
+	CommunityPlus myFlop;
+	my.RequestCards(tableDealer,3,myFlop, "Please enter the flop (no whitespace): ");
+    if( my.PlayRound_Flop(myFlop) == -1 ) return;
+
+
+	DeckLocation myTurn = my.RequestCard(tableDealer);
+    if( my.PlayRound_Turn(myFlop,myTurn) == -1 ) return;
+
+	DeckLocation myRiver = my.RequestCard(tableDealer);
+    int8 playerToReveal = my.PlayRound_River(myFlop,myTurn,myRiver);
+    if( playerToReveal == -1 ) return;
+
+
+	CommunityPlus finalCommunity;
+	finalCommunity.SetUnique(myFlop);
+	finalCommunity.AddToHand(myTurn);
+	finalCommunity.AddToHand(myRiver);
+
+
+	my.PlayShowdown(finalCommunity,playerToReveal);
+*/
 
 
 /*****************************************************************************
@@ -339,8 +389,8 @@ C_DLL_FUNCTION enum return_status PlayerShowsCard(void * event_ptr, playernumber
 ///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
 C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber);
 
-C_DLL_FUNCTION struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer);
-C_DLL_FUNCTION enum return_status DeleteFinishShowdown(void * event_ptr );
+C_DLL_FUNCTION struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer, struct holdem_cardset final_community);
+C_DLL_FUNCTION enum return_status DeleteFinishShowdown(void * table_ptr, void * event_ptr);
 
 
 /*****************************************************************************
