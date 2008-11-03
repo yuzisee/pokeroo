@@ -317,11 +317,44 @@ static PyMethodDef HoldemMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
+/*
+C_DLL_FUNCTION struct return_money GetMoney(void * table_ptr, playernumber_t);
+C_DLL_FUNCTION enum return_status SetMoney(void * table_ptr, playernumber_t, float64);
+C_DLL_FUNCTION struct return_money GetCurrentRoundBet(void * table_ptr, playernumber_t playerNumber);
+C_DLL_FUNCTION struct return_money GetPrevRoundsBet(void * table_ptr, playernumber_t playerNumber);
+C_DLL_FUNCTION struct return_money GetPotSize(void * table_ptr);
+C_DLL_FUNCTION struct return_money GetPrevRoundsPotsize(void * table_ptr);
+C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * table_ptr);
+C_DLL_FUNCTION enum return_status InitializeNewTableState(void * table_ptr);
+C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind);
+C_DLL_FUNCTION enum return_status ShowHoleCards(void * table_ptr, playernumber_t , struct holdem_cardset );
+C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr);
+C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
+C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
+C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
+C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community );
+C_DLL_FUNCTION struct return_seat DeleteFinishBettingRound(void * event_ptr);
+C_DLL_FUNCTION enum return_status PlayerMakesBetTo(void * event_ptr, playernumber_t playerNumber, float64 money);
+C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, playernumber_t playerNumber);
+C_DLL_FUNCTION struct return_money GetBetToCall(void * table_ptr);
+C_DLL_FUNCTION struct return_seat WhoIsNext_Betting(void * event_ptr);
+C_DLL_FUNCTION struct return_seat WhoIsNext_Showdown(void * event_ptr);
+C_DLL_FUNCTION enum return_status PlayerShowsCard(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community);
+C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber);
+C_DLL_FUNCTION struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer, struct holdem_cardset final_community);
+C_DLL_FUNCTION enum return_status DeleteFinishShowdown(void * table_ptr, void * event_ptr);
+C_DLL_FUNCTION struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination);
+C_DLL_FUNCTION enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete);
+C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money);
+C_DLL_FUNCTION struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType);
+
+*/
+
 
 PyMODINIT_FUNC
-initholdem(void)
+init_holdem(void)
 {
-    (void) Py_InitModule("holdem", HoldemMethods);
+    (void) Py_InitModule("_holdem", HoldemMethods);
 }
 
 /*****************************************************************************

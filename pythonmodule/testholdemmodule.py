@@ -10,7 +10,10 @@ userModulePath = os.path.expanduser('~/lib/python')
 #	python setup.py install --home=~
 import sys
 sys.path.append(userModulePath); #This helps Python find the extension in Linux
-
+#But the DLL search path is determined by Windows, not Python
+#Most recently,  http://msdn.microsoft.com/en-us/library/ms972822.aspx says:
+#"The default behavior now is to look in all the system locations first, then the current directory, and finally any user-defined paths."
+#The DLL will be local just be safe. This is a test script anyways.
 
 print "Ready?"
 print "SetMoney!",
@@ -18,16 +21,10 @@ print "SetMoney!",
 # http://www.python.org/doc/2.5.2/ext/dynamic-linking.html
 
 
-#Actually, DLL search path is determined by Windows, not Python
-#Most recently,  http://msdn.microsoft.com/en-us/library/ms972822.aspx says:
-#"The default behavior now is to look in all the system locations first, then the current directory, and finally any user-defined paths."
-#We'll copy the DLL just be safe. This is a test script anyways.
-import os
-import shutil
-shutil.copy ('../holdem/holdemDLL/Release/holdemDLL.dll', './holdemDLL.dll')
 
 
-from holdem import *
+
+from _holdem import *
 print SetMoney()
 
 # Printing strings: http://www.python.org/doc/2.5.2/tut/node9.html
