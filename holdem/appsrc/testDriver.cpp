@@ -160,6 +160,9 @@ static void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindCont
 		d->LogDeckState( allSaveState );
 		allSaveState << endl;
 	}
+
+    if( !allSaveState.is_open() ) std::cerr << handnumtxt << " not saved." << endl;
+
 	allSaveState.close();
 #endif
 
@@ -226,7 +229,7 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 	    struct BlindUpdate lastRoundBlinds = thisRoundBlinds;
         thisRoundBlinds = blindController.UpdateSituation( lastRoundBlinds , myBlindState(my) );
 
-		my.BeginNewHands(thisRoundBlinds);
+		my.BeginNewHands(thisRoundBlinds.b, thisRoundBlinds.bNew);
 
 
         my.DealAllHands(tableDealer);

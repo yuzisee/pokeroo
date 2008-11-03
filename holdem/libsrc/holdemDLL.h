@@ -179,15 +179,13 @@ struct return_table
 
 
 ///Get the amount of money playerNumber has in front of him
-C_DLL_FUNCTION
-struct return_money GetMoney(void * table_ptr, playernumber_t);
+C_DLL_FUNCTION struct return_money GetMoney(void * table_ptr, playernumber_t);
 
 
 
 
 //Override the amount of money playerNumber has in front of him
-C_DLL_FUNCTION
-enum return_status SetMoney(void * table_ptr, playernumber_t, float64);
+C_DLL_FUNCTION enum return_status SetMoney(void * table_ptr, playernumber_t, float64);
 
 
 
@@ -200,13 +198,11 @@ C_DLL_FUNCTION struct return_money GetPrevRoundsBet(void * table_ptr, playernumb
 
 
 ///Get the amount of money that is in the pot
-C_DLL_FUNCTION
-struct return_money GetPotSize(void * table_ptr);
+C_DLL_FUNCTION struct return_money GetPotSize(void * table_ptr);
 
 
 ///Get the amount of money that was in the pot at the BEGINNING of the current betting round
-C_DLL_FUNCTION
-struct return_money GetPrevRoundsPotsize(void * table_ptr);
+C_DLL_FUNCTION struct return_money GetPrevRoundsPotsize(void * table_ptr);
 
 
 /*****************************************************************************
@@ -348,8 +344,7 @@ C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
 	Event functions
 *****************************************************************************/
 
-C_DLL_FUNCTION
-struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community );
+C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community );
 
 //This function reports who made first high bet that was called
 //If nobody called the high bet, then you will get -1 here.
@@ -370,8 +365,7 @@ C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, playernumber
 
 
 ///Get the size of the highest bet so far
-C_DLL_FUNCTION
-struct return_money GetBetToCall(void * table_ptr);
+C_DLL_FUNCTION struct return_money GetBetToCall(void * table_ptr);
 
 
 
@@ -405,11 +399,9 @@ C_DLL_FUNCTION enum return_status DeleteFinishShowdown(void * table_ptr, void * 
 	BEGIN
 	Initial setup and final destructor functions
 *****************************************************************************/
-C_DLL_FUNCTION
-struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination);
+C_DLL_FUNCTION struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination);
 
-C_DLL_FUNCTION
-enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete);
+C_DLL_FUNCTION enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete);
 
 
 ///Add a player/bot to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER

@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 #include <sstream>
-
+#include <string.h>
 
 #include "../src/arena.h"
 #include "../src/stratCombined.h"
