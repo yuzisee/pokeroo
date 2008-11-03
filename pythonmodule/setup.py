@@ -57,7 +57,7 @@ setup(name=packagename,
       author_email='yuzisee@gmail.com',
       url='http://opensvn.csie.org/traccgi/Yuzisee/holdemmodule',
 	  data_files = [('.',['../holdem/holdemdll/Release/holdemDLL.dll'])],
-#	  py_modules = ['holdem'],
+	  py_modules = ['holdem'],
       ext_modules = [module1])
 
 	  

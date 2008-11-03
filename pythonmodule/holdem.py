@@ -24,7 +24,7 @@ class HoldemArenaPlayer:
     HoldemArenaPlayerCptr = ''
     HoldemArenaPlayerStrategyCptr = ''
 
-    def IsBot(self)
-        return HoldemArenaPlayerCptr != '' && HoldemArenaPlayerStrategyCptr == ''
+    def IsBot(self):
+        return HoldemArenaPlayerCptr != '' and HoldemArenaPlayerStrategyCptr == ''
 
 #    def GetSeatNumber(self):

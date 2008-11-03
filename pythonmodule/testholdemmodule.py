@@ -33,3 +33,6 @@ print ' '.join(['GetMoney = ', str(get_money()),  'n'])
 
 print CC()
 
+#from holdem import HoldemArenaPlayer
+import holdem
+
