@@ -1,13 +1,47 @@
 #!/usr/bin/env python
 
+
 from distutils.core import setup, Extension
+import sys
 
-module1 = Extension('holdem',
-#		    include_dirs = ['/usr/local/include'],
-#                    libraries = ['tcl83'],
-#                    library_dirs = ['/usr/local/lib'],
-                    sources = ['holdemmodule.c'])
+#Choose
+linkstatically = False
+linkdynamically = True
 
+
+if (linkstatically and linkdynamically) or (not linkstatically and not linkdynamically):
+	raise Exception,  "Link dynamically or statically?? Choose only one please"
+
+sourcefiles = ['holdemmodule.c']
+
+# What OS am I? http://docs.python.org/library/sys.html#sys.platform
+if sys.platform[:3] == 'win':
+    #But we'll use MinGW anyways.
+    if linkstatically:
+        module1 = Extension('holdem',
+                    extra_objects = ['../holdem/holdemdll/Release/holdemDLL.dll'],
+                    sources = sourcefiles)
+    elif linkdynamically:
+        module1 = Extension('holdem',
+                    extra_objects = ['../holdem/holdemdll/Release/holdemDLL.lib'],
+                    sources = sourcefiles)
+else:
+#Assume Posix
+    if linkstatically:
+        module1 = Extension('holdem',
+                    extra_objects = ['../lib/holdem.a'],
+                    sources = sourcefiles)
+    elif linkdynamically:
+        module1 = Extension('holdem',
+                    libraries = ['holdem.so'],
+                    library_dirs = ['../lib'],
+                    sources = sourcefiles)
+	
+#Possible options to Extension contstructor: http://docs.python.org/distutils/apiref.html?highlight=extension#distutils.core.Extension
+
+
+					
+#Building in Windows: http://boodebr.org/main/python/build-windows-extensions
 
 setup(name='Holdem',
       version='0.09',
@@ -17,4 +51,6 @@ setup(name='Holdem',
       url='http://opensvn.csie.org/traccgi/Yuzisee/holdemmodule',
       ext_modules = [module1])
 
+	  
+	  
 #vim: set expandtab shiftwidth=4 tabstop=8

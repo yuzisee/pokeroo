@@ -21,9 +21,14 @@
 #include "Python.h"
 
 
-//#include "interfaceC.h"
+// The import library is currently stored with the dll at ../holdem/holdemdll/Release/* along with its import library.
+// In lieu of a definitions file we have used the dllexport directive
+#include "../holdem/libsrc/holdemDLL.h"
+
+
 
 // If you want to create an actual object http://starship.python.net/crew/arcege/extwriting/pyext.html
+// But we probably won't be doing that
 
 
 /*****************************************************************************
@@ -31,11 +36,11 @@
 	Betting round accessors
 *****************************************************************************/
 
-// Use this: http://www.python.org/doc/2.5.2/api/arg-parsing.html
+// Use this: http://www.python.org/doc/2.5.2/api/arg-parsing.html (also http://docs.python.org/c-api/arg.html#arg-parsing)
 // and this: http://www.python.org/dev/peps/pep-0008/
 
 ///Get the amount of money playerNumber has in front of him
-static PyObject * GetMoney (PyObject *self, PyObject *args) //float64 (int8 playerNumber);
+static PyObject * PyHoldem_GetMoney (PyObject *self, PyObject *args) //float64 (int8 playerNumber);
 {
     return Py_BuildValue("d", 10.0);
     //TODO: If the player is all in, make sure this returns the correct value
@@ -43,12 +48,12 @@ static PyObject * GetMoney (PyObject *self, PyObject *args) //float64 (int8 play
 
 
 //Override the amount of money playerNumber has in front of him
-static PyObject * SetMoney (PyObject *self, PyObject *args) ////void (int8 playerNumber, float64 money);
+static PyObject * PyHoldem_SetMoney (PyObject *self, PyObject *args) ////void (int8 playerNumber, float64 money);
 {
     Py_RETURN_NONE;
 }
 
-
+#if 0
 
 ///Get the amount of money playerNumber has bet so far this round
 static PyObject * GetBetThisRound (PyObject *self, PyObject *args) //float64 (int8 playerNumber);
@@ -95,6 +100,59 @@ static PyObject * WhoIsNext (PyObject *self, PyObject *args) //int8 ();
 *****************************************************************************/
 
 
+
+
+/*****************************************************************************
+	BEGIN
+	Card functions
+*****************************************************************************/
+
+
+///Call NewCommunityCard for each card that is dealt to the table during flop/turn/river
+///cardValue and cardSuit are both characters:
+/*
+cardValue can be any of:
+'2' for two
+'3' for three
+'4' for four
+'5' for five
+'6' for six
+'7' for seven
+'8' for eight
+'9' for nine
+'t' for ten (notice lowercase 't')
+'J' for Jack
+'Q' for Queen
+'K' for King
+'A' for Ace
+
+
+cardSuit can be any of:
+'S' for Spades
+'H' for Hearts
+'C' for Clubs
+'D' for Diamonds
+*/
+
+#endif // 0
+
+static PyObject * PyHoldem_CreateNewCardset (PyObject *self, PyObject *args)
+{
+	struct holdem_cardset n = CreateNewCardset();
+	return Py_BuildValue("i", n.card_count);
+}
+
+#if 0
+
+///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
+enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
+
+enum return_status DeleteCardset(struct holdem_cardset c);
+
+/*****************************************************************************
+	END
+	Card functions
+*****************************************************************************/
 
 
 
@@ -243,7 +301,7 @@ static PyObject * AddBot (PyObject *self, PyObject *args) //int8 (string playerN
 	END
 *****************************************************************************/
 
-
+#endif //0
 
 
 
@@ -253,8 +311,9 @@ static PyObject * AddBot (PyObject *self, PyObject *args) //int8 (string playerN
 *****************************************************************************/
 
 static PyMethodDef HoldemMethods[] = {
-    {"get_money",  GetMoney, METH_VARARGS, "Get the amount of money a player has in front of him/her."},
-    {"SetMoney",  SetMoney, METH_VARARGS, "Override the amount of money a player has in front of him/her."},
+    {"get_money",  PyHoldem_GetMoney, METH_VARARGS, "Get the amount of money a player has in front of him/her."},
+    {"SetMoney",  PyHoldem_SetMoney, METH_VARARGS, "Override the amount of money a player has in front of him/her."},
+	{"CC",  PyHoldem_CreateNewCardset, METH_VARARGS, "Create a new set of cards to form a hand. Delete this cardset when you are done with it."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
