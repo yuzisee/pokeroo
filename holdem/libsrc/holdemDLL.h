@@ -74,7 +74,7 @@
 // As long as the functions were defined as extern "C" during the DLL compile, the DLL will
 // contain C function prototypes, and this header file contains C function prototypes, and everything
 // works out great.
-	#define C_FUNCTION
+	#define C_FUNCTION 
 #endif // __cplusplus
 
 
@@ -325,7 +325,7 @@ cardSuit can be any of:
 'D' for Diamonds
 */
 
-C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
+C_DLL_FUNCTION struct holdem_cardset CreateNewCardset(void);
 
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
 C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);

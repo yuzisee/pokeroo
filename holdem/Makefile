@@ -23,17 +23,14 @@ BUILD_DEPS = $(patsubst $(BUILD_DIR)/%.o,$(BUILD_DIR)/%.d,$(BUILT_OBJS))
 
 STATIC_OBJ_CPP = $(BUILD_DIR)/holdem.a
 
-STATIC_LIB_C = $(LIB_DIR)/libholdem.a
-DYNAMIC_LIB_C = $(LIB_DIR)/libholdem.so
+#Naming your shared libraries: http://www.faqs.org/docs/Linux-HOWTO/Program-Library-HOWTO.html#SHARED-LIBRARIES
+DYNAMIC_LIB_C = $(LIB_DIR)/libholdem.so.1
 APP = $(BIN_DIR)/holdem
 
-FINAL_TARGETS = $(STATIC_LIB_C) $(DYNAMIC_LIB_C) $(APP)
+FINAL_TARGETS = $(DYNAMIC_LIB_C) $(APP)
 
 
 vpath %.cpp $(SRC_DIRS)
-#vpath %.cpp
-#vpath %.cpp appsrc
-#vpath %.cpp libsrc
 
 
 all:
@@ -48,9 +45,7 @@ test:
 	echo $(CORE_OBJS)
 
 clean:
-	rm $(BUILD_OBJS)
-	rm $(BUILD_DIR)/*.d
-	#rm $(BUILD_EXE)
+	rm -R $(BUILD_DIR)
 
 depends:
 	make $(BUILD_DEPS)
@@ -75,7 +70,7 @@ $(BUILD_DIR)/%.o: %.cpp
 
 $(STATIC_OBJ_CPP): $(CORE_OBJS)
 	@mkdir -p $(dir $@)
-	ar rc $@ $^
+	ar rcs $@ $^
 
 #
 #  FINAL TARGET RULES
@@ -87,10 +82,6 @@ $(FINAL_TARGETS): $(STATIC_OBJ_CPP)
 $(APP): $(BUILD_DIR)/testDriver.o
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -o $@ $^
-
-$(STATIC_LIB_C): $(BUILD_DIR)/interfaceC.o
-	@mkdir -p $(dir $@)
-	ar rcs lib/libholdem.a $^
 
 $(DYNAMIC_LIB_C): $(BUILD_DIR)/interfaceC.o
 	@mkdir -p $(dir $@)

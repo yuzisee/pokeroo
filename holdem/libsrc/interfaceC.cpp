@@ -556,6 +556,8 @@ struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardse
 		myTable->PrepBettingRound(community.card_count);
 
 		HoldemArenaBetting * bettingEvent = new HoldemArenaBetting( myTable, *myHand, community.card_count );
+
+		retval.event_ptr = reinterpret_cast<void *>(bettingEvent);
 	}
 
 	return retval;
@@ -735,6 +737,8 @@ struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPla
 		myTable->PrepShowdownRound(*myCommunity);
 
 		HoldemArenaShowdown * bettingEvent = new HoldemArenaShowdown( myTable, calledPlayer );
+
+		retval.event_ptr = reinterpret_cast<void *>(bettingEvent);
 	}
 
 	return retval;
@@ -893,7 +897,6 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 	{
 		bool illustrate = true;
 		bool spectate = true;
-		bool externalDealer = true;
 
 		retval.table.table_ptr = reinterpret_cast<void *>(new HoldemArena(chipDenomination, std::cout ,illustrate,spectate));
 		retval.table.seat_count = seatsAtTable;
