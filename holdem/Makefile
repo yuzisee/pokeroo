@@ -1,6 +1,7 @@
 
 CXX = g++
-CXXFLAGS += -O -g -Wall
+CXXFLAGS += -O -g -Wall -fpic
+#The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
 
 EXT_SRC_DIRS = appsrc libsrc
 SRC_DIRS = src $(EXT_SRC_DIRS)
@@ -85,4 +86,4 @@ $(APP): $(BUILD_DIR)/testDriver.o
 
 $(DYNAMIC_LIB_C): $(BUILD_DIR)/interfaceC.o
 	@mkdir -p $(dir $@)
-	$(CXX) -shared -o lib/libholdem.so  -Wl,-soname,libholdem.so $^
+	$(CXX) $(CXXFLAGS) -shared -o $@ -Wl,-soname,libholdem.so $^

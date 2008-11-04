@@ -15,12 +15,14 @@ sourcefiles = ['holdemmodule.c']
 # What OS am I? http://docs.python.org/library/sys.html#sys.platform
 if sys.platform[:3] == 'win':
     #But we'll use MinGW anyways and link dynamically
+    library_data_files = ('.',['../holdem/holdemdll/Release/holdemDLL.dll'])
     module1 = Extension(extensionname,
 #                extra_objects = ['../holdem/holdemdll/Release/holdemDLL.dll'],  # MinGW would be smart enough to figure this out, but we'll do it the proper way below
                 extra_objects = ['../holdem/holdemdll/Release/holdemDLL.lib'],
                 sources = sourcefiles)
 else:
 #Assume Posix
+    library_data_files = ('lib',['../holdem/lib/libholdem.so.1'])
     module1 = Extension(extensionname,
                 libraries = ['holdem'],
                 library_dirs = ['../holdem/lib'],
@@ -42,7 +44,7 @@ setup(name=packagename,
       author='Joseph Huang',
       author_email='yuzisee@gmail.com',
       url='http://opensvn.csie.org/traccgi/Yuzisee/holdemmodule',
-	  data_files = [('.',['../holdem/lib/libholdem.so.1','../holdem/holdemdll/Release/holdemDLL.dll'])],
+	  data_files = [library_data_files],
 	  py_modules = ['holdem'],
       ext_modules = [module1])
 
