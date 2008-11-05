@@ -32,7 +32,7 @@ public:
     void Unserialize( std::istream& inFile );
 
     virtual void LoggedShuffle(std::ostream&);
-    virtual void LoggedShuffle(std::ostream&,float64);
+    virtual void LoggedShuffle(std::ostream&,uint32);
     virtual void LogDeckState(std::ostream&);
 }
 ;

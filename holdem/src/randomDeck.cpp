@@ -49,19 +49,19 @@ void RandomDeck::ShuffleDeck()
 
 }
 
-void RandomDeck::ShuffleDeck(float64 seedShift)
+int8 RandomDeck::RandomSmallInteger()
 {
-
 	++lastDealtPos;
 	lastDealtPos %= DECKSIZE;
 
+	return lastDealtPos;
+}
 
+uint32 RandomDeck::Float64ToUint32Seed(int8 small_int, float64 seedShift)
+{
 	//lastDealtIs okay up to 5 bits and then one more...
-	uint32 wrap = (lastDealtPos & 31) | ((lastDealtPos & 32) << 26);
-
-
-	ShuffleDeck();
-
+	uint32 wrap = (small_int & 31) | ((small_int & 32) << 26);
+	return wrap;
 
 	//int is long by default (4-byte)
 	uint32* warp = reinterpret_cast<uint32*>(&seedShift);
@@ -69,6 +69,19 @@ void RandomDeck::ShuffleDeck(float64 seedShift)
 	wrap ^= (psychoRandom >> 8);
 	wrap ^= (psychoRandom << 8);
 	psychoRandom = psychoRandom ^ wrap;
+
+	return psychoRandom;
+}
+
+//Float64ToUint32Seed(GetRandomSmallInteger(), seedShift);
+void RandomDeck::ShuffleDeck(uint32 psychoRandom)
+{
+
+	
+
+	ShuffleDeck();
+
+
 
 #ifdef COOLSEEDINGVIEWER
 

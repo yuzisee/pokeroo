@@ -121,9 +121,10 @@ static void PlayGameInner(HoldemArena & my, SerializeRandomDeck * tableDealer)
 static void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindController, SerializeRandomDeck * d, float64 randRem)
 {
 
+	uint32 shuffleSeed = RandomDeck::Float64ToUint32Seed(d->RandomSmallInteger(),randRem);
 
 #ifndef DEBUGSAVEGAME
-	if( d ) d->ShuffleDeck( randRem );
+	if( d ) d->ShuffleDeck( shuffleSeed );
 
 
 	return;
@@ -137,7 +138,7 @@ static void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindCont
 	if( d )
 	{
 		d->UndealAll();
-		d->LoggedShuffle(newSaveState, randRem);
+		d->LoggedShuffle(newSaveState, shuffleSeed);
 		newSaveState << endl;
 	}
 
@@ -407,7 +408,7 @@ static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 	SerializeRandomDeck internalDealer;
 
 	#ifndef EXTERNAL_DEALER
-		internalDealer.ShuffleDeck(static_cast<float64>(   myTable.NumberAtTable()   ));
+		internalDealer.ShuffleDeck(static_cast<uint32>(   myTable.NumberAtTable()   ));
 		tableDealer = &internalDealer;
 	#endif
 

@@ -52,7 +52,7 @@ void SerializeRandomDeck::LoggedShuffle(std::ostream& outFile)
     LogDeckState( outFile );
 }
 
-void SerializeRandomDeck::LoggedShuffle(std::ostream& outFile, float64 seedShift)
+void SerializeRandomDeck::LoggedShuffle(std::ostream& outFile, uint32 seedShift)
 {
     RandomDeck::ShuffleDeck( seedShift );
     LogDeckState( outFile );

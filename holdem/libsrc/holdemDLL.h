@@ -184,7 +184,7 @@ C_DLL_FUNCTION struct return_money GetMoney(void * table_ptr, playernumber_t);
 
 
 
-//Override the amount of money playerNumber has in front of him
+///Override the amount of money playerNumber has in front of him
 C_DLL_FUNCTION enum return_status SetMoney(void * table_ptr, playernumber_t, float64);
 
 
@@ -219,31 +219,32 @@ C_DLL_FUNCTION struct return_money GetPrevRoundsPotsize(void * table_ptr);
 
 1. Create a New Table
 2. Add Players and InitializeNew the TableState, or RestoreTableState
-3. -----
-	2.1 BeginNewHand
-	2.2 ShowHoleCards to all bots who need to know their hand
-	2.3 If you would like to use the deterministic random seed generator, reset it here: ResetDeterministicSeed().
-	2.4 -----
-		 2.4.1a CreateNewCardset() a blank hand to represent the pre-flop and CreateNewBettingRound() with it
-		 2.4.1b Make bets for WhoIsNext_Betting() with PlayerMakesBetTo(), while querying your bots through GetBetDecision()
-		 2.4.1c DeleteFinishBettingRound() and it will report if the high bet was called.
+3. You may save the state of the table at this point, if you really want to.
+4. -----
+	4.1 BeginNewHand
+	4.2 ShowHoleCards to all bots who need to know their hand
+	4.3 If you would like to use the deterministic random seed generator, reset it here: ResetDeterministicSeed().
+	4.4 -----
+		 4.4.1a CreateNewCardset() a blank hand to represent the pre-flop and CreateNewBettingRound() with it
+		 4.4.1b Make bets for WhoIsNext_Betting() with PlayerMakesBetTo(), while querying your bots through GetBetDecision()
+		 4.4.1c DeleteFinishBettingRound() and it will report if the high bet was called.
 
-		 2.4.2a If the preflop high bet was called, AppendCard() your flop to the holdem_cardset and then CreateNewBettingRound() with it
-		 2.4.2b Make bets ...
-		 2.4.2c DeleteFinishBettingRound() ...
+		 4.4.2a If the preflop high bet was called, AppendCard() your flop to the holdem_cardset and then CreateNewBettingRound() with it
+		 4.4.2b Make bets ...
+		 4.4.2c DeleteFinishBettingRound() ...
 
-		 2.4.3 ... If the postflop high-bet was called, play the Turn ... and it will report if the high bet is called.
+		 4.4.3 ... If the postflop high-bet was called, play the Turn ... and it will report if the high bet is called.
 
-		 2.4.4 ... If the high-bet was called after the turn, play the River ... and it will report if the high bet is called.
+		 4.4.4 ... If the high-bet was called after the turn, play the River ... and it will report if the high bet is called.
 
-		 2.4.5a If the high-bet was called after the river, CreateNewShowdown()
-		 2.4.5b Each WhoIsNext_Showdown can PlayerShowsHand() or PlayerMucksHand()
-		 2.4.5c DeleteFinishShowdown() will calculate side pots and move money from the pot to the winners. Compare GetMoney() before and after to determine winners.
+		 4.4.5a If the high-bet was called after the river, CreateNewShowdown()
+		 4.4.5b Each WhoIsNext_Showdown can PlayerShowsHand() or PlayerMucksHand()
+		 4.4.5c DeleteFinishShowdown() will calculate side pots and move money from the pot to the winners. Compare GetMoney() before and after to determine winners.
 
-	2.5 Call FinishHandRefreshPlayers() to complete any final bookkeeping that needs to take place to prepare data structures for the next hand
-	2.6 Here is a good time to shuffle the deck. Retrieve a deterministic seed with GetDeterministicSeed() if you would like.
-	2.7 If you would like to save the game, now is the best time to do so. Call SaveTableState()
-	2.8 [Go back to step 2.1]
+	4.5 Call FinishHandRefreshPlayers() to complete any final bookkeeping that needs to take place to prepare data structures for the next hand
+	4.6 Here is a good time to shuffle the deck. Retrieve a deterministic seed with GetDeterministicSeed() if you would like.
+	4.7 If you would like to save the game, now is the best time to do so. Call SaveTableState()
+	4.8 [Go back to step 4.1]
 
 */
 
@@ -254,9 +255,14 @@ C_DLL_FUNCTION enum return_status InitializeNewTableState(void * table_ptr);
 C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind);
 C_DLL_FUNCTION enum return_status ShowHoleCards(void * table_ptr, playernumber_t , struct holdem_cardset );
 
+C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr);
+
+
 C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr);
 
 
+C_DLL_FUNCTION enum return_status ResetDeterministicSeed(void * table_ptr);
+C_DLL_FUNCTION uint32 GetDeterministicSeed(void * table_ptr, uint8 small_int); //small_int works pretty well as a number between 0 and 51
 
 
 /*

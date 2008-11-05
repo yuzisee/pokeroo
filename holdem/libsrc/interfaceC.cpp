@@ -338,6 +338,22 @@ enum return_status BeginNewHands(void * table_ptr, float64 smallBlind)
 	return error_code;
 }
 
+C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr)
+{
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		myTable->RefreshPlayers();
+	}
+
+	return error_code;
+}
 
 //Serializes the table state into a single string.
 //Actions performed during betting events and showdown events will not be saved properly.
@@ -434,6 +450,41 @@ enum return_status InitializeNewTableState(void * table_ptr)
 	Card functions
 *****************************************************************************/
 
+C_DLL_FUNCTION enum return_status ResetDeterministicSeed(void * table_ptr)
+{
+	enum return_status error_code = SUCCESS;
+
+	if( !table_ptr )
+	{
+		error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		myTable->ResetDRseed();
+	}
+
+	return error_code;
+}
+
+C_DLL_FUNCTION uint32 GetDeterministicSeed(void * table_ptr, uint8 small_int)
+{
+	if( !table_ptr )
+	{
+		//retval.error_code = NULL_TABLE_PTR;
+		return 0;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		//retval.money = myTable->GetDRseed();
+		
+		return RandomDeck::Float64ToUint32Seed(small_int,myTable->GetDRseed());
+	}
+
+	//return retval;
+
+}
 
 ///Call NewCommunityCard for each card that is dealt to the table during flop/turn/river
 ///cardValue and cardSuit are both characters:

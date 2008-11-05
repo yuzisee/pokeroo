@@ -30,7 +30,7 @@ class GameDeck : virtual public DealableOrderedDeck
 public:
 
     virtual void ShuffleDeck()=0;
-    virtual void ShuffleDeck(float64)=0;
+    virtual void ShuffleDeck(uint32)=0;
 
     virtual float64 DealCard(Hand&)=0;
 
@@ -39,7 +39,7 @@ public:
 
 class RandomDeck : virtual public GameDeck
 {
-
+	
 	protected:
    		static const uint8 DECKSIZE = 52;
         bool bDeckEmpty;
@@ -49,8 +49,12 @@ class RandomDeck : virtual public GameDeck
 		int8 firstDealtPos;
 	public:
 
+		static uint32 Float64ToUint32Seed(int8 small_int, float64 seedShift);
+
+		int8 RandomSmallInteger();
+
 		virtual void ShuffleDeck();
-		virtual void ShuffleDeck(float64);
+		virtual void ShuffleDeck(uint32);
 
 		virtual float64 DealCard(Hand&);
 
