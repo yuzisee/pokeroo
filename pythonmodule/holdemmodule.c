@@ -17,7 +17,15 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-
+#if 0
+^/*[A-Z_]* .* ([^\( ][^\( ]*)\(.*
+static PyObject * PyHoldem_\1 (PyObject *self, PyObject *args)\n{\n}
+*/
+#endif
+ 
+ 
+// http://docs.python.org/extending/extending.html
+// Since Python may define some pre-processor definitions which affect the standard headers on some systems, you must include Python.h before any standard headers are included.
 #include "Python.h"
 
 
@@ -31,76 +39,6 @@
 // But we probably won't be doing that
 
 
-/*****************************************************************************
-	BEGIN
-	Betting round accessors
-*****************************************************************************/
-
-// Use this: http://www.python.org/doc/2.5.2/api/arg-parsing.html (also http://docs.python.org/c-api/arg.html#arg-parsing)
-// and this: http://www.python.org/dev/peps/pep-0008/
-
-///Get the amount of money playerNumber has in front of him
-static PyObject * PyHoldem_GetMoney (PyObject *self, PyObject *args) //float64 (int8 playerNumber);
-{
-    return Py_BuildValue("d", 10.0);
-    //TODO: If the player is all in, make sure this returns the correct value
-}
-
-
-//Override the amount of money playerNumber has in front of him
-static PyObject * PyHoldem_SetMoney (PyObject *self, PyObject *args) ////void (int8 playerNumber, float64 money);
-{
-    Py_RETURN_NONE;
-}
-
-#if 0
-
-///Get the amount of money playerNumber has bet so far this round
-static PyObject * GetBetThisRound (PyObject *self, PyObject *args) //float64 (int8 playerNumber);
-{
-    //TODO: If the player is all in, make sure this returns the correct value
-    return Py_BuildValue("d", 1.0);
-}
-
-
-
-
-///Get the amount of money that is in the pot
-static PyObject * GetPotSize (PyObject *self, PyObject *args) //float64 ();
-{
-    return Py_BuildValue("d", 4.75);
-}
-
-
-///Get the amount of money that was in the pot at the BEGINNING of the current betting round
-static PyObject * GetLastRoundPotsize (PyObject *self, PyObject *args) //float64 ();
-{
-    return Py_BuildValue("d", 0.5);
-}
-
-
-///Get the size of the highest bet so far
-static PyObject * GetBetToCall (PyObject *self, PyObject *args) //float64 ();
-{
-    return Py_BuildValue("d", 2.5);
-}
-
-
-
-//Get the playerNumber of the player who's turn it is
-static PyObject * WhoIsNext (PyObject *self, PyObject *args) //int8 ();
-{
-    return Py_BuildValue("i", 0);
-}
-
-
-/*****************************************************************************
-	Betting round accessors
-	END
-*****************************************************************************/
-
-
-
 
 /*****************************************************************************
 	BEGIN
@@ -134,20 +72,27 @@ cardSuit can be any of:
 'D' for Diamonds
 */
 
-#endif // 0
 
+
+//C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
 static PyObject * PyHoldem_CreateNewCardset (PyObject *self, PyObject *args)
 {
 	struct holdem_cardset n = CreateNewCardset();
 	return Py_BuildValue("i", n.card_count);
 }
 
-#if 0
+
 
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
-enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
+//C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
+static PyObject * PyHoldem_AppendCard (PyObject *self, PyObject *args)
+{
+}
 
-enum return_status DeleteCardset(struct holdem_cardset c);
+//C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
+static PyObject * PyHoldem_DeleteCardset (PyObject *self, PyObject *args)
+{
+}
 
 /*****************************************************************************
 	END
@@ -155,104 +100,215 @@ enum return_status DeleteCardset(struct holdem_cardset c);
 *****************************************************************************/
 
 
-
 /*****************************************************************************
 	BEGIN
-	Event functions
+	Money functions
+*****************************************************************************/
 
-Note: If AutoPlayGame() is called, bAutoMode is set to 1, you never
-need to use any of the Start______() functions.
+// Use this: http://www.python.org/doc/2.5.2/api/arg-parsing.html (also http://docs.python.org/c-api/arg.html#arg-parsing)
+// and this: http://www.python.org/dev/peps/pep-0008/
+
+///Get the amount of money playerNumber has in front of him
+//C_DLL_FUNCTION struct return_money GetMoney(void * table_ptr, playernumber_t);
+static PyObject * PyHoldem_GetMoney (PyObject *self, PyObject *args) 
+{
+    return Py_BuildValue("d", 10.0);
+    //TODO: If the player is all in, make sure this returns the correct value
+}
+
+
+///Override the amount of money playerNumber has in front of him
+//C_DLL_FUNCTION enum return_status SetMoney(void * table_ptr, playernumber_t, float64);
+static PyObject * PyHoldem_SetMoney (PyObject *self, PyObject *args) 
+{
+    Py_RETURN_NONE;
+}
+
+
+
+///Get the amount of money playerNumber has bet so far this round
+//C_DLL_FUNCTION struct return_money GetCurrentRoundBet(void * table_ptr, playernumber_t playerNumber);
+static PyObject * PyHoldem_GetCurrentRoundBet (PyObject *self, PyObject *args) 
+{
+    //TODO: If the player is all in, make sure this returns the correct value
+    return Py_BuildValue("d", 1.0);
+}
+
+
+//C_DLL_FUNCTION struct return_money GetPrevRoundsBet(void * table_ptr, playernumber_t playerNumber);
+static PyObject * PyHoldem_GetPrevRoundsBet (PyObject *self, PyObject *args)
+{
+}
+
+///Get the amount of money that is in the pot
+//C_DLL_FUNCTION struct return_money GetPotSize(void * table_ptr);
+static PyObject * PyHoldem_GetPotSize (PyObject *self, PyObject *args) 
+{
+    return Py_BuildValue("d", 4.75);
+}
+
+
+///Get the amount of money that was in the pot at the BEGINNING of the current betting round
+//C_DLL_FUNCTION struct return_money GetPrevRoundsPotsize(void * table_ptr);
+static PyObject * PyHoldem_GetPrevRoundsPotsize (PyObject *self, PyObject *args)
+{
+    return Py_BuildValue("d", 0.5);
+}
+
+
+
+/*****************************************************************************
+	Money functions
+	END
 *****************************************************************************/
 
 
-///Call NewCommunityCard for each card that is dealt to the table during flop/turn/river
-///cardValue and cardSuit are both characters:
-/*
-cardValue can be any of:
-'2' for two
-'3' for three
-'4' for four
-'5' for five
-'6' for six
-'7' for seven
-'8' for eight
-'9' for nine
-'t' for ten (notice lowercase 't')
-'J' for Jack
-'Q' for Queen
-'K' for King
-'A' for Ace
 
-
-cardSuit can be any of:
-'S' for Spades
-'H' for Hearts
-'C' for Clubs
-'D' for Diamonds
-*/
-///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
-static PyObject * NewCommunityCard (PyObject *self, PyObject *args) //void (char cardValue,char cardSuit);
+/*****************************************************************************
+	BEGIN
+	Game Initialization functions
+*****************************************************************************/
+//C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * table_ptr);
+static PyObject * PyHoldem_RestoreTableState (PyObject *self, PyObject *args)
 {
-    Py_RETURN_NONE ;
+}
+//C_DLL_FUNCTION enum return_status InitializeNewTableState(void * table_ptr);
+static PyObject * PyHoldem_InitializeNewTableState (PyObject *self, PyObject *args)
+{
+}
+
+//C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr);
+static PyObject * PyHoldem_SaveTableState (PyObject *self, PyObject *args)
+{
+}
+/*****************************************************************************
+	Game Initialization functions
+	END
+*****************************************************************************/
+
+
+/*****************************************************************************
+	BEGIN
+	Hand Initialization functions
+*****************************************************************************/
+
+//C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind);
+static PyObject * PyHoldem_BeginNewHands (PyObject *self, PyObject *args)
+{
 }
 
 
-
-
-
-///Call this when the betting begins
-static PyObject * StartBetting (PyObject *self, PyObject *args) //void ();
+//C_DLL_FUNCTION enum return_status ShowHoleCardsToBot(void * table_ptr, playernumber_t , struct holdem_cardset );
+static PyObject * PyHoldem_ShowHoleCardsToBot (PyObject *self, PyObject *args)
 {
-    Py_RETURN_NONE ;
+}
+
+//C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr);
+static PyObject * PyHoldem_FinishHandRefreshPlayers (PyObject *self, PyObject *args)
+{
+}
+
+/*****************************************************************************
+	Hand Initialization functions
+	END
+*****************************************************************************/
+
+
+
+/*****************************************************************************
+	BEGIN
+	Betting round functions
+*****************************************************************************/
+
+//C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community );
+static PyObject * PyHoldem_CreateNewBettingRound (PyObject *self, PyObject *args)
+{
+}
+
+//C_DLL_FUNCTION struct return_seat DeleteFinishBettingRound(void * event_ptr);
+static PyObject * PyHoldem_DeleteFinishBettingRound (PyObject *self, PyObject *args)
+{
 }
 
 
-///Call these functions when playerNumber Raises, Folds, or Calls
-static PyObject * PlayerCalls (PyObject *self, PyObject *args) //void (int8 playerNumber);
-{Py_RETURN_NONE;}
-
-static PyObject * PlayerFolds (PyObject *self, PyObject *args) //void (int8 playerNumber);
-{Py_RETURN_NONE;}
-
-static PyObject * PlayerRaisesTo (PyObject *self, PyObject *args) //void (int8 playerNumber, float64 amount);
-{Py_RETURN_NONE;}
-
-static PyObject * PlayerRaisesBy (PyObject *self, PyObject *args) //void (int8 playerNumber, float64 amount);
-{Py_RETURN_NONE;}
-///Question: If a player doesn't call any of these, which is the default action?
+//C_DLL_FUNCTION enum return_status PlayerMakesBetTo(void * event_ptr, playernumber_t playerNumber, float64 money);
+static PyObject * PyHoldem_PlayerMakesBetTo (PyObject *self, PyObject *args)
+{
+}
 
 
 
 ///GetBetAmount is useful for asking a bot what to bet
-static PyObject * DecideBetAmount (PyObject *self, PyObject *args) //float64 (int8 playerNumber);
+//C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, playernumber_t playerNumber);
+static PyObject * PyHoldem_GetBetDecision (PyObject *self, PyObject *args)
 {
     return Py_BuildValue("d", 6.0);
 }
 
 
 
-///Call this when (if) the showdown begins
-static PyObject * StartShowdown (PyObject *self, PyObject *args) //void ();
-{Py_RETURN_NONE;}
-
-///Call this for each card playerNumber reveals during the showdown
-///See NewCommunityCard for usage of cardValue and cardSuit
-static PyObject * PlayerShowsCard (PyObject *self, PyObject *args) //void (int8 playerNumber, char cardValue, char cardSuit);
-{Py_RETURN_NONE;}
-
-///Call this when playerNumber mucks his/her hand during the showdown.
-///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
-static PyObject * PlayerMucksHand (PyObject *self, PyObject *args) //void (int8 playerNumber);
-{Py_RETURN_NONE;}
+//Get the playerNumber of the player who's turn it is
+//C_DLL_FUNCTION struct return_seat WhoIsNext_Betting(void * event_ptr);
+static PyObject * PyHoldem_WhoIsNext_Betting (PyObject *self, PyObject *args)
+{
+    return Py_BuildValue("i", 0);
+}
 
 
 
-///Call this when new hands are dealt
-static PyObject * StartDealNewHands (PyObject *self, PyObject *args) //void ();
-{Py_RETURN_NONE;}
+///Get the size of the highest bet so far
+//C_DLL_FUNCTION struct return_money GetBetToCall(void * table_ptr);
+static PyObject * PyHoldem_GetBetToCall (PyObject *self, PyObject *args) 
+{
+    return Py_BuildValue("d", 2.5);
+}
+
 
 /*****************************************************************************
-	Event functions
+	Betting round functions
+	END
+*****************************************************************************/
+
+
+/*****************************************************************************
+	BEGIN
+	Showdown functions
+*****************************************************************************/
+
+///Call this when (if) the showdown begins
+//C_DLL_FUNCTION struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer, struct holdem_cardset final_community);
+static PyObject * PyHoldem_CreateNewShowdown (PyObject *self, PyObject *args)
+{
+}
+
+//Get the playerNumber of the player who's turn it is
+//C_DLL_FUNCTION struct return_seat PyHoldem_WhoIsNext_Showdown(void * event_ptr);
+static PyObject * PyHoldem_WhoIsNext_Showdown (PyObject *self, PyObject *args)
+{
+    return Py_BuildValue("i", 0);
+}
+
+
+
+
+///Call this for each card playerNumber reveals during the showdown
+//C_DLL_FUNCTION enum return_status PlayerShowsCard(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community);
+static PyObject * PyHoldem_PlayerShowsCard (PyObject *self, PyObject *args)
+{Py_RETURN_NONE;}
+
+///Call this when playerNumber mucks his/her hand during the showdow
+//C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber);
+static PyObject * PyHoldem_PlayerMucksHand (PyObject *self, PyObject *args)
+{Py_RETURN_NONE;}
+
+//C_DLL_FUNCTION enum return_status DeleteFinishShowdown(void * table_ptr, void * event_ptr);
+static PyObject * PyHoldem_DeleteFinishShowdown (PyObject *self, PyObject *args)
+{
+}
+
+
+/*****************************************************************************
+	Showdown functions
 	END
 *****************************************************************************/
 
@@ -261,47 +317,37 @@ static PyObject * StartDealNewHands (PyObject *self, PyObject *args) //void ();
 
 /*****************************************************************************
 	BEGIN
-	Initial setup functions
-
-static PyObject * SetBigBlind (PyObject *self, PyObject *args) //Note: () and SetSmallBlind() can be called between
-hands anytime the blind size changes during the game
+	Main Constructor/Destructors
 *****************************************************************************/
 
-///Choose playerNumber to be the dealer for the first hand
-static PyObject * InitChooseDealer (PyObject *self, PyObject *args) //void (int8 playerNumber);
-{Py_RETURN_NONE;}
-
-///Set the amount of money that the SMALLEST chip is worth
-static PyObject * InitSmallestChipSize (PyObject *self, PyObject *args) //void (float64 money);
-{Py_RETURN_NONE;}
-
-///Call this when the big blind has changed
-static PyObject * SetBigBlind (PyObject *self, PyObject *args) //void ();
-{Py_RETURN_NONE;}
-
-///Call this when the small blind has changed
-static PyObject * SetSmallBlind (PyObject *self, PyObject *args) //void ();
-{Py_RETURN_NONE;}
-
-///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
-///The function returns a playerNumber to identify this player in your code
-static PyObject * AddHuman (PyObject *self, PyObject *args) //int8 (string playerName);
+//C_DLL_FUNCTION struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination);
+static PyObject * PyHoldem_CreateNewTable (PyObject *self, PyObject *args)
 {
-    return Py_BuildValue("i", 0);
+}
+//C_DLL_FUNCTION enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete);
+static PyObject * PyHoldem_DeleteTableAndPlayers (PyObject *self, PyObject *args)
+{
 }
 
-static PyObject * AddBot (PyObject *self, PyObject *args) //int8 (string playerName, char botType);
+///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
+///These functions returns a playerNumber to identify this player in your code
+
+//C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money);
+static PyObject * PyHoldem_CreateNewHumanOpponent (PyObject *self, PyObject *args)
 {
-    return Py_BuildValue("i", 1);
+}
+//C_DLL_FUNCTION struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType);
+static PyObject * PyHoldem_CreateNewStrategyBot (PyObject *self, PyObject *args)
+{
 }
 
 
 /*****************************************************************************
-	Initial setup functions
+	Main Constructor/Destructors
 	END
 *****************************************************************************/
 
-#endif //0
+
 
 
 
@@ -320,7 +366,7 @@ static PyMethodDef HoldemMethods[] = {
 	{"restore_table_state",  			PyHoldem_RestoreTableState, METH_VARARGS, "Restore a table from a state saved with save_table_state instead of initializing a new table state"},
 	{"initialize_new_table_state",  	PyHoldem_InitializeNewTableState, METH_VARARGS, "Initialize the state of a newly created table instead of restoring from a saved state"},
 	{"begin_new_hands",  				PyHoldem_BeginNewHands, METH_VARARGS, "Call this when it is time to begin dealing new hands to all of the players"},
-	{"bot_receives_hole_cards",  		PyHoldem_ShowHoleCards, METH_VARARGS, "Notify a bot that it has received hole cards"},
+	{"bot_receives_hole_cards",  		PyHoldem_ShowHoleCardsToBot, METH_VARARGS, "Notify a bot that it has received hole cards"},
 	{"finish_hand_refresh_players",  	PyHoldem_FinishHandRefreshPlayers, METH_VARARGS, "complete any final bookkeeping that needs to take place to prepare data structures for the next hand"},
 	{"save_table_state",  				PyHoldem_SaveTableState, METH_VARARGS, "After finish_hand_refresh_players has been called, use this function to save the state of the table"},
 //	{"reset_deterministic_seed",  ResetDeterministicSeed, METH_VARARGS, ""},

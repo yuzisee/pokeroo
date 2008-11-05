@@ -284,7 +284,7 @@ struct return_money GetBetToCall(void * table_ptr)
 
 
 C_DLL_FUNCTION
-enum return_status ShowHoleCards(void * table_ptr, playernumber_t playerNumber, struct holdem_cardset holecards)
+enum return_status ShowHoleCardsToBot(void * table_ptr, playernumber_t playerNumber, struct holdem_cardset holecards)
 {
 
 	enum return_status error_code = SUCCESS;
@@ -316,8 +316,9 @@ enum return_status ShowHoleCards(void * table_ptr, playernumber_t playerNumber, 
 }
 
 
+//Use overrideDealer == -1 and you won't override the dealer
 C_DLL_FUNCTION
-enum return_status BeginNewHands(void * table_ptr, float64 smallBlind)
+enum return_status BeginNewHands(void * table_ptr, float64 smallBlind, playernumber_t overrideDealer)
 {
 
 	enum return_status error_code = SUCCESS;
@@ -332,7 +333,25 @@ enum return_status BeginNewHands(void * table_ptr, float64 smallBlind)
 		BlindValues b;
 		b.SetSmallBigBlind(smallBlind);
 
-		myTable->BeginNewHands(b,false); //bNewBlindValues is always false when calling through DLL because notification of blind changes is redundant.
+		bool bNewBlindValues = false; //bNewBlindValues is always false when calling through DLL because notification of blind changes is redundant.
+		if( myTable->IsAlive(overrideDealer) )
+		{
+			myTable->BeginNewHands(b,bNewBlindValues,overrideDealer);
+		}
+		else
+		{
+			if( overrideDealer >= 0 )
+			{
+				error_code = PARAMETER_INVALID;
+			}else
+			{
+				if( overrideDealer != -1 ) error_code = INPUT_CLEANED;
+				
+				myTable->BeginNewHands(b,bNewBlindValues);
+			}
+		}
+		
+		 
 	}
 
 	return error_code;

@@ -594,10 +594,10 @@ void HoldemArena::RefreshPlayers()
     ++handnum;
 
 
-    do{
-        ++curDealer;
-        curDealer %= nextNewPlayer;
-    }while(!IsAlive(curDealer));
+		do{
+			++curDealer;
+			curDealer %= nextNewPlayer;
+		}while(!IsAlive(curDealer));
 
 
 

@@ -371,7 +371,7 @@ class HoldemArena
         void ResetDRseed(); //You may reset the seed here (recommended at the beginning of each hand, before the first HoldemArenaBetting event
         float64 GetDRseed(); //You may get a seed at any time, but it is best to do so after PlayShowdown or when no more HoldemArenaBetting events will take place
 
-		void BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues);
+		void BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer = -1);
         void DealAllHands(SerializeRandomDeck *);
 
 		void PrepBettingRound(const int8);

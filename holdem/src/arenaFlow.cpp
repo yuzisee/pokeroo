@@ -253,8 +253,10 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
 
 
 //If tableDealer is null, you may specify dealt cards using the console.
-void HoldemArena::BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues)
+void HoldemArena::BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer)
 {
+	if( IsAlive(newDealer) ) curDealer = newDealer;
+
     roundPlayers = livePlayers;
 
     myPot        = 0;

@@ -212,7 +212,7 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
     if( !bLoadedGame )
 	{
 		//Shuffle the deck here with an arbitrary seed
-		float64 randRem = time(0);
+		time_t randRem = time(0);
 		SaveStateShuffleNextHand(my, blindController, tableDealer, randRem);
 
 		//Initialize the blinds with a starting value

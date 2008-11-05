@@ -198,7 +198,7 @@ class SitAndGoBlinds : virtual public BlindStructure
     public:
 
 
-    SitAndGoBlinds(float64 small, float64 big, const int16 afterHands)
+    SitAndGoBlinds(float64 small, float64 big, handnum_t afterHands)
 	: handPeriod(afterHands)
     {
         InitializeHist(small,big);

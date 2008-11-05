@@ -252,8 +252,8 @@ C_DLL_FUNCTION struct return_money GetPrevRoundsPotsize(void * table_ptr);
 C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * table_ptr);
 C_DLL_FUNCTION enum return_status InitializeNewTableState(void * table_ptr);
 
-C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind);
-C_DLL_FUNCTION enum return_status ShowHoleCards(void * table_ptr, playernumber_t , struct holdem_cardset );
+C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind, playernumber_t overrideDealer);
+C_DLL_FUNCTION enum return_status ShowHoleCardsToBot(void * table_ptr, playernumber_t , struct holdem_cardset );
 
 C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr);
 
