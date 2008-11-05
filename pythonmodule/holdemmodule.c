@@ -312,10 +312,44 @@ static PyObject * AddBot (PyObject *self, PyObject *args) //int8 (string playerN
 
 static PyMethodDef HoldemMethods[] = {
     {"get_money",  PyHoldem_GetMoney, METH_VARARGS, "Get the amount of money a player has in front of him/her."},
-    {"SetMoney",  PyHoldem_SetMoney, METH_VARARGS, "Override the amount of money a player has in front of him/her."},
-	{"CC",  PyHoldem_CreateNewCardset, METH_VARARGS, "Create a new set of cards to form a hand. Delete this cardset when you are done with it."},
+    {"set_money",  PyHoldem_SetMoney, METH_VARARGS, "Override the amount of money a player has in front of him/her."},
+	{"get_current_round_bet",  PyHoldem_GetCurrentRoundBet, METH_VARARGS, "Get the amount of money a player has bet so far this round"},
+	{"get_previous_rounds_bet",  PyHoldem_GetPrevRoundsBet, METH_VARARGS, "Get the amount of money a player has bet so far in all previous rounds"},
+	{"get_pot_size",  PyHoldem_GetPotSize, METH_VARARGS, "Get the amount of money that is in the pot"},
+	{"get_previous_rounds_pot_size",  PyHoldem_GetPrevRoundsPotsize, METH_VARARGS, "Get the amount of money that was in the pot at the BEGINNING of the current betting round"},
+	{"restore_table_state",  PyHoldem_RestoreTableState, METH_VARARGS, "Restore a table from a state saved with save_table_state instead of initializing a new table state"},
+	{"initialize_new_table_state",  InitializeNewTableState, METH_VARARGS, "Initialize the state of a newly created table instead of restoring from a saved state"},
+	{"begin_new_hands",  BeginNewHands, METH_VARARGS, "Call this when it is time to begin dealing new hands to all of the players"},
+	{"bot_receives_hole_cards",  ShowHoleCards, METH_VARARGS, "Notify a bot that it has received hole cards"},
+	{"finish_hand_refresh_players",  FinishHandRefreshPlayers, METH_VARARGS, "complete any final bookkeeping that needs to take place to prepare data structures for the next hand"},
+	{"save_table_state",  SaveTableState, METH_VARARGS, "After finish_hand_refresh_players has been called, use this function to save the state of the table"},
+//	{"reset_deterministic_seed",  ResetDeterministicSeed, METH_VARARGS, ""},
+//	{"get_deterministic_seed",  GetDeterministicSeed, METH_VARARGS, ""},
+	{"create_new_cardset",  CreateNewCardset, METH_VARARGS, "Create a container for cards"},
+	{"append_card_to_cardset",  AppendCard, METH_VARARGS, "Add a single card to a cardset container"},
+	{"delete_cardset",  DeleteCardset, METH_VARARGS, "Free a cardset that was created with create_new_cardset to release the memory"},
+	{"create_new_betting_round",  CreateNewBettingRound, METH_VARARGS, ""},
+	{"delete_finish_betting_round",  DeleteFinishBettingRound, METH_VARARGS, ""},
+	{"player_makes_bet",  PlayerMakesBetTo, METH_VARARGS, ""},
+	{"get_bot_bet_decision",  GetBetDecision, METH_VARARGS, ""},
+	{"get_bet_to_call",  GetBetToCall, METH_VARARGS, ""},
+	{"who_is_next_to_bet",  WhoIsNext_Betting, METH_VARARGS, ""},
+	{"who_is_next_in_showdown",  WhoIsNext_Showdown, METH_VARARGS, ""},
+	{"player_shows_hand",  PlayerShowsCard, METH_VARARGS, ""},
+	{"player_mucks_hand",  PlayerMucksHand, METH_VARARGS, ""},
+	{"create_new_showdown",  CreateNewShowdown, METH_VARARGS, ""},
+	{"delete_finish_showdown",  DeleteFinishShowdown, METH_VARARGS, ""},
+	{"create_new_table",  CreateNewTable, METH_VARARGS, ""},
+	{"delete_table_and_players",  DeleteTableAndPlayers, METH_VARARGS, ""},
+	{"create_new_human_opponent",  CreateNewHumanOpponent, METH_VARARGS, ""},
+	{"create_new_strategy_bot",  CreateNewStrategyBot, METH_VARARGS, ""},
+	{"CC",  PyHoldem_CreateNewCardset, METH_VARARGS, ""},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
+//http://www.python.org/dev/peps/pep-0008/
+//Function names should be lowercase, with words separated by underscores as necessary to improve readability.
+//Use one leading underscore only for non-public methods and instance variables
+//you should use the suffix "Error" on your exception names (if the exception actually is an error).
 
 /*
 C_DLL_FUNCTION struct return_money GetMoney(void * table_ptr, playernumber_t);
@@ -328,7 +362,10 @@ C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * tab
 C_DLL_FUNCTION enum return_status InitializeNewTableState(void * table_ptr);
 C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind);
 C_DLL_FUNCTION enum return_status ShowHoleCards(void * table_ptr, playernumber_t , struct holdem_cardset );
+C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr);
 C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr);
+C_DLL_FUNCTION enum return_status ResetDeterministicSeed(void * table_ptr);
+C_DLL_FUNCTION uint32 GetDeterministicSeed(void * table_ptr, uint8 small_int); //small_int works pretty well as a number between 0 and 51
 C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
 C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
 C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
