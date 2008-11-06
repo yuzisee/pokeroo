@@ -83,7 +83,7 @@ static PyObject * return_on_success(PyObject * retval, enum return_status error_
 		return NULL;
 	
 	default:
-		PyErr_SetString(PyExc_RuntimeError, "The C interface has returned an unknown error_code");	
+		PyErr_SetString(PyExc_RuntimeError, "The C interface has returned an unknown error_code");
 		return NULL;
 	}
 
@@ -99,33 +99,48 @@ static PyObject * return_on_success(PyObject * retval, enum return_status error_
 	}
 }
 
-static const char * get_char_array_of_cardset_ptr(struct holdem_cardset c)
+static PyObject * return_None_on_success(enum return_status error_code)
 {
-	//c.cards_ptr is a (void*), say a numeric address of something.
-	//&(c.cards_ptr) is a (void**), say the memory location at which that numeric address is stored or a length-1 array of void*'s
-	//chars need one byte, numeric addresses need multiple bytes.
-	//A char array starting at the same address as the starting address of the void** will be interpreted by python as a string.
-	const char * cards_ptr_char_array = (const char *)(&(c.cards_ptr));
-	return cards_ptr_char_array;
+	return return_on_success(0,error_code);
+}
+
+static void * reconstruct_voidptr_address(const char * cards_ptr_char_array, int array_len)
+{
+	
+	if( array_len == sizeof(void *) )
+	{
+		//A char array starting at the same address as the starting address of the void** will be interpreted by python as a string.
+		//chars need one byte, numeric addresses need multiple bytes.
+		//&(c.cards_ptr) is a (void**), say the memory location at which that numeric address is stored or a length-1 array of void*'s
+		//c.cards_ptr is a (void*), say a numeric address of something.
+		void ** cards_ptr_memory_address = (void **)cards_ptr_char_array;
+		return (*cards_ptr_memory_address);
+	}else
+	{
+		return 0; //ERROR
+	}
+	
 }
 
 static struct holdem_cardset reconstruct_holdem_cardset(const char * cards_ptr_char_array, int array_len, int card_count)
 {
 	struct holdem_cardset c;
-	//A char array starting at the same address as the starting address of the void** will be interpreted by python as a string.
-	//chars need one byte, numeric addresses need multiple bytes.
-	//&(c.cards_ptr) is a (void**), say the memory location at which that numeric address is stored or a length-1 array of void*'s
-	//c.cards_ptr is a (void*), say a numeric address of something.
-	void ** cards_ptr_memory_address = (void **)cards_ptr_char_array;
+
 	
-	c.cards_ptr = *cards_ptr_memory_address;
+	c.cards_ptr = reconstruct_voidptr_address(cards_ptr_char_array,array_len);
 	c.card_count = card_count;
 	return c;
 }
 
 static PyObject * return_tuple_holdem_cardset(struct holdem_cardset c)
 {
-	return Py_BuildValue("s#i", get_char_array_of_cardset_ptr(c), sizeof(void *), c.card_count);
+	//c.cards_ptr is a (void*), say a numeric address of something.
+	//&(c.cards_ptr) is a (void**), say the memory location at which that numeric address is stored or a length-1 array of void*'s
+	//chars need one byte, numeric addresses need multiple bytes.
+	//A char array starting at the same address as the starting address of the void** will be interpreted by python as a string.
+	const char * cards_ptr_char_array = (const char *)(&(c.cards_ptr));
+	
+	return Py_BuildValue("s#i", cards_ptr_char_array, sizeof(void *), c.card_count);
 }
 
 /*****************************************************************************
@@ -188,10 +203,16 @@ static PyObject * PyHoldem_AppendCard (PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "s#icc", &c_chars, &c_chars_len, &(c.card_count), &cardValue, &cardSuit))
         return NULL;
 
-		
 	c = reconstruct_holdem_cardset(c_chars,c_chars_len,c.card_count);
-		
-	struct return_cardset retval = AppendCard(c,cardValue,cardSuit);
+	
+	struct return_cardset retval;
+	if( c.cards_ptr )
+	{
+		retval = AppendCard(c,cardValue,cardSuit);
+	}else
+	{
+		retval.error_code = INTERNAL_INCONSISTENCY;
+	}
     
 	return return_on_success( return_tuple_holdem_cardset(retval.cardset) , retval.error_code );
 }
@@ -199,6 +220,26 @@ static PyObject * PyHoldem_AppendCard (PyObject *self, PyObject *args)
 //C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
 static PyObject * PyHoldem_DeleteCardset (PyObject *self, PyObject *args)
 {
+	const char *c_chars;
+	int c_chars_len;
+
+	struct holdem_cardset c;
+
+	if (!PyArg_ParseTuple(args, "s#i", &c_chars, &c_chars_len, &(c.card_count)))
+        return NULL;
+	
+	c = reconstruct_holdem_cardset(c_chars,c_chars_len,c.card_count);
+	
+	enum return_status error_code;
+	if( c.cards_ptr )
+	{
+		error_code = DeleteCardset(c);
+	}else
+	{
+		error_code = INTERNAL_INCONSISTENCY;
+	}
+	
+	return return_None_on_success(error_code);
 }
 
 /*****************************************************************************
@@ -218,9 +259,28 @@ static PyObject * PyHoldem_DeleteCardset (PyObject *self, PyObject *args)
 ///Get the amount of money playerNumber has in front of him
 //C_DLL_FUNCTION struct return_money GetMoney(void * table_ptr, playernumber_t);
 static PyObject * PyHoldem_GetMoney (PyObject *self, PyObject *args) 
-{
-    return Py_BuildValue("d", 10.0);
-    //TODO: If the player is all in, make sure this returns the correct value
+{	
+	const char *c_chars;
+	int c_chars_len;
+	int playernumber;
+
+	if (!PyArg_ParseTuple(args, "s#i", &c_chars, &c_chars_len, &playernumber))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	
+	struct return_money retval;
+	if( table_ptr )
+	{
+		retval = GetMoney(table_ptr, playernumber);
+	}else
+	{
+		retval.error_code = INTERNAL_INCONSISTENCY;
+	}
+	
+	return return_on_success(Py_BuildValue("d", retval.money), retval.error_code);
+
 }
 
 
