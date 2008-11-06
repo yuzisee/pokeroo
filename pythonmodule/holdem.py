@@ -1,4 +1,4 @@
-from holdem import *
+from _holdem import *
 
 class HoldemArena:
     "Class Interface for the holdem C extension"
