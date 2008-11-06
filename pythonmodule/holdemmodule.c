@@ -33,11 +33,71 @@ static PyObject * PyHoldem_\1 (PyObject *self, PyObject *args)\n{\n}
 // In lieu of a definitions file we have used the dllexport directive
 #include "../holdem/libsrc/holdemDLL.h"
 
-
+//sizeof(char) is 1, that's the C standard.
+//http://drj11.wordpress.com/2007/04/08/sizeofchar-is-1/
 
 // If you want to create an actual object http://starship.python.net/crew/arcege/extwriting/pyext.html
 // But we probably won't be doing that
 
+
+//http://docs.python.org/c-api/exceptions.html#PyErr_SetString
+static PyObject * return_on_success(static PyObject * retval, enum return_status error_code)
+{
+
+	//If there is an error of any sort, this function should return directly from inside the switch statement.
+	switch( error_code )
+	{
+	case SUCCESS:
+		break;
+		
+	case INPUT_CLEANED:
+		break;
+		
+	case UNRELIABLE_RESULT:
+	//http://docs.python.org/c-api/exceptions.html#PyErr_WarnEx
+	//http://docs.python.org/library/warnings.html
+		PyErr_WarnEx( PyExc_RuntimeWarning, "Unreliable result", 2);
+		break;
+		
+
+//http://docs.python.org/library/exceptions.html?highlight=exceptions#module-exceptions
+		
+	case NULL_TABLE_PTR:
+		PyErr_SetString(PyObject *type, "Pointer to C++ HoldemArena object is null!");
+		return NULL;
+		
+	case NOT_IMPLEMENTED:
+		PyErr_SetString(PyExc_NotImplementedError, "The function called does not apply to the current situation");
+		return NULL;
+		
+	case PARAMETER_INVALID:
+		PyErr_SetString(PyExc_LookupError, "A function parameter is out of range");	
+		return NULL;
+		
+	case PARAMETER_DATA_ERROR:
+		PyErr_SetString(PyExc_ValueError, "Parameters that were specified have not been initialized properly");	
+		return NULL;
+		
+	case INTERNAL_INCONSISTENCY:
+		PyErr_SetString(PyExc_AssertionError, "The internal state of the C++ objects are inconsistent");
+		return NULL;
+	
+	default:
+		PyErr_SetString(PyExc_RuntimeError, "The C interface has returned an unknown error_code");	
+		return NULL;
+	}
+
+	
+	//If the code reaches this point outside the switch statement, we will be returning retval.
+	//However, if the function would prefer to return None, it will not have specified a retval.
+	if( retval )
+	{
+		return retval;
+	}else
+	{
+		Py_RETURN_NONE;
+	}
+}
 
 
 /*****************************************************************************
@@ -77,16 +137,32 @@ cardSuit can be any of:
 //C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
 static PyObject * PyHoldem_CreateNewCardset (PyObject *self, PyObject *args)
 {
-	struct holdem_cardset n = CreateNewCardset();
-	return Py_BuildValue("i", n.card_count);
+	struct holdem_cardset c = CreateNewCardset();
+	
+	char * cards_ptr_chars = (char *)(&(c.cards_ptr));
+	c.card_count;	
+	
+	return Py_BuildValue("si", cards_ptr_chars, sizeof(void *), n.card_count);
 }
 
 
 
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
-//C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
+//C_DLL_FUNCTION struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char cardSuit);
 static PyObject * PyHoldem_AppendCard (PyObject *self, PyObject *args)
 {
+	const char *c_chars;
+    char cardValue;
+	char cardSuit;
+
+    if (!PyArg_ParseTuple(args, "scc", &c, cardValue, cardSuit))
+        return NULL;
+
+	struct holdem_cardset c = (struct holdem_cardset *)c_chars;
+		
+	struct return_cardset retval = AppendCard(c,cardValue,cardSuit);
+    
+	return_on_success(0,error_code);
 }
 
 //C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
@@ -412,7 +488,7 @@ C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_
 C_DLL_FUNCTION enum return_status ResetDeterministicSeed(void * table_ptr);
 C_DLL_FUNCTION uint32 GetDeterministicSeed(void * table_ptr, uint8 small_int); //small_int works pretty well as a number between 0 and 51
 C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
-C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
+C_DLL_FUNCTION struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char cardSuit);
 C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
 C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community );
 C_DLL_FUNCTION struct return_seat DeleteFinishBettingRound(void * event_ptr);

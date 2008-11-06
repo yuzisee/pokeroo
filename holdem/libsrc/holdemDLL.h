@@ -149,6 +149,12 @@ struct return_seat
 }
 ;
 
+struct return_cardset
+{
+	struct holdem_cardset cardset;
+	enum return_status error_code;
+}
+;
 
 struct return_event
 {
@@ -334,7 +340,7 @@ cardSuit can be any of:
 C_DLL_FUNCTION struct holdem_cardset CreateNewCardset(void);
 
 ///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
-C_DLL_FUNCTION enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit);
+C_DLL_FUNCTION struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char cardSuit);
 
 C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
 

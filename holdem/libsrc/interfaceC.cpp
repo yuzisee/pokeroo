@@ -545,28 +545,30 @@ struct holdem_cardset CreateNewCardset()
 }
 
 C_DLL_FUNCTION
-enum return_status AppendCard(struct holdem_cardset * c, char cardValue,char cardSuit)
+struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char cardSuit)
 {
-	enum return_status error_code = SUCCESS;
+	struct return_cardset retval;
+	retval.cardset = c;
+	retval.error_code = SUCCESS;
 
-	if( !c || !(c->cards_ptr) )
+	if( !(c.cards_ptr) )
 	{
-		error_code = PARAMETER_DATA_ERROR;
+		retval.error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
-		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(c->cards_ptr);
+		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(c.cards_ptr);
 		
 		int8 newCardIndex = HoldemUtil::ParseCard(cardValue,cardSuit);
 		if( newCardIndex < 0 )
 		{
-			error_code = PARAMETER_INVALID;
+			retval.error_code = PARAMETER_INVALID;
 		}else
 		{
 			DeckLocation newCard;
 			newCard.SetByIndex(newCardIndex);
 			
 			myHand->AddToHand( newCard );
-			++(c->card_count);
+			retval.cardset.card_count = c.card_count + 1;
 		}
 	}
 
