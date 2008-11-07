@@ -62,6 +62,10 @@ static PyObject * return_on_success(PyObject * retval, enum return_status error_
 
 //http://docs.python.org/library/exceptions.html?highlight=exceptions#module-exceptions
 		
+	case OUT_OF_MEMORY:
+		PyErr_SetString(PyExc_MemoryError, "A call to malloc() or new() returned null");
+		return NULL;
+		
 	case NULL_TABLE_PTR:
 		PyErr_SetString(PyExc_AttributeError, "Pointer to C++ HoldemArena object is null!");
 		return NULL;
@@ -81,7 +85,7 @@ static PyObject * return_on_success(PyObject * retval, enum return_status error_
 	case INTERNAL_INCONSISTENCY:
 		PyErr_SetString(PyExc_AssertionError, "The internal state of the C++ objects are inconsistent");
 		return NULL;
-	
+		
 	default:
 		PyErr_SetString(PyExc_RuntimeError, "The C interface has returned an unknown error_code");
 		return NULL;
@@ -117,7 +121,7 @@ static void * reconstruct_voidptr_address(const char * cards_ptr_char_array, int
 		return (*cards_ptr_memory_address);
 	}else
 	{
-		return 0; //ERROR
+		return 0; //All of the functions within the DLL have null pointer checking and will return an appropriate error
 	}
 	
 }
@@ -132,6 +136,16 @@ static struct holdem_cardset reconstruct_holdem_cardset(const char * cards_ptr_c
 	return c;
 }
 
+static struct holdem_table reconstruct_holdem_table(const char * table_ptr_char_array, int array_len, int seat_count)
+{
+	struct holdem_table t;
+
+	
+	t.table_ptr = reconstruct_voidptr_address(table_ptr_char_array,array_len);
+	t.seat_count = seat_count;
+	return t;
+}
+
 static PyObject * return_tuple_holdem_cardset(struct holdem_cardset c)
 {
 	//c.cards_ptr is a (void*), say a numeric address of something.
@@ -140,7 +154,29 @@ static PyObject * return_tuple_holdem_cardset(struct holdem_cardset c)
 	//A char array starting at the same address as the starting address of the void** will be interpreted by python as a string.
 	const char * cards_ptr_char_array = (const char *)(&(c.cards_ptr));
 	
-	return Py_BuildValue("s#i", cards_ptr_char_array, sizeof(void *), c.card_count);
+	return Py_BuildValue("(s#i)", cards_ptr_char_array, sizeof(void *), c.card_count);
+}
+
+static PyObject * return_tuple_holdem_table(struct holdem_table t)
+{
+	//t.cards_ptr is a (void*), say a numeric address of something.
+	//&(t.cards_ptr) is a (void**), say the memory location at which that numeric address is stored or a length-1 array of void*'s
+	//chars need one byte, numeric addresses need multiple bytes.
+	//A char array starting at the same address as the starting address of the void** will be interpreted by python as a string.
+	const char * table_ptr_char_array = (const char *)(&(t.table_ptr));
+	
+	return Py_BuildValue("(s#i)", table_ptr_char_array, sizeof(void *), t.seat_count);
+}
+
+static PyObject * return_voidptr(void * ptr)
+{
+	//ptr is a (void*), say a numeric address of something.
+	//&(ptr) is a (void**), say the memory location at which that numeric address is stored or a length-1 array of void*'s
+	//chars need one byte, numeric addresses need multiple bytes.
+	//A char array starting at the same address as the starting address of the void** will be interpreted by python as a string.
+	const char * ptr_char_array = (const char *)(&(ptr));
+	
+	return Py_BuildValue("s#", ptr_char_array, sizeof(void *));
 }
 
 /*****************************************************************************
@@ -180,10 +216,16 @@ cardSuit can be any of:
 //C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
 static PyObject * PyHoldem_CreateNewCardset (PyObject *self, PyObject *args)
 {
-	struct holdem_cardset c = CreateNewCardset();
+	struct holdem_cardset c = CreateNewCardset();	
 	
-	
-	return return_tuple_holdem_cardset(c);
+	if( c.cards_ptr )
+	{
+		return return_tuple_holdem_cardset(c);
+	}
+	else
+	{
+		return return_None_on_success(OUT_OF_MEMORY);
+	}
 	
 }
 
@@ -200,20 +242,13 @@ static PyObject * PyHoldem_AppendCard (PyObject *self, PyObject *args)
 
 	struct holdem_cardset c;
 	
-    if (!PyArg_ParseTuple(args, "s#icc", &c_chars, &c_chars_len, &(c.card_count), &cardValue, &cardSuit))
+    if (!PyArg_ParseTuple(args, "(s#i)cc", &c_chars, &c_chars_len, &(c.card_count), &cardValue, &cardSuit))
         return NULL;
 
 	c = reconstruct_holdem_cardset(c_chars,c_chars_len,c.card_count);
 	
-	struct return_cardset retval;
-	if( c.cards_ptr )
-	{
-		retval = AppendCard(c,cardValue,cardSuit);
-	}else
-	{
-		retval.error_code = INTERNAL_INCONSISTENCY;
-	}
-    
+	struct return_cardset retval = AppendCard(c,cardValue,cardSuit);
+	
 	return return_on_success( return_tuple_holdem_cardset(retval.cardset) , retval.error_code );
 }
 
@@ -225,19 +260,12 @@ static PyObject * PyHoldem_DeleteCardset (PyObject *self, PyObject *args)
 
 	struct holdem_cardset c;
 
-	if (!PyArg_ParseTuple(args, "s#i", &c_chars, &c_chars_len, &(c.card_count)))
+	if (!PyArg_ParseTuple(args, "(s#i)", &c_chars, &c_chars_len, &(c.card_count)))
         return NULL;
 	
 	c = reconstruct_holdem_cardset(c_chars,c_chars_len,c.card_count);
 	
-	enum return_status error_code;
-	if( c.cards_ptr )
-	{
-		error_code = DeleteCardset(c);
-	}else
-	{
-		error_code = INTERNAL_INCONSISTENCY;
-	}
+	enum return_status error_code = DeleteCardset(c);
 	
 	return return_None_on_success(error_code);
 }
@@ -264,20 +292,12 @@ static PyObject * PyHoldem_GetMoney (PyObject *self, PyObject *args)
 	int c_chars_len;
 	int playernumber;
 
-	if (!PyArg_ParseTuple(args, "s#i", &c_chars, &c_chars_len, &playernumber))
+	if (!PyArg_ParseTuple(args, "(s#i)", &c_chars, &c_chars_len, &playernumber))
         return NULL;
 	
 	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
 	
-	
-	struct return_money retval;
-	if( table_ptr )
-	{
-		retval = GetMoney(table_ptr, playernumber);
-	}else
-	{
-		retval.error_code = INTERNAL_INCONSISTENCY;
-	}
+	struct return_money retval = GetMoney(table_ptr, playernumber);
 	
 	return return_on_success(Py_BuildValue("d", retval.money), retval.error_code);
 
@@ -288,7 +308,19 @@ static PyObject * PyHoldem_GetMoney (PyObject *self, PyObject *args)
 //C_DLL_FUNCTION enum return_status SetMoney(void * table_ptr, playernumber_t, float64);
 static PyObject * PyHoldem_SetMoney (PyObject *self, PyObject *args) 
 {
-    Py_RETURN_NONE;
+	const char *c_chars;
+	int c_chars_len;
+	int playernumber;
+	double money;
+
+	if (!PyArg_ParseTuple(args, "(s#i)d", &c_chars, &c_chars_len, &playernumber, &money))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	enum return_status error_code = SetMoney(table_ptr, playernumber, money);
+	
+	return return_None_on_success(error_code);
 }
 
 
@@ -297,21 +329,53 @@ static PyObject * PyHoldem_SetMoney (PyObject *self, PyObject *args)
 //C_DLL_FUNCTION struct return_money GetCurrentRoundBet(void * table_ptr, playernumber_t playerNumber);
 static PyObject * PyHoldem_GetCurrentRoundBet (PyObject *self, PyObject *args) 
 {
-    //TODO: If the player is all in, make sure this returns the correct value
-    return Py_BuildValue("d", 1.0);
+	const char *c_chars;
+	int c_chars_len;
+	int playernumber;
+
+	if (!PyArg_ParseTuple(args, "(s#i)", &c_chars, &c_chars_len, &playernumber))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	struct return_money retval = GetCurrentRoundBet(table_ptr, playernumber);
+	
+	return return_on_success(Py_BuildValue("d", retval.money), retval.error_code);
 }
 
 
 //C_DLL_FUNCTION struct return_money GetPrevRoundsBet(void * table_ptr, playernumber_t playerNumber);
 static PyObject * PyHoldem_GetPrevRoundsBet (PyObject *self, PyObject *args)
 {
+	const char *c_chars;
+	int c_chars_len;
+	int playernumber;
+
+	if (!PyArg_ParseTuple(args, "(s#i)", &c_chars, &c_chars_len, &playernumber))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	struct return_money retval = GetPrevRoundsBet(table_ptr, playernumber);
+	
+	return return_on_success(Py_BuildValue("d", retval.money), retval.error_code);
 }
 
 ///Get the amount of money that is in the pot
 //C_DLL_FUNCTION struct return_money GetPotSize(void * table_ptr);
 static PyObject * PyHoldem_GetPotSize (PyObject *self, PyObject *args) 
 {
-    return Py_BuildValue("d", 4.75);
+    const char *c_chars;
+	int c_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &c_chars, &c_chars_len))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	struct return_money retval = GetPotSize(table_ptr);
+	
+	return return_on_success(Py_BuildValue("d", retval.money), retval.error_code);
 }
 
 
@@ -319,7 +383,17 @@ static PyObject * PyHoldem_GetPotSize (PyObject *self, PyObject *args)
 //C_DLL_FUNCTION struct return_money GetPrevRoundsPotsize(void * table_ptr);
 static PyObject * PyHoldem_GetPrevRoundsPotsize (PyObject *self, PyObject *args)
 {
-    return Py_BuildValue("d", 0.5);
+    const char *c_chars;
+	int c_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &c_chars, &c_chars_len))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	struct return_money retval = GetPrevRoundsPotsize(table_ptr);
+	
+	return return_on_success(Py_BuildValue("d", retval.money), retval.error_code);
 }
 
 
@@ -335,18 +409,56 @@ static PyObject * PyHoldem_GetPrevRoundsPotsize (PyObject *self, PyObject *args)
 	BEGIN
 	Game Initialization functions
 *****************************************************************************/
-//C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * table_ptr);
+//C_DLL_FUNCTION enum return_status RestoreTableState(const char * state_str, void * table_ptr);
 static PyObject * PyHoldem_RestoreTableState (PyObject *self, PyObject *args)
 {
+	const char *state_str;
+	const char *c_chars;
+	int c_chars_len;
+
+	if (!PyArg_ParseTuple(args, "ss#", &state_str, &c_chars, &c_chars_len))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	enum return_status error_code = RestoreTableState(state_str, table_ptr);
+	
+	return return_None_on_success(error_code);
 }
 //C_DLL_FUNCTION enum return_status InitializeNewTableState(void * table_ptr);
 static PyObject * PyHoldem_InitializeNewTableState (PyObject *self, PyObject *args)
 {
+	const char *c_chars;
+	int c_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &c_chars, &c_chars_len))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	enum return_status error_code = InitializeNewTableState(table_ptr);
+	
+	return return_None_on_success(error_code);
 }
 
-//C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr);
+//C_DLL_FUNCTION struct return_string SaveTableState(void * table_ptr);
 static PyObject * PyHoldem_SaveTableState (PyObject *self, PyObject *args)
 {
+	const char *c_chars;
+	int c_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &c_chars, &c_chars_len))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	struct return_string retval = SaveTableState(table_ptr);
+	
+	PyObject * Py_retval = Py_BuildValue("s", retval.str);
+	
+	if( retval.error_code == SUCCESS ) free(retval.str);
+	
+	return return_on_success(Py_retval, retval.error_code);
 }
 /*****************************************************************************
 	Game Initialization functions
@@ -359,20 +471,63 @@ static PyObject * PyHoldem_SaveTableState (PyObject *self, PyObject *args)
 	Hand Initialization functions
 *****************************************************************************/
 
-//C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind);
+//C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind, playernumber_t overrideDealer);
 static PyObject * PyHoldem_BeginNewHands (PyObject *self, PyObject *args)
 {
+	const char *c_chars;
+	int c_chars_len;
+	double smallBlind;
+	int overrideDealer = -1;
+
+	if (!PyArg_ParseTuple(args, "s#di", &c_chars, &c_chars_len, &smallBlind, &overrideDealer))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	enum return_status error_code = BeginNewHands(table_ptr, smallBlind, overrideDealer);
+	
+	return return_None_on_success(error_code);
 }
 
 
 //C_DLL_FUNCTION enum return_status ShowHoleCardsToBot(void * table_ptr, playernumber_t , struct holdem_cardset );
 static PyObject * PyHoldem_ShowHoleCardsToBot (PyObject *self, PyObject *args)
 {
+	const char *table_chars;
+	int table_chars_len;
+	
+	const char *cardset_chars;
+	int cardset_chars_len;
+	
+	int playernumber;
+	struct holdem_cardset c;
+	
+	if (!PyArg_ParseTuple(args, "s#i(s#i)", &table_chars, &table_chars_len, &playernumber, &cardset_chars, &cardset_chars_len, &(c.card_count)))
+        return NULL;
+
+	c = reconstruct_holdem_cardset(cardset_chars,cardset_chars_len,c.card_count);
+		
+	void * table_ptr = reconstruct_voidptr_address(table_chars,table_chars_len);
+	
+	enum return_status error_code = ShowHoleCardsToBot(table_ptr, playernumber, c);
+	
+	return return_None_on_success(error_code);
 }
 
 //C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr);
 static PyObject * PyHoldem_FinishHandRefreshPlayers (PyObject *self, PyObject *args)
 {
+	const char *table_chars;
+	int table_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &table_chars, &table_chars_len))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(table_chars,table_chars_len);
+	
+	enum return_status error_code = FinishHandRefreshPlayers(table_ptr);
+	
+	return return_None_on_success(error_code);
 }
 
 /*****************************************************************************
@@ -390,17 +545,59 @@ static PyObject * PyHoldem_FinishHandRefreshPlayers (PyObject *self, PyObject *a
 //C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community );
 static PyObject * PyHoldem_CreateNewBettingRound (PyObject *self, PyObject *args)
 {
+	const char *table_chars;
+	int table_chars_len;
+	
+	const char *cardset_chars;
+	int cardset_chars_len;
+	
+	struct holdem_cardset c;
+	
+	if (!PyArg_ParseTuple(args, "s#(s#i)", &table_chars, &table_chars_len, &cardset_chars, &cardset_chars_len, &(c.card_count)))
+        return NULL;
+
+	c = reconstruct_holdem_cardset(cardset_chars,cardset_chars_len,c.card_count);
+		
+	void * table_ptr = reconstruct_voidptr_address(table_chars,table_chars_len);
+	
+	struct return_event retval = CreateNewBettingRound(table_ptr, c);
+	
+	return return_on_success( return_voidptr(retval.event_ptr) , retval.error_code );
 }
 
 //C_DLL_FUNCTION struct return_seat DeleteFinishBettingRound(void * event_ptr);
 static PyObject * PyHoldem_DeleteFinishBettingRound (PyObject *self, PyObject *args)
 {
+    const char *event_chars;
+	int event_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &event_chars, &event_chars_len))
+        return NULL;
+	
+	void * event_ptr = reconstruct_voidptr_address(event_chars,event_chars_len);
+	
+	struct return_seat retval = DeleteFinishBettingRound(event_ptr);
+	
+	return return_on_success(Py_BuildValue("i", retval.seat_number), retval.error_code);
 }
 
 
 //C_DLL_FUNCTION enum return_status PlayerMakesBetTo(void * event_ptr, playernumber_t playerNumber, float64 money);
 static PyObject * PyHoldem_PlayerMakesBetTo (PyObject *self, PyObject *args)
 {
+    const char *event_chars;
+	int event_chars_len;
+	int playernumber;
+	double money;
+
+	if (!PyArg_ParseTuple(args, "s#id", &event_chars, &event_chars_len, &playernumber, &money))
+        return NULL;
+	
+	void * event_ptr = reconstruct_voidptr_address(event_chars,event_chars_len);
+	
+	enum return_status error_code = PlayerMakesBetTo(event_ptr, playernumber, money);
+	
+	return return_None_on_success(error_code);
 }
 
 
@@ -409,7 +606,18 @@ static PyObject * PyHoldem_PlayerMakesBetTo (PyObject *self, PyObject *args)
 //C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, playernumber_t playerNumber);
 static PyObject * PyHoldem_GetBetDecision (PyObject *self, PyObject *args)
 {
-    return Py_BuildValue("d", 6.0);
+    const char *table_chars;
+	int table_chars_len;
+	int playernumber;
+
+	if (!PyArg_ParseTuple(args, "s#i", &table_chars, &table_chars_len, &playernumber))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(table_chars,table_chars_len);
+	
+	struct return_money retval = GetBetDecision(table_ptr, playernumber);
+	
+	return return_on_success(Py_BuildValue("d", retval.money), retval.error_code);
 }
 
 
@@ -418,7 +626,24 @@ static PyObject * PyHoldem_GetBetDecision (PyObject *self, PyObject *args)
 //C_DLL_FUNCTION struct return_seat WhoIsNext_Betting(void * event_ptr);
 static PyObject * PyHoldem_WhoIsNext_Betting (PyObject *self, PyObject *args)
 {
-    return Py_BuildValue("i", 0);
+    const char *event_chars;
+	int event_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &event_chars, &event_chars_len))
+        return NULL;
+	
+	void * event_ptr = reconstruct_voidptr_address(event_chars,event_chars_len);
+	
+	struct return_seat retval = WhoIsNext_Betting(event_ptr);
+	
+	if( retval.seat_number == -1 )
+	{
+		return return_None_on_success(retval.error_code);
+	}
+	else
+	{
+		return return_on_success(Py_BuildValue("i", retval.seat_number), retval.error_code);
+	}
 }
 
 
@@ -427,7 +652,17 @@ static PyObject * PyHoldem_WhoIsNext_Betting (PyObject *self, PyObject *args)
 //C_DLL_FUNCTION struct return_money GetBetToCall(void * table_ptr);
 static PyObject * PyHoldem_GetBetToCall (PyObject *self, PyObject *args) 
 {
-    return Py_BuildValue("d", 2.5);
+    const char *c_chars;
+	int c_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &c_chars, &c_chars_len))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	struct return_money retval = GetBetToCall(table_ptr);
+	
+	return return_on_success(Py_BuildValue("d", retval.money), retval.error_code);
 }
 
 
@@ -446,31 +681,126 @@ static PyObject * PyHoldem_GetBetToCall (PyObject *self, PyObject *args)
 //C_DLL_FUNCTION struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer, struct holdem_cardset final_community);
 static PyObject * PyHoldem_CreateNewShowdown (PyObject *self, PyObject *args)
 {
+	const char *table_chars;
+	int table_chars_len;
+	
+	const char *cardset_chars;
+	int cardset_chars_len;
+	
+	int calledPlayer;
+	struct holdem_cardset c;
+	
+	if (!PyArg_ParseTuple(args, "s#i(s#i)", &table_chars, &table_chars_len, &calledPlayer, &cardset_chars, &cardset_chars_len, &(c.card_count)))
+        return NULL;
+
+	c = reconstruct_holdem_cardset(cardset_chars,cardset_chars_len,c.card_count);
+		
+	void * table_ptr = reconstruct_voidptr_address(table_chars,table_chars_len);
+	
+	struct return_event retval = CreateNewShowdown(table_ptr, calledPlayer, c);
+	
+	return return_on_success( return_voidptr(retval.event_ptr) , retval.error_code );
 }
 
 //Get the playerNumber of the player who's turn it is
-//C_DLL_FUNCTION struct return_seat PyHoldem_WhoIsNext_Showdown(void * event_ptr);
+//C_DLL_FUNCTION struct return_seat WhoIsNext_Showdown(void * event_ptr);
 static PyObject * PyHoldem_WhoIsNext_Showdown (PyObject *self, PyObject *args)
 {
-    return Py_BuildValue("i", 0);
+    const char *event_chars;
+	int event_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &event_chars, &event_chars_len))
+        return NULL;
+	
+	void * event_ptr = reconstruct_voidptr_address(event_chars,event_chars_len);
+	
+	struct return_seat retval = WhoIsNext_Showdown(event_ptr);
+	
+	if( retval.seat_number == -1 )
+	{
+		return return_None_on_success(retval.error_code);
+	}
+	else
+	{
+		return return_on_success(Py_BuildValue("i", retval.seat_number), retval.error_code);
+	}
 }
 
 
 
 
 ///Call this for each card playerNumber reveals during the showdown
-//C_DLL_FUNCTION enum return_status PlayerShowsCard(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community);
-static PyObject * PyHoldem_PlayerShowsCard (PyObject *self, PyObject *args)
-{Py_RETURN_NONE;}
+//C_DLL_FUNCTION enum return_status PlayerShowsHand(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community);
+static PyObject * PyHoldem_PlayerShowsHand (PyObject *self, PyObject *args)
+{
+	const char *event_chars;
+	int event_chars_len;
+
+	const char *playerHand_chars;
+	int playerHand_chars_len;
+	
+	const char *community_chars;
+	int community_chars_len;
+	
+	int playernumber;
+	struct holdem_cardset playerHand;
+	struct holdem_cardset community;
+	
+	if (!PyArg_ParseTuple(args, "s#i(s#i)(s#i)", &event_chars, &event_chars_len
+											, &playernumber
+											, &playerHand_chars, &playerHand_chars_len, &(playerHand.card_count)
+											, &community_chars, &community_chars_len, &(community.card_count) )
+	   )
+	{
+        return NULL;
+	}
+
+	playerHand = reconstruct_holdem_cardset(playerHand_chars,playerHand_chars_len,playerHand.card_count);
+	community = reconstruct_holdem_cardset(community_chars,community_chars_len,community.card_count);
+		
+	void * event_ptr = reconstruct_voidptr_address(event_chars,event_chars_len);
+	
+	enum return_status error_code = PlayerShowsHand(event_ptr, playernumber, playerHand, community);
+	
+	return return_None_on_success(error_code);
+}
 
 ///Call this when playerNumber mucks his/her hand during the showdow
 //C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber);
 static PyObject * PyHoldem_PlayerMucksHand (PyObject *self, PyObject *args)
-{Py_RETURN_NONE;}
+{
+    const char *event_chars;
+	int event_chars_len;
+	int playernumber;
+
+	if (!PyArg_ParseTuple(args, "s#i", &event_chars, &event_chars_len, &playernumber))
+        return NULL;
+	
+	void * event_ptr = reconstruct_voidptr_address(event_chars,event_chars_len);
+	
+	enum return_status error_code = PlayerMucksHand(event_ptr, playernumber);
+	
+	return return_None_on_success(error_code);
+}
 
 //C_DLL_FUNCTION enum return_status DeleteFinishShowdown(void * table_ptr, void * event_ptr);
 static PyObject * PyHoldem_DeleteFinishShowdown (PyObject *self, PyObject *args)
 {
+	const char *table_chars;
+	int table_chars_len;
+	
+	const char *event_chars;
+	int event_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#s#", &table_chars, &table_chars_len, &event_chars, &event_chars_len))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(table_chars,table_chars_len);
+	void * event_ptr = reconstruct_voidptr_address(event_chars,event_chars_len);
+	
+	enum return_status error_code = DeleteFinishShowdown(table_ptr, event_ptr);
+	
+	return return_None_on_success(error_code);
 }
 
 
@@ -490,22 +820,76 @@ static PyObject * PyHoldem_DeleteFinishShowdown (PyObject *self, PyObject *args)
 //C_DLL_FUNCTION struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination);
 static PyObject * PyHoldem_CreateNewTable (PyObject *self, PyObject *args)
 {
+    int seatsAtTable;
+	double chipDenomination;
+	
+    if (!PyArg_ParseTuple(args, "id", &seatsAtTable, &chipDenomination))
+        return NULL;
+
+	struct return_table retval = CreateNewTable(seatsAtTable,chipDenomination);
+	
+	return return_on_success( return_tuple_holdem_table(retval.table) , retval.error_code );
 }
+
 //C_DLL_FUNCTION enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete);
 static PyObject * PyHoldem_DeleteTableAndPlayers (PyObject *self, PyObject *args)
 {
+	const char *table_chars;
+	int table_chars_len;
+
+	struct holdem_table t;
+
+	if (!PyArg_ParseTuple(args, "(s#i)", &table_chars, &table_chars_len, &(t.seat_count)))
+        return NULL;
+	
+	t = reconstruct_holdem_table(table_chars,table_chars_len,t.seat_count);
+	
+	enum return_status error_code = DeleteTableAndPlayers(t);
+	
+	return return_None_on_success(error_code);
 }
 
 ///Add a player to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER.
 ///These functions returns a playerNumber to identify this player in your code
 
-//C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money);
+//C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, const char * playerName, float64 money);
 static PyObject * PyHoldem_CreateNewHumanOpponent (PyObject *self, PyObject *args)
 {
+    const char *table_chars;
+	int table_chars_len;
+
+	struct holdem_table t;
+	const char * playerName;
+	double money;
+
+	if (!PyArg_ParseTuple(args, "(s#i)sd", &table_chars, &table_chars_len, &(t.seat_count), &playerName, &money))
+        return NULL;
+	
+	t = reconstruct_holdem_table(table_chars,table_chars_len,t.seat_count);
+	
+	struct return_seat retval = CreateNewHumanOpponent(t, playerName, money);
+	
+	return return_on_success(Py_BuildValue("i", retval.seat_number), retval.error_code);
 }
-//C_DLL_FUNCTION struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType);
+//C_DLL_FUNCTION struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, const char *playerName, float64 money, char botType);
 static PyObject * PyHoldem_CreateNewStrategyBot (PyObject *self, PyObject *args)
 {
+    const char *table_chars;
+	int table_chars_len;
+
+	struct holdem_table t;
+	const char * playerName;
+	double money;
+	char botType;
+
+	if (!PyArg_ParseTuple(args, "(s#i)sdc", &table_chars, &table_chars_len, &(t.seat_count), &playerName, &money, &botType))
+        return NULL;
+	
+	t = reconstruct_holdem_table(table_chars,table_chars_len,t.seat_count);
+	
+	struct return_seat retval = CreateNewStrategyBot(t, playerName, money, botType);
+	
+	return return_on_success(Py_BuildValue("i", retval.seat_number), retval.error_code);
 }
 
 
@@ -524,38 +908,38 @@ static PyObject * PyHoldem_CreateNewStrategyBot (PyObject *self, PyObject *args)
 *****************************************************************************/
 
 static PyMethodDef HoldemMethods[] = {
-    {"get_money",  						PyHoldem_GetMoney, METH_VARARGS, "Get the amount of money a player has in front of him/her."},
-    {"set_money",  						PyHoldem_SetMoney, METH_VARARGS, "Override the amount of money a player has in front of him/her."},
-	{"get_current_round_bet",  			PyHoldem_GetCurrentRoundBet, METH_VARARGS, "Get the amount of money a player has bet so far this round"},
-	{"get_previous_rounds_bet",  		PyHoldem_GetPrevRoundsBet, METH_VARARGS, "Get the amount of money a player has bet so far in all previous rounds"},
-	{"get_pot_size",  					PyHoldem_GetPotSize, METH_VARARGS, "Get the amount of money that is in the pot"},
-	{"get_previous_rounds_pot_size",  	PyHoldem_GetPrevRoundsPotsize, METH_VARARGS, "Get the amount of money that was in the pot at the BEGINNING of the current betting round"},
-	{"restore_table_state",  			PyHoldem_RestoreTableState, METH_VARARGS, "Restore a table from a state saved with save_table_state instead of initializing a new table state"},
-	{"initialize_new_table_state",  	PyHoldem_InitializeNewTableState, METH_VARARGS, "Initialize the state of a newly created table instead of restoring from a saved state"},
-	{"begin_new_hands",  				PyHoldem_BeginNewHands, METH_VARARGS, "Call this when it is time to begin dealing new hands to all of the players"},
-	{"bot_receives_hole_cards",  		PyHoldem_ShowHoleCardsToBot, METH_VARARGS, "Notify a bot that it has received hole cards"},
-	{"finish_hand_refresh_players",  	PyHoldem_FinishHandRefreshPlayers, METH_VARARGS, "complete any final bookkeeping that needs to take place to prepare data structures for the next hand"},
-	{"save_table_state",  				PyHoldem_SaveTableState, METH_VARARGS, "After finish_hand_refresh_players has been called, use this function to save the state of the table"},
+    {"get_money",  						PyHoldem_GetMoney, METH_VARARGS				, "s#i: Get the amount of money a player has in front of him/her."},
+    {"set_money",  						PyHoldem_SetMoney, METH_VARARGS				, "s#id: Override the amount of money a player has in front of him/her."},
+	{"get_current_round_bet",  			PyHoldem_GetCurrentRoundBet, METH_VARARGS	, "s#i: Get the amount of money a player has bet so far this round"},
+	{"get_previous_rounds_bet",  		PyHoldem_GetPrevRoundsBet, METH_VARARGS		, "s#i: Get the amount of money a player has bet so far in all previous rounds"},
+	{"get_pot_size",  					PyHoldem_GetPotSize, METH_VARARGS			, "s#: Get the amount of money that is in the pot"},
+	{"get_previous_rounds_pot_size",  	PyHoldem_GetPrevRoundsPotsize, METH_VARARGS	, "s#: Get the amount of money that was in the pot at the BEGINNING of the current betting round"},
+	{"restore_table_state",  			PyHoldem_RestoreTableState, METH_VARARGS	, "ss#: Restore a table from a state saved with save_table_state instead of initializing a new table state"},
+	{"initialize_new_table_state",  	PyHoldem_InitializeNewTableState, METH_VARARGS, "s#: Initialize the state of a newly created table instead of restoring from a saved state"},
+	{"begin_new_hands",  				PyHoldem_BeginNewHands, METH_VARARGS		, "s#di: Call this when it is time to begin dealing new hands to all of the players"},
+	{"bot_receives_hole_cards",  		PyHoldem_ShowHoleCardsToBot, METH_VARARGS	, "s#i(s#i): Notify a bot that it has received hole cards"},
+	{"finish_hand_refresh_players",  	PyHoldem_FinishHandRefreshPlayers, METH_VARARGS, "s#: Complete any final bookkeeping that needs to take place to prepare data structures for the next hand"},
+	{"save_table_state",  				PyHoldem_SaveTableState, METH_VARARGS		, "s#: After finish_hand_refresh_players has been called, use this function to save the state of the table"},
 //	{"reset_deterministic_seed",  ResetDeterministicSeed, METH_VARARGS, ""},
 //	{"get_deterministic_seed",  GetDeterministicSeed, METH_VARARGS, ""},
-	{"create_new_cardset",  			PyHoldem_CreateNewCardset, METH_VARARGS, "Create a container for cards"},
-	{"append_card_to_cardset",  		PyHoldem_AppendCard, METH_VARARGS, "Add a single card to a cardset container"},
-	{"delete_cardset",  				PyHoldem_DeleteCardset, METH_VARARGS, "Free a cardset that was created with create_new_cardset to release the memory"},
-	{"create_new_betting_round",  		PyHoldem_CreateNewBettingRound, METH_VARARGS, "A betting round object moderates the bets made at the table for a given set of community cards"},
-	{"delete_finish_betting_round",  	PyHoldem_DeleteFinishBettingRound, METH_VARARGS, "When a betting round completes, free the betting round object and retrieve the called player's seat number"},
-	{"player_makes_bet",  				PyHoldem_PlayerMakesBetTo, METH_VARARGS, "Indicate to a betting round object that a specific player has made a certain bet"},
-	{"get_bot_bet_decision",  			PyHoldem_GetBetDecision, METH_VARARGS, "Ask a bot what bet it would like to make"},
-	{"get_bet_to_call",  				PyHoldem_GetBetToCall, METH_VARARGS, "Get the amount of the largest bet so far this round"},
-	{"who_is_next_to_bet",  			PyHoldem_WhoIsNext_Betting, METH_VARARGS, "Get the seat number of the player that is next to act in a betting round"},
-	{"who_is_next_in_showdown",  		PyHoldem_WhoIsNext_Showdown, METH_VARARGS, "Get the seat number of the player that is next to act in a showdown"},
-	{"player_shows_hand",  				PyHoldem_PlayerShowsCard, METH_VARARGS, "Indicate to a showdown object that a specific player has revealed its hand"},
-	{"player_mucks_hand",  				PyHoldem_PlayerMucksHand, METH_VARARGS, "Indicate to a showdown object that a specific player has mucked its hand"},
-	{"create_new_showdown",  			PyHoldem_CreateNewShowdown, METH_VARARGS, "A showdown object moderates the revealing of hands performed at the table, starting with the called player"},
-	{"delete_finish_showdown",  		PyHoldem_DeleteFinishShowdown, METH_VARARGS, "What a showdown round completes, free the showdown object"},
-	{"create_new_table", 				PyHoldem_CreateNewTable, METH_VARARGS, "Create a table: This is the main constructor"},
-	{"delete_table_and_players",  		PyHoldem_DeleteTableAndPlayers, METH_VARARGS, "Delete the table and all added players: This is the main destructor"},
-	{"add_a_human_opponent",  			PyHoldem_CreateNewHumanOpponent, METH_VARARGS, "Indicate that a non-bot player will be sitting at the table in the next seat (clockwise)"},
-	{"add_a_strategy_bot",  			PyHoldem_CreateNewStrategyBot, METH_VARARGS, "Indicate that a bot will be sitting at the table in the next seat (clockwise)"},
+	{"create_new_cardset",  			PyHoldem_CreateNewCardset, METH_VARARGS		, "Create a container for cards"},
+	{"append_card_to_cardset",  		PyHoldem_AppendCard, METH_VARARGS			, "(s#i)cc: Add a single card to a cardset container"},
+	{"delete_cardset",  				PyHoldem_DeleteCardset, METH_VARARGS		, "(s#i): Free a cardset that was created with create_new_cardset to release the memory"},
+	{"create_new_betting_round",  		PyHoldem_CreateNewBettingRound, METH_VARARGS, "s#(s#i): A betting round object moderates the bets made at the table for a given set of community cards"},
+	{"delete_finish_betting_round",  	PyHoldem_DeleteFinishBettingRound, METH_VARARGS, "s#: When a betting round completes, free the betting round object and retrieve the called player's seat number"},
+	{"player_makes_bet",  				PyHoldem_PlayerMakesBetTo, METH_VARARGS		, "s#id: Indicate to a betting round object that a specific player has made a certain bet"},
+	{"get_bot_bet_decision",  			PyHoldem_GetBetDecision, METH_VARARGS		, "s#i: Ask a bot what bet it would like to make"},
+	{"get_bet_to_call",  				PyHoldem_GetBetToCall, METH_VARARGS			, "s#: Get the amount of the largest bet so far this round"},
+	{"who_is_next_to_bet",  			PyHoldem_WhoIsNext_Betting, METH_VARARGS	, "s#: Get the seat number of the player that is next to act in a betting round"},
+	{"who_is_next_in_showdown",  		PyHoldem_WhoIsNext_Showdown, METH_VARARGS	, "s#: Get the seat number of the player that is next to act in a showdown"},
+	{"player_shows_hand",  				PyHoldem_PlayerShowsHand, METH_VARARGS		, "s#i(s#i)(s#i): Indicate to a showdown object that a specific player has revealed its hand"},
+	{"player_mucks_hand",  				PyHoldem_PlayerMucksHand, METH_VARARGS		, "s#i: Indicate to a showdown object that a specific player has mucked its hand"},
+	{"create_new_showdown",  			PyHoldem_CreateNewShowdown, METH_VARARGS	, "s#i(s#i)(s#i): A showdown object moderates the revealing of hands performed at the table, starting with the called player"},
+	{"delete_finish_showdown",  		PyHoldem_DeleteFinishShowdown, METH_VARARGS	, "s#s#: What a showdown round completes, free the showdown object"},
+	{"create_new_table", 				PyHoldem_CreateNewTable, METH_VARARGS		, "id: Create a table: This is the main constructor"},
+	{"delete_table_and_players",  		PyHoldem_DeleteTableAndPlayers, METH_VARARGS, "(s#i): Delete the table and all added players: This is the main destructor"},
+	{"add_a_human_opponent",  			PyHoldem_CreateNewHumanOpponent, METH_VARARGS, "(s#i)sd: Indicate that a non-bot player will be sitting at the table in the next seat (clockwise)"},
+	{"add_a_strategy_bot",  			PyHoldem_CreateNewStrategyBot, METH_VARARGS	, "(s#i)sdc: Indicate that a bot will be sitting at the table in the next seat (clockwise)"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 //http://www.python.org/dev/peps/pep-0008/
@@ -564,21 +948,22 @@ static PyMethodDef HoldemMethods[] = {
 //you should use the suffix "Error" on your exception names (if the exception actually is an error).
 
 /*
+
 C_DLL_FUNCTION struct return_money GetMoney(void * table_ptr, playernumber_t);
 C_DLL_FUNCTION enum return_status SetMoney(void * table_ptr, playernumber_t, float64);
 C_DLL_FUNCTION struct return_money GetCurrentRoundBet(void * table_ptr, playernumber_t playerNumber);
 C_DLL_FUNCTION struct return_money GetPrevRoundsBet(void * table_ptr, playernumber_t playerNumber);
 C_DLL_FUNCTION struct return_money GetPotSize(void * table_ptr);
 C_DLL_FUNCTION struct return_money GetPrevRoundsPotsize(void * table_ptr);
-C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * table_ptr);
+C_DLL_FUNCTION enum return_status RestoreTableState(const char * state_str, void * table_ptr);
 C_DLL_FUNCTION enum return_status InitializeNewTableState(void * table_ptr);
-C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind);
-C_DLL_FUNCTION enum return_status ShowHoleCards(void * table_ptr, playernumber_t , struct holdem_cardset );
+C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind, playernumber_t overrideDealer);
+C_DLL_FUNCTION enum return_status ShowHoleCardsToBot(void * table_ptr, playernumber_t , struct holdem_cardset );
 C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr);
-C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr);
+C_DLL_FUNCTION struct return_string SaveTableState(void * table_ptr);
 C_DLL_FUNCTION enum return_status ResetDeterministicSeed(void * table_ptr);
 C_DLL_FUNCTION uint32 GetDeterministicSeed(void * table_ptr, uint8 small_int); //small_int works pretty well as a number between 0 and 51
-C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
+C_DLL_FUNCTION struct holdem_cardset CreateNewCardset(void);
 C_DLL_FUNCTION struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char cardSuit);
 C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
 C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community );
@@ -588,14 +973,14 @@ C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, playernumber
 C_DLL_FUNCTION struct return_money GetBetToCall(void * table_ptr);
 C_DLL_FUNCTION struct return_seat WhoIsNext_Betting(void * event_ptr);
 C_DLL_FUNCTION struct return_seat WhoIsNext_Showdown(void * event_ptr);
-C_DLL_FUNCTION enum return_status PlayerShowsCard(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community);
+C_DLL_FUNCTION enum return_status PlayerShowsHand(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community);
 C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber);
 C_DLL_FUNCTION struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer, struct holdem_cardset final_community);
 C_DLL_FUNCTION enum return_status DeleteFinishShowdown(void * table_ptr, void * event_ptr);
 C_DLL_FUNCTION struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDenomination);
 C_DLL_FUNCTION enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete);
-C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money);
-C_DLL_FUNCTION struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType);
+C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, const char * playerName, float64 money);
+C_DLL_FUNCTION struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, const char *playerName, float64 money, char botType);
 
 */
 

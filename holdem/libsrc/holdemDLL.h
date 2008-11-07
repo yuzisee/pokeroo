@@ -125,11 +125,12 @@ enum return_status {
    UNRELIABLE_RESULT,
 
 //FAIL
+	OUT_OF_MEMORY,
    NULL_TABLE_PTR,
    NOT_IMPLEMENTED,
    PARAMETER_INVALID,
    PARAMETER_DATA_ERROR,
-   INTERNAL_INCONSISTENCY
+   INTERNAL_INCONSISTENCY   
 };
 
 
@@ -152,6 +153,13 @@ struct return_seat
 struct return_cardset
 {
 	struct holdem_cardset cardset;
+	enum return_status error_code;
+}
+;
+
+struct return_string
+{
+	char * str;
 	enum return_status error_code;
 }
 ;
@@ -255,7 +263,7 @@ C_DLL_FUNCTION struct return_money GetPrevRoundsPotsize(void * table_ptr);
 */
 
 
-C_DLL_FUNCTION enum return_status RestoreTableState(char * state_str, void * table_ptr);
+C_DLL_FUNCTION enum return_status RestoreTableState(const char * state_str, void * table_ptr);
 C_DLL_FUNCTION enum return_status InitializeNewTableState(void * table_ptr);
 
 C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallBlind, playernumber_t overrideDealer);
@@ -264,7 +272,8 @@ C_DLL_FUNCTION enum return_status ShowHoleCardsToBot(void * table_ptr, playernum
 C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr);
 
 
-C_DLL_FUNCTION enum return_status SaveTableState(char * state_str, void * table_ptr);
+//The new string is allocated with malloc(), free this buffer when you no longer need it
+C_DLL_FUNCTION struct return_string SaveTableState(void * table_ptr);
 
 
 C_DLL_FUNCTION enum return_status ResetDeterministicSeed(void * table_ptr);
@@ -389,10 +398,9 @@ C_DLL_FUNCTION struct return_seat WhoIsNext_Showdown(void * event_ptr);
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
-C_DLL_FUNCTION enum return_status PlayerShowsCard(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community);
+C_DLL_FUNCTION enum return_status PlayerShowsHand(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community);
 
 ///Call this when playerNumber mucks his/her hand during the showdown.
-///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
 C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber);
 
 C_DLL_FUNCTION struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPlayer, struct holdem_cardset final_community);
@@ -418,8 +426,8 @@ C_DLL_FUNCTION enum return_status DeleteTableAndPlayers(struct holdem_table tabl
 
 ///Add a player/bot to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER
 //The first player added to the table (seat #0) will have the button in the first hand
-C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money);
-C_DLL_FUNCTION struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType);
+C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, const char * playerName, float64 money);
+C_DLL_FUNCTION struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, const char *playerName, float64 money, char botType);
 
 
 /*****************************************************************************

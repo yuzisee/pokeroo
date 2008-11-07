@@ -376,18 +376,18 @@ C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr)
 
 //Serializes the table state into a single string.
 //Actions performed during betting events and showdown events will not be saved properly.
+//The new string is allocated with malloc(), free this buffer when you no longer need it
 C_DLL_FUNCTION
-enum return_status SaveTableState(char * state_str, void * table_ptr)
+struct return_string SaveTableState(void * table_ptr)
 {
 	
-	enum return_status error_code = SUCCESS;
+	struct return_string retval;
+	retval.error_code = SUCCESS;
+	retval.str = 0;
 
 	if( !table_ptr )
 	{
-		error_code = NULL_TABLE_PTR;
-	}else if( !state_str )
-	{
-		error_code = PARAMETER_DATA_ERROR;
+		retval.error_code = NULL_TABLE_PTR;
 	}else
 	{
 		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
@@ -396,18 +396,27 @@ enum return_status SaveTableState(char * state_str, void * table_ptr)
 
 		myTable->SerializeRoundStart(strBufState);
 
-		strcpy( state_str , strBufState.str().c_str() );
+		retval.str = (char *)(malloc(strBufState.str().length()+1));
+		if( retval.str )
+		{
+			strcpy( retval.str , strBufState.str().c_str() );
+		}
+		else
+		{
+			retval.error_code = OUT_OF_MEMORY;
+		}
 	}
 
-	return error_code;
+	return retval;
 }
+
 
 
 //Unserializes the table state from a single string.
 //Players and PlayerStrategies will be automatically added back into their correct seats.
 //Actions performed during betting events and showdown events will not be restored properly.
 C_DLL_FUNCTION
-enum return_status RestoreTableState(char * state_str, void * table_ptr)
+enum return_status RestoreTableState(const char * state_str, void * table_ptr)
 {
 	
 	enum return_status error_code = SUCCESS;
@@ -572,7 +581,7 @@ struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char ca
 		}
 	}
 
-	return error_code;
+	return retval;
 }
 
 C_DLL_FUNCTION
@@ -629,7 +638,16 @@ struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardse
 
 		HoldemArenaBetting * bettingEvent = new HoldemArenaBetting( myTable, *myHand, community.card_count );
 
-		retval.event_ptr = reinterpret_cast<void *>(bettingEvent);
+		if( bettingEvent )
+		{
+			retval.event_ptr = reinterpret_cast<void *>(bettingEvent);
+		}
+		else
+		{
+			retval.error_code = OUT_OF_MEMORY;
+		}
+		
+		
 	}
 
 	return retval;
@@ -679,6 +697,7 @@ struct return_seat DeleteFinishBettingRound(void * event_ptr)
 
 
 //Get the seat of the player who's turn it is
+//Returns -1 once the round has ended
 C_DLL_FUNCTION
 struct return_seat WhoIsNext_Betting(void * event_ptr)
 {
@@ -693,7 +712,7 @@ struct return_seat WhoIsNext_Betting(void * event_ptr)
 
 		if( bettingEvent->bBetState != 'b' ) //if the round has already finished,
 		{
-			retval.error_code = NOT_IMPLEMENTED; 
+			retval.seat_number = -1; 
 		}else
 		{
 			retval.seat_number = bettingEvent->WhoIsNext();
@@ -810,7 +829,15 @@ struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPla
 
 		HoldemArenaShowdown * bettingEvent = new HoldemArenaShowdown( myTable, calledPlayer );
 
-		retval.event_ptr = reinterpret_cast<void *>(bettingEvent);
+		if( bettingEvent )
+		{
+			retval.event_ptr = reinterpret_cast<void *>(bettingEvent);
+		}
+		else
+		{
+			retval.error_code = OUT_OF_MEMORY;
+		}
+		
 	}
 
 	return retval;
@@ -854,6 +881,7 @@ enum return_status DeleteFinishShowdown(void * table_ptr, void * event_ptr)
 //Get the seat of the player who's turn it is.
 //Players who aren't all-in first reveal/muck in order.
 //Then players who are all-in show their cards starting with the largest stack.
+//Returns -1 once the round has ended
 C_DLL_FUNCTION
 struct return_seat WhoIsNext_Showdown(void * event_ptr)
 {
@@ -868,7 +896,7 @@ struct return_seat WhoIsNext_Showdown(void * event_ptr)
 
 		if( showdownEvent->bRoundState == '!' ) //if the round has already finished,
 		{
-			retval.error_code = NOT_IMPLEMENTED; 
+			retval.seat_number = -1; 
 		}else
 		{
 			retval.seat_number = showdownEvent->WhoIsNext();
@@ -881,7 +909,8 @@ struct return_seat WhoIsNext_Showdown(void * event_ptr)
 
 ///Call this for each card playerNumber reveals during the showdown
 ///See NewCommunityCard for usage of cardValue and cardSuit
-C_DLL_FUNCTION enum return_status PlayerShowsHand(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community)
+C_DLL_FUNCTION
+enum return_status PlayerShowsHand(void * event_ptr, playernumber_t playerNumber, struct holdem_cardset playerHand, struct holdem_cardset community)
 {
 	enum return_status error_code = SUCCESS;
 
@@ -914,8 +943,8 @@ C_DLL_FUNCTION enum return_status PlayerShowsHand(void * event_ptr, playernumber
 }
 
 ///Call this when playerNumber mucks his/her hand during the showdown.
-///Note: If a player doesn't PlayerShowsCard() then a muck is assumed
-C_DLL_FUNCTION enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber)
+C_DLL_FUNCTION
+enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber)
 {
 	enum return_status error_code = SUCCESS;
 
@@ -970,9 +999,17 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 		bool illustrate = true;
 		bool spectate = true;
 
-		retval.table.table_ptr = reinterpret_cast<void *>(new HoldemArena(chipDenomination, std::cout ,illustrate,spectate));
-		retval.table.seat_count = seatsAtTable;
-
+		HoldemArena * newTable = new HoldemArena(chipDenomination, std::cout ,illustrate,spectate);
+		
+		if( newTable )
+		{
+			retval.table.table_ptr = reinterpret_cast<void *>(newTable);
+			retval.table.seat_count = seatsAtTable;
+		}
+		else
+		{
+			retval.error_code = OUT_OF_MEMORY;
+		}
 	}
 
 	return retval;
@@ -981,7 +1018,7 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 
 
 C_DLL_FUNCTION
-struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char * playerName, float64 money)
+struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, const char * playerName, float64 money)
 {
 	//A human opponent is treated the same as a bot, except it has no strat (and therefore no children)
 	struct return_seat retval = DEFAULT_RETURN_SEAT;
@@ -1018,7 +1055,7 @@ struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, char
 
 
 C_DLL_FUNCTION
-struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, char *playerName, float64 money, char botType)
+struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, const char *playerName, float64 money, char botType)
 {
 	struct return_seat retval = DEFAULT_RETURN_SEAT;
 
