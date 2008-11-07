@@ -961,8 +961,6 @@ C_DLL_FUNCTION enum return_status BeginNewHands(void * table_ptr, float64 smallB
 C_DLL_FUNCTION enum return_status ShowHoleCardsToBot(void * table_ptr, playernumber_t , struct holdem_cardset );
 C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr);
 C_DLL_FUNCTION struct return_string SaveTableState(void * table_ptr);
-C_DLL_FUNCTION enum return_status ResetDeterministicSeed(void * table_ptr);
-C_DLL_FUNCTION uint32 GetDeterministicSeed(void * table_ptr, uint8 small_int); //small_int works pretty well as a number between 0 and 51
 C_DLL_FUNCTION struct holdem_cardset CreateNewCardset(void);
 C_DLL_FUNCTION struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char cardSuit);
 C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
