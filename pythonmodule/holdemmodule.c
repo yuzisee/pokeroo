@@ -934,7 +934,7 @@ static PyMethodDef HoldemMethods[] = {
 	{"who_is_next_in_showdown",  		PyHoldem_WhoIsNext_Showdown, METH_VARARGS	, "s#: Get the seat number of the player that is next to act in a showdown"},
 	{"player_shows_hand",  				PyHoldem_PlayerShowsHand, METH_VARARGS		, "s#i(s#i)(s#i): Indicate to a showdown object that a specific player has revealed its hand"},
 	{"player_mucks_hand",  				PyHoldem_PlayerMucksHand, METH_VARARGS		, "s#i: Indicate to a showdown object that a specific player has mucked its hand"},
-	{"create_new_showdown",  			PyHoldem_CreateNewShowdown, METH_VARARGS	, "s#i(s#i)(s#i): A showdown object moderates the revealing of hands performed at the table, starting with the called player"},
+	{"create_new_showdown",  			PyHoldem_CreateNewShowdown, METH_VARARGS	, "s#i(s#i): A showdown object moderates the revealing of hands performed at the table, starting with the called player"},
 	{"delete_finish_showdown",  		PyHoldem_DeleteFinishShowdown, METH_VARARGS	, "s#s#: What a showdown round completes, free the showdown object"},
 	{"create_new_table", 				PyHoldem_CreateNewTable, METH_VARARGS		, "id: Create a table: This is the main constructor"},
 	{"delete_table_and_players",  		PyHoldem_DeleteTableAndPlayers, METH_VARARGS, "(s#i): Delete the table and all added players: This is the main destructor"},

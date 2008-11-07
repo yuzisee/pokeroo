@@ -16,23 +16,18 @@ sys.path.append(userModulePath); #This helps Python find the extension in Linux
 #The DLL will be local just be safe. This is a test script anyways.
 
 print "Ready?"
-print "SetMoney!",
 
 # http://www.python.org/doc/2.5.2/ext/dynamic-linking.html
 
 
 
+chip_size = 0.5
 
+import holdem
+a = holdem.HoldemArena(chip_size)
 
-from _holdem import *
-print SetMoney()
 
 # Printing strings: http://www.python.org/doc/2.5.2/tut/node9.html
 # Concatenating strings: http://www.skymind.com/~ocrow/python_string/
-print ' '.join(['GetMoney = ', str(get_money()),  'n'])
-
-print CC()
-
-#from holdem import HoldemArenaPlayer
-import holdem
+print ' '.join(['seat_number = ', str(a.seat_number),  'n'])
 
