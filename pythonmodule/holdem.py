@@ -212,7 +212,7 @@ class HoldemArenaBettingRound:
     def __init__(self, holdem_table_voidptr,  community_cards):
         self._c_betting_round_event = create_new_betting_round(holdem_table_voidptr, community_cards)
     
-    def who_is_next(self):
+    def which_seat_is_next(self):
         return who_is_next_to_bet(self._c_betting_round_event)
     
     def raise_by(self,  player,  amount):
@@ -259,13 +259,14 @@ class HoldemArenaShowdownRound:
         self._c_holdem_table_ptr = holdem_table_voidptr
         self._c_betting_round_event = create_new_showdown(holdem_table_voidptr, community_cards)
     
-    def who_is_next(self):
+    def which_seat_is_next(self):
         player_to_act = who_is_next_in_showdown(self._c_betting_round_event)
         if player_to_act == -1:
             return None
         else:
             return player_to_act
     
+    #Bots can always just show their hand. Internally the table will auto-muck when appropriate.
     def show_hand(self,  player,  player_hand):
         player_shows_hand(self._c_betting_round_event, player.seat_number, player_hand, self._community_cards)
     
@@ -277,6 +278,4 @@ class HoldemArenaShowdownRound:
         self._c_showdown_event = None
         self._community_cards = None
 
-    def _player_makes_bet(self, seat_number, amount):
-        player_makes_bet(self._c_betting_round_event, seat_number, amount)
 
