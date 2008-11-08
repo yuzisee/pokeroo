@@ -57,6 +57,13 @@ using std::flush;
 char * myPlayerName = 0;
 
 
+#ifdef GRAPHMONEY
+    std::ofstream scoreboard;
+#endif
+
+#ifdef DEBUGHOLECARDS
+    std::ofstream holecardsData;
+#endif
 
 
 
@@ -74,16 +81,39 @@ static void InitGameLoop(HoldemArena & my, bool bLoadGame)
 	{
 		my.BeginInitialState(); //handnum is set to 1 here
 
+            #ifdef GRAPHMONEY
+
+                scoreboard.open(GRAPHMONEY);
+                scoreboard << "#Hand";
+                for(int8 i=0;i<my.GetTotalPlayers();++i)
+                {
+                    scoreboard << "," << my.ViewPlayer(i)->GetIdent();
+                }
+                scoreboard << endl;
+                scoreboard << "0";
+                for(int8 i=0;i<my.GetTotalPlayers();++i)
+                {
+                    scoreboard << "," << my.ViewPlayer(i)->GetMoney();
+                }
+                scoreboard << endl;
+            #endif // GRAPHMONEY
 
 	}
 #if defined(GRAPHMONEY) && defined(DEBUGSAVEGAME)
     else
     {
-	    my.LoadBeginInitialState();
+
+        #ifdef GRAPHMONEY
+            scoreboard.open(GRAPHMONEY , std::ios::app);
+        #endif
     }
 #endif
 
 		my.ResetDRseed();
+
+        #ifdef DEBUGHOLECARDS
+        holecardsData.open( DEBUGHOLECARDS );
+        #endif
 
 }
 
@@ -230,10 +260,17 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 	    struct BlindUpdate lastRoundBlinds = thisRoundBlinds;
         thisRoundBlinds = blindController.UpdateSituation( lastRoundBlinds , myBlindState(my) );
 
+    #ifdef DEBUGHOLECARDS
+        holecardsData <<
+        "############ Hand " << my.handnum << " " <<
+        "############" << endl;
+
+    #endif
+
 		my.BeginNewHands(thisRoundBlinds.b, thisRoundBlinds.bNew);
 
 
-        my.DealAllHands(tableDealer);
+        my.DealAllHands(tableDealer,holecardsData);
 
 #ifdef DEBUGASSERT
 		if( my.GetDRseed() != 1 )
@@ -249,6 +286,33 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 #ifdef DEBUG_SINGLE_HAND
 		exit(0);
 #endif
+
+
+
+#ifdef GRAPHMONEY
+
+    scoreboard << my.handnum << flush;
+
+    for(int8 i=0;i<my.GetTotalPlayers();++i)
+    {
+
+
+            if( my.ViewPlayer(i)->GetMoney() < 0 )
+            {
+                scoreboard << ",0";
+            }else
+            {
+                scoreboard << "," << flush;
+                scoreboard.precision(10);
+                scoreboard << my.ViewPlayer(i)->GetMoney() << flush;
+            }
+
+
+    }
+    scoreboard << endl;
+#endif // GRAPHMONEY
+
+
 		my.RefreshPlayers(); ///New Hand (handnum is also incremented now)
 
 
@@ -264,6 +328,10 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 #endif
 
 	}
+
+#ifdef GRAPHMONEY
+    scoreboard.close();
+#endif
 
 
 	return my.FinalizeReportWinner();

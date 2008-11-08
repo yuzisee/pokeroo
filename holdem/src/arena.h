@@ -232,16 +232,9 @@ class HoldemArena
 		float64 & PlayerMoney(Player& target){ return target.myMoney; }
 
 
-#ifdef DEBUGHOLECARDS
-        std::ofstream holecardsData;
-#endif
-
     protected:
 
         std::ostream& gamelog;
-        #ifdef GRAPHMONEY
-            std::ofstream scoreboard;
-        #endif
 
 		float64 randRem;
 
@@ -372,7 +365,7 @@ class HoldemArena
         float64 GetDRseed(); //You may get a seed at any time, but it is best to do so after PlayShowdown or when no more HoldemArenaBetting events will take place
 
 		void BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer = -1);
-        void DealAllHands(SerializeRandomDeck *);
+        void DealAllHands(SerializeRandomDeck * tableDealer, std::ofstream & holecardsData);
 
 		void PrepBettingRound(const int8);
         //returns the first person to reveal cards (-1 if all fold)

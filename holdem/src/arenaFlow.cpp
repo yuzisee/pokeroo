@@ -210,7 +210,7 @@ bool HoldemArena::ShowHoleCards(const Player & withP, const CommunityPlus & deal
 	return false;
 }
 
-void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
+void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer, std::ofstream & holecardsData)
 {
 
 
@@ -246,7 +246,7 @@ void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer)
                 holecardsData << withP.GetIdent().c_str() << endl;
             }
         }
-        
+
     }while(curDealer != curIndex);
 }
 
@@ -291,12 +291,6 @@ void HoldemArena::BeginNewHands(const BlindValues & roundBlindValues, const bool
         }
     }
 
-    #ifdef DEBUGHOLECARDS
-        holecardsData <<
-        "############ Hand " << handnum << " " <<
-        "############" << endl;
-
-    #endif
 
 	do
     {
@@ -359,13 +353,6 @@ float64 HoldemArena::GetDRseed()
 void HoldemArena::LoadBeginInitialState()
 {
 
-	#ifdef GRAPHMONEY
-        scoreboard.open(GRAPHMONEY , std::ios::app);
-	#endif
-    #ifdef DEBUGHOLECARDS
-        holecardsData.open( DEBUGHOLECARDS, std::ios::app );
-    #endif
-
 
 }
 
@@ -377,35 +364,13 @@ void HoldemArena::BeginInitialState()
         curDealer = 0;
 
         handnum = 1;
-            #ifdef GRAPHMONEY
 
-                scoreboard.open(GRAPHMONEY);
-                scoreboard << "#Hand";
-                for(int8 i=0;i<nextNewPlayer;++i)
-                {
-                    scoreboard << "," << (p[i])->GetIdent();
-                }
-                scoreboard << endl;
-                scoreboard << "0";
-                for(int8 i=0;i<nextNewPlayer;++i)
-                {
-                    scoreboard << "," << (p[i])->GetMoney();
-                }
-                scoreboard << endl;
-            #endif // GRAPHMONEY
-        #ifdef DEBUGHOLECARDS
-        holecardsData.open( DEBUGHOLECARDS );
-        #endif
 
 }
 
 
 Player * HoldemArena::FinalizeReportWinner()
 {
-
-#ifdef GRAPHMONEY
-    scoreboard.close();
-#endif
 
 
 

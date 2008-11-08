@@ -24,7 +24,7 @@ print "Ready?"
 chip_size = 0.5
 
 import holdem
-a = holdem.HoldemArena(chip_size)
+a = holdem.HoldemTable(chip_size)
 
 
 # Printing strings: http://www.python.org/doc/2.5.2/tut/node9.html

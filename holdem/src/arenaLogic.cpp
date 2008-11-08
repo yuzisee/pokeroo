@@ -499,9 +499,7 @@ void HoldemArena::RefreshPlayers()
     {
         leaderboard = 0 ;
     }
-#ifdef GRAPHMONEY
-    scoreboard << handnum << flush;
-#endif
+
 
     for(int8 i=0;i<nextNewPlayer;++i)
     {
@@ -522,11 +520,6 @@ void HoldemArena::RefreshPlayers()
             withP.myMoney = -1;
             withP.myBetSize = INVALID;
 //            bPlayerElimBlindUp |= blinds->PlayerEliminated();
-
-#ifdef GRAPHMONEY
-            scoreboard << ",0";
-#endif
-
         }
         else
         {
@@ -542,17 +535,6 @@ void HoldemArena::RefreshPlayers()
 
             withP.myBetSize = 0;
 
-#ifdef GRAPHMONEY
-            if( withP.GetMoney() < 0 )
-            {
-                scoreboard << ",0";
-            }else
-            {
-                scoreboard << "," << flush;
-                scoreboard.precision(10);
-                scoreboard << withP.myMoney << flush;
-            }
-#endif
 
         }
         withP.handBetTotal = 0;
@@ -565,6 +547,7 @@ void HoldemArena::RefreshPlayers()
 
 
     }
+
 
 
     if( bSpectate )
@@ -588,9 +571,7 @@ void HoldemArena::RefreshPlayers()
     }
 
 
-#ifdef GRAPHMONEY
-    scoreboard << endl;
-#endif
+
     ++handnum;
 
 
