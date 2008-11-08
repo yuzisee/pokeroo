@@ -134,6 +134,11 @@ enum return_status {
 };
 
 
+enum betting_round {
+   LATER_BETTING_ROUND,
+   FIRST_BETTING_ROUND
+};
+
 
 
 struct return_money
@@ -365,7 +370,7 @@ C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
 	Event functions
 *****************************************************************************/
 
-C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community );
+C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset, enum betting_round , uint8 );
 
 //This function reports who made first high bet that was called
 //If nobody called the high bet, then you will get -1 here.

@@ -20,10 +20,25 @@ print "Ready?"
 # http://www.python.org/doc/2.5.2/ext/dynamic-linking.html
 
 
+#http://docs.python.org/library/sys.html#sys.path
+#http://docs.python.org/library/os.html?highlight=os#os-file-dir
+##if os.path.isdir('run') and os.path.isfile('run/holdemdb.ini'):
+##    os.chdir('run')
+##else:
+##
 
 chip_size = 0.5
 
+
 import holdem
+
+
+print os.path.abspath(os.curdir)
+
+if not os.path.isfile('run/holdemdb.ini'):
+    raise RuntimeError, "Get a run/holdemdb.ini to avoid a very long calculation (~45 mins)"
+
+os.chdir('run')
 
 a = holdem.HoldemTable(chip_size)
 

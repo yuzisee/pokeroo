@@ -20,6 +20,7 @@ from _holdem import *
 #save_table_state s#
 class HoldemTable(object):
     "Class Interface for the holdem C extension"
+    HOLDEM_BETTING_ROUNDS = 4
     VALID_BOT_TYPES = frozenset(['trap','normal','action','gear','multi', 'danger','space', 'com']);
 
     def __init__(self, smallest_chip_amount):
@@ -103,7 +104,7 @@ class HoldemTable(object):
                 else:
                     raise AssertionError, "All bots must be given their hole cards before starting the pot"
 
-        self._current_pot = HoldemPot(self._c_holdem_table[0], small_blind,  next_dealer)
+        self._current_pot = HoldemPot(self._c_holdem_table[0], self.HOLDEM_BETTING_ROUNDS, small_blind,  next_dealer)
         #Instantiating a HoldemPot also calls begin_new_hands
         for bot in bots:
             bot._process_hole_cards()
@@ -131,9 +132,10 @@ class HoldemTable(object):
 #finish_hand_refresh_players s#
 class HoldemPot(object):
 
-    def __init__(self, holdem_table_voidptr,  my_small_blind,  my_next_dealer):
+    def __init__(self, holdem_table_voidptr, num_betting_rounds, my_small_blind,  my_next_dealer):
         self._current_event = None
-        self._showdown_started = False
+        self._betting_rounds_total = num_betting_rounds
+        self._betting_rounds_remaining = num_betting_rounds
         self._called_player = None #initialized to none, set to -1 when the pot is over
         self._c_holdem_table_ptr = holdem_table_voidptr
         begin_new_hands(self._c_holdem_table_ptr,  my_small_blind,  my_next_dealer)
@@ -150,8 +152,8 @@ class HoldemPot(object):
 
     def start_betting_round(self, community_cards):
         """Returns a HoldemBettingRound object"""
-        if self._showdown_started:
-            raise AssertionError, "Betting rounds can't be started once the showdown begins"
+        if self._betting_rounds_remaining <= 0:
+            raise AssertionError, "All betting rounds have already been started"
 
         if self._current_event != None:
             raise AssertionError, "Betting round already started"
@@ -159,15 +161,19 @@ class HoldemPot(object):
         if self._called_player == -1:
             raise AssertionError, "All players folded in the last betting round"
 
-        self._current_event = HoldemBettingRound(self._c_holdem_table_ptr,community_cards)
+        self._betting_rounds_remaining -= 1
+
+        betting_round_voidptr = create_new_betting_round(self._c_holdem_table_ptr, community_cards.c_ptr, self._betting_rounds_total, self._betting_rounds_remaining)
+
+        self._current_event = HoldemBettingRound(betting_round_voidptr)
         return self._current_event
 
     def finish_betting_round(self):
         if self._current_event == None:
             raise AssertionError, "Start a betting round before finishing one"
 
-        if self._showdown_started:
-            raise AssertionError, "There is no betting round to finish"
+        if self._betting_rounds_remaining < 0:
+            raise AssertionError, "The showdown has already started; there's no betting round to finish"
 
         if self._current_event.which_seat_is_next() != None:
             raise AssertionError, "Wait for all bets to be made and which_seat_is_next() == None"
@@ -179,23 +185,30 @@ class HoldemPot(object):
         else:
             return self.called_player
 
-    def start_showdown(self):
+    def start_showdown(self, community_cards):
         """Returns a HoldemShowdownRound object"""
-        if self._showdown_started:
+        if self._betting_rounds_remaining > 0:
+            raise AssertionError, "Not all betting rounds have taken place yet"
+
+        if self._betting_rounds_remaining < 0:
             raise AssertionError, "Showdown already started"
 
         if self._called_player == -1:
             raise AssertionError, "All players have already folded"
 
-        self._current_event = HoldemShowdownRound(self._c_holdem_table_ptr, self._called_player)
+        self._betting_rounds_remaining = -1
+
+        showdown_voidptr = create_new_showdown(self._c_holdem_table_ptr, called_player, community_cards.c_ptr)
+
+        self._current_event = HoldemShowdownRound(showdown_voidptr, self._called_player, community_cards)
         return self._current_event
 
     def finish_showdown(self):
-        if not self._showdown_started:
+        if self._betting_rounds_remaining >= 0:
             raise AssertionError, "Showdown not yet started"
 
         if not self._current_event:
-            raise AssertionError, "No showdown taking place"
+            raise AssertionError, "Showdown already finished"
 
         if self._current_event.which_seat_is_next() != None:
             raise AssertionError, "Wait for all players to act and which_seat_is_next() == None"
@@ -322,7 +335,7 @@ class HoldemCards(object):
     def c_ptr(self):
         return self._c_holdem_cardset
 
-#create_new_betting_round s#(s#i)
+#create_new_betting_round s#(s#i)ii
 #i: delete_finish_betting_round s#
 #player_makes_bet s#id
 #who_is_next_to_bet s#
@@ -330,8 +343,8 @@ class HoldemBettingRound(object):
     "Class Interface for betting_round from the holdem C extension"
     _c_betting_round_event = None
 
-    def __init__(self, holdem_table_voidptr,  community_cards):
-        self._c_betting_round_event = create_new_betting_round(holdem_table_voidptr, community_cards.c_ptr)
+    def __init__(self, c_betting_round_voidptr):
+        self._c_betting_round_event = c_betting_round_voidptr;
 
     def which_seat_is_next(self):
         return who_is_next_to_bet(self._c_betting_round_event)
@@ -375,13 +388,12 @@ class HoldemShowdownRound(object):
     _c_showdown_event = None
     _community_cards = None
 
-    def __init__(self, holdem_table_voidptr, called_player, community_cards):
+    def __init__(self, showdown_event_voidptr, community_cards):
         self._community_cards = community_cards
-        self._c_holdem_table_ptr = holdem_table_voidptr
-        self._c_betting_round_event = create_new_showdown(holdem_table_voidptr, called_player, community_cards.c_ptr)
+        self._c_showdown_event = showdown_event_voidptr;
 
     def which_seat_is_next(self):
-        player_to_act = who_is_next_in_showdown(self._c_betting_round_event)
+        player_to_act = who_is_next_in_showdown(self._c_showdownevent)
         if player_to_act == -1:
             return None
         else:
@@ -389,13 +401,13 @@ class HoldemShowdownRound(object):
 
     #Bots can always just show their hand. Internally the table will auto-muck when appropriate.
     def show_hand(self,  player,  player_hand):
-        player_shows_hand(self._c_betting_round_event, player.seat_number, player_hand, self._community_cards.c_ptr)
+        player_shows_hand(self._c_showdown_event, player.seat_number, player_hand, self._community_cards.c_ptr)
 
     def muck_hand(self,  player):
-        player_mucks_hand(self._c_betting_round_event, player.seat_number)
+        player_mucks_hand(self._c_showdown_event, player.seat_number)
 
     def _finish(self, holdem_table_voidptr):
-        called_player = delete_finish_showdown(holdem_table_voidptr, self._c_betting_round_event)
+        called_player = delete_finish_showdown(holdem_table_voidptr, self._c_showdown_event)
         self._c_showdown_event = None
         self._community_cards = None
 

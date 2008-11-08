@@ -383,16 +383,15 @@ Player * HoldemArena::FinalizeReportWinner()
 }
 
 
-void HoldemArena::PrepBettingRound(const int8 comSize)
+void HoldemArena::PrepBettingRound(bool bFirstBettingRound, uint8 otherBettingRounds)
 {
-	if( comSize == 0 ){
+	if( bFirstBettingRound ){
 		playersInHand = livePlayers;
-		bettingRoundsRemaining = 4; //Preflop, flop, turn, river
 		playersAllIn = 0;
 	}
 
+	bettingRoundsRemaining = otherBettingRounds;
 	roundPlayers = livePlayers;
-	--bettingRoundsRemaining;
 }
 
 
@@ -401,8 +400,8 @@ int8 HoldemArena::PlayRound_BeginHand()
     gamelog << "BEGIN" << endl;
 
 
-
-	PrepBettingRound(0);
+    //Preflop
+	PrepBettingRound(true,3);  //flop, turn, river remaining
 
 
     return PlayRound(CommunityPlus::EMPTY_COMPLUS,0);
@@ -423,7 +422,7 @@ int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop)
 
     }
 
-	PrepBettingRound(3);
+	PrepBettingRound(false,2); //turn, river remaining
 
     return PlayRound(flop,3);
 }
@@ -444,7 +443,8 @@ int8 HoldemArena::PlayRound_Turn(const CommunityPlus & flop, const DeckLocation 
         gamelog << "   " << flush;
     }
 
-	PrepBettingRound(4);
+    PrepBettingRound(false,1); //river remaining
+
 
     return PlayRound(community,4);
 
@@ -471,7 +471,7 @@ int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation
     }
 
 
-	PrepBettingRound(5);
+    PrepBettingRound(false,0); //no other betting rounds
 
     return PlayRound(community,5);
 }

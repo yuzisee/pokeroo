@@ -550,19 +550,36 @@ static PyObject * PyHoldem_CreateNewBettingRound (PyObject *self, PyObject *args
 	
 	const char *cardset_chars;
 	int cardset_chars_len;
-	
+
 	struct holdem_cardset c;
 	
-	if (!PyArg_ParseTuple(args, "s#(s#i)", &table_chars, &table_chars_len, &cardset_chars, &cardset_chars_len, &(c.card_count)))
+	int total_betting_rounds;
+	int future_betting_rounds;
+	
+	if (!PyArg_ParseTuple(args, "s#(s#i)ii", &table_chars, &table_chars_len, &cardset_chars, &cardset_chars_len, &(c.card_count), &total_betting_rounds, &future_betting_rounds))
         return NULL;
 
 	c = reconstruct_holdem_cardset(cardset_chars,cardset_chars_len,c.card_count);
 		
 	void * table_ptr = reconstruct_voidptr_address(table_chars,table_chars_len);
 	
-	struct return_event retval = CreateNewBettingRound(table_ptr, c);
 	
-	return return_on_success( return_voidptr(retval.event_ptr) , retval.error_code );
+	
+	if( future_betting_rounds >= total_betting_rounds )
+	{
+		return return_None_on_success( PARAMETER_INVALID );
+	}else
+	{
+		enum betting_round is_first_betting_round = LATER_BETTING_ROUND;
+		if( total_betting_rounds == future_betting_rounds + 1 )
+		{
+			is_first_betting_round = FIRST_BETTING_ROUND;
+		}
+		struct return_event retval = CreateNewBettingRound(table_ptr, c, is_first_betting_round, future_betting_rounds);
+		
+		return return_on_success( return_voidptr(retval.event_ptr) , retval.error_code );
+	}
+	
 }
 
 //C_DLL_FUNCTION struct return_seat DeleteFinishBettingRound(void * event_ptr);
@@ -925,7 +942,7 @@ static PyMethodDef HoldemMethods[] = {
 	{"create_new_cardset",  			PyHoldem_CreateNewCardset, METH_VARARGS		, "Create a container for cards"},
 	{"append_card_to_cardset",  		PyHoldem_AppendCard, METH_VARARGS			, "(s#i)cc: Add a single card to a cardset container"},
 	{"delete_cardset",  				PyHoldem_DeleteCardset, METH_VARARGS		, "(s#i): Free a cardset that was created with create_new_cardset to release the memory"},
-	{"create_new_betting_round",  		PyHoldem_CreateNewBettingRound, METH_VARARGS, "s#(s#i): A betting round object moderates the bets made at the table for a given set of community cards"},
+	{"create_new_betting_round",  		PyHoldem_CreateNewBettingRound, METH_VARARGS, "s#(s#i)ii: A betting round object moderates the bets made at the table for a given set of community cards"},
 	{"delete_finish_betting_round",  	PyHoldem_DeleteFinishBettingRound, METH_VARARGS, "s#: When a betting round completes, free the betting round object and retrieve the called player's seat number"},
 	{"player_makes_bet",  				PyHoldem_PlayerMakesBetTo, METH_VARARGS		, "s#id: Indicate to a betting round object that a specific player has made a certain bet"},
 	{"get_bot_bet_decision",  			PyHoldem_GetBetDecision, METH_VARARGS		, "s#i: Ask a bot what bet it would like to make"},

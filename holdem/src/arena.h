@@ -367,7 +367,7 @@ class HoldemArena
 		void BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer = -1);
         void DealAllHands(SerializeRandomDeck * tableDealer, std::ofstream & holecardsData);
 
-		void PrepBettingRound(const int8);
+		void PrepBettingRound(bool bFirstBettingRound, uint8 otherBettingRounds);
         //returns the first person to reveal cards (-1 if all fold)
         playernumber_t PlayRound(const CommunityPlus &, const int8);
 		playernumber_t PlayRound_BeginHand();

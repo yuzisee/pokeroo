@@ -618,7 +618,7 @@ enum return_status DeleteCardset(struct holdem_cardset c)
 
 ///Call this when betting begins
 C_DLL_FUNCTION
-struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community )
+struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset community, enum betting_round bFirstBettingRound , uint8 numFutureBettingRounds )
 {
 	struct return_event retval = DEFAULT_RETURN_EVENT;
 
@@ -634,7 +634,7 @@ struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardse
 
 		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(community.cards_ptr);
 
-		myTable->PrepBettingRound(community.card_count);
+		myTable->PrepBettingRound(bFirstBettingRound == FIRST_BETTING_ROUND, numFutureBettingRounds);
 
 		HoldemArenaBetting * bettingEvent = new HoldemArenaBetting( myTable, *myHand, community.card_count );
 
@@ -1112,4 +1112,20 @@ enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete)
 	END
 *****************************************************************************/
 
+
+/*
+        float64 GetFoldedPotSize() const;
+        float64 GetUnfoldedPotSize() const;
+		float64 GetDeadPotSize() const; //That's pot - betSum;
+		float64 GetLivePotSize() const;
+		//float64 GetRoundPotSize() const; //ThisRound pot size
+
+		float64 GetPrevFoldedRetroactive() const;
+   		float64 GetRoundBetsTotal() const; //Bets made this round by players still in hand, excludes blind bets
+   		
+		//float64 GetMaxShowdown(const float64 myMoney = -1) const;
+		
+		float64 GetUnbetBlindsTotal() const; //blindOnlySum
+		float64 GetMinRaise() const;
+*/
 
