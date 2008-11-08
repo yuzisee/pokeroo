@@ -148,7 +148,7 @@ class HoldemPot(object):
         """Get the pot size from just after the previous betting round ended."""
         return get_previous_rounds_pot_size(self._c_holdem_table_ptr)
 
-    def start_betting_round(self,  community_cards):
+    def start_betting_round(self, community_cards):
         """Returns a HoldemBettingRound object"""
         if self._showdown_started:
             raise AssertionError, "Betting rounds can't be started once the showdown begins"
@@ -159,7 +159,7 @@ class HoldemPot(object):
         if self._called_player == -1:
             raise AssertionError, "All players folded in the last betting round"
 
-        self._current_event = HoldemBettingRound()
+        self._current_event = HoldemBettingRound(self._c_holdem_table_ptr,community_cards)
         return self._current_event
 
     def finish_betting_round(self):
@@ -243,7 +243,7 @@ class HoldemPlayer(object):
     #http://docs.python.org/library/functions.html?highlight=property
 
     def _process_hole_cards(self):
-        bot_receives_hole_cards(self._c_holdem_table_ptr, self.seat_number, self.hole_cards._c_holdem_cardset)
+        bot_receives_hole_cards(self._c_holdem_table_ptr, self.seat_number, self.hole_cards.c_ptr)
 
     def calculate_bet_decision(self):
         return get_bot_bet_decision(self._c_holdem_table_ptr, self.seat_number)
@@ -295,7 +295,7 @@ class HoldemCards(object):
         self._c_holdem_cardset = create_new_cardset()
 
     def __del__(self):
-        delete_cardset(self._c_holdem_cardset)
+        delete_cardset(self.c_ptr)
 
     def _valid_card_pair(self,card_rank,card_suit):
         return (card_rank in self.VALID_CARD_RANKS and card_suit in self.VALID_CARD_SUITS)
@@ -304,7 +304,7 @@ class HoldemCards(object):
         if not self._valid_card_pair(card_rank, card_suit):
             raise AssertionError,  "card_rank (resp. card_suit) must be present in VALID_CARD_RANKS (resp. VALID_CARD_SUITS)"
 
-        self._c_holdem_cardset = append_card_to_cardset(self._c_holdem_cardset,  card_rank,  card_suit)
+        self._c_holdem_cardset = append_card_to_cardset(self.c_ptr,  card_rank,  card_suit)
         return self
 
     def append_cards(self,  cards_str):
@@ -318,6 +318,9 @@ class HoldemCards(object):
 
         return self
 
+    @property
+    def c_ptr(self):
+        return self._c_holdem_cardset
 
 #create_new_betting_round s#(s#i)
 #i: delete_finish_betting_round s#
@@ -328,7 +331,7 @@ class HoldemBettingRound(object):
     _c_betting_round_event = None
 
     def __init__(self, holdem_table_voidptr,  community_cards):
-        self._c_betting_round_event = create_new_betting_round(holdem_table_voidptr, community_cards)
+        self._c_betting_round_event = create_new_betting_round(holdem_table_voidptr, community_cards.c_ptr)
 
     def which_seat_is_next(self):
         return who_is_next_to_bet(self._c_betting_round_event)
@@ -375,7 +378,7 @@ class HoldemShowdownRound(object):
     def __init__(self, holdem_table_voidptr, called_player, community_cards):
         self._community_cards = community_cards
         self._c_holdem_table_ptr = holdem_table_voidptr
-        self._c_betting_round_event = create_new_showdown(holdem_table_voidptr, called_player, community_cards)
+        self._c_betting_round_event = create_new_showdown(holdem_table_voidptr, called_player, community_cards.c_ptr)
 
     def which_seat_is_next(self):
         player_to_act = who_is_next_in_showdown(self._c_betting_round_event)
@@ -386,7 +389,7 @@ class HoldemShowdownRound(object):
 
     #Bots can always just show their hand. Internally the table will auto-muck when appropriate.
     def show_hand(self,  player,  player_hand):
-        player_shows_hand(self._c_betting_round_event, player.seat_number, player_hand, self._community_cards)
+        player_shows_hand(self._c_betting_round_event, player.seat_number, player_hand, self._community_cards.c_ptr)
 
     def muck_hand(self,  player):
         player_mucks_hand(self._c_betting_round_event, player.seat_number)

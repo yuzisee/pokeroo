@@ -79,6 +79,6 @@ for c in serialized_table:
 b1.hole_cards = holdem.HoldemCards().append_cards("Ks 7h")
 b2.hole_cards = holdem.HoldemCards().append_cards("8c 7c")
 
-a.start_new_pot(7)
+pot = a.start_new_pot(7)
 
-del a
+#betting_round = pot.start_betting_round(holdem.HoldemCards())
