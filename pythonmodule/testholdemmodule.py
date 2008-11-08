@@ -24,6 +24,7 @@ print "Ready?"
 chip_size = 0.5
 
 import holdem
+
 a = holdem.HoldemTable(chip_size)
 
 #http://www.mrsneeze.com/mrmen/meetmrmen.html
@@ -80,3 +81,4 @@ b2.hole_cards = holdem.HoldemCards().append_cards("8c 7c")
 
 a.start_new_pot(7)
 
+del a

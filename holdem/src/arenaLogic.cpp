@@ -335,8 +335,10 @@ void HoldemArena::prepareRound(const CommunityPlus& community, const int8 comSiz
 #endif
 		{
 			Player& withP = *(p[curIndex]);
-
-			withP.myStrat->SeeCommunity(community, comSize);
+            if( withP.IsBot() )
+            {
+                withP.myStrat->SeeCommunity(community, comSize);
+            }
 		}
 	}while( curIndex != curDealer);
 
@@ -504,9 +506,12 @@ void HoldemArena::RefreshPlayers()
     for(int8 i=0;i<nextNewPlayer;++i)
     {
         Player& withP = *(p[i]);
-        if( withP.myMoney == 0 )
+        if( withP.IsBot() )
         {
-            withP.myStrat->FinishHand();
+            if( withP.myMoney == 0 )
+            {
+                withP.myStrat->FinishHand();
+            }
         }
     }
 
@@ -564,9 +569,12 @@ void HoldemArena::RefreshPlayers()
     for(int8 i=0;i<nextNewPlayer;++i)
     {
         Player& withP = *(p[i]);
-        if( withP.myMoney > 0 )
+        if( withP.IsBot() )
         {
-            withP.myStrat->FinishHand();
+            if( withP.myMoney > 0 )
+            {
+                withP.myStrat->FinishHand();
+            }
         }
     }
 

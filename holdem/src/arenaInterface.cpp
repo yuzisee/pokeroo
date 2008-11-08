@@ -142,10 +142,14 @@ void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theB
 
 	while(cycleIndex != curIndex)
 	{
+	    Player & broadcastP = (*p[curIndex]);
+	    if( broadcastP.IsBot() )
+	    {
             #ifdef LEAVE_TABLE_WHEN_LOSING
                 if( IsAlive(curIndex) )
             #endif
-        (*p[curIndex]).myStrat->SeeAction(currentMove);
+            broadcastP.myStrat->SeeAction(currentMove);
+	    }
     	incrIndex();
 	}
 	if( bSpectate )
@@ -164,13 +168,22 @@ void HoldemArena::broadcastHand(const Hand& h, const int8 broadcaster)
 
 	while(cycleIndex != broadcaster)
 	{
+	    Player & cycleP = (*p[cycleIndex]);
+	    if( cycleP.IsBot() )
+	    {
             #ifdef LEAVE_TABLE_WHEN_LOSING
                 if( IsAlive(cycleIndex) )
             #endif
-        (*p[cycleIndex]).myStrat->SeeOppHand(broadcaster, h);
+            cycleP.myStrat->SeeOppHand(broadcaster, h);
+	    }
 		incrIndex(cycleIndex);
 	}
-	(*p[broadcaster]).myStrat->SeeOppHand(broadcaster, h);
+
+	Player & broadcasterP = (*p[broadcaster]);
+	if( broadcasterP.IsBot() )
+	{
+        broadcasterP.myStrat->SeeOppHand(broadcaster, h);
+	}
 }
 
 
