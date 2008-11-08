@@ -81,4 +81,4 @@ b2.hole_cards = holdem.HoldemCards().append_cards("8c 7c")
 
 pot = a.start_new_pot(7)
 
-#betting_round = pot.start_betting_round(holdem.HoldemCards())
+betting_round = pot.start_betting_round(holdem.HoldemCards())

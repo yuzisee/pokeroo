@@ -56,7 +56,7 @@ static PyObject * return_on_success(PyObject * retval, enum return_status error_
 	case UNRELIABLE_RESULT:
 	//http://docs.python.org/c-api/exceptions.html#PyErr_WarnEx
 	//http://docs.python.org/library/warnings.html
-		PyErr_WarnEx( PyExc_RuntimeWarning, "Unreliable result", 2);
+		PyErr_WarnEx( PyExc_RuntimeWarning, "The returned result will be unreliable; hopefully you are trying to exit your program", 2);
 		break;
 		
 
