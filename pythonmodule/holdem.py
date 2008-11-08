@@ -32,8 +32,8 @@ class HoldemTable(object):
         self._c_holdem_table = create_new_table(self.seat_number,  smallest_chip_amount)
 
     def __del__(self):
-        if _current_pot != None:
-            finish_pot_refresh_players() #The program is likely exiting, let's try to free whatever we can
+        if self._current_pot != None:
+            self._current_pot._finish() #The program is likely exiting, let's try to free whatever we can
 
         delete_table_and_players(self._c_holdem_table)
 
@@ -111,6 +111,9 @@ class HoldemTable(object):
         if self._current_pot == None:
             raise AssertionError, "Start a new pot; when all betting/showdown rounds have completed, then call this function"
 
+        if not self._current_pot.is_finished():
+            raise AssertionError, "Wait for the final betting round or showdown to complete before refreshing players"
+
         self._current_pot._finish()
         _current_pot = None
 
@@ -125,7 +128,7 @@ class HoldemPot(object):
     _c_holdem_table_ptr = None
     _current_event = None
     _showdown_started = False
-    called_player = -1
+    _called_player = None #initialized to none, set to -1 when the pot is over
 
     def __init__(self, holdem_table_voidptr,  my_small_blind,  my_next_dealer):
         self._c_holdem_table_ptr = holdem_table_voidptr
@@ -149,8 +152,10 @@ class HoldemPot(object):
         if _current_event != None:
             raise AssertionError, "Betting round already started"
 
+        if _called_player == -1:
+            raise AssertionError, "All players folded in the last betting round"
+
         self._current_event = HoldemBettingRound()
-        self.called_player = -1
         return self._current_event
 
     def finish_betting_round(self):
@@ -160,25 +165,48 @@ class HoldemPot(object):
         if _showdown_started:
             raise AssertionError, "There is no betting round to finish"
 
-        self.called_player = self._current_event._finish()
+        if _current_event.which_seat_is_next() != None:
+            raise AssertionError, "Wait for all bets to be made and which_seat_is_next() == None"
+
+        self._called_player = self._current_event._finish()
         self._current_event = None
-        return self.called_player
+        if self._called_player == -1:
+            return None
+        else:
+            return self.called_player
 
     def start_showdown(self):
         """Returns a HoldemShowdownRound object"""
-        if _showdown_started:
+        if self._showdown_started:
             raise AssertionError, "Showdown already started"
 
-        self._current_event = HoldemShowdownRound(_c_holdem_table_ptr)
-        return _current_event
+        if self._called_player == -1:
+            raise AssertionError, "All players have already folded"
+
+        self._current_event = HoldemShowdownRound(self._c_holdem_table_ptr, self._called_player)
+        return self._current_event
+
+    def finish_showdown(self):
+        if not self._showdown_started:
+            raise AssertionError, "Showdown not yet started"
+
+        if not self._current_event:
+            raise AssertionError, "No showdown taking place"
+
+        if _current_event.which_seat_is_next() != None:
+            raise AssertionError, "Wait for all players to act and which_seat_is_next() == None"
+
+        self._current_event._finish()
+
+        self._called_player = -1
+
+    def is_finished(self):
+        return (self._called_player == -1)
 
     def _finish(self):
         if _current_event != None:
         #The program is likely exiting, let's try to free whatever we can
-            if _showdown_started:
-                finish_showdown()
-            else:
-                finish_betting_round()
+            self._current_event._finish()
 
         finish_hand_refresh_players(self._c_holdem_table_ptr)
         self._c_holdem_table_ptr = None
@@ -328,10 +356,10 @@ class HoldemShowdownRound(object):
     _c_showdown_event = None
     _community_cards = None
 
-    def __init__(self, holdem_table_voidptr,  community_cards):
+    def __init__(self, holdem_table_voidptr, called_player, community_cards):
         self._community_cards = community_cards
         self._c_holdem_table_ptr = holdem_table_voidptr
-        self._c_betting_round_event = create_new_showdown(holdem_table_voidptr, community_cards)
+        self._c_betting_round_event = create_new_showdown(holdem_table_voidptr, called_player, community_cards)
 
     def which_seat_is_next(self):
         player_to_act = who_is_next_in_showdown(self._c_betting_round_event)
