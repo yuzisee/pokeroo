@@ -201,7 +201,7 @@ class HoldemPot(object):
             raise AssertionError, "Wait for all players to act and which_seat_is_next() == None"
 
         self._current_event._finish()
-
+        self._current_event = None
         self._called_player = -1
 
     def is_finished(self):
@@ -209,10 +209,19 @@ class HoldemPot(object):
 
     def _finish(self):
         if self._current_event != None:
-        #The program is likely exiting, let's try to free whatever we can
+            #The program is likely exiting, let's try to free whatever we can
             self._current_event._finish()
+            betting_round_started_before = True
+        elif self._called_player == None:
+            #We've never finished a betting round, and we aren't in one!
+            #And again, the program is likely exiting.
+            betting_round_started_before = False
+        else:
+            betting_round_started_before = True
 
-        finish_hand_refresh_players(self._c_holdem_table_ptr)
+        if betting_round_started_before:
+            finish_hand_refresh_players(self._c_holdem_table_ptr)
+
         self._c_holdem_table_ptr = None
 
 #bot_receives_hole_cards s#i(s#i)
