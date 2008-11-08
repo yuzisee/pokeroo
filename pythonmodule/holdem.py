@@ -1,6 +1,7 @@
 from _holdem import *
 
 
+#Class attributes are all static: http://diveintopython.org/object_oriented_framework/class_attributes.html
 
 #types: http://docs.python.org/library/stdtypes.html
 
@@ -19,16 +20,13 @@ from _holdem import *
 #save_table_state s#
 class HoldemTable(object):
     "Class Interface for the holdem C extension"
-    _c_holdem_table = None
-    _table_initialized = False
-    _current_pot = None
-
-    players = []
-    seat_number = 10 #See holdem/src/debug_flags.h, for now SEATS_AT_TABLE is fixed to 10.
-
-    valid_bot_types = frozenset(['trap','normal','action','gear','multi', 'danger','space', 'com']);
+    VALID_BOT_TYPES = frozenset(['trap','normal','action','gear','multi', 'danger','space', 'com']);
 
     def __init__(self, smallest_chip_amount):
+        self.seat_number = 10 #See holdem/src/debug_flags.h, for now SEATS_AT_TABLE is fixed to 10.
+        self.players = []
+        self._table_initialized = False
+        self._current_pot = None
         self._c_holdem_table = create_new_table(self.seat_number,  smallest_chip_amount)
 
     def __del__(self):
@@ -38,65 +36,72 @@ class HoldemTable(object):
         delete_table_and_players(self._c_holdem_table)
 
     def add_player_clockwise(self,  player_name, starting_money,  bot_type):
-        if _table_initialized:
+        if self._table_initialized:
             raise AssertionError,  "The HoldemArena table has already been initialized; add all players before initializing"
 
         if bot_type == None:
             seat_number = add_a_human_opponent(self._c_holdem_table,  player_name,  starting_money)
             player_is_bot = False
-        elif bot_type.lower() in valid_bot_types:
-            seat_number = add_a_strategy_bot(self._c_holdem_table,  player_name,  starting_money,  bot_type[0])
+        elif bot_type.lower() in self.VALID_BOT_TYPES:
+            seat_number = add_a_strategy_bot(self._c_holdem_table,  player_name,  starting_money,  bot_type[0].upper())
             player_is_bot = True
         else:
-            raise KeyError,  "Create a human player with bot_type == None, or select a bot type from valid_bot_types"
+            raise KeyError,  "Create a human player with bot_type == None, or select a bot type from self.VALID_BOT_TYPES"
 
         new_player = HoldemPlayer(self._c_holdem_table[0],  seat_number,  player_is_bot)
-        players.append(new_player)
+        self.players.append(new_player)
 
-        if players[seat_number] != new_player:
+        if self.players[seat_number] != new_player:
             raise IndexError, "I've lost track of how many players are at the table!"
 
         return new_player
 
     def restore_state(self,  state_str):
-        if _table_initialized:
+        if self._table_initialized:
             raise AssertionError,  "You must restore the state once instead of calling initialize_table"
 
-        _table_initialized = True
+        self._table_initialized = True
         restore_table_state(state_str, self._c_holdem_table)
 
     def initialize_table(self):
-        if _table_initialized:
+        if self._table_initialized:
             raise AssertionError,  "The HoldemArena table was already initialized, you can only initialize_table once"
 
-        _table_initialized = True
-        initialize_new_table_state(self._c_holdem_table)
+        self._table_initialized = True
+        initialize_new_table_state(self._c_holdem_table[0])
 
     def save_state(self):
-        if not _table_initialized:
+        if not self._table_initialized:
             raise AssertionError,  "You must initialize the table first"
 
         if self._current_pot != None:
             raise AssertionError,  "Finish the playing out the previous pot before starting saving the game state"
 
-        return save_table_state(self._c_holdem_table)
+        return save_table_state(self._c_holdem_table[0])
 
 
 
-    def start_new_pot(self,  small_blind,  next_dealer=-1):
-        if not _table_initialized:
+    def start_new_pot(self, small_blind, override_next_dealer=None):
+        if not self._table_initialized:
             raise AssertionError,  "You must initialize the table first"
 
         if self._current_pot != None:
             raise AssertionError,  "Finish the playing out the previous pot before starting a new one"
 
+        if override_next_dealer == None:
+            next_dealer = -1
+        elif override_next_dealer in players:
+            next_dealer = override_next_dealer.seat_number
+        else:
+            raise ValueError,  "override_next_dealer must be a valid player"
+
         bots = []
-        for bot in players:
+        for bot in self.players:
             if bot.is_bot:
                 if bot.hole_cards:
                     bots.append(bot)
                 else:
-                    raise AssertionError, "All bots must be given their hole cards or they won't know what to do"
+                    raise AssertionError, "All bots must be given their hole cards before starting the pot"
 
         self._current_pot = HoldemPot(self._c_holdem_table[0], small_blind,  next_dealer)
         #Instantiating a HoldemPot also calls begin_new_hands
@@ -115,7 +120,7 @@ class HoldemTable(object):
             raise AssertionError, "Wait for the final betting round or showdown to complete before refreshing players"
 
         self._current_pot._finish()
-        _current_pot = None
+        self._current_pot = None
 
         for bot in players:
             if bot.is_bot:
@@ -125,12 +130,11 @@ class HoldemTable(object):
 #begin_new_hands s#di
 #finish_hand_refresh_players s#
 class HoldemPot(object):
-    _c_holdem_table_ptr = None
-    _current_event = None
-    _showdown_started = False
-    _called_player = None #initialized to none, set to -1 when the pot is over
 
     def __init__(self, holdem_table_voidptr,  my_small_blind,  my_next_dealer):
+        self._current_event = None
+        self._showdown_started = False
+        self._called_player = None #initialized to none, set to -1 when the pot is over
         self._c_holdem_table_ptr = holdem_table_voidptr
         begin_new_hands(self._c_holdem_table_ptr,  my_small_blind,  my_next_dealer)
 
@@ -146,26 +150,26 @@ class HoldemPot(object):
 
     def start_betting_round(self,  community_cards):
         """Returns a HoldemBettingRound object"""
-        if _showdown_started:
+        if self._showdown_started:
             raise AssertionError, "Betting rounds can't be started once the showdown begins"
 
-        if _current_event != None:
+        if self._current_event != None:
             raise AssertionError, "Betting round already started"
 
-        if _called_player == -1:
+        if self._called_player == -1:
             raise AssertionError, "All players folded in the last betting round"
 
         self._current_event = HoldemBettingRound()
         return self._current_event
 
     def finish_betting_round(self):
-        if _current_event == None:
+        if self._current_event == None:
             raise AssertionError, "Start a betting round before finishing one"
 
-        if _showdown_started:
+        if self._showdown_started:
             raise AssertionError, "There is no betting round to finish"
 
-        if _current_event.which_seat_is_next() != None:
+        if self._current_event.which_seat_is_next() != None:
             raise AssertionError, "Wait for all bets to be made and which_seat_is_next() == None"
 
         self._called_player = self._current_event._finish()
@@ -193,7 +197,7 @@ class HoldemPot(object):
         if not self._current_event:
             raise AssertionError, "No showdown taking place"
 
-        if _current_event.which_seat_is_next() != None:
+        if self._current_event.which_seat_is_next() != None:
             raise AssertionError, "Wait for all players to act and which_seat_is_next() == None"
 
         self._current_event._finish()
@@ -204,7 +208,7 @@ class HoldemPot(object):
         return (self._called_player == -1)
 
     def _finish(self):
-        if _current_event != None:
+        if self._current_event != None:
         #The program is likely exiting, let's try to free whatever we can
             self._current_event._finish()
 
@@ -220,12 +224,9 @@ class HoldemPot(object):
 #get_bot_bet_decision s#i
 class HoldemPlayer(object):
     "Player sitting in one seat of a HoldemArena"
-    _c_holdem_table_ptr = None
-    _hole_cards = None
-    _is_bot = None
-    seat_number = -1
 
     def __init__(self, holdem_table_voidptr,  my_seat_number,  bot):
+        self._hole_cards = None
         self._c_holdem_table_ptr = holdem_table_voidptr
         self.seat_number = my_seat_number
         self._is_bot = bot
@@ -240,15 +241,15 @@ class HoldemPlayer(object):
 
 
     def _getholecards(self):
-        if not is_bot:
+        if not self.is_bot:
             raise AssertionError, "Hole cards are only assigned to bots"
         else:
-            return _hole_cards
+            return self._hole_cards
     def _setholecards(self,  cards):
-        if not is_bot:
+        if not self.is_bot:
             raise AssertionError, "Hole cards are only assigned to bots"
         else:
-            _hole_cards = cards
+            self._hole_cards = cards
     hole_cards = property(_getholecards, _setholecards)
 
     def _getmoney(self):
@@ -259,7 +260,7 @@ class HoldemPlayer(object):
 
     @property
     def is_bot(self):
-        return _is_bot
+        return self._is_bot
 
     @property
     def current_round_bet(self):
@@ -277,10 +278,9 @@ class HoldemPlayer(object):
 #delete_cardset (s#i)
 class HoldemCards(object):
     "Hole cards for a HoldemPlayer or community cards for a HoldemArena "
-    _c_holdem_cardset = None
 
-    valid_card_ranks = frozenset(['2','3','4','5','6', '7','8', '9', 'T','J', 'Q', 'K', 'A']);
-    valid_card_suits = frozenset(['s','h','c','d']);
+    VALID_CARD_RANKS = frozenset(['2','3','4','5','6', '7','8', '9', 'T','J', 'Q', 'K', 'A']);
+    VALID_CARD_SUITS = frozenset(['s','h','c','d']);
 
     def __init__(self):
         self._c_holdem_cardset = create_new_cardset()
@@ -288,19 +288,26 @@ class HoldemCards(object):
     def __del__(self):
         delete_cardset(self._c_holdem_cardset)
 
-    def append_card(self, card_rank, card_suit):
-        if card_rank in valid_card_ranks and card_suit in valid_card_suits:
-            self._c_holdem_cardset = append_card_to_cardset(self._c_holdem_cardset,  card_rank,  card_suit)
-        else:
-            raise AssertionError,  "card_rank (resp. card_suit) must be present in valid_card_ranks (resp. valid_card_suits)"
+    def _valid_card_pair(self,card_rank,card_suit):
+        return (card_rank in self.VALID_CARD_RANKS and card_suit in self.VALID_CARD_SUITS)
 
-    def append_cards(self,  card_str):
-        card_str = card_str.strip()
-        while card_str.length() > 0:
-            card_rank = card_str[0].upper()
-            card_suit = card_str[1].lower()
-            append_card(self, card_rank,  card_suit)
-            card_str = card_str.strip()
+    def append_card(self, card_rank, card_suit):
+        if not self._valid_card_pair(card_rank, card_suit):
+            raise AssertionError,  "card_rank (resp. card_suit) must be present in VALID_CARD_RANKS (resp. VALID_CARD_SUITS)"
+
+        self._c_holdem_cardset = append_card_to_cardset(self._c_holdem_cardset,  card_rank,  card_suit)
+        return self
+
+    def append_cards(self,  cards_str):
+        for next_card in cards_str.strip().split():
+            #determine order
+            if not self._valid_card_pair(next_card[0],next_card[1]):
+                next_card.reverse()
+
+            #append cards
+            self.append_card(next_card[0], next_card[1])
+
+        return self
 
 
 #create_new_betting_round s#(s#i)
