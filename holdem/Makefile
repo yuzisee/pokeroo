@@ -25,10 +25,11 @@ BUILD_DEPS = $(patsubst $(BUILD_DIR)/%.o,$(BUILD_DIR)/%.d,$(BUILT_OBJS))
 STATIC_OBJ_CPP = $(BUILD_DIR)/holdem.a
 
 #Naming your shared libraries: http://www.faqs.org/docs/Linux-HOWTO/Program-Library-HOWTO.html#SHARED-LIBRARIES
-DYNAMIC_LIB_C = $(LIB_DIR)/libholdem.so.1
 APP = $(BIN_DIR)/holdem
+DYNAMIC_LINK_LIB_C = $(LIB_DIR)/libholdem.so
+DYNAMIC_SO_LIB_C = $(DYNAMIC_LINK_LIB_C).1
 
-FINAL_TARGETS = $(DYNAMIC_LIB_C) $(APP)
+FINAL_TARGETS = $(DYNAMIC_LINK_LIB_C) $(DYNAMIC_SO_LIB_C) $(APP)
 
 
 vpath %.cpp $(SRC_DIRS)
@@ -75,15 +76,15 @@ $(STATIC_OBJ_CPP): $(CORE_OBJS)
 
 #
 #  FINAL TARGET RULES
-#  (All final targets depend on STATIC_OBJ_CPP)
 #  
 
-$(FINAL_TARGETS): $(STATIC_OBJ_CPP)
-
-$(APP): $(BUILD_DIR)/testDriver.o
+$(APP): $(BUILD_DIR)/testDriver.o $(STATIC_OBJ_CPP)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-$(DYNAMIC_LIB_C): $(BUILD_DIR)/interfaceC.o
+$(DYNAMIC_SO_LIB_C): $(BUILD_DIR)/interfaceC.o $(STATIC_OBJ_CPP)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -shared -o $@ -Wl,-soname,libholdem.so $^
+
+$(DYNAMIC_LINK_LIB_C): $(DYNAMIC_SO_LIB_C)
+	cp -v $< $@

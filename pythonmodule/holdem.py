@@ -34,6 +34,8 @@ class HoldemTable(object):
         if self._current_pot != None:
             self._current_pot._finish() #The program is likely exiting, let's try to free whatever we can
 
+        print "Deleting Python HoldemTable..."
+
         delete_table_and_players(self._c_holdem_table)
 
     def add_player_clockwise(self,  player_name, starting_money,  bot_type):
@@ -49,7 +51,7 @@ class HoldemTable(object):
         else:
             raise KeyError,  "Create a human player with bot_type == None, or select a bot type from self.VALID_BOT_TYPES"
 
-        new_player = HoldemPlayer(self._c_holdem_table[0],  seat_number,  player_is_bot)
+        new_player = HoldemPlayer(self._c_holdem_table[0], player_name, seat_number,  player_is_bot)
         self.players.append(new_player)
 
         if self.players[seat_number] != new_player:
@@ -145,6 +147,34 @@ class HoldemPot(object):
         """Get the total size of the pot so far."""
         return get_pot_size(self._c_holdem_table_ptr)
 
+    @property
+    def bet_to_call(self):
+        """Get the largest bet so far this round."""
+        if self._current_event == None:
+            raise AssertionError, "Start a betting round first"
+
+        if self._betting_rounds_remaining < 0:
+            raise AssertionError, "There is no more betting"
+
+        return get_bet_to_call(self._c_holdem_table_ptr)
+
+
+    @property
+    def min_raise_to(self):
+        """Get the minimum allowable raise."""
+        if self._current_event == None:
+            raise AssertionError, "Start a betting round first"
+
+        if self._betting_rounds_remaining < 0:
+            raise AssertionError, "There is no more betting"
+
+        minimum_raise_by = get_minimum_raise_by(self._c_holdem_table_ptr)
+
+        return self.bet_to_call + minimum_raise_by
+
+    @property
+    def more_betting_rounds_remaining(self):
+        return self._betting_rounds_remaining > 0
 
     def size_from_previous_rounds(self):
         """Get the pot size from just after the previous betting round ended."""
@@ -165,7 +195,7 @@ class HoldemPot(object):
 
         betting_round_voidptr = create_new_betting_round(self._c_holdem_table_ptr, community_cards.c_ptr, self._betting_rounds_total, self._betting_rounds_remaining)
 
-        self._current_event = HoldemBettingRound(betting_round_voidptr)
+        self._current_event = HoldemBettingRound(betting_round_voidptr,self)
         return self._current_event
 
     def finish_betting_round(self):
@@ -183,7 +213,7 @@ class HoldemPot(object):
         if self._called_player == -1:
             return None
         else:
-            return self.called_player
+            return self._called_player
 
     def start_showdown(self, community_cards):
         """Returns a HoldemShowdownRound object"""
@@ -247,11 +277,12 @@ class HoldemPot(object):
 class HoldemPlayer(object):
     "Player sitting in one seat of a HoldemArena"
 
-    def __init__(self, holdem_table_voidptr,  my_seat_number,  bot):
+    def __init__(self, holdem_table_voidptr, my_name, my_seat_number,  bot):
         self._hole_cards = None
         self._c_holdem_table_ptr = holdem_table_voidptr
-        self.seat_number = my_seat_number
         self._is_bot = bot
+        self.seat_number = my_seat_number
+        self.name = my_name
 
     #http://docs.python.org/library/functions.html?highlight=property
 
@@ -259,8 +290,10 @@ class HoldemPlayer(object):
         bot_receives_hole_cards(self._c_holdem_table_ptr, self.seat_number, self.hole_cards.c_ptr)
 
     def calculate_bet_decision(self):
-        return get_bot_bet_decision(self._c_holdem_table_ptr, self.seat_number)
+        if not self._is_bot:
+            raise AssertionError, "Only bots can generate a betting decision for you"
 
+        return get_bot_bet_decision(self._c_holdem_table_ptr, self.seat_number)
 
     def _getholecards(self):
         if not self.is_bot:
@@ -293,7 +326,6 @@ class HoldemPlayer(object):
     def previous_rounds_bet(self):
         """Get the total bets that the player has made in all previous rounds."""
         return get_previous_rounds_bet(self._c_holdem_table_ptr, self.seat_number)
-
 
 #create_new_cardset
 #append_card_to_cardset (s#i)cc
@@ -341,40 +373,53 @@ class HoldemCards(object):
 #who_is_next_to_bet s#
 class HoldemBettingRound(object):
     "Class Interface for betting_round from the holdem C extension"
-    _c_betting_round_event = None
 
-    def __init__(self, c_betting_round_voidptr):
+    def __init__(self, c_betting_round_voidptr, my_table):
+        self._betting_table = my_table
         self._c_betting_round_event = c_betting_round_voidptr;
 
     def which_seat_is_next(self):
         return who_is_next_to_bet(self._c_betting_round_event)
 
-    def raise_by(self,  player,  amount):
-        _player_makes_bet(player.seat_number,  amount + bet_to_call())
+    def auto_make_bet(self, bot):
+        if not bot.is_bot:
+            raise AssertionError, "Only bots can use auto_make_bet"
 
-    def raise_to(self,  player,  amount):
-        _player_makes_bet(player.seat_number,  amount)
+        bot_decision = bot.calculate_bet_decision()
+        self._player_makes_bet(bot.seat_number,bot_decision)
+        return bot_decision
 
-    def check_call(self,  player):
-        _player_makes_bet(player.seat_number,  bet_to_call())
+    def player_raises_by(self,  player,  amount):
+        self.player_raises_to(player,self._betting_table.bet_to_call + amount)
 
-    def check_fold(self,  player):
-        _player_makes_bet(player.seat_number,  0)
+    def player_raises_to(self,  player,  amount):
+        if amount < self._betting_table.min_raise_to:
+            raise AssertionError, "You must raise by at least the minimum raise"
 
-    def fold(self,  player):
-        _player_makes_bet(player.seat_number,  -1)
+        self._player_makes_bet(player.seat_number,  amount)
 
-    @property
-    def bet_to_call(self):
-        """Get the largest bet so far this round."""
-        return get_bet_to_call(self._c_holdem_table_ptr)
+    def player_check_calls(self,  player):
+        self._player_makes_bet(player.seat_number, self._betting_table.bet_to_call)
+
+    def player_check_folds(self,  player):
+        self._player_makes_bet(player.seat_number,  0)
+
+    def player_folds(self,  player):
+        self._player_makes_bet(player.seat_number,  -1)
 
     def _finish(self):
         called_player = delete_finish_betting_round(self._c_betting_round_event)
         self._c_betting_round_event = None
+        self._betting_table = None
         return called_player
 
     def _player_makes_bet(self, seat_number, amount):
+        if self.which_seat_is_next() == None:
+            raise AssertionError, "The betting round has ended already"
+
+        if self.which_seat_is_next() != seat_number:
+            raise AssertionError, "It's not this player's turn to bet"
+
         player_makes_bet(self._c_betting_round_event, seat_number, amount)
 
 
@@ -385,8 +430,7 @@ class HoldemBettingRound(object):
 #delete_finish_showdown s#s#
 class HoldemShowdownRound(object):
     "Class Interface for showdown_round from the holdem C extension"
-    _c_showdown_event = None
-    _community_cards = None
+
 
     def __init__(self, showdown_event_voidptr, community_cards):
         self._community_cards = community_cards

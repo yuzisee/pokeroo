@@ -392,6 +392,7 @@ C_DLL_FUNCTION struct return_money GetBetDecision(void * table_ptr, playernumber
 
 ///Get the size of the highest bet so far
 C_DLL_FUNCTION struct return_money GetBetToCall(void * table_ptr);
+C_DLL_FUNCTION struct return_money GetMinRaise(void * table_ptr);
 
 
 

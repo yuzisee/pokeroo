@@ -683,6 +683,23 @@ static PyObject * PyHoldem_GetBetToCall (PyObject *self, PyObject *args)
 }
 
 
+
+//C_DLL_FUNCTION struct return_money GetMinRaise(void * table_ptr);
+static PyObject * PyHoldem_GetMinRaise (PyObject *self, PyObject *args) 
+{
+    const char *c_chars;
+	int c_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &c_chars, &c_chars_len))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	struct return_money retval = GetMinRaise(table_ptr);
+	
+	return return_on_success(Py_BuildValue("d", retval.money), retval.error_code);
+}
+
 /*****************************************************************************
 	Betting round functions
 	END
@@ -947,6 +964,7 @@ static PyMethodDef HoldemMethods[] = {
 	{"player_makes_bet",  				PyHoldem_PlayerMakesBetTo, METH_VARARGS		, "s#id: Indicate to a betting round object that a specific player has made a certain bet"},
 	{"get_bot_bet_decision",  			PyHoldem_GetBetDecision, METH_VARARGS		, "s#i: Ask a bot what bet it would like to make"},
 	{"get_bet_to_call",  				PyHoldem_GetBetToCall, METH_VARARGS			, "s#: Get the amount of the largest bet so far this round"},
+	{"get_minimum_raise_by",  			PyHoldem_GetMinRaise, METH_VARARGS			, "s#: Get the amount of the smallest allowable raise"},
 	{"who_is_next_to_bet",  			PyHoldem_WhoIsNext_Betting, METH_VARARGS	, "s#: Get the seat number of the player that is next to act in a betting round"},
 	{"who_is_next_in_showdown",  		PyHoldem_WhoIsNext_Showdown, METH_VARARGS	, "s#: Get the seat number of the player that is next to act in a showdown"},
 	{"player_shows_hand",  				PyHoldem_PlayerShowsHand, METH_VARARGS		, "s#i(s#i)(s#i): Indicate to a showdown object that a specific player has revealed its hand"},

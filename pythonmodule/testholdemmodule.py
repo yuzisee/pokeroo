@@ -97,3 +97,46 @@ b2.hole_cards = holdem.HoldemCards().append_cards("8c 7c")
 pot = a.start_new_pot(7)
 
 betting_round = pot.start_betting_round(holdem.HoldemCards())
+
+print "Starting at seat 0 we have dealer, small, big. Next up should be seat #",
+print betting_round.which_seat_is_next()
+
+bet_choice = betting_round.auto_make_bet(b2)
+
+print b2.name,
+print "has decided to bet",
+print bet_choice
+
+#betting_round.player_raises_to(b2,bet_choice)
+
+print "Seat #",
+print betting_round.which_seat_is_next(),
+print "is next to bet"
+
+betting_round.player_check_calls(p1)
+betting_round.player_check_calls(p2)
+betting_round.player_check_calls(b1)
+
+print "Betting round finished"
+pot.finish_betting_round()
+
+
+print "Flop..."
+next_betting_round = pot.start_betting_round(holdem.HoldemCards().append_cards("As Ac Ad"))
+while next_betting_round.which_seat_is_next() != None:
+    next_betting_round.player_check_calls(a.players[next_betting_round.which_seat_is_next()])
+pot.finish_betting_round()
+
+
+print "Turn..."
+next_betting_round = pot.start_betting_round(holdem.HoldemCards().append_cards("As Ac Ad 2d"))
+while next_betting_round.which_seat_is_next() != None:
+    next_betting_round.player_check_calls(a.players[next_betting_round.which_seat_is_next()])
+pot.finish_betting_round()
+
+print "River..."
+next_betting_round = pot.start_betting_round(holdem.HoldemCards().append_cards("As Ac Ad 2d 9c"))
+while next_betting_round.which_seat_is_next() != None:
+    next_betting_round.player_check_calls(a.players[next_betting_round.which_seat_is_next()])
+pot.finish_betting_round()
+

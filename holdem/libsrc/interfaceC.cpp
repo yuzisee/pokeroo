@@ -265,6 +265,26 @@ struct return_money GetBetToCall(void * table_ptr)
 	return retval;
 }
 
+///Get the size of the highest bet so far this round
+C_DLL_FUNCTION
+struct return_money GetMinRaise(void * table_ptr)
+{
+	struct return_money retval = DEFAULT_RETURN_MONEY;
+
+	if( !table_ptr )
+	{
+		retval.error_code = NULL_TABLE_PTR;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		retval.money = myTable->GetMinRaise();
+	}
+
+	return retval;
+}
+
+
 
 
 /*****************************************************************************
@@ -1126,6 +1146,6 @@ enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete)
 		//float64 GetMaxShowdown(const float64 myMoney = -1) const;
 		
 		float64 GetUnbetBlindsTotal() const; //blindOnlySum
-		float64 GetMinRaise() const;
+		
 */
 
