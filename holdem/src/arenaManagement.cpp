@@ -13,8 +13,6 @@
 #include <typeinfo>
 #endif
 
-typedef PositionalStrategy * stratPtr;
-
 
 
 void HoldemArena::UnserializeRoundStart(std::istream & fileLoadState)
@@ -132,7 +130,6 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
 {
     PlayerStrategy * botStrat = 0;
     MultiStrategy * combined = 0;
-    PositionalStrategy **children = 0;
 
     switch( botType )
     {
@@ -156,7 +153,7 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
         break;
     case 'G':
     case 'M':
-        children = new stratPtr[NUMBER_OF_BOTS_COMBINED];
+    	PositionalStrategy *(children[NUMBER_OF_BOTS_COMBINED]);
 
         children[0] = new ImproveGainStrategy(0); //Norm
         children[1] = new ImproveGainStrategy(1); //Trap
@@ -241,7 +238,7 @@ playernumber_t HoldemArena::AddPlayer(const char* const id, const float64 money,
 //  +  The player has an optional strat, and if that strat is a MultiStrategy, it has a list of children strats
 // (1) We need to delete the strat if it exists
 // (2) For each child strat, we need to delete it
-// (3) We need to delete the children strat list if it exists
+// (3) We need to delete the children strat list if it exists (THE HISTORYSTRATEGY DOES THIS ALREADY)
 //
 //Note: If a player is not a bot, it won't need any of (1) or (2) or (3).
 //      If a player is a bot but not a MultiStrategy, it won't have (2)
@@ -300,15 +297,10 @@ void HoldemArena::FreePlayer(Player* playerToDelete, char botType)
                 for( playernumber_t n=0;n<substrats;++n )
                 {
 #ifdef VERBOSE_DESTRUCTOR
-                    std::cerr << "Deleting child #" << (int)n << endl;
+                    std::cerr << "Deleting child #" << (int)n << "@" << mStratChildren[n] << endl;
 #endif // VERBOSE_DESTRUCTOR
                     delete mStratChildren[n];
                 }
-
-#ifdef VERBOSE_DESTRUCTOR
-                std::cerr << "Deleting PositionalStrategy **" << endl;
-#endif // VERBOSE_DESTRUCTOR
-                delete [] mStratChildren;
             }
 		#ifdef DEBUGASSERT
 	    else if( typeid( pStrat ) == typeid( MultiStrategy ) )
@@ -319,7 +311,7 @@ void HoldemArena::FreePlayer(Player* playerToDelete, char botType)
        	#endif
 
 #ifdef VERBOSE_DESTRUCTOR
-            std::cerr << "Deleting bot strategy" << endl;
+            std::cerr << "Deleting bot strategy @" << pStrat << " which will free mStratChildren" << endl;
 #endif // VERBOSE_DESTRUCTOR
             delete pStrat;
         }
