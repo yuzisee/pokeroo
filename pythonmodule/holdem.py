@@ -125,10 +125,18 @@ class HoldemTable(object):
         self._current_pot._finish()
         self._current_pot = None
 
-        for bot in players:
+        for bot in self.players:
             if bot.is_bot:
                 bot.hole_cards = None
 
+    @property
+    def players_with_chips(self):
+    	alive_players = []
+    	for p in self.players:
+    		if p.money > 0:
+    			alive_players.append(p)
+
+        return alive_players
 
 #begin_new_hands s#di
 #finish_hand_refresh_players s#
@@ -174,7 +182,10 @@ class HoldemPot(object):
 
     @property
     def more_betting_rounds_remaining(self):
-        return self._betting_rounds_remaining > 0
+    	if self._called_player == -1:
+    		return None
+    	else:
+        	return self._betting_rounds_remaining > 0
 
     def size_from_previous_rounds(self):
         """Get the pot size from just after the previous betting round ended."""
@@ -210,7 +221,7 @@ class HoldemPot(object):
 
         self._called_player = self._current_event._finish()
         self._current_event = None
-        if self._called_player == -1:
+        if self._called_player == -1: #All fold
             return None
         else:
             return self._called_player
@@ -228,9 +239,9 @@ class HoldemPot(object):
 
         self._betting_rounds_remaining = -1
 
-        showdown_voidptr = create_new_showdown(self._c_holdem_table_ptr, called_player, community_cards.c_ptr)
+        showdown_voidptr = create_new_showdown(self._c_holdem_table_ptr, self._called_player, community_cards.c_ptr)
 
-        self._current_event = HoldemShowdownRound(showdown_voidptr, self._called_player, community_cards)
+        self._current_event = HoldemShowdownRound(showdown_voidptr, community_cards)
         return self._current_event
 
     def finish_showdown(self):
@@ -243,7 +254,7 @@ class HoldemPot(object):
         if self._current_event.which_seat_is_next() != None:
             raise AssertionError, "Wait for all players to act and which_seat_is_next() == None"
 
-        self._current_event._finish()
+        self._current_event._finish(self._c_holdem_table_ptr)
         self._current_event = None
         self._called_player = -1
 
@@ -253,7 +264,13 @@ class HoldemPot(object):
     def _finish(self):
         if self._current_event != None:
             #The program is likely exiting, let's try to free whatever we can
-            self._current_event._finish()
+            if self._betting_rounds_remaining < 0:
+            	#Showdown started
+				self._current_event._finish(self._c_holdem_table_ptr)
+            else:
+				#It's a betting round
+				self._current_event._finish()
+
             betting_round_started_before = True
         elif self._called_player == None:
             #We've never finished a betting round, and we aren't in one!
@@ -407,7 +424,7 @@ class HoldemBettingRound(object):
     def player_folds(self,  player):
         self._player_makes_bet(player.seat_number,  -1)
 
-    def _finish(self):
+    def _finish(self, holdem_table_voidptr):
         called_player = delete_finish_betting_round(self._c_betting_round_event)
         self._c_betting_round_event = None
         self._betting_table = None
@@ -437,7 +454,7 @@ class HoldemShowdownRound(object):
         self._c_showdown_event = showdown_event_voidptr;
 
     def which_seat_is_next(self):
-        player_to_act = who_is_next_in_showdown(self._c_showdownevent)
+        player_to_act = who_is_next_in_showdown(self._c_showdown_event)
         if player_to_act == -1:
             return None
         else:

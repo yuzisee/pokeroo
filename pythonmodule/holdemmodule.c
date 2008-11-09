@@ -292,7 +292,7 @@ static PyObject * PyHoldem_GetMoney (PyObject *self, PyObject *args)
 	int c_chars_len;
 	int playernumber;
 
-	if (!PyArg_ParseTuple(args, "(s#i)", &c_chars, &c_chars_len, &playernumber))
+	if (!PyArg_ParseTuple(args, "s#i", &c_chars, &c_chars_len, &playernumber))
         return NULL;
 	
 	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
