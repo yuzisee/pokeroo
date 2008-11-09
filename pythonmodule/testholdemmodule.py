@@ -105,7 +105,6 @@ print "Starting a betting round"
 
 betting_round = pot.start_betting_round(holdem.HoldemCards())
 
-exit()
 print "Starting at seat 0 we have dealer, small, big."
 print "Next up should be seat #",
 print betting_round.which_seat_is_next()
