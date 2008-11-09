@@ -22,7 +22,7 @@ if sys.platform[:3] == 'win':
                 sources = sourcefiles)
 else:
 #Assume Posix
-    library_data_files = ('local/lib',['../holdem/lib/libholdem.so.1'])
+    library_data_files = ('local/lib',['../holdem/lib/libholdem.so'])
     module1 = Extension(extensionname,
                 libraries = ['holdem'],
                 library_dirs = ['../holdem/lib'],
