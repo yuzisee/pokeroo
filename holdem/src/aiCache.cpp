@@ -57,10 +57,20 @@ void StatsManager::initPath()
 		getline (configfile,baseDataPath);
 		configfile.close();
 
-                if( baseDataPath[baseDataPath.length()-1] != '/' )
-                {
-                    baseDataPath = baseDataPath + "/";
-                }
+		size_t endpos = baseDataPath.find_last_not_of("/\r\n \t");
+
+		if( string::npos == endpos )
+		{
+	    		std::cerr << "Using default data path of ./ (holdemdb.ini contains an invalid first line)" << std::endl;
+			baseDataPath = "./";
+		}else
+		{
+			//Trim trailing whitespace (and trailing slash)
+			baseDataPath = baseDataPath.substr( 0, endpos+1 );
+
+			//Append slash if needed
+			baseDataPath = baseDataPath + "/";
+		}
 	}else
 	{
 	    std::cerr << "Using default data path of ./ (Use a holdemdb.ini to specify your own path)" << std::endl;
@@ -202,7 +212,12 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
                 std::cerr << "Error reading " << datafilename << endl;
                 dataserial.close();
             }
-        }
+        }else
+	{
+		#ifdef DEBUGASSERT
+		std::cerr << "Cacheable " << datafilename << " being regenereated" << endl;
+		#endif
+    	}
     }
 
     WinStats ds(withCommunity, onlyCommunity,n);
@@ -380,7 +395,12 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
                 std::cerr << "Error reading " << datafilename << endl;
                 dataserial.close();
             }
-        }
+        }else
+	{
+		#ifdef DEBUGASSERT
+		std::cerr << "Cacheable " << datafilename << " being regenereated" << endl;
+		#endif
+	}
     }
 
     CallStats ds(withCommunity, onlyCommunity,n);
