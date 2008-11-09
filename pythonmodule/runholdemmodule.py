@@ -37,6 +37,7 @@ b = holdemhelpers.HoldemDealer()
 
 a.initialize_table()
 
+
 while len(a.players_with_chips) > 1:
 
 	b.shuffle()
@@ -46,9 +47,17 @@ while len(a.players_with_chips) > 1:
 		p.hole_cards.append_cards(b.next_card())
 
 	average_stack = total_chips / len(a.players_with_chips)
-	small_blind = average_stack / 70.0
+	small_blind = average_stack / 55
 
 	pot = a.start_new_pot(small_blind)
+
+	# print dir(pot)
+	
+	# print "Pot size"
+	# print pot.money
+
+	# print "Showdown:"
+	# print pot.showdown_started
 
 	community = holdem.HoldemCards()
 
