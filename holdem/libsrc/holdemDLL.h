@@ -198,6 +198,9 @@ struct return_table
 
 
 ///Get the amount of money playerNumber has in front of him
+C_DLL_FUNCTION handnum_t GetHandnum(void * table_ptr);
+
+///Get the amount of money playerNumber has in front of him
 C_DLL_FUNCTION struct return_money GetMoney(void * table_ptr, playernumber_t);
 
 

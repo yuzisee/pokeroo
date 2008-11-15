@@ -284,6 +284,25 @@ static PyObject * PyHoldem_DeleteCardset (PyObject *self, PyObject *args)
 // Use this: http://www.python.org/doc/2.5.2/api/arg-parsing.html (also http://docs.python.org/c-api/arg.html#arg-parsing)
 // and this: http://www.python.org/dev/peps/pep-0008/
 
+//C_DLL_FUNCTION struct return_money GetMoney(void * table_ptr, playernumber_t);
+static PyObject * PyHoldem_GetHandnum (PyObject *self, PyObject *args) 
+{	
+	const char *c_chars;
+	int c_chars_len;
+
+	if (!PyArg_ParseTuple(args, "s#", &c_chars, &c_chars_len))
+        return NULL;
+	
+	void * table_ptr = reconstruct_voidptr_address(c_chars,c_chars_len);
+	
+	int handnum = GetHandnum(table_ptr);
+	
+	if(handnum) return return_on_success(Py_BuildValue("i", handnum), SUCCESS);
+	else return return_None_on_success(NULL_TABLE_PTR);
+
+}
+
+
 ///Get the amount of money playerNumber has in front of him
 //C_DLL_FUNCTION struct return_money GetMoney(void * table_ptr, playernumber_t);
 static PyObject * PyHoldem_GetMoney (PyObject *self, PyObject *args) 
@@ -942,6 +961,7 @@ static PyObject * PyHoldem_CreateNewStrategyBot (PyObject *self, PyObject *args)
 *****************************************************************************/
 
 static PyMethodDef HoldemMethods[] = {
+	{"get_hand_number",					PyHoldem_GetHandnum, METH_VARARGS			, "s#: Get the hand number."},
     {"get_money",  						PyHoldem_GetMoney, METH_VARARGS				, "s#i: Get the amount of money a player has in front of him/her."},
     {"set_money",  						PyHoldem_SetMoney, METH_VARARGS				, "s#id: Override the amount of money a player has in front of him/her."},
 	{"get_current_round_bet",  			PyHoldem_GetCurrentRoundBet, METH_VARARGS	, "s#i: Get the amount of money a player has bet so far this round"},

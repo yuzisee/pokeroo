@@ -40,6 +40,18 @@ struct return_table DEFAULT_RETURN_TABLE = { {0,-1} , SUCCESS };
 	Betting round accessors
 *****************************************************************************/
 
+C_DLL_FUNCTION handnum_t GetHandnum(void * table_ptr)
+{
+	if( !table_ptr )
+	{
+		return 0;
+	}else
+	{
+		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
+
+		return myTable->handnum;
+	}
+}
 
 ///Get the amount of money playerNumber has in front of him
 C_DLL_FUNCTION

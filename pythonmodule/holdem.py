@@ -129,10 +129,19 @@ class HoldemTable(object):
             if bot.is_bot:
                 bot.hole_cards = None
 
+
+    @property
+    def hand_number(self):
+    	if not self._table_initialized:
+            raise AssertionError,  "hand_number is not defined until the table is initialized"
+
+    	return get_hand_number(self._c_holdem_table[0])
+
+
     @property
     def players_with_chips(self):
-    	alive_players = []
-    	for p in self.players:
+        alive_players = []
+        for p in self.players:
     		if p.money > 0:
     			alive_players.append(p)
 

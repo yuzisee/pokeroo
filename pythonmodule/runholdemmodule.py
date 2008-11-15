@@ -103,6 +103,7 @@ while len(a.players_with_chips) > 1:
 
 	a.finish_pot_refresh_players()
 
+	print a.hand_number
 	print a.save_state()
 	print len(a.players_with_chips),
 	print "players left"
