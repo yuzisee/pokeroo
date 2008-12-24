@@ -110,25 +110,15 @@ class QuitButtonWindow(QWidget):
 			qApp, QtCore.SLOT('quit()'))
 
 
-class DeckOfCards:
-
+class DeckImage:
 	def __init__(self):
-		x = 5
+		CARD_LENGTH = 123
+		CARD_WIDTH = 79
+		
 
-class PokerGUI:
-
-
-	def __init__(self, master):
-		print "init"
-
-	def betAction(self):
-		print "bet"
-
-	def checkAction(self):
-		print "check"
-
-	def foldAction(self):
-		print "fold"
+class CardImage:
+	def __init__(self):
+		card_image = ''
 
 
 if __name__ == "__main__":
