@@ -431,7 +431,11 @@ class HoldemPlayer(object):
 #append_card_to_cardset (s#i)cc
 #delete_cardset (s#i)
 class HoldemCards(object):
-    "Hole cards for a HoldemPlayer or community cards for a HoldemArena "
+    """Hole cards for a HoldemPlayer or community cards for a HoldemArena
+    Add cards one by one, choosing rank/suit combinations from HoldemCards.VALID_CARD_RANKS and HoldemCards.VALID_CARD_SUITS
+    You may also add multiple cards at a time: separate your cards with whitespace.
+    For example, my_cards.append_cards("8h Tc") adds the eight of hearts and the ten of clubs to my_cards
+    """
 
     VALID_CARD_RANKS = frozenset(['2','3','4','5','6', '7','8', '9', 'T','J', 'Q', 'K', 'A']);
     VALID_CARD_SUITS = frozenset(['s','h','c','d']);

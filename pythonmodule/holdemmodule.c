@@ -205,10 +205,10 @@ cardValue can be any of:
 
 
 cardSuit can be any of:
-'S' for Spades
-'H' for Hearts
-'C' for Clubs
-'D' for Diamonds
+'s' for Spades
+'h' for Hearts
+'c' for Clubs
+'d' for Diamonds
 */
 
 
@@ -990,7 +990,7 @@ static PyMethodDef HoldemMethods[] = {
 	{"player_shows_hand",  				PyHoldem_PlayerShowsHand, METH_VARARGS		, "s#i(s#i)(s#i): Indicate to a showdown object that a specific player has revealed its hand"},
 	{"player_mucks_hand",  				PyHoldem_PlayerMucksHand, METH_VARARGS		, "s#i: Indicate to a showdown object that a specific player has mucked its hand"},
 	{"create_new_showdown",  			PyHoldem_CreateNewShowdown, METH_VARARGS	, "s#i(s#i): A showdown object moderates the revealing of hands performed at the table, starting with the called player"},
-	{"delete_finish_showdown",  		PyHoldem_DeleteFinishShowdown, METH_VARARGS	, "s#s#: What a showdown round completes, free the showdown object"},
+	{"delete_finish_showdown",  		PyHoldem_DeleteFinishShowdown, METH_VARARGS	, "s#s#: When a showdown round completes, free the showdown object"},
 	{"create_new_table", 				PyHoldem_CreateNewTable, METH_VARARGS		, "id: Create a table: This is the main constructor"},
 	{"delete_table_and_players",  		PyHoldem_DeleteTableAndPlayers, METH_VARARGS, "(s#i): Delete the table and all added players: This is the main destructor"},
 	{"add_a_human_opponent",  			PyHoldem_CreateNewHumanOpponent, METH_VARARGS, "(s#i)sd: Indicate that a non-bot player will be sitting at the table in the next seat (clockwise)"},
