@@ -201,6 +201,7 @@ class HoldemTable(object):
 #begin_new_hands s#di
 #finish_hand_refresh_players s#
 class HoldemPot(object):
+    """A HoldemPot is created for each hand of the game. A HoldemPot spawns all of the betting rounds for a hand, and the showdown if needed."""
 
     def __init__(self, holdem_table_voidptr, num_betting_rounds, my_small_blind,  my_next_dealer):
         self._current_event = None
@@ -242,6 +243,10 @@ class HoldemPot(object):
 
     @property
     def more_betting_rounds_remaining(self):
+    	"""This is the number of betting rounds that have not yet started.
+    	Once you start the river betting round, this number is zero.
+    	If all players folded or the showdown has already finished, this function returns None.
+    	"""
     	if self._called_player == -1:
     		return None
     	else:
@@ -249,6 +254,7 @@ class HoldemPot(object):
 
     @property
     def showdown_started(self):
+		"""Has the showdown begun? This function still returns true after the showdown has completed."""
 		if self._betting_rounds_remaining < 0:
 			return True
 		else:
@@ -277,6 +283,10 @@ class HoldemPot(object):
         return self._current_event
 
     def finish_betting_round(self):
+        """Call this function once the all bets for this (started with start_betting_round) have been made.
+        This function also reports who made first high bet that was called; if nobody called the high bet, then you will get None here.
+        start_showdown will need this value to determine who is going to act first in the showdown.
+        """
         if self._current_event == None:
             raise AssertionError, "Start a betting round before finishing one"
 
@@ -312,6 +322,7 @@ class HoldemPot(object):
         return self._current_event
 
     def finish_showdown(self):
+        """When a HoldemShowdownRound completes, free the showdown object"""
         if not self.showdown_started:
             raise AssertionError, "Showdown not yet started"
 
@@ -326,6 +337,7 @@ class HoldemPot(object):
         self._called_player = -1
 
     def is_finished(self):
+        """This function returns true if everybody has folded to the high bet or the showdown has completed."""
         return (self._called_player == -1)
 
     def _finish(self):
@@ -374,11 +386,15 @@ class HoldemPlayer(object):
         bot_receives_hole_cards(self._c_holdem_table_ptr, self.seat_number, self.hole_cards.c_tuple)
 
     def calculate_bet_decision(self):
+        """Ask a bot what bet it would like to make. Use it to ask a bot what to bet"""
         if not self._is_bot:
             raise AssertionError, "Only bots can generate a betting decision for you"
 
         return get_bot_bet_decision(self._c_holdem_table_ptr, self.seat_number)
 
+#http://code.activestate.com/recipes/410698/
+#http://code.activestate.com/recipes/205183/
+#might be a better way to make properties
     def _getholecards(self):
         if not self.is_bot:
             raise AssertionError, "Hole cards are only assigned to bots"
