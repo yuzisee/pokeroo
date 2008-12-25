@@ -347,15 +347,15 @@ cardValue can be any of:
 
 
 cardSuit can be any of:
-'S' for Spades
-'H' for Hearts
-'C' for Clubs
-'D' for Diamonds
+'s' for Spades
+'h' for Hearts
+'c' for Clubs
+'d' for Diamonds
 */
 
 C_DLL_FUNCTION struct holdem_cardset CreateNewCardset(void);
 
-///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'H'
+///For example, for the eight of hearts: cardValue = '8' and cardSuit = 'h'
 C_DLL_FUNCTION struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char cardSuit);
 
 C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
