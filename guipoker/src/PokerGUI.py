@@ -16,9 +16,13 @@ from PyQt4.QtCore import Qt
 #>>> dir(QtCore)
 #>>> dir(QtCore.Qt)
 
-class DisplayInfo(QVBoxLayout):
+class DisplayInfoWidget(QWidget):
 	def __init__(self, label_image = None, alignment = Qt.Alignment):
-		QTextEdit.__init__(self,None)
+		super(DisplayInfoWidget,self).__init__()
+		
+		self.my_layout = QVBoxLayout()
+		self.setLayout(self.my_layout)
+
 
 		new_hello_label = QLabel('No card image')
 		if label_image != None:
@@ -26,24 +30,15 @@ class DisplayInfo(QVBoxLayout):
 			new_hello_label.setPixmap(pixmap)
 
 		#new_hello_label.setAlignment(alignment)
-		new_hello_label.setStyleSheet("QWidget { background-color: %s }" % QColor(165, 250, 225).name())
-		self.addWidget(new_hello_label)
-		self.addWidget(QLabel('bet size: 20'))
+		#new_hello_label.setStyleSheet("QWidget { background-color: %s }" % QColor(165, 250, 225).name())
+		
+		self.my_layout.addWidget(new_hello_label)
+
+		self.my_layout.addWidget(QLabel('bet size: 20'))
 		#new_line_edit = QLineEdit('00000')
 		#self.addWidget(new_line_edit)
 
 
-
-class DisplayManyLabelsTopRow(QHBoxLayout):
-	def __init__(self, num_labels, alignment = Qt.Alignment):
-		QHBoxLayout.__init__(self, None)
-
-
-		for cell_num in range(0,num_labels):
-			self.addLayout(DisplayInfo('Hello, from hbox entry '+str(cell_num)+' of '+str(num_labels),alignment))
-
-
-#It seems like each spot in a layout can contain either a widget or another layout
 
 class EllipseLayout(QLayout):
 	
@@ -103,7 +98,7 @@ class EllipseLayout(QLayout):
 
 # Following tutorial from: http://www.zetcode.com/tutorials/pyqt4/
 # Perhaps I'll try this: http://doc.trolltech.com/4.2/layout.html
-class QuitButtonWindow(QWidget):
+class QuitButtonWidget(QWidget):
 	def __init__(self, parent=None):
 		
 		QWidget.__init__(self, parent)
@@ -124,7 +119,7 @@ class QuitButtonWindow(QWidget):
 		hoo = QLabel('HOO',self)
 		
 		self.setLayout(self.card_table)
-		self.card_table.addWidget(hoo)#DisplayInfo(card_image_deck['back']))
+		self.card_table.addWidget(hoo)#DisplayInfoWidget(card_image_deck['back']))
 
 		quit_button = QPushButton('Close',self)
 		quit_button.setGeometry(180, 8, 60, 35)
@@ -149,17 +144,18 @@ class QuitButtonWindow(QWidget):
 	def add_hoo(self):
 		for n in range(20):
 			self.john = self.john + 1
-			add_hoo_here = QLabel('HOOadded' + str(self.john),self);
-			add_hoo_here.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-			add_hoo_here.setFrameStyle(QFrame.Box)
-			self.card_table.addWidget(add_hoo_here)
-			#self.card_table.addChildLayout(DisplayInfo(self.card_image_deck['back']))
+			#add_hoo_here = QLabel('HOOadded' + str(self.john),self);
+			#add_hoo_here.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+			#add_hoo_here.setFrameStyle(QFrame.Box)
+			#self.card_table.addWidget(add_hoo_here)
+			self.card_table.addWidget(DisplayInfoWidget(self.card_image_deck['back']))
 		self.hoo_button.raise_()
 
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
 
-	qb = QuitButtonWindow()
+	qb = QuitButtonWidget()
+	#qb = DisplayInfoWidget()
 	qb.show()
 
 
