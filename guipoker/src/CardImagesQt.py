@@ -10,6 +10,8 @@ class CardImageDeck(dict):
             _deck_instance = CardImageDeck()
         return _deck_instance
     
+    get_instance = staticmethod(get_instance)
+    
     _CARD_LENGTH = 123
     _CARD_WIDTH = 79
     _CARDS_IMAGE = Image.open('cards.png')
