@@ -50,9 +50,7 @@ class EllipseLayout(QLayout):
 	def addItem(self, item):
 		if not isinstance(item,QLayoutItem):
 			raise TypeError, 'This exception is not object oriented, but Ruby is, so use addWidget'
-		if len(self._item_list) >= self._max_items:
-			print 'too many items'
-			return
+		print 'hoo' + str(len(self._item_list))
 		self._item_list.append(item)
 	
 	def sizeHint(self):
@@ -61,12 +59,17 @@ class EllipseLayout(QLayout):
 	def setGeometry(self, q_rect):
 		if len(self._item_list) == 0:
 			return
+
+		x = q_rect.center().x()
+		y = q_rect.center().y()
 		num_items = len(self._item_list)
 		item_spacing = (2 * math.pi) / num_items  #in radians
 		for index in range(num_items):
-			mysize = QRect(100+100* math.sin(index * item_spacing), 100+100*math.cos(index * item_spacing), 100, 200);
+			mytem = self._item_list[index]
+			mysize = QRect(x + (x-self.margin())* math.sin(index * item_spacing) - mytem.minimumSize().width()/2.0, y + (y-self.margin())*math.cos(index * item_spacing) - mytem.minimumSize().height()/2.0, mytem.minimumSize().width(),mytem.minimumSize().height());
 			self._item_list[index].setGeometry(mysize)
-			print repr(mysize.getCoords())
+			#print repr(mysize.getCoords())
+			
 		
 	def itemAt(self, index):
 		if index < len(self._item_list):
@@ -84,10 +87,9 @@ class EllipseLayout(QLayout):
 	def expandingDirections(self):
 		return 0
 
-	def __init__(self, parent=None, max_items = 13):
+	def __init__(self, parent=None):
 		super(EllipseLayout, self).__init__(parent)
 		self._item_list = []
-		self._max_items = max_items
 
 		#Center green
 
@@ -105,10 +107,10 @@ class QuitButtonWindow(QWidget):
 	def __init__(self, parent=None):
 		
 		QWidget.__init__(self, parent)
-		card_image_deck = CardImageDeck('cards.png')
+		self.card_image_deck = CardImageDeck('cards.png')
 
 		#http://doc.trolltech.com/4.4/qgridlayout.html
-
+		self.john = 0
 
 
 		self.setGeometry(300, 300, 250, 150)
@@ -117,25 +119,42 @@ class QuitButtonWindow(QWidget):
 
 
 		#self.setLayout(DisplayManyLabelsLayout())
-		card_table = EllipseLayout()
+		self.card_table = EllipseLayout()
+		self.card_table.setMargin(20)
 		hoo = QLabel('HOO',self)
-		hoo1 = QLabel('HOO1',self)
-		hoo2 = QLabel('HOO2',self)
-		hoo3 = QLabel('HOO3',self)
 		
-		self.setLayout(card_table)
-		card_table.addWidget(hoo)#DisplayInfo(card_image_deck['back']))
-		card_table.addWidget(hoo1)
-		card_table.addWidget(hoo2)
-		card_table.addWidget(hoo3)
+		self.setLayout(self.card_table)
+		self.card_table.addWidget(hoo)#DisplayInfo(card_image_deck['back']))
 
 		quit_button = QPushButton('Close',self)
 		quit_button.setGeometry(180, 8, 60, 35)
 
 
+		self.hoo_button = QPushButton('Add One',self)
+		self.hoo_button.setGeometry(2, 20, 60, 35)
+
+
+#		hood_button = QPushButton('Remone',self)
+#		hood_button.setGeometry(180, 80, 60, 35)
+
+
+
 		self.connect(quit_button, QtCore.SIGNAL('clicked()'),
 			qApp, QtCore.SLOT('quit()'))
 
+
+		self.connect(self.hoo_button, QtCore.SIGNAL('clicked()'),
+			self.add_hoo)
+
+	def add_hoo(self):
+		for n in range(20):
+			self.john = self.john + 1
+			add_hoo_here = QLabel('HOOadded' + str(self.john),self);
+			add_hoo_here.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+			add_hoo_here.setFrameStyle(QFrame.Box)
+			self.card_table.addWidget(add_hoo_here)
+			#self.card_table.addChildLayout(DisplayInfo(self.card_image_deck['back']))
+		self.hoo_button.raise_()
 
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
