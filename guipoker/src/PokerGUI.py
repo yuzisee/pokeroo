@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
-#from Tkinter import *
+
 # We will be using things from the qt and sys modules
 import math
 import sys
+from CardImagesQt import *
 from PyQt4.QtGui import *
 from PyQt4 import QtCore
 from PyQt4.QtCore import Qt
@@ -99,7 +100,7 @@ class QuitButtonWindow(QWidget):
 
 
 
-  		self.setLayout(DisplayManyLabelsLayout())
+		self.setLayout(DisplayManyLabelsLayout())
 
 
 		quit_button = QPushButton('Close',self)
@@ -108,17 +109,6 @@ class QuitButtonWindow(QWidget):
 
 		self.connect(quit_button, QtCore.SIGNAL('clicked()'),
 			qApp, QtCore.SLOT('quit()'))
-
-
-class DeckImage:
-	def __init__(self):
-		CARD_LENGTH = 123
-		CARD_WIDTH = 79
-		
-
-class CardImage:
-	def __init__(self):
-		card_image = ''
 
 
 if __name__ == "__main__":
