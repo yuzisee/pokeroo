@@ -18,6 +18,7 @@ from PyQt4.QtCore import Qt
 
 class DisplayInfo(QVBoxLayout):
 	def __init__(self, text, alignment = Qt.Alignment):
+		card_image_deck = CardImageDeck.get_instance(self)
 		QTextEdit.__init__(self,None)
 
 		new_hello_label = QLabel(text)
