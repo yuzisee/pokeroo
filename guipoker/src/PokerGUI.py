@@ -17,15 +17,18 @@ from PyQt4.QtCore import Qt
 #>>> dir(QtCore.Qt)
 
 class DisplayInfo(QVBoxLayout):
-	def __init__(self, text, alignment = Qt.Alignment):
-		card_image_deck = CardImageDeck.get_instance(self)
+	def __init__(self, label_image = None, alignment = Qt.Alignment):
 		QTextEdit.__init__(self,None)
 
-		new_hello_label = QLabel(text)
-		new_hello_label.setAlignment(alignment)
+		new_hello_label = QLabel('No card image')
+		if label_image != None:
+			pixmap = label_image.get_image(62)
+			new_hello_label.setPixmap(pixmap)
+
+		#new_hello_label.setAlignment(alignment)
 		new_hello_label.setStyleSheet("QWidget { background-color: %s }" % QColor(165, 250, 225).name())
 		self.addWidget(new_hello_label)
-
+		self.addWidget(QLabel('bet size: 20'))
 		#new_line_edit = QLineEdit('00000')
 		#self.addWidget(new_line_edit)
 
@@ -42,45 +45,47 @@ class DisplayManyLabelsTopRow(QHBoxLayout):
 
 #It seems like each spot in a layout can contain either a widget or another layout
 
-class DisplayManyLabelsLayout(QGridLayout):
-	NUMBER_OF_LABELS = 13
+class EllipseLayout(QLayout):
+	
+	def addItem(self, item):
+		if len(self._item_list) >= self._max_items:
+			print 'too many items'
+			return
+		self._item_list.append(item)
+	
+	def sizeHint(self):
+		return 34
+	
+	def setGeometry(self, q_rect):
+		num_items = len(self._item_list)
+		item_spacing = (2 / num_items) * math.pi #in radians
+		for index in range(num_items):
+			self._item_list[index].setGeometry(QRect(62* math.sin(index * item_spacing), 34*math.cos(index * item_spacing), 34, 62))
+		
+	def itemAt(self, index):
+		print self._item_list
+		print index
+		print 'hooooooo'
+		return self._item_list[0]#index]
+	
+	def count(self):
+		return len(self._item_list)
+	
+	def takeAt(self, index):
+		return self._item_list.pop(index)
+	#addItem(), sizeHint(), setGeometry(), itemAt() and takeAt(). You should also implement minimumSize() to e
 
-	def __init__(self, parent=None):
+	def __init__(self, parent=None, max_items = 13):
+		super(EllipseLayout, self)
+		self._item_list = []
+		self._max_items = max_items
 		QGridLayout.__init__(self, parent)
 
-		self.setSpacing(1) #Spacing between grid cells is 1 pixel
-
-		non_corner_labels = self.NUMBER_OF_LABELS - 4
-
-		if non_corner_labels < 0:
-			raise NotImplementedError, "Not yet implemented"
-
-		inner_rows = int(non_corner_labels) / 4
-		columns = 2 + int(non_corner_labels) / 4 + 1
-
-		top_bottom_labels = self.NUMBER_OF_LABELS - inner_rows*2
-		top_labels = top_bottom_labels / 2 + 1
-		bottom_labels = top_bottom_labels / 2
-
-#Setting styles: http://www.zetcode.com/tutorials/pyqt4/widgets/
-
-		for row_num in range(1,inner_rows+1):
-			self.addLayout(DisplayInfo('Hello, from row '+str(row_num)+' column 0',Qt.AlignVCenter | Qt.AlignLeft),row_num,0) #Take the cell at row row_num, column 0
-			self.addLayout(DisplayInfo('Hello, from row '+str(row_num)+' column 2',Qt.AlignVCenter | Qt.AlignRight),row_num,columns-1) #Take the cell at row row_num, column (columns-1)
-
-
-		#Top labels
-		self.addLayout(DisplayManyLabelsTopRow(top_labels,Qt.AlignHCenter | Qt.AlignBottom),0,0,1,columns) #Span all columns, and one row at the top
-
-		#Bottom labels
-		self.addLayout(DisplayManyLabelsTopRow(bottom_labels,Qt.AlignHCenter | Qt.AlignTop),inner_rows+1,0,1,columns) #Span all columns, and one row at the bottom
-
-
 		#Center green
-		if inner_rows > 0 and columns > 2:
-			test_label = QLabel('QLabel')
-			test_label.setStyleSheet("QWidget { background-color: %s }" % QColor(0, 150, 50).name())
-			self.addWidget(test_label,1,1,inner_rows,columns-2) #Span (rows-2) rows and 1 column, starting at row 1, column 1
+
+		test_label = QLabel('QLabel')
+		test_label.setStyleSheet("QWidget { background-color: %s }" % QColor(0, 150, 50).name())
+		#self.addWidget(test_label) #Span (rows-2) rows and 1 column, starting at row 1, column 1
 
 
 
@@ -90,7 +95,9 @@ class DisplayManyLabelsLayout(QGridLayout):
 # Perhaps I'll try this: http://doc.trolltech.com/4.2/layout.html
 class QuitButtonWindow(QWidget):
 	def __init__(self, parent=None):
+		
 		QWidget.__init__(self, parent)
+		card_image_deck = CardImageDeck('cards.png')
 
 		#http://doc.trolltech.com/4.4/qgridlayout.html
 
@@ -101,8 +108,10 @@ class QuitButtonWindow(QWidget):
 
 
 
-		self.setLayout(DisplayManyLabelsLayout())
-
+		#self.setLayout(DisplayManyLabelsLayout())
+		card_table = EllipseLayout()
+		card_table.addItem(QLabel('HOOOO'))#DisplayInfo(card_image_deck['back']))
+		self.setLayout(card_table)
 
 		quit_button = QPushButton('Close',self)
 		quit_button.setGeometry(2, 8, 60, 35)
