@@ -1,8 +1,8 @@
 import Image
 import ImageQt
-from PyQt4.QtCore import Qt
+from PyQt4.QtGui import *
 
-class CardImageDeck(UserDict):
+class CardImageDeck(dict):
     _CARD_LENGTH = 123
     _CARD_WIDTH = 79
     _CARDS_IMAGE = Image.open('cards.png')
