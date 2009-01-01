@@ -52,7 +52,7 @@ class HoldemTable(object):
     """
 
     HOLDEM_BETTING_ROUNDS = 4
-    VALID_BOT_TYPES = frozenset(['trap','normal','action','gear','multi', 'danger','space', 'com']);
+    ACCEPTED_BOT_TYPES = frozenset(['trap','normal','action','gear','multi', 'danger','space', 'com']);
 
     def __init__(self, smallest_chip_amount):
         self.seat_number = 10 #See holdem/src/debug_flags.h, for now SEATS_AT_TABLE is fixed to 10.
@@ -81,11 +81,11 @@ class HoldemTable(object):
         if bot_type == None:
             seat_number = add_a_human_opponent(self._c_holdem_table,  player_name,  starting_money)
             player_is_bot = False
-        elif bot_type.lower() in self.VALID_BOT_TYPES:
+        elif bot_type.lower() in self.ACCEPTED_BOT_TYPES:
             seat_number = add_a_strategy_bot(self._c_holdem_table,  player_name,  starting_money,  bot_type[0].upper())
             player_is_bot = True
         else:
-            raise KeyError,  "Create a human player with bot_type == None, or select a bot type from self.VALID_BOT_TYPES"
+            raise KeyError,  "Create a human player with bot_type == None, or select a bot type from self.ACCEPTED_BOT_TYPES"
 
         new_player = HoldemPlayer(self._c_holdem_table[0], player_name, seat_number,  player_is_bot)
         self.players.append(new_player)
@@ -182,10 +182,10 @@ class HoldemTable(object):
     @property
     def hand_number(self):
         """Get the hand number"""
-    	if not self._table_initialized:
+        if not self._table_initialized:
             raise AssertionError,  "hand_number is not defined until the table is initialized"
 
-    	return get_hand_number(self._c_holdem_table[0])
+        return get_hand_number(self._c_holdem_table[0])
 
 
     @property
@@ -193,8 +193,8 @@ class HoldemTable(object):
         """Returns the list of all players that still have chips"""
         alive_players = []
         for p in self.players:
-    		if p.money > 0:
-    			alive_players.append(p)
+            if p.money > 0:
+                alive_players.append(p)
 
         return alive_players
 
@@ -243,22 +243,22 @@ class HoldemPot(object):
 
     @property
     def more_betting_rounds_remaining(self):
-    	"""This is the number of betting rounds that have not yet started.
-    	Once you start the river betting round, this number is zero.
-    	If all players folded or the showdown has already finished, this function returns None.
-    	"""
-    	if self._called_player == -1:
-    		return None
-    	else:
-        	return self._betting_rounds_remaining > 0
+        """This is the number of betting rounds that have not yet started.
+        Once you start the river betting round, this number is zero.
+        If all players folded or the showdown has already finished, this function returns None.
+        """
+        if self._called_player == -1:
+            return None
+        else:
+            return self._betting_rounds_remaining > 0
 
     @property
     def showdown_started(self):
-		"""Has the showdown begun? This function still returns true after the showdown has completed."""
-		if self._betting_rounds_remaining < 0:
-			return True
-		else:
-			return False
+        """Has the showdown begun? This function still returns true after the showdown has completed."""
+        if self._betting_rounds_remaining < 0:
+            return True
+        else:
+            return False
 
     def size_from_previous_rounds(self):
         """Get the pot size from just after the previous betting round ended."""
@@ -344,11 +344,11 @@ class HoldemPot(object):
         if self._current_event != None:
             #The program is likely exiting, let's try to free whatever we can
             if self.showdown_started:
-            	#Showdown started
-				self._current_event._finish(self._c_holdem_table_ptr)
+                #Showdown started
+                self._current_event._finish(self._c_holdem_table_ptr)
             else:
-				#It's a betting round
-				self._current_event._finish()
+                #It's a betting round
+                self._current_event._finish()
 
             betting_round_started_before = True
         elif self._called_player == None:
@@ -427,6 +427,8 @@ class HoldemPlayer(object):
         """Get the total bets that the player has made in all previous rounds."""
         return get_previous_rounds_bet(self._c_holdem_table_ptr, self.seat_number)
 
+
+
 #create_new_cardset
 #append_card_to_cardset (s#i)cc
 #delete_cardset (s#i)
@@ -437,23 +439,27 @@ class HoldemCards(object):
     For example, my_cards.append_cards("8h Tc") adds the eight of hearts and the ten of clubs to my_cards
     """
 
-    VALID_CARD_RANKS = frozenset(['2','3','4','5','6', '7','8', '9', 'T','J', 'Q', 'K', 'A']);
-    VALID_CARD_SUITS = frozenset(['s','h','c','d']);
+    #http://docs.python.org/library/stdtypes.html#set-types-set-frozenset
+    CARD_RANKS = frozenset(['2','3','4','5','6', '7','8', '9', 'T','J', 'Q', 'K', 'A'])
+    CARD_SUITS = frozenset(['s','h','c','d'])
 
     def __init__(self):
         self._c_holdem_cardset = create_new_cardset()
+        self._appended_cards = []
 
     def __del__(self):
         delete_cardset(self.c_tuple)
 
     def _valid_card_pair(self,card_rank,card_suit):
-        return (card_rank in self.VALID_CARD_RANKS and card_suit in self.VALID_CARD_SUITS)
+        return (card_rank in self.CARD_RANKS and card_suit in self.CARD_SUITS)
 
     def append_card(self, card_rank, card_suit):
+        """add one card to the hand"""
         if not self._valid_card_pair(card_rank, card_suit):
-            raise AssertionError,  "card_rank (resp. card_suit) must be present in VALID_CARD_RANKS (resp. VALID_CARD_SUITS)"
+            raise AssertionError,  "card_rank (resp. card_suit) must be present in CARD_RANKS (resp. CARD_SUITS)"
 
         self._c_holdem_cardset = append_card_to_cardset(self.c_tuple,  card_rank,  card_suit)
+        self._appended_cards.append((card_rank,card_suit))
         return self
 
     def append_cards(self,  cards_str):
@@ -466,6 +472,9 @@ class HoldemCards(object):
             self.append_card(next_card[0], next_card[1])
 
         return self
+
+    def get_all_appended_cards(self):
+        return self._appended_cards
 
     @property
     def c_tuple(self):
