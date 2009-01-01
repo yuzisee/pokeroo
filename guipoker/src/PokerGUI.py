@@ -4,7 +4,7 @@
 # We will be using things from the qt and sys modules
 import math
 import sys
-from CardImagesQt import *
+from CardImages import *
 from PyQt4.QtGui import *
 from PyQt4 import QtCore
 from PyQt4.QtCore import Qt
@@ -16,31 +16,41 @@ from PyQt4.QtCore import Qt
 #>>> dir(QtCore)
 #>>> dir(QtCore.Qt)
 
-class DisplayInfoWidget(QWidget):
-	def __init__(self, label_image = None, alignment = Qt.Alignment):
-		super(DisplayInfoWidget,self).__init__()
+class CardsWidget(QWidget):
+	def __init__(self, images = []):
+		super(CardsWidget,self).__init__()
 		
-		self.my_layout = QVBoxLayout()
-		self.setLayout(self.my_layout)
+		self.cards = images
+		self.cards_layout = QHBoxLayout()
+		self.setLayout(self.cards_layout)
+		for image in images:
+			self.cards_layout.addWidget(image)
 
-
-		new_hello_label = QLabel('No card image')
-		if label_image != None:
-			pixmap = label_image.get_image(62)
-			new_hello_label.setPixmap(pixmap)
-
-		#new_hello_label.setAlignment(alignment)
-		#new_hello_label.setStyleSheet("QWidget { background-color: %s }" % QColor(165, 250, 225).name())
+class PlayerInfoWidget(QWidget):
+	def __init__(self, player_name = 'john', cards_widget = None):
+		super(PlayerInfoWidget,self).__init__()
 		
-		self.my_layout.addWidget(new_hello_label)
-
-		self.my_layout.addWidget(QLabel('bet size: 20'))
-		#new_line_edit = QLineEdit('00000')
-		#self.addWidget(new_line_edit)
-
-
+		if cards_widget == None:
+			cards_widget = CardsWidget()
+		
+		self.player_layout = QVBoxLayout()
+		self.setLayout(self.player_layout)
+		
+		self.player_layout.addWidget(QLabel(player_name))
+		self.player_layout.addWidget(cards_widget)
+		self.player_layout.addWidget(QLabel('chip count: 20000000'))
+		self.player_layout.addWidget(QLabel('bet size: 20'))
 
 class EllipseLayout(QLayout):
+	def __init__(self, parent=None):
+		super(EllipseLayout, self).__init__(parent)
+		self._item_list = []
+
+		#Center green
+
+		#test_label = QLabel('QLabel')
+		#test_label.setStyleSheet("QWidget { background-color: %s }" % QColor(0, 150, 50).name())
+		#self.addWidget(test_label) #Span (rows-2) rows and 1 column, starting at row 1, column 1
 	
 	def addItem(self, item):
 		if not isinstance(item,QLayoutItem):
@@ -78,23 +88,6 @@ class EllipseLayout(QLayout):
 	def takeAt(self, index):
 		return self._item_list.pop(index)
 	#addItem(), sizeHint(), setGeometry(), itemAt() and takeAt(). You should also implement minimumSize() to e
-	
-	def expandingDirections(self):
-		return 0
-
-	def __init__(self, parent=None):
-		super(EllipseLayout, self).__init__(parent)
-		self._item_list = []
-
-		#Center green
-
-		#test_label = QLabel('QLabel')
-		#test_label.setStyleSheet("QWidget { background-color: %s }" % QColor(0, 150, 50).name())
-		#self.addWidget(test_label) #Span (rows-2) rows and 1 column, starting at row 1, column 1
-
-
-
-
 
 # Following tutorial from: http://www.zetcode.com/tutorials/pyqt4/
 # Perhaps I'll try this: http://doc.trolltech.com/4.2/layout.html
@@ -148,7 +141,7 @@ class QuitButtonWidget(QWidget):
 			#add_hoo_here.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 			#add_hoo_here.setFrameStyle(QFrame.Box)
 			#self.card_table.addWidget(add_hoo_here)
-			self.card_table.addWidget(DisplayInfoWidget(self.card_image_deck['back']))
+			self.card_table.addWidget(PlayerInfoWidget(CardsWidget([self.card_image_deck['back'], self.card_image_deck['back']])))
 		self.hoo_button.raise_()
 
 if __name__ == "__main__":
