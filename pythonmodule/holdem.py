@@ -18,33 +18,33 @@ from _holdem import *
 #initialize_new_table_state s#
 #restore_table_state ss#
 #save_table_state s#
-class HoldemTable(object):
+class CardTable(object):
     """Class Interface for the holdem C extension
     
     Basic control flow is as follows:
-    1.  Instantiate a new HoldemTable
+    1.  Instantiate a new CardTable
     2a. Add players (add_player_clockwise) as desired and either initialize the state of the table (initialize_table), or restore_state
     2b. Either initialize (initialize_table) the state of the table, or restore (restore_state) it from a previous state
     3.  You may save (save_state) the state of the table at this point, if you want to for some reason.
     4.  -----
-        4.1 Clear the table for a new hand (start_new_pot)
+        4.1 Clear the table for a new hand (start_new_game_round)
         4.2 Assign hole cards (HoldemPlayer.hole_cards) to all bots who need to know their hand
         4.3 -----
-             4.3.1a Create a blank hand (HoldemCards) to represent the pre-flop and create a new betting round (GameRound.start_betting_round) with it
-             4.3.1b Make bets for players (HoldemBettingRound.player...) in order (HoldemBettingRound.which_seat_is_next), while querying (HoldemPlayer.calculate_bet_decision) your bots for their decisions
-             4.3.1c Finish the betting round (GameRound.finish_betting_round) and it will report if the high bet was called.
+             4.3.1a Create a blank hand (HoldemCards) to represent the pre-flop and create a new betting round (current_game_round.start_betting_round) with it
+             4.3.1b Make bets for players (current_game_round.current_action_round.player...) in order (current_game_round.current_action_round.which_seat_is_next()), while querying (HoldemPlayer.calculate_bet_decision) your bots for their decisions
+             4.3.1c Finish the betting round (current_game_round.finish_betting_round) and it will report if the high bet was called.
 
-             4.3.2a If the preflop high bet was called, append to your flop (HoldemCards.append_cards) and then create a new betting round (GameRound.start_betting_round) with your new flop.
-             4.3.2b Make bets ... (HoldemBettingRound.player...)
-             4.3.2c Finish the betting round (GameRound.finish_betting_round) ...
+             4.3.2a If the preflop high bet was called, append to your flop (HoldemCards.append_cards) and then create a new betting round (current_game_round.start_betting_round) with your new flop.
+             4.3.2b Make bets ... (current_game_round.current_action_round.player...)
+             4.3.2c Finish the betting round (current_game_round.finish_betting_round) ...
 
              4.3.3 ... If the postflop high-bet was called, play the Turn ... and it will report if the high bet is called.
 
              4.3.4 ... If the high-bet was called after the turn, play the River ... and it will report if the high bet is called.
 
-             4.3.5a If the high-bet was called after the river, create a new showdown (GameRound.start_showdown)
-             4.3.5b Players show (HoldemShowdownRound.show_hand) or muck (HoldemShowdownRound.muck_hand) their hands in order (HoldemShowdownRound.which_seat_is_next)
-             4.3.5c Finishing the showdown (GameRound.finish_showdown) will calculate side pots and move money from the pot to the winners. (Compare HoldemPlayer.money before and after, to determine winners.)
+             4.3.5a If the high-bet was called after the river, create a new showdown (current_game_round.start_showdown)
+             4.3.5b Players show (current_game_round.current_action_round.show_hand()) or muck (current_game_round.current_action_round.muck_hand()) their hands in order (current_game_round.current_action_round.which_seat_is_next)
+             4.3.5c Finishing the showdown (current_game_round.finish_showdown) will calculate side pots and move money from the pot to the winners. (Compare HoldemPlayer.money before and after, to determine winners.)
 
         4.4 Complete the final bookkeeping that needs to take place (finish_pot_refresh_players) to prepare data structures for the next hand
         4.5 If you would like to save the game (save_state), now is the safest time to do so
@@ -58,22 +58,22 @@ class HoldemTable(object):
         self.seat_number = 10 #See holdem/src/debug_flags.h, for now SEATS_AT_TABLE is fixed to 10.
         self.players = []
         self._table_initialized = False
-        self._current_pot = None
+        self._current_game_round = None
         self._c_holdem_table = create_new_table(self.seat_number,  smallest_chip_amount)
 
     def __del__(self):
-        if self._current_pot != None:
-            self._current_pot._finish() #The program is likely exiting, let's try to free whatever we can
+        if self._current_game_round != None:
+            self._current_game_round._finish() #The program is likely exiting, let's try to free whatever we can
 
-        print "Deleting Python HoldemTable..."
+        print "Deleting Python CardTable..."
 
         delete_table_and_players(self._c_holdem_table)
 
     def add_player_clockwise(self,  player_name, starting_money,  bot_type):
         """Add a player/bot to the table. To add a human player, bot_type must be None;
-        Otherwise, the parameter bot_type must be selected from HoldemTable.VALID_BOT_TYPES;
+        Otherwise, the parameter bot_type must be selected from CardTable.VALID_BOT_TYPES;
         By default, the first player added to the table (seat #0) will have the button in the first hand.
-        You can, of course, specify the initial dealer yourself during any call to start_new_pot.
+        You can, of course, specify the initial dealer yourself during any call to start_new_game_round.
         """
         if self._table_initialized:
             raise AssertionError,  "The HoldemArena table has already been initialized; add all players before initializing"
@@ -124,19 +124,19 @@ class HoldemTable(object):
         if not self._table_initialized:
             raise AssertionError,  "You must initialize the table first"
 
-        if self._current_pot != None:
+        if self._current_game_round != None:
             raise AssertionError,  "Finish the playing out the previous pot before starting saving the game state"
 
         return save_table_state(self._c_holdem_table[0])
 
 
 
-    def start_new_pot(self, small_blind, override_next_dealer=None):
+    def start_new_game_round(self, small_blind, override_next_dealer=None):
         """Call this once new hands have been dealt to all of the players, and bots have been notified of their hands"""
         if not self._table_initialized:
             raise AssertionError,  "You must initialize the table first"
 
-        if self._current_pot != None:
+        if self._current_game_round != None:
             raise AssertionError,  "Finish the playing out the previous pot before starting a new one"
 
         if override_next_dealer == None:
@@ -154,25 +154,32 @@ class HoldemTable(object):
                 else:
                     raise AssertionError, "All bots must be given their hole cards before starting the pot"
 
-        self._current_pot = GameRound(self._c_holdem_table[0], self.HOLDEM_BETTING_ROUNDS, small_blind,  next_dealer)
+        self._current_game_round = GameRound(self._c_holdem_table[0], self.HOLDEM_BETTING_ROUNDS, small_blind,  next_dealer)
         #Instantiating a GameRound also calls begin_new_hands
         for bot in bots:
             bot._process_hole_cards()
 
-        return self._current_pot
+        return self._current_game_round
 
-
+    @property
+    def current_game_round(self):
+        """This property provides public access to the current GameRound"""
+        if self._current_game_round == None:
+            raise AssertionError,  "There is no game round currently in progress. Only call CardTable.current_game_round when there is a game round in progress"
+            
+        return self._current_game_round
+        
 
     def finish_pot_refresh_players(self):
         """Complete any final bookkeeping that needs to take place to prepare data structures for the next hand"""
-        if self._current_pot == None:
+        if self._current_game_round == None:
             raise AssertionError, "Start a new pot; when all betting/showdown rounds have completed, then call this function"
 
-        if not self._current_pot.is_finished():
+        if not self._current_game_round.is_finished():
             raise AssertionError, "Wait for the final betting round or showdown to complete before refreshing players"
 
-        self._current_pot._finish()
-        self._current_pot = None
+        self._current_game_round._finish()
+        self._current_game_round = None
 
         for bot in self.players:
             if bot.is_bot:
@@ -344,6 +351,14 @@ class GameRound(object):
         """This function returns true if everybody has folded to the high bet or the showdown has completed."""
         return (self._called_player == -1)
 
+    @property
+    def current_action_round(self):
+        """This property provides public access to the event queue action handler. An action round can be a betting round or a showdown round."""
+        if self._current_event == None:
+            raise  AssertionError, "There is no Betting/Showdown round currently in progress. Only call GameRound.current_action_round when there is a betting or showdown round in progress"
+        
+        return self._current_event
+        
     def _finish(self):
         if self._current_event != None:
             #The program is likely exiting, let's try to free whatever we can
