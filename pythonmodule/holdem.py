@@ -30,21 +30,21 @@ class HoldemTable(object):
         4.1 Clear the table for a new hand (start_new_pot)
         4.2 Assign hole cards (HoldemPlayer.hole_cards) to all bots who need to know their hand
         4.3 -----
-             4.3.1a Create a blank hand (HoldemCards) to represent the pre-flop and create a new betting round (HoldemPot.start_betting_round) with it
+             4.3.1a Create a blank hand (HoldemCards) to represent the pre-flop and create a new betting round (GameRound.start_betting_round) with it
              4.3.1b Make bets for players (HoldemBettingRound.player...) in order (HoldemBettingRound.which_seat_is_next), while querying (HoldemPlayer.calculate_bet_decision) your bots for their decisions
-             4.3.1c Finish the betting round (HoldemPot.finish_betting_round) and it will report if the high bet was called.
+             4.3.1c Finish the betting round (GameRound.finish_betting_round) and it will report if the high bet was called.
 
-             4.3.2a If the preflop high bet was called, append to your flop (HoldemCards.append_cards) and then create a new betting round (HoldemPot.start_betting_round) with your new flop.
+             4.3.2a If the preflop high bet was called, append to your flop (HoldemCards.append_cards) and then create a new betting round (GameRound.start_betting_round) with your new flop.
              4.3.2b Make bets ... (HoldemBettingRound.player...)
-             4.3.2c Finish the betting round (HoldemPot.finish_betting_round) ...
+             4.3.2c Finish the betting round (GameRound.finish_betting_round) ...
 
              4.3.3 ... If the postflop high-bet was called, play the Turn ... and it will report if the high bet is called.
 
              4.3.4 ... If the high-bet was called after the turn, play the River ... and it will report if the high bet is called.
 
-             4.3.5a If the high-bet was called after the river, create a new showdown (HoldemPot.start_showdown)
+             4.3.5a If the high-bet was called after the river, create a new showdown (GameRound.start_showdown)
              4.3.5b Players show (HoldemShowdownRound.show_hand) or muck (HoldemShowdownRound.muck_hand) their hands in order (HoldemShowdownRound.which_seat_is_next)
-             4.3.5c Finishing the showdown (HoldemPot.finish_showdown) will calculate side pots and move money from the pot to the winners. (Compare HoldemPlayer.money before and after, to determine winners.)
+             4.3.5c Finishing the showdown (GameRound.finish_showdown) will calculate side pots and move money from the pot to the winners. (Compare HoldemPlayer.money before and after, to determine winners.)
 
         4.4 Complete the final bookkeeping that needs to take place (finish_pot_refresh_players) to prepare data structures for the next hand
         4.5 If you would like to save the game (save_state), now is the safest time to do so
@@ -154,8 +154,8 @@ class HoldemTable(object):
                 else:
                     raise AssertionError, "All bots must be given their hole cards before starting the pot"
 
-        self._current_pot = HoldemPot(self._c_holdem_table[0], self.HOLDEM_BETTING_ROUNDS, small_blind,  next_dealer)
-        #Instantiating a HoldemPot also calls begin_new_hands
+        self._current_pot = GameRound(self._c_holdem_table[0], self.HOLDEM_BETTING_ROUNDS, small_blind,  next_dealer)
+        #Instantiating a GameRound also calls begin_new_hands
         for bot in bots:
             bot._process_hole_cards()
 
@@ -200,8 +200,12 @@ class HoldemTable(object):
 
 #begin_new_hands s#di
 #finish_hand_refresh_players s#
-class HoldemPot(object):
-    """A HoldemPot is created for each hand of the game. A HoldemPot spawns all of the betting rounds for a hand, and the showdown if needed."""
+class GameRound(object):
+    """A GameRound is created for each hand of the game.
+    We would have called this class HandRound, except "a hand" also refers to the cards a player is holding or the pair/flush/straight/etc. that a player has made.
+    To avoid this confusion the class is named GameRound rather than HandRound
+    A GameRound manages all of the betting rounds for a hand, and the showdown if needed.
+    """
 
     def __init__(self, holdem_table_voidptr, num_betting_rounds, my_small_blind,  my_next_dealer):
         self._current_event = None
