@@ -6,8 +6,8 @@ class HoldemDealer(object):
 	def __init__(self):
 		self.cardlist = []
 		self.cards_dealt_before_shuffling = 0
-		for r in holdem.HoldemCards.CARD_RANKS:
-			for s in holdem.HoldemCards.CARD_SUITS:
+		for r in holdem.Cards.CARD_RANKS:
+			for s in holdem.Cards.CARD_SUITS:
 				self.cardlist.append(r + s)
 
 	def shuffle(self):

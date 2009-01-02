@@ -28,13 +28,13 @@ class CardTable(object):
     3.  You may save (save_state) the state of the table at this point, if you want to for some reason.
     4.  -----
         4.1 Clear the table for a new hand (start_new_game_round)
-        4.2 Assign hole cards (HoldemPlayer.hole_cards) to all bots who need to know their hand
+        4.2 Assign hole cards (Player.hole_cards) to all bots who need to know their hand
         4.3 -----
-             4.3.1a Create a blank hand (HoldemCards) to represent the pre-flop and create a new betting round (current_game_round.start_betting_round) with it
-             4.3.1b Make bets for players (current_game_round.current_action_round.player...) in order (current_game_round.current_action_round.which_seat_is_next()), while querying (HoldemPlayer.calculate_bet_decision) your bots for their decisions
+             4.3.1a Create a blank hand (Cards) to represent the pre-flop and create a new betting round (current_game_round.start_betting_round) with it
+             4.3.1b Make bets for players (current_game_round.current_action_round.player...) in order (current_game_round.current_action_round.which_seat_is_next()), while querying (Player.calculate_bet_decision) your bots for their decisions
              4.3.1c Finish the betting round (current_game_round.finish_betting_round) and it will report if the high bet was called.
 
-             4.3.2a If the preflop high bet was called, append to your flop (HoldemCards.append_cards) and then create a new betting round (current_game_round.start_betting_round) with your new flop.
+             4.3.2a If the preflop high bet was called, append to your flop (Cards.append_cards) and then create a new betting round (current_game_round.start_betting_round) with your new flop.
              4.3.2b Make bets ... (current_game_round.current_action_round.player...)
              4.3.2c Finish the betting round (current_game_round.finish_betting_round) ...
 
@@ -44,7 +44,7 @@ class CardTable(object):
 
              4.3.5a If the high-bet was called after the river, create a new showdown (current_game_round.start_showdown)
              4.3.5b Players show (current_game_round.current_action_round.show_hand()) or muck (current_game_round.current_action_round.muck_hand()) their hands in order (current_game_round.current_action_round.which_seat_is_next)
-             4.3.5c Finishing the showdown (current_game_round.finish_showdown) will calculate side pots and move money from the pot to the winners. (Compare HoldemPlayer.money before and after, to determine winners.)
+             4.3.5c Finishing the showdown (current_game_round.finish_showdown) will calculate side pots and move money from the pot to the winners. (Compare Player.money before and after, to determine winners.)
 
         4.4 Complete the final bookkeeping that needs to take place (finish_pot_refresh_players) to prepare data structures for the next hand
         4.5 If you would like to save the game (save_state), now is the safest time to do so
@@ -87,7 +87,7 @@ class CardTable(object):
         else:
             raise KeyError,  "Create a human player with bot_type == None, or select a bot type from self.ACCEPTED_BOT_TYPES"
 
-        new_player = HoldemPlayer(self._c_holdem_table[0], player_name, seat_number,  player_is_bot)
+        new_player = Player(self._c_holdem_table[0], player_name, seat_number,  player_is_bot)
         self.players.append(new_player)
 
         if self.players[seat_number] != new_player:
@@ -276,7 +276,7 @@ class GameRound(object):
         return get_previous_rounds_pot_size(self._c_holdem_table_ptr)
 
     def start_betting_round(self, community_cards):
-        """Returns a HoldemBettingRound object"""
+        """Returns a BettingRound object"""
         if self._betting_rounds_remaining <= 0:
             raise AssertionError, "All betting rounds have already been started"
 
@@ -290,7 +290,7 @@ class GameRound(object):
 
         betting_round_voidptr = create_new_betting_round(self._c_holdem_table_ptr, community_cards.c_tuple, self._betting_rounds_total, self._betting_rounds_remaining)
 
-        self._current_event = HoldemBettingRound(betting_round_voidptr,self)
+        self._current_event = BettingRound(betting_round_voidptr,self)
         return self._current_event
 
     def finish_betting_round(self):
@@ -315,7 +315,7 @@ class GameRound(object):
             return self._called_player
 
     def start_showdown(self, community_cards):
-        """Returns a HoldemShowdownRound object"""
+        """Returns a ShowdownRound object"""
         if self._betting_rounds_remaining > 0:
             raise AssertionError, "Not all betting rounds have taken place yet"
 
@@ -329,11 +329,11 @@ class GameRound(object):
 
         showdown_voidptr = create_new_showdown(self._c_holdem_table_ptr, self._called_player, community_cards.c_tuple)
 
-        self._current_event = HoldemShowdownRound(showdown_voidptr, community_cards)
+        self._current_event = ShowdownRound(showdown_voidptr, community_cards)
         return self._current_event
 
     def finish_showdown(self):
-        """When a HoldemShowdownRound completes, free the showdown object"""
+        """When a ShowdownRound completes, free the showdown object"""
         if not self.showdown_started:
             raise AssertionError, "Showdown not yet started"
 
@@ -389,7 +389,7 @@ class GameRound(object):
 #get_current_round_bet s#i
 #get_previous_rounds_bet s#i
 #get_bot_bet_decision s#i
-class HoldemPlayer(object):
+class Player(object):
     "Player sitting in one seat of a HoldemArena"
 
     def __init__(self, holdem_table_voidptr, my_name, my_seat_number,  bot):
@@ -451,9 +451,9 @@ class HoldemPlayer(object):
 #create_new_cardset
 #append_card_to_cardset (s#i)cc
 #delete_cardset (s#i)
-class HoldemCards(object):
-    """Hole cards for a HoldemPlayer or community cards for a HoldemArena
-    Add cards one by one, choosing rank/suit combinations from HoldemCards.VALID_CARD_RANKS and HoldemCards.VALID_CARD_SUITS
+class Cards(object):
+    """Hole cards for a Player or community cards for a HoldemArena
+    Add cards one by one, choosing rank/suit combinations from Cards.VALID_CARD_RANKS and Cards.VALID_CARD_SUITS
     You may also add multiple cards at a time: separate your cards with whitespace.
     For example, my_cards.append_cards("8h Tc") adds the eight of hearts and the ten of clubs to my_cards
     """
@@ -503,7 +503,7 @@ class HoldemCards(object):
 #i: delete_finish_betting_round s#
 #player_makes_bet s#id
 #who_is_next_to_bet s#
-class HoldemBettingRound(object):
+class BettingRound(object):
     "Class Interface for betting_round from the holdem C extension"
 
     def __init__(self, c_betting_round_voidptr, my_table):
@@ -560,7 +560,7 @@ class HoldemBettingRound(object):
 #player_mucks_hand s#i
 #create_new_showdown s#i(s#i)
 #delete_finish_showdown s#s#
-class HoldemShowdownRound(object):
+class ShowdownRound(object):
     "Class Interface for showdown_round from the holdem C extension"
 
 
