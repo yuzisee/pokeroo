@@ -1,0 +1,182 @@
+\documentclass[english,12pt,oneside]{book}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\pagestyle{empty}
+
+%Language Specifics
+\usepackage{babel}
+
+%Captions (doesn't appear to be needed)
+%\usepackage{caption}
+
+%Tables can now produce multirow cells
+%\usepackage{multirow}
+
+%Insert graphics
+\usepackage{graphics}
+
+%Graphics formatting
+%\usepackage{epsfig,float}
+%\usepackage{wrapfig}
+
+%Ordinals: the "st" in 1st, the "th" in 4th, etc.
+\usepackage{fmtcount}
+
+%Don't waste so much space in section headings
+\usepackage[medium,compact]{titlesec}
+
+%1.5 line spacing
+\usepackage{setspace}
+
+%We need to be able to use \thetitle
+\usepackage{titling}
+
+%Package subfig to make arrays of figures (needed for \captionsetup I think...)
+\usepackage{subfig}
+
+%We need to be able to choose our own header format
+\usepackage{fancyhdr}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Headers and footers
+%From fancyhdr documentation
+\fancyhf{} %Reset the header/footer 
+\cfoot{\thepage} %Add the page number to the bottom
+\renewcommand{\headrulewidth}{0pt} %No horizontal line separating header
+\renewcommand{\footrulewidth}{0pt} %No horizontal line for separating footer
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Options for figures and tables (allow more figures/tables on a single page)
+%From http://mintaka.sdsu.edu/GF/bibliog/latex/floats.html
+% Distinguish captions from body text
+\captionsetup{font=small,labelfont=bf,margin=2ex}
+\setlength\abovecaptionskip{-0.2em}
+\setlength\belowcaptionskip{1em}
+% Alter some LaTeX defaults for better treatment of figures:
+    % See p.105 of "TeX Unbound" for suggested values.
+    % See pp. 199-200 of Lamport's "LaTeX" book for details.
+    %   General parameters, for ALL pages:
+    \renewcommand{\topfraction}{0.9}	% max fraction of floats at top
+    \renewcommand{\bottomfraction}{0.8}	% max fraction of floats at bottom
+    %   Parameters for TEXT pages (not float pages):
+    \setcounter{topnumber}{2}
+    \setcounter{bottomnumber}{2}
+    \setcounter{totalnumber}{4}     % 2 may work better
+    \setcounter{dbltopnumber}{2}    % for 2-column pages
+    \renewcommand{\dbltopfraction}{0.9}	% fit big float above 2-col. text
+    \renewcommand{\textfraction}{0.07}	% allow minimal text w. figs
+    %   Parameters for FLOAT pages (not text pages):
+    \renewcommand{\floatpagefraction}{0.7}	% require fuller float pages
+	% N.B.: floatpagefraction MUST be less than topfraction !!
+    \renewcommand{\dblfloatpagefraction}{0.7}	% require fuller float pages
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Page Format
+%From http://www.iam.ubc.ca/old_pages/newbury/tex/page-set-up.html
+%and, http://www-h.eng.cam.ac.uk/help/tpl/textprocessing/teTeX/latex/latex2e-html/ltx-86.html
+\oddsidemargin   -.25in
+\textwidth       7in
+\textheight      9.5in
+\setlength\topmargin{-.25in}
+\addtolength\topmargin{-\headheight}
+\addtolength\topmargin{-\headsep}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Make chapter heading format way smaller
+%From titlesec documentation
+\titleclass{\chapter}{straight}
+\titleformat{\chapter}[hang]{\LARGE\bfseries}{\thechapter.0}{\baselineskip}{}{}
+%\titlespacing*{\chapter}{0pt}{*-3}{*2}
+\titlespacing*{\chapter}{0pt}{*3.5}{*2}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Path for figures
+\graphicspath{{figures/}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Bibliography should be called "References"
+%From http://www.tug.org/TeXnik/mainFAQ.cgi?file=bibtex/bibtex
+\AtBeginDocument{\renewcommand\bibname{References}}
+\AtBeginDocument{\renewcommand\contentsname{Table of Contents}}
+
+\input{document/info.tex}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Path for figures
+
+\begin{document}
+\singlespacing
+\pagestyle{empty}
+
+\newlength{\defaultindent}
+\setlength\defaultindent{\parindent}
+
+\parindent=0em
+\input{document/titlepage.tex}
+\parskip=\baselineskip
+%\addtolength{\parskip}{\baselineskip}
+
+
+
+
+\pagestyle{fancyplain}
+\setstretch{2}
+
+\pagenumbering{roman}
+\setcounter{page}{2}
+
+
+\setstretch{1}
+
+\parskip=0ex
+\parindent=\defaultindent
+
+\tableofcontents
+
+\clearpage
+\singlespacing
+
+ \addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures
+
+\clearpage
+
+ \addcontentsline{toc}{chapter}{List of Tables}
+\listoftables
+
+\clearpage
+
+
+\pagestyle{fancyplain}
+\setstretch{2.0}
+\pagenumbering{arabic}
+\setcounter{chapter}{0}
+
+
+\input{document/body/background.tex}
+\input{document/body/implementation.tex}
+
+
+
+\def\thechapter       {\Alph{chapter}}
+\titleformat{\chapter}[hang]{\LARGE\bfseries}{Appendix \thechapter}{\baselineskip}{}{}
+\setcounter{chapter}{0}
+
+\singlespacing
+\parskip=\baselineskip
+\parindent=0em
+
+\clearpage
+%%%%%%%%%%%%%%% Bibliography
+
+\begin{flushleft}
+\bibliographystyle{ieeetr}
+\bibliography{document/references}
+
+\addcontentsline{toc}{chapter}{References}
+\end{flushleft}
+\clearpage
+
+
+
+\end{document}
+
+
