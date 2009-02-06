@@ -1,20 +1,45 @@
 
+\newcommand{\xs}{$\spadesuit$}
+\newcommand{\xh}{$\heartsuit$}
+\newcommand{\xc}{$\clubsuit$}
+\newcommand{\xd}{$\diamondsuit$}
+
+
+
 \clearpage
 
 
 \chapter{Poker Hand Evaluation}
 \label{sec:HandEvaluation}
 
-In order to determine whether a set of cards is stronger than another, it is
+A hand evaluator is required in order to determine whether a set of cards is stronger than another.
+This section presents a data structure for representation of a set of cards, as well as an efficient algorithm for computation of card strength for comparison.
+
 
 \section{Poker Hands}
 \label{sec:PokerHands}
 
+
+From strongest to weakest the standard poker hands are:
+
+\begin{itemize}
+\singlespacing
+\item Straight Flush: Five consecutive card values, all with the same suit
+\item Four of a kind: Four matching cards
+\item Full house: Three-of-a-kind and then a pair
+\item Flush: Five cards with the same suit
+\item Straight: Five consecutive card values, any suit
+\item Three-of-a-kind: Three matching cards
+\item Two-pair: Two different pairs
+\item One pair: Two matching cards
+\end{itemize}
+Since all poker hands are five cards, the poker hands that don't use all five cards use the remaining cards to break ties.
+The highest tiebreaking card wins.
+If it is still a tie, the next highest tiebreaking card is compared next, until all five cards have been used.
+If a tie cannot be broken with all five cards, neither hand wins.
+In the case that no poker hand is made, all five cards are used to break ties --- this is commonly referred to as a 'high card' hand.
 Holdem poker uses standard five-card poker hands, except players are always allowed to choose the best five cards out of seven available cards.
 
-
-\section{Poker Hands}
-\label{sec:PokerHands}
 
 \section{Implementation}
 \label{sec:HandEvaluationImplementation}
@@ -46,7 +71,7 @@ Although this representation is unable to store hands with four of a kind, it wi
 \captionsetup{position=top}
 \caption[Cardset Bitfield]{The 'cardset' bitfield for storing cards. Each integer in the cardset array represents a separate suit.
 In this example, index 0, 1, 2, and 3 represent space, hearts, clubs, and diamonds, respectively.
-The set of cards represented by (3080, 8, 8193, 14) is (Q,J,3) of spades, 4 of hearts, A of clubs, and (4,3,2) of diamonds.
+The set of cards represented by (3080, 8, 8193, 14) is Q\xs{} J\xs{} 3\xs{} 4\xh{} A\xc{} 4\xd{} 3\xd{} 2\xd{}.
 Bits 14 and higher are unused.}
 \begin{small}
 \begin{center}
