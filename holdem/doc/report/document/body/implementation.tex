@@ -12,7 +12,8 @@
 \chapter{Poker Hand Evaluation}
 \label{sec:HandEvaluation}
 
-A hand evaluator is required in order to determine whether a set of cards is stronger than another.
+The core of the decision engine will contain a mechanism for determining whether a set of cards is stronger than another.
+%A hand evaluator is required in order to determine whether a set of cards is stronger than another.
 This section presents a data structure for representation of a set of cards, as well as an efficient algorithm for computation of card strength for comparison.
 
 
@@ -25,7 +26,7 @@ From strongest to weakest the standard poker hands are:
 \begin{itemize}
 \singlespacing
 \item Straight Flush: Five consecutive card values, all with the same suit
-\item Four of a kind: Four matching cards
+\item Four-of-a-kind: Four matching cards
 \item Full house: Three-of-a-kind and then a pair
 \item Flush: Five cards with the same suit
 \item Straight: Five consecutive card values, any suit
@@ -33,20 +34,36 @@ From strongest to weakest the standard poker hands are:
 \item Two-pair: Two different pairs
 \item One pair: Two matching cards
 \end{itemize}
-Since all poker hands are five cards, the poker hands that don't use all five cards use the remaining cards to break ties.
+In pair-type poker hands (eg. two-pair, full house, etc.) a higher valued match is stronger than a lower valued match.
+In a full house the three-of-a-kind is more important than the pair.
+For example, 555QQ is stronger than 444KK, because three fives is stronger than three fours.
+Similarly, 99332 is stronger than 7766K, the highest pair, nines, is stronger than the opposing highest pair, sevens.
+In non-pair-type poker hands, or when the matches are identical between both players, the values of the remaining cards are used to break ties.
 The highest tiebreaking card wins.
+Aces are always considered high except when used for the ace-low (5432A) straight, and suits have no associated strength.
+%Since all poker hands are five card hands, the poker hands that don't use all five cards (eg. four-of-a-kind, two-pair, etc.) use the remaining cards to break ties.
 If it is still a tie, the next highest tiebreaking card is compared next, until all five cards have been used.
+In the case that no poker hand is made, all five cards end up being used in this way --- this is commonly referred to as a 'high card' hand.
 If a tie cannot be broken with all five cards, neither hand wins.
-In the case that no poker hand is made, all five cards are used to break ties --- this is commonly referred to as a 'high card' hand.
-Holdem poker uses standard five-card poker hands, except players are always allowed to choose the best five cards out of seven available cards.
+
+Holdem poker uses these standard five-card poker hands for strength comparison, however players always have seven available cards from which they will form the best five-card poker hand.
 
 
 \section{Implementation}
 \label{sec:HandEvaluationImplementation}
 
+Hand evaluation exists at two levels.
+Firstly, it must be possible to compute which seven-card hand would win among a set of seven-card hands.
+This requires an implicit computation of the best five-card poker hand that can be formed within each seven-card hand.
+Secondly, it will be necessary to evaluate the strength of a set of incomplete hands, that is, those with fewer than seven cards.
+This is then determined by the distribution of potential seven-card hands that can be formed.
+
 %In order to generate probability distributions to describe $Pr_\mathrm{*} \left( f_\mathrm{bet} | H \right)$ it is necessary to implement a ... evaluator.
 
 %The ... evaluator uses Holdem-specific assumptions to improve efficiency.
+
+%For the purposes of implementation it is safe to assume that strengths will only be compared between seven-card hands.
+
 
 \subsection{Data Structure}
 \label{sec:DataStructure}
@@ -64,12 +81,12 @@ Storing aces as both bit 0 and bit 13 improves efficiency of the strength calcul
 
 The 'valueset' integer determines how many times each card is contained in the set.
 Every two bits are used to store a number between 0 and 3.
-Although this representation is unable to store hands with four of a kind, it will be shown that the the valueset variable is not needed in four-of-a-kind situations.
+Although this representation is unable to store hands with four-of-a-kind, it will be shown that the the valueset variable is not needed in four-of-a-kind situations.
 \textbf{Table~\ref{tab:ValuesetInteger}} provides an example of the 'cardset' bitfield.
 
 \begin{table}[htb]
 \captionsetup{position=top}
-\caption[Cardset Bitfield]{The 'cardset' bitfield for storing cards. Each integer in the cardset array represents a separate suit.
+\caption[Cardset Bitfield]{Each integer in the cardset array represents a separate suit.
 In this example, index 0, 1, 2, and 3 represent space, hearts, clubs, and diamonds, respectively.
 The set of cards represented by (3080, 8, 8193, 14) is Q\xs{} J\xs{} 3\xs{} 4\xh{} A\xc{} 4\xd{} 3\xd{} 2\xd{}.
 Bits 14 and higher are unused.}
@@ -112,16 +129,18 @@ Value  &    1    &0      & 1     &  1    &  0    & 0     &  0    &  0    &  0   
 \end{table}
 
 The 'cardset' bitfield is used to efficiently determine whether a certain card is contained in the hand.
-The 'valueset' bitfield can efficienctly determine how many cards of a certain value are contained in the hand.
+The 'valueset' bitfield can efficiently determine how many cards of a certain value are contained in the hand.
+Furthermore, the ordinality of the 'valueset' bitfield is very similar to what is required for tiebreaking.
 
-For the purposes of strength calculation, 
+%For the purposes of strength calculation, 
 
 \subsection{Strength Calculation}
 \label{sec:StrengthCalculation}
 
 The first step of the strength calculation involves detecting what poker hand has been made.
-Detecting straights and flushes take advantage of the 'cardset' representation.
-Detecting flushes and matches (pair, two-pairs, full house, etc.) is done incrementally, as each card is added to the set.
+Detecting straights, straight flushes, and four-of-a-kind takes advantage of the 'cardset' representation.
+Detecting pairs, triples and flushes is performed incrementally, as each card is added to the set.
+The strength of a hand is stored in one byte as outlined in \textbf{Table~\ref{tab:StrengthByte}}.
 
 Straight flushes can be detected by shifting and ANDing each of the 'cardset' bitfields.
 Straights can be detected by looking for straight flushes within a combined bitfield that is the bitwise OR of the four 'cardset' bitfields.
@@ -133,11 +152,48 @@ A list of the top two pairs is always stored, and the list is updated whenever a
 If a card with a value that has already paired is added to a set of cards, the hand is promoted to a three-of-a-kind, or to a full house if another pair already exists.
 The same applies to four-of-a-kind.
 
-For the purposes of implementation it is safe to assume that no more cards will be added after seven cards have been added.
 
 \subsection{Tiebreaking}
 \label{sec:Tiebreaking}
-Two hands that have the same strength (eg. two-pair vs. another two-pair) require tiebreaking 
+Two hands that have the exact same strength (eg. two-pair vs. the same two-pair) require tiebreaking.
+For a set of five cards where either a flush or no poker hand is made, the ordinality of the 'valueset' bitfield directly determines the winner.
+For a set of seven cards, the two cards with the least value need to be subtracted from the 'valueset' bitfield.
+This operation is sufficient for all hands up to and including three-of-a-kind: The smallest two cards that aren't used in a pair/triplet are subtracted from the 'valueset' bitfield, and the remaining value represents the tiebreaker.
+The tiebreak value of a straight or straight flush only depends on one of the cards in the straight, and the tiebreak value of a four-of-a-kind depends only on the highest remaining card.
+Lastly, during a full-house, the tiebreak variable needs only to represent the contained three-of-a-kind and pair, with more significance placed on the three-of-a-kind.
+
+Organizing the strength and tiebreak fields in this way maps each poker hand strength to a set of integers, while preserving ordinality.
+This representation allows for efficient sorting and searching of arbitrary groups of seven-card hands, leading to a mechanism for evaluating incomplete hands by iterating over all possible complete hands that can be obtained.
+The combinations of all strength and tiebreak pairs are summarized in \textbf{Table~\ref{tab:StrengthByte}}.
+
+
+\begin{table}[htb]
+\captionsetup{position=top}
+\caption[Hand Strength Byte]{The strength of a poker hand can be represented with a single unsigned byte.
+%The ordinality of each number reflects the relative strength of its corresponding poker hand.
+There are 13 possible pairs, three-of-a-kinds, and four-of-a-kinds: A,K,...,3,2.
+There are $\binom{13}{2}$ possible two-pairs: AK,AQ,AJ,...,54,53,52,43,42,32.}
+\begin{small}
+\begin{center}
+\begin{tabular}{|r|c|l|}
+\hline
+Poker Hand      & Strength & Tiebreaker                                   \\ \hline
+Straight Flush  & 122      & High-card of straight                        \\%& Ace is high except in 5432A straight \\
+Four-of-a-kind  & 121-109  & Highest non-four-of-a-kind card              \\
+Full house      & 108      & Three-of-a-kind, then best pair              \\
+Flush           & 107      & Valueset, lowest two cards removed           \\
+Straight        & 106      & High-card of straight                        \\
+Three-of-a-kind & 105-93   & Valueset, lowest two unpaired cards removed  \\
+Two-pair        & 92-15    & Valueset, lowest two unpaired cards removed  \\
+One Pair        & 2-14     & Valueset, lowest two unpaired cards removed  \\
+Nothing         & 1        & Valueset, lowest two cards removed           \\
+\hline
+\end{tabular}
+\label{tab:StrengthByte}
+\end{center}
+\end{small}
+\end{table}
+
 
 \subsection{Iteration}
 \label{sec:Iteration}

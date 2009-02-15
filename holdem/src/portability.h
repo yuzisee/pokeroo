@@ -48,6 +48,33 @@ typedef int8 playernumber_t;
 #ifdef __cplusplus
 class HoldemConstants
 {
+
+
+    /*
+        //anywhere there are no hanging/off-cards competitive values will be stored
+
+        //possible strengths of FIVE (from seven) CARD hands
+        //0		cannot occur without wild
+        //1			high card to order
+        //			[TIES: Remove lowest two remaining via VALUESET]
+        //2-14		there are 13 pairs
+        //			[TIES: Remove pair via VALUESET, treat as "high card to order"]
+        //15-92		there are 13*3*2 = 78 twopairs
+        //			[TIES: Remove pairs via VALUESET, treat as "high card to order"]
+        //93-105	there are 13 trips
+        //			[TIES: Remove trip via VALUESET, treat as "high card to order"]
+        //106		straight
+        //			[TIES: Leave ONLY the AND-AND-ANDed even as VALUESET = CARDSET]
+        //(107?)	flush (reserved)
+        //			[TIES: treat as "high card to order"]
+        //108		boat 13*13 valueset choices
+        //			[TIES: Leaving the pair AND-extracted VALUESET is enough]
+        //109-121	there are 13 quads
+        //			[TIES: Remove quad, remove lowest two remaining]
+        //122		straight flush (similarily reserved)
+        //			[TIES: treat as "straight"]
+    */
+
 public:
     static const uint8 PAIR_ZERO=1, PAIRS_LOW=15, SET_ZERO=92;
     static const uint8 SET_HIGH=105,STRAIGHT=106,FLUSH=107,BOAT=108;

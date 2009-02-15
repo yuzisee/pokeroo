@@ -18,7 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-
+//We should use header versioning
+//http://plan99.net/~mike/writing-shared-libraries.html
 
 
 #ifndef HOLDEM_HeaderDLL
@@ -53,7 +54,7 @@
 		/* EXE import */
 		#define DLL_FUNCTION __declspec(dllimport)
 	#endif
-#elif defined(__linux)
+#elif defined(__linux) || defined(__APPLE__)
 	//In Linux your functions will just be included as any other object file, nothing special.
 	#define DLL_FUNCTION
 #else

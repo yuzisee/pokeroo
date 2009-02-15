@@ -26,13 +26,13 @@
 #include "debug_flags.h"
 
 
-
+//See also arena:h HoldemAction::SMALLBLIND, HoldemAction::BIGBLIND
 #define PLAYERS_IN_BLIND 2
 
 class BlindValues
 {
     public:
-        const static playernumber_t playersInBlind;
+        const static playernumber_t playersInBlind; //PLAYERS_IN_BLIND Constant
         float64 anteSize;
         float64 blindSize[PLAYERS_IN_BLIND];
 

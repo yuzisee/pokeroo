@@ -175,6 +175,7 @@ class HoldemAction
 		bool bCheckBlind;
 		bool bAllIn;
 	public:
+		//See also blinds.h: BlindValues::playersInBlind
         static const int8 SMALLBLIND = 1;
         static const int8 BIGBLIND = 2;
 

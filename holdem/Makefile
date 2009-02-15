@@ -29,6 +29,8 @@ APP = $(BIN_DIR)/holdem
 DYNAMIC_LINK_LIB_C = $(LIB_DIR)/libholdem.so
 DYNAMIC_SO_LIB_C = $(DYNAMIC_LINK_LIB_C).1
 
+#For easier access to libholdem.so, we may eventually try http://tldp.org/LDP/LGNET/issue55/tag/5.html
+
 FINAL_TARGETS = $(DYNAMIC_LINK_LIB_C) $(DYNAMIC_SO_LIB_C) $(APP)
 
 
