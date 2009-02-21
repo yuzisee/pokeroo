@@ -44,10 +44,10 @@ Aces are always considered high except when used for the ace-low (5432A) straigh
 %Since all poker hands are five card hands, the poker hands that don't use all five cards (eg. four-of-a-kind, two-pair, etc.) use the remaining cards to break ties.
 If it is still a tie, the next highest tiebreaking card is compared next, until all five cards have been used.
 In the case that no poker hand is made, all five cards end up being used in this way --- this is commonly referred to as a 'high card' hand.
-If a tie cannot be broken with all five cards, neither hand wins.
+A ``split pot'' occurs if a tie cannot be broken with all five cards.
 
-Holdem poker uses these standard five-card poker hands for strength comparison, however each player is only dealt two cards of their own (known as ''hole cards'').
-Five more cards are dealt as ''community cards'' and are equally available to all players.
+Holdem poker uses these standard five-card poker hands for strength comparison, however each player is only dealt two cards of their own (known as ``hole cards'').
+Five more cards are dealt as ``community cards'' and are equally available to all players.
 %players always have seven available cards from which they will form the best five-card poker hand.
 When determining the winner, each player forms their own best five-card poker hand using any five of the seven total available cards.
 
@@ -59,8 +59,8 @@ The only complex decisions that need to be made take place during the betting ro
 In holdem poker, each game round consists of four betting rounds:
 \begin{enumerate}
 \singlespacing
-\item ''Pre-flop'': After each player has received his/her two hole cards, and before any community cards are dealt.
-\item ''Post-flop'': After the first three community cards are dealt.
+\item Pre-flop: After each player has received his/her two hole cards, and before any community cards are dealt.
+\item Post-flop: After the first three community cards are dealt.
 \item Turn: After the fourth community card is dealt.
 \item River: After the final (fifth) community card is dealt.
 \end{enumerate}
@@ -69,6 +69,10 @@ During each betting round, each player is given at least one chance to bet.
 A player's bet must match (known as a call) or exceed (known as a raise) the highest bet during the betting round so far, otherwise, a player forfeits (known as a fold) his/her opportunity to win until new hole cards are dealt in the following game round.
 A betting round continues until all players have called or folded.
 Players that fold make no further bets until the next hole cards are dealt.
+
+After all four betting rounds have completed, the ``showdown'' takes place.
+The player that forms the best five-card hand wins the total sum of all bets made in all betting rounds.
+When there is a tie for best five-card hand between more than one player, the winnings are split evenly between the tying hands.
 
 \section{Implementation}
 \label{sec:HandEvaluationImplementation}
@@ -224,18 +228,103 @@ This distribution can be computed by iterating over all possible seven-card hand
 So far, hand strength evaluation has been based on the strength of a single seven-card hand.
 However, in game situations, hand strength is always relative to the opponent's hand.
 Thus, given the hole cards of a specific player, the decision engine calculates the joint distribution of community cards and opposing hole cards.
+A player may also make a specific bet in order to better position him/herself during the next betting round, rather than acheive the greatest showdown utility.
+For this reason, it is often desirable to distinguish between the immediately upcoming community cards, and future community cards.
+%to condition the distribution on the specific community cards that will be dealt between the current betting round 
+The calculation of such distributions entail a very large runtime complexity.
 
-The most computationally expensive distributions to calculate are for the ''Pre-flop'' betting round.
-At this point a player only has his/her two hole cards and can form up to $\binom{50}{5}$ potential seven-card hands, and must consider another $\binom{45}{2}$ possible hole card combinations for his/her opponent.
-This requires the computation of roughly two billion combinations, and considers only one opponent.
+The most computationally expensive distributions to calculate are for the ``Pre-flop'' betting round.
+At this point a player has only his/her two hole cards and must consider $\binom{50}{3}$ potential combinations of immediately upcoming flops, leading to $\binom{47}{2}$ potential seven-card hands per flop, and $\binom{45}{2}$ possible combinations of opposing hole cards.
+This requires the computation of roughly twenty billion combinations, and considers only one opponent.
 A series of optimizations and approximations must be made to make the problem more computationally feasible. %reduce the problem into a more computationally feasible one.
 
-%\subsection{Unknown Opponent}
-%\label{sec:UnknownOpponent}
+\subsubsection{Optimizations}
+\label{sec:Optimizations}
+
+Certain optimizations that take advantage of symmetry among suits are employed to reduce the breadth of iterations required to generate the complete distributions in question.
+For example, consider the hole card pair of 7\xs{} 4\xs{}.
+A na\"{i}ve approach would be to explore:
+\begin{itemize}
+\singlespacing
+\item 7\xs{} 4\xs{} 2\xs{} ...
+\item 7\xs{} 4\xs{} 2\xh{} ...
+\item 7\xs{} 4\xs{} 2\xc{} ...
+\item 7\xs{} 4\xs{} 2\xd{} ...
+\item 7\xs{} 4\xs{} 3\xs{} ...
+\item 7\xs{} 4\xs{} 3\xh{} ...
+\item ...
+\end{itemize}
+There is, however, a symmetry between the set of outcomes starting with 7\xs{} 4\xs{} 2\xh{}, the set of outcomes starting with 7\xs{} 4\xs{} 2\xc{}, and set of outcomes starting with 7\xs{} 4\xs{} 2\xd{}
+%along the above three exploration paths
+, and it is unnecessary to explore more than one of the three paths.
+In this particular example it would be sufficient to explore only the outcomes starting with 2\xh{} given triple weight, reducing the branching factor by three:
+\begin{itemize}
+\singlespacing
+\item 7\xs{} 4\xs{} 2\xs{} ...
+\item 7\xs{} 4\xs{} 2\xh{} ...
+\item \sout{7\xs{} 4\xs{} 2\xc{}} ...
+\item \sout{7\xs{} 4\xs{} 2\xd{}} ...
+\item 7\xs{} 4\xs{} 3\xs{} ...
+\item \sout{7\xs{} 4\xs{} 3\xh{}} ...
+\item ...
+\end{itemize}
+
+
+
+In another example, consider the hole card pair of 5\xs{} 5\xh{}.
+Notice that adding 2\xs{} and then K\xh{} is symmetric to adding K\xs{} and then 2\xh{}, and it is unnecessary to explore both paths:
+\begin{itemize}
+\singlespacing
+\item ...
+\item 5\xs{} 5\xh{} 2\xs{} 2\xh{} ...
+\item \sout{5\xs{} 5\xh{} 2\xs{} 3\xh{}} ...
+\item \sout{5\xs{} 5\xh{} 2\xs{} 4\xh{}} ...
+\item ...
+\item \sout{5\xs{} 5\xh{} 2\xs{} Q\xh{}} ...
+\item \sout{5\xs{} 5\xh{} 2\xs{} K\xh{}} ...
+\item \sout{5\xs{} 5\xh{} 2\xs{} A\xh{}} ...
+\item 5\xs{} 5\xh{} 3\xs{} 2\xh{} ...
+\item 5\xs{} 5\xh{} 3\xs{} 3\xh{} ...
+\item \sout{5\xs{} 5\xh{} 3\xs{} 4\xh{}} ...
+\item ...
+\item 5\xs{} 5\xh{} K\xs{} 2\xh{} ...
+\item 5\xs{} 5\xh{} K\xs{} 3\xh{} ...
+\item 5\xs{} 5\xh{} K\xs{} 4\xh{} ...
+\item ...
+\end{itemize}
+It is possible to prune each of these duplicate paths by implicitly sorting the suits in descending order of cardset integers.
+Because the initial cards contained symmetric spades and hearts, the potential seven-card hands where the hearts cardset is greater than the spades cardset can be safely pruned.
+In this particular example, the exploration algorithm avoids exploring all paths where the hearts cardset exceeds the spades cardset.
+
+%At this point, spades has a larger cardset integer than hearts unless a heart larger than 3\xh{} is added to the hand.
+%Instead, 
+%Exploiting such symmetries further reduces the branching factor.
+
+For the pre-flop case in particular, combining the optimizations described above improves the number of required computations from twenty billion to %______.
+
+\subsubsection{Caching}
+\label{sec:Caching}
+
+Finally, since only 169 unique hole card pairs (accounting for symmetry among suits) exist, it is possible to pre-compute these 169 distributions and cache them on disk.
+This way, only post-flop or simpler distributions are calculated in real-time, with a worst case runtime complexity on the order of one million hand evaluations ($\binom{47}{2}$ seven-card hands and $\binom{45}{2}$ possible opponents).
+This runtime complexity can be decreased even further by applying the symmetry optimizations described in section~\ref{sec:Optimizations}.
+
+\subsubsection{Approximations}
+\label{sec:Approximations}
+
+To reduce runtime complexity, it is assumed that the probabilities of winning against each opponent are independent.
+This is not the case in general: Two opponents cannot simultaneously hold any of the same hole cards.
+%If one opponent has weak cards, since the next opponent will not simultaneously hold those cards the distribution of possible hands 
+That is, knowledge of the hole cards of one opponent affects the distribution of hole cards of another opponent.
+However, when the number of opponents is small, this assumption should be relatively safe.
+
+
+%\subsection{Unknown Opponents}
+%\label{sec:UnknownOpponents}
 
 
 
 
-Three such distributions are computed.
+%Three such distributions are computed.
 
 \clearpage
