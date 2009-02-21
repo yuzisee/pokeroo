@@ -20,7 +20,7 @@ from _holdem import *
 #save_table_state s#
 class CardTable(object):
     """Class Interface for the holdem C extension
-    
+
     Basic control flow is as follows:
     1.  Instantiate a new CardTable
     2a. Add players (add_player_clockwise) as desired and either initialize the state of the table (initialize_table), or restore_state
@@ -152,7 +152,7 @@ class CardTable(object):
                 if bot.hole_cards:
                     bots.append(bot)
                 else:
-                    raise AssertionError, "All bots must be given their hole cards before starting the pot"
+                    raise AssertionError,  "All bots must be given their hole cards before starting the pot"
 
         self._current_game_round = GameRound(self._c_holdem_table[0], self.HOLDEM_BETTING_ROUNDS, small_blind,  next_dealer)
         #Instantiating a GameRound also calls begin_new_hands

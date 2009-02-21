@@ -17,7 +17,7 @@ The core of the decision engine will contain a mechanism for determining whether
 This section presents a data structure for representation of a set of cards, as well as an efficient algorithm for computation of card strength for comparison.
 
 
-\section{Poker Hands}
+\subsection{Poker Hands}
 \label{sec:PokerHands}
 
 
@@ -46,8 +46,29 @@ If it is still a tie, the next highest tiebreaking card is compared next, until 
 In the case that no poker hand is made, all five cards end up being used in this way --- this is commonly referred to as a 'high card' hand.
 If a tie cannot be broken with all five cards, neither hand wins.
 
-Holdem poker uses these standard five-card poker hands for strength comparison, however players always have seven available cards from which they will form the best five-card poker hand.
+Holdem poker uses these standard five-card poker hands for strength comparison, however each player is only dealt two cards of their own (known as ''hole cards'').
+Five more cards are dealt as ''community cards'' and are equally available to all players.
+%players always have seven available cards from which they will form the best five-card poker hand.
+When determining the winner, each player forms their own best five-card poker hand using any five of the seven total available cards.
 
+
+\subsection{Betting Rounds}
+\label{sec:BettingRounds}
+
+The only complex decisions that need to be made take place during the betting rounds.
+In holdem poker, each game round consists of four betting rounds:
+\begin{enumerate}
+\singlespacing
+\item ''Pre-flop'': After each player has received his/her two hole cards, and before any community cards are dealt.
+\item ''Post-flop'': After the first three community cards are dealt.
+\item Turn: After the fourth community card is dealt.
+\item River: After the final (fifth) community card is dealt.
+\end{enumerate}
+
+During each betting round, each player is given at least one chance to bet.
+A player's bet must match (known as a call) or exceed (known as a raise) the highest bet during the betting round so far, otherwise, a player forfeits (known as a fold) his/her opportunity to win until new hole cards are dealt in the following game round.
+A betting round continues until all players have called or folded.
+Players that fold make no further bets until the next hole cards are dealt.
 
 \section{Implementation}
 \label{sec:HandEvaluationImplementation}
@@ -163,7 +184,7 @@ The tiebreak value of a straight or straight flush only depends on one of the ca
 Lastly, during a full-house, the tiebreak variable needs only to represent the contained three-of-a-kind and pair, with more significance placed on the three-of-a-kind.
 
 Organizing the strength and tiebreak fields in this way maps each poker hand strength to a set of integers, while preserving ordinality.
-This representation allows for efficient sorting and searching of arbitrary groups of seven-card hands, leading to a mechanism for evaluating incomplete hands by iterating over all possible complete hands that can be obtained.
+This representation allows for efficient sorting and searching of arbitrary groups of seven-card hands, leading to a mechanism for evaluating incomplete hands by iterating over all potential complete hands that can be obtained.
 The combinations of all strength and tiebreak pairs are summarized in \textbf{Table~\ref{tab:StrengthByte}}.
 
 
@@ -195,8 +216,26 @@ Nothing         & 1        & Valueset, lowest two cards removed           \\
 \end{table}
 
 
-\subsection{Iteration}
-\label{sec:Iteration}
+\subsection{Potential Hands}
+\label{sec:PotentialHands}
 
+The strength of an incomplete hand is represented not by a single value, but by a distribution of values.
+This distribution can be computed by iterating over all possible seven-card hands that can be obtained.%all potential combinations of the cards remaining in the deck.
+So far, hand strength evaluation has been based on the strength of a single seven-card hand.
+However, in game situations, hand strength is always relative to the opponent's hand.
+Thus, given the hole cards of a specific player, the decision engine calculates the joint distribution of community cards and opposing hole cards.
+
+The most computationally expensive distributions to calculate are for the ''Pre-flop'' betting round.
+At this point a player only has his/her two hole cards and can form up to $\binom{50}{5}$ potential seven-card hands, and must consider another $\binom{45}{2}$ possible hole card combinations for his/her opponent.
+This requires the computation of roughly two billion combinations, and considers only one opponent.
+A series of optimizations and approximations must be made to make the problem more computationally feasible. %reduce the problem into a more computationally feasible one.
+
+%\subsection{Unknown Opponent}
+%\label{sec:UnknownOpponent}
+
+
+
+
+Three such distributions are computed.
 
 \clearpage
