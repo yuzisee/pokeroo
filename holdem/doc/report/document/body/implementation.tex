@@ -16,8 +16,23 @@ The core of the decision engine will contain a mechanism for determining whether
 %A hand evaluator is required in order to determine whether a set of cards is stronger than another.
 This section presents a data structure for representation of a set of cards, as well as an efficient algorithm for computation of card strength for comparison.
 
+%\section{Implementation}
+%\label{sec:HandEvaluationImplementation}
 
-\subsection{Poker Hands}
+%In order to generate probability distributions to describe $Pr_\mathrm{*} \left( f_\mathrm{bet} | H \right)$ it is necessary to implement a ... evaluator.
+
+%The ... evaluator uses Holdem-specific assumptions to improve efficiency.
+
+%For the purposes of implementation it is safe to assume that strengths will only be compared between seven-card hands.
+
+Hand evaluation exists at two levels.
+Firstly, it must be possible to compute which seven-card hand would win among a set of seven-card hands.
+This requires an implicit computation of the best five-card poker hand that can be formed within each seven-card hand.
+Secondly, it will be necessary to evaluate the strength of a set of incomplete hands, that is, those with fewer than seven cards.
+This is then determined by the distribution of potential seven-card hands that can be formed.
+
+
+\section{Poker Hands}
 \label{sec:PokerHands}
 
 
@@ -52,7 +67,7 @@ Five more cards are dealt as ``community cards'' and are equally available to al
 When determining the winner, each player forms their own best five-card poker hand using any five of the seven total available cards.
 
 
-\subsection{Betting Rounds}
+\section{Betting Rounds}
 \label{sec:BettingRounds}
 
 The only complex decisions that need to be made take place during the betting rounds.
@@ -74,24 +89,10 @@ After all four betting rounds have completed, the ``showdown'' takes place.
 The player that forms the best five-card hand wins the total sum of all bets made in all betting rounds.
 When there is a tie for best five-card hand between more than one player, the winnings are split evenly between the tying hands.
 
-\section{Implementation}
-\label{sec:HandEvaluationImplementation}
-
-Hand evaluation exists at two levels.
-Firstly, it must be possible to compute which seven-card hand would win among a set of seven-card hands.
-This requires an implicit computation of the best five-card poker hand that can be formed within each seven-card hand.
-Secondly, it will be necessary to evaluate the strength of a set of incomplete hands, that is, those with fewer than seven cards.
-This is then determined by the distribution of potential seven-card hands that can be formed.
-
-%In order to generate probability distributions to describe $Pr_\mathrm{*} \left( f_\mathrm{bet} | H \right)$ it is necessary to implement a ... evaluator.
-
-%The ... evaluator uses Holdem-specific assumptions to improve efficiency.
-
-%For the purposes of implementation it is safe to assume that strengths will only be compared between seven-card hands.
 
 
-\subsection{Data Structure}
-\label{sec:DataStructure}
+\section{Data Structures}
+\label{sec:DataStructures}
 
 The core poker hand evaluator takes a seven cards as input, and produces a comparable card 'strength' object as output.
 The strength of any seven cards can be represented with two values: the poker hand made and the tiebreaking cards.
@@ -220,8 +221,8 @@ Nothing         & 1        & Valueset, lowest two cards removed           \\
 \end{table}
 
 
-\subsection{Potential Hands}
-\label{sec:PotentialHands}
+\section{Incomplete Hands}
+\label{sec:IncompleteHands}
 
 The strength of an incomplete hand is represented not by a single value, but by a distribution of values.
 This distribution can be computed by iterating over all possible seven-card hands that can be obtained.%all potential combinations of the cards remaining in the deck.
@@ -238,7 +239,7 @@ At this point a player has only his/her two hole cards and must consider $\binom
 This requires the computation of roughly twenty billion combinations, and considers only one opponent.
 A series of optimizations and approximations must be made to make the problem more computationally feasible. %reduce the problem into a more computationally feasible one.
 
-\subsubsection{Optimizations}
+\subsection{Optimizations}
 \label{sec:Optimizations}
 
 Certain optimizations that take advantage of symmetry among suits are employed to reduce the breadth of iterations required to generate the complete distributions in question.
@@ -302,14 +303,14 @@ In this particular example, the exploration algorithm avoids exploring all paths
 
 For the pre-flop case in particular, combining the optimizations described above improves the number of required computations from twenty billion to %______.
 
-\subsubsection{Caching}
+\subsection{Caching}
 \label{sec:Caching}
 
 Finally, since only 169 unique hole card pairs (accounting for symmetry among suits) exist, it is possible to pre-compute these 169 distributions and cache them on disk.
 This way, only post-flop or simpler distributions are calculated in real-time, with a worst case runtime complexity on the order of one million hand evaluations ($\binom{47}{2}$ seven-card hands and $\binom{45}{2}$ possible opponents).
 This runtime complexity can be decreased even further by applying the symmetry optimizations described in section~\ref{sec:Optimizations}.
 
-\subsubsection{Approximations}
+\subsection{Approximations}
 \label{sec:Approximations}
 
 To reduce runtime complexity, it is assumed that the probabilities of winning against each opponent are independent.
