@@ -60,7 +60,7 @@ clean:
 
 $(MAIN_BIB): $(REFERENCES) $(RERUN_BIBTEX_TOUCH)
 	( grep "bibdata" $(MAIN_AUX) && bibtex $(MAIN_DOC) ) || (touch $@ && echo Bibtex skipped... > $(BIBTEX_LOG))
-	( grep -e $(BIBTEX_ERROR_REGEX) $(BIBTEX_LOG) && rm $@ $(RERUN_BIBTEX_TOUCH) && exit 1 ) || ls $@
+	( grep "I found no .citation commands---while reading file $(MAIN_AUX)" $(BIBTEX_LOG) || ( grep -e $(BIBTEX_ERROR_REGEX) $(BIBTEX_LOG) && rm $@ $(RERUN_BIBTEX_TOUCH) && exit 1 ) ) || ls $@
 
 
 $(OUTPUT_PDF): $(MAIN_BIB) $(SRC_TEX)

@@ -106,7 +106,7 @@
 \input{document/info.tex}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Path for figures
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% BEGIN DOCUMENT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 \singlespacing
@@ -161,25 +161,18 @@
 \input{document/body/implementation.tex}
 
 
+% Start backmatter
 
 \def\thechapter       {\Alph{chapter}}
 \titleformat{\chapter}[hang]{\LARGE\bfseries}{Appendix \thechapter}{\baselineskip}{}{}
 \setcounter{chapter}{0}
 
+
 \singlespacing
 \parskip=\baselineskip
 \parindent=0em
 
-\clearpage
-%%%%%%%%%%%%%%% Bibliography
-
-\begin{flushleft}
-\bibliographystyle{ieeetr}
-\bibliography{document/references}
-
-\addcontentsline{toc}{chapter}{References}
-\end{flushleft}
-\clearpage
+\input{document/backmatter.tex}
 
 
 
