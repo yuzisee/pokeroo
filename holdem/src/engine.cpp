@@ -174,7 +174,6 @@ void DealableOrderedDeck::UndealCard(const DeckLocation& deck)
 
 float64 DealRemainder::DealCard(Hand& h)
 {
-//	bool bMatchesOld = false;
     const int8 & qprevSuit = prevSuit[dealt.Suit];
 
 	++(dealt.Rank);
@@ -202,6 +201,8 @@ float64 DealRemainder::DealCard(Hand& h)
 	else if(prevSuit[dealt.Suit] != HoldemConstants::NO_SUIT) //unless we are in the first suit, we have to check for certain cases
 	{
         ///What we're looking for is...
+        ///    (Action) Reason...
+        /// ------------------------
         /// 1. (Skip) Dealing into already identical suits: bPastMatchesOld + suits are the same (transient) in the hand being dealt to
         /// 2. (occBase = 1) Even though bMatchesOld? If for example, hHere and hBack are different, but it has coincidentally
         ///                  Imagine 73 of Spades, and just a 7 of Hearts. You could possibly deal 3 of Hearts into h, then bMatchesOld!
@@ -264,7 +265,7 @@ float64 DealRemainder::DealCard(Hand& h)
 	uint32 addedTo = h.SeeCards(dealt.Suit);
 
 
-	float64 matchesNew = 0; //new duplicate suits formed.
+	float64 matchesNew = 0; //matchesNew reflects how many new duplicate suits formed.
 
 	for(int8 i=0;i<4;++i)
 	{
