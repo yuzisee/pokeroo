@@ -19,7 +19,21 @@ The combination of all of the following factors is a player's betting situation:
 \end{itemize}
 Also considered is the probability of improving the betting situation for the next betting round, as well as best-case and worst-case $Pr_\mathrm{win}$ estimates.
 
-The estimation of each of the above four parameters will be described in the following sections.
+The estimation of each of the above four values is accomplished using two distributions.
+\begin{itemize}
+\singlespacing
+\item \texttt{CallStats}: The possible hands your opponent can have, compared to the hand the you have
+\item \texttt{CommunityCallStats}: The possible hands any player can have, compared to each other
+\end{itemize}
+The \texttt{CallStats} distribution helps determine how your opponent should behave if he/she knows what hand you have.
+The \texttt{CommunityCallStats} is used to measure the ''rank'' of any given hand with respect to the community cards that are available.
+
+The following sections will explore the generation and characteristics of each of these distributions, and then describe the computation of $\mathrm{Pr\{raised_x\}, Pr\{push_x\}, Pr\{win\}, and E[callers]}.
+
+
+\section{Distributions}
+\label{sec:Distributions}
+
 
 
 
