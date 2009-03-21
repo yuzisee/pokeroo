@@ -97,7 +97,7 @@ In all cases, information from \texttt{WinStats} never overpowers the fundamenta
 \subsection{Showdown Win Percentage}
 \label{sec:Mean}
 The mean of \texttt{WinStats} or the expectation of \texttt{CallStats} both provide $\mathrm{Pr\{win\}}$, the average chance of winning in a showdown against one opponent.
-As mentioned in Section~\ref{sec:Approximation}, this measurement is extended to the $N$ opponent case by with the following approximations:
+As mentioned in Section~\ref{sec:Approximations}, this measurement is extended to the $N$ opponent case by with the following approximations:
 \[
 \mathrm{Pr\{win all\}} = \prod_\mathrm{opponents} \mathrm{Pr\{win one\}} \approx \left( \mathrm{Pr\{win one\}} \right)^N
 \]
@@ -118,7 +118,7 @@ $\mathrm{Pr\{best\}}$ is extended to multiple opponents in the same way as $\mat
 In order to compute $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$, it is necessary to define a notion of utility.
 The utility of a given hand acts as a measure of its worth.
 If the outcome of betting a specific fraction of your bankroll on a certain scenario is random and independent, in the long run, the expectation of making the bet many times reduces to the geometric mean~\cite{KellyCriterion} of the outcomes.
-If it is difficult or impossible to make the bet a large number of times, an arithmetic mean (or independent chip model~cite{ICMmag2007} when the payout structure of a tournament is known) is more suitable.
+If it is difficult or impossible to make the bet a large number of times, an arithmetic mean (or independent chip model~\cite{ICMmag2007} when the payout structure of a tournament is known) is more suitable.
 For small bet of size $f$ that would occur many times throughout the course of a game, the total utility of making $N$ bets is:
 \[
 U = \left( \left( 1 + v_\mathrm{win} \left( f \right) \right)^\mathrm{\# wins} \left( 1 - v_\mathrm{loss} \left( f \right) \right)^\mathrm{\# losses} \right) \cdot B
