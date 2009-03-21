@@ -66,7 +66,7 @@ class ScrollableText(Tkinter.Frame):
         self._my_text.configure(font=new_font)
 
     def add_text(self,new_text):
-        print repr(self._my_text)
+        #print repr(self._my_text)
 
         self._my_text.configure(state=Tkinter.NORMAL)
         self._my_text.insert(Tkinter.END,new_text)
@@ -74,7 +74,7 @@ class ScrollableText(Tkinter.Frame):
         self._my_text.see(Tkinter.END)
 
     def push_text(self,destination):
-        print repr(self._my_text)
+        #print repr(self._my_text)
         destination.add_text(self._my_text.get("1.0",Tkinter.END))
 
         self._my_text.configure(state=Tkinter.NORMAL)
@@ -112,28 +112,31 @@ class UserEntry(Tkinter.Entry):
         self.uninitialized = True
         self.gui_lock = gui_lock
 
-        self.gui_lock.acquire()
+        self.gui_lock.acquire(True)
 
     def capture_return_event(self,event):
 
-        user_input_string = event.widget.get()
-        event.widget.delete(0, Tkinter.END)
-
         if self.uninitialized:
+            event.widget.delete(0, Tkinter.END)
             self.uninitialized = False
             self.gui_lock.release()
             return
 
+        self.gui_lock.acquire(True)
+
         #Send input text
+        user_input_string = event.widget.get()
         self._app_stdin.write(user_input_string + '\r\n')
         self._app_stdin.flush()
 
+        event.widget.delete(0, Tkinter.END)
 
         #Rotate label text into history
         for history_frame in self._label_histories:
             history_frame.rotate_label()
 
         self._label_histories[0].add_text(user_input_string + '\n')
+        self.gui_lock.release()
 
 
 class ConsoleSeparateWindow(Tkinter.Tk):
@@ -203,12 +206,12 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.stdout_history_frame.bind_label(stdout_latest)
 
         history_frames_list = [self.stderr_history_frame,self.stdout_history_frame]
-        stderr_input.bind_input_output(self._my_subprocess.stdin,history_frames_list)
+        stderr_input.bind_input_output(self.gui_lock,self._my_subprocess.stdin,history_frames_list)
         self.protocol("WM_DELETE_WINDOW", self._destroy_handler)
 
     def _destroy_handler(self):
 
-        self.gui_lock.acquire()
+        self.gui_lock.acquire(True)
 
         #Clean up in a threadsafe manner
         self._my_subprocess.terminate()
@@ -227,7 +230,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self._synchronous_append(self.stderr_history_frame,append_text)
 
     def _synchronous_append(self,history_frame,append_text):
-        self.gui_lock.acquire()
+        self.gui_lock.acquire(True)
         if not history_frame is None:
             history_frame.my_latest.add_text(append_text.replace('\r',''))
         self.gui_lock.release()
