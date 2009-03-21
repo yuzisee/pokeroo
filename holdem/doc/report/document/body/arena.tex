@@ -12,41 +12,129 @@ When deciding on an action to take, a competent poker player must always take ce
 The combination of all of the following factors is a player's betting situation:
 \begin{itemize}
 \singlespacing
-\item $\mathrm{Pr\{raised_x\}}$: Probability of being raised by an opponent, to $x$ chips
-\item $\mathrm{Pr\{push_y\}}$: Probability of causing all opponents to fold after betting $x$ chips
 \item $\mathrm{Pr\{win\}}$: Probability of winning in a showdown
-\item $\mathrm{E[callers]}$: Number of opponents expected to call or raise your bet
+\item $\mathrm{Pr\{best\}}$: Probability of having the best hand
+\item $\mathrm{E[callers}_x]$: Number of opponents expected to call or raise your bet of $x$ chips.
+\item $\mathrm{Pr\{push}_x\}$: Probability of causing all opponents to fold after betting $x$ chips
+\item $\mathrm{Pr\{raised}_y\}$: Probability of being raised by an opponent, to $y$ chips
 \end{itemize}
 Also considered is the probability of improving the betting situation for the next betting round, as well as best-case and worst-case $Pr_\mathrm{win}$ estimates.
 
-The estimation of each of the above four values is accomplished using two distributions.
+The estimation of each of the above four values is accomplished using three histograms.
 \begin{itemize}
 \singlespacing
 \item \texttt{CallStats}: The possible hands your opponent can have, compared to the hand the you have
 \item \texttt{CommunityCallStats}: The possible hands any player can have, compared to each other
+\item \texttt{WinStats}: The possible upcoming community cards, and how they affect your existing hand
 \end{itemize}
-The \texttt{CallStats} distribution helps determine how your opponent should behave if he/she knows what hand you have.
-The \texttt{CommunityCallStats} is used to measure the ''rank'' of any given hand with respect to the community cards that are available.
+The \texttt{CallStats} histogram helps determine how your opponent should behave if he/she knows what hand you have.
+The \texttt{CommunityCallStats} histogram is used to measure the ``rank'' of any given hand with respect to the community cards that are available.
+The \texttt{WinStats} is less important than the other two, is used to create an awareness of ``playing styles''.
 
-The following sections will explore the generation and characteristics of each of these distributions, and then describe the computation of $\mathrm{Pr\{raised_x\}, Pr\{push_x\}, Pr\{win\}, and E[callers]}$.
+The following sections will first explore each of these histograms, and then look at how $\mathrm{Pr\{win\}}$, $\mathrm{Pr\{best\}}$, $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$ are estimated.
 
+\section{Histograms}
 
-\section{CallStats Distribution}
+\subsection{CallStats Histogram}
 \label{sec:CallStats}
 
-The \texttt{CallStats} distribution is a description of all of the possible seven-card hands that a player can form, compared to each of the hole cards that an opponent could have.
-For a given incomplete hand, the \texttt{CallStats} distribution is computed by first iterating over all possible combinations of two opposing hole cards.
-Then, for each opposing hole card combination, iterate over all of the possible community card combinations.
+The \texttt{CallStats} histogram is a description of all of the possible seven-card hands that a player can form, compared to each of the hole cards that an opponent could have.
+For a given incomplete hand, the \texttt{CallStats} histogram is computed by first iterating over all possible combinations of two opposing hole cards.
+Then, for each opposing hole card combination, iterate over all of the possible community card combinations that can be formed with the existing community cards (if any).
 Each community card combination completes a seven-card hand for both the player and the opponent.
 The seven-card hands are compared to determine the winner, and the results for each hole card combination are accumulated to generate $\mathrm{Pr\{win\}}$ against each opposing pair of hole cards.
-\texttt{CallStats} is the histogram of 
 
-The \texttt{CallStats} distribution, therefore, can also be treated as a function: $\mathrm{CallStats} : My Hole Cards, 
+\texttt{CallStats} is the histogram of the set of $\mathrm{Pr\{win\}}$ values corresponding to each possible opposing hole card pair.
+Assuming a uniform distribution of opposing hands, the corresponding cumulative histogram provides $\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge x|\mathrm{Your hole cards}\}$, the probability of your opponent's hand being weaker than $x$\% chance to win against your hand.
+Its distribution depends on the possible hole cards that your opponent could have, and how they perform against your hand.
+
+This cumulative histogram is the starting point for estimating how the opponent should behave if he/she knows which cards you have.
+Eg. if the opponent has a high probability of having a strong hand versus yours, he/she should call or raise rather than fold.
 
 
+\subsection{CommunityCallStats Histogram}
+\label{sec:CommunityCallStats}
 
-\section{Number of Callers}
+The \texttt{CommunityCallStats} histogram is a description of all of the possible seven-card hands that any player can form.
+To compute this histogram, first iterate over all possible combinations of two hole cards.
+For each hole card pair, iterate over all possible seven-card hands that can be formed with that hole card pair and the existing community cards (if any).
+Then sort the entire list of possible seven-card hands according to strength and tiebreaker.
+At this point, the weakest hands will be at the top of the list, and the strongest hands will be at the bottom.
+Each hand's ``effectiveness'' is measured by how many weaker hands are above it in the list.
+Since each seven-card hand in the list is associated with a specific hole card pair, the hole card pairs can also be ranked by the average ``effectiveness'' of all seven-card hands that are associated with it.
+The average ``effectiveness'' of a hole card pair is the percentage of opposing hands that the hole card can win against.
+Assuming a uniform distribution of hole cards, this becomes the overall probability of winning against any hole cards.
+
+\texttt{CommunityCallStats} is the histogram of the set of $\mathrm{Pr\{win\}}$ values corresponding to each possible starting hole card pair, assuming uniform random opposing hole cards.
+The corresponding cumulative histogram provides $\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge x\}$, the probability of having a hand stronger than $x$\% chance to win, on average.
+Its distribution depends on the existing community cards already available.
+
+This cumulative histogram is useful for various reasons.
+Firstly, if your own $\mathrm{Pr\{win\}}$ is known, \texttt{CommunityCallStats} acts as a measure of rank.
+$\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge \mathrm{Your Pr\{win\}}\}$ is the probability of someone having a better hand than your hand.
+Note that this is different than the probability of someone having a better hand \emph{against} your hand (that, is determined by \texttt{CallStats}).
+Secondly, the \texttt{CommunityCallStats} cumulative histogram is the starting point for estimating how the opponent should behave if he/she has no information about your cards.
+\texttt{CommunityCallStats} represents the average $\mathrm{Pr\{win\}}$ of a given hand against all other hands.
+
+
+\subsection{WinStats Histogram}
+\label{sec:WinStats}
+
+The \texttt{WinStats} histogram provdes a sense how a set of community cards ``feels'' to a poker player.
+To compute \texttt{WinStats}, iterate over all possible immediately upcoming community cards.
+Here, immediate means the cards that can be dealt before the next betting round takes place.
+For each possible combination of upcoming community cards, calculate how the player's average $\mathrm{Pr\{win\}}$ changes.
+
+Most often, measures of spread and skew of $\mathrm{Pr\{win\}}$ across the various upcoming community cards create a quantitative description of ``bluffing hands'' and ``drawing hands''.
+If the spread/variance of $\mathrm{Pr\{win\}}$ across all possible cominbations of upcoming community cards is high, a player's position is relatively uncertain, and it may be safer to try to win the hand by bluffing than to work the game into a showdown.
+If there are more upcoming community card combinations that worsen $\mathrm{Pr\{win\}}$ than improve it, the player should try to keep the betting low wait to see if he/she will ``catch'' any of the few cards that will greatly improve his/her hand.
+\texttt{WinStats} data is used more heuristically, whereas \texttt{CallStats} and \texttt{CommunityCallStats} are used more for purely probabilistic calculations.
+In all cases, information from \texttt{WinStats} never overpowers the fundamental mathematics of making good poker decisions, but is used to add distinct ``personalities'' and ``playing styles'', each of which may be best suited to countering specific opponents.
+
+
+\section{Opponent Modelling Factors}
+
+
+\subsection{Showdown Win Percentage}
+\label{sec:Mean}
+The mean of \texttt{WinStats} or the expectation of \texttt{CallStats} both provide $\mathrm{Pr\{win\}}$, the average chance of winning in a showdown against one opponent.
+As mentioned in Section~\ref{sec:Approximation}, this measurement is extended to the $N$ opponent case by with the following approximations:
+\[
+\mathrm{Pr\{win all\}} = \prod_\mathrm{opponents} \mathrm{Pr\{win one\}} \approx \left( \mathrm{Pr\{win one\}} \right)^N
+\]
+
+
+\subsection{Best Hand}
+\label{sec:Rank}
+Once $\mathrm{Pr\{win\}}$ is known, \texttt{CommunityCallStats} can be used to calculate the probability of having a hand with a better chance of winning than $\mathrm{Pr\{win\}}$.
+This is the hand's ``rank'' and represents the probability, $\mathrm{Pr\{best\}}$, of having the better hand against one opponent.
+$\mathrm{Pr\{best\}}$ is extended to multiple opponents in the same way as $\mathrm{Pr\{win\}}$.
+
+
+\subsection{Utility}
+\label{sec:Utility}
+
+In order to compute $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$, it is necessary to define a notion of utility.
+The utility of a given hand acts as a measure of its worth.
+If the outcome of betting a specific fraction of your bankroll on a certain scenario is random and independent, in the long run, the expectation of making the bet many times reduces to the geometric mean~\cite{KellyCriterion} of the outcomes.
+If it is difficult or impossible to make the bet a large number of times, an arithmetic mean (or independent chip model~cite{ICMmag2007} when the payout structure of a tournament is known) is more suitable.
+
+
+\subsection{Number of Callers}
 \label{sec:Callers}
+It is assumed that an opponent will only fold if the utility of his/her hand is too low to be worth playing.
+
+Computing $\mathrm{E[callers}_x]$ is not linear. If the first opponent calls your bet, there is more money in the pot and more incentive for the next player to call.
+A straightfoward method of estimating $\mathrm{E[callers]}$ is to assume that each player will add $\mathrm{E[call]} = x \cdot \mathrm{Pr\{play\}}$ to the pot.
+That amount is added to the pot, and is included in the calculation of $\mathrm{Pr\{play\}}$ for the next player.
+Although players cannot actually call a fraction of the best, this provides a simple estimation of the aggregate call amount made by all players.
+For each player, $\mathrm{Pr\{play\}}$ is the probability of that player calling or raising, and is 
+This method assumes a fractional call by each player proportional 
+In practise, usually only one or two opponents make it to the showdown, so the accuracy of this estimate is acceptable.
+
+\subsection{Raises}
+\label{sec:Raises}
+
 
 
 
