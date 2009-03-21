@@ -78,7 +78,7 @@ class ScrollableText(Tkinter.Frame):
         destination.add_text(self._my_text.get("1.0",Tkinter.END))
 
         self._my_text.configure(state=Tkinter.NORMAL)
-        self._my_text.delete(0,Tkinter.END)
+        self._my_text.delete("1.0",Tkinter.END)
         self._my_text.configure(state=Tkinter.DISABLED)
 
     def setup_geometry_manager(self):
