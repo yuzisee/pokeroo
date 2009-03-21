@@ -92,8 +92,7 @@ If there are more upcoming community card combinations that worsen $\mathrm{Pr\{
 In all cases, information from \texttt{WinStats} never overpowers the fundamental mathematics of making good poker decisions, but is used to add distinct ``personalities'' and ``playing styles'', each of which may be best suited to countering specific opponents.
 
 
-\section{Opponent Modelling Factors}
-
+\section{Value of Hole Cards}
 
 \subsection{Showdown Win Percentage}
 \label{sec:Mean}
@@ -111,26 +110,80 @@ This is the hand's ``rank'' and represents the probability, $\mathrm{Pr\{best\}}
 $\mathrm{Pr\{best\}}$ is extended to multiple opponents in the same way as $\mathrm{Pr\{win\}}$.
 
 
-\subsection{Utility}
+\section{Expected Utility}
+
+\subsection{Bet Utility}
 \label{sec:Utility}
 
 In order to compute $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$, it is necessary to define a notion of utility.
 The utility of a given hand acts as a measure of its worth.
 If the outcome of betting a specific fraction of your bankroll on a certain scenario is random and independent, in the long run, the expectation of making the bet many times reduces to the geometric mean~\cite{KellyCriterion} of the outcomes.
 If it is difficult or impossible to make the bet a large number of times, an arithmetic mean (or independent chip model~cite{ICMmag2007} when the payout structure of a tournament is known) is more suitable.
+For small bet of size $f$ that would occur many times throughout the course of a game, the total utility of making $N$ bets is:
+\[
+U = \left( \left( 1 + v_\mathrm{win} \left( f \right) \right)^\mathrm{\# wins} \left( 1 - v_\mathrm{loss} \left( f \right) \right)^\mathrm{\# losses} \right) \cdot B
+\]
+Here, the bet size $f$ is a fraction of the bankroll $B$.
+$N = \mathrm{wins} + \mathrm{losses}$, $v_\mathrm{win} \left( f \right)$ is the payoff for winning the bet, and $v_\mathrm{loss} \left( f \right)$ is the price of making the bet.
+As $N \to \inf$, the incremental gain of each bet is simply the geometric mean of outcomes weighted by their probabilities, and extends easily to include the various split-pot situations, etc.
 
+For large bets such as all-in calls that cannot be approximated using $N \to \inf$, a suitable short-term expectation of utility is the arithmetic mean equivalent:
+\[
+U = \left( \left( 1 + v_\mathrm{win} \left( f \right) \right) \cdot \mathrm{\# wins} + \left( 1 - v_\mathrm{loss} \left( f \right) \right) \cdot \mathrm{\# losses} \right) \cdot B
+\]
+
+
+\subsection{Opportunity Cost of Folding}
+\label{sec:FoldEquity}
+
+When facing a large bet $b$, you always have the option to either fold or play.
+Often, it is more favourable to wait until the same opportunity arises again in the future, especially if it is likely for you to have better cards then.
+Across $n$ situations facing the same bet, in your best opportunity to win you are likely have, on average, one of the $\frac{1}{n}^\mathrm{th}$ best hands.
+From the rank of the hand and \texttt{CommunityCallStats}, the best probability of winning, $p$, during those $n$ situations can be obtained.
+However, by waiting $n$ hands before playing, you will sacrifice whatever chips, $C$, you have already committed to the pot in previous bets leading up to this one.
+Therefore, it is possible to win $b-C$ with probability $p$ by folding now, and expecting to wait an average of $n$ hands before calling.
+For sufficiently large $b$ and a suitable \texttt{CommunityCallStats} histogram, it is possible to call from a better situation by folding now.
+
+If \texttt{CommunityCallStats} is differentiable, for any given situation and bet faced, it is possible to solve for the optimal $n$ that maximizes the final expected utility.
+Any money still lost in the maximum expected utility is the opportunity cost of folding, which in most cases is better than the cost of playing with a weak hand.
+
+The computation of $n$ can be achieved through any variety of Unimodal function optimization techniques.
+
+\section{Opponent Modelling}
 
 \subsection{Number of Callers}
 \label{sec:Callers}
 It is assumed that an opponent will only fold if the utility of his/her hand is too low to be worth playing.
+For the purposes of computing $\mathrm{E[callers}_x]$, the geometric utility function is used, offset by the opportunity cost of folding.
+The utility of a hand is a function of $w$, the percentage chance of winning in a showdown.
+The utility function is more or less monotonic in $w$ and so there is a $w_\mathrm{threshold}$ for which the utility exactly zero.
+$w_\mathrm{threshold}$ can be computed numerically using any variety of root-finding methodologies.
+Depending on how well the opponent knows what hand you have, either the \texttt{CallStats} or \texttt{CommunityCallStats} (or a combination therefrom) histogram can be used to look up what percentage of hands have a chance to win greater than $w_\mathrm{threshold}$.
+This is the fraction of opponents that are likely to play (call or raise).
 
-Computing $\mathrm{E[callers}_x]$ is not linear. If the first opponent calls your bet, there is more money in the pot and more incentive for the next player to call.
-A straightfoward method of estimating $\mathrm{E[callers]}$ is to assume that each player will add $\mathrm{E[call]} = x \cdot \mathrm{Pr\{play\}}$ to the pot.
-That amount is added to the pot, and is included in the calculation of $\mathrm{Pr\{play\}}$ for the next player.
-Although players cannot actually call a fraction of the best, this provides a simple estimation of the aggregate call amount made by all players.
-For each player, $\mathrm{Pr\{play\}}$ is the probability of that player calling or raising, and is 
-This method assumes a fractional call by each player proportional 
-In practise, usually only one or two opponents make it to the showdown, so the accuracy of this estimate is acceptable.
+
+Computing the total $\mathrm{E[callers}_x]$ for all opponents is not linear.
+If the first opponent calls your bet, there is more money in the pot and more incentive for the next opponent to call.
+A straightfoward method of estimating $\mathrm{E[callers]}$ is to assume that each opponent will add $\mathrm{E[call]} = x \cdot \mathrm{Pr\{play\}}$ to the pot.
+That amount is added to the pot, and is included in the calculation of $\mathrm{Pr\{play\}}$ for the next opponent.
+Although opponents cannot generally call a fraction of the best, this provides a simple estimation of the aggregate call amount made by all opponents.
+For each opponent, $\mathrm{Pr\{play\}}$ is the probability of that opponent calling or raising, and is solved numerically using the utility function described above.
+If the total $\mathrm{E[callers}_x]$ turns out to be less than the bet to call, it is rounded up to avoid the case of having less than one call.
+The value of $\mathrm{E[callers}_x]$ is not relevant if all opponents fold, and in practise, usually only one or two opponents make it to the showdown, so the accuracy of this estimate is acceptable.
+For very easy calls over a large number of players, $\mathrm{E[callers}_x]$ will still sum to a large number of callers, and in more usual circumstances, $\mathrm{E[callers}_x]$ is generally between $x$ and $2x$.
+
+
+\subsection{Pushes}
+\label{sec:Push}
+
+There is always a chance of making a bet large enough to push all of your opponents into folding.
+If no opponents choose to play your bet, they will all fold and you win whatever is in the pot.
+The probability $\mathrm{Pr\{play\}}$ is computed the same way as for $\mathrm{E[callers}_x]$, except for a few differences.
+Firstly, in general, when your bet is so large that all players will decide to fold, the bet size will fall in the category of algebraic mean utilities rather than geometric mean utilities.
+Secondly, making a large bet gives more away about the hand that you hold, and therefore, in the spirit of the minimax/Nash equilibrium approaches, more weight is delibrately given to the worse of \texttt{CallStats} or \texttt{CommunityCallStats} when looking up $\mathrm{Pr\{play\}}$ from the computed $w_\mathrm{threshold}$.
+Once $\mathrm{Pr\{play\}}$ is known for each player, the product $\mathrm{Pr\{push\}} = \prod_\mathrm{opponents} \left( 1 - \mathrm{Pr\{play\}} \right)$ is the total probability of winning the pot due to opponent folds.
+
+
 
 \subsection{Raises}
 \label{sec:Raises}
