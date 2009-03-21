@@ -66,12 +66,17 @@ class ScrollableText(Tkinter.Frame):
         self._my_text.configure(font=new_font)
 
     def add_text(self,new_text):
+        print repr(self._my_text)
+
         self._my_text.configure(state=Tkinter.NORMAL)
         self._my_text.insert(Tkinter.END,new_text)
         self._my_text.configure(state=Tkinter.DISABLED)
         self._my_text.see(Tkinter.END)
 
-    def clear_text(self):
+    def push_text(self,destination):
+        print repr(self._my_text)
+        destination.add_text(self._my_text.get("1.0",Tkinter.END))
+
         self._my_text.configure(state=Tkinter.NORMAL)
         self._my_text.delete(0,Tkinter.END)
         self._my_text.configure(state=Tkinter.DISABLED)
@@ -89,8 +94,7 @@ class HistoryText(ScrollableText):
         self.my_latest = source_text
 
     def rotate_label(self):
-        self.add_text(self.my_latest.get())
-        self.my_latest.clear_text()
+        self.my_latest.push_text(self)
 
 class UserEntry(Tkinter.Entry):
     def __init__(self, parent, **options):
@@ -100,15 +104,15 @@ class UserEntry(Tkinter.Entry):
     def setup_geometry_manager(self):
         self.pack(side=Tkinter.BOTTOM,fill=Tkinter.X,expand=0)
 
-    def bind_input_output(self,app_stdin,input_output_pairs):
+    def bind_input_output(self,gui_lock,app_stdin,input_output_pairs):
         self._label_histories = input_output_pairs
         self._app_stdin = app_stdin
         self.bind("<Return>",self.capture_return_event)
 
         self.uninitialized = True
+        self.gui_lock = gui_lock
 
-        self.writer_semaphore = threading.Semaphore(0)
-        return self.writer_semaphore
+        self.gui_lock.acquire()
 
     def capture_return_event(self,event):
 
@@ -116,10 +120,8 @@ class UserEntry(Tkinter.Entry):
         event.widget.delete(0, Tkinter.END)
 
         if self.uninitialized:
-            print "GO"
             self.uninitialized = False
-            for history_frame in self._label_histories:
-                self.writer_semaphore.release()
+            self.gui_lock.release()
             return
 
         #Send input text
@@ -129,13 +131,7 @@ class UserEntry(Tkinter.Entry):
 
         #Rotate label text into history
         for history_frame in self._label_histories:
-            self.writer_semaphore.acquire(True)
-
-        for history_frame in self._label_histories:
             history_frame.rotate_label()
-
-        for history_frame in self._label_histories:
-            self.writer_semaphore.release()
 
         self._label_histories[0].add_text(user_input_string + '\n')
 
@@ -155,6 +151,10 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.stdout_history_frame = HistoryText(self)
         self.stderr_history_frame = HistoryText(self)
 
+        #It looks like Tkinter isn't threadsafe!
+        #To make any GUI changes, you have to lock our GUI.
+        self.gui_lock = threading.Lock()
+
         self._init_widgets();
 
     def _init_widgets(self):
@@ -168,20 +168,20 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.stderr_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
 
         stdout_latest = ScrollableText(self)
-        stdout_latest.add_text("a")
 
         #The input frame contains the stderr latest with an entry field at the bottom
         stderr_input_frame = Tkinter.Frame(self, borderwidth=2, relief=Tkinter.GROOVE)
         stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0)
 
         stderr_latest  = ScrollableText(stderr_input_frame)
-        stderr_latest.add_text("b")
-        stderr_latest.pack(side=Tkinter.TOP,fill=Tkinter.BOTH,expand=1)
 
         #Grid layout is resizable
-        stderr_input.setup_geometry_manager()
-        stdout_latest.setup_geometry_manager()
         stderr_latest.setup_geometry_manager()
+        stdout_latest.setup_geometry_manager()
+        stderr_input.setup_geometry_manager()
+
+        stderr_latest.pack(side=Tkinter.TOP,fill=Tkinter.BOTH,expand=1)
+
 
         self.stdout_history_frame.setup_geometry_manager()
         self.stdout_history_frame.grid(row=0,column=0,sticky=ConsoleSeparateWindow.EXPAND_ALL)
@@ -194,7 +194,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.grid_columnconfigure(0,weight=1)
         self.grid_columnconfigure(1,weight=1)
         self.grid_rowconfigure(0,weight=1)
-        self.grid_rowconfigure(1,weight=1)
+        self.grid_rowconfigure(1,weight=0)
 
         stderr_input.focus_set()
 
@@ -202,23 +202,35 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.stderr_history_frame.bind_label(stderr_latest)
         self.stdout_history_frame.bind_label(stdout_latest)
 
-        self.access_semaphore = stderr_input.bind_input_output(self._my_subprocess.stdin,[self.stderr_history_frame,self.stdout_history_frame])
+        history_frames_list = [self.stderr_history_frame,self.stdout_history_frame]
+        stderr_input.bind_input_output(self._my_subprocess.stdin,history_frames_list)
         self.protocol("WM_DELETE_WINDOW", self._destroy_handler)
 
     def _destroy_handler(self):
+
+        self.gui_lock.acquire()
+
+        #Clean up in a threadsafe manner
         self._my_subprocess.terminate()
+        self.stdout_history_frame = None
+        self.stderr_history_frame = None
+
+        self.gui_lock.release()
+
         self.destroy()
 
     def append_stdout(self,append_text):
-        self.access_semaphore.acquire(True)
-        self.stdout_history_frame.my_latest.add_text(append_text.replace('\r',''))
-        self.access_semaphore.release()
+        self._synchronous_append(self.stdout_history_frame,append_text)
         sys.stdout.write(append_text)
 
     def append_stderr(self,append_text):
-        self.access_semaphore.acquire(True)
-        self.stderr_history_frame.my_latest.add_text(append_text.replace('\r',''))
-        self.access_semaphore.release()
+        self._synchronous_append(self.stderr_history_frame,append_text)
+
+    def _synchronous_append(self,history_frame,append_text):
+        self.gui_lock.acquire()
+        if not history_frame is None:
+            history_frame.my_latest.add_text(append_text.replace('\r',''))
+        self.gui_lock.release()
 
 
 
@@ -244,14 +256,14 @@ if __name__=='__main__':
     #===========================================
     #   Bind stdout and stderr to root_window
     #===========================================
-    #stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, root_window.append_stdout)
-    #stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, root_window.append_stderr)
+    stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, root_window.append_stdout)
+    stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, root_window.append_stderr)
     #stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, fake_out)
     #stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, fake_out)
 
     #==========
     #   Run!
     #==========
-    #stdout_capturer.start()
-    #stderr_capturer.start()
+    stdout_capturer.start()
+    stderr_capturer.start()
     root_window.mainloop()
