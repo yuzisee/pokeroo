@@ -94,22 +94,21 @@ void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
 
 void HoldemArena::PrintPositions(std::ostream& o)
 {
-    o << "(" << (int)(NumberInHand()) << " players" << flush;
+    o << "(" << (int)(NumberInHand()) << " players)" << endl;
     int8 tempIndex = curDealer;
     do
     {
         incrIndex(tempIndex);
         if( CanStillBet(tempIndex) )
         {
-            o << ", " << p[tempIndex]->GetIdent() << " $" << p[tempIndex]->GetMoney() << flush;
+            o << "\t[" << p[tempIndex]->GetIdent() << " $" << p[tempIndex]->GetMoney() << "]" << endl;
         }
         else if( IsInHand(tempIndex) && !HasFolded(tempIndex) )
         {
-            o << ", " << p[tempIndex]->GetIdent() << " all-in" << flush;
+            o << "\t[" << p[tempIndex]->GetIdent() << " all-in]" << endl;
         }
     }while( tempIndex != curDealer );
 
-    o << ")" << endl;
 }
 
 void HoldemArena::addBets(float64 b)

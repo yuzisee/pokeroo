@@ -18,7 +18,7 @@ import os
 import time
 
 class SubProcessThread(threading.Thread):
-    MAXIMUM_BYTE_READ = 2048
+    MAXIMUM_BYTE_READ = 4
 
     def __init__(self,bytestream,returncode_test,text_append_callback):
         threading.Thread.__init__(self)
@@ -44,6 +44,26 @@ class SubProcessThread(threading.Thread):
 
         #txt =
 #
+
+class AppendableLabel(Tkinter.Label):
+    def __init__(self,parent):
+        Tkinter.Label.__init__(self,parent)
+
+        self.configure(anchor=Tkinter.SW,justify=Tkinter.LEFT)
+
+        self._my_str = ""
+
+    def set_font(self,new_font):
+        self.configure(font=new_font)
+
+    def add_text(self,new_text):
+        self._my_str += new_text
+        self.configure(text=self._my_str)
+
+    def push_text(self,destination):
+        destination.add_text(self._my_str)
+        self._my_str = ""
+        self.configure(text="")
 
 #http://www.pythonware.com/library/
 #http://effbot.org/tkinterbook/
@@ -171,17 +191,17 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.stdout_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
         self.stderr_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
 
-        stdout_latest = ScrollableText(self)
+        stdout_latest = AppendableLabel(self)
+        stdout_latest.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
 
         #The input frame contains the stderr latest with an entry field at the bottom
         stderr_input_frame = Tkinter.Frame(self, borderwidth=2, relief=Tkinter.GROOVE)
         stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0)
 
-        stderr_latest  = ScrollableText(stderr_input_frame)
+        stderr_latest  = AppendableLabel(stderr_input_frame)
+        stderr_latest.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
 
         #Grid layout is resizable
-        stderr_latest.setup_geometry_manager()
-        stdout_latest.setup_geometry_manager()
         stderr_input.setup_geometry_manager()
 
         stderr_latest.pack(side=Tkinter.TOP,fill=Tkinter.BOTH,expand=1)
@@ -224,16 +244,16 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.destroy()
 
     def append_stdout(self,append_text):
-        self._synchronous_append(self.stdout_history_frame,append_text)
-        sys.stdout.write(append_text)
+        self._synchronous_append(self.stdout_history_frame,append_text.replace('\r',''))
+        sys.stdout.write(append_text.replace('\r',''))
 
     def append_stderr(self,append_text):
-        self._synchronous_append(self.stderr_history_frame,append_text)
+        self._synchronous_append(self.stderr_history_frame,append_text.replace('\r',''))
 
     def _synchronous_append(self,history_frame,append_text):
         self.gui_lock.acquire(True)
         if not history_frame is None:
-            history_frame.my_latest.add_text(append_text.replace('\r',''))
+            history_frame.my_latest.add_text(append_text)
         self.gui_lock.release()
         time.sleep(0.04)
 
