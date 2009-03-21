@@ -18,7 +18,7 @@ import os
 import time
 
 class SubProcessThread(threading.Thread):
-    MAXIMUM_BYTE_READ = 2
+    MAXIMUM_BYTE_READ = 2048
 
     def __init__(self,bytestream,returncode_test,text_append_callback):
         threading.Thread.__init__(self)
@@ -70,14 +70,14 @@ class ScrollableText(Tkinter.Frame):
 
         self._my_text.configure(state=Tkinter.NORMAL)
         self._my_text.insert(Tkinter.END,new_text)
-        self._my_text.configure(state=Tkinter.DISABLED)
         self._my_text.see(Tkinter.END)
+        self._my_text.configure(state=Tkinter.DISABLED)
 
     def push_text(self,destination):
         #print repr(self._my_text)
-        destination.add_text(self._my_text.get("1.0",Tkinter.END))
 
         self._my_text.configure(state=Tkinter.NORMAL)
+        destination.add_text(self._my_text.get("1.0",Tkinter.END))
         self._my_text.delete("1.0",Tkinter.END)
         self._my_text.configure(state=Tkinter.DISABLED)
 
@@ -154,7 +154,8 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.stdout_history_frame = HistoryText(self)
         self.stderr_history_frame = HistoryText(self)
 
-        #It looks like Tkinter isn't threadsafe!
+        #It looks like Tkinter can't take too many commands at once.
+        #It overflows or something...
         #To make any GUI changes, you have to lock our GUI.
         self.gui_lock = threading.Lock()
 
@@ -234,6 +235,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         if not history_frame is None:
             history_frame.my_latest.add_text(append_text.replace('\r',''))
         self.gui_lock.release()
+        time.sleep(0.04)
 
 
 
