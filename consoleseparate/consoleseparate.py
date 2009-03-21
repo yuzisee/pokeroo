@@ -25,9 +25,14 @@ class SubProcessThread(threading.Thread):
 
     def run(self):
         #From http://mail.python.org/pipermail/python-list/2007-June/618721.html
-        while self._stopreading_test() is None:
+        continue_reading = True
+        while continue_reading and (self._stopreading_test() is None):
             print "performing read"
-            self._txt_callback(os.read(self._fd, SubProcessThread.MAXIMUM_BYTE_READ))
+            try:
+                self._txt_callback(os.read(self._fd, SubProcessThread.MAXIMUM_BYTE_READ))
+            except Exception:
+                print "consoleseparate abort."
+                continue_reading = False
 
         #txt =
 #        time.sleep(0.5)   # read at most x times / sec
@@ -66,21 +71,23 @@ class UserEntry(Tkinter.Entry):
         self.pack(side=Tkinter.BOTTOM,fill=Tkinter.X,expand=0)
 
     def bind_input_output(self,app_stdin,input_output_pairs):
-        self.label_history_pairs = input_output_pairs
-        self.app_stdin = app_stdin
+        self._label_history_pairs = input_output_pairs
+        self._app_stdin = app_stdin
         self.bind("<Return>",self.capture_return_event)
 
     def capture_return_event(self,event):
 #        print "User pressed" + repr(event.char)
 #        if event.char == '\r' or event.char == '\n':
-        for lh_pair in self.label_history_pairs:
+        for lh_pair in self._label_history_pairs:
             #print "Input contents" + lh_pair[0].cget("text")#1,Tkinter.END)
-            lh_pair[1].add_text(lh_pair[0].cget("text"))
+            lh_pair[1].add_text(lh_pair[0].cget("text").replace('\r',''))
             lh_pair[0].configure(text='')
 #        else:
 #            for lh_pair in self.label_history_pairs:
 #                lh_pair[0].configure(text=lh_pair[0].cget("text")+event.char+'\r\n')
-        self.app_stdin.write(event.widget.get())
+        user_input_string = event.widget.get() + '\r\n'
+        #print "User input=" + user_input_string,
+        self._app_stdin.write(user_input_string)
         event.widget.delete(0, Tkinter.END)
 
 
@@ -137,6 +144,8 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.grid_columnconfigure(1,weight=1)
         self.grid_rowconfigure(0,weight=1)
         self.grid_rowconfigure(1,weight=0)
+
+        stderr_input.focus_set()
 
         #Event capture
         stderr_input.bind_input_output(self._my_subprocess.stdin,[(self._stdout_latest,stdout_history_frame),(self._stderr_latest,stderr_history_frame)])
