@@ -18,7 +18,7 @@ import os
 import time
 
 class SubProcessThread(threading.Thread):
-    MAXIMUM_BYTE_READ = 4
+    MAXIMUM_BYTE_READ = 2048
 
     def __init__(self,bytestream,returncode_test,text_append_callback):
         threading.Thread.__init__(self)
@@ -61,13 +61,19 @@ class AppendableLabel(Tkinter.Label):
         self.configure(text=self._my_str)
 
     def push_text(self,destination):
-        destination.add_text(self._my_str)
-        self._my_str = ""
-        self.configure(text="")
+        if len(self._my_str) > 0:
+            destination.add_text(self._my_str)
+            self._my_str = ""
+            self.configure(text="")
 
 #http://www.pythonware.com/library/
 #http://effbot.org/tkinterbook/
 class ScrollableText(Tkinter.Frame):
+
+    #It looks like Tkinter can't take too many commands at once.
+    #It overflows or something...
+    TKINTER_SPAM_RELIEF_TIME = 0.04
+
     def __init__(self,parent):
         Tkinter.Frame.__init__(self,parent)
         self._my_yscrollbar = Tkinter.Scrollbar(self)
@@ -90,21 +96,29 @@ class ScrollableText(Tkinter.Frame):
 
         self._my_text.configure(state=Tkinter.NORMAL)
         self._my_text.insert(Tkinter.END,new_text)
-        self._my_text.see(Tkinter.END)
         self._my_text.configure(state=Tkinter.DISABLED)
+        time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
 
     def push_text(self,destination):
+        raise AssertionError, "stderr_latest and stdout_latest are labels now"
         #print repr(self._my_text)
 
         self._my_text.configure(state=Tkinter.NORMAL)
         destination.add_text(self._my_text.get("1.0",Tkinter.END))
         self._my_text.delete("1.0",Tkinter.END)
         self._my_text.configure(state=Tkinter.DISABLED)
+        time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
 
     def setup_geometry_manager(self):
         self._my_yscrollbar.pack(side=Tkinter.RIGHT, fill=Tkinter.Y)
         self._my_xscrollbar.pack(side=Tkinter.BOTTOM, fill=Tkinter.X)
         self._my_text.pack(fill=Tkinter.BOTH,expand=1)
+
+    def scroll_down(self):
+        self._my_text.configure(state=Tkinter.NORMAL)
+        self._my_text.see(Tkinter.END)
+        self._my_text.configure(state=Tkinter.DISABLED)
+        time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
 
 class HistoryText(ScrollableText):
     def __init__(self, parent):
@@ -156,6 +170,10 @@ class UserEntry(Tkinter.Entry):
             history_frame.rotate_label()
 
         self._label_histories[0].add_text(user_input_string + '\n')
+
+        for history_frame in self._label_histories:
+            history_frame.scroll_down()
+
         self.gui_lock.release()
 
 
@@ -166,6 +184,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
     DEFAULT_CONSOLE_FONT = font=("Lucida Console", 9)
 
+
     def __init__(self, my_console_app):
         Tkinter.Tk.__init__(self)
 
@@ -174,8 +193,8 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.stdout_history_frame = HistoryText(self)
         self.stderr_history_frame = HistoryText(self)
 
-        #It looks like Tkinter can't take too many commands at once.
-        #It overflows or something...
+        #If Tkinter can't even handle a flood of commands from a single thread,
+        #I wouldn't trust its ability to be threadsafe at all.
         #To make any GUI changes, you have to lock our GUI.
         self.gui_lock = threading.Lock()
 
@@ -226,8 +245,8 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.stderr_history_frame.bind_label(stderr_latest)
         self.stdout_history_frame.bind_label(stdout_latest)
 
-        history_frames_list = [self.stderr_history_frame,self.stdout_history_frame]
-        stderr_input.bind_input_output(self.gui_lock,self._my_subprocess.stdin,history_frames_list)
+        self.history_frames_list = [self.stderr_history_frame,self.stdout_history_frame]
+        stderr_input.bind_input_output(self.gui_lock,self._my_subprocess.stdin,self.history_frames_list)
         self.protocol("WM_DELETE_WINDOW", self._destroy_handler)
 
     def _destroy_handler(self):
@@ -238,6 +257,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self._my_subprocess.terminate()
         self.stdout_history_frame = None
         self.stderr_history_frame = None
+        self.history_frames_list = None
 
         self.gui_lock.release()
 
@@ -252,10 +272,14 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
     def _synchronous_append(self,history_frame,append_text):
         self.gui_lock.acquire(True)
+
         if not history_frame is None:
             history_frame.my_latest.add_text(append_text)
+
+        for f in self.history_frames_list:
+            f.scroll_down()
+
         self.gui_lock.release()
-        time.sleep(0.04)
 
 
 
