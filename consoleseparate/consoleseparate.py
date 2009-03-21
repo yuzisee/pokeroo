@@ -14,8 +14,11 @@ import subprocess
 #for os.read
 import os
 
+#for sleep
+#import time
+
 class SubProcessThread(threading.Thread):
-    MAXIMUM_BYTE_READ = 2048
+    MAXIMUM_BYTE_READ = 2
 
     def __init__(self,bytestream,returncode_test,text_append_callback):
         threading.Thread.__init__(self)
@@ -25,17 +28,22 @@ class SubProcessThread(threading.Thread):
 
     def run(self):
         #From http://mail.python.org/pipermail/python-list/2007-June/618721.html
-        continue_reading = True
-        while continue_reading and (self._stopreading_test() is None):
-            print "performing read"
-            try:
-                self._txt_callback(os.read(self._fd, SubProcessThread.MAXIMUM_BYTE_READ))
-            except Exception:
-                print "consoleseparate abort."
-                continue_reading = False
+
+        while (self._stopreading_test() is None):
+            #print str(self._fd) + "performing read " + repr(self._stopreading_test())
+            #try:
+                #time.sleep(1.0/24.0) # read at most x times / sec
+                next_char = os.read(self._fd, SubProcessThread.MAXIMUM_BYTE_READ)
+                #print str(self._fd) + "received [" + repr(next_char) + "]"
+                if not next_char is None:
+                    self._txt_callback(next_char)
+            #except Exception:
+            #    print "CONSOLESEPARATE: abort "
+
+        print "CONSOLESEPARATE: read terminate"
 
         #txt =
-#        time.sleep(0.5)   # read at most x times / sec
+#
 
 #http://www.pythonware.com/library/
 #http://effbot.org/tkinterbook/
@@ -76,6 +84,12 @@ class UserEntry(Tkinter.Entry):
         self.bind("<Return>",self.capture_return_event)
 
     def capture_return_event(self,event):
+        user_input_string = event.widget.get()
+        #print "User input=" + user_input_string,
+        self._app_stdin.write(user_input_string + '\r\n')
+        self._app_stdin.flush()
+        event.widget.delete(0, Tkinter.END)
+
 #        print "User pressed" + repr(event.char)
 #        if event.char == '\r' or event.char == '\n':
         for lh_pair in self._label_history_pairs:
@@ -85,10 +99,8 @@ class UserEntry(Tkinter.Entry):
 #        else:
 #            for lh_pair in self.label_history_pairs:
 #                lh_pair[0].configure(text=lh_pair[0].cget("text")+event.char+'\r\n')
-        user_input_string = event.widget.get() + '\r\n'
-        #print "User input=" + user_input_string,
-        self._app_stdin.write(user_input_string)
-        event.widget.delete(0, Tkinter.END)
+
+        self._label_history_pairs[0][1].add_text(user_input_string + '\n')
 
 
 class ConsoleSeparateWindow(Tkinter.Tk):
@@ -148,7 +160,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         stderr_input.focus_set()
 
         #Event capture
-        stderr_input.bind_input_output(self._my_subprocess.stdin,[(self._stdout_latest,stdout_history_frame),(self._stderr_latest,stderr_history_frame)])
+        stderr_input.bind_input_output(self._my_subprocess.stdin,[(self._stderr_latest,stderr_history_frame),(self._stdout_latest,stdout_history_frame)])
         self.protocol("WM_DELETE_WINDOW", self._destroy_handler)
 
     def _destroy_handler(self):
@@ -156,14 +168,15 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.destroy()
 
     def append_stdout(self,append_text):
-        self._stdout_latest.configure(text=self._stdout_latest.cget("text")+append_text)
+        self._stdout_latest.configure(text=self._stdout_latest.cget("text")+append_text.replace('\r',''))
         print append_text,
 
     def append_stderr(self,append_text):
-        self._stderr_latest.configure(text=self._stderr_latest.cget("text")+append_text)
+        self._stderr_latest.configure(text=self._stderr_latest.cget("text")+append_text.replace('\r',''))
 
 
 if __name__=='__main__':
+    print os.path.abspath(os.curdir)
     #================================
     #   Execute our child process
     #================================
@@ -180,8 +193,8 @@ if __name__=='__main__':
     #===========================================
     #   Bind stdout and stderr to root_window
     #===========================================
-    stdout_capturer = SubProcessThread(console_app.stdout, lambda: console_app.returncode, root_window.append_stdout)
-    stderr_capturer = SubProcessThread(console_app.stderr, lambda: console_app.returncode, root_window.append_stderr)
+    stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, root_window.append_stdout)
+    stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, root_window.append_stderr)
 
     #==========
     #   Run!
