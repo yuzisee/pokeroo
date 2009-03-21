@@ -38,6 +38,7 @@ if __name__=='__main__':
 
     root_window = Tkinter.Tk()
     expand_all =Tkinter.W+Tkinter.E+Tkinter.N+Tkinter.S
+    expand_bottom_horizontal =Tkinter.W+Tkinter.E+Tkinter.S
 
     #
     #The root window is composed of four quarters:
@@ -45,31 +46,30 @@ if __name__=='__main__':
     #Top is history, Bottom is input
     #
 
-    stdout_history = Tkinter.Label(root_window, text="out top", relief=Tkinter.SUNKEN)
-    stdout_latest  = Tkinter.Label(root_window, text="out bottom", relief=Tkinter.SUNKEN)
+    stdout_history = Tkinter.Label(root_window, text="out top", borderwidth=2, relief=Tkinter.SUNKEN)
+    stderr_history = Tkinter.Label(root_window, text="err top", borderwidth=2, relief=Tkinter.SUNKEN)
 
-    stderr_history = Tkinter.Label(root_window, text="err top", relief=Tkinter.SUNKEN)
-
+    stdout_latest  = Tkinter.Label(root_window, text="out bottom\n \ne\nr\nr bottom\nnbb\nf err bottom\nnbb\nf", borderwidth=2, relief=Tkinter.GROOVE)
 
     #The input frame contains the stderr latest with an entry field at the bottom
-    stderr_input_frame = Tkinter.Frame(root_window)
+    stderr_input_frame = Tkinter.Frame(root_window, borderwidth=2, relief=Tkinter.GROOVE)
 
 
-    stderr_input  = Tkinter.Entry(stderr_input_frame, relief=Tkinter.RAISED,width=0)
+    stderr_input  = Tkinter.Entry(stderr_input_frame, relief=Tkinter.SUNKEN,width=0)
     stderr_input.pack(side=Tkinter.BOTTOM,fill=Tkinter.X,expand=0)
 
-    stderr_latest  = Tkinter.Label(stderr_input_frame, text="err bottom", relief=Tkinter.SUNKEN)
+    stderr_latest  = Tkinter.Label(stderr_input_frame, text="err bottom\nnbb\nf", relief=Tkinter.FLAT)
     stderr_latest.pack(side=Tkinter.TOP,fill=Tkinter.BOTH,expand=1)
 
     #Grid layout is resizable
     stdout_history.grid(row=0,column=0,sticky=expand_all)
-    stdout_latest.grid(row=1,column=0,sticky=expand_all)
+    stdout_latest.grid(row=1,column=0,sticky=expand_bottom_horizontal)
     stderr_history.grid(row=0,column=1,sticky=expand_all)
-    stderr_input_frame.grid(row=1,column=1,sticky=expand_all)
+    stderr_input_frame.grid(row=1,column=1,sticky=expand_bottom_horizontal)
 
     root_window.grid_columnconfigure(0,weight=1)
     root_window.grid_columnconfigure(1,weight=1)
     root_window.grid_rowconfigure(0,weight=1)
-    root_window.grid_rowconfigure(1,weight=1)
+    root_window.grid_rowconfigure(1,weight=0)
 
     root_window.mainloop()

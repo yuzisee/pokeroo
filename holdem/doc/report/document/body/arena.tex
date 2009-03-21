@@ -28,12 +28,20 @@ The estimation of each of the above four values is accomplished using two distri
 The \texttt{CallStats} distribution helps determine how your opponent should behave if he/she knows what hand you have.
 The \texttt{CommunityCallStats} is used to measure the ''rank'' of any given hand with respect to the community cards that are available.
 
-The following sections will explore the generation and characteristics of each of these distributions, and then describe the computation of $\mathrm{Pr\{raised_x\}, Pr\{push_x\}, Pr\{win\}, and E[callers]}.
+The following sections will explore the generation and characteristics of each of these distributions, and then describe the computation of $\mathrm{Pr\{raised_x\}, Pr\{push_x\}, Pr\{win\}, and E[callers]}$.
 
 
-\section{Distributions}
-\label{sec:Distributions}
+\section{CallStats Distribution}
+\label{sec:CallStats}
 
+The \texttt{CallStats} distribution is a description of all of the possible seven-card hands that a player can form, compared to each of the hole cards that an opponent could have.
+For a given incomplete hand, the \texttt{CallStats} distribution is computed by first iterating over all possible combinations of two opposing hole cards.
+Then, for each opposing hole card combination, iterate over all of the possible community card combinations.
+Each community card combination completes a seven-card hand for both the player and the opponent.
+The seven-card hands are compared to determine the winner, and the results for each hole card combination are accumulated to generate $\mathrm{Pr\{win\}}$ against each opposing pair of hole cards.
+\texttt{CallStats} is the histogram of 
+
+The \texttt{CallStats} distribution, therefore, can also be treated as a function: $\mathrm{CallStats} : My Hole Cards, 
 
 
 
