@@ -15,7 +15,7 @@ import subprocess
 import os
 
 #for sleep
-#import time
+import time
 
 class SubProcessThread(threading.Thread):
     MAXIMUM_BYTE_READ = 2
@@ -28,15 +28,15 @@ class SubProcessThread(threading.Thread):
 
     def run(self):
         #From http://mail.python.org/pipermail/python-list/2007-June/618721.html
-
+        time.sleep(1)
         while (self._stopreading_test() is None):
             #print str(self._fd) + "performing read " + repr(self._stopreading_test())
             #try:
                 #time.sleep(1.0/24.0) # read at most x times / sec
-                next_char = os.read(self._fd, SubProcessThread.MAXIMUM_BYTE_READ)
-                #print str(self._fd) + "received [" + repr(next_char) + "]"
-                if not next_char is None:
-                    self._txt_callback(next_char)
+            next_char = os.read(self._fd, SubProcessThread.MAXIMUM_BYTE_READ)
+            #print str(self._fd) + "received [" + repr(next_char) + "]"
+            if not next_char is None:
+                self._txt_callback(next_char)
             #except Exception:
             #    print "CONSOLESEPARATE: abort "
 
@@ -51,25 +51,39 @@ class HistoryText(Tkinter.Frame):
 
     def __init__(self, parent, **options):
         Tkinter.Frame.__init__(self,parent,options)
-        self.my_scrollbar = Tkinter.Scrollbar(self)
+        self._my_yscrollbar = Tkinter.Scrollbar(self)
+        self._my_xscrollbar = Tkinter.Scrollbar(self,orient=Tkinter.HORIZONTAL)
 
-        self.my_text = Tkinter.Text(self,height=0,yscrollcommand=self.my_scrollbar.set)
-        self.my_scrollbar.config(command=self.my_text.yview)
 
-        self.config(relief=self.my_text.cget("relief"))
+        self._my_text = Tkinter.Text(self,height=0,yscrollcommand=self._my_yscrollbar.set,xscrollcommand=self._my_xscrollbar.set)
+        self._my_yscrollbar.config(command=self._my_text.yview)
+        self._my_xscrollbar.config(command=self._my_text.xview)
+
+        self.config(relief=self._my_text.cget("relief"))
+        self._my_text.config(relief=Tkinter.FLAT)
+
+        self.my_lock = threading.Lock()
 
     def set_font(self,new_font):
-        self.my_text.configure(font=new_font)
+        self._my_text.configure(font=new_font)
 
     def add_text(self,new_text):
-        self.my_text.configure(state=Tkinter.NORMAL)
-        self.my_text.insert(Tkinter.END,new_text)
-        self.my_text.configure(state=Tkinter.DISABLED)
-        self.my_text.see(Tkinter.END)
+        self._my_text.configure(state=Tkinter.NORMAL)
+        self._my_text.insert(Tkinter.END,new_text)
+        self._my_text.configure(state=Tkinter.DISABLED)
+        self._my_text.see(Tkinter.END)
 
     def setup_geometry_manager(self):
-        self.my_scrollbar.pack(side=Tkinter.RIGHT, fill=Tkinter.Y)
-        self.my_text.pack(fill=Tkinter.BOTH,expand=1)
+        self._my_yscrollbar.pack(side=Tkinter.RIGHT, fill=Tkinter.Y)
+        self._my_xscrollbar.pack(side=Tkinter.BOTTOM, fill=Tkinter.X)
+        self._my_text.pack(fill=Tkinter.BOTH,expand=1)
+
+    def bind_label(self,source_label):
+        self.my_latest = source_label
+
+    def rotate_label(self):
+        self.add_text(self.my_latest.cget("text"))
+        self.my_latest.configure(text='')
 
 class UserEntry(Tkinter.Entry):
     def __init__(self, parent, **options):
@@ -79,28 +93,23 @@ class UserEntry(Tkinter.Entry):
         self.pack(side=Tkinter.BOTTOM,fill=Tkinter.X,expand=0)
 
     def bind_input_output(self,app_stdin,input_output_pairs):
-        self._label_history_pairs = input_output_pairs
+        self._label_histories = input_output_pairs
         self._app_stdin = app_stdin
         self.bind("<Return>",self.capture_return_event)
 
     def capture_return_event(self,event):
+        #Process input text
         user_input_string = event.widget.get()
-        #print "User input=" + user_input_string,
         self._app_stdin.write(user_input_string + '\r\n')
         self._app_stdin.flush()
         event.widget.delete(0, Tkinter.END)
 
-#        print "User pressed" + repr(event.char)
-#        if event.char == '\r' or event.char == '\n':
-        for lh_pair in self._label_history_pairs:
-            #print "Input contents" + lh_pair[0].cget("text")#1,Tkinter.END)
-            lh_pair[1].add_text(lh_pair[0].cget("text").replace('\r',''))
-            lh_pair[0].configure(text='')
-#        else:
-#            for lh_pair in self.label_history_pairs:
-#                lh_pair[0].configure(text=lh_pair[0].cget("text")+event.char+'\r\n')
+        #Rotate label text into history
+        for history_frame in self._label_histories:
+            with history_frame.my_lock:
+                history_frame.rotate_label()
 
-        self._label_history_pairs[0][1].add_text(user_input_string + '\n')
+        self._label_histories[0].add_text(user_input_string + '\n')
 
 
 class ConsoleSeparateWindow(Tkinter.Tk):
@@ -114,10 +123,15 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         Tkinter.Tk.__init__(self)
 
         self._my_subprocess = my_console_app
-        self._stdout_latest = None
-        self._stderr_latest = None
 
+        self.stdout_history_frame = HistoryText(self)
+        self.stderr_history_frame = HistoryText(self)
+
+        self.stdout_history_frame.my_lock.acquire()
+        self.stderr_history_frame.my_lock.acquire()
         self._init_widgets();
+        self.stdout_history_frame.my_lock.release()
+        self.stderr_history_frame.my_lock.release()
 
     def _init_widgets(self):
         #
@@ -126,30 +140,27 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         #Top is history, Bottom is input
         #
 
-        stdout_history_frame = HistoryText(self)
-        stdout_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
-        self._stdout_latest  = Tkinter.Label(self,borderwidth=2,relief=Tkinter.GROOVE, font=ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT, justify=Tkinter.LEFT, anchor=Tkinter.W)
+        self.stdout_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
+        self.stderr_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
 
-
-        stderr_history_frame = HistoryText(self)
-        stderr_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
+        stdout_latest  = Tkinter.Label(self,borderwidth=2,relief=Tkinter.GROOVE, font=ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT, justify=Tkinter.LEFT, anchor=Tkinter.W)
 
         #The input frame contains the stderr latest with an entry field at the bottom
         stderr_input_frame = Tkinter.Frame(self, borderwidth=2, relief=Tkinter.GROOVE)
         stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0)
 
-        self._stderr_latest  = Tkinter.Label(stderr_input_frame,relief=Tkinter.FLAT, font=ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT, justify=Tkinter.LEFT, anchor =Tkinter.W)
-        self._stderr_latest.pack(side=Tkinter.TOP,fill=Tkinter.BOTH,expand=1)
+        stderr_latest  = Tkinter.Label(stderr_input_frame,relief=Tkinter.FLAT, font=ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT, justify=Tkinter.LEFT, anchor =Tkinter.W)
+        stderr_latest.pack(side=Tkinter.TOP,fill=Tkinter.BOTH,expand=1)
 
         #Grid layout is resizable
         stderr_input.setup_geometry_manager()
 
-        stdout_history_frame.setup_geometry_manager()
-        stdout_history_frame.grid(row=0,column=0,sticky=ConsoleSeparateWindow.EXPAND_ALL)
-        self._stdout_latest.grid(row=1,column=0,sticky=ConsoleSeparateWindow.EXPAND_BOTTOM_HORIZONTAL)
+        self.stdout_history_frame.setup_geometry_manager()
+        self.stdout_history_frame.grid(row=0,column=0,sticky=ConsoleSeparateWindow.EXPAND_ALL)
+        stdout_latest.grid(row=1,column=0,sticky=ConsoleSeparateWindow.EXPAND_BOTTOM_HORIZONTAL)
 
-        stderr_history_frame.setup_geometry_manager()
-        stderr_history_frame.grid(row=0,column=1,sticky=ConsoleSeparateWindow.EXPAND_ALL)
+        self.stderr_history_frame.setup_geometry_manager()
+        self.stderr_history_frame.grid(row=0,column=1,sticky=ConsoleSeparateWindow.EXPAND_ALL)
         stderr_input_frame.grid(row=1,column=1,sticky=ConsoleSeparateWindow.EXPAND_BOTTOM_HORIZONTAL)
 
         self.grid_columnconfigure(0,weight=1)
@@ -160,7 +171,10 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         stderr_input.focus_set()
 
         #Event capture
-        stderr_input.bind_input_output(self._my_subprocess.stdin,[(self._stderr_latest,stderr_history_frame),(self._stdout_latest,stdout_history_frame)])
+        self.stderr_history_frame.bind_label(stderr_latest)
+        self.stdout_history_frame.bind_label(stdout_latest)
+
+        stderr_input.bind_input_output(self._my_subprocess.stdin,[self.stderr_history_frame,self.stdout_history_frame])
         self.protocol("WM_DELETE_WINDOW", self._destroy_handler)
 
     def _destroy_handler(self):
@@ -168,11 +182,16 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.destroy()
 
     def append_stdout(self,append_text):
-        self._stdout_latest.configure(text=self._stdout_latest.cget("text")+append_text.replace('\r',''))
-        print append_text,
+        with self.stdout_history_frame.my_lock:
+            self._label_append(self.stdout_history_frame.my_latest,append_text.replace('\r',''))
+        sys.stdout.write(append_text)
 
     def append_stderr(self,append_text):
-        self._stderr_latest.configure(text=self._stderr_latest.cget("text")+append_text.replace('\r',''))
+        with self.stderr_history_frame.my_lock:
+            self._label_append(self.stderr_history_frame.my_latest,append_text.replace('\r',''))
+
+    def _label_append(self,label_widget,new_text):
+        label_widget.configure(text=label_widget.cget("text")+new_text)
 
 
 if __name__=='__main__':
