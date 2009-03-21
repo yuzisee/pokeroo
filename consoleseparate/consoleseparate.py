@@ -115,10 +115,13 @@ class ScrollableText(Tkinter.Frame):
         self._my_text.pack(fill=Tkinter.BOTH,expand=1)
 
     def scroll_down(self):
+        #Let it settle down so that we know how far we actually need to scroll
+        time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
         self._my_text.configure(state=Tkinter.NORMAL)
         self._my_text.see(Tkinter.END)
         self._my_text.configure(state=Tkinter.DISABLED)
         time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
+
 
 class HistoryText(ScrollableText):
     def __init__(self, parent):
@@ -183,6 +186,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
     EXPAND_BOTTOM_HORIZONTAL =Tkinter.W+Tkinter.E+Tkinter.S
 
     DEFAULT_CONSOLE_FONT = font=("Lucida Console", 9)
+    DEFAULT_INPUT_FONT = font=("Courier New", 9,"bold")
 
 
     def __init__(self, my_console_app):
@@ -215,7 +219,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
         #The input frame contains the stderr latest with an entry field at the bottom
         stderr_input_frame = Tkinter.Frame(self, borderwidth=2, relief=Tkinter.GROOVE)
-        stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0)
+        stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0,font=DEFAULT_INPUT_FONT)
 
         stderr_latest  = AppendableLabel(stderr_input_frame)
         stderr_latest.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
@@ -257,7 +261,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self._my_subprocess.terminate()
         self.stdout_history_frame = None
         self.stderr_history_frame = None
-        self.history_frames_list = None
+        self.history_frames_list = []
 
         self.gui_lock.release()
 
