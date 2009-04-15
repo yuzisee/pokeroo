@@ -209,14 +209,14 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     }
     if(bLogRanking)
     {
-        logFile << "(All-in) " << statrelation.pct * 100 << "%"  << std::endl;
+        logFile << "(Better All-in) " << statrelation.pct * 100 << "%"  << std::endl;
         logFile << "(Re.s) " << statrelation.splits * 100 << "%"  << std::endl;
-        logFile << "(Outright) " << statranking.pct * 100 << "%"  << std::endl;
+        logFile << "(Better Mean Rank) " << statranking.pct * 100 << "%"  << std::endl;
         logFile << "(Ra.s) " << statranking.splits * 100 << "%"  << std::endl;
     }
     if(bLogHybrid)
     {
-        logFile << "(Hybrid) " << hybridMagnified.pct * 100 << "%"  << std::endl;
+        logFile << "(Geomean Win&Rank) " << hybridMagnified.pct * 100 << "%"  << std::endl;
         //logFile << "(H.w) " << hybridMagnified.wins * 100 << "%"  << std::endl;
         logFile << "(H.s) " << hybridMagnified.splits * 100 << "%"  << std::endl;
         //logFile << "(H.l) " << hybridMagnified.loss * 100 << "%"  << std::endl;
@@ -400,6 +400,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
     int32 maxcallStep = -1;
     int32 raiseStep = 0;
     float64 rAmount =  rl.RaiseAmount(betToCall,raiseStep);
+    logFile << endl << "Why didn't I bet lower?" << endl;
     while( rAmount < separatorBet )
     {
         rAmount =  rl.RaiseAmount(betToCall,raiseStep);
@@ -420,6 +421,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
     if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
 
     logFile << "\t--" << endl;
+    logFile << "What am I expecting now?" << endl;
 
     maxcallStep = -1;
     raiseStep = 0;
@@ -611,22 +613,25 @@ float64 ImproveGainStrategy::MakeBet()
 
     if( bGamble >= 1 )
     {
+        logFile << "Personality tweak parameters..." << endl;
         #ifdef LOGPOSITION
 //            logFile << minWin <<" ... "<< minWin+2 <<" = impliedfactor " << distrScale << endl;
-            logFile << " " << improvePure <<" improvePure " << endl;
+            logFile << " " << improvePure <<" improvePure (pure Pr of improving) " << endl;
             logFile << "Likely Worsen By "<< targetWorsenBy << endl; //TRAPBOT, ACTIONBOT
-            if( bGamble >= 2 ) logFile << "impliedOddsGain would be " << impliedOddsGain << endl; //ACTIONBOT
+            if( bGamble >= 2 ) logFile << "impliedOddsGain would be " << impliedOddsGain  << " (1 + detailPCT.avgDev / statmean.pct / 2) bonus" << endl; //ACTIONBOT
             logFile << "opp Likely to fold " << oppInsuranceBigBet << " (to a big bet) is the same as improveMod/2 if positive" << endl; //TRAPBOT, ACTIONBOT
-            if( bGamble >= 2 ) logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << endl; //ACTIONBOT
+            if( bGamble >= 2 ) logFile << "Can push expectedVersus from " << fullVersus << " ... " << newVersus << " ... " << (fullVersus - peopleDrawing) << " (scaled down by (1-improvePure) & detailPCT.stdDev)" << endl; //ACTIONBOT
         #endif
+        logFile << endl;
     }
     logFile <<
     #ifdef MODEL_REACTION
+     "A bet that is large could have been accumulated due to other bets (react), or initiated by me (act). There is more statworse/fear in the (act) case." << endl <<
 	 " Act(0%) or React(100%)? " << (actOrReact * 100) << "% --> pct of " << base_right.pct << ":React ... " << algbModel_fear.ViewShape().pct <<
 	#else
-	 geomModel.ViewShape().pct << ":React ... " <<
+	 geomModel.ViewShape().pct << ":React/Main ... " <<
 	#endif // MODEL_REACTION
-	 " ... " << algbModel_fear.ViewShape().pct << ":Act" << endl;
+	 " ... " << algbModel_fear.ViewShape().pct << ":Act/Fear" << endl;
 #endif
 
 ///From geom to algb
@@ -783,7 +788,7 @@ exit(1);
     const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? nextBet : bestBet;
 
     logFile << "\"riskprice\"... " << riskprice << "(" << geom_algb_scaler << ")" << endl;
-    logFile << "When betting " << min_worst_scaler << ", oppFoldChance is first " << statworse.repeated << endl;
+    logFile << "When betting b_min=" << min_worst_scaler << ", oppFoldChance is first " << statworse.repeated << endl;
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     choicemodel.f(betToCall);
@@ -818,8 +823,8 @@ exit(1);
     logFile << "OppFoldChance% ... left " << myDeterredCall_left.pWin(viewBet) << " --" << myDeterredCall_right.pWin(viewBet) << " right" << endl;
     if( myDeterredCall.pWin(bestBet) > 0 )
     {
-        logFile << "confirm Normal " << choicemodel.f(viewBet) << endl;
-        logFile << "confirm " << rolemodel.f(viewBet) << endl;
+        logFile << "if playstyle NormalBot, overall utility is " << choicemodel.f(viewBet) << endl;
+        logFile << "if playstyle Trap/Ace, overall utility is " << rolemodel.f(viewBet) << endl;
     }
 
 #endif
@@ -919,11 +924,13 @@ float64 DeterredGainStrategy::MakeBet()
 
 	if( bGamble <= 1 )
 	{
-        logFile << "timeLeft      " << timeLeft << endl;
-        logFile << "  uncertainty      " << uncertainty << endl;
+	    logFile << "Personality tweak parameters..." << endl;
+        logFile << "timeLeft:                  sigma + uncertainty in Pr{win} is  " << timeLeft << endl;
+        logFile << "  uncertainty (remaining convergence of statrank to statmean: " << uncertainty << endl;
         logFile << "  detailPCT.stdDev " << detailPCT.stdDev << endl;
         logFile << "nearEndOfBets         " << nearEndOfBets << endl;
         logFile << "impliedFactor... " << 1 / nearEndOfBets << endl;
+        logFile << endl;
     }
     logFile << "BetToCall " << certainty << ", pct " << left.pct << " ... " << algbModel.ViewShape().pct << " ... " << right.pct << endl;
 
@@ -1012,7 +1019,7 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
         logFile << "\"riskprice\"... " << riskprice << "(" << geom_algb_scaler << ")" << endl;
-        logFile << "When betting " << min_worst_scaler << ", oppFoldChance is first " << statworse.repeated << endl;
+        logFile << "When betting b_min = " << min_worst_scaler << ", oppFoldChance is first " << statworse.repeated << endl;
 
         logFile << "Geom("<< displaybet <<")=" << geomModel.f(displaybet) << endl;
         logFile << "Algb("<< displaybet <<")=" << algbModel.f(displaybet) << endl;
@@ -1028,7 +1035,7 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
         logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(displaybet) << "   d\\" << myDeterredCall.pWinD(displaybet) << endl;
         if( myDeterredCall.pWin(displaybet) > 0 )
         {
-            logFile << "confirm " << choicemodel.f(displaybet) << endl;
+            logFile << "if playstyle is Danger/Conservative, overall utility is " << choicemodel.f(displaybet) << endl;
         }
 
 #endif
