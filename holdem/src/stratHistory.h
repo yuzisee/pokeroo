@@ -1,6 +1,5 @@
-
 /***************************************************************************
- *   Copyright (C) 2006 by Joseph Huang                                    *
+ *   Copyright (C) 2009 by Joseph Huang                                    *
  *                                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
