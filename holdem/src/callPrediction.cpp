@@ -203,7 +203,7 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
 	if( bMyWouldCall )
 	{
 		a.callIncrLoss = 1 - fold_bet/cps.bankroll;
-		a.callIncrBase = (cps.bankroll + cps.pot)/(cps.bankroll - fold_bet);
+		a.callIncrBase = (cps.bankroll + cps.pot)/(cps.bankroll - fold_bet); // = 1 + (pot - fold_bet) / (bankroll - fold_bet);
 	}else
 	{
 		a.callIncrLoss = 0;

@@ -461,12 +461,14 @@ void FacedOddsRaiseGeom::query( const float64 w )
 
 	bool bUseCall = false;
 	const float64 callGain = callIncrLoss * pow(callIncrBase,fw);
-	//Test against call AND fold possibilities
+
+	//We need to compare raising to the opportunity cost of calling/folding
+	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
 	if( callGain > nonRaiseGain )
-	{
+	{   //calling is more profitable than folding
 		nonRaiseGain = callGain;
 		bUseCall = true;
-	}
+	}//else, folding (opportunity cost) is more profitable than calling (expected value)
 
 
     lastF = U - nonRaiseGain;
