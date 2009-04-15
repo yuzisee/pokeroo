@@ -9,8 +9,64 @@
 \label{sec:CompleteAlgorithm}
 
 Once the fundamental situational evaluation functions are established, they can be combined to produce a complete betting algorithm.
-The core ``poker bot'' is implemented through the following code path:
-\begin{itemize}
+The poker bot makes its bet by defining an overall scalar utility function, and performing typical 1-D function optimization to find the global maximum (eg. golden section search with parabolic interpolation, etc.).
+As long as the utility function is sufficiently close to unimodal, the optimal bet amount can always be located efficiently.
+The following sections describe the mathematics and implementation of the overall betting algorithm.
+
+\section{Overall Utility}
+\label{sec:OverallUtility}
+
+
+\subsection{Outcome Expectation}
+
+The overall utility function weights the utility of each possible outcome with the probability of achieving that outcome.
+For example, if $\mathrm{Pr\{push}\}$, and $\mathrm{Pr\{raised}\}$ are known, %$\mathrm{E[callers}_x]$, 
+\[
+U_\mathrm{StateModel} = \left(U_\mathrm{showdown}\right)^{\mathrm{Pr\{call\}}} \cdot \left(U_\mathrm{push}\right)^{\mathrm{Pr\{push}\}} \cdot \prod_\mathrm{raiseAmount} \left(U_\mathrm{raiseAmount}\right)^{\mathrm{Pr\{raiseAmount}\}}
+\]
+Again, the utilities and probabilities are all functions of $b$, the size you choose to bet; and ultimately a 1-D function extremum search takes place across $U\left(b\right)$
+$\mathrm{Pr\{call\}}$ is simply $\left(1 - \mathrm{Pr\{push}\} - \sum \mathrm{Pr\{raised}\}\right)$.
+The $raiseAmount$ variable iterates across an array of possible amounts that opponents could raise to.
+It is too expensive to consider all possible $raiseAmount$ values, so an approximation is employed.
+The range of possible raises is logarithmically quantized and the $U_\mathrm{raiseAmount}$ is precomputed at each of the quantized values.
+The \texttt{StateModel} class implements this final aggregation of outcomes.
+
+\subsection{Geometric vs. Arithmetic Utility}
+
+For small bets, the ideal utility function is based on the geometric mean utility from section~\ref{sec:Utility}.
+For large bets, the arithmetic mean equivalent is preferred.
+The actual utility function is therefore a linear combination of both the geometric and arithmetic utility functions:
+\[
+U_\mathrm{combined}(b) = \left(1 - \frac{b}{riskprice}\right) U_\mathrm{geom}(b) + \left(\frac{b}{riskprice}\right) U_\mathrm{algb}(b)
+\]
+As $b$ increases toward $riskprice$, the weight shifts from $U_\mathrm{geom}(b)$ to $U_\mathrm{algb}(b)$.
+Here $riskprice$ is the maximum possible bet.
+This is either the total number of chips that the poker bot currently has, or the smallest bet size for which the opponents' FoldGain is \emph{always} positive.
+
+\subsection{Worst Case Win Percentage}
+
+For small bets, $Pr\{push\}$ will tend to be low, and based on the histogram of possible opponents, $\mathrm{Pr\{win\}}$ and $\mathrm{Pr\{best\}}$ will be relatively accurate.
+%the probabilty of winning the showdown (Section~\ref{sec:Mean}) as well as the probability of having the best hand (Section~\ref{sec:Rank}) will be relatively accurate.
+For large bets where $Pr\{push\}$ is higher, most opponents will choose to fold, and only the $1 - Pr\{push\}$ best opponents are likely to continue playing.
+In the extreme case, $Pr\{push\} \rightarrow 1$ and only the best few hands will even consider playing.
+When this happens, $\mathrm{Pr\{win\}}$ should approach the worst case win percentage: the chance of winning against the strongest opposing hand.
+
+Unfortunately, recomputing $\mathrm{Pr\{win\}}$ for every $Pr\{push\}$ is computationally expensive.
+Therefore, we apply the same linear combination strategy as used to balance the geometric vs. arithmetic utility.
+Two separate utility functions are created: one with the standard $\mathrm{Pr\{win\}}$, and one with the worst case $\mathrm{Pr\{win\}}$ (denoted with the subscript ``fear'').
+These two utility functions are then dynamically weighted in a linear combination based on the bet size $b$:
+\[
+U_\mathrm{combined}(b) = \left(1 - \frac{b - b_\mathrm{min}}{riskprice - b_\mathrm{min}}\right) U_\mathrm{main}(b) + \left(\frac{b - b_\mathrm{min}}{riskprice - b_\mathrm{min}}\right) U_\mathrm{fear}(b)
+\]
+Here, $b_\mathrm{min}$ is the largest bet where $Pr\{push\}$ is still zero.
+If $b < b_\mathrm{min}$, only $U_\mathrm{main}(b)$ is used.
+
+\section{Implementation}
+\label{sec:CompleteImplementation}
+
+
+The core poker bot betting algorithm is implemented within the following code path:
+\begin{enumerate}
 \singlespacing
 \item \texttt{PositionalStrategy::StoreDealtHand(const CommunityPlus \& o)}
 
@@ -27,8 +83,9 @@ Furthermore, a bot may need to bet multiple times in a betting round, but since 
 \item \texttt{ImproveGainStrategy::MakeBet()} and \texttt{float64 DeterredGainStrategy::MakeBet()}
 
 Calling the \texttt{MakeBet()} function initiates the poker bot's search for the optimal bet in the current situation.
-When the function completes, it returns the optimal bet size as determined by the poker bot.
+The bot applies for the bet size that leads to the optimum overall utility.
+The function returns the optimal bet size as determined by the poker bot upon completion.
+\end{enumerate}
 
-\end{itemize}
 
 \clearpage

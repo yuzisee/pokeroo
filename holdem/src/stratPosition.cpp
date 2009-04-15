@@ -121,15 +121,21 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
     //if(bLogWorse)
     {
+        ///Compute CallStats
         StatsManager::QueryDefense(foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
         foldcumu.ReversePerspective();
     }
     //else{
 
     //}
+
+    ///Compute CommunityCallStats
     ViewTable().CachedQueryOffense(callcumu,onlyCommunity, withCommunity);
     //StatsManager::QueryOffense(callcumu,withCommunity,onlyCommunity,cardsInCommunity );
+
+    ///Compute WinStats
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
+
     statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
     statworse = foldcumu.oddsAgainstBestTwoHands(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
     //CallStats is foldcumu

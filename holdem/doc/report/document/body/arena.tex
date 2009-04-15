@@ -102,6 +102,9 @@ In all cases, information from \texttt{WinStats} never overpowers the fundamenta
 
 \section{Value of Hole Cards}
 
+%This section describes the definitions of $\mathrm{Pr\{win\}}$ and $\mathrm{Pr\{best\}}$ in more detail.
+
+
 \subsection{Showdown Win Percentage}
 \label{sec:Mean}
 The mean of \texttt{WinStats} or the expectation of \texttt{CallStats} both provide $\mathrm{Pr\{win\}}$, the average chance of winning in a showdown against one opponent.
@@ -111,7 +114,7 @@ As mentioned in Section~\ref{sec:Approximations}, this measurement is extended t
 \]
 
 
-\subsection{Best Hand}
+\subsection{Best Hand Percentage}
 \label{sec:Rank}
 Once $\mathrm{Pr\{win\}}$ is known, \texttt{CommunityCallStats} can be used to calculate the probability of having a hand with a better chance of winning than $\mathrm{Pr\{win\}}$.
 This is the hand's ``rank'' and represents the probability ($\mathrm{Pr\{best\}}$) of having the better hand against one opponent.
@@ -120,7 +123,10 @@ $\mathrm{Pr\{best\}}$ is then extended to multiple opponents in the same way as 
 
 \section{Expected Utility}
 
-\subsection{Bet Utility}
+This section describes the relationships that define $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$.
+The \texttt{ExactCallBluffD} class implements the general computation of $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$.
+
+\subsection{Showdown Utility}
 \label{sec:Utility}
 
 In order to compute $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$, it is necessary to define a notion of utility.
@@ -146,17 +152,17 @@ U = \left( \left( 1 + v_\mathrm{win} \left( f \right) \right) \cdot N_w + \left(
 When facing a large bet $b$, you always have the option to either fold or play.
 Often, it is more favourable to wait until the same opportunity arises again in the future, especially if it is likely for you to have better cards then.
 Across $n$ situations facing the same bet, in your best opportunity to win out of those $n$ situation, you are likely have on average one of the $\frac{1}{n}^\mathrm{th}$ best hands.
-From the rank ($\frac{1}{n}^\mathrm{th}$) of the hand and \texttt{CommunityCallStats}, its corresponding probability of winning ($p_delayed(n)$, a function of $n$) can be obtained.
-By waiting one hand (waiting until the same opportunity arises again) before playing, you will sacrifice whatever chips you have already committed to the pot in previous bets leading up to this one: $C_committed$.
-By waiting $n$ opportunities before playing, you will sacrifice $n C_committed$.
-However, you will improve your probability of winning to $p_delayed(n)$.
-Therefore, it is possible to win a total pot of $b-n C_committed$ with probability $p_delayed(n)$, by folding now and expecting to wait an average of $n$ hands before calling.
+From the rank ($\frac{1}{n}^\mathrm{th}$) of the hand and \texttt{CommunityCallStats}, its corresponding probability of winning ($p_{delayed}(n)$, a function of $n$) can be obtained.
+By waiting one hand (waiting until the same opportunity arises again) before playing, you will sacrifice whatever chips you have already committed to the pot in previous bets leading up to this one: $C_{committed}$.
+By waiting $n$ opportunities before playing, you will sacrifice $n C_{committed}$.
+However, you will improve your probability of winning to $p_{delayed}(n)$.
+Therefore, it is possible to win a total pot of $b-n C_{committed}$ with probability $p_{delayed}(n)$, by folding now and expecting to wait an average of $n$ hands before calling.
 For sufficiently large $b$ and a suitable \texttt{CommunityCallStats} histogram, it is advantageous to call from a better situation by folding now.
 
 If \texttt{CommunityCallStats} is differentiable, for any given situation and bet faced, it is possible to solve for the optimal $n$ that maximizes the final expected utility.
 Any money still lost in the maximum expected utility is the opportunity cost of folding, which in most cases is better than the cost of playing with a weak hand.
 
-The computation of $n$ that optimizes the expectation of winning $b-n C_committed$ with probability $p_delayed(n)$ can be achieved through any variety of unimodal function optimization techniques.
+The computation of $n$ that optimizes the expectation of winning $b-n C_{committed}$ with probability $p_{delayed}(n)$ can be achieved through any variety of unimodal function optimization techniques.
 The expectation of the potential profit to be gained by folding against a bet that is too large is stored as the ``FoldGain'' of a situation.
 
 \subsubsection{RiskLoss}
@@ -164,7 +170,7 @@ The expectation of the potential profit to be gained by folding against a bet th
 The ``opportunity cost of folding'' formula can also be applied in reverse, in a sort of ``opportunity cost of raising'' heuristic.
 The reverse application of the formula is implemented in a function called ``RiskLoss''.
 This ``RiskLoss'' heuristic reports a loss (negative value) if your bet is large enough for the average opponent to profit (opportunity) by folding and waiting for a better hand.
-%RiskLoss is computed by setting $C_committed$ to the average contribution to the pot by active players
+%RiskLoss is computed by setting $C_{committed}$ to the average contribution to the pot by active players
 Since making a small bet does not allow an average opponent to profit due to opportunity cost of folding, your ``RiskLoss'' remains zero as long as your bet is sufficiently small compared to an average opponent's opportunity.
 The value returned by the RiskLoss function is used as a deterrent for raising too high.
 
@@ -218,22 +224,24 @@ The utility of an opponent's hand is a function of $w$, the percentage chance of
 For raises, we apply the geometric mean model to the opponent's utility, $U(w,b)$.
 The resulting inequality describes the condition required for an opponent to raise:
 \[
-\mathrm{Utility of raising} + RiskLoss > max{\mathrm{Utility of calling}, FoldGain}
+\mathrm{Utility of raising} + RiskLoss > max\{\mathrm{Utility of calling}, FoldGain\}
 \]
 \[
-U(w,b_raiseTo) + RiskLoss - max{U(w,b_call), FoldGain} > 0
+U(w,b_\mathrm{raiseTo}) + RiskLoss - max\{U(w,b_\mathrm{call}), FoldGain\} > 0
 \]
 The left hand side of the inequality is implemented in the ``FacedOddsRaiseGeom'' class, and is a function of $w$.
 Let $w_r$ be the value at $w$ at the boundary of the inequality (ie. the value that causes the left hand side of the equation to be zero).
 This way, $w_r$ represents the chance to win that an opponent would desire in order to choose to raise.
-Then, \texttt{CommunityCallStats} can be used to look up the fraction of opponents that are likely to have a hand that good or better, which in turn, is the probability that a single opponent will have a hand good enough to raise you to $b_raise$.
-For any given $b_raise$, the $w_r$ and therefore the probability of raising ($\mathrm{Pr\{raise\}}$) for a single opponent can be computed.
+The value of $w_r$ can be computed using any standard 1-D root finding technique.
+Then, \texttt{CommunityCallStats} can be used to look up the fraction of opponents that are likely to have a hand that good or better, which in turn, is the probability that a single opponent will have a hand good enough to raise you to $b_\mathrm{raise}$.
+For any given $b_\mathrm{raise}$, the $w_r$ and therefore the probability of raising ($\mathrm{Pr\{raise\}}$) for a single opponent can be computed.
 Extending to multiple opponents:
 \[
-\mathrm{Pr\{raised by any opponent\}} = 1 - \prod_\mathrm{opponents} \left( 1 - \mathrm{Pr\{raise\}} \right)
+\mathrm{Pr\{anyOpponentRaise\}} = 1 - \prod_\mathrm{opponents} \left( 1 - \mathrm{Pr\{raise\}} \right)
 \]
 
-In general, we will omit RiskLoss from the inequality if $max{U(w,b_call), FoldGain} = U(w,b_call)$, that is, we do not consider RiskLoss when the utility of calling is more significant than FoldGain.
+
+In general, we will omit RiskLoss from the inequality if $max\{U(w,b_call), FoldGain\} = U(w,b_call)$, that is, we do not consider RiskLoss when the utility of calling is more significant than FoldGain.
 The reason for this is because RiskLoss is meant to act as a deterrent for raising too high.
 When any player wins money by raising in a situation where folding is safer than calling, it is generally because that player will force everybody else to fold -- not because the player had good cards.
 The bet most likely to force everybody else to fold is the largest possible bet.
@@ -242,4 +250,4 @@ Instead, when a player has good cards, the utility of calling is higher than the
 Then, the decision of whether to call or raise is simply about adding more money to the showdown or not, and the RiskLoss deterrent isn't needed.
 Furthermore, ``FacedOddsRaiseGeom'' currently does not explicitly consider the expected utility due to the possibility of everybody else folding, and the removal of RiskLoss plays that role somewhat in the comparison between the utility of raising vs. calling.
 
-\clearpage
+%\clearpage
