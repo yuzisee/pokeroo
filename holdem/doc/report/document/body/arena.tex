@@ -35,6 +35,9 @@ The following sections will first explore each of these histograms, and then loo
 
 \section{Histograms}
 
+This section will explore the properties of the \texttt{CallStats}, \texttt{CommunityCallStats}, and \texttt{WinStats} histograms in more detail.
+The \texttt{StatsManager} class implements the generation and caching of these histograms.
+
 \subsection{CallStats Histogram}
 \label{sec:CallStats}
 
@@ -75,6 +78,11 @@ $\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge \mathrm{Your Pr\{win\}}\}$ is the probabili
 Note that this is different than the probability of someone having a better hand \emph{against} your hand (that, is determined by \texttt{CallStats}).
 Secondly, the \texttt{CommunityCallStats} cumulative histogram is the starting point for estimating how the opponent should behave if he/she has no information about your cards.
 \texttt{CommunityCallStats} represents the average $\mathrm{Pr\{win\}}$ of a given hand against all other hands.
+
+%Finally, since \texttt{CommunityCallStats} is almost completely independent of which hole cards a player holds, 
+Finally, a single master \texttt{CommunityCallStats} can be generated as soon as the community cards are known, and the results can be efficiently shared between multiple poker bots running in the same process.
+This is not the case for \texttt{CallStats} or \texttt{WinStats}.
+The master \texttt{CommunityCallStats} for the current community are accessible through \texttt{HoldemArena::communityBuffer}.
 
 
 \subsection{WinStats Histogram}

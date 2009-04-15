@@ -1,0 +1,34 @@
+
+\clearpage
+
+%\cite{eulerAngles2008}
+
+
+
+\chapter{Complete Algorithm}
+\label{sec:CompleteAlgorithm}
+
+Once the fundamental situational evaluation functions are established, they can be combined to produce a complete betting algorithm.
+The core ``poker bot'' is implemented through the following code path:
+\begin{itemize}
+\singlespacing
+\item \texttt{PositionalStrategy::StoreDealtHand(const CommunityPlus \& o)}
+
+Calling this method assigns a new hand to a bot/player.
+Bots will later call \texttt{ViewDealtHand()} to access their current hand.
+
+\item \texttt{PositionalStrategy::SeeCommunity(const Hand\& h, const int8 cardsInCommunity)}
+
+Calling this method informs the bot that the next betting round is about to begin.
+It will now have all the information that it needs in order to begin histogram generation.
+Histogram generation requires a significant portion of runtime; by generating the histograms ahead of time, less computation will required when the bot's turn to bet begins.
+Furthermore, a bot may need to bet multiple times in a betting round, but since the community cards won't change in the middle of a betting round, there is no need to recompute any of the histograms until the next betting round is about to begin.
+
+\item \texttt{ImproveGainStrategy::MakeBet()} and \texttt{float64 DeterredGainStrategy::MakeBet()}
+
+Calling the \texttt{MakeBet()} function initiates the poker bot's search for the optimal bet in the current situation.
+When the function completes, it returns the optimal bet size as determined by the poker bot.
+
+\end{itemize}
+
+\clearpage
