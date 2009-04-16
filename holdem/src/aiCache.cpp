@@ -409,8 +409,15 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
     myStatBuilder.UndealAll();
     myStatBuilder.OmitSet(onlyCommunity, withCommunity);
 
+    #ifdef PROGRESSUPDATE
+    const float handsTotal =
+    #endif
     myStatBuilder.AnalyzeComplete(&ds);
     const CallCumulation &newC = *(ds.calc);
+
+    #ifdef PROGRESSUPDATE
+    std::cout << endl << "Efficiency: " << ds.handsComputed << " of " << handsTotal << endl;
+    #endif
 
     if( "" != datafilename )
     {

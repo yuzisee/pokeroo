@@ -127,6 +127,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     }
     //else{
 
+
     //}
 
     ///Compute CommunityCallStats
@@ -144,6 +145,32 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     logFile << "*" << endl;
     #endif
 
+
+
+#ifdef DUMP_CSV_PLOTS
+    std::ofstream excel(StatsManager::dbFileName(withCommunity, onlyCommunity, "CALLSTATS.csv").c_str()
+            , std::ios::out
+            );
+
+    if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
+
+            foldcumu.dump_csv_plots(excel,foldcumu);
+
+
+    excel.close();
+
+    excel.open(StatsManager::dbFileName(withCommunity, onlyCommunity, "CALLCOMMUNITYSTATS.csv").c_str()
+            , std::ios::out
+            );
+
+    if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
+
+            callcumu.dump_csv_plots(excel,foldcumu);
+
+
+    excel.close();
+
+    #endif
 
 
 

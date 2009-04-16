@@ -79,8 +79,6 @@ private:
 
     static void initPath();
 
-    static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity, const string label);
-
     static void serializeDistrShape(ofstream& dataf, const DistrShape& d);
     static void serializeStatResult(ofstream& dataf, const StatResult& d);
     static bool unserializeDistrShape(ifstream& dataf, DistrShape* d);
@@ -94,6 +92,8 @@ protected:
     static string baseDataPath;
 
 public:
+
+    static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity, const string label);
 
     static void Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     static void QueryDefense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);

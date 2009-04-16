@@ -90,6 +90,11 @@ class PlayStats
 		virtual void DropCard(const DeckLocation) = 0;
         virtual ~PlayStats();
 
+
+		#ifdef PROGRESSUPDATE
+		float64 handsComputed;
+		#endif
+
 }
 ;
 
@@ -129,7 +134,11 @@ public:
 	}
 	~CallStats();
 
-
+/*
+    #ifdef DUMP_CSV_PLOTS
+    void dump_csv_plot(const char * dump_filename);
+    #endif
+*/
 }
 ;
 

@@ -749,6 +749,17 @@ int main(int argc, char* argv[])
                     #endif
                     exit(0);
                     break;
+                case 'c':
+                    CallCumulationD foldcumu;
+                    CommunityPlus onlyCommunity;
+                    CommunityPlus withCommunity;
+                    DeckLocation tempOpp;
+                    tempOpp.SetByIndex(34);withCommunity.AddToHand(tempOpp);
+                    tempOpp.SetByIndex(33);withCommunity.AddToHand(tempOpp);
+                    withCommunity.DisplayHand(std::cout);
+                    StatsManager::QueryDefense(foldcumu,withCommunity,onlyCommunity,0);
+                    exit(0);
+                    break;
             }
         }
         ++n;

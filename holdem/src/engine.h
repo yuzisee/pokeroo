@@ -193,6 +193,7 @@ class DealRemainder : public virtual DealableOrderedDeck
 
 
 		virtual ~DealRemainder();
+
 }
 ;
 

@@ -27,13 +27,9 @@
 
 #define DEFAULT_TIE_SCALE_FACTOR 0.5
 
-//#define DEBUGLOGINFERENTIALS
-    #ifdef DEBUGLOGINFERENTIALS
+    #ifdef DUMP_CSV_PLOTS
         #include <iostream>
     #endif
-//#define DEBUG_DEXF
-//#include <iostream>
-
 
 
 #undef MODEL_REACTION
@@ -218,8 +214,8 @@ public:
 	virtual StatResult oddsAgainstBestHand() const;
 	virtual StatResult oddsAgainstBestTwoHands() const;
 
-	#ifdef DEBUGLOGINFERENTIALS
-        static void displayCallCumulation(std::ostream &targetoutput, const CallCumulation& calc)
+	#ifdef DUMP_CSV_PLOTS
+        static void dump_csv_plots(std::ostream &targetoutput, const CallCumulation& calc)
         {
             targetoutput << std::endl << "=============Reduced=============" << std::endl;
             targetoutput.precision(4);
@@ -249,8 +245,9 @@ public:
 	virtual float64 Pr_haveWinPCT_orbetter_continuous(const float64 w_toHave, float64 *out_d_dw = 0) const;
 	virtual float64 inverseD(const float64, const float64 mean);
 
-        #ifdef DEBUG_DEXF
-            void breakdown(float64 points, std::ostream& target)
+/*
+        #ifdef DUMP_CSV_PLOTS
+            void dump_csv_plots(float64 points, std::ostream& target)
             {
 
 
@@ -261,13 +258,16 @@ public:
                     float64 exf = pctWillCall(midpoint);
                     float64 dexf = pctWillCallD(midpoint);
                     float64 mandexf = slopeof(elementNum-1,elementNum);
-                    target << midpoint << "," << exf << "," << dexf << "," << mandexf <</* "," << exf << "," << dexf <<*/ std::endl;
+                    target << midpoint << "," << exf << "," << dexf << "," << mandexf <<// "," << exf << "," << dexf <<
+                     std::endl;
 
                 }
 
 
             }
         #endif
+*/
+
 }
 ;
 
@@ -336,8 +336,8 @@ public:
 
     const DistrShape & operator=(const DistrShape& o);
 
-    #ifdef DEBUGLOGINFERENTIALS
-        static void displayDistr(std::ostream& targetoutput, const DistrShape& myDistrPCT)
+    #ifdef DUMP_CSV_PLOTS
+        static void dump_csv_plots(std::ostream& targetoutput, const DistrShape& myDistrPCT)
         {
 
             //targetoutput << "myAvg.genPCT " << myWins.pct << "!"  << endl;

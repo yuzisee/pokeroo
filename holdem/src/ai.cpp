@@ -28,6 +28,15 @@
 using std::endl;
 using std::sort;
 
+/*
+#ifdef DUMP_CSV_PLOTS
+void CallStats::dump_csv_plot(const char * dump_filename)
+{
+
+}
+#endif
+*/
+
 void PlayStats::Compare(const float64 occ)
 {
 

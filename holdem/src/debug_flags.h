@@ -37,6 +37,7 @@
 #undef DEBUG_GAIN
 
 #define GRAPHMONEY "chipcount.csv.txt"
+#define DUMP_CSV_PLOTS
 
 /* Savegame debugging */
 #undef DEBUG_SINGLE_HAND
