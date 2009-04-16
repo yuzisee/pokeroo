@@ -4,5 +4,141 @@
 \chapter{Concluding Summary}
 \label{sec:Summary}
 
-When deciding on an act
+Ring Games -- EU
 
+f: bet fraction
+
+v: payoff function (At it{\textquotesingle}s core: vwin = num\_callers {\texttimes} f, but this becomes more complex later) 
+
+Earn $\left((1+v_{\mathit{win}}\left(f\right))^{\mathit{wins}}(1-v_{\mathit{loss}}\left(f\right))^{\mathit{losses}}\right)\cdot B$ after (wins+losses+ties = n) games.
+
+
+\bigskip
+
+
+\bigskip
+
+After including splits,  $U_{\mathit{showdown}}\left(f\right)=\prod _{e\;\in \;\mathit{outcomes}}\left((1+v_{e}\left(f\right))^{\mathit{Pr}_{e}\left(f\right)}\right)$ 
+
+(We can ignore B because it is constant of f)
+
+e can be: win, lose, split with 1, split with 2, split with 3, etc.
+
+Notice that Pre is a function of f, see {\textquotedblleft}Actions{\textquotedblright}
+
+
+\bigskip
+
+We assume approximate derivative monotonicity over f, and search for maximum expected utility (Quadratic optimization, Newton{\textquotesingle}s method, etc.)
+
+
+\bigskip
+
+As f approaches 1, we can also evaluate ICM or approximate it with linear utility.
+
+
+\bigskip
+
+No Limit -- EU
+
+An opponent may fold, call, or (re)raise, depending on his/her current hand H.
+
+\begin{equation*}
+U_{\mathit{bet}}\left(f_{\mathit{bet}}\right)=\left(U_{\mathit{fold}}\right)^{\mathit{Pr}_{\mathit{fold}}\left(f_{\mathit{bet}}\right)}\left(U_{\mathit{showdown}}\left(f_{\mathit{bet}}\right)\right)^{\mathit{Pr}_{\mathit{call}}\left(f_{\mathit{bet}}\right)}\prod _{f_{\mathit{raised}}}\left(U_{\mathit{showdown}}\left(f_{\mathit{bet}}+f_{\mathit{raised}}\right)\right)^{\mathit{Pr}_{\mathit{raise}}\left(f_{\mathit{bet}},f_{\mathit{raise}}\right)}
+\end{equation*}
+The opponent is more likely to fold weak hands to large bets: eg. Prwin(f) decreases with f, however, Ufold {\textgreater} 1 and Prfold(f) increases, which should produce a distinct optimum.
+
+Prcall = 1 -- Prraise -- Prfold
+
+Then, Prraise and Prfold can be looked up from the distributions below:
+
+num\_callers in Ushowdown can also be derived from Prfold.
+
+
+\bigskip
+
+Distributions
+
+We can find  $\mathit{Pr}_{\text{*}}\left(f_{\mathit{bet}}\right)$ (resp. $U_{\mathit{bet}}\left(f_{\mathit{bet}}\right)$) by iterating over  $\mathit{Pr}_{\text{*}}\left(f_{\mathit{bet}}|H\right)$ (resp.  $U_{\mathit{bet}}\left(f_{\mathit{bet}}|H\right)$) 
+
+Possible distributions that can be used to define  $\mathit{Pr}_{\text{*}}\left(f_{\mathit{bet}}|H\right)$ are:
+
+1. Assume the opponent knows your hand, what is their Prwin for each hand they could have?
+
+2. Assume the opponent does not know your hand, what is the Prwin for each hand?
+
+3. Order the hands in \#2 to provide a dimensionless rank ranging from 0 to 1; i.e. How many hands have a higher Prwin than your opponent?
+
+
+\bigskip
+
+Multiple opponents
+
+We can approximate multiple-opponent probabilities initially.
+
+\begin{equation*}
+\mathit{Pr}_{\text{win all}}=\prod _{\mathit{opponents}}\mathit{Pr}_{\text{win single}}
+\end{equation*}
+\begin{equation*}
+\mathit{Pr}_{\text{all fold}}=\prod _{\mathit{opponents}}\mathit{Pr}_{\text{single fold}}
+\end{equation*}
+\begin{equation*}
+\mathit{Pr}_{\text{reraised}}=1-\prod _{\mathit{opponents}}\left(1-\mathit{Pr}_{\text{reraised single}}\right)
+\end{equation*}
+etc.
+
+
+\bigskip
+
+Fold Equity
+
+Bots know they are bots, so we account for the fact that make the same decision in the same circumstances, indefinitely.
+
+
+\bigskip
+
+Say, p\% chance to win is the best hand in n hands. That means, \  $\frac{1}{1-p}=n$
+
+If you fold, you are expecting to improve your odds and win the bet made over n hands.
+
+In n identical chances, the best chance to win will be $p=1-\frac{1}{n}$
+
+This means, if you allow yourself to wait n hands in a table of N opponents, you will win $\mathit{Pr}_{\text{win all}}=p^{N}=\left(1-\frac{1}{n}\right)^{N}$ of the time.
+
+So if faced with a bet, and you choose to fold against a bet of b, you are saying
+
+\begin{equation*}
+U_{\text{fold equity}}=-{\frac{n}{\mathit{freq}}}C+\mathit{Pr}_{\mathit{win}}b-\mathit{Pr}_{\mathit{lose}}b
+\end{equation*}
+(Assuming you are pot committed C chips, in this situation, with frequency freq)
+
+
+\bigskip
+
+Opponent Fold Equity
+
+The opponent{\textquotesingle}s chance of folding also affects their chance of winning the showdown. As your  $\mathit{Pr}_{\text{single fold}}$ increases against an opponent, your $\mathit{Pr}_{\text{win single}}$ also decreases simultaneously. An opponent that is likely to fold a bad hand will have a distribution of stronger hands when reaching the showdown. This balance between  $\mathit{Pr}_{\text{single fold}}$ and  $\mathit{Pr}_{\text{win single}}$ allows the bot to model the tradeoff between overbets vs. calculated bluffs.
+
+
+\bigskip
+
+Community Statistics
+
+How your Prwin is affected by possible future community cards can also be measured. A heuristic for implied odds can be obtained from the skew of \ Prwin over all possible future community card combinations. A heuristic for opponent confidence can be obtained from the variance of \ Prwin over all possible future community card combinations. Community statistics can be used to develop {\textquotedblleft}playing styles{\textquotedblright} which can be dynamically selected throughout a match.
+
+\chapter{Future Recommendations}
+\label{sec:FutureDirection}
+
+Areas for future development that have begun include:
+\begin{itemize}
+\singlespace
+\item Expose public API for use in higher level languages
+\item Create `playing-styles' or `personalities' for bots
+\item Track opponent `playing-styles' or `personalities'
+\end{itemize}
+
+ modularizing the code base and exposing public APIs for access in higher level languages such as Python's extension framework, or Java's JNI.
+
+ that may be more or less effective against specific types of players. University of Alberta currently employs this tactic in their leading poker AIs~\cite{PolarisCoached2007}
+ 
+ 

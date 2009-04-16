@@ -32,7 +32,7 @@
 #ifndef NO_LOG_FILES
 /* Mode Flags (Depends on NO_LOG_FILES) */
 #define LOGPOSITION
-#define WINRELEASE
+#undef WINRELEASE
 /**********************************/
 #undef DEBUG_GAIN
 
