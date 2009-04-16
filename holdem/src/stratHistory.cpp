@@ -199,7 +199,14 @@ void HistoryStrategy::init(PositionalStrategy** ps, uint8 n)
 
 void HistoryStrategy::FinishHand()
 {
-    strats[picks[currentStrategy].id]->ReleaseLogFile();
+
+	//Just after loading a game, a player that is not active may still have money == 0, and will have FinishHand invoked even though they weren't in the hand.
+	//In case of this, we only call ReleaseLogFile when the currentStrategy is valid.
+	if(currentStrategy >= 0){
+		strats[picks[currentStrategy].id]->ReleaseLogFile();
+	}
+
+    
 }
 
 void HistoryStrategy::SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph )
