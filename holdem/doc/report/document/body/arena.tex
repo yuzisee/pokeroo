@@ -18,7 +18,7 @@ The combination of all of the following factors is a player's betting situation:
 \item $\mathrm{Pr\{push}_x\}$: Probability of causing all opponents to fold after betting $x$ chips
 \item $\mathrm{Pr\{raised}_y\}$: Probability of being raised by an opponent, to $y$ chips
 \end{itemize}
-Also considered is the probability of improving the betting situation for the next betting round, as well as best-case and worst-case $Pr_\mathrm{win}$ estimates.
+Also considered is the probability of improving the betting situation for the next betting round, as well as best-case and worst-case $Pr_{\mathrm{win}}$ estimates.
 
 The estimation of each of the above four values is accomplished using three histograms.
 \begin{itemize}
@@ -48,11 +48,11 @@ Each community card combination completes a seven-card hand for both the player 
 The seven-card hands are compared to determine the winner, and the results for each hole card combination are accumulated to generate $\mathrm{Pr\{win\}}$ against each opposing pair of hole cards.
 
 \texttt{CallStats} is the histogram of the set of $\mathrm{Pr\{win\}}$ values corresponding to each possible opposing hole card pair.
-Assuming a uniform distribution of opposing hands, the corresponding cumulative histogram provides $\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge x|\mathrm{Your hole cards}\}$, the probability of your opponent's hand being weaker than $x$\% chance to win against your hand.
+Assuming a uniform distribution of opposing hands, the corresponding cumulative histogram provides $\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge x|\mathrm{Your\:hole\:cards}\}$, the probability of your opponent's hand being weaker than $x$\% chance to win against your hand.
 Its distribution depends on the possible hole cards that your opponent could have, and how they perform against your hand.
 
 This cumulative histogram is the starting point for estimating how the opponent should behave if he/she knows which cards you have.
-Eg. if the opponent has a high probability of having a strong hand versus yours, he/she should call or raise rather than fold.
+E.g. if the opponent has a high probability of having a strong hand versus yours, he/she should call or raise rather than fold.
 
 
 \subsection{CommunityCallStats Histogram}
@@ -74,7 +74,7 @@ Its distribution depends on the existing community cards already available.
 
 This cumulative histogram is useful for various reasons.
 Firstly, if your own $\mathrm{Pr\{win\}}$ is known, \texttt{CommunityCallStats} acts as a measure of rank.
-$\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge \mathrm{Your Pr\{win\}}\}$ is the probability of someone having a better hand than your hand.
+$\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge \mathrm{Your\:Pr\{win\}}\}$ is the probability of someone having a better hand than your hand.
 Note that this is different than the probability of someone having a better hand \emph{against} your hand (that, is determined by \texttt{CallStats}).
 Secondly, the \texttt{CommunityCallStats} cumulative histogram is the starting point for estimating how the opponent should behave if he/she has no information about your cards.
 \texttt{CommunityCallStats} represents the average $\mathrm{Pr\{win\}}$ of a given hand against all other hands.
@@ -88,13 +88,13 @@ The master \texttt{CommunityCallStats} for the current community are accessible 
 \subsection{WinStats Histogram}
 \label{sec:WinStats}
 
-The \texttt{WinStats} histogram provdes a sense how a set of community cards ``feels'' to a poker player.
+The \texttt{WinStats} histogram provides a sense how a set of community cards ``feels'' to a poker player.
 To compute \texttt{WinStats}, iterate over all possible immediately upcoming community cards.
 Here, immediate means the cards that can be dealt before the next betting round takes place.
 For each possible combination of upcoming community cards, calculate how the player's average $\mathrm{Pr\{win\}}$ changes.
 
 Most often, measures of spread and skew of $\mathrm{Pr\{win\}}$ across the various upcoming community cards create a quantitative description of ``bluffing hands'' and ``drawing hands''.
-If the spread/variance of $\mathrm{Pr\{win\}}$ across all possible cominbations of upcoming community cards is high, a player's position is relatively uncertain, and it may be safer to try to win the hand by bluffing than to work the game into a showdown.
+If the spread/variance of $\mathrm{Pr\{win\}}$ across all possible combinations of upcoming community cards is high, a player's position is relatively uncertain, and it may be safer to try to win the hand by bluffing than to work the game into a showdown.
 If there are more upcoming community card combinations that worsen $\mathrm{Pr\{win\}}$ than improve it, the player should try to keep the betting low wait to see if he/she will ``catch'' any of the few cards that will greatly improve his/her hand.
 \texttt{WinStats} data is used more heuristically, whereas \texttt{CallStats} and \texttt{CommunityCallStats} are used more for purely probabilistic calculations.
 In all cases, information from \texttt{WinStats} never overpowers the fundamental mathematics of making good poker decisions, but is used to add distinct ``personalities'' and ``playing styles'', each of which may be best suited to countering specific opponents.
@@ -110,7 +110,7 @@ In all cases, information from \texttt{WinStats} never overpowers the fundamenta
 The mean of \texttt{WinStats} or the expectation of \texttt{CallStats} both provide $\mathrm{Pr\{win\}}$, the average chance of winning in a showdown against one opponent.
 As mentioned in Section~\ref{sec:Approximations}, this measurement is extended to the $N$ opponent case by with the following approximations:
 \[
-\mathrm{Pr\{win all\}} = \prod_\mathrm{opponents} \mathrm{Pr\{win one\}} \approx \left( \mathrm{Pr\{win one\}} \right)^N
+\mathrm{Pr\{win all\}} = \prod_{\mathrm{opponents}} \mathrm{Pr\{win one\}} \approx \left( \mathrm{Pr\{win one\}} \right)^N
 \]
 
 
@@ -137,19 +137,19 @@ If the outcome of betting a specific fraction of your bankroll on a certain scen
 If it is difficult or impossible to make the bet a large number of times, an arithmetic mean (or independent chip model~\cite{ICMmag2007} when the payout structure of a tournament is known) is more suitable.
 For small bet of size $f$ that would occur many times throughout the course of a game, the total utility of making $N$ bets is:
 \[
-U = \left( \left( 1 + v_\mathrm{win} \left( f \right) \right)^N_w \left( 1 - v_\mathrm{loss} \left( f \right) \right)^N_l \right) \cdot B
+U = \left( \left( 1 + v_{\mathrm{win}} \left( f \right) \right)^N_w \left( 1 - v_{\mathrm{loss}} \left( f \right) \right)^N_l \right) \cdot B
 \]
-Here, the bet size $f$ is a fraction of the bankroll $B$, $N_w$ is the number of wins that occured during the $N$ bets, and similarly $N_l$ is the number of losses.
-$N = N_w + N_l$, $v_\mathrm{win} \left( f \right)$ is the payoff for winning the bet, and $v_\mathrm{loss} \left( f \right)$ is the price of making the bet (functions of the bet fraction $f$).
+Here, the bet size $f$ is a fraction of the bankroll $B$, $N_w$ is the number of wins that occurred during the $N$ bets, and similarly $N_l$ is the number of losses.
+$N = N_w + N_l$, $v_{\mathrm{win}} \left( f \right)$ is the payoff for winning the bet, and $v_{\mathrm{loss}} \left( f \right)$ is the price of making the bet (functions of the bet fraction $f$).
 As $N \to \infty$, the incremental gain of each bet is simply the geometric mean of outcomes weighted by their probabilities, and extends easily to include the various split-pot situations, etc.
 The complete showdown gain model 
 
 For large bets such as all-in calls that cannot be approximated using $N \to \infty$, a suitable short-term expectation of utility is the arithmetic mean equivalent:
 \[
-U = \left( \left( 1 + v_\mathrm{win} \left( f \right) \right) \cdot N_w + \left( 1 - v_\mathrm{loss} \left( f \right) \right) \cdot N_l \right) \cdot B
+U = \left( \left( 1 + v_{\mathrm{win}} \left( f \right) \right) \cdot N_w + \left( 1 - v_{\mathrm{loss}} \left( f \right) \right) \cdot N_l \right) \cdot B
 \]
 
-In all cases, $v_\mathrm{win} \left( f \right)$ is also a function of $\mathrm{E[callers}_x]$.
+In all cases, $v_{\mathrm{win}} \left( f \right)$ is also a function of $\mathrm{E[callers}_x]$.
 The computation of showdown utilities is implemented in the \texttt{GainModel} class for the geometric mean case, and the \texttt{GainModelNoRisk} derived class for the algebraic mean case.
 
 
@@ -163,18 +163,18 @@ The reverse perspective of this is the opportunity cost of folding.
 
 When facing a large bet $b$, you always have the option to either fold or play.
 Often, it is more favourable to wait until the same opportunity arises again in the future, especially if it is likely for you to have better cards then.
-Across $n$ situations facing the same bet, in your best opportunity to win out of those $n$ situation, you are likely have on average one of the $\frac{1}{n}^\mathrm{th}$ best hands.
-From the rank ($\frac{1}{n}^\mathrm{th}$) of the hand and \texttt{CommunityCallStats}, its corresponding probability of winning ($p_\mathrm{delayed}(n)$, a function of $n$) can be obtained.
+Across $n$ situations facing the same bet, in your best opportunity to win out of those $n$ situation, you are likely have on average one of the $\frac{1}{n}^{\mathrm{th}}$ best hands.
+From the rank ($\frac{1}{n}^{\mathrm{th}}$) of the hand and \texttt{CommunityCallStats}, its corresponding probability of winning ($p_{\mathrm{delayed}}(n)$, a function of $n$) can be obtained.
 By waiting one hand (waiting until the same opportunity arises again) before playing, you will sacrifice whatever chips you have already committed to the pot in previous bets leading up to this one: $C_{committed}$.
 By waiting $n$ opportunities before playing, you will sacrifice $n C_{committed}$.
-However, you will improve your probability of winning to $p_\mathrm{delayed}(n)$.
-Therefore, it is possible to win a total pot of $b-n C_{committed}$ with probability $p_\mathrm{delayed}(n)$, by folding now and expecting to wait an average of $n$ hands before calling.
+However, you will improve your probability of winning to $p_{\mathrm{delayed}}(n)$.
+Therefore, it is possible to win a total pot of $b-n C_{committed}$ with probability $p_{\mathrm{delayed}}(n)$, by folding now and expecting to wait an average of $n$ hands before calling.
 For sufficiently large $b$ and a suitable \texttt{CommunityCallStats} histogram, it is advantageous to call from a better situation by folding now.
 
 If \texttt{CommunityCallStats} is differentiable, for any given situation and bet faced, it is possible to solve for the optimal $n$ that maximizes the final expected utility.
 Any money still lost in the maximum expected utility is the opportunity cost of folding, which in most cases is better than the cost of playing with a weak hand.
 
-The computation of $n$ that optimizes the expectation of winning $b-n C_{committed}$ with probability $p_\mathrm{delayed}(n)$ can be achieved through any variety of unimodal function optimization techniques.
+The computation of $n$ that optimizes the expectation of winning $b-n C_{committed}$ with probability $p_{\mathrm{delayed}}(n)$ can be achieved through any variety of unimodal function optimization techniques.
 The expectation of the potential profit to be gained by folding against a bet that is too large is stored as the ``FoldGain'' of a situation.
 
 \subsubsection{RiskLoss}
@@ -198,15 +198,15 @@ The computation of $\mathrm{Pr\{push\}}$ is implemented in the \texttt{ExactCall
 It is assumed that an opponent will only fold if the utility of his/her hand is too low to be worth playing.
 For the purposes of computing $\mathrm{E[callers}_x]$, the geometric utility function is used, offset by the opportunity cost of folding.
 The utility of a hand is a function of $w$, the percentage chance of winning in a showdown.
-The utility function is more or less monotonic in $w$ and so there is a $w_\mathrm{threshold}$ for which the utility exactly zero.
-$w_\mathrm{threshold}$ can be computed numerically using any variety of root-finding methodologies.
-Depending on how well the opponent knows what hand you have, either the \texttt{CallStats} or \texttt{CommunityCallStats} (or a combination therefrom) histogram can be used to look up what percentage of hands have a chance to win greater than $w_\mathrm{threshold}$.
+The utility function is more or less monotonic in $w$ and so there is a $w_{\mathrm{threshold}}$ for which the utility exactly zero.
+$w_{\mathrm{threshold}}$ can be computed numerically using any variety of root-finding methodologies.
+Depending on how well the opponent knows what hand you have, either the \texttt{CallStats} or \texttt{CommunityCallStats} (or a combination therefrom) histogram can be used to look up what percentage of hands have a chance to win greater than $w_{\mathrm{threshold}}$.
 This is the fraction of opponents that are likely to play (call or raise).
 
 
 Computing the total $\mathrm{E[callers}_x]$ for all opponents is not linear.
 If the first opponent calls your bet, there is more money in the pot and more incentive for the next opponent to call.
-A straightfoward method of estimating $\mathrm{E[callers]}$ is to assume that each opponent will add $\mathrm{E[call]} = x \cdot \mathrm{Pr\{play\}}$ to the pot.
+A straightforward method of estimating $\mathrm{E[callers]}$ is to assume that each opponent will add $\mathrm{E[call]} = x \cdot \mathrm{Pr\{play\}}$ to the pot.
 That amount is added to the pot, and is included in the calculation of $\mathrm{Pr\{play\}}$ for the next opponent.
 Although opponents cannot generally call a fraction of the best, this provides a simple estimation of the aggregate call amount made by all opponents.
 For each opponent, $\mathrm{Pr\{play\}}$ is the probability of that opponent calling or raising, and is solved numerically using the utility function described above.
@@ -224,8 +224,8 @@ This is known as pushing out your opponents, and only occurs if nobody is willin
 We first let $\mathrm{Pr\{play\}}$ be the probability that any opponent decides to play (decides not to fold).
 The probability $\mathrm{Pr\{play\}}$ is computed with almost the same approach as for $\mathrm{E[callers}_x]$, with a few minor differences.
 Firstly, in general, when your bet is so large that all players will decide to fold, the bet size will fall in the category of algebraic mean utilities rather than geometric mean utilities.
-Secondly, making a large bet gives more away about the hand that you hold, and therefore, in the spirit of the minimax/Nash equilibrium approaches, more weight is delibrately given to the worse of \texttt{CallStats} or \texttt{CommunityCallStats} when looking up $\mathrm{Pr\{play\}}$ from the computed $w_\mathrm{threshold}$.
-Once $\mathrm{Pr\{play\}}$ is known for each player, the product $\mathrm{Pr\{push\}} = \prod_\mathrm{opponents} \left( 1 - \mathrm{Pr\{play\}} \right)$ is the total probability of winning the pot due to opponent folds.
+Secondly, making a large bet gives more away about the hand that you hold, and therefore, in the spirit of the minimax/Nash equilibrium approaches, more weight is deliberately given to the worse of \texttt{CallStats} or \texttt{CommunityCallStats} when looking up $\mathrm{Pr\{play\}}$ from the computed $w_{\mathrm{threshold}}$.
+Once $\mathrm{Pr\{play\}}$ is known for each player, the product $\mathrm{Pr\{push\}} = \prod_{\mathrm{opponents}} \left( 1 - \mathrm{Pr\{play\}} \right)$ is the total probability of winning the pot due to opponent folds.
 
 
 
@@ -246,17 +246,17 @@ The resulting inequality describes the condition required for an opponent to rai
 \mathrm{Utility\:of\:raising} + RiskLoss > max\{\mathrm{Utility\:of\:calling}, FoldGain\}
 \]
 \[
-U(w,b_\mathrm{raiseTo}) + RiskLoss - max\{U(w,b_\mathrm{call}), FoldGain\} > 0
+U(w,b_{\mathrm{raiseTo}}) + RiskLoss - max\{U(w,b_{\mathrm{call}}), FoldGain\} > 0
 \]
 The left hand side of the inequality is implemented in the \texttt{FacedOddsRaiseGeom} class, and is a function of $w$.
-Let $w_r$ be the value at $w$ at the boundary of the inequality (ie. the value that causes the left hand side of the equation to be zero).
+Let $w_r$ be the value at $w$ at the boundary of the inequality (i.e. the value that causes the left hand side of the equation to be zero).
 This way, $w_r$ represents the chance to win that an opponent would desire in order to choose to raise.
 The value of $w_r$ can be computed using any standard 1-D root finding technique.
-Then, \texttt{CommunityCallStats} can be used to look up the fraction of opponents that are likely to have a hand that good or better, which in turn, is the probability that a single opponent will have a hand good enough to raise you to $b_\mathrm{raise}$.
-For any given $b_\mathrm{raise}$, the $w_r$ and therefore the probability of raising ($\mathrm{Pr\{raise\}}$) for a single opponent can be computed.
+Then, \texttt{CommunityCallStats} can be used to look up the fraction of opponents that are likely to have a hand that good or better, which in turn, is the probability that a single opponent will have a hand good enough to raise you to $b_{\mathrm{raise}}$.
+For any given $b_{\mathrm{raise}}$, the $w_r$ and therefore the probability of raising ($\mathrm{Pr\{raise\}}$) for a single opponent can be computed.
 Extending to multiple opponents:
 \[
-\mathrm{Pr\{anyOpponentRaise\}} = 1 - \prod_\mathrm{opponents} \left( 1 - \mathrm{Pr\{raise\}} \right)
+\mathrm{Pr\{anyOpponentRaise\}} = 1 - \prod_{\mathrm{opponents}} \left( 1 - \mathrm{Pr\{raise\}} \right)
 \]
 
 

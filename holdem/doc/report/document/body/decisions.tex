@@ -9,7 +9,7 @@
 \label{sec:CompleteAlgorithm}
 
 Once the fundamental situational evaluation functions are established, they can be combined to produce a complete betting algorithm.
-The poker bot makes its bet by defining an overall scalar utility function, and performing typical 1-D function optimization to find the global maximum (eg. golden section search with parabolic interpolation, etc.).
+The poker bot makes its bet by defining an overall scalar utility function, and performing typical 1-D function optimization to find the global maximum (e.g. golden section search with parabolic interpolation, etc.).
 As long as the utility function is sufficiently close to unimodal, the optimal bet amount can always be located efficiently.
 The following sections describe the mathematics and implementation of the overall betting algorithm.
 
@@ -22,14 +22,14 @@ The following sections describe the mathematics and implementation of the overal
 The overall utility function weights the utility of each possible outcome with the probability of achieving that outcome.
 For example, if $\mathrm{Pr\{push}\}$, and $\mathrm{Pr\{raised}\}$ are known, %$\mathrm{E[callers}_x]$, 
 \[
-U_\mathrm{StateModel} = \left(U_\mathrm{showdown}\right)^{\mathrm{Pr\{call\}}} \cdot \left(U_\mathrm{push}\right)^{\mathrm{Pr\{push}\}} \cdot \prod_\mathrm{raiseAmount} \left(U_\mathrm{raiseAmount}\right)^{\mathrm{Pr\{raiseAmount}\}}
+U_{\mathrm{StateModel}} = \left(U_{\mathrm{showdown}}\right)^{\mathrm{Pr\{call\}}} \cdot \left(U_{\mathrm{push}}\right)^{\mathrm{Pr\{push}\}} \cdot \prod_{\mathrm{raiseAmount}} \left(U_{\mathrm{raiseAmount}}\right)^{\mathrm{Pr\{raiseAmount}\}}
 \]
 Here, $\mathrm{Pr\{call\}}$ is simply $\left(1 - \mathrm{Pr\{push}\} - \sum \mathrm{Pr\{raised}\}\right)$.
 Again, all utilities and probabilities are functions of $b$, the size you choose to bet; and ultimately a 1-D function extremum search takes place across $U\left(b\right)$.
 
 It is too expensive to consider all possible $raiseAmount$ values, so an approximation is employed.
 Here, the $raiseAmount$ variable iterates across an array of possible amounts that opponents could raise to.
-The range of possible raises is a logarithmic quantization of the full range of raise amounts, and then $U_\mathrm{raiseAmount}$ and $\mathrm{Pr\{raised}\}$ are precomputed at each of the quantized values.
+The range of possible raises is a logarithmic quantization of the full range of raise amounts, and then $U_{\mathrm{raiseAmount}}$ and $\mathrm{Pr\{raised}\}$ are precomputed at each of the quantized values.
 The \texttt{StateModel} class implements this final aggregation of outcomes.
 
 \subsection{Geometric vs. Arithmetic Utility}
@@ -38,9 +38,9 @@ For small bets, the ideal utility function is based on the geometric mean utilit
 For large bets, the arithmetic mean equivalent is preferred.
 The actual utility function is therefore a linear combination of both the geometric and arithmetic utility functions:
 \[
-U_\mathrm{combined}(b) = \left(1 - \frac{b}{riskprice}\right) U_\mathrm{geom}(b) + \left(\frac{b}{riskprice}\right) U_\mathrm{algb}(b)
+U_{\mathrm{combined}}(b) = \left(1 - \frac{b}{riskprice}\right) U_{\mathrm{geom}}(b) + \left(\frac{b}{riskprice}\right) U_{\mathrm{algb}}(b)
 \]
-As $b$ increases toward $riskprice$, the weight shifts from $U_\mathrm{geom}(b)$ to $U_\mathrm{algb}(b)$.
+As $b$ increases toward $riskprice$, the weight shifts from $U_{\mathrm{geom}}(b)$ to $U_{\mathrm{algb}}(b)$.
 Here $riskprice$ is the maximum possible bet.
 This is either the total number of chips that the poker bot currently has, or the smallest bet size for which the opponents' FoldGain is \emph{always} positive.
 The \texttt{AutoScalingFunction} class provides the linear combinations framework for combining utility functions.
@@ -58,10 +58,10 @@ Therefore, we apply the same linear combination strategy as used to balance the 
 Two separate utility functions are created: one with the standard $\mathrm{Pr\{win\}}$, and one with the worst case $\mathrm{Pr\{win\}}$ (denoted with the subscript ``fear'').
 These two utility functions are then dynamically weighted in a linear combination based on the bet size $b$:
 \[
-U_\mathrm{combined}(b) = \left(1 - \frac{b - b_\mathrm{min}}{riskprice - b_\mathrm{min}}\right) U_\mathrm{main}(b) + \left(\frac{b - b_\mathrm{min}}{riskprice - b_\mathrm{min}}\right) U_\mathrm{fear}(b)
+U_{\mathrm{combined}}(b) = \left(1 - \frac{b - b_{\mathrm{min}}}{riskprice - b_{\mathrm{min}}}\right) U_{\mathrm{main}}(b) + \left(\frac{b - b_{\mathrm{min}}}{riskprice - b_{\mathrm{min}}}\right) U_{\mathrm{fear}}(b)
 \]
-Here, $b_\mathrm{min}$ is the largest bet where $Pr\{push\}$ is still zero.
-If $b < b_\mathrm{min}$, only $U_\mathrm{main}(b)$ is used.
+Here, $b_{\mathrm{min}}$ is the largest bet where $Pr\{push\}$ is still zero.
+If $b < b_{\mathrm{min}}$, only $U_{\mathrm{main}}(b)$ is used.
 
 \section{Implementation}
 \label{sec:CompleteImplementation}
@@ -79,7 +79,7 @@ Bots will later call \texttt{ViewDealtHand()} to access their current hand.
 
 Calling this method informs the bot that the next betting round is about to begin.
 It will now have all the information that it needs in order to begin histogram generation.
-Histogram generation requires a significant portion of runtime; by generating the histograms ahead of time, less computation will required when the bot's turn to bet begins.
+Histogram generation requires a significant portion of runtime; by generating the histograms ahead of time, less computation will required when the poker bot's turn to bet begins.
 Furthermore, a bot may need to bet multiple times in a betting round, but since the community cards won't change in the middle of a betting round, there is no need to recompute any of the histograms until the next betting round is about to begin.
 
 \item \texttt{ImproveGainStrategy::MakeBet()} and \texttt{float64 DeterredGainStrategy::MakeBet()}
