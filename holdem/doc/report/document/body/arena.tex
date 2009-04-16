@@ -45,11 +45,11 @@ Each community card combination completes a seven-card hand for both the player 
 The seven-card hands are compared to determine the winner, and the results for each hole card combination are accumulated to generate $\mathrm{Pr\{win\}}$ against each opposing pair of hole cards.
 
 \texttt{CallStats} is the histogram of the set of $\mathrm{Pr\{win\}}$ values corresponding to each possible opposing hole card pair.
-Assuming a uniform distribution of opposing hands, the corresponding cumulative histogram provides $\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge x|\mathrm{Your\:hole\:cards}\}$, the probability of your opponent's hand being weaker than $x$\% chance to win against your hand.
+Assuming a uniform distribution of opposing hands, the corresponding cumulative histogram provides $\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge x \; | \; \mathrm{Your\:hole\:cards}\}$, the probability of your opponent's hand being weaker than $x$\% chance to win against your hand.
 Its distribution depends on the possible hole cards that your opponent could have, and how they perform against your hand.
 
 This cumulative histogram is the starting point for estimating how the opponent should behave if he/she knows which cards you have.
-E.g. if the opponent has a high probability of having a strong hand versus yours, he/she should call or raise rather than fold.
+For example, if the opponent has a high probability of having a strong hand versus yours, he/she should call or raise rather than fold.
 
 
 \subsection{CommunityCallStats Histogram}
