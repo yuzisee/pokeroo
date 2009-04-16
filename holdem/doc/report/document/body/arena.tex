@@ -14,7 +14,7 @@ The combination of all of the following factors is a player's betting situation:
 \item $\mathrm{Pr\{push}_x\}$: Probability of causing all opponents to fold after betting $x$ chips
 \item $\mathrm{Pr\{raised}_y\}$: Probability of being raised by an opponent, to $y$ chips
 \end{itemize}
-Also considered is the probability of improving the betting situation for the next betting round, as well as best-case and worst-case $\mathrm{Pr_\{win\}}$ estimates.
+Also considered is the probability of improving the betting situation for the next betting round, as well as best-case and worst-case $\mathrm{Pr\{win\}}$ estimates.
 
 The estimation of each of the above four values is accomplished using three histograms.
 \begin{itemize}
@@ -33,7 +33,7 @@ The following sections will first explore each of these histograms, and then loo
 \label{sec:Histograms}
 
 This section will explore the properties of the \texttt{CallStats}, \texttt{CommunityCallStats}, and \texttt{WinStats} histograms in more detail.
-The \texttt{StatsManager} class implements the generation and caching of these histograms.
+The \texttt{StatsManager} class implements both the generation and caching of these histograms.
 
 \subsection{CallStats Histogram}
 \label{sec:CallStats}
@@ -50,7 +50,7 @@ Its distribution depends on the possible hole cards that your opponent could hav
 
 This cumulative histogram is the starting point for estimating how the opponent should behave if he/she knows which cards you have.
 For example, if the opponent has a high probability of having a strong hand versus yours, he/she should call or raise rather than fold.
-Figure~\ref{fig:Cumu} provides a sample \texttt{CallStats} cumulative histogram plotted from real simulation data.
+\textbf{Figure~\ref{fig:Cumu}} provides a sample \texttt{CallStats} cumulative histogram plotted from real simulation data.
 
 \subsection{CommunityCallStats Histogram}
 \label{sec:CommunityCallStats}
@@ -67,7 +67,7 @@ Assuming a uniform distribution of hole cards, this becomes the overall probabil
 
 \texttt{CommunityCallStats} is the histogram of the set of $\mathrm{Pr\{win\}}$ values corresponding to each possible starting hole card pair, assuming uniform random opposing hole cards.
 The corresponding cumulative histogram provides $\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge x\}$, the probability of having a hand stronger than $x$\% chance to win, on average.
-Its distribution depends on the existing community cards already available.
+Its distribution is a function of the existing community cards already available.
 
 This cumulative histogram is useful for various reasons.
 Firstly, if your own $\mathrm{Pr\{win\}}$ is known, \texttt{CommunityCallStats} acts as a measure of rank.
@@ -75,7 +75,7 @@ $\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge \mathrm{Your\:Pr\{win\}}\}$ is the probabil
 Note that this is different than the probability of someone having a better hand \emph{against} your hand (that, is determined by \texttt{CallStats}).
 Secondly, the \texttt{CommunityCallStats} cumulative histogram is the starting point for estimating how the opponent should behave if he/she has no information about your cards.
 \texttt{CommunityCallStats} represents the average $\mathrm{Pr\{win\}}$ of a given hand against all other hands.
-Figure~\ref{fig:Cumu} provides a sample \texttt{CallStats} cumulative histogram plotted from real simulation data.
+\textbf{Figure~\ref{fig:Cumu}} provides a sample \texttt{CommunityCallStats} cumulative histogram plotted from real simulation data.
 
 
 \begin{figure}[htb]
@@ -104,7 +104,7 @@ For each possible combination of upcoming community cards, calculate how the pla
 
 Most often, measures of spread and skew of $\mathrm{Pr\{win\}}$ across the various upcoming community cards create a quantitative description of ``bluffing hands'' and ``drawing hands''.
 If the spread/variance of $\mathrm{Pr\{win\}}$ across all possible combinations of upcoming community cards is high, a player's position is relatively uncertain, and it may be safer to try to win the hand by bluffing than to work the game into a showdown.
-If there are more upcoming community card combinations that worsen $\mathrm{Pr\{win\}}$ than improve it, the player should try to keep the betting low wait to see if he/she will ``catch'' any of the few cards that will greatly improve his/her hand.
+If more of the upcoming community card combinations will worsen $\mathrm{Pr\{win\}}$ than improve it, the player should try to keep the betting low and wait to see if he/she will ``catch'' any of the few cards that will greatly improve his/her hand.
 \texttt{WinStats} data is used more heuristically, whereas \texttt{CallStats} and \texttt{CommunityCallStats} are used more for purely probabilistic calculations.
 In all cases, information from \texttt{WinStats} never overpowers the fundamental mathematics of making good poker decisions, but is used to add distinct ``personalities'' and ``playing styles'', each of which may be best suited to countering specific opponents.
 
@@ -126,14 +126,14 @@ As mentioned in Section~\ref{sec:Approximations}, this measurement is extended t
 \subsection{Best Hand Percentage}
 \label{sec:Rank}
 Once $\mathrm{Pr\{win\}}$ is known, \texttt{CommunityCallStats} can be used to calculate the probability of having a hand with a better chance of winning than $\mathrm{Pr\{win\}}$.
-This is the hand's ``rank'' and represents the probability ($\mathrm{Pr\{best\}}$) of having the better hand against one opponent.
+This is the hand's ``rank'' and represents the probability $\mathrm{Pr\{best\}}$ of having the better hand against one opponent.
 $\mathrm{Pr\{best\}}$ is then extended to multiple opponents in the same way as $\mathrm{Pr\{win\}}$.
 
 
 \section{Expected Utility}
 
-This section describes the relationships that define $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$.
-The \texttt{ExactCallBluffD} class implements the general computation of $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$.
+%This section describes the relationships that define $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$.
+%The \texttt{ExactCallBluffD} class implements the general computation of $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$.
 
 \subsection{Showdown Utility}
 \label{sec:Utility}
@@ -146,12 +146,12 @@ If the outcome of betting a specific fraction of your bankroll on a certain scen
 If it is difficult or impossible to make the bet a large number of times, an arithmetic mean (or independent chip model~\cite{ICMmag2007} when the payout structure of a tournament is known) is more suitable.
 For small bet of size $f$ that would occur many times throughout the course of a game, the total utility of making $N$ bets is:
 \[
-U = \left( \left( 1 + v_{\mathrm{win}} \left( f \right) \right)^N_w \left( 1 - v_{\mathrm{loss}} \left( f \right) \right)^N_l \right) \cdot B
+U = \left( \left( 1 + v_{\mathrm{win}} \left( f \right) \right)^{N_w} \left( 1 - v_{\mathrm{loss}} \left( f \right) \right)^{N_l} \right) \cdot B
 \]
 Here, the bet size $f$ is a fraction of the bankroll $B$, $N_w$ is the number of wins that occurred during the $N$ bets, and similarly $N_l$ is the number of losses.
-$N = N_w + N_l$, $v_{\mathrm{win}} \left( f \right)$ is the payoff for winning the bet, and $v_{\mathrm{loss}} \left( f \right)$ is the price of making the bet (functions of the bet fraction $f$).
+$N = N_w + N_l$, $v_{\mathrm{win}} \left( f \right)$ is the payoff for winning the bet, and $v_{\mathrm{loss}} \left( f \right)$ is the price of making the bet (both are functions of the bet fraction $f$).
 As $N \to \infty$, the incremental gain of each bet is simply the geometric mean of outcomes weighted by their probabilities, and extends easily to include the various split-pot situations, etc.
-The complete showdown gain model 
+%The complete showdown gain model 
 
 For large bets such as all-in calls that cannot be approximated using $N \to \infty$, a suitable short-term expectation of utility is the arithmetic mean equivalent:
 \[
@@ -165,10 +165,10 @@ The computation of showdown utilities is implemented in the \texttt{GainModel} c
 
 \subsection{Opportunity Cost of Folding}
 \label{sec:FoldEquity}
-Although the most obvious measure of utility is the outcome of a showdown, it is possible to win chips in other ways as well.
-If you make a bet large enough, you will force your opponents to fold, winning you all of the chips that were previously bet.
-This is known as pushing out your opponents, and has it's own utility associated with it.
-The reverse perspective of this is the opportunity cost of folding.
+Although the most obvious measure of utility is to consider the outcome of a showdown, it is possible to win chips in other ways as well.
+If you make a bet large enough, you will force your opponents to fold, winning all of the chips in the pot.
+This is known as pushing out your opponents, and has it's own associated utility.
+In the reverse perspective, this concept becomes the opportunity cost of folding.
 
 When facing a large bet $b$, you always have the option to either fold or play.
 Often, it is more favourable to wait until the same opportunity arises again in the future, especially if it is likely for you to have better cards then.
@@ -184,7 +184,7 @@ If \texttt{CommunityCallStats} is differentiable, for any given situation and be
 Any money still lost in the maximum expected utility is the opportunity cost of folding, which in most cases is better than the cost of playing with a weak hand.
 
 The computation of $n$ that optimizes the expectation of winning $b-n C_{committed}$ with probability $p_{\mathrm{delayed}}(n)$ can be achieved through any variety of unimodal function optimization techniques.
-The expectation of the potential profit to be gained by folding against a bet that is too large is stored as the ``FoldGain'' of a situation.
+The expectation of the potential profit to be gained by folding against a bet that is too large is the ``FoldGain'' of a situation.
 The \texttt{FoldGainModel} class implements these concepts.
 
 \subsubsection{RiskLoss}
@@ -193,7 +193,7 @@ The ``opportunity cost of folding'' formula can also be applied from the perspec
 The reverse application of the formula is implemented in a function called ``RiskLoss''.
 This ``RiskLoss'' heuristic reports a loss (negative value) if your bet is large enough for the average opponent to profit (opportunity) by folding and waiting for a better hand.
 %RiskLoss is computed by setting $C_{committed}$ to the average contribution to the pot by active players
-Since making a small bet does not allow an average opponent to profit due to opportunity cost of folding, your ``RiskLoss'' remains zero as long as your bet is sufficiently small compared to an average opponent's opportunity.
+Since making a small bet does not allow an average opponent to profit via his/her opportunity cost of folding, your ``RiskLoss'' remains zero as long as your bet is sufficiently small compared to an average opponent's opportunity.
 The value returned by the RiskLoss function is used as a deterrent for raising too high.
 
 
@@ -231,38 +231,39 @@ There is always a chance of making a bet large enough to push all of your oppone
 If no opponents choose to play your bet, they will all fold and you win whatever is in the pot.
 This is known as pushing out your opponents, and only occurs if nobody is willing to call (or raise) your bet.
 
-We first let $\mathrm{Pr\{play\}}$ be the probability that any opponent decides to play (decides not to fold).
-The probability $\mathrm{Pr\{play\}}$ is computed with almost the same approach as for $\mathrm{E[callers}_x]$, with a few minor differences.
+We first let $\mathrm{Pr\{play\}}$ be the probability that any opponent decides to play (i.e. decides not to fold).
+The probability $\mathrm{Pr\{play\}}$ is computed with almost the same approach as for $\mathrm{E[callers}_x]$, with a few minor distinctions.
 Firstly, in general, when your bet is so large that all players will decide to fold, the bet size will fall in the category of arithmetic mean utility functions rather than geometric mean utility functions.
 Secondly, making a large bet gives more away about the hand that you hold, and therefore, in the spirit of the minimax/Nash equilibrium approaches, more weight is deliberately given to the worse of \texttt{CallStats} or \texttt{CommunityCallStats} when looking up $\mathrm{Pr\{play\}}$ from the computed $w_{\mathrm{threshold}}$.
 Once $\mathrm{Pr\{play\}}$ is known for each player, the product $\mathrm{Pr\{push\}} = \prod_{\mathrm{opponents}} \left( 1 - \mathrm{Pr\{play\}} \right)$ is the total probability of winning the pot due to opponent folds.
-See Figure~\ref{fig:Pr} for example $\mathrm{Pr\{push\}}$ behaviour plotted from real simulation data.
+See \textbf{Figure~\ref{fig:Pr}} for example $\mathrm{Pr\{push\}}$ behaviour plotted using real simulation data.
 
 
 \subsection{Raises}
 \label{sec:Raises}
 Your opponent may choose to raise rather than call, forcing you to make a new decision.
 An opponent is motivated to raise rather than call if he/she can win more money by making you call a larger amount.
-However, if your opponent's bet is too large, it becomes profitable for you to fold due to ``FoldGain''.
+However, if your opponent's bet is too large, it becomes profitable for you to fold due to `FoldGain'.
 
-Furthermore, it may not be profitable for the opponent to call or raise your bet.
-Your opponent may prefer to raise with the hope that you fold, rather than allow him/herself to fold outright.
-Therefore, an opponent will only choose to raise if the expected value of raising outweighs the expected value of both calling or folding, with all opportunity costs considered.
+Furthermore, it may not always be profitable in a showdown for the opponent to have called or raised your bet.
+Your opponent may prefer to raise with the hope that you fold, rather than being the one to fold himself/herself.
+Therefore, an opponent should choose to raise whenever the expected value of raising outweighs the expected value of both calling or folding, with all opportunity costs considered.
 
-The utility of an opponent's hand is a function of $w$, the percentage chance of winning in a showdown, and $b$, the size of bet that he/she decides to make.
-For raises, we apply the geometric mean model to the opponent's utility, $U(w,b)$.
+The utility of an opponent's hand is a function of both $w$, the percentage chance of winning in a showdown, and $b$, the size of bet that he/she decides to make.
+For raises, we apply the geometric mean model to the opponent's utility $U(w,b)$.
 The resulting inequality describes the condition required for an opponent to raise:
 \[
 \mathrm{Utility\:of\:raising} + RiskLoss > max\{\mathrm{Utility\:of\:calling}, FoldGain\}
 \]
+Rearranging,
 \[
 U(w,b_{\mathrm{raiseTo}}) + RiskLoss - max\{U(w,b_{\mathrm{call}}), FoldGain\} > 0
 \]
 The left hand side of the inequality is implemented in the \texttt{FacedOddsRaiseGeom} class, and is a function of $w$.
 Let $w_r$ be the value at $w$ at the boundary of the inequality (i.e. the value that causes the left hand side of the equation to be zero).
-This way, $w_r$ represents the chance to win that an opponent would desire in order to choose to raise.
+This way, $w_r$ represents the minimum chance to win that opponent would desire in order to choose to raise.
 The value of $w_r$ can be computed using any standard 1-D root finding technique.
-Then, \texttt{CommunityCallStats} can be used to look up the fraction of opponents that are likely to have a hand that good or better, which in turn, is the probability that a single opponent will have a hand good enough to raise you to $b_{\mathrm{raise}}$.
+Then, \texttt{CommunityCallStats} can be used to look up the fraction of opponents that are likely to have a hand $w_r$ good or better, which in turn, is the probability that a single opponent will have a hand good enough to raise you to $b_{\mathrm{raise}}$.
 For any given $b_{\mathrm{raise}}$, the $w_r$ and therefore the probability of raising ($\mathrm{Pr\{raise\}}$) for a single opponent can be computed.
 Extending to multiple opponents:
 \[
@@ -273,18 +274,18 @@ Extending to multiple opponents:
 In general, we will omit RiskLoss from the inequality if $max\{U(w,b_call), FoldGain\} = U(w,b_call)$, that is, we do not consider RiskLoss when the utility of calling is more significant than FoldGain.
 The reason for this is because RiskLoss is meant to act as a deterrent for raising too high.
 When any player wins money by raising in a situation where folding is safer than calling, it is generally because that player will force everybody else to fold -- not because the player had good cards.
-The bet most likely to force everybody else to fold is the largest possible bet.
-However, betting the maximum provides everybody else with an implicit FoldGain of their own, so RiskLoss is used to deter such bets that are so large that they become profitable to others.
-Instead, when a player has good cards, the utility of calling is higher than the utility of folding.
+The bet most likely to force everybody else to fold is an all-in bet.
+However, betting all-in provides everybody else with an implicit FoldGain of their own, so RiskLoss is used to offset FoldGain for such bets that are so large that they become profitable to others.
+On the other hand, when a player has good cards, the utility of calling is higher than the utility of folding.
 Then, the decision of whether to call or raise is simply about adding more money to the showdown or not, and the RiskLoss deterrent isn't needed.
 Furthermore, \texttt{FacedOddsRaiseGeom} currently does not explicitly consider the expected utility due to the possibility of everybody else folding, and the removal of RiskLoss plays that role somewhat in the comparison between the utility of raising vs. calling.
-See Figure~\ref{fig:Pr} for example $\mathrm{Pr\{raise\}}$ behaviour plotted from real simulation data.
+See \textbf{Figure~\ref{fig:Pr}} for example $\mathrm{Pr\{raise\}}$ behaviour plotted using real simulation data.
 
 \begin{figure}[htb]
  \begin{center}
       \includegraphics[width=0.8\textwidth]{pr.pdf} 
  \end{center}
- \caption[$\mathrm{Pr\{fold\}}$, $\mathrm{Pr\{play\}}$, and $\mathrm{Pr\{raise\}}$]{ $\mathrm{Pr\{fold\}}$, $\mathrm{Pr\{play\}}$, and $\mathrm{Pr\{raise\}}$ are estimated in a preflop situation. Notice the jump from 70\% play to 70\% push at a bet size of about half of the remaining chips. Once a bet is that big, if your opponent has any interest in playing he/she may as well re-raise all in.}
+ \caption[$\mathrm{Pr\{fold\}}$, $\mathrm{Pr\{play\}}$, and $\mathrm{Pr\{raise\}}$]{ $\mathrm{Pr\{fold\}}$, $\mathrm{Pr\{play\}}$, and $\mathrm{Pr\{raise\}}$ are estimated in a preflop situation. Notice the jump from 70\% play to 70\% push at a bet size of about half of the remaining chips. Once a bet is that big, if your opponent has any interest in playing he/she may as well re-raise all in. The smaller jump at about 30 chips is a similar situation with a different opponent who has only a small number of chips remaining.}
  \label{fig:Pr}
 \end{figure}
 
