@@ -10,13 +10,14 @@ As long as the utility function is sufficiently close to unimodal, the optimal b
 The following sections describe the mathematics and implementation of the overall betting algorithm.
 
 \section{Overall Utility}
-\label{sec:OverallUtility}
+
 
 
 \subsection{Outcome Expectation}
+\label{sec:StateModel}
 
 The overall utility function weights the utility of each possible outcome with the probability of achieving that outcome.
-For example, if $\mathrm{Pr\{push}\}$, and $\mathrm{Pr\{raised}\}$ are known, %$\mathrm{E[callers}_x]$, 
+For example, if $\mathrm{Pr\{push}\}$ and $\mathrm{Pr\{raised}\}$ are known, %$\mathrm{E[callers}_x]$, 
 \[
 U_{\mathrm{StateModel}} = \left(U_{\mathrm{showdown}}\right)^{\mathrm{Pr\{call\}}} \cdot \left(U_{\mathrm{push}}\right)^{\mathrm{Pr\{push}\}} \cdot \prod_{\mathrm{raiseAmount}} \left(U_{\mathrm{raiseAmount}}\right)^{\mathrm{Pr\{raiseAmount}\}}
 \]
@@ -29,6 +30,7 @@ The range of possible raises is a logarithmic quantization of the full range of 
 The \texttt{StateModel} class implements this final aggregation of outcomes.
 
 \subsection{Geometric vs. Arithmetic Utility}
+\label{sec:GeomAlgb}
 
 For small bets, the ideal utility function is based on the geometric mean utility from section~\ref{sec:Utility}.
 For large bets, the arithmetic mean equivalent is preferred.
@@ -42,6 +44,7 @@ This is either the total number of chips that the poker bot currently has, or th
 The \texttt{AutoScalingFunction} class provides the linear combinations framework for combining utility functions.
 
 \subsection{Worst Case Win Percentage}
+\label{sec:statworse}
 
 For small bets, $Pr\{push\}$ will tend to be low, and based on the histogram of possible opponents, $\mathrm{Pr\{win\}}$ and $\mathrm{Pr\{best\}}$ will be relatively accurate.
 %the probabilty of winning the showdown (Section~\ref{sec:Mean}) as well as the probability of having the best hand (Section~\ref{sec:Rank}) will be relatively accurate.

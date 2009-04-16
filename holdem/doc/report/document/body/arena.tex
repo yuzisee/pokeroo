@@ -10,7 +10,7 @@ The combination of all of the following factors is a player's betting situation:
 \singlespacing
 \item $\mathrm{Pr\{win\}}$: Probability of winning in a showdown
 \item $\mathrm{Pr\{best\}}$: Probability of having the best hand
-\item $\mathrm{E[callers}_x]$: Number of opponents expected to call or raise your bet of $x$ chips.
+\item $\mathrm{E[callers}_x]$: Number of opponents expected to call or raise your bet of $x$ chips
 \item $\mathrm{Pr\{push}_x\}$: Probability of causing all opponents to fold after betting $x$ chips
 \item $\mathrm{Pr\{raised}_y\}$: Probability of being raised by an opponent, to $y$ chips
 \end{itemize}
@@ -30,6 +30,7 @@ The \texttt{WinStats} is less important than the other two, is used to create an
 The following sections will first explore each of these histograms, and then look at how $\mathrm{Pr\{win\}}$, $\mathrm{Pr\{best\}}$, $\mathrm{E[callers}_x]$, $\mathrm{Pr\{push}_x\}$, and $\mathrm{Pr\{raised}_y\}$ are estimated.
 
 \section{Histograms}
+\label{sec:Histograms}
 
 This section will explore the properties of the \texttt{CallStats}, \texttt{CommunityCallStats}, and \texttt{WinStats} histograms in more detail.
 The \texttt{StatsManager} class implements the generation and caching of these histograms.
@@ -146,7 +147,7 @@ U = \left( \left( 1 + v_{\mathrm{win}} \left( f \right) \right) \cdot N_w + \lef
 \]
 
 In all cases, $v_{\mathrm{win}} \left( f \right)$ is also a function of $\mathrm{E[callers}_x]$.
-The computation of showdown utilities is implemented in the \texttt{GainModel} class for the geometric mean case, and the \texttt{GainModelNoRisk} derived class for the algebraic mean case.
+The computation of showdown utilities is implemented in the \texttt{GainModel} class for the geometric mean case, and the \texttt{GainModelNoRisk} derived class for the arithmetic mean case.
 
 
 
@@ -172,6 +173,7 @@ Any money still lost in the maximum expected utility is the opportunity cost of 
 
 The computation of $n$ that optimizes the expectation of winning $b-n C_{committed}$ with probability $p_{\mathrm{delayed}}(n)$ can be achieved through any variety of unimodal function optimization techniques.
 The expectation of the potential profit to be gained by folding against a bet that is too large is stored as the ``FoldGain'' of a situation.
+The \texttt{FoldGainModel} class implements these concepts.
 
 \subsubsection{RiskLoss}
 \label{sec:RiskLoss}
@@ -219,7 +221,7 @@ This is known as pushing out your opponents, and only occurs if nobody is willin
 
 We first let $\mathrm{Pr\{play\}}$ be the probability that any opponent decides to play (decides not to fold).
 The probability $\mathrm{Pr\{play\}}$ is computed with almost the same approach as for $\mathrm{E[callers}_x]$, with a few minor differences.
-Firstly, in general, when your bet is so large that all players will decide to fold, the bet size will fall in the category of algebraic mean utilities rather than geometric mean utilities.
+Firstly, in general, when your bet is so large that all players will decide to fold, the bet size will fall in the category of arithmetic mean utility functions rather than geometric mean utility functions.
 Secondly, making a large bet gives more away about the hand that you hold, and therefore, in the spirit of the minimax/Nash equilibrium approaches, more weight is deliberately given to the worse of \texttt{CallStats} or \texttt{CommunityCallStats} when looking up $\mathrm{Pr\{play\}}$ from the computed $w_{\mathrm{threshold}}$.
 Once $\mathrm{Pr\{play\}}$ is known for each player, the product $\mathrm{Pr\{push\}} = \prod_{\mathrm{opponents}} \left( 1 - \mathrm{Pr\{play\}} \right)$ is the total probability of winning the pot due to opponent folds.
 
