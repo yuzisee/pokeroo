@@ -14,7 +14,7 @@ The combination of all of the following factors is a player's betting situation:
 \item $\mathrm{Pr\{push}_x\}$: Probability of causing all opponents to fold after betting $x$ chips
 \item $\mathrm{Pr\{raised}_y\}$: Probability of being raised by an opponent, to $y$ chips
 \end{itemize}
-Also considered is the probability of improving the betting situation for the next betting round, as well as best-case and worst-case $Pr_{\mathrm{win}}$ estimates.
+Also considered is the probability of improving the betting situation for the next betting round, as well as best-case and worst-case $\mathrm{Pr_\{win\}}$ estimates.
 
 The estimation of each of the above four values is accomplished using three histograms.
 \begin{itemize}
@@ -155,7 +155,7 @@ The complete showdown gain model
 
 For large bets such as all-in calls that cannot be approximated using $N \to \infty$, a suitable short-term expectation of utility is the arithmetic mean equivalent:
 \[
-U = \left( \left( 1 + v_{\mathrm{win}} \left( f \right) \right) \cdot N_w + \left( 1 - v_{\mathrm{loss}} \left( f \right) \right) \cdot N_l \right) \cdot B
+U = \left[ \left( 1 + v_{\mathrm{win}} \left( f \right) \right) \cdot N_w + \left( 1 - v_{\mathrm{loss}} \left( f \right) \right) \cdot N_l \right] \cdot B
 \]
 
 In all cases, $v_{\mathrm{win}} \left( f \right)$ is also a function of $\mathrm{E[callers}_x]$.
