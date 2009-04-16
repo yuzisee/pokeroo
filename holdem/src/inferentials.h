@@ -220,12 +220,14 @@ public:
             targetoutput << std::endl << "=============Reduced=============" << std::endl;
             targetoutput.precision(4);
             size_t vectorLast = calc.cumulation.size();
+            targetoutput << std::endl << "x, hand";
             for(size_t i=0;i<vectorLast;i++)
             {
-                targetoutput << std::endl << "{" << i << "}" << calc.cumulation[i].loss << " l +\t"
-                        << calc.cumulation[i].splits << " s +\t" << calc.cumulation[i].wins << " w =\t" <<
-                        calc.cumulation[i].pct
-                        << " pct\tx;"<< calc.cumulation[i].repeated << std::flush;
+                targetoutput << std::endl << calc.cumulation[i].repeated  << ", "<< calc.cumulation[i].pct<< std::flush;
+                //targetoutput << std::endl << "{" << i << "}" << calc.cumulation[i].loss << " l +\t"
+                //        << calc.cumulation[i].splits << " s +\t" << calc.cumulation[i].wins << " w =\t" <<
+                //        calc.cumulation[i].pct
+                //        << " pct\tx;"<< calc.cumulation[i].repeated << std::flush;
             }
         }
     #endif

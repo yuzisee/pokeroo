@@ -146,9 +146,34 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     #endif
 
 
-
+/*
 #ifdef DUMP_CSV_PLOTS
-    std::ofstream excel(StatsManager::dbFileName(withCommunity, onlyCommunity, "CALLSTATS.csv").c_str()
+    string csvname;
+    switch(cardsInCommunity)
+    {
+        case 0:
+            csvname.append("p");
+            break;
+        case 3:
+            csvname.append("f");
+            break;
+        case 4:
+            csvname.append("t");
+            break;
+        case 5:
+            csvname.append("r");
+            break;
+        default:
+            csvname.append("x");
+            break;
+    }
+    string csvfilename = csvname;
+    csvfilename.append("CALLSTATS.csv");
+    //std::cout << endl << csvfilename.c_str() << endl;
+    csvfilename = StatsManager::dbFileName(withCommunity, onlyCommunity, csvfilename.c_str());
+    //std::cout << endl << csvfilename.c_str() << endl ;
+
+    std::ofstream excel(csvfilename.c_str()
             , std::ios::out
             );
 
@@ -159,19 +184,24 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
     excel.close();
 
-    excel.open(StatsManager::dbFileName(withCommunity, onlyCommunity, "CALLCOMMUNITYSTATS.csv").c_str()
+    csvfilename = csvname;
+    csvfilename.append("CALLCOMMUNITYSTATS.csv");
+    csvfilename = StatsManager::dbFileName(withCommunity, onlyCommunity, csvfilename.c_str());
+
+
+    excel.open(csvfilename.c_str()
             , std::ios::out
             );
 
     if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
 
-            callcumu.dump_csv_plots(excel,foldcumu);
+            callcumu.dump_csv_plots(excel,callcumu);
 
 
     excel.close();
 
-    #endif
-
+#endif
+*/
 
 
 

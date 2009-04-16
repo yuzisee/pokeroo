@@ -50,7 +50,7 @@ Its distribution depends on the possible hole cards that your opponent could hav
 
 This cumulative histogram is the starting point for estimating how the opponent should behave if he/she knows which cards you have.
 For example, if the opponent has a high probability of having a strong hand versus yours, he/she should call or raise rather than fold.
-
+Figure~\ref{fig:Cumu} provides a sample \texttt{CallStats} cumulative histogram plotted from real simulation data.
 
 \subsection{CommunityCallStats Histogram}
 \label{sec:CommunityCallStats}
@@ -75,11 +75,23 @@ $\mathrm{Pr}\{\mathrm{Pr\{win\}} \ge \mathrm{Your\:Pr\{win\}}\}$ is the probabil
 Note that this is different than the probability of someone having a better hand \emph{against} your hand (that, is determined by \texttt{CallStats}).
 Secondly, the \texttt{CommunityCallStats} cumulative histogram is the starting point for estimating how the opponent should behave if he/she has no information about your cards.
 \texttt{CommunityCallStats} represents the average $\mathrm{Pr\{win\}}$ of a given hand against all other hands.
+Figure~\ref{fig:Cumu} provides a sample \texttt{CallStats} cumulative histogram plotted from real simulation data.
+
+
+\begin{figure}[htb]
+ \begin{center}
+      \includegraphics[width=0.8\textwidth]{cumu.pdf} 
+ \end{center}
+ \caption[Sample Cumulative Histograms]{ The pre-flop CommunityCallStats cumulative histogram and the pre-flop CallStats histogram of a player holding a pair of nines.}
+ \label{fig:Cumu}
+\end{figure}
+
 
 %Finally, since \texttt{CommunityCallStats} is almost completely independent of which hole cards a player holds, 
-Finally, a single master \texttt{CommunityCallStats} can be generated as soon as the community cards are known, and the results can be efficiently shared between multiple poker bots running in the same process.
-This is not the case for \texttt{CallStats} or \texttt{WinStats}.
-The master \texttt{CommunityCallStats} for the current community are accessible through \texttt{HoldemArena::communityBuffer}.
+%Note that a single master \texttt{CommunityCallStats} can be generated as soon as the community cards are known, and the results can be efficiently shared between multiple poker bots running in the same process.
+%This is not the case for \texttt{CallStats} or \texttt{WinStats}.
+%The master \texttt{CommunityCallStats} for the current community are accessible through \texttt{HoldemArena::communityBuffer}.
+
 
 
 \subsection{WinStats Histogram}
