@@ -9,42 +9,36 @@ Section~\ref{sec:HandEvaluation} designs a mechanism for efficiently evaluating 
 Section~\ref{sec:Histograms} describes how the incomplete hand strength evaluation techniques can be employed to generate the three basic histograms that represent the betting situation facing a poker bot.
 Section~\ref{sec:Utility} defines the structure of the utility functions that will govern the poker bot's behaviour:
 \[
-U = \left( \left( 1 + v_{\mathrm{win}} \left( f \right) \right)^N_w \left( 1 - v_{\mathrm{loss}} \left( f \right) \right)^N_l \right) \cdot B
+U = \left( \left( 1 + v_{\mathrm{win}} \left( f \right) \right)^{N_w} \left( 1 - v_{\mathrm{loss}} \left( f \right) \right)^{N_l} \right) \cdot B
 \]
-The basic formula is extended in the \texttt{GainModel} class to handle various split-pot situations together with specific computation of $v_{\mathrm{loss}}$ and $v_{\mathrm{win}}$ (using the $\mathrm{E[callers}]$ estimation of Section~\ref{sec:Callers}), forming the basis of the showdown utility function.
+This basic formula is extended by the \texttt{GainModel} class to handle split-pot situations together with specific evaluate of $v_{\mathrm{loss}}$ and $v_{\mathrm{win}}$ (using the $\mathrm{E[callers}]$ estimation from Section~\ref{sec:Callers}), forming the basis of the showdown utility function.
 
-Such utility functions for the basis of all of the poker bot's decision making.
+Such utility functions are the basis of all of the poker bot's decision making.
 If the expected utility can be reduced to a single function of $b$, the proposed bet size, standard 1-D unimodal extremum search algorithms can be employed to determine an optimal bet size.
-Section~\ref{sec:StateModel} describes how $\mathrm{Pr\{push}\}$ (of Section~\ref{sec:Push}), $\mathrm{Pr\{raised}\}$ (of Section~\ref{sec:Raises}), and showdown utility (of Section~\ref{sec:Utility}, requiring $\mathrm{E[callers}]$ of Section~\ref{sec:Callers}) are combined to form the overall utility function.
-Heuristics for handling very large bet sizes are covered in Sections~\ref{sec:GeomAlgb}~and~\ref{sec:statworse}, and the key entrypoints for the main betting decision algorithm are presented in Section~\ref{sec:CompleteImplementation}.
+Section~\ref{sec:StateModel} describes how $\mathrm{Pr\{push}\}$ (of Section~\ref{sec:Push}), $\mathrm{Pr\{raised}\}$ (of Section~\ref{sec:Raises}), and showdown utility above are combined to form the overall utility function.
+Heuristics for handling very large bet sizes are covered in Sections~\ref{sec:GeomAlgb}~and~\ref{sec:statworse}, and the key entrypoints for the main betting decision algorithms are presented in Section~\ref{sec:CompleteImplementation}.
 
 
 
 \chapter{Future Recommendations}
 \label{sec:FutureDirection}
 
-Areas for future development that are currently underway include:
-\begin{itemize}
-\singlespace
-\item Exposing public API for integration in higher level languages
-\item More comprehensive `playing-styles' and `personalities'
-\item Tracking opponent `playing-styles' or `personalities' to better predict behaviour
-\end{itemize}
+Areas for future development that are currently underway include: exposing a public API for integration in higher level languages, more comprehensive `playing-styles' and `personalities', and long-term tracking of opponent playing-styles/personalities.
 
 By modularizing the code base and exposing public APIs for access in higher level languages such as Python's extension framework, or Java's JNI, it becomes possible to hook the poker bots into existing tournament frameworks and other poker software.
-This leads to the potential for competition against other poker AI implementations, and is a significant opportunity to learn more about the performance of the poker bot.
+This leads to the potential for competition against other poker AI implementations and is a significant opportunity to learn more about the poker bot's performance.
 %The easiest way to acheive this is to compile the C++ source code into a C DLL/.so library, and then employ the higher level languages' native execution tools, linking at the C level.
 
 Implementing a variety of `playing-styles' or `personalities' can also be a powerful tool for improving the poker bot's performance, especially against human players.
-A specific `playing-style' that deviates from an otherwise `optimal' approach that may turn out to be more effective against specific types of opponents, and less effective against others.
-By choosing between the available `personalities' in real-time with a metaheuristic, it may be possible to dynamically identify the play style that best exploits the opponent's own style of play.
-The University of Alberta's leading currently employs this tactic in their leading poker AIs~\cite{PolarisCoached2007}.
+A specific `playing-style' that deviates from an otherwise `optimal' approach may turn out to be more effective against specific types of opponents, and less effective against others.
+By managing the available `personalities' in real-time with a metaheuristic, it may be possible to dynamically identify the play style that best exploits your opponent's own style of play.
+The University of Alberta currently employs this tactic in their leading poker AIs~\cite{PolarisCoached2007}.
 
 Lastly, it may be advantageous to be able to profile an opponent based on his/her betting patterns to improve the precision with which an opponent's future actions can be predicted.
 Some players bet more than others in certain situations, and if that knowledge is available, a poker bot can make even more informed decisions.
 However, this also opens the door to deception.
 If the computer player relies too heavily on historical profiling, a human player can use this information to mislead the poker bot.
-It is certainly still worthwhile to at least explore the possibilities of historical profiling.
+It is however, certainly still worthwhile to at least explore the possibilities of historical profiling.
 %Naturally, a computer has a natural resistance to manipulation, since 
 %to some of the same weaknesses that a human player has that a computer poker player might otherwise desire to avoid.
 
