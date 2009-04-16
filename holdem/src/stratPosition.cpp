@@ -146,27 +146,32 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     #endif
 
 
-/*
 #ifdef DUMP_CSV_PLOTS
-    string csvname;
+
+    csvpre.clear();
     switch(cardsInCommunity)
     {
         case 0:
-            csvname.append("p");
+            csvpre.append("p");
             break;
         case 3:
-            csvname.append("f");
+            csvpre.append("f");
             break;
         case 4:
-            csvname.append("t");
+            csvpre.append("t");
             break;
         case 5:
-            csvname.append("r");
+            csvpre.append("r");
             break;
         default:
-            csvname.append("x");
+            csvpre.append("x");
             break;
     }
+#endif
+
+/*
+#ifdef DUMP_CSV_PLOTS
+
     string csvfilename = csvname;
     csvfilename.append("CALLSTATS.csv");
     //std::cout << endl << csvfilename.c_str() << endl;
@@ -829,6 +834,44 @@ exit(1);
 
 
 
+#ifdef DUMP_CSV_PLOTS
+ if (bGamble == 0)
+ {
+    string csvfilename = csvpre;
+    csvfilename.append("PLOT.csv");
+    //std::cout << endl << csvfilename.c_str() << endl;
+    csvfilename = StatsManager::dbFileName(ViewDealtHand(), Hand::EMPTY_HAND, csvfilename.c_str());
+    //std::cout << endl << csvfilename.c_str() << endl ;
+
+    std::ofstream excel(csvfilename.c_str()
+            , std::ios::out
+            );
+
+    if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
+
+        excel << "b, oppFoldChance , playChance, geom, geom w/ arith, all four, statemodel" << std::flush;
+        for(float64 csv_betsize = betToCall;csv_betsize < maxShowdown;csv_betsize+=ViewTable().GetChipDenom()/4)
+        {
+            excel << csv_betsize << ",";
+            choicemodel.dump_csv_plots(excel,csv_betsize);
+            excel << geomModel.f(csv_betsize) << ",";
+            excel << hybridgainDeterred_aggressive.f(csv_betsize) << ",";
+            excel << ap.f(csv_betsize) << ",";
+            excel << choicemodel.f(csv_betsize) << ",";
+
+            excep << std::endl;
+        }
+
+
+    excel.close();
+
+ }
+#endif
+
+
+
+
+
     const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel, &callcumu) : solveGainModel(&rolemodel, &callcumu);
 
 #endif
@@ -885,6 +928,12 @@ exit(1);
     }
 
 #endif
+
+
+
+
+
+
 
     return bestBet;
 

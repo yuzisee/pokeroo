@@ -171,6 +171,22 @@ class StateModel : public virtual HoldemFunctionModel
 	virtual float64 f(const float64);
     virtual float64 fd(const float64, const float64);
 
+
+
+	#ifdef DUMP_CSV_PLOTS
+	float64 oppFoldChance;
+	float64 playChance;
+        void dump_csv_plots(std::ostream &targetoutput, float64 betSize)
+        {
+
+
+            targetoutput.precision(4);
+            targetoutput << oppFoldChance << "," << playChance << "," << std::flush;
+
+
+        }
+    #endif
+
 }
 ;
 

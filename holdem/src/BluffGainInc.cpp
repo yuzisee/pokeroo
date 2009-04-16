@@ -255,7 +255,11 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
 	float64 potFoldWin = ea.tableinfo->PushGain();
 	const float64 potFoldWinD = 0;
-    float64 oppFoldChance = ea.pWin(betSize);
+	#ifndef DUMP_CSV_PLOTS
+	float64
+	#endif // if ! DUMP_CSV_PLOTS
+    oppFoldChance = ea.pWin(betSize);
+
     float64 oppFoldChanceD = ea.pWinD(betSize);
 
 //#ifdef DEBUGASSERT
@@ -361,7 +365,10 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
 
 ///Establish [Play] values
-	float64 playChance = 1 - oppFoldChance - lastuptoRaisedChance;
+    #ifndef DUMP_CSV_PLOTS
+	float64
+	#endif // if ! DUMP_CSV_PLOTS
+	playChance = 1 - oppFoldChance - lastuptoRaisedChance;
 	float64 playChanceD = - oppFoldChanceD - lastuptoRaisedChanceD;
     /*
 	float64 playChance = 1 - oppFoldChance;

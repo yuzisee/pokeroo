@@ -87,6 +87,9 @@ class PositionalStrategy : virtual public PlayerStrategy
         virtual void SeeAction(const HoldemAction&) {};
         virtual void FinishHand(){};
 
+    #ifdef DUMP_CSV_PLOTS
+    string csvpre;
+    #endif
 }
 ;
 

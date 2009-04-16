@@ -44,6 +44,7 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 
     virtual float64 GetFoldGain(CallCumulationD* const e, float64 * const foldWaitLength_out);
 
+
     #ifdef DEBUG_GAIN
         void breakdown(float64 points, std::ostream& target, float64 start=0, float64 end=1)
         {
