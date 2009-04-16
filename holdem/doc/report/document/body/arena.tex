@@ -236,7 +236,7 @@ The probability $\mathrm{Pr\{play\}}$ is computed with almost the same approach 
 Firstly, in general, when your bet is so large that all players will decide to fold, the bet size will fall in the category of arithmetic mean utility functions rather than geometric mean utility functions.
 Secondly, making a large bet gives more away about the hand that you hold, and therefore, in the spirit of the minimax/Nash equilibrium approaches, more weight is deliberately given to the worse of \texttt{CallStats} or \texttt{CommunityCallStats} when looking up $\mathrm{Pr\{play\}}$ from the computed $w_{\mathrm{threshold}}$.
 Once $\mathrm{Pr\{play\}}$ is known for each player, the product $\mathrm{Pr\{push\}} = \prod_{\mathrm{opponents}} \left( 1 - \mathrm{Pr\{play\}} \right)$ is the total probability of winning the pot due to opponent folds.
-
+See Figure~\ref{fig:Pr} for example $\mathrm{Pr\{push\}}$ behaviour plotted from real simulation data.
 
 
 \subsection{Raises}
@@ -278,5 +278,14 @@ However, betting the maximum provides everybody else with an implicit FoldGain o
 Instead, when a player has good cards, the utility of calling is higher than the utility of folding.
 Then, the decision of whether to call or raise is simply about adding more money to the showdown or not, and the RiskLoss deterrent isn't needed.
 Furthermore, \texttt{FacedOddsRaiseGeom} currently does not explicitly consider the expected utility due to the possibility of everybody else folding, and the removal of RiskLoss plays that role somewhat in the comparison between the utility of raising vs. calling.
+See Figure~\ref{fig:Pr} for example $\mathrm{Pr\{raise\}}$ behaviour plotted from real simulation data.
+
+\begin{figure}[htb]
+ \begin{center}
+      \includegraphics[width=0.8\textwidth]{pr.pdf} 
+ \end{center}
+ \caption[$\mathrm{Pr\{fold\}}$, $\mathrm{Pr\{play\}}$, and $\mathrm{Pr\{raise\}}$]{ $\mathrm{Pr\{fold\}}$, $\mathrm{Pr\{play\}}$, and $\mathrm{Pr\{raise\}}$ are estimated in a preflop situation. Notice the jump from 70\% play to 70\% push at a bet size of about half of the remaining chips. Once a bet is that big, if your opponent has any interest in playing he/she may as well re-raise all in.}
+ \label{fig:Pr}
+\end{figure}
 
 %\clearpage
