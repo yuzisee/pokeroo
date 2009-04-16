@@ -24,11 +24,12 @@ For example, if $\mathrm{Pr\{push}\}$, and $\mathrm{Pr\{raised}\}$ are known, %$
 \[
 U_\mathrm{StateModel} = \left(U_\mathrm{showdown}\right)^{\mathrm{Pr\{call\}}} \cdot \left(U_\mathrm{push}\right)^{\mathrm{Pr\{push}\}} \cdot \prod_\mathrm{raiseAmount} \left(U_\mathrm{raiseAmount}\right)^{\mathrm{Pr\{raiseAmount}\}}
 \]
-Again, the utilities and probabilities are all functions of $b$, the size you choose to bet; and ultimately a 1-D function extremum search takes place across $U\left(b\right)$
-$\mathrm{Pr\{call\}}$ is simply $\left(1 - \mathrm{Pr\{push}\} - \sum \mathrm{Pr\{raised}\}\right)$.
-The $raiseAmount$ variable iterates across an array of possible amounts that opponents could raise to.
+Here, $\mathrm{Pr\{call\}}$ is simply $\left(1 - \mathrm{Pr\{push}\} - \sum \mathrm{Pr\{raised}\}\right)$.
+Again, all utilities and probabilities are functions of $b$, the size you choose to bet; and ultimately a 1-D function extremum search takes place across $U\left(b\right)$.
+
 It is too expensive to consider all possible $raiseAmount$ values, so an approximation is employed.
-The range of possible raises is logarithmically quantized and the $U_\mathrm{raiseAmount}$ is precomputed at each of the quantized values.
+Here, the $raiseAmount$ variable iterates across an array of possible amounts that opponents could raise to.
+The range of possible raises is a logarithmic quantization of the full range of raise amounts, and then $U_\mathrm{raiseAmount}$ and $\mathrm{Pr\{raised}\}$ are precomputed at each of the quantized values.
 The \texttt{StateModel} class implements this final aggregation of outcomes.
 
 \subsection{Geometric vs. Arithmetic Utility}
@@ -42,6 +43,7 @@ U_\mathrm{combined}(b) = \left(1 - \frac{b}{riskprice}\right) U_\mathrm{geom}(b)
 As $b$ increases toward $riskprice$, the weight shifts from $U_\mathrm{geom}(b)$ to $U_\mathrm{algb}(b)$.
 Here $riskprice$ is the maximum possible bet.
 This is either the total number of chips that the poker bot currently has, or the smallest bet size for which the opponents' FoldGain is \emph{always} positive.
+The \texttt{AutoScalingFunction} class provides the linear combinations framework for combining utility functions.
 
 \subsection{Worst Case Win Percentage}
 
