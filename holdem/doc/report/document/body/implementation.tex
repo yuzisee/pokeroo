@@ -9,7 +9,7 @@
 \chapter{Poker Hand Evaluation}
 \label{sec:HandEvaluation}
 
-The core of the decision engine contains a mechanism for determining whether a set of cards is stronger than another.
+The core of the decision engine contains a mechanism for determining whether one set of cards is stronger than another.
 %A hand evaluator is required in order to determine whether a set of cards is stronger than another.
 This section presents a data structure for representation of a set of cards, as well as an efficient algorithm for computation of card strength for comparison.
 The \texttt{CommunityCallStats} class implements the data structures discussed in Section~\ref{sec:DataStructures}.
@@ -28,7 +28,7 @@ Hand evaluation exists at two levels.
 Firstly, it must be possible to compute which seven-card hand would win among a set of seven-card hands.
 This requires an implicit computation of the best five-card poker hand that can be formed within each seven-card hand.
 Secondly, it will be necessary to evaluate the strength of a set of incomplete hands, that is, those with fewer than seven cards.
-This is then determined by the distribution of potential seven-card hands that can be formed.
+This is determined by the distribution of potential seven-card hands that can be formed.
 
 
 \section{Poker Hands}
@@ -41,7 +41,7 @@ From strongest to weakest the standard poker hands are:
 \singlespacing
 \item Straight Flush: Five consecutive card values, all with the same suit
 \item Four-of-a-kind: Four matching cards
-\item Full house: Three-of-a-kind and then a pair
+\item Full house: Three-of-a-kind and a different pair
 \item Flush: Five cards with the same suit
 \item Straight: Five consecutive card values, any suit
 \item Three-of-a-kind: Three matching cards
@@ -51,13 +51,13 @@ From strongest to weakest the standard poker hands are:
 In pair-type poker hands (e.g. two-pair, full house, etc.) a higher valued match is stronger than a lower valued match.
 In a full house the three-of-a-kind is more important than the pair.
 For example, 555QQ is stronger than 444KK, because three fives is stronger than three fours.
-Similarly, 99332 is stronger than 7766K, the highest pair, nines, is stronger than the opposing highest pair, sevens.
+Similarly, 99332 is stronger than 7766K: the highest pair, nines, is stronger than the opposing highest pair, sevens.
 In non-pair-type poker hands, or when the matches are identical between both players, the values of the remaining cards are used to break ties.
 The highest tiebreaking card wins.
 Aces are always considered high except when used for the ace-low (5432A) straight, and suits have no associated strength.
 %Since all poker hands are five card hands, the poker hands that don't use all five cards (e.g. four-of-a-kind, two-pair, etc.) use the remaining cards to break ties.
 If it is still a tie, the next highest tiebreaking card is compared next, until all five cards have been used.
-In the case that no poker hand is made, all five cards end up being used in this way --- this is commonly referred to as a 'high card' hand.
+In the case that none of the listed poker hands can be made, all five cards are tiebreak cards -- this is commonly referred to as a 'high card' hand.
 A ``split pot'' occurs if a tie cannot be broken with all five cards.
 
 Holdem poker uses these standard five-card poker hands for strength comparison, however each player is only dealt two cards of their own (known as ``hole cards'').
@@ -80,7 +80,7 @@ In holdem poker, each game round consists of four betting rounds:
 \end{enumerate}
 
 During each betting round, each player is given at least one chance to bet.
-A player's bet must match (known as a call) or exceed (known as a raise) the highest bet during the betting round so far, otherwise, a player forfeits (known as a fold) his/her opportunity to win until new hole cards are dealt in the following game round.
+A player's bet must match (known as a call) or exceed (known as a raise) the highest bet so far during the betting round, otherwise, a player forfeits (known as a fold) his/her opportunity to win until new hole cards are dealt in the following game round.
 A betting round continues until all players have called or folded.
 Players that fold make no further bets until the next hole cards are dealt.
 
@@ -101,7 +101,7 @@ A set of cards is stored as an array of four 16-bit integers (the `cardset' arra
 
 Each of the four 16-bit `cardset' integers represents an individual suit.
 Each bit in each `cardset' integer determines whether that card is contained in the set.
-Storing aces as both bit 0 and bit 13 improves efficiency of the strength calculation stage.
+Storing aces as both bit 0 and bit 13 improves computational efficiency during the strength calculation stage.
 \textbf{Table~\ref{tab:CardsetBitfield}} provides an example of the `cardset' bitfield.
 
 The `valueset' integer determines how many times each card is contained in the set.
@@ -153,8 +153,8 @@ Value  &    1    &0      & 1     &  1    &  0    & 0     &  0    &  0    &  0   
 \end{small}
 \end{table}
 
-The `cardset' bitfield is used to efficiently determine whether a certain card is contained in the hand.
-The `valueset' bitfield can efficiently determine how many cards of a certain value are contained in the hand.
+The `cardset' bitfield efficiently determines whether a certain card is contained in the hand.
+The `valueset' bitfield efficiently determines how many cards of a certain value are contained in the hand.
 Furthermore, the ordinality of the `valueset' bitfield is very similar to what is required for tiebreaking.
 
 %For the purposes of strength calculation, 
@@ -163,8 +163,8 @@ Furthermore, the ordinality of the `valueset' bitfield is very similar to what i
 \label{sec:StrengthCalculation}
 
 The first step of the strength calculation involves detecting what poker hand has been made.
-Detecting straights, straight flushes, and four-of-a-kind takes advantage of the `cardset' representation.
-Detecting pairs, triples and flushes is performed incrementally, as each card is added to the set.
+Detection of straights, straight flushes, and four-of-a-kinds takes advantage of the `cardset' representation.
+Detection of pairs, triples and flushes is performed incrementally, as each card is added to the set.
 The strength of a hand is stored in one byte as outlined in \textbf{Table~\ref{tab:StrengthByte}}.
 
 Straight flushes can be detected by shifting and ANDing each of the `cardset' bitfields.
@@ -173,24 +173,19 @@ To detect flushes, any time a card is added to the set, a corresponding counter 
 Any counter exceeding five indicates that the poker hand contains at least a flush.
 %by counting the number of 1s in each cardset bitfield (excluding the Ace at bit 0 so that it is not double-counted).
 %Card matches (pairs, two-pairs, three-of-a-kind, full house, four-of-a-kind) are also detected incrementally.
-A list of the top two pairs is always stored, and the list is updated whenever another pair occurs.
-If a card with a value that has already paired is added to a set of cards, the hand is promoted to a three-of-a-kind, or to a full house if another pair already exists.
+A list of the top two pairs is always stored, and the list is incrementally updated whenever another pair is formed.
+If a card with a value that has already paired is added again to a set of cards, the hand is promoted to `three-of-a-kind', or to `full house' if another pair already exists.
 The same applies to four-of-a-kind.
 
 
 \subsection{Tiebreaking}
 \label{sec:Tiebreaking}
-Two hands that have the exact same strength (e.g. two-pair vs. the same two-pair) require tiebreaking.
+Two hands that have the exact same strength (e.g. two-pair vs. the same two-pair) always require tiebreaking.
 For a set of five cards where either a flush or no poker hand is made, the ordinality of the `valueset' bitfield directly determines the winner.
 For a set of seven cards, the two cards with the least value need to be subtracted from the `valueset' bitfield.
-This operation is sufficient for all hands up to and including three-of-a-kind: The smallest two cards that aren't used in a pair/triplet are subtracted from the `valueset' bitfield, and the remaining value represents the tiebreaker.
-The tiebreak value of a straight or straight flush only depends on one of the cards in the straight, and the tiebreak value of a four-of-a-kind depends only on the highest remaining card.
+This operation is sufficient for all hands up to and including three-of-a-kind: The smallest two cards that aren't used in a pair/triplet are subtracted from the `valueset' bitfield, and the remaining `valueset' represents the tiebreaker.
+The tiebreak value of a straight or straight flush only depends on one of the cards from the straight, and the tiebreak value of a four-of-a-kind depends only on the highest remaining card.
 Lastly, during a full-house, the tiebreak variable needs only to represent the contained three-of-a-kind and pair, with more significance placed on the three-of-a-kind.
-
-Organizing the strength and tiebreak fields in this way maps each poker hand strength to a set of integers, while preserving ordinality.
-This representation allows for efficient sorting and searching of arbitrary groups of seven-card hands, leading to a mechanism for evaluating incomplete hands by iterating over all potential complete hands that can be obtained.
-The combinations of all strength and tiebreak pairs are summarized in \textbf{Table~\ref{tab:StrengthByte}}.
-
 
 \begin{table}[htb]
 \captionsetup{position=top}
@@ -219,6 +214,11 @@ Nothing         & 1        & Valueset, lowest two cards removed           \\
 \end{small}
 \end{table}
 
+Organizing the strength and tiebreak fields in this way maps each poker hand strength to a set of integers, while preserving ordinality.
+This representation allows for efficient sorting and searching of arbitrary groups of seven-card hands, leading to a mechanism for evaluating incomplete hands by iterating over all potential complete hands that can be obtained.
+The combinations of all strength and tiebreak pairs are summarized in \textbf{Table~\ref{tab:StrengthByte}}.
+
+
 
 \section{Incomplete Hands}
 \label{sec:IncompleteHands}
@@ -228,12 +228,12 @@ This distribution can be computed by iterating over all possible seven-card hand
 So far, hand strength evaluation has been based on the strength of a single seven-card hand.
 However, in game situations, hand strength is always relative to the opponent's hand.
 Thus, given the hole cards of a specific player, the decision engine calculates the joint distribution of community cards and opposing hole cards.
-A player may also make a specific bet in order to better position him/herself during the next betting round, rather than achieve the greatest showdown utility.
+A player might also choose to better position him/herself for the next betting round, rather than to achieve the greatest outright showdown utility.
 For this reason, it is often desirable to distinguish between the immediately upcoming community cards, and future community cards.
 %to condition the distribution on the specific community cards that will be dealt between the current betting round 
 The calculation of such distributions entail a very large runtime complexity.
 
-The most computationally expensive distributions to calculate are for the ``Pre-flop'' betting round.
+The most computationally expensive distributions to calculate are for the `Pre-flop' betting round.
 At this point a player has only his/her two hole cards and must consider $\binom{50}{3}$ potential combinations of immediately upcoming flops, leading to $\binom{47}{2}$ potential seven-card hands per flop, and $\binom{45}{2}$ possible combinations of opposing hole cards.
 This requires the computation of roughly twenty billion combinations, and considers only one opponent.
 A series of optimizations and approximations must be made to make the problem more computationally feasible. %reduce the problem into a more computationally feasible one.
@@ -265,7 +265,8 @@ In this particular example it would be sufficient to explore only the outcomes s
 \item \sout{7\xs{} 4\xs{} 2\xc{}} ...
 \item \sout{7\xs{} 4\xs{} 2\xd{}} ...
 \item 7\xs{} 4\xs{} 3\xs{} ...
-\item \sout{7\xs{} 4\xs{} 3\xh{}} ...
+\item 7\xs{} 4\xs{} 3\xh{} ...
+\item \sout{7\xs{} 4\xs{} 3\xc{}} ...
 \item ...
 \end{itemize}
 
@@ -293,8 +294,8 @@ Notice that adding 2\xs{} and then K\xh{} is symmetric to adding K\xs{} and then
 \item ...
 \end{itemize}
 It is possible to prune each of these duplicate paths by implicitly sorting the suits in descending order of cardset integers.
-Because the initial cards contained symmetric spades and hearts, the potential seven-card hands where the hearts cardset is greater than the spades cardset can be safely pruned.
-In this particular example, the exploration algorithm avoids exploring all paths where the hearts cardset exceeds the spades cardset.
+Because the initial cards contained symmetric spades and hearts, you can safely prune all potential seven-card hands where the hearts cardset is greater than the spades cardset.
+In this particular example, the exploration algorithm avoids exploring all paths where the hearts cardset integer exceeds the spades cardset integer.
 
 %At this point, spades has a larger cardset integer than hearts unless a heart larger than 3\xh{} is added to the hand.
 %Instead, 
@@ -306,13 +307,13 @@ For the pre-flop case in particular, combining the optimizations described above
 \label{sec:Caching}
 
 Finally, since only 169 unique hole card pairs (accounting for symmetry among suits) exist, it is possible to pre-compute these 169 distributions and cache them on disk.
-This way, only post-flop or simpler distributions are calculated in real-time, with a worst case runtime complexity on the order of one million hand evaluations ($\binom{47}{2}$ seven-card hands and $\binom{45}{2}$ possible opponents).
-This runtime complexity can be decreased even further by applying the symmetry optimizations described in section~\ref{sec:Optimizations}.
+This way, only post-flop or simpler distributions require to be calculated in real-time, with a worst case runtime complexity on the order of one million hand evaluations ($\binom{47}{2}$ seven-card hands and $\binom{45}{2}$ possible opponents).
+This runtime complexity is then improved even further once applying the symmetry optimizations described in section~\ref{sec:Optimizations}.
 
 \subsection{Approximations}
 \label{sec:Approximations}
 
-To reduce runtime complexity, it is assumed that the probabilities of winning against each opponent are independent.
+One additional runtime complexity reduction is to assume that the probabilities of winning against each opponent are independent.
 This is not the case in general: Two opponents cannot simultaneously hold any of the same hole cards.
 %If one opponent has weak cards, since the next opponent will not simultaneously hold those cards the distribution of possible hands 
 That is, knowledge of the hole cards of one opponent affects the distribution of hole cards of another opponent.
