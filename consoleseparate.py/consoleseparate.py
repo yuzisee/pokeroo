@@ -185,8 +185,11 @@ class ConsoleSeparateWindow(Tkinter.Tk):
     EXPAND_ALL = Tkinter.W+Tkinter.E+Tkinter.N+Tkinter.S
     EXPAND_BOTTOM_HORIZONTAL =Tkinter.W+Tkinter.E+Tkinter.S
 
-    DEFAULT_CONSOLE_FONT = font=("Lucida Console", 9)
-    DEFAULT_INPUT_FONT = font=("Courier New", 9,"bold")
+#    DEFAULT_CONSOLE_FONT = font=("Lucida Console", 9)
+#    DEFAULT_INPUT_FONT = font=("Courier New", 9,"bold")
+#Portable font choices: http://wiki.tcl.tk/451
+    DEFAULT_CONSOLE_FONT = font=("Courier", 9)
+    DEFAULT_INPUT_FONT = font=("Courier", 9,"bold")
 
 
     def __init__(self, my_console_app):
