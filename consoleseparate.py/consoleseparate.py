@@ -219,7 +219,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
         #The input frame contains the stderr latest with an entry field at the bottom
         stderr_input_frame = Tkinter.Frame(self, borderwidth=2, relief=Tkinter.GROOVE)
-        stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0,font=DEFAULT_INPUT_FONT)
+        stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0,font=ConsoleSeparateWindow.DEFAULT_INPUT_FONT)
 
         stderr_latest  = AppendableLabel(stderr_input_frame)
         stderr_latest.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
@@ -297,7 +297,7 @@ if __name__=='__main__':
     #   Execute our child process
     #================================
     #From http://mail.python.org/pipermail/python-list/2007-June/618721.html
-    console_app = subprocess.Popen(sys.argv[1:], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=1)
+    console_app = subprocess.Popen(sys.argv[1:], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=1, shell=True)
 
 
     #===============================================
