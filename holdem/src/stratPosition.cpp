@@ -849,7 +849,7 @@ exit(1);
 
     if( !excel.is_open() ) std::cerr << "\n!functionlog.cvs file access denied" << std::endl;
 
-        excel << "b, oppFoldChance , playChance, geom, geom w/ arith, all four, statemodel" << std::flush;
+        excel << "b, oppFoldChance , playChance, geom, geom w/ arith, all four, statemodel" << std::endl;
         for(float64 csv_betsize = betToCall;csv_betsize < maxShowdown;csv_betsize+=ViewTable().GetChipDenom()/4)
         {
             excel << csv_betsize << ",";
@@ -859,7 +859,7 @@ exit(1);
             excel << ap.f(csv_betsize) << ",";
             excel << choicemodel.f(csv_betsize) << ",";
 
-            excep << std::endl;
+            excel << std::endl;
         }
 
 
