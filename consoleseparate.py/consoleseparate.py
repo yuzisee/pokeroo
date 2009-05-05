@@ -40,7 +40,7 @@ class SubProcessThread(threading.Thread):
             #except Exception:
             #    print "CONSOLESEPARATE: abort "
 
-        print "CONSOLESEPARATE: read terminate"
+        print str(self._fd) + "CONSOLESEPARATE: read terminate"
 
         #txt =
 #
@@ -297,7 +297,7 @@ if __name__=='__main__':
     #   Execute our child process
     #================================
     #From http://mail.python.org/pipermail/python-list/2007-June/618721.html
-    console_app = subprocess.Popen(sys.argv[1:], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=1, shell=True)
+    console_app = subprocess.Popen(sys.argv[1:], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=1)
 
 
     #===============================================
