@@ -155,8 +155,8 @@ bool StatsManager::UnserializeW( ifstream& dataf, StatResult* myAvg, DistrShape*
 
 void StatsManager::SerializeC( ofstream& dataf, const CallCumulation& q )
 {
-    size_t vcount = q.cumulation.size();
-    dataf.write(reinterpret_cast<const char*>(&vcount),sizeof(size_t));
+    cachesize_t vcount = q.cumulation.size();
+    dataf.write(reinterpret_cast<const char*>(&vcount),sizeof(cachesize_t));
     //const vector<StatResult>& targetVector = q.cumulation;
     vector<StatResult>::const_iterator target;
     for(target = q.cumulation.begin();target != q.cumulation.end();++target)
@@ -173,8 +173,8 @@ void StatsManager::SerializeC( ofstream& dataf, const CallCumulation& q )
 
 bool StatsManager::UnserializeC( ifstream& dataf,  CallCumulation& q )
 {
-    size_t vcount;
-    dataf.read(reinterpret_cast<char*>(&vcount),sizeof(size_t));
+    cachesize_t vcount;
+    dataf.read(reinterpret_cast<char*>(&vcount),sizeof(cachesize_t));
     if( dataf.bad() || dataf.eof() ) return false;
 
     q.cumulation.clear();

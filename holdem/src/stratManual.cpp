@@ -577,7 +577,7 @@ float64 UserConsoleStrategy::queryAction()
 {
     int8 bExtraTry = 1;
     char defaultAction = 0;
-    float64 returnMe;
+    float64 returnMe = ViewPlayer().GetBetSize();
 
     showSituation();
 

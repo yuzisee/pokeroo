@@ -35,7 +35,7 @@
 
  void HoldemArena::FileNumberString(handnum_t value, char * str)
  {
-	sprintf(str,"%lu",value);
+	sprintf(str,"%u",value);
  }
 
 

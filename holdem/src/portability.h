@@ -27,15 +27,15 @@ typedef signed char int8;
 typedef unsigned short int uint16;
 typedef signed short int int16;
 
-typedef unsigned long int uint32;
-typedef signed long int int32;
+typedef unsigned int uint32;
+typedef signed int int32;
 /*
 ISO C++ doesn't support 'long long'
 typedef unsigned long long int uint64;
 typedef signed long long int int64;
 */
 
-typedef long double float128;
+//typedef long double float128;
 typedef double float64;
 typedef float float32;
 
@@ -44,6 +44,8 @@ typedef float float32;
 
 typedef uint32 handnum_t;
 typedef int8 playernumber_t;
+typedef uint32 cachesize_t; //Note: data cache is stored little-endian too...
+
 
 #ifdef __cplusplus
 class HoldemConstants

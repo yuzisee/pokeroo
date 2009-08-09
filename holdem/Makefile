@@ -25,7 +25,7 @@ BUILD_DEPS = $(patsubst $(BUILD_DIR)/%.o,$(BUILD_DIR)/%.d,$(BUILT_OBJS))
 STATIC_OBJ_CPP = $(BUILD_DIR)/holdem.a
 
 #Naming your shared libraries: http://www.faqs.org/docs/Linux-HOWTO/Program-Library-HOWTO.html#SHARED-LIBRARIES
-APP = $(BIN_DIR)/holdem
+APP = $(BIN_DIR)/holdem.$(shell uname -m)
 DYNAMIC_LINK_LIB_C = $(LIB_DIR)/libholdem.so
 DYNAMIC_SO_LIB_C = $(DYNAMIC_LINK_LIB_C).1
 

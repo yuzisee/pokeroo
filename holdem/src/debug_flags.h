@@ -32,12 +32,12 @@
 #ifndef NO_LOG_FILES
 /* Mode Flags (Depends on NO_LOG_FILES) */
 #define LOGPOSITION
-#undef WINRELEASE
+#define WINRELEASE
 /**********************************/
 #undef DEBUG_GAIN
 
 #define GRAPHMONEY "chipcount.csv.txt"
-#define DUMP_CSV_PLOTS
+#undef DUMP_CSV_PLOTS
 
 /* Savegame debugging */
 #undef DEBUG_SINGLE_HAND
