@@ -440,90 +440,196 @@ void ConsoleStrategy::showSituation()
 }
 
 
+
+
+//enum QueriedAction { ALGEBRAIC_AUTOSCALE, LOGARITHMIC_AUTOSCALE };
+
+void queryAction_skipFileWhitespace(std::istream * const userInstream)
+{
+//This function skips whitespace when parsing a (save)file.
+//If userInstream isn't a file stream, we don't care. Just return.
+//
+// Caution: EARLY RETURN!
+//
+    if( userInstream == &cin ) return;
+
+//In this case, we want to keep ignoring any whitespace characters that we find
+    #ifdef USERINPUT
+    UI_DESCRIPTOR << "Mark fileinput" << endl;
+    #endif
+    while( userInstream->peek() == '\n' || userInstream->peek() == '\r' || userInstream->peek() == ' ' )
+    {
+	#ifdef USERINPUT
+	UI_DESCRIPTOR << "ExtraE" << endl;
+	#endif
+	userInstream->ignore( 1 , '\n');
+    }
+
+}
+
+
+void queryAction_switchovertoConsoleInput(std::istream * &userInstream)
+{ 
+//If we happen to just reach the end of the file, switch over to the c-input stream.
+//(Otherwise, return as usual)
+    if( userInstream->eof() )
+    {
+	#ifdef USERINPUT
+	if( userInstream == &cin )
+	{
+		UI_DESCRIPTOR << "EOFchar!" << endl;
+	}
+	else
+	{
+		UI_DESCRIPTOR << "StreamClear" << endl;
+	}
+	#endif
+	cin.sync();
+	cin.clear();
+	
+	userInstream = &(cin);
+    }
+}
+
+enum UserConsoleStrategyAction { ACTION_FOLD,
+				 ACTION_CHECK,
+				 ACTION_CALL,
+				 ACTION_RAISEBY,
+				 ACTION_RAISETO,
+				 ACTION_DEFAULT,
+				 ACTION_UNKNOWN,
+				 ACTION_INPUTERROR
+				};
+
+
+enum UserConsoleStrategyAction queryAction_determineAction(std::istream * const userInstream){
+    const int16 MAXINPUTLEN = 10;
+    char inputBuf[MAXINPUTLEN];
+    int16 inputLen = MAXINPUTLEN;
+    inputBuf[0] = 0;
+
+    if( userInstream->peek() == 'r' ) inputLen = 7; // Avoid extracting/discarding the raiseAmount (if presenti)
+
+    if( userInstream->getline( inputBuf, inputLen ) == 0 ) return ACTION_INPUTERROR;
+
+    if( strncmp(inputBuf, "fold",4) == 0 ) return ACTION_FOLD;
+    else if( strncmp(inputBuf, "check", 5) == 0 ) return ACTION_CHECK;
+    else if( strncmp(inputBuf, "call", 4) == 0 ) return ACTION_CALL;
+    else if( strncmp(inputBuf, "raiseby", 7) == 0 ) return ACTION_RAISEBY;
+    else if( strncmp(inputBuf, "raiseto", 7) == 0 ) return ACTION_RAISETO;
+    else if( strncmp(inputBuf, "EXIT", 4) == 0 ) exit(0);
+    else if( 0 == inputBuf[0] ) return ACTION_DEFAULT;
+    else
+    {
+	UI_DESCRIPTOR << inputBuf << " is not a correct choice." << endl;
+	return ACTION_UNKNOWN;
+    }
+}
+
+float64 queryAction_queryPositiveFloat(std::istream * const userInstream){
+    float64 usersFloat;
+    if( (*userInstream) >> usersFloat )
+    {
+        /// Success!
+	/// Now clean up the stream past all whitespace that follows.
+
+	if( userInstream->rdbuf()->in_avail() > 0 )
+	{
+	    while( userInstream->peek() == '\n' || userInstream->peek() == '\r' )
+	    {
+		#ifdef USERINPUT
+		int numericPeek = userInstream->peek();
+		UI_DESCRIPTOR << "avail:" << userInstream->rdbuf()->in_avail() << endl;
+		UI_DESCRIPTOR << "SkipE" << numericPeek << endl;
+		#endif
+		userInstream->ignore(1);
+	    }
+	    #ifdef USERINPUT
+	    UI_DESCRIPTOR << ".seComplete" << endl;
+	    #endif
+	}
+	cin.sync();
+
+	/// Report value back to caller
+    	return usersFloat;
+    }
+    else
+    {
+    //
+    // ERROR HANDLING
+    //
+
+	#ifdef USERINPUT
+	UI_DESCRIPTOR << "ApE" << endl;
+	#endif
+	cin.sync();
+	cin.clear();
+
+    	return 0;
+    }
+
+    
+}
+
 //Only ^Z will cause cin.eof()
 ///Aha!
 float64 UserConsoleStrategy::queryAction()
 {
-	const int16 INPUTLEN = 10;
-	int8 bExtraTry = 1;
-	char inputBuf[INPUTLEN];
-	char defaultAction = 0;
-	inputBuf[0] = 0;
-	float64 returnMe;
+    int8 bExtraTry = 1;
+    char defaultAction = 0;
+    float64 returnMe;
 
     showSituation();
 
 
 
-	while( bExtraTry != 0 )
+    while( bExtraTry != 0 ) //Main input loop
+    {
+        
+	queryAction_skipFileWhitespace(myFifo);
+	queryAction_switchovertoConsoleInput(myFifo);
+
+
+	//==============================
+	// Display user input choices
+	//==============================
+
+	UI_DESCRIPTOR << endl << endl;
+	UI_DESCRIPTOR << "== ENTER ACTION: " << ViewPlayer().GetIdent().c_str() << " ==";
+	UI_DESCRIPTOR << "      (press only [Enter] for check/fold)" << endl;
+	if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
 	{
-	    if( myFifo != &cin )
-        {
-            #ifdef USERINPUT
-            UI_DESCRIPTOR << "Mark fileinput" << endl;
-            #endif
-            while( myFifo->peek() == '\n' || myFifo->peek() == '\r' || myFifo->peek() == ' ' )
-            {
-                #ifdef USERINPUT
-                UI_DESCRIPTOR << "ExtraE" << endl;
-                #endif
-                myFifo->ignore( 1 , '\n');
-            }
-            if( myFifo->eof() )
-            {
-                #ifdef USERINPUT
-                UI_DESCRIPTOR << "StreamClear" << endl;
-                #endif
-                myFifo = &(cin);
-                cin.sync();
-                cin.clear();
-            }
-        }
+	    UI_DESCRIPTOR << "check" << endl;
+	    defaultAction = 'c';
+	}
+	else
+	{
+	    UI_DESCRIPTOR << "fold" << endl;
+	    defaultAction = 'f';
+	    UI_DESCRIPTOR << "call (" << ViewTable().GetBetToCall() << flush;
+	    if( ViewPlayer().GetBetSize() > 0 )
+	    {
+		UI_DESCRIPTOR << " = +" << (ViewTable().GetBetToCall() - ViewPlayer().GetBetSize());
+	    }
+	    UI_DESCRIPTOR << ")" << endl;
+	}
+	UI_DESCRIPTOR << "raiseto" << endl << "raiseby" << endl << "-->" << flush;
+	#ifdef FANCYUNDERLINE
+	std::cerr << "____\b\b\b\b" << flush;
+	#endif
 
 
-        if( myFifo->eof() )
-        {
-            #ifdef USERINPUT
-            UI_DESCRIPTOR << "EOF" << endl;
-            #endif
-            myFifo = &(cin);
-            cin.sync();
-            cin.clear();
-        }else
-        {
-            UI_DESCRIPTOR << endl << endl;
-            UI_DESCRIPTOR << "== ENTER ACTION: " << ViewPlayer().GetIdent().c_str() << " ==";
-            UI_DESCRIPTOR << "      (press only [Enter] for check/fold)" << endl;
-            if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
-            {
-                UI_DESCRIPTOR << "check" << endl;
-                defaultAction = 'c';
-            }
-            else
-            {
-                UI_DESCRIPTOR << "fold" << endl;
-                defaultAction = 'f';
-                UI_DESCRIPTOR << "call (" << ViewTable().GetBetToCall() << flush;
-                if( ViewPlayer().GetBetSize() > 0 )
+        const float64 minRaiseBy = ViewTable().GetMinRaise();
+        const float64 minRaiseTo  = ViewTable().GetMinRaise() + ViewTable().GetBetToCall();
+	
+
+
+	switch( queryAction_determineAction( myFifo ) )
+	{
+	    case ACTION_FOLD:
+                if( bExtraTry == 2 || ViewTable().GetBetToCall() > ViewPlayer().GetBetSize())
                 {
-                    UI_DESCRIPTOR << " = +" << (ViewTable().GetBetToCall() - ViewPlayer().GetBetSize());
-                }
-                UI_DESCRIPTOR << ")" << endl;
-            }
-            UI_DESCRIPTOR << "raiseto" << endl << "raiseby" << endl << "-->" << flush;
-            #ifdef FANCYUNDERLINE
-            std::cerr << "____\b\b\b\b" << flush;
-            #endif
-        }
-
-		if( myFifo->getline( inputBuf, INPUTLEN ) != 0 )
-		{
-
-			if( strncmp(inputBuf,"fold",4) == 0 )
-			{
-				if( bExtraTry == 2 || ViewTable().GetBetToCall() > ViewPlayer().GetBetSize())
-				{
-				        #ifdef DEBUGSAVEGAME
+                        #ifdef DEBUGSAVEGAME
                             if( myFifo == &cin )
                             {
                                 if( !logFile.is_open() )
@@ -533,20 +639,19 @@ float64 UserConsoleStrategy::queryAction()
                                 logFile.write("fold\n",5);
                             }
                         #endif
-					returnMe = -1;
-					bExtraTry = 0;
-				}
-				else
-				{
-					bExtraTry = 2;
-					UI_DESCRIPTOR << "You can still check..." << endl;
-				}
-
-			}
-			else if ( strncmp(inputBuf, "check", 5) == 0 )
-			{
-				if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
-				{
+                    returnMe = -1;
+                    bExtraTry = 0;
+                }
+                else
+                {
+                    bExtraTry = 2;
+                    UI_DESCRIPTOR << "You can still check..." << endl;
+                }
+		break;
+	
+	    case ACTION_CHECK:
+                if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
+                {
                         #ifdef DEBUGSAVEGAME
                             if( myFifo == &cin )
                             {
@@ -558,16 +663,16 @@ float64 UserConsoleStrategy::queryAction()
                             }
                         #endif
 
-					returnMe = ViewTable().GetBetToCall();
-					bExtraTry = 0;
-				}
-				else
-				{
-					UI_DESCRIPTOR << "Can't check here" << endl;
-				}
-			}
-			else if ( strncmp(inputBuf, "call", 4) == 0 )
-			{
+                    returnMe = ViewTable().GetBetToCall();
+                    bExtraTry = 0;
+                }
+                else
+                {
+                    UI_DESCRIPTOR << "Can't check here" << endl;
+                }
+            	break;
+	
+	    case ACTION_CALL:
                     #ifdef DEBUGSAVEGAME
                         if( myFifo == &cin )
                         {
@@ -578,164 +683,101 @@ float64 UserConsoleStrategy::queryAction()
                             logFile.write("call\n",5);
                         }
                     #endif
-				returnMe = ViewTable().GetBetToCall();
-				bExtraTry = 0;
-			}
-			else if ( strncmp(inputBuf, "raiseby", 7) == 0 )
+                returnMe = ViewTable().GetBetToCall();
+                bExtraTry = 0;
+                break;
+
+	    case ACTION_RAISEBY:
+                UI_DESCRIPTOR << "By how much?  (Minimum by " << minRaiseBy << ")" << endl;
+                while( bExtraTry != 0)
+                {
+		    returnMe = queryAction_queryPositiveFloat(myFifo);
+
+		    if( returnMe > 0 )
+		    {
+			if( returnMe < minRaiseBy )
 			{
-			    const float64 minRaiseBy = ViewTable().GetMinRaise();
-				UI_DESCRIPTOR << "By how much?  (Minimum by " << minRaiseBy << ")" << endl;
-				while( bExtraTry != 0)
+			    UI_DESCRIPTOR << "Minimum raise was by " << minRaiseBy << ". Please try again." << endl;
+			}else
+			{
+
+			    #ifdef DEBUGSAVEGAME
+				if( myFifo == &cin )
 				{
-
-					if( (*myFifo) >> returnMe )
-					{
-						if( returnMe > 0 )
-						{
-						    if( returnMe < minRaiseBy )
-						    {
-						        UI_DESCRIPTOR << "Minimum raise was by " << minRaiseBy << ". Please try again." << endl;
-						    }else
-						    {
-
-                                #ifdef DEBUGSAVEGAME
-                                    if( myFifo == &cin )
-                                    {
-                                        if( !logFile.is_open() )
-                                        {
-                                            logFile.open(DEBUGSAVEGAME,std::ios::app);
-                                        }
-                                        logFile.write("raiseby\n",8);
-                                        logFile << returnMe << endl;
-                                    }
-                                #endif
-                                bExtraTry = 0;
-						    }
-
-							returnMe += ViewTable().GetBetToCall();
-						}
-
-                        if( myFifo->rdbuf()->in_avail() > 0 )
-                        {
-                            while( myFifo->peek() == '\n' || myFifo->peek() == '\r' )
-                            {
-                                #ifdef USERINPUT
-                                int numericPeek = myFifo->peek();
-                                UI_DESCRIPTOR << "avail:" << myFifo->rdbuf()->in_avail() << endl;
-                                UI_DESCRIPTOR << "SkipE" << numericPeek << endl;
-                                #endif
-                                myFifo->ignore(1);
-                                //myFifo->rdbuf()->sbumpc();
-                            }
-                            #ifdef USERINPUT
-                            UI_DESCRIPTOR << ".seComplete" << endl;
-                            #endif
-                        }
-                        cin.sync();
-					}
-					else
-					{
-					    #ifdef USERINPUT
-					    UI_DESCRIPTOR << "ApE" << endl;
-					    #endif
-                        cin.sync();
-                        //cin.ignore( cin.rdbuf()->in_avail() ,'\n');
-                        cin.clear();
-					}
+				    if( !logFile.is_open() )
+				    {
+					logFile.open(DEBUGSAVEGAME,std::ios::app);
+				    }
+				    logFile.write("raiseby\n",8);
+				    logFile << returnMe << endl;
 				}
-			}
-			else if ( strncmp(inputBuf, "raiseto", 7) == 0 )
-			{
-			    const float64 minRaiseTo  = ViewTable().GetMinRaise() + ViewTable().GetBetToCall();
-                UI_DESCRIPTOR << "To how much?  (Minimum is " << minRaiseTo << ")" << endl;
-				while( bExtraTry != 0)
-				{
-
-                    if( (*myFifo) >> returnMe )
-					{
-						if( returnMe > 0 )
-						{
-						    if( returnMe < minRaiseTo )
-						    {
-						        UI_DESCRIPTOR << "Minimum raise was to " << minRaiseTo << ". Please try again." << endl;
-						        //returnMe = ViewTable().GetBetToCall();
-						    }
-                            else
-                            {
-                                #ifdef DEBUGSAVEGAME
-
-                                    if( myFifo == &cin )
-                                    {
-                                        if( !logFile.is_open() )
-                                        {
-                                            logFile.open(DEBUGSAVEGAME,std::ios::app);
-                                        }
-                                        logFile.write("raiseto\n",8);
-                                        logFile << returnMe << endl;
-                                    }
-                                #endif
-
-                                bExtraTry = 0;
-                            }
-
-						}
-
-
-                        if( myFifo->rdbuf()->in_avail() > 0 )
-                        {
-                            while( myFifo->peek() == '\n' || myFifo->peek() == '\r' )
-                            {
-                                #ifdef USERINPUT
-                                int numericPeek = myFifo->peek();
-                                UI_DESCRIPTOR << "avail:" << myFifo->rdbuf()->in_avail() << endl;
-                                UI_DESCRIPTOR << "SkipE" << numericPeek << endl;
-                                #endif
-                                myFifo->ignore(1);
-                                //myFifo->rdbuf()->sbumpc();
-                            }
-                            #ifdef USERINPUT
-                            UI_DESCRIPTOR << ".seComplete" << endl;
-                            #endif
-                        }
-                        cin.sync();
-
-					}
-					else
-					{
-					    #ifdef USERINPUT
-					    UI_DESCRIPTOR << "ApE" << endl;
-					    #endif
-						cin.sync();
-						//cin.ignore( cin.rdbuf()->in_avail() ,'\n');
-						cin.clear();
-					}
-
-				}
-			}
-			else if ( strncmp(inputBuf, "EXIT", 4) == 0 )
-			{
-			    exit(0);
-			}
-			else if ( 0 == inputBuf[0] )
-			{///Just press [ENTER]: do default action
-			    #ifdef DEBUGASSERT
-			    //This can't occur if reading from a file though
-			    if( myFifo != &cin )
-			    {
-			        UI_DESCRIPTOR << "Blank lines in file got caught" << endl;
-			        exit(1);
-			    }
 			    #endif
+			    bExtraTry = 0;
+			}
+
+			returnMe += ViewTable().GetBetToCall();
+
+		    }//end if: valid positive float recieved
+
+		}//end loop: acceptable raise
+            	break;
+
+	    case ACTION_RAISETO:
+                UI_DESCRIPTOR << "To how much?  (Minimum is " << minRaiseTo << ")" << endl;
+                while( bExtraTry != 0)
+                {
+		    returnMe = queryAction_queryPositiveFloat(myFifo);
+		    
+		    if( returnMe > 0 )
+		    {
+			if( returnMe < minRaiseTo )
+			{
+			    UI_DESCRIPTOR << "Minimum raise was to " << minRaiseTo << ". Please try again." << endl;
+			    //returnMe = ViewTable().GetBetToCall();
+			}
+			else
+			{
+			    #ifdef DEBUGSAVEGAME
+
+				if( myFifo == &cin )
+				{
+				    if( !logFile.is_open() )
+				    {
+					logFile.open(DEBUGSAVEGAME,std::ios::app);
+				    }
+				    logFile.write("raiseto\n",8);
+				    logFile << returnMe << endl;
+				}
+			    #endif
+
+			    bExtraTry = 0;
+			}
+
+		    }//end if: valid positive float recieved
+
+		}//end loop: acceptable raise
+                break;
+	
+            case ACTION_DEFAULT:
+            ///Just press [ENTER]: do default action
+                #ifdef DEBUGASSERT
+                //This can't occur if reading from a file though
+                if( myFifo != &cin )
+                {
+                    UI_DESCRIPTOR << "Blank lines in file got caught" << endl;
+                    exit(1);
+                }
+                #endif
 
 
                 if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
-				{
-					returnMe = ViewTable().GetBetToCall();
-				}else
-				{
-				    returnMe = -1;
-				}
-				bExtraTry = 0;
+                {
+                    returnMe = ViewTable().GetBetToCall();
+                }else
+                {
+                    returnMe = -1;
+                }
+                bExtraTry = 0;
                 //UI_DESCRIPTOR << "(default)" << endl;
                     #ifdef DEBUGSAVEGAME
                         if( myFifo == &cin )
@@ -763,48 +805,55 @@ float64 UserConsoleStrategy::queryAction()
                         }
 
                     #endif
-			}
-			else
-			{
-				UI_DESCRIPTOR << inputBuf << " is not a correct choice." << endl;
-			}
-		}
-		else //error on input
+            	break;
+	    
+
+	
+	    case ACTION_INPUTERROR:    
+		#ifdef DEBUGSAVEGAME
+		    if( !(myFifo->eof()) )
+		    {
+		#endif
+		UI_DESCRIPTOR << "Error on input." << endl;
+
+		//Clear (up to) 20 characters at a time
+		const std::streamsize MAXCLEARLEN = 20;
+		char clearBuf[MAXCLEARLEN];
+		while(myFifo->gcount() == MAXCLEARLEN)
 		{
-            #ifdef DEBUGSAVEGAME
-                if( !(myFifo->eof()) )
-                {
-            #endif
-            UI_DESCRIPTOR << "Error on input." << endl;
-            while(myFifo->gcount() == INPUTLEN)
-            {
-                #ifdef USERINPUT
-                UI_DESCRIPTOR << "Clearing" << endl;
-                #endif
-                 myFifo->getline( inputBuf, INPUTLEN );
-            }
-            cin.sync();
-            cin.clear();
-
-            #ifdef DEBUGSAVEGAME
-                }
-                #ifdef USERINPUT
-                    else
-                        {
-                        UI_DESCRIPTOR << "eof start" << endl;
-                        }
-                #endif
-            #endif
+		    #ifdef USERINPUT
+		    UI_DESCRIPTOR << "Clearing" << endl;
+		    #endif
+		     myFifo->getline( clearBuf, MAXCLEARLEN );
 		}
+		cin.sync();
+		cin.clear();
 
-	//End of loop
-	}
+		#ifdef DEBUGSAVEGAME
+		    }
+		    #ifdef USERINPUT
+			else
+			    {
+			    UI_DESCRIPTOR << "eof start" << endl;
+			    }
+		    #endif
+		#endif
+		break;
+
+
+	    case ACTION_UNKNOWN:
+	    default:
+                break;
+        }
+
+    //End of main input loop
+    }
 #ifdef USERFEEDBACK
-	UI_DESCRIPTOR << "To bet " << returnMe << endl;
+    UI_DESCRIPTOR << "To bet " << returnMe << endl;
 
 
 
-	UI_DESCRIPTOR << "Command accepted" << endl;
+    UI_DESCRIPTOR << "Command accepted" << endl;
 #endif
 
     #ifdef DEBUGSAVEGAME
@@ -815,6 +864,6 @@ float64 UserConsoleStrategy::queryAction()
     #endif
 
 
-	return returnMe;
+    return returnMe;
 }
 
