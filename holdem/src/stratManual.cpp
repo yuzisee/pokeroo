@@ -31,7 +31,7 @@
 #include <iostream>
 #include <string.h>
 
-#ifdef INFOASSIST
+#ifdef INFOASSIST_STRONG
 #include "functionmodel.h"
 #endif
 
@@ -62,7 +62,7 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 	comBuf.SetEmpty();
 	comBuf.AppendUnique(h);
 
-	#ifdef INFOASSIST
+	#ifdef INFOASSIST_STRONG
         CallCumulationD possibleHands;
         StatResult rankPCT;
 
@@ -102,7 +102,7 @@ void UserConsoleStrategy::SeeCommunity(const Hand& h, const int8 n)
 	ConsoleStrategy::SeeCommunity(h,n);
 	if ( !bNoPrint ){ printCommunity(); }
 
-	#ifdef INFOASSIST
+	#ifdef INFOASSIST_STRONG
 		bComSize = n;
 	#endif
 
@@ -169,15 +169,18 @@ float64 UserConsoleStrategy::MakeBet()
 }
 void ConsoleStrategy::printCommunity()
 {
+#ifdef INFOASSIST_UPDATE
 	HandPlus u;
 	UI_DESCRIPTOR << "The community now shows:" << endl;
 	u.SetUnique(comBuf);
 	u.DisplayHandBig(UI_DESCRIPTOR);
+#endif
 }
 
 void ConsoleStrategy::printActions()
 {
 
+#ifdef INFOASSIST_UPDATE
 	UI_DESCRIPTOR << endl;
 
 	const HoldemArena & myTable = ViewTable();
@@ -247,6 +250,8 @@ void ConsoleStrategy::printActions()
 	myTable.incrIndex(tempIndex);
 
 	}
+
+#endif // INFOASSIST_UPDATE
 }
 
 UserConsoleStrategy::~UserConsoleStrategy()
@@ -276,7 +281,7 @@ void ConsoleStrategy::showSituation()
     UI_DESCRIPTOR << endl << "The pot contains $" << ViewTable().GetPrevPotSize() + ViewTable().GetRoundPotSize() << endl;
     #endif
 
-    #ifdef INFOASSIST
+    #ifdef INFOASSIST_STRONG
         const float64 xBet = ViewTable().GetBetToCall() - ViewPlayer().GetBetSize();
         if( xBet > 0 )
         {
@@ -284,8 +289,9 @@ void ConsoleStrategy::showSituation()
             UI_DESCRIPTOR << "\tYou can bet $" << xBet << " more to win $" << winAmount - xBet << " plus your $" << xBet << endl;
             UI_DESCRIPTOR << "\tThis works out to be " << winAmount/xBet << " : 1 odds (" << 100*xBet/winAmount << "%)" << endl;
         }
-    #endif
+    #endif // INFOASSIST_STRONG
 
+#ifdef INFOASSIST_UPDATE
 
 	++tempIndex;
 	tempIndex %= totalPlayers;
@@ -313,7 +319,7 @@ void ConsoleStrategy::showSituation()
 		++tempIndex;
 		tempIndex %= totalPlayers;
 	}
-	#else
+	#else //then !OLD_DISPLAY_STYLE
 	UI_DESCRIPTOR << endl ;
 	UI_DESCRIPTOR << "PLAYER SUMMARY" << endl;
 
@@ -378,7 +384,10 @@ void ConsoleStrategy::showSituation()
 	}
     }while( tempIndex !=  myIndex);//ViewTable().GetDealer() );
 
-	#endif
+	#endif // OLD_DISPLAY_STYLE, else
+
+
+#endif // INFOASSIST_UPDATE
     UI_DESCRIPTOR << endl ;
 
 	UI_DESCRIPTOR << endl << "You ("<< ViewPlayer().GetIdent() <<") have: " << flush;
@@ -388,7 +397,7 @@ void ConsoleStrategy::showSituation()
 	u.SetUnique(ViewDealtHand());
 	u.DisplayHand(UI_DESCRIPTOR);
 
-#ifdef INFOASSIST
+#ifdef INFOASSIST_STRONG
     UI_DESCRIPTOR.precision(4);
 
 	if( rarity > 0 )

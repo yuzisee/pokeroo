@@ -24,7 +24,10 @@
 #ifndef HOLDEM_ConsoleStrat
 #define HOLDEM_ConsoleStrat
 
-#define INFOASSIST
+/*
+#define INFOASSIST_STRONG
+#define INFOASSIST_UPDATE
+*/
 
 #include "arena.h"
 #ifdef DEBUGSAVEGAME
