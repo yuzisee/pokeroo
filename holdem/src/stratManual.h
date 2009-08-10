@@ -57,6 +57,7 @@ class DualInputStream
 	    void GetCommandString(char * inputBuf, const int MAXINPUTLEN);
 
 	    bool IsFileInput(){ return currentStream <= 0; }
+	    void AbsorbNewline();
 }
 ;
 

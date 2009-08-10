@@ -428,14 +428,15 @@ static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
             {
                 std::cerr << "You will start with "<< startingMoney <<" chips.\nPlease enter the initial big blind:" << std::endl;
                 std::cin >> smallBlindChoice;
-                std::cin.sync();
                 std::cin.clear();
+                std::cin.sync();
                 smallBlindChoice /= 2;
 
                 std::cerr << endl << "Blinds will start at " << smallBlindChoice << "/" << smallBlindChoice*2 << ".\nPlease enter how many hands before blinds increase:" << std::endl;
                 std::cin >> blindIncrFreq;
-                std::cin.sync();
+		std::cin.ignore(2,'\n'); //Don't leave lingering whitespace, sometimes you can't trust sync()
                 std::cin.clear();
+                std::cin.sync();
 
                 std::ofstream storePlayerName(AUTOEXTRATOKEN,std::ios::app);
                 storePlayerName << blindIncrFreq << endl;

@@ -20,7 +20,7 @@
 
 //#define USERFEEDBACK
 //#define SELF_SPECTATE
-#define USERINPUT
+//#define USERINPUT
 //#define FANCYUNDERLINE
 #define SPACE_UI
 #define USER_DELAY_HANDS
@@ -479,6 +479,19 @@ void DualInputStream::skipWhitespaceSection()
     }
 }
 
+void DualInputStream::AbsorbNewline()
+{
+    int next_char;
+
+    if( IsFileInput() ) return; //No need, skipWhitespaceSection() is always called for file inputs...
+
+    for(;;)
+    {
+	next_char = myFifo[currentStream]->get();
+	if( next_char == EOF || next_char == '\n' || next_char == '\0' ) break;
+    }
+}
+
 float64 DualInputStream::GetPositiveFloat64()
 {
     float64 usersFloat;
@@ -516,6 +529,7 @@ void DualInputStream::GetCommandString(char * inputBuf, const int MAXINPUTLEN)
     {
         if( next_char == 0 || next_char == EOF ) break;
 
+        myFifo[currentStream]->ignore(1);
 	inputBuf[bufidx] = next_char;
         ++bufidx;
 
@@ -581,7 +595,7 @@ float64 UserConsoleStrategy::queryAction()
 
 	UI_DESCRIPTOR << endl << endl;
 	UI_DESCRIPTOR << "== ENTER ACTION: " << ViewPlayer().GetIdent().c_str() << " ==";
-//	UI_DESCRIPTOR << "      (press only [Enter] for check/fold)" << endl;
+	UI_DESCRIPTOR << "      (press only [Enter] for check/fold)" << endl;
 	if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
 	{
 	    UI_DESCRIPTOR << "check" << endl;
@@ -611,6 +625,7 @@ float64 UserConsoleStrategy::queryAction()
 	switch( queryAction_determineAction( myFifos ) )
 	{
 	    case ACTION_FOLD:
+		myFifos.AbsorbNewline();
                 if( bExtraTry == 2 || ViewTable().GetBetToCall() > ViewPlayer().GetBetSize())
                 {
                         #ifdef DEBUGSAVEGAME
@@ -634,6 +649,7 @@ float64 UserConsoleStrategy::queryAction()
 		break;
 	
 	    case ACTION_CHECK:
+		myFifos.AbsorbNewline();
                 if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
                 {
                         #ifdef DEBUGSAVEGAME
@@ -657,6 +673,7 @@ float64 UserConsoleStrategy::queryAction()
             	break;
 	
 	    case ACTION_CALL:
+		myFifos.AbsorbNewline();
                     #ifdef DEBUGSAVEGAME
                         if( !myFifos.IsFileInput() )
                         {
@@ -676,6 +693,7 @@ float64 UserConsoleStrategy::queryAction()
                 while( bExtraTry != 0)
                 {
 		    returnMe = myFifos.GetPositiveFloat64();
+		    myFifos.AbsorbNewline();
 
 		    if( returnMe > 0 )
 		    {
@@ -711,6 +729,7 @@ float64 UserConsoleStrategy::queryAction()
                 while( bExtraTry != 0)
                 {
 		    returnMe = myFifos.GetPositiveFloat64();
+		    myFifos.AbsorbNewline();
 		    
 		    if( returnMe > 0 )
 		    {
@@ -743,6 +762,7 @@ float64 UserConsoleStrategy::queryAction()
                 break;
 	
             case ACTION_DEFAULT:
+		myFifos.AbsorbNewline();
             ///Just press [ENTER]: do default action
                 #ifdef DEBUGASSERT
                 //This can't occur if reading from a file though
@@ -795,6 +815,7 @@ float64 UserConsoleStrategy::queryAction()
 	
 	    case ACTION_UNKNOWN:
 	    default:
+		myFifos.AbsorbNewline();
 		UI_DESCRIPTOR << "Error on input?" << endl;
 
 		    #ifdef USERINPUT
