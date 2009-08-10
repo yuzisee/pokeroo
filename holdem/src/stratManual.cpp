@@ -20,7 +20,7 @@
 
 //#define USERFEEDBACK
 //#define SELF_SPECTATE
-//#define USERINPUT
+#define USERINPUT
 //#define FANCYUNDERLINE
 #define SPACE_UI
 #define USER_DELAY_HANDS
@@ -118,8 +118,8 @@ void UserConsoleStrategy::FinishHand()
 {
 #ifdef USER_DELAY_HANDS
     UI_DESCRIPTOR << endl << "Press [Enter] to begin hand" << endl;
-    std::cin.sync();
     std::cin.clear();
+    std::cin.sync();
 
     int16 getChar = std::cin.get();
     if( getChar == 'X' )
@@ -127,8 +127,8 @@ void UserConsoleStrategy::FinishHand()
         exit(0);
     }
 
-    std::cin.sync();
     std::cin.clear();
+    std::cin.sync();
 #ifdef SPACE_UI
     UI_DESCRIPTOR << endl;
 #endif
@@ -440,56 +440,92 @@ void ConsoleStrategy::showSituation()
 }
 
 
-
-
-//enum QueriedAction { ALGEBRAIC_AUTOSCALE, LOGARITHMIC_AUTOSCALE };
-
-void queryAction_skipFileWhitespace(std::istream * const userInstream)
+void DualInputStream::SetFileStream(std::istream * fileStream)
 {
-//This function skips whitespace when parsing a (save)file.
-//If userInstream isn't a file stream, we don't care. Just return.
-//
-// Caution: EARLY RETURN!
-//
-    if( userInstream == &cin ) return;
+    myFifo[0] = fileStream;
+    currentStream = 0;
+}
 
-//In this case, we want to keep ignoring any whitespace characters that we find
+int DualInputStream::stream_peek_update()
+{
+    while( (myFifo[currentStream]->peek() == EOF) && (currentStream <= 0) ) //Either CTRL+Z or end of text file
+    {
+        ++currentStream;
+    }
+
+    return myFifo[currentStream]->peek();
+}
+/*
+void DualInputStream::stream_ignore1()
+{
+    if( stream_peek_update() != EOF ) ;
+}
+*/
+
+bool DualInputStream::charIsWhitespace(char a)
+{
+    return (    a == '\r'
+             || a == '\n'
+	     || a == ' '
+	     || a == '\t'
+	   )
+    ;
+}
+
+void DualInputStream::skipWhitespaceSection()
+{
+    while  ( charIsWhitespace(stream_peek_update()) )  {
+        myFifo[currentStream]->ignore(1);//stream_ignore1();
+    }
+}
+
+float64 DualInputStream::GetPositiveFloat64()
+{
+    float64 usersFloat;
+
+    skipWhitespaceSection();
+
+    if( (*(myFifo[currentStream])) >> usersFloat )	return usersFloat;
+    else						return 0;
+}
+
+
+void DualInputStream::GetCommandString(char * inputBuf, const int MAXINPUTLEN)
+{
+    int bufidx = 0;
+    int next_char;
+
+    if( IsFileInput() )
+    {
+        skipWhitespaceSection(); //which includes peek_update...
+    }
+    
+    if( !IsFileInput() )
+    {
     #ifdef USERINPUT
-    UI_DESCRIPTOR << "Mark fileinput" << endl;
+    UI_DESCRIPTOR << endl << "Force clear" << endl;
     #endif
-    while( userInstream->peek() == '\n' || userInstream->peek() == '\r' || userInstream->peek() == ' ' )
-    {
-	#ifdef USERINPUT
-	UI_DESCRIPTOR << "ExtraE" << endl;
-	#endif
-	userInstream->ignore( 1 , '\n');
-    }
-
-}
-
-
-void queryAction_switchovertoConsoleInput(std::istream * &userInstream)
-{ 
-//If we happen to just reach the end of the file, switch over to the c-input stream.
-//(Otherwise, return as usual)
-    if( userInstream->eof() )
-    {
-	#ifdef USERINPUT
-	if( userInstream == &cin )
-	{
-		UI_DESCRIPTOR << "EOFchar!" << endl;
-	}
-	else
-	{
-		UI_DESCRIPTOR << "StreamClear" << endl;
-	}
-	#endif
-	cin.sync();
 	cin.clear();
-	
-	userInstream = &(cin);
+        cin.sync();
     }
+
+    //You don't want to switch streams mid-command.
+    //Furthermore, currentStream should be an accurate indicator of where the LAST command came from.
+    //(So that we don't double-log savegame text)
+    while( !charIsWhitespace(next_char = myFifo[currentStream]->peek()) )
+    {
+        if( next_char == 0 || next_char == EOF ) break;
+
+	inputBuf[bufidx] = next_char;
+        ++bufidx;
+
+	if( bufidx >= MAXINPUTLEN - 1 ) break;
+    }
+
+    inputBuf[bufidx] = '\0';
 }
+
+
 
 enum UserConsoleStrategyAction { ACTION_FOLD,
 				 ACTION_CHECK,
@@ -497,20 +533,16 @@ enum UserConsoleStrategyAction { ACTION_FOLD,
 				 ACTION_RAISEBY,
 				 ACTION_RAISETO,
 				 ACTION_DEFAULT,
-				 ACTION_UNKNOWN,
-				 ACTION_INPUTERROR
+				 ACTION_UNKNOWN
 				};
 
 
-enum UserConsoleStrategyAction queryAction_determineAction(std::istream * const userInstream){
+enum UserConsoleStrategyAction queryAction_determineAction(DualInputStream & userInstream)
+{
     const int16 MAXINPUTLEN = 10;
     char inputBuf[MAXINPUTLEN];
-    int16 inputLen = MAXINPUTLEN;
     inputBuf[0] = 0;
-
-    if( userInstream->peek() == 'r' ) inputLen = 7; // Avoid extracting/discarding the raiseAmount (if presenti)
-
-    if( userInstream->getline( inputBuf, inputLen ) == 0 ) return ACTION_INPUTERROR;
+    userInstream.GetCommandString(inputBuf,MAXINPUTLEN);
 
     if( strncmp(inputBuf, "fold",4) == 0 ) return ACTION_FOLD;
     else if( strncmp(inputBuf, "check", 5) == 0 ) return ACTION_CHECK;
@@ -526,77 +558,30 @@ enum UserConsoleStrategyAction queryAction_determineAction(std::istream * const 
     }
 }
 
-float64 queryAction_queryPositiveFloat(std::istream * const userInstream){
-    float64 usersFloat;
-    if( (*userInstream) >> usersFloat )
-    {
-        /// Success!
-	/// Now clean up the stream past all whitespace that follows.
-
-	if( userInstream->rdbuf()->in_avail() > 0 )
-	{
-	    while( userInstream->peek() == '\n' || userInstream->peek() == '\r' )
-	    {
-		#ifdef USERINPUT
-		int numericPeek = userInstream->peek();
-		UI_DESCRIPTOR << "avail:" << userInstream->rdbuf()->in_avail() << endl;
-		UI_DESCRIPTOR << "SkipE" << numericPeek << endl;
-		#endif
-		userInstream->ignore(1);
-	    }
-	    #ifdef USERINPUT
-	    UI_DESCRIPTOR << ".seComplete" << endl;
-	    #endif
-	}
-	cin.sync();
-
-	/// Report value back to caller
-    	return usersFloat;
-    }
-    else
-    {
-    //
-    // ERROR HANDLING
-    //
-
-	#ifdef USERINPUT
-	UI_DESCRIPTOR << "ApE" << endl;
-	#endif
-	cin.sync();
-	cin.clear();
-
-    	return 0;
-    }
-
-    
-}
 
 //Only ^Z will cause cin.eof()
-///Aha!
 float64 UserConsoleStrategy::queryAction()
 {
     int8 bExtraTry = 1;
     char defaultAction = 0;
     float64 returnMe = ViewPlayer().GetBetSize();
 
-    showSituation();
+    cin.clear();
+    cin.sync();
 
+    showSituation();
 
 
     while( bExtraTry != 0 ) //Main input loop
     {
         
-	queryAction_skipFileWhitespace(myFifo);
-	queryAction_switchovertoConsoleInput(myFifo);
-
-
 	//==============================
 	// Display user input choices
 	//==============================
 
 	UI_DESCRIPTOR << endl << endl;
 	UI_DESCRIPTOR << "== ENTER ACTION: " << ViewPlayer().GetIdent().c_str() << " ==";
-	UI_DESCRIPTOR << "      (press only [Enter] for check/fold)" << endl;
+//	UI_DESCRIPTOR << "      (press only [Enter] for check/fold)" << endl;
 	if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
 	{
 	    UI_DESCRIPTOR << "check" << endl;
@@ -623,14 +608,13 @@ float64 UserConsoleStrategy::queryAction()
         const float64 minRaiseTo  = ViewTable().GetMinRaise() + ViewTable().GetBetToCall();
 	
 
-
-	switch( queryAction_determineAction( myFifo ) )
+	switch( queryAction_determineAction( myFifos ) )
 	{
 	    case ACTION_FOLD:
                 if( bExtraTry == 2 || ViewTable().GetBetToCall() > ViewPlayer().GetBetSize())
                 {
                         #ifdef DEBUGSAVEGAME
-                            if( myFifo == &cin )
+                            if( !myFifos.IsFileInput() )
                             {
                                 if( !logFile.is_open() )
                                 {
@@ -653,7 +637,7 @@ float64 UserConsoleStrategy::queryAction()
                 if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
                 {
                         #ifdef DEBUGSAVEGAME
-                            if( myFifo == &cin )
+                            if( !myFifos.IsFileInput() )
                             {
                                 if( !logFile.is_open() )
                                 {
@@ -674,7 +658,7 @@ float64 UserConsoleStrategy::queryAction()
 	
 	    case ACTION_CALL:
                     #ifdef DEBUGSAVEGAME
-                        if( myFifo == &cin )
+                        if( !myFifos.IsFileInput() )
                         {
                             if( !logFile.is_open() )
                             {
@@ -691,7 +675,7 @@ float64 UserConsoleStrategy::queryAction()
                 UI_DESCRIPTOR << "By how much?  (Minimum by " << minRaiseBy << ")" << endl;
                 while( bExtraTry != 0)
                 {
-		    returnMe = queryAction_queryPositiveFloat(myFifo);
+		    returnMe = myFifos.GetPositiveFloat64();
 
 		    if( returnMe > 0 )
 		    {
@@ -702,7 +686,7 @@ float64 UserConsoleStrategy::queryAction()
 			{
 
 			    #ifdef DEBUGSAVEGAME
-				if( myFifo == &cin )
+                                if( !myFifos.IsFileInput() )
 				{
 				    if( !logFile.is_open() )
 				    {
@@ -726,7 +710,7 @@ float64 UserConsoleStrategy::queryAction()
                 UI_DESCRIPTOR << "To how much?  (Minimum is " << minRaiseTo << ")" << endl;
                 while( bExtraTry != 0)
                 {
-		    returnMe = queryAction_queryPositiveFloat(myFifo);
+		    returnMe = myFifos.GetPositiveFloat64();
 		    
 		    if( returnMe > 0 )
 		    {
@@ -739,7 +723,7 @@ float64 UserConsoleStrategy::queryAction()
 			{
 			    #ifdef DEBUGSAVEGAME
 
-				if( myFifo == &cin )
+                                if( !myFifos.IsFileInput() )
 				{
 				    if( !logFile.is_open() )
 				    {
@@ -762,7 +746,7 @@ float64 UserConsoleStrategy::queryAction()
             ///Just press [ENTER]: do default action
                 #ifdef DEBUGASSERT
                 //This can't occur if reading from a file though
-                if( myFifo != &cin )
+                if( myFifos.IsFileInput() )
                 {
                     UI_DESCRIPTOR << "Blank lines in file got caught" << endl;
                     exit(1);
@@ -780,7 +764,7 @@ float64 UserConsoleStrategy::queryAction()
                 bExtraTry = 0;
                 //UI_DESCRIPTOR << "(default)" << endl;
                     #ifdef DEBUGSAVEGAME
-                        if( myFifo == &cin )
+                	if( !myFifos.IsFileInput() )
                         {
                             if( !logFile.is_open() )
                             {
@@ -809,41 +793,20 @@ float64 UserConsoleStrategy::queryAction()
 	    
 
 	
-	    case ACTION_INPUTERROR:    
-		#ifdef DEBUGSAVEGAME
-		    if( !(myFifo->eof()) )
-		    {
-		#endif
-		UI_DESCRIPTOR << "Error on input." << endl;
+	    case ACTION_UNKNOWN:
+	    default:
+		UI_DESCRIPTOR << "Error on input?" << endl;
 
-		//Clear (up to) 20 characters at a time
-		const std::streamsize MAXCLEARLEN = 20;
-		char clearBuf[MAXCLEARLEN];
-		while(myFifo->gcount() == MAXCLEARLEN)
-		{
 		    #ifdef USERINPUT
 		    UI_DESCRIPTOR << "Clearing" << endl;
 		    #endif
-		     myFifo->getline( clearBuf, MAXCLEARLEN );
-		}
-		cin.sync();
+		
 		cin.clear();
+		cin.sync();
 
-		#ifdef DEBUGSAVEGAME
-		    }
-		    #ifdef USERINPUT
-			else
-			    {
-			    UI_DESCRIPTOR << "eof start" << endl;
-			    }
-		    #endif
-		#endif
 		break;
 
 
-	    case ACTION_UNKNOWN:
-	    default:
-                break;
         }
 
     //End of main input loop

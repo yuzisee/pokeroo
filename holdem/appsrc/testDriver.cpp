@@ -545,7 +545,7 @@ if( bLoadGame )
         std::istream *saveLoc = &loadFile;
         if( saveLoc != 0 )
         {
-            consolePlay.myFifo = saveLoc;
+            consolePlay.myFifos.SetFileStream(saveLoc);
         }
 
 	}

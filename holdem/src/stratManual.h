@@ -32,6 +32,34 @@
 #endif
 
 
+class DualInputStream
+{
+	private:
+	    uint8 currentStream;
+	    std::istream * myFifo[2];
+	    bool charIsWhitespace(char);
+
+	protected:
+	    int stream_peek_update();
+	    void stream_ignore1();
+            void skipWhitespaceSection();
+
+	public:
+	    DualInputStream() : currentStream(1)
+	    {
+	        myFifo[0] = 0;
+		myFifo[1] = &(std::cin);
+	    }
+
+	    void SetFileStream(std::istream *);
+
+	    float64 GetPositiveFloat64();
+	    void GetCommandString(char * inputBuf, const int MAXINPUTLEN);
+
+	    bool IsFileInput(){ return currentStream <= 0; }
+}
+;
+
 ///This class is used only for debugging, but the derived class UserConsoleStrategy allows for human players
 class ConsoleStrategy : public PlayerStrategy
 {
@@ -53,7 +81,7 @@ class ConsoleStrategy : public PlayerStrategy
 	public:
 
 
-            std::istream *myFifo;
+            DualInputStream myFifos;
 
 
 		ConsoleStrategy() : PlayerStrategy()
@@ -62,7 +90,6 @@ class ConsoleStrategy : public PlayerStrategy
 		#endif
             , bNoPrint(false)
 
-            ,myFifo(&(std::cin))
 
         {}
 
