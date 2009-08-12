@@ -32,7 +32,7 @@
 #include <string.h>
 
 #ifdef INFOASSIST_STRONG
-#include "functionmodel.h"
+#include "../src/functionmodel.h"
 #endif
 
 

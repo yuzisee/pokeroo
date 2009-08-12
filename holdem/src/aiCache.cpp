@@ -156,6 +156,13 @@ bool StatsManager::UnserializeW( ifstream& dataf, StatResult* myAvg, DistrShape*
 void StatsManager::SerializeC( ofstream& dataf, const CallCumulation& q )
 {
     cachesize_t vcount = q.cumulation.size();
+#ifdef DEBUGASSERT
+	if (vcount != q.cumulation.size())
+	{
+		std::cerr << "Portability error in SerializeC" << endl;
+		exit(1);
+	}
+#endif
     dataf.write(reinterpret_cast<const char*>(&vcount),sizeof(cachesize_t));
     //const vector<StatResult>& targetVector = q.cumulation;
     vector<StatResult>::const_iterator target;
@@ -174,6 +181,13 @@ void StatsManager::SerializeC( ofstream& dataf, const CallCumulation& q )
 bool StatsManager::UnserializeC( ifstream& dataf,  CallCumulation& q )
 {
     cachesize_t vcount;
+#ifdef DEBUGASSERT
+	if (sizeof(cachesize_t) > sizeof(size_t))
+	{
+		std::cerr << "Cached size_t could be larger than current arch size_t" << endl;
+		exit(1);
+	}
+#endif
     dataf.read(reinterpret_cast<char*>(&vcount),sizeof(cachesize_t));
     if( dataf.bad() || dataf.eof() ) return false;
 

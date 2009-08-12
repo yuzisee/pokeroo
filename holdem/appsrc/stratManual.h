@@ -29,7 +29,7 @@
 #define INFOASSIST_UPDATE
 */
 
-#include "arena.h"
+#include "../src/arena.h"
 #ifdef DEBUGSAVEGAME
 #include <fstream>
 #endif

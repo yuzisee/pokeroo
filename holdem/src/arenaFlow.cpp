@@ -81,49 +81,7 @@ DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
     //}
     return userCard;
 }
-/*
 
-   const int16 INPUTLEN = 5;
-	char inputBuf[INPUTLEN];
-
-
-	std::cerr << p[curIndex]->GetIdent().c_str() << ", enter your cards (no whitespace)\r\n";
-	std::cerr << "or enter nothing to muck: " << endl;
-	std::cin.sync();
-	std::cin.clear();
-
-
-
-
-
-	CommunityPlus showHandP;
-	showHandP.SetEmpty();
-
-
-	bool bMuck = true;
-	if( std::cin.getline( inputBuf, INPUTLEN ) != 0 )
-	{
-		if( 0 != inputBuf[0] )
-		{
-			bMuck = false;
-			showHandP.AddToHand(ExternalQueryCard(std::cin));
-			showHandP.AddToHand(ExternalQueryCard(std::cin));
-			#ifdef DEBUGSAVEGAME
-			if( !bLoadGame )
-			{
-				std::ofstream saveFile(DEBUGSAVEGAME,std::ios::app);
-				showHandP.HandPlus::DisplayHand(saveFile);
-				saveFile.close();
-			}
-				#endif
-			}
-		}//else, error on input
-
-		std::cin.sync();
-		std::cin.clear();
-
-
- */
 
 void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, CommunityPlus & intoCards, const char * request_str)
 //, std::ofstream *saveCards)
