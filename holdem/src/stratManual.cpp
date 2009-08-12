@@ -267,12 +267,12 @@ UserConsoleStrategy::~UserConsoleStrategy()
 
 void ConsoleStrategy::showSituation()
 {
-
+#ifdef INFOASSIST_UPDATE
 	const HoldemArena & myTable = ViewTable();
 	const int8 myIndex = myTable.GetCurPlayer();
 	int8 tempIndex = myIndex;
 	const int8 totalPlayers = myTable.GetTotalPlayers();
-
+#endif // INFOASSIST_UPDATE
 
     #ifdef OLD_DISPLAY_STYLE
 	UI_DESCRIPTOR << endl << "The pot contains " << ViewTable().GetPrevPotSize() << " from previous rounds and "
@@ -521,7 +521,7 @@ void DualInputStream::GetCommandString(char * inputBuf, const int MAXINPUTLEN)
     {
         skipWhitespaceSection(); //which includes peek_update...
     }
-    
+
     if( !IsFileInput() )
     {
     #ifdef USERINPUT
@@ -597,7 +597,7 @@ float64 UserConsoleStrategy::queryAction()
 
     while( bExtraTry != 0 ) //Main input loop
     {
-        
+
 	//==============================
 	// Display user input choices
 	//==============================
@@ -629,7 +629,7 @@ float64 UserConsoleStrategy::queryAction()
 
         const float64 minRaiseBy = ViewTable().GetMinRaise();
         const float64 minRaiseTo  = ViewTable().GetMinRaise() + ViewTable().GetBetToCall();
-	
+
 
 	switch( queryAction_determineAction( myFifos ) )
 	{
@@ -656,7 +656,7 @@ float64 UserConsoleStrategy::queryAction()
                     UI_DESCRIPTOR << "You can still check..." << endl;
                 }
 		break;
-	
+
 	    case ACTION_CHECK:
 		myFifos.AbsorbNewline();
                 if( ViewTable().GetBetToCall() == ViewPlayer().GetBetSize() )
@@ -680,7 +680,7 @@ float64 UserConsoleStrategy::queryAction()
                     UI_DESCRIPTOR << "Can't check here" << endl;
                 }
             	break;
-	
+
 	    case ACTION_CALL:
 		myFifos.AbsorbNewline();
                     #ifdef DEBUGSAVEGAME
@@ -739,7 +739,7 @@ float64 UserConsoleStrategy::queryAction()
                 {
 		    returnMe = myFifos.GetPositiveFloat64();
 		    myFifos.AbsorbNewline();
-		    
+
 		    if( returnMe > 0 )
 		    {
 			if( returnMe < minRaiseTo )
@@ -769,7 +769,7 @@ float64 UserConsoleStrategy::queryAction()
 
 		}//end loop: acceptable raise
                 break;
-	
+
             case ACTION_DEFAULT:
 		myFifos.AbsorbNewline();
             ///Just press [ENTER]: do default action
@@ -819,9 +819,9 @@ float64 UserConsoleStrategy::queryAction()
 
                     #endif
             	break;
-	    
 
-	
+
+
 	    case ACTION_UNKNOWN:
 	    default:
 		myFifos.AbsorbNewline();
@@ -830,7 +830,7 @@ float64 UserConsoleStrategy::queryAction()
 		    #ifdef USERINPUT
 		    UI_DESCRIPTOR << "Clearing" << endl;
 		    #endif
-		
+
 		cin.clear();
 		cin.sync();
 
