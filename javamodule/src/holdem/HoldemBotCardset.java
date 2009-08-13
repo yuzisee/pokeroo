@@ -92,6 +92,16 @@ public class HoldemBotCardset {
         AppendCard(cardrank,cardsuit);
     }
 
+    public HoldemBotCardset(Card[] cardset)
+    {
+        CreateNewCardset();
+        for( Card c : cardset )
+        {
+            AppendCard(c);
+        }
+    }
+
+
     public HoldemBotCardset(Hand cardset)
     {
         CreateNewCardset();
