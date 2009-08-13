@@ -5,7 +5,6 @@
 
 package holdem;
 
-import com.biotools.meerkat.Hand;
 
 /**
  *
@@ -26,16 +25,12 @@ public class HoldemJNI {
     //==============================
     //   Constructors/Destructors
     //==============================
-    static native long CreateNewTable(int seatsAtTable, double chipDenomination);
-    static native void DeleteTableAndPlayers(long ptr_holdemCPtr);
+
 
     static native long CreateNewShowdown(long ptr_holdemCPtr, int calledPlayer, Hand final_community);
     static native void DeleteFinishShowdown(long ptr_holdemCPtr, long ptr_eventPtr);
 
-    static native long NewCardset(Hand c); //C_DLL_FUNCTION struct holdem_cardset CreateNewCardset();
-    //C_DLL_FUNCTION struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char cardSuit);
-    static native void DeleteCardset(long ptr_holdemCardset);
-
+    
     static native long CreateNewBettingRound(long ptr_holdemCPtr, Hand community);
     static native int DeleteFinishBettingRound(long ptr_eventPtr);
 
@@ -45,10 +40,7 @@ public class HoldemJNI {
 
 
 
-    static void BeginNewHands(long ptr_holdemCPtr, double smallBlind) { BeginNewHands(ptr_holdemCPtr, smallBlind, -1); }
-    static native void BeginNewHands(long ptr_holdemCPtr, double smallBlind, int dealerOverride);
-
-    static native void ShowHoleCardsToBot(long ptr_holdemCPtr, double smallBlind, int dealerOverride);
+    
     static native double GetBetDecision(long ptr_holdemCPtr, int playerNumber);
 
     static native void FinishHandRefreshPlayers(long ptr_holdemCPtr);
@@ -65,12 +57,6 @@ public class HoldemJNI {
 
 
     static native void SetMoney(long ptr_holdemCPtr, int playerNumber, double money);
-    static native void InitializeNewTableState(long ptr_holdemCPtr);
-
-    static native int CreateNewHumanOpponent(long ptr_holdemCPtr, String playerName, double money);
-    static native int CreateNewStrategyBot(long ptr_holdemCPtr, String playerName, double money, char botType);
-
-
 
     //==========================
     //   Assertions/Debugging
