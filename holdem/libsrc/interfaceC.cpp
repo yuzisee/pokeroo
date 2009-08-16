@@ -469,7 +469,7 @@ enum return_status RestoreTableState(const char * state_str, void * table_ptr)
 		myTable->UnserializeRoundStart(strBufState);
 
 		//InitGameLoop calls:
-		myTable->LoadBeginInitialState(); //opens some logfile handles
+		//empty function, after all... myTable->LoadBeginInitialState(); //opens some logfile handles
 		myTable->ResetDRseed();
 	}
 
@@ -477,7 +477,7 @@ enum return_status RestoreTableState(const char * state_str, void * table_ptr)
 }
 
 C_DLL_FUNCTION
-enum return_status InitializeNewTableState(void * table_ptr)
+enum return_status InitializeNewTableState(void * table_ptr, handnum_t game_id)
 {
 
 	enum return_status error_code = SUCCESS;
@@ -490,7 +490,7 @@ enum return_status InitializeNewTableState(void * table_ptr)
 		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
 
 		//InitGameLoop calls:
-		myTable->BeginInitialState(); //sets handnum=1, opens logfile handles,
+		myTable->BeginInitialState(game_id); //sets handnum=1, opens logfile handles,
 		myTable->ResetDRseed();
 	}
 
