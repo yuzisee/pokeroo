@@ -357,8 +357,7 @@ class HoldemArena
 //============================
 
 		void AssertInitialState();
-		void LoadBeginInitialState();
-		void BeginInitialState();
+		void BeginInitialState(handnum_t game_id = 1);
 		Player * FinalizeReportWinner();
 
 		// HoldemArenaBetting events and PlayShowdown will both update the deterministic-random-seed assistant

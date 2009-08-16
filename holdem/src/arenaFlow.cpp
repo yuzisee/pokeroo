@@ -308,20 +308,15 @@ float64 HoldemArena::GetDRseed()
 }
 
 
-void HoldemArena::LoadBeginInitialState()
-{
 
-
-}
-
-void HoldemArena::BeginInitialState()
+void HoldemArena::BeginInitialState(handnum_t game_id)
 {
 
 
         curIndex = 0;
         curDealer = 0;
 
-        handnum = 1;
+        handnum = game_id;
 
 
 }
