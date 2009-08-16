@@ -206,7 +206,7 @@ void HistoryStrategy::FinishHand()
 		strats[picks[currentStrategy].id]->ReleaseLogFile();
 	}
 
-    
+
 }
 
 void HistoryStrategy::SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph )
@@ -273,7 +273,7 @@ void HistoryStrategy::SaveState( )
         char handnumbasename[200];
         char handnumstr[20];
 
-        const handnum_t handNumberToPlayNext = handNumber+1;
+        const handnum_t handNumberToPlayNext = ViewTable().handnum;//bookHandNumber+1;
 	HoldemArena::FileNumberString(handNumberToPlayNext,handnumstr);
         handnumstr[19] = '\0'; //Just to be safe
 

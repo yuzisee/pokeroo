@@ -153,12 +153,13 @@ class HistoryStrategy : public virtual PlayerStrategy
         PositionalStrategy ** strats; //Generated at construction (constant during a game load)
         uint8 stratcount; //Generated at construction...
 
-		handnum_t handNumber; //Should be loaded/saved
+
+		//handnum_t bookHandNumber; //Should be loaded/saved (so that debug savefiles match up with the HoldemArena savegames?
 
         static PerformanceHistory UnserializeOne( std::istream& loadFile );
         static void SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph );
 
-        HistoryStrategy(PositionalStrategy** ps, uint8 n) :   picks(0), currentStrategy(-1) , strats(0), stratcount(n), handNumber(0)
+        HistoryStrategy(PositionalStrategy** ps, uint8 n) :   picks(0), currentStrategy(-1) , strats(0), stratcount(n)//, bookHandNumber(0)
         {
             init(ps,n);
         }

@@ -93,13 +93,13 @@ void MultiStrategy::SeeCommunity(const Hand& h, const int8 n)
         {//If there is no previous hand, initialize
             if( !initM() )
             {//Arena new game
-                handNumber = 1;
+                //bookHandNumber = 1;
                 prevMoney = -1;
             }
         }else
         {//Every hand runs through here
             SaveState();//SAVE STATE
-            handNumber += 1;
+            //bookHandNumber += 1;
         }
 
 
@@ -163,7 +163,7 @@ float64 MultiStrategy::MakeBet()
 bool MultiStrategy::initM()
 {
     bool bLoadedState = LoadState();
-    if( bLoadedState ) handNumber = ViewTable().handnum;
+//    if( bLoadedState ) bookHandNumber = ViewTable().handnum;
     currentStrategy = 0;
     strats[0]->Link(this);
     strats[0]->HardOpenLogFile();
@@ -173,8 +173,8 @@ bool MultiStrategy::initM()
 
 void MultiStrategy::Unserialize( std::istream& loadFile )
 {
-    loadFile >> handNumber;
-    handNumber -= 1;
+//    loadFile >> bookHandNumber;
+//    bookHandNumber -= 1;
     prevMoney = HoldemUtil::ReadFloat64(loadFile);
     for(uint8 i=0;i<stratcount;++i)
     {
@@ -184,7 +184,7 @@ void MultiStrategy::Unserialize( std::istream& loadFile )
 
 void MultiStrategy::Serialize( std::ostream& saveFile )
 {
-    saveFile << (handNumber+1) << endl;
+//    saveFile << (bookHandNumber+1) << endl;
     HoldemUtil::WriteFloat64(saveFile,prevMoney);
     saveFile << endl;
     for(uint8 i=0;i<stratcount;++i)
