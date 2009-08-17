@@ -1121,7 +1121,6 @@ struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, const 
 }
 
 
-
 C_DLL_FUNCTION 
 enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete)
 {

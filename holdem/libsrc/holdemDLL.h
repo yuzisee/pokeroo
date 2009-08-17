@@ -435,9 +435,14 @@ C_DLL_FUNCTION enum return_status DeleteTableAndPlayers(struct holdem_table tabl
 
 ///Add a player/bot to the table. PLAYERS MUST BE ADDED IN CLOCKWISE ORDER
 //The first player added to the table (seat #0) will have the button in the first hand
-C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, const char * playerName, float64 money);
+//Create a StrategyBot to allow pokerai's holdemDLL GetBetDecision
+//Currently, valid basic bot types are: 'N','T','A'
+//Some more "creative" bot types are: 'C','D','S'
+//Aggregate bot types that combine the dynamically switch between the above 6 bots: 'M','G'
+//BotType of 'R' will randomly select a value BotType (favouring those that are not yet added, using the string hash (player name) as its randomizer)
 C_DLL_FUNCTION struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, const char *playerName, float64 money, char botType);
-
+//Create a HumanOpponent to represent any player that is not governed by this AI.
+C_DLL_FUNCTION struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, const char * playerName, float64 money);
 
 /*****************************************************************************
 	Initial setup and final destructor functions
