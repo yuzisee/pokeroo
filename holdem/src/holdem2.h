@@ -21,7 +21,8 @@
 #ifndef HOLDEM_Community
 #define HOLDEM_Community
 
-
+// TODO: Refactor hand evaluator as separate module.
+//       Incorporate poker-eval from http://pokersource.info/developers/ or RayW from http://pokerai.org/pf3/viewtopic.php?f=3&t=16 (C version is http://pokerai.org/pf3/viewtopic.php?f=3&t=16&st=0&sk=t&sd=a&start=130)
 
 #include "holdemutil.h"
 #include <iostream>

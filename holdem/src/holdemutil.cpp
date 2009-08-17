@@ -113,6 +113,7 @@ float64 HoldemUtil::ReadFloat64(std::istream & loadFile)
     return result;
 }
 
+//We can use a union instead to clean up the warnings.
 void HoldemUtil::WriteFloat64( std::ostream& saveFile, const float64 v )
 {
     const uint32 *pMoneyU = reinterpret_cast< const uint32* >( &v );
