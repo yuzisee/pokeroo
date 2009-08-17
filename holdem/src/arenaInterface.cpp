@@ -280,6 +280,27 @@ char HoldemArena::GetPlayerBotType(playernumber_t n) const
 }
 
 
+uint32 HoldemArena::jenkins_one_at_a_time_hash(const char *key_null_termninated)
+{ //http://en.wikipedia.org/wiki/Jenkins_hash_function
+	uint32 hash = 0;
+	size_t key_len = strlen(key_null_termninated);
+    size_t i;
+
+    for (i = 0; i < key_len; i++) {
+		unsigned char key = key_null_termninated[i];
+        hash += key;
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    return hash;
+}
+
+
+
+
 float64 HoldemArena::GetPotSize() const
 {
 	return myPot;

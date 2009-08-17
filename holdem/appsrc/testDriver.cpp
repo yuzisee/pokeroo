@@ -586,6 +586,7 @@ if( bLoadGame )
                 opponentorder = Permute(NUM_OPPONENTS,randSeed);
                 for(i=0;i<NUM_OPPONENTS;++i)
                 {
+
                     //cout << i << endl;
                     switch(opponentorder[i])
                     {
@@ -624,17 +625,17 @@ if( bLoadGame )
 
             default:
 
-            myTable.AddStrategyBot("GearBotV", AUTO_CHIP_COUNT, 'G');
-            myTable.AddStrategyBot("MultiBotV", AUTO_CHIP_COUNT, 'M');
+            myTable.AddStrategyBot("GearBotR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot("MultiBotR", AUTO_CHIP_COUNT, 'R');
 
-            myTable.AddStrategyBot("DangerV", AUTO_CHIP_COUNT, 'D');
-            myTable.AddStrategyBot("ComV", AUTO_CHIP_COUNT, 'C');
-            myTable.AddStrategyBot("NormV", AUTO_CHIP_COUNT, 'N');
-            myTable.AddStrategyBot("TrapV", AUTO_CHIP_COUNT, 'T');
-            myTable.AddStrategyBot("AceV", AUTO_CHIP_COUNT, 'A');
+            myTable.AddStrategyBot("DangerR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot("ComR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot("NormR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot("TrapR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot("AceR", AUTO_CHIP_COUNT, 'R');
 
 
-            myTable.AddStrategyBot("SpaceV", AUTO_CHIP_COUNT, 'S');//&MeanGeomBluff);
+            myTable.AddStrategyBot("SpaceR", AUTO_CHIP_COUNT, 'R');//&MeanGeomBluff);
 
 
                 break;

@@ -76,7 +76,7 @@ class Player
 
 
 		Player( float64 money, const std::string name, PlayerStrategy* strat, float64 init_play)
-		: myStrat(strat),  allIn(init_play), myMoney(money)
+		: myStrat(strat), allIn(init_play), myMoney(money)
 		 , handBetTotal(0), myBetSize(0), lastBetSize(init_play)
 		{
 			myName = name;
@@ -232,7 +232,8 @@ class HoldemArena
 		float64 & PlayerHandBetTotal(Player& target){ return target.handBetTotal; }
 		float64 & PlayerMoney(Player& target){ return target.myMoney; }
 
-
+		uint32 jenkins_one_at_a_time_hash(const char *key_null_termninated); //A simple hash for selecting random botTypes.
+		char randomBotType(const char *key_null_termninated);
     protected:
 
         std::ostream& gamelog;

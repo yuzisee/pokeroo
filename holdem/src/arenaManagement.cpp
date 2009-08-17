@@ -27,7 +27,11 @@
 
 #define VERBOSE_DESTRUCTOR
 
+//Number of core bot types (excluding aggregate bot types)
 #define NUMBER_OF_BOTS_COMBINED 6
+
+//Number of bot types including aggregate bot types
+#define NUMBER_OF_BOTS_TOTAL 8
 
 #ifdef DEBUGASSERT
 #include <typeinfo>
@@ -151,6 +155,12 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
     PlayerStrategy * botStrat = 0;
     MultiStrategy * combined = 0;
 
+	//EARLY RETURN!!
+	if( botType == 'R' ) return AddStrategyBot(	 id
+												,money
+												,randomBotType(id)
+											   );
+
     switch( botType )
     {
     case 'A':
@@ -190,7 +200,7 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
         break;
     default:
         #ifdef DEBUGASSERT
-            std::cerr << "Unknown bot type being added!";
+            std::cerr << "Unknown bot type " << (char)(botType) << "being added!";
             exit(1);
         #endif
         botStrat = 0;
@@ -206,7 +216,63 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
             pTypes[addedIndex] = botType;
         }
     }
+
     return addedIndex;
+}
+
+
+char HoldemArena::randomBotType(const char *key_null_termninated)
+{
+	char validBotTypes[NUMBER_OF_BOTS_TOTAL] = {'N','T','A','C','D','S','M','G'};
+	playernumber_t validBotTypeFreq[NUMBER_OF_BOTS_TOTAL] = {0};
+	vector<char> minFreqBotTypes;
+    uint32 botTypeSeed = jenkins_one_at_a_time_hash(key_null_termninated);
+	playernumber_t minFrequency = SEATS_AT_TABLE; //Start at SEATS_AT_TABLE and reduce down to minimum.
+
+	//
+	//Count existing bots by type.
+	//
+
+	for(uint8 botTypeIdx = 0;botTypeIdx<NUMBER_OF_BOTS_TOTAL;++botTypeIdx)
+	{
+		char tallyingBotType = validBotTypes[botTypeIdx];
+		for(playernumber_t n=0;(n<SEATS_AT_TABLE) && p[n];++n)
+		{
+			char pBotType = GetPlayerBotType(n);
+			if( pBotType == tallyingBotType )
+			{
+				++validBotTypeFreq[botTypeIdx];
+				break;
+			}
+		}
+		//We have counted all the bots that are of type tallyingBotType.
+		//Is it the minimum so far?
+		if( validBotTypeFreq[botTypeIdx] < minFrequency )
+		{
+			minFrequency = validBotTypeFreq[botTypeIdx];
+			minFreqBotTypes.clear();
+		}
+		//Keep track of the list of minimum frequency botTypes.
+		if( validBotTypeFreq[botTypeIdx] == minFrequency )
+		{
+		    minFreqBotTypes.push_back(validBotTypes[botTypeIdx]);
+		}
+	}
+
+	//
+	//Randomly select a bot type that has minFrequency frequency.
+	//
+	return minFreqBotTypes[ botTypeSeed % minFreqBotTypes.size() ];
+
+
+    #if 0
+	std::cout << "Type selection: ";
+	for(size_t n=0;n<minFreqBotTypes.size();++n)
+	{
+	    std::cout << minFreqBotTypes[n];
+	}
+	std::cout << " | " << botTypeSeed << " % " << minFreqBotTypes.size() << " = " << minFreqBotTypes[ botTypeSeed % minFreqBotTypes.size() ] << std::endl;
+    #endif //debugging only...
 }
 
 playernumber_t HoldemArena::ManuallyAddPlayer(const char* const id, const float64 money, PlayerStrategy* newStrat)
