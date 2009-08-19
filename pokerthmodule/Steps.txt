@@ -1,0 +1,39 @@
+Note: since we require GCC4, we will need tdm-gcc (auto) or MinGW GCC4.4 (https://sourceforge.net/project/shownotes.php?release_id=691876)
+http://forums.codeblocks.org/index.php?action=printpage;topic=5666.0
+1.  Install QT4 (qt-win-opensource-4.5.2-mingw) from Nokia which should also install MinGW (at least the latest version of w32api.h)
+2.  (http://lists.trolltech.com/qt-interest/2006-08/thread00942-0.html)
+	OPTIONAL, since pokerTH ships with mingwm10.dll anyways, but apparently it's not needed by Qt in mingw32, so:
+    edit [QT]\mkspecs\win32-g++\qmake.conf: remove all occurrences of "-mthreads".
+3. 	cd C:\Qt\4.5.2
+    configure -static -fast -no-qt3support -no-sql-sqlite -no-dbus -no-opengl -no-openssl -no-phonon -no-webkit -no-direct3d
+	qmake projects.pro -o Makefile -spec win32-g++
+	mingw32-make sub-src
+From QT Command Prompt:
+4.  Download boost, boost_jam as a sibling directory of PokerTH-0.7.1-src
+zlib?: http://www.boost.org/doc/libs/1_39_0/libs/iostreams/doc/installation.html
+5.  Environment variables:
+		SET ZLIB_PATH=%PKTH_BaseDir%\zlib
+		SET ZLIB_LIBPATH=%PKTH_BaseDir%\zlib
+		SET ZLIB_SOURCE=%PKTH_BaseDir%\zlib
+		SET ZLIB_BINARY=zlib
+6.  Download zlib (source) as a sibling directory of PokerTH-0.7.1-src
+7.  Build zlib with mingw32-make -fwin32\makefile.gcc
+8.  set PATH=<path to bjam.exe>;%PATH%
+9.  bjam link=static --build-dir=<path to PokerTH-0.7.1-src>\pkth_boost_delete_me_after_build --toolset=gcc stage
+10. (if you wish to save space) Delete intermediate files: pkth_boost_delete_me_after_build
+11. Download GnuTLS binary.
+12. Download SDL, SDL_mixer (source and binary)
+13. Download curl (source).
+14. Build curl:
+		mingw32-make mingw32-zlib
+*.  Add to the linker section under win32 in pokerth_game.pro
+		LIBPATH += ../pokerai
+		LIBS += -lholdemDLL
+	Add to the SOURCES section of pokerth_lib.pro
+		src/ai/aitools.cpp
+	Remove pokerth_server.pro from pokerth.pro
+15. qmake pokerth_game.pro
+16. mingw32-make
+17. Copy SDL, SDL_mixer, (curl DLLs?) to pokerTH.exe release directory
+18. #diff -buNr src.old src.new > holdemDLL_pokerth.patchfile
+	//It may be easier to include aitools.cpp, aitools.h, holdemDLL.h, portability.h, localplayer.h, localplayer.cpp verbatim.
