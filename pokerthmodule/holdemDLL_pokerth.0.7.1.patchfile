@@ -764,19 +764,6 @@ diff -buNr PokerTH-0.7.1-src.old/src/ai/src/portability.h PokerTH-0.7.1-src.new/
 +#endif
 +
 +
-diff -buNr PokerTH-0.7.1-src.old/src/engine/berointerface.h PokerTH-0.7.1-src.new/src/engine/berointerface.h
---- PokerTH-0.7.1-src.old/src/engine/berointerface.h	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/berointerface.h	2009-08-18 19:54:34.000000000 -0400
-@@ -73,6 +73,9 @@
- 
- 	virtual void postRiverRun() =0;
- 
-+	//pokerai: Added
-+	virtual void setAIptrs(void * aibero_ptr) = 0;
-+
- };
- 
- #endif
 diff -buNr PokerTH-0.7.1-src.old/src/engine/handinterface.h PokerTH-0.7.1-src.new/src/engine/handinterface.h
 --- PokerTH-0.7.1-src.old/src/engine/handinterface.h	2009-06-25 17:37:44.000000000 -0400
 +++ PokerTH-0.7.1-src.new/src/engine/handinterface.h	2009-08-18 19:54:26.000000000 -0400
@@ -799,242 +786,9 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/handinterface.h PokerTH-0.7.1-src.ne
  };
  
  #endif
-diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localbero.cpp PokerTH-0.7.1-src.new/src/engine/local_engine/localbero.cpp
---- PokerTH-0.7.1-src.old/src/engine/local_engine/localbero.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localbero.cpp	2009-08-19 12:47:14.000000000 -0400
-@@ -23,6 +23,9 @@
- #include "engine_msg.h"
- #include <core/loghelper.h>
- 
-+//pokerai: Added
-+#include "ai/libsrc/holdemDLL.h"
-+
- using namespace std;
- 
- LocalBeRo::LocalBeRo(HandInterface* hi, int id, unsigned dP, int sB, GameState gS)
-@@ -55,6 +58,7 @@
- 		throw LocalException(__FILE__, __LINE__, ERR_ACTIVE_PLAYER_NOT_FOUND);
- 	}
- 
-+	event_ptr = 0; //pokerai: Added
- }
- 
- 
-@@ -68,6 +72,10 @@
- 	return 0;
- }
- 
-+//Here's the flow:
-+//nextPlayer calls action(), which gets an action, and then calls run().
-+//If there are more players to act, run() will get the next player, and call action() on it.
-+//Repeat, until eventually run() decides to increment currentRound via setCurrentRound() and then switchRounds();
- void LocalBeRo::nextPlayer() {
- 
- 	PlayerListConstIterator currentPlayersTurnConstIt = myHand->getRunningPlayerIt(currentPlayersTurnId);
-@@ -131,6 +139,30 @@
- 			}
- 		}
- 
-+		//
-+		//pokerai: Added BEGIN
-+		//
-+		if( getMyHand()->getLastPlayersTurn() != -1 )
-+		{
-+		
-+		
-+			//If this isn't the first run, someone has made an action and we would like to catch it here.
-+			//NOTE: localberopreflop overrides this function, so we need to do this there too.
-+			int lastPlayerId = getMyHand()->getLastPlayersTurn();
-+			PlayerListConstIterator it_cur = getMyHand()->getActivePlayerIt(lastPlayerId);
-+			
-+			enum return_status retval = PlayerMakesBetTo(event_ptr, lastPlayerId, (*it_cur)->getMySet());
-+			assert(retval != PARAMETER_DATA_ERROR);
-+			assert(retval != NOT_IMPLEMENTED);
-+			assert(retval != PARAMETER_INVALID);
-+			assert(retval == SUCCESS);
-+			assert(WhoIsNext_Betting(event_ptr).seat_number != lastPlayerId);
-+		}
-+		//
-+		//pokerai: Added END
-+		//		
-+		
-+
- 		//log the turned cards
- 		if(!logBoardCardsDone) {
- 
-@@ -153,10 +185,10 @@
- 
- 		bool allHighestSet = true;
- 
--		PlayerListIterator it;
- 		PlayerListIterator it_c;
- 
- 
-+		
- 		// check if all running players have same sets (else allHighestSet = false)
- 		for( it_c = myHand->getRunningPlayerList()->begin(); it_c != myHand->getRunningPlayerList()->end(); it_c++) {
- 			if(highestSet != (*it_c)->getMySet()) {
-@@ -167,11 +199,20 @@
- 
- 		int i;
- 
-+		// Here's what I think is happening. allHighestSet means that everyone has called.
-+		// However, before the first bet, all bets are 0 and highestSet is 0, which would lead the round to end immediately.
-+		// Therefore, (!firstRound && allHighestSet) is the condition that determines if a round is now over.
-+		
- 		// prfen, ob aktuelle bero wirklich dran ist
- 		if(!firstRound && allHighestSet) { 
- 	
-+			//pokerai: Added
-+			//If the next round is starting, hopefully this round has ended.
-+			assert(WhoIsNext_Betting(event_ptr).seat_number == -1);
-+	
- 			// aktuelle bero nicht dran, weil alle Sets gleich sind
- 			//also gehe in naechste bero
-+			// (ie. All sets are equal, so we are moving onto the next betting round)
- 			myHand->setCurrentRound(myBeRoID+1);
- 
- 			//Action loeschen und ActionButtons refresh
-@@ -194,6 +235,7 @@
- 			// aktuelle bero ist wirklich dran
- 
- 			// Anzahl der effektiv gespielten Runden (des human player) erhöhen
-+			// (Increment the Number of actual rounds played)
- 			it_c = myHand->getActivePlayerIt(0);
- 			if( it_c != myHand->getActivePlayerList()->end() ) {
- 				// human player is active
-@@ -229,8 +271,9 @@
- 				firstRound = false;
- 			}
- 
-+			//I believe there is an assumption here: in local play, the GUI human player is always Id 0.
- 			if( currentPlayersTurnId == 0) {
--				// Wir sind dran
-+				// Wir sind dran ("We are off")
- 				myHand->getGuiInterface()->meInAction();
- 			}
- 			else {
-diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localbero.h PokerTH-0.7.1-src.new/src/engine/local_engine/localbero.h
---- PokerTH-0.7.1-src.old/src/engine/local_engine/localbero.h	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localbero.h	2009-08-19 11:14:08.000000000 -0400
-@@ -46,9 +46,16 @@
- 
- 	void postRiverRun() {};
- 	
-+	//pokerai: Added
-+	void setAIptrs(void * aibero_ptr) {
-+		assert(event_ptr == 0); //Calling setAIptrs more than once implies that you're calling CreateNewBettingRound more than once.
-+		event_ptr = aibero_ptr;
-+	};
- 
- protected:
- 
-+	void * event_ptr; //pokerai: Added
-+
- 	HandInterface* getMyHand() const { return myHand; }
- 
- 	int getDealerPosition() const {return dealerPosition; }
-@@ -100,7 +107,6 @@
- 	
- 
- 
--
- private:
- 
- 	HandInterface* myHand;
-diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localberopostriver.cpp PokerTH-0.7.1-src.new/src/engine/local_engine/localberopostriver.cpp
---- PokerTH-0.7.1-src.old/src/engine/local_engine/localberopostriver.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localberopostriver.cpp	2009-08-18 16:48:58.000000000 -0400
-@@ -23,6 +23,9 @@
- 
- #include <iostream>
- 
-+//pokerai: Added
-+#include "ai/libsrc/holdemDLL.h"
-+
- using namespace std;
- 
- LocalBeRoPostRiver::LocalBeRoPostRiver(HandInterface* hi, int id, int dP, int sB) : LocalBeRo(hi, id, dP, sB, GAME_STATE_POST_RIVER), highestCardsValue(0)
-@@ -41,6 +44,8 @@
- 	PlayerListConstIterator it_c;
- 	PlayerListIterator it;
- 
-+
-+	
- 	// who is the winner
- 	for(it_c=getMyHand()->getActivePlayerList()->begin(); it_c!=getMyHand()->getActivePlayerList()->end(); it_c++) {
- 
-diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localberopreflop.cpp PokerTH-0.7.1-src.new/src/engine/local_engine/localberopreflop.cpp
---- PokerTH-0.7.1-src.old/src/engine/local_engine/localberopreflop.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localberopreflop.cpp	2009-08-19 12:46:34.000000000 -0400
-@@ -25,6 +25,10 @@
- #include <handinterface.h>
- #include <game_defs.h>
- 
-+
-+//pokerai: Added
-+#include "ai/libsrc/holdemDLL.h"
-+
- using namespace std;
- 
- LocalBeRoPreflop::LocalBeRoPreflop(HandInterface* hi, int id, unsigned dP, int sB) : LocalBeRo(hi, id, dP, sB, GAME_STATE_PREFLOP)
-@@ -110,10 +114,35 @@
- 
- 	}
- 
-+	//
-+	//pokerai: Added BEGIN
-+	//
-+	if( getMyHand()->getLastPlayersTurn() != -1 )
-+	{
-+		
-+		//If this isn't the first run, someone has made an action and we would like to catch it here.
-+		int lastPlayerId = getMyHand()->getLastPlayersTurn();
-+		PlayerListConstIterator it_cur = getMyHand()->getActivePlayerIt(lastPlayerId);
-+
-+		enum return_status retval = PlayerMakesBetTo(event_ptr,lastPlayerId, (*it_cur)->getMySet());
-+		assert(retval != PARAMETER_DATA_ERROR);
-+		assert(retval != NOT_IMPLEMENTED);
-+		assert(retval != PARAMETER_INVALID);
-+		assert(retval == SUCCESS);
-+		assert(WhoIsNext_Betting(event_ptr).seat_number != lastPlayerId);
-+
-+	}
-+	//
-+	//pokerai: Added END
-+	//
-+
-+	
-+		
- 	int i;
- 	bool allHighestSet = true;
- 	PlayerListConstIterator it_c;
- 
-+
- 	// check if all running players have same sets (else allHighestSet = false)
- 	for(it_c=getMyHand()->getRunningPlayerList()->begin(); it_c!=getMyHand()->getRunningPlayerList()->end(); it_c++) {
- 		if(getHighestSet() != (*it_c)->getMySet()) {
-@@ -133,9 +162,17 @@
- 
- 	setCurrentPlayersTurnId( (*currentPlayersTurnIt)->getMyUniqueID() );
- 	
-+	
-+
-+	
-+	
- 	// prfen, ob Preflop wirklich dran ist
- 	if(!getFirstRound() && allHighestSet) { 
- 
-+		//pokerai: Added
-+		//If the next round is starting, hopefully this round has ended.
-+		assert(WhoIsNext_Betting(event_ptr).seat_number == -1);
-+		
- 		// Preflop nicht dran, weil wir nicht mehr in erster PreflopRunde und alle Sets gleich sind
- 		//also gehe in Flop
- 		getMyHand()->setCurrentRound(GAME_STATE_FLOP);
 diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp
 --- PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp	2009-08-19 13:08:30.000000000 -0400
++++ PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp	2009-08-19 18:36:44.000000000 -0400
 @@ -28,6 +28,7 @@
  
  #include <iostream>
@@ -1131,7 +885,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  void LocalHand::start() {
  
  	//Log blinds sets for new Hand
-@@ -438,7 +498,8 @@
+@@ -438,12 +498,36 @@
  	}
  }
  
@@ -1141,7 +895,35 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  void LocalHand::switchRounds() {
  
  	PlayerListIterator it, it_1;
-@@ -558,26 +619,115 @@
+ 	PlayerListConstIterator it_c;
+ 
++	//
++	//pokerai: Added BEGIN
++	//
++	//Capture player action.
++	if (curBettingRoundAI) {
++		int lastPlayerId = WhoIsNext_Betting(curBettingRoundAI).seat_number;
++		if (lastPlayerId != -1) {
++			assert(getLastPlayersTurn() == lastPlayerId );
++			PlayerListConstIterator it_cur = getActivePlayerIt(lastPlayerId);
++			
++			enum return_status retval_bet = PlayerMakesBetTo(curBettingRoundAI, lastPlayerId, (*it_cur)->getMySet());
++			assert(retval_bet != PARAMETER_DATA_ERROR);
++			assert(retval_bet != NOT_IMPLEMENTED);
++			assert(retval_bet != PARAMETER_INVALID);
++			assert(retval_bet == SUCCESS);
++		}
++	}
++	//
++	//pokerai: Added END
++	//
++		
++	
++	
+ 	// refresh runningPlayerList
+ 	for(it=runningPlayerList->begin(); it!=runningPlayerList->end(); ) {
+ 		if((*it)->getMyAction() == PLAYER_ACTION_FOLD || (*it)->getMyAction() == PLAYER_ACTION_ALLIN) {
+@@ -558,26 +642,115 @@
  
  	myGui->refreshGameLabels((GameState)getCurrentRound());
  
@@ -1150,8 +932,6 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
 +	//
 +	// pokerai: Added BEGIN
 +	//
-+	struct return_event retval_new; 
-+	struct return_seat retval_delete;
 +	assert(table_ptr);
 +	
 +	//assert(GetPotSize(table_ptr)
@@ -1161,63 +941,65 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
 +	
 +	if (currentRound != lastBettingRoundNum) {
 +		//This is the start of a new round, because currentRound has changed.
++		struct return_event retval_new; 
++		struct return_seat retval_delete;
 +		
-+		//WORKAROUND: In an all-fold situation, the last BeRoInterface::run() is not called...
-+		//So we need to process that action here.
-+		if(nonFoldPlayerCounter==1) {
-+			int lastPlayerId = getLastPlayersTurn();
-+			PlayerListConstIterator it_cur = getActivePlayerIt(lastPlayerId);
-+			
-+			enum return_status retval_bet = PlayerMakesBetTo(curBettingRoundAI, lastPlayerId, (*it_cur)->getMySet());
-+			assert(retval_bet != PARAMETER_DATA_ERROR);
-+			assert(retval_bet != NOT_IMPLEMENTED);
-+			assert(retval_bet != PARAMETER_INVALID);
-+			assert(retval_bet == SUCCESS);
-+			assert(WhoIsNext_Betting(curBettingRoundAI).seat_number == -1);
-+		}
++		if (curBettingRoundAI) assert(WhoIsNext_Betting(curBettingRoundAI).seat_number == -1);
 +		
 +		enum betting_round bFirstBettingRound = FIRST_BETTING_ROUND; //by default...
 +		if (lastBettingRoundNum != -1) {
 +			//This isn't the first betting round.
 +			bFirstBettingRound = LATER_BETTING_ROUND;
 +			//Finalize the existing round, because we're about to move on to the next one.
++			assert(curBettingRoundAI);
 +			retval_delete = DeleteFinishBettingRound(curBettingRoundAI);
++			curBettingRoundAI = 0;
 +			assert(retval_delete.error_code != PARAMETER_DATA_ERROR);
 +			assert(retval_delete.error_code != UNRELIABLE_RESULT);
 +			assert(retval_delete.error_code != INTERNAL_INCONSISTENCY);
 +			assert(retval_delete.error_code == SUCCESS);
 +		}
++		//At this point bFirstBettingRound should be correctly set to either FIRST_BETTING_ROUND or LATER_BETTING_ROUND
 +		
 +		if (currentRound != GAME_STATE_POST_RIVER) {
 +			//Create a betting round!
 +			int numBettingRoundsRemaining = GAME_STATE_RIVER - currentRound;
++			assert(!curBettingRoundAI);
 +			retval_new = CreateNewBettingRound(table_ptr,myBoardAI[currentRound],bFirstBettingRound,numBettingRoundsRemaining);
 +			curBettingRoundAI = retval_new.event_ptr;
-+			myBeRo[currentRound]->setAIptrs(curBettingRoundAI);
 +			assert(retval_new.error_code == SUCCESS);
 +		}
 +		else {
 +			assert(currentRound == GAME_STATE_POST_RIVER);
++			assert(lastBettingRoundNum != -1);
++			assert(!curBettingRoundAI);
 +			
 +			//We can't always call CreateNewShowdown, ie. if everybody folds, holdemDLL does not not warrant a showdown.
-+			if (nonFoldPlayerCounter > 1) {
-+				retval_new = CreateNewShowdown(table_ptr, retval_delete.seat_number, myBoardAI[3]);
-+				myBeRo[currentRound]->setAIptrs(curBettingRoundAI);
-+				assert(retval_new.error_code == SUCCESS);
-+			
-+				void * curShowdownRoundAI = retval_new.event_ptr;
++			if (retval_delete.seat_number != -1) {
++				assert(nonFoldPlayerCounter > 1);
++				
++				//CreateNewShowdown
 +				struct holdem_cardset riverBoard = myBoardAI.back();
-+				int nextPlayerToActInShowdown_Id;
-+				while( (nextPlayerToActInShowdown_Id = WhoIsNext_Showdown(curShowdownRoundAI).seat_number) != -1 ) {
++				retval_new = CreateNewShowdown(table_ptr, retval_delete.seat_number, riverBoard);
++				assert(retval_new.error_code == SUCCESS);
++				
++				//Link with BEttingROund (not strictly necessary, localberopostriver doesn't have any holdemDLL-specific code)
++				void * curShowdownRoundAI = retval_new.event_ptr;		
++				
++				//Process showdown
++				
++				for (;;) {
++					int nextPlayerToActInShowdown_Id = WhoIsNext_Showdown(curShowdownRoundAI).seat_number;
++					if (nextPlayerToActInShowdown_Id == -1) { break; }
 +					PlayerShowsHand(curShowdownRoundAI, nextPlayerToActInShowdown_Id, myPlayerCardsAI[nextPlayerToActInShowdown_Id], riverBoard );
 +				}
-+				
 +				DeleteFinishShowdown(table_ptr, curShowdownRoundAI);
 +			}
 +			
 +			//Luckily, pokerTH always runs the showdown round, even when everybody folds.
 +			//Thus, this is a good place to close things out.
-+			FinishHandRefreshPlayers(table_ptr);			
++			assert(!curBettingRoundAI);
++			FinishHandRefreshPlayers(table_ptr);	
 +		}
 +		
 +		lastBettingRoundNum = currentRound;
@@ -1262,7 +1044,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  			// start post river
  			myGui->postRiverAnimation1();
  
-@@ -590,6 +740,7 @@
+@@ -590,6 +763,7 @@
  
  }
  
@@ -1304,7 +1086,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.h PokerTH-0.7
  	PlayerList activePlayerList;
 diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localplayer.cpp PokerTH-0.7.1-src.new/src/engine/local_engine/localplayer.cpp
 --- PokerTH-0.7.1-src.old/src/engine/local_engine/localplayer.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localplayer.cpp	2009-08-18 23:17:06.000000000 -0400
++++ PokerTH-0.7.1-src.new/src/engine/local_engine/localplayer.cpp	2009-08-19 19:00:54.000000000 -0400
 @@ -29,921 +29,28 @@
  
  using namespace std;
@@ -2277,7 +2059,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localplayer.cpp PokerTH
  
  			currentBoard->collectSets();
  			currentHand->getGuiInterface()->refreshPot();
-@@ -1054,3681 +157,95 @@
+@@ -1054,3681 +157,94 @@
  
  }
  
@@ -2860,8 +2642,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localplayer.cpp PokerTH
 -	// 		cout << "sBLUFF!" << endl;
 +	//We process all-ins separately
 +	if ( myNewSet >= myCash ) {
-+		mySet += myCash;
-+		myCash = 0;
++		setMySet(myCash);
  	
 -			// Gegner setzen -> call
 -			if(currentHand->getCurrentBeRo()->getHighestSet() >= 4*currentHand->getSmallBlind()) {
@@ -6090,18 +5871,6 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localplayer.h PokerTH-0
  	int myButton; // 0 = none, 1 = dealer, 2 =small, 3 = big
  	bool myActiveStatus; // 0 = inactive, 1 = active
          bool myStayOnTableStatus; // 0 = left, 1 = stay
-diff -buNr PokerTH-0.7.1-src.old/src/engine/network_engine/clientbero.h PokerTH-0.7.1-src.new/src/engine/network_engine/clientbero.h
---- PokerTH-0.7.1-src.old/src/engine/network_engine/clientbero.h	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/network_engine/clientbero.h	2009-08-18 19:56:16.000000000 -0400
-@@ -85,6 +85,8 @@
- 
- 	void postRiverRun();
- 
-+	void setAIptrs(void * aibero_ptr){}; //pokerai: Added
-+
- private:
- 
- 	const GameState myBeRoID;
 diff -buNr PokerTH-0.7.1-src.old/src/engine/network_engine/clienthand.h PokerTH-0.7.1-src.new/src/engine/network_engine/clienthand.h
 --- PokerTH-0.7.1-src.old/src/engine/network_engine/clienthand.h	2009-06-25 17:37:44.000000000 -0400
 +++ PokerTH-0.7.1-src.new/src/engine/network_engine/clienthand.h	2009-08-18 19:55:56.000000000 -0400
@@ -6167,7 +5936,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/playerinterface.h PokerTH-0.7.1-src.
  #endif
 diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
 --- PokerTH-0.7.1-src.old/src/game.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/game.cpp	2009-08-19 13:38:12.000000000 -0400
++++ PokerTH-0.7.1-src.new/src/game.cpp	2009-08-19 19:04:18.000000000 -0400
 @@ -70,6 +70,21 @@
  	activePlayerList = PlayerList(new std::list<boost::shared_ptr<PlayerInterface> >);
  	runningPlayerList = PlayerList(new std::list<boost::shared_ptr<PlayerInterface> >);
@@ -6176,7 +5945,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
 +	//
 +	//pokerai: Added BEGIN
 +	//
-+	struct return_table aiModelNew = CreateNewTable(startQuantityPlayers, 1 /* chipDenomination */);
++	struct return_table aiModelNew = CreateNewTable(MAX_NUMBER_OF_PLAYERS, 1 /* chipDenomination */);
 +	//Notice that we initialize chipDenomination as 1.
 +	//In pokerai, money is stored as a double. In PokerTH, money is stored as an integer.
 +	//Therefore, the chip denomination is always 1 in PokerTH.
@@ -6190,7 +5959,22 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
  	// create player
  	player_i = playerDataList.begin();
  	player_end = playerDataList.end();
-@@ -94,6 +109,30 @@
+@@ -80,6 +95,7 @@
+ 		unsigned uniqueId = 0;
+ 		PlayerType type = PLAYER_TYPE_COMPUTER;
+ 		boost::shared_ptr<SessionData> myNetSession;
++		bool bPlayerIsActive = false;
+ 
+ 		if (player_i != player_end)
+ 		{
+@@ -88,12 +104,40 @@
+ 			myName = (*player_i)->GetName();
+ 			myAvatarFile = (*player_i)->GetAvatarFile();
+ 			myNetSession = (*player_i)->GetNetSessionData();
++			bPlayerIsActive = true;
+ 			++player_i;
+ 		}
+ 
  		// create player objects
  		boost::shared_ptr<PlayerInterface> tmpPlayer = myFactory->createPlayer(currentBoard, i, uniqueId, type, myName, myAvatarFile, startCash, startQuantityPlayers > i, 0);
  
@@ -6198,22 +5982,25 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
 +		//pokerai: Added BEGIN
 +		//
 +		//We add matching player entries into the pokerai model
-+		struct return_seat retval; 
-+		if (type == PLAYER_TYPE_COMPUTER) 
++		if (bPlayerIsActive)
 +		{
-+			tmpPlayer->setAIptrs(aiModel.table_ptr);
-+			retval = CreateNewStrategyBot(aiModel,myName.c_str(),gameData.startMoney,'R');
-+			assert(tmpPlayer->getMyName().c_str()[7] == i + '0');
++			struct return_seat retval; 
++			if (type == PLAYER_TYPE_COMPUTER) 
++			{
++				tmpPlayer->setAIptrs(aiModel.table_ptr);
++				retval = CreateNewStrategyBot(aiModel,myName.c_str(),gameData.startMoney,'R');
++				//assert(tmpPlayer->getMyName().c_str()[7] == i + '0'); //Makes debugging easier if the names are consistent with DLL call indices...
++			}
++			else
++			{
++				assert(type == PLAYER_TYPE_HUMAN);
++				retval = CreateNewHumanOpponent(aiModel,myName.c_str(),gameData.startMoney);
++			}
++			assert(retval.error_code == SUCCESS);
++			assert(retval.seat_number == i);
++			assert(tmpPlayer->getMyID() == i);
++			assert(tmpPlayer->getMyUniqueID() == i);
 +		}
-+		else
-+		{
-+			assert(type == PLAYER_TYPE_HUMAN);
-+			retval = CreateNewHumanOpponent(aiModel,myName.c_str(),gameData.startMoney);
-+		}
-+		assert(retval.error_code == SUCCESS);
-+		assert(retval.seat_number == i);
-+		assert(tmpPlayer->getMyID() == i);
-+		assert(tmpPlayer->getMyUniqueID() == i);
 +		//
 +		//pokerai: Added END
 +		//
@@ -6221,7 +6008,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
  		tmpPlayer->setNetSessionData(myNetSession);
  
  		// fill player lists
-@@ -110,6 +149,11 @@
+@@ -110,6 +154,11 @@
  	//start timer
  	blindsTimer.reset();
  	blindsTimer.start();
@@ -6233,7 +6020,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
  }
  
  Game::~Game()
-@@ -118,6 +162,11 @@
+@@ -118,6 +167,11 @@
  	currentBoard = 0;
  	delete currentHand;
  	currentHand = 0;
@@ -6245,12 +6032,13 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
  }
  
  HandInterface *Game::getCurrentHand()
-@@ -168,9 +217,37 @@
+@@ -168,9 +222,38 @@
  	runningPlayerList->clear();
  	(*runningPlayerList) = (*activePlayerList);
  
 -	// create Hand
-+	
++	//pokerai: Added
++	assertHoldemDLL(); //createHand extracts the blinds. We should reconcile any stack differences here.
 +
 +	//create Hand
  	currentHand = myFactory->createHand(myFactory, myGui, currentBoard, seatsList, activePlayerList, runningPlayerList, currentHandID, startQuantityPlayers, dealerPosition, currentSmallBlind, startCash);
@@ -6259,14 +6047,14 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
 +	//		
 +	//pokerai: Added BEGIN
 +	//
-+	assertHoldemDLL();
 +	//Right now we know our dealer, we can BeginNewHands
 +	
 +	currentHand->setAIptrs(aiModel.table_ptr);
 +	it = currentHand->getSeatIt(dealerPosition);
 +	assert((*it)->getMyID() == dealerPosition);
 +	enum return_status retval = BeginNewHands(aiModel.table_ptr, getCurrentSmallBlind(), dealerPosition );
-+	assert(retval == SUCCESS);
++	assert(retval != NULL_TABLE_PTR);
++	assert(retval != PARAMETER_INVALID);
 +	
 +	
 +	it = activePlayerList->begin();
@@ -6284,7 +6072,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
  	// shifting dealer button -> TODO exception-rule !!!
  	bool nextDealerFound = false;
  	PlayerListConstIterator dealerPositionIt = currentHand->getSeatIt(dealerPosition);
-@@ -193,6 +270,9 @@
+@@ -193,6 +276,9 @@
  	if(!nextDealerFound) {
  		throw LocalException(__FILE__, __LINE__, ERR_NEXT_DEALER_NOT_FOUND);
  	}
@@ -6294,7 +6082,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
  }
  
  void Game::startHand()
-@@ -272,3 +352,27 @@
+@@ -272,3 +358,30 @@
  		}
  	}
  }
@@ -6313,6 +6101,9 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
 +		//GetMoney matches PokerTH's getMyCash()?
 +		//assert(  floor( it_a_money.money + 0.5 ) == (*it_a)->getMyCash()  );
 +		if (  floor( it_a_money.money + 0.5 ) != (*it_a)->getMyCash()  ) {
++			//We use PlayerAction 255 to force the default clause in the switch (see logPlayerActionMsg in log.cpp).
++			//In order for logPlayerActionMsg to display the amount, we must choose: PlayerAction >= PLAYER_ACTION_BET
++			currentHand->getGuiInterface()->logPlayerActionMsg((*it_a)->getMyName() + " resolving discrepancy with holdemAI: ",255,it_a_money.money);
 +			enum return_status retval = SetMoney(aiModel.table_ptr,(*it_a)->getMyID(),(*it_a)->getMyCash());
 +			assert(retval == SUCCESS);
 +		}

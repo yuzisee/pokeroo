@@ -9,3 +9,5 @@ To build PokerTH 0.7.1 Win32 to use holdemDLL.dll as the AI engine for local gam
 		mingw32-make
 	7. Copy your newly built pokerth.exe into your PokerTH installation directory (from release directory)
 	8. Copy holdemdb.ini, holdemdll.dll, data (entire directory), into the PokerTH installation directory.
+	9. Start PokerTH
+	NOTE: The game will run a little slower due to increased processing demands (I prefer gamespeed 9 or 10)
