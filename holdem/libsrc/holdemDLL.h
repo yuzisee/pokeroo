@@ -126,7 +126,7 @@ enum return_status {
    UNRELIABLE_RESULT,
 
 //FAIL
-	OUT_OF_MEMORY,
+   OUT_OF_MEMORY,
    NULL_TABLE_PTR,
    NOT_IMPLEMENTED,
    PARAMETER_INVALID,
@@ -243,7 +243,7 @@ C_DLL_FUNCTION struct return_money GetPrevRoundsPotsize(void * table_ptr);
 2. Add Players and InitializeNew the TableState, or RestoreTableState
 3. You may save the state of the table at this point, if you really want to.
 4. -----
-	4.1 BeginNewHand
+	4.1 BeginNewHands
 	4.2 ShowHoleCards to all bots who need to know their hand
 	4.3 If you would like to use the deterministic random seed generator, reset it here: ResetDeterministicSeed().
 	4.4 -----
@@ -373,7 +373,7 @@ C_DLL_FUNCTION enum return_status DeleteCardset(struct holdem_cardset c);
 	Event functions
 *****************************************************************************/
 
-C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset, enum betting_round , uint8 );
+C_DLL_FUNCTION struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardset, enum betting_round , uint8 numFutureBettingRounds );
 
 //This function reports who made first high bet that was called
 //If nobody called the high bet, then you will get -1 here.
