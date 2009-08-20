@@ -788,7 +788,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/handinterface.h PokerTH-0.7.1-src.ne
  #endif
 diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp
 --- PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp	2009-08-19 18:36:44.000000000 -0400
++++ PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp	2009-08-19 22:42:10.000000000 -0400
 @@ -28,6 +28,7 @@
  
  #include <iostream>
@@ -797,7 +797,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  using namespace std;
  
  LocalHand::LocalHand(boost::shared_ptr<EngineFactory> f, GuiInterface *g, BoardInterface *b, PlayerList sl, PlayerList apl, PlayerList rpl, int id, int sP, unsigned dP, int sB,int sC)
-@@ -61,6 +62,31 @@
+@@ -61,6 +62,32 @@
  		tempPlayerAndBoardArray[i+2] = cardsArray[i];
  	}
  
@@ -807,6 +807,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
 +	table_ptr = 0;
 +	curBettingRoundAI = 0;
 +	lastBettingRoundNum = -1;
++	lastCapturedId = -1;
 +	
 +	struct return_cardset newCardset;
 +	myBoardAI.push_back(CreateNewCardset()); assert(myBoardAI.back().cards_ptr);
@@ -829,7 +830,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  	k = 0;
  	myBoard->setMyCards(tempBoardArray);
  	for(it=activePlayerList->begin(); it!=activePlayerList->end(); it++, k++) {
-@@ -72,6 +98,18 @@
+@@ -72,6 +99,18 @@
  			tempPlayerAndBoardArray[j] = cardsArray[2*k+j+5];
  		}
  
@@ -848,7 +849,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  		(*it)->setMyCards(tempPlayerArray);
  		(*it)->setMyCardsValueInt(myCardsValue.cardsValue(tempPlayerAndBoardArray, bestHandPos));
  		(*it)->setMyBestHandPosition(bestHandPos);
-@@ -319,14 +357,36 @@
+@@ -319,14 +358,36 @@
  	assignButtons();
  
  	myBeRo = myFactory->createBeRo(this, myID, dealerPosition, smallBlind);
@@ -885,7 +886,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  void LocalHand::start() {
  
  	//Log blinds sets for new Hand
-@@ -438,12 +498,36 @@
+@@ -438,12 +499,51 @@
  	}
  }
  
@@ -902,16 +903,31 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
 +	//
 +	//Capture player action.
 +	if (curBettingRoundAI) {
-+		int lastPlayerId = WhoIsNext_Betting(curBettingRoundAI).seat_number;
-+		if (lastPlayerId != -1) {
-+			assert(getLastPlayersTurn() == lastPlayerId );
++		int lastPlayerId = getLastPlayersTurn();
++		//Sometimes switchRounds is called BEFORE a round starts; in that case getLastPlayersTurn() is still -1;
++		//Sometimes switchRounds is called AFTER the last action (for animation reasons?); in that case lastPlayerId is still lastCapturedId
++		if (lastPlayerId != -1 && lastPlayerId != lastCapturedId) {
++			assert(WhoIsNext_Betting(curBettingRoundAI).seat_number != -1);
++			assert(WhoIsNext_Betting(curBettingRoundAI).seat_number == lastPlayerId);
 +			PlayerListConstIterator it_cur = getActivePlayerIt(lastPlayerId);
 +			
-+			enum return_status retval_bet = PlayerMakesBetTo(curBettingRoundAI, lastPlayerId, (*it_cur)->getMySet());
++			//Sometimes a player folds when they can still check.
++			//However, we want to be consistent with PokerTH's input.
++			int lastPlayerBetTo = (*it_cur)->getMySet();
++			if ( (*it_cur)->getMyAction() == PLAYER_ACTION_FOLD ) {
++				lastPlayerBetTo = 0;
++			}
++			
++			//Forward the action onto pokerai's holdemDLL
++			enum return_status retval_bet = PlayerMakesBetTo(curBettingRoundAI, lastPlayerId, lastPlayerBetTo);
 +			assert(retval_bet != PARAMETER_DATA_ERROR);
 +			assert(retval_bet != NOT_IMPLEMENTED);
 +			assert(retval_bet != PARAMETER_INVALID);
 +			assert(retval_bet == SUCCESS);
++			
++			if(WhoIsNext_Betting(curBettingRoundAI).seat_number != -1) assert(currentRound == lastBettingRoundNum);
++			
++			lastCapturedId = lastPlayerId;
 +		}
 +	}
 +	//
@@ -923,7 +939,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  	// refresh runningPlayerList
  	for(it=runningPlayerList->begin(); it!=runningPlayerList->end(); ) {
  		if((*it)->getMyAction() == PLAYER_ACTION_FOLD || (*it)->getMyAction() == PLAYER_ACTION_ALLIN) {
-@@ -558,26 +642,115 @@
+@@ -558,26 +658,117 @@
  
  	myGui->refreshGameLabels((GameState)getCurrentRound());
  
@@ -953,11 +969,13 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
 +			//Finalize the existing round, because we're about to move on to the next one.
 +			assert(curBettingRoundAI);
 +			retval_delete = DeleteFinishBettingRound(curBettingRoundAI);
-+			curBettingRoundAI = 0;
 +			assert(retval_delete.error_code != PARAMETER_DATA_ERROR);
 +			assert(retval_delete.error_code != UNRELIABLE_RESULT);
 +			assert(retval_delete.error_code != INTERNAL_INCONSISTENCY);
 +			assert(retval_delete.error_code == SUCCESS);
++			
++			curBettingRoundAI = 0;
++			lastCapturedId = -1;
 +		}
 +		//At this point bFirstBettingRound should be correctly set to either FIRST_BETTING_ROUND or LATER_BETTING_ROUND
 +		
@@ -1044,7 +1062,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  			// start post river
  			myGui->postRiverAnimation1();
  
-@@ -590,6 +763,7 @@
+@@ -590,6 +781,7 @@
  
  }
  
@@ -1054,7 +1072,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  	PlayerListIterator it;
 diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.h PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.h
 --- PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.h	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.h	2009-08-19 11:30:04.000000000 -0400
++++ PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.h	2009-08-19 22:43:00.000000000 -0400
 @@ -32,6 +32,8 @@
  #include <berointerface.h>
  
@@ -1064,7 +1082,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.h PokerTH-0.7
  class LocalHand : public HandInterface{
  public:
  	LocalHand(boost::shared_ptr<EngineFactory> f, GuiInterface*, BoardInterface*, PlayerList, PlayerList, PlayerList, int, int, unsigned, int, int);
-@@ -88,13 +90,18 @@
+@@ -88,13 +90,19 @@
  	void assignButtons();
  
  	void switchRounds();
@@ -1079,6 +1097,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.h PokerTH-0.7
 +	void * table_ptr; //pokerai: Added
 +	void * curBettingRoundAI; //pokerai: Added
 +	int lastBettingRoundNum; //pokerai: Added
++	int lastCapturedId;			 //pokerai: Added
 +	std::vector<struct holdem_cardset> myBoardAI; //pokerai: Added
 +	std::map<int, struct holdem_cardset> myPlayerCardsAI; //pokerai: Added
  
@@ -5936,7 +5955,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/playerinterface.h PokerTH-0.7.1-src.
  #endif
 diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
 --- PokerTH-0.7.1-src.old/src/game.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/game.cpp	2009-08-19 19:04:18.000000000 -0400
++++ PokerTH-0.7.1-src.new/src/game.cpp	2009-08-19 20:38:54.000000000 -0400
 @@ -70,6 +70,21 @@
  	activePlayerList = PlayerList(new std::list<boost::shared_ptr<PlayerInterface> >);
  	runningPlayerList = PlayerList(new std::list<boost::shared_ptr<PlayerInterface> >);
@@ -6115,7 +6134,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/game.cpp PokerTH-0.7.1-src.new/src/game.cpp
 +
 diff -buNr PokerTH-0.7.1-src.old/src/game.h PokerTH-0.7.1-src.new/src/game.h
 --- PokerTH-0.7.1-src.old/src/game.h	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/game.h	2009-08-19 13:01:42.000000000 -0400
++++ PokerTH-0.7.1-src.new/src/game.h	2009-08-19 22:43:00.000000000 -0400
 @@ -24,6 +24,9 @@
  #include "gamedata.h"
  #include "playerdata.h"
