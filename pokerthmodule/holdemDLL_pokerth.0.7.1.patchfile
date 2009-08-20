@@ -788,7 +788,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/handinterface.h PokerTH-0.7.1-src.ne
  #endif
 diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp
 --- PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp	2009-08-19 22:42:10.000000000 -0400
++++ PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp	2009-08-20 16:29:18.000000000 -0400
 @@ -28,6 +28,7 @@
  
  #include <iostream>
@@ -915,7 +915,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
 +			//However, we want to be consistent with PokerTH's input.
 +			int lastPlayerBetTo = (*it_cur)->getMySet();
 +			if ( (*it_cur)->getMyAction() == PLAYER_ACTION_FOLD ) {
-+				lastPlayerBetTo = 0;
++				lastPlayerBetTo = -1;
 +			}
 +			
 +			//Forward the action onto pokerai's holdemDLL
