@@ -1105,7 +1105,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.h PokerTH-0.7
  	PlayerList activePlayerList;
 diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localplayer.cpp PokerTH-0.7.1-src.new/src/engine/local_engine/localplayer.cpp
 --- PokerTH-0.7.1-src.old/src/engine/local_engine/localplayer.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localplayer.cpp	2009-08-19 19:00:54.000000000 -0400
++++ PokerTH-0.7.1-src.new/src/engine/local_engine/localplayer.cpp	2009-08-20 17:05:38.000000000 -0400
 @@ -29,921 +29,28 @@
  
  using namespace std;
@@ -2683,7 +2683,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localplayer.cpp PokerTH
 -				myAction = 5;
 -			}
 +		//When you are all-in, sometimes you don't have the money to 
-+		if ( myNewSet > currentHand->getCurrentBeRo()->getHighestSet() ) { currentHand->getCurrentBeRo()->setHighestSet(mySet); }
++		if ( mySet > currentHand->getCurrentBeRo()->getHighestSet() ) { currentHand->getCurrentBeRo()->setHighestSet(mySet); }
 +		if ( raiseBy > currentHand->getCurrentBeRo()->getMinimumRaise() ) { currentHand->getCurrentBeRo()->setMinimumRaise(raiseBy); }
  
 -			// extrem hoher set der gegner -> bluff beenden
