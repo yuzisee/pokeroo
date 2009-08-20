@@ -40,11 +40,11 @@ If everyone checks (or is all-in) on the final betting round, the player who act
                 incrIndex(highestBetter);
             }while( PlayerAllIn(*(p[highestBetter])) < 0);
 	    }else if( GetNumberInHand() - 1 == playersAllIn)
-	    {///Find the player that is not allin
+	    {///Find the player that is not allin -- in this (non-standard) implementation, all-in players ALWAYS show their cards
 	        do
             {
                 incrIndex(highestBetter);
-            }while( (!(myTable->IsAlive(highestBetter))) || PlayerAllIn(*(p[highestBetter])) < 0);//Obviously you have to skip dead people too
+            }while( (!(myTable->IsAlive(highestBetter))) || PlayerAllIn(*(p[highestBetter])) > 0);//Obviously you have to skip dead people too
 	    }else
 	    {///Find the first player to check
             do
