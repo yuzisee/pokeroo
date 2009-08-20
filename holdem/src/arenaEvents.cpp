@@ -216,7 +216,7 @@ void HoldemArenaBetting::startBettingRound()
         Player& withP1 = *p[curIndex];
         PlayerBet(withP1) = myTable->GetBlindValues().GetSmallBlind();
 
-        if( PlayerBet(withP1) > PlayerMoney(withP1) )
+        if( PlayerBet(withP1) >= PlayerMoney(withP1) - GetChipDenom()/2.0 )
         {
             PlayerBet(withP1) = PlayerMoney(withP1);
             PlayerAllIn(withP1) = PlayerMoney(withP1);
@@ -241,7 +241,7 @@ void HoldemArenaBetting::startBettingRound()
 		Player& withP2 = *p[curIndex];
 		PlayerBet(withP2) = myTable->GetBlindValues().GetBigBlind();
 
-        if( PlayerBet(withP2) > PlayerMoney(withP2) )
+        if( PlayerBet(withP2) >= PlayerMoney(withP2) - GetChipDenom()/2.0 )
         {
             PlayerBet(withP2) = PlayerMoney(withP2);
             PlayerAllIn(withP2) = PlayerMoney(withP2);
