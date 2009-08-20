@@ -788,7 +788,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/handinterface.h PokerTH-0.7.1-src.ne
  #endif
 diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp
 --- PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp	2009-06-25 17:37:44.000000000 -0400
-+++ PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp	2009-08-20 16:29:18.000000000 -0400
++++ PokerTH-0.7.1-src.new/src/engine/local_engine/localhand.cpp	2009-08-20 18:36:54.000000000 -0400
 @@ -28,6 +28,7 @@
  
  #include <iostream>
@@ -939,7 +939,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  	// refresh runningPlayerList
  	for(it=runningPlayerList->begin(); it!=runningPlayerList->end(); ) {
  		if((*it)->getMyAction() == PLAYER_ACTION_FOLD || (*it)->getMyAction() == PLAYER_ACTION_ALLIN) {
-@@ -558,26 +658,117 @@
+@@ -558,26 +658,131 @@
  
  	myGui->refreshGameLabels((GameState)getCurrentRound());
  
@@ -960,9 +960,23 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
 +		struct return_event retval_new; 
 +		struct return_seat retval_delete;
 +		
++		enum betting_round bFirstBettingRound;
++		if (lastBettingRoundNum == -1) {
++			bFirstBettingRound = FIRST_BETTING_ROUND;
++			
++			//Handle a PokerTH special case: The preflop can get skipped when no action occurs, eg. heads-up both BB and SB are all-in because the blinds are too high.
++			if (currentRound != GAME_STATE_PREFLOP) {
++				assert(!curBettingRoundAI);
++				retval_new = CreateNewBettingRound(table_ptr,myBoardAI[GAME_STATE_PREFLOP],FIRST_BETTING_ROUND,GAME_STATE_RIVER); //Create pre-flop
++				curBettingRoundAI = retval_new.event_ptr;
++				assert(retval_new.error_code == SUCCESS);
++				
++				lastBettingRoundNum = GAME_STATE_PREFLOP;
++			}
++		}
++		
 +		if (curBettingRoundAI) assert(WhoIsNext_Betting(curBettingRoundAI).seat_number == -1);
 +		
-+		enum betting_round bFirstBettingRound = FIRST_BETTING_ROUND; //by default...
 +		if (lastBettingRoundNum != -1) {
 +			//This isn't the first betting round.
 +			bFirstBettingRound = LATER_BETTING_ROUND;
@@ -1062,7 +1076,7 @@ diff -buNr PokerTH-0.7.1-src.old/src/engine/local_engine/localhand.cpp PokerTH-0
  			// start post river
  			myGui->postRiverAnimation1();
  
-@@ -590,6 +781,7 @@
+@@ -590,6 +795,7 @@
  
  }
  
