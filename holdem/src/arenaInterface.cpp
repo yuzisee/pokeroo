@@ -117,10 +117,16 @@ void HoldemArena::addBets(float64 b)
 	myPot += b;
 }
 
-void HoldemArena::incrIndex(int8& c) const
+void HoldemArena::incrIndex(playernumber_t& c) const
 {
 	++c;
 	c %= nextNewPlayer;
+}
+
+void HoldemArena::decrIndex(playernumber_t& c) const
+{
+	if( c == 0 ) c = nextNewPlayer;
+	--c;
 }
 
 void HoldemArena::incrIndex()

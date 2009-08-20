@@ -164,6 +164,8 @@ void HoldemArenaBetting::startBettingRound()
 	bBlinds      = curDealer;	//Used to account for soft-bets:
 								//ie, if called, you can still reraise.
 								//BUT, it also handles the check-check-check
+	bHighBetCalled = false;     //BUT! If the blind is never called, bBlinds is meaningless (eg. all players in the hand are all-in less than the big blind)
+
     curHighBlind = -1;
 
     if( comSize == 0 && myTable->NumberInHand() == 2)
@@ -294,12 +296,7 @@ void HoldemArenaBetting::startBettingRound()
         {
             incrPlayerNumber(*(p[curIndex]));
 
-            if(!(
-                 (curIndex != highestBetter || bBlinds == highestBetter)
-                 &&
-                 (GetNumberInHand() - playersAllIn + allInsNowCount > 1)
-                 )
-               )
+            if(readyToFinish())
             {
                 finishBettingRound();
                 return;
@@ -395,7 +392,7 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 			}
 
 			///Decide what to do with the bet
-			if( PlayerBet(withP) >= PlayerMoney(withP) )
+			if( PlayerBet(withP) >= PlayerMoney(withP) - GetChipDenom()/2.0 )
 			{
 						randRem *= (PlayerLastBet(withP)+1.0) / PlayerBet(withP) ;
 
@@ -453,6 +450,8 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 
 			if( PlayerBet(withP) >= highBet )
 			{
+				bHighBetCalled = true;
+
 				addBets(PlayerBet(withP) - PlayerLastBet(withP));
 
 				if( PlayerBet(withP) > highBet )
@@ -486,20 +485,26 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 		{
 		    incrPlayerNumber(*(p[curIndex]));
 
-            if(!(
-                    (curIndex != highestBetter || bBlinds == highestBetter)
-                    &&
-                    (playersInHand - playersAllIn + allInsNowCount > 1)
-                  )
-                 )
-                {
-                     finishBettingRound();
-                     return ;
-                }
+			
+            if(readyToFinish())
+            {
+                 finishBettingRound();
+                 return ;
+            }
 		}while (!( myTable->CanStillBet(curIndex) ));
 
         //bRoundState = 'b';
 
+}
+
+bool HoldemArenaBetting::readyToFinish() const
+{
+	const bool bBlindCheckOpportunity = (bBlinds == highestBetter) && bHighBetCalled; //The BB was never raised, but yet it has been called.
+
+	const bool bBettorsAvailable = (playersInHand - playersAllIn + allInsNowCount > 1);
+	const bool bReasonToBet = (curIndex != highestBetter || bBlindCheckOpportunity); //There are still players that haven't had their chance
+	
+	return ((!bReasonToBet) || (!bBettorsAvailable));
 }
 
 HoldemArenaBetting::~HoldemArenaBetting()

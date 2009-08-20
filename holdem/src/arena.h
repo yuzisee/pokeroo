@@ -318,6 +318,7 @@ class HoldemArena
     #endif
 
 		void incrIndex(playernumber_t&) const;
+		void decrIndex(playernumber_t&) const;
 
         static void ToString(const HoldemAction& e, std::ostream& o);
         static void FileNumberString(handnum_t value, char * str);
@@ -500,6 +501,7 @@ class HoldemArenaEventBase
 
     playernumber_t GetTotalPlayers() const { return myTable->GetTotalPlayers(); }
     playernumber_t GetNumberInHand() const { return myTable->NumberInHand(); }
+	float64 GetChipDenom() const { return myTable->GetChipDenom(); }
 
     public:
 
@@ -526,6 +528,7 @@ class HoldemArenaBetting : public HoldemArenaEventBase
     const int8 comSize;
 
     protected:
+	bool bHighBetCalled;
     int8 bBlinds;
     int8 highestBetter;
     int8* allInsNow;
@@ -536,6 +539,8 @@ class HoldemArenaBetting : public HoldemArenaEventBase
     void startBettingRound();
     void finishBettingRound();
     void incrPlayerNumber(Player& currentPlayer);
+
+	bool readyToFinish() const;
 
 
     public:

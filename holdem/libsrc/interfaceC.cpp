@@ -353,11 +353,11 @@ C_DLL_FUNCTION
 enum return_status BeginNewHands(void * table_ptr, float64 smallBlind, playernumber_t overrideDealer)
 {
 
-	enum return_status error_code = SUCCESS;
+	//CAUTION: This function uses EARLY RETURNS for convenience
 
 	if( !table_ptr )
 	{
-		error_code = NULL_TABLE_PTR;
+		return NULL_TABLE_PTR;
 	}else
 	{
 		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
@@ -366,27 +366,31 @@ enum return_status BeginNewHands(void * table_ptr, float64 smallBlind, playernum
 		b.SetSmallBigBlind(smallBlind);
 
 		bool bNewBlindValues = false; //bNewBlindValues is always false when calling through DLL because notification of blind changes is redundant.
-		if( myTable->IsAlive(overrideDealer) )
+
+		if( overrideDealer >= 0 )
 		{
-			myTable->BeginNewHands(b,bNewBlindValues,overrideDealer);
+			playernumber_t searchDealer = overrideDealer;
+			while( ! myTable->IsAlive(searchDealer) )
+			{
+				myTable->decrIndex(searchDealer);
+
+				if( searchDealer == overrideDealer ) return PARAMETER_INVALID;
+			}
+			
+			myTable->BeginNewHands(b,bNewBlindValues,searchDealer);
+
+			return SUCCESS;
 		}
 		else
 		{
-			if( overrideDealer >= 0 )
-			{
-				error_code = PARAMETER_INVALID;
-			}else
-			{
-				if( overrideDealer != -1 ) error_code = INPUT_CLEANED;
-				
-				myTable->BeginNewHands(b,bNewBlindValues);
-			}
-		}
-		
+			myTable->BeginNewHands(b,bNewBlindValues);
+
+			if( overrideDealer != -1 )	return INPUT_CLEANED;
+			else						return SUCCESS;
+		}		
 		 
 	}
 
-	return error_code;
 }
 
 C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr)
