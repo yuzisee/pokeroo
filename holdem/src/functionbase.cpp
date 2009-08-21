@@ -150,21 +150,41 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 			}
         #endif
 
+	
 	if( yb <= y1 && yb <= y2)
 	{
+		//Likely too flat. Only search the more promising edge regions
 	    if( x2 - x1 > quantum/2 )
 	    {
 	        #ifdef SINGLETURNINGPOINT
 	        cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
 	        exit(1);
 	        #else
-	        float64 leftmax = round(FindMax(x1,xb)/quantum)*quantum;
-	        float64 rightmax = round(FindMax(xb,x2)/quantum)*quantum;
+
+			float64 x1b = xb;
+			float64 x2b = xb;
+			float64 x1b_outer, x2b_outer;
+			float64 y1b, y2b;
+			
+			do{
+				x1b_outer = x1b;
+				x2b_outer = x2b;
+				x1b = bisectionStep(x1,x1b);
+				x2b = bisectionStep(x2,x2b);
+
+				y1b = f(x1b);
+				y2b = f(x2b);
+
+			}while( y1b <= y1 && y2b <= y2  &&  x1b - x1 > quantum/2 && x2 - x2b > quantum/2 );
+
+	        float64 leftmax = round(FindMax(x1,x1b_outer)/quantum)*quantum;
+	        float64 rightmax = round(FindMax(x2b_outer,x2)/quantum)*quantum;
 	        if( f(leftmax) > f(rightmax) )
 	        {
 	            return leftmax;
 	        }
 	        return rightmax;
+
 	        #endif
 	    }
 
@@ -182,31 +202,48 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 
 float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
 {
-    float64 y1 = f(x1);
-    float64 y2 = f(x2);
+    const float64 y1 = f(x1);
+    const float64 y2 = f(x2);
 
-    float64 xb = bisectionStep(x1,x2);
-    float64 yb = f(xb);
+    const float64 xb = bisectionStep(x1,x2);
+    const float64 yb = f(xb);
 
 	if( yb >= y1 && yb >= y2)
 	{
-        if( x2 - x1 > quantum/2 )
-        {
-            #ifdef SINGLETURNINGPOINT
-            cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
-            exit(1);
-            #else
-	        float64 leftmin = round(FindMin(x1,xb)/quantum)*quantum;
-	        float64 rightmin = round(FindMin(xb,x2)/quantum)*quantum;
-	        if( f(leftmin) < f(rightmin) )
-	        {
-	            return leftmin;
-	        }
-	        return rightmin;
-	        #endif
-        }
+		if( x2 - x1 > quantum/2 )
+		{
+			#ifdef SINGLETURNINGPOINT
+			cout << "MISUAGE OF FindTurningPoint!!!!!!!!!!!!!!!!!!" << endl;
+			exit(1);
+			#else
 
-        return round(xb/quantum)*quantum;
+			float64 x1b = xb;
+			float64 x2b = xb;
+			float64 x1b_outer, x2b_outer;
+			float64 y1b, y2b;
+			
+			do{
+				x1b_outer = x1b;
+				x2b_outer = x2b;
+				x1b = bisectionStep(x1,x1b);
+				x2b = bisectionStep(x2,x2b);
+
+				y1b = f(x1b);
+				y2b = f(x2b);
+
+			}while( y1b >= y1 && y2b >= y2  &&  x1b - x1 > quantum/2 && x2 - x2b > quantum/2 );
+
+			float64 leftmin = round(FindMin(x1,x1b_outer)/quantum)*quantum;
+			float64 rightmin = round(FindMin(x2b_outer,x2)/quantum)*quantum;
+			if( f(leftmin) < f(rightmin) )
+			{
+				return leftmin;
+			}
+			return rightmin;
+			#endif
+		}
+
+		return round(xb/quantum)*quantum;
     }
 
 
