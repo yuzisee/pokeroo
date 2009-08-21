@@ -18,52 +18,28 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef HOLDEM_ThresholdStrat
-#define HOLDEM_ThresholdStrat
+#ifndef HOLDEM_SearchBaseStrat
+#define HOLDEM_SearchBaseStrat
 
-#include "stratSearch.h"
-#include "../src/ai.h"
+#include "../src/arena.h"
+//#include "engine.h"
+//#include "aiCache.h"
 
-
-#ifndef NO_LOG_FILES
-#define LOGTHRESHOLD
-#endif
-
-class ThresholdStrategy : virtual public SearchStrategy
-{
-	protected:
-        #ifdef LOGTHRESHOLD
-        ofstream logFile;
-        #endif
-		float64 aiThreshold;
-	public:
-
-		ThresholdStrategy(float64 thresh=.5) : SearchStrategy(), aiThreshold(thresh) {}
-		virtual ~ThresholdStrategy();
-
-		virtual void SeeCommunity(const Hand&, const int8);
-		virtual float64 MakeBet();
-		virtual void SeeOppHand(const int8, const Hand&){};
-        virtual void SeeAction(const HoldemAction&) {};
-}
-;
-
-class MultiThresholdStrategy : virtual public ThresholdStrategy
+class SearchStrategy : public PlayerStrategy
 {
     protected:
-        int8 redundancy;
-        int8 bCall;
+        DistrShape* w;
+		void cleanstats();
 	public:
 
-		MultiThresholdStrategy(int8 tight = 0, int8 call = 0, float64 thresh=.5) : ThresholdStrategy(thresh), redundancy(tight), bCall(call){}
-		//virtual ~MultiThresholdStrategy();
+		SearchStrategy() : PlayerStrategy(),w(0){}
+        virtual ~SearchStrategy();
+
 
 		virtual void SeeCommunity(const Hand&, const int8);
-		virtual float64 MakeBet();
-		virtual void FinishHand(){}
-		//virtual void SeeOppHand(const int8, const Hand&);
-        //virtual void SeeAction(const HoldemAction&);
+
 }
 ;
 
 #endif
+

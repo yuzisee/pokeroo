@@ -21,11 +21,11 @@
 
 #include "../src/stratCombined.h"
 #include "../src/stratPosition.h"
-#include "../src/stratThreshold.h"
 #include "../src/arena.h"
 #include "../src/aiCache.h"
 #include "../src/functionmodel.h"
 #include "../src/aiInformation.h"
+#include "stratThreshold.h"
 #include "stratManual.h"
 
 #include <ctime>

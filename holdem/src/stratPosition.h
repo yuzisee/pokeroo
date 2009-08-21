@@ -22,7 +22,7 @@
 #define HOLDEM_PositionalStrat
 
 #include "BluffGainInc.h"
-#include "stratSearch.h"
+//#include "stratSearch.h"
 #include "ai.h"
 
 #include "debug_flags.h"
