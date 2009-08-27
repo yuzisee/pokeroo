@@ -927,8 +927,8 @@ exit(1);
     logFile << "OppFoldChance% ... left " << myDeterredCall_left.pWin(viewBet) << " --" << myDeterredCall_right.pWin(viewBet) << " right" << endl;
     if( myDeterredCall.pWin(bestBet) > 0 )
     {
-        logFile << "if playstyle NormalBot, overall utility is " << choicemodel.f(viewBet) << endl;
-        logFile << "if playstyle Trap/Ace, overall utility is " << rolemodel.f(viewBet) << endl;
+        logFile << "if playstyle NormalBot, overall utility is " << 1.0+choicemodel.f(viewBet) << endl;
+        logFile << "if playstyle Trap/Ace, overall utility is " << 1.0+rolemodel.f(viewBet) << endl;
     }
 
 #endif
