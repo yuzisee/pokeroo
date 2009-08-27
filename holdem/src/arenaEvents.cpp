@@ -166,6 +166,9 @@ void HoldemArenaBetting::startBettingRound()
 								//BUT, it also handles the check-check-check
 	bHighBetCalled = false;     //BUT! If the blind is never called, bBlinds is meaningless (eg. all players in the hand are all-in less than the big blind)
 
+	bSeenFirstAction = false;   //Used to facilitate NumberAtFirstAction
+                                //Note: post-flop onward you can't really fold first (you would instead check) so this should have no effect.
+
     curHighBlind = -1;
 
     if( comSize == 0 && myTable->NumberInHand() == 2)
@@ -406,6 +409,8 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 
 				allInsNow[allInsNowCount] = curIndex;
 				++allInsNowCount;
+
+				bSeenFirstAction = true; //(Facilitates NumberAtFirstAction)
 			}
 			else
 			{//Not all-in
@@ -423,27 +428,36 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
                     forcedBetSum += PlayerLastBet(withP);
 
 					PlayerBet(withP) = HoldemArena::FOLDED;
+
+					//NumberInHand always decrements with a fold.
 					--playersInHand;
-				}else if( PlayerBet(withP) > highBet && PlayerBet(withP) < highBet + myTable->GetMinRaise() )
-				{///You raised less than the MinRaise
+					//By comparison, NumberAtFirstAction decrements until a non-fold action is taken.
+					if( !bSeenFirstAction ) --firstActionRoundPlayers;
+				}else
+				{ //Not a fold.
+                    bSeenFirstAction = true; //(Facilitates NumberAtFirstAction)
 
-                        if( bVerbose )
+                    if( PlayerBet(withP) > highBet && PlayerBet(withP) < highBet + myTable->GetMinRaise() )
+                    {///You raised less than the MinRaise
+
+                            if( bVerbose )
+                            {
+                                gamelog << "The minimum raise bet is by " << myTable->GetMinRaise() << " to " << highBet + myTable->GetMinRaise() << ": " << highBet + myTable->GetMinRaise() - PlayerBet(withP) << " more" << endl;
+                            }
+
+                        const float64 distFromCall = PlayerBet(withP) - highBet;
+                        const float64 distFromMinRaise = myTable->GetMinRaise() - distFromCall;
+
+                        if( distFromCall > distFromMinRaise && PlayerMoney(withP) >= highBet + myTable->GetMinRaise() )
                         {
-                            gamelog << "The minimum raise bet is by " << myTable->GetMinRaise() << " to " << highBet + myTable->GetMinRaise() << ": " << highBet + myTable->GetMinRaise() - PlayerBet(withP) << " more" << endl;
+                            PlayerBet(withP) = highBet + myTable->GetMinRaise();
+                        }else
+                        {
+                            PlayerBet(withP) = highBet;
                         }
-
-                    const float64 distFromCall = PlayerBet(withP) - highBet;
-                    const float64 distFromMinRaise = myTable->GetMinRaise() - distFromCall;
-
-                    if( distFromCall > distFromMinRaise && PlayerMoney(withP) >= highBet + myTable->GetMinRaise() )
-                    {
-                        PlayerBet(withP) = highBet + myTable->GetMinRaise();
-                    }else
-                    {
-                        PlayerBet(withP) = highBet;
-                    }
-				}
-			}
+                    } //end if: raised less than MinRaise
+				}//end if: fold, else not fold
+			}//end if: all-in, else not all-in
 ///TODO Reraises need to say RERAISE.
 			broadcastCurrentMove(curIndex, PlayerBet(withP), PlayerBet(withP) - PlayerLastBet(withP), highBet, 0
 					, curIndex == bBlinds && comSize == 0 && curIndex == highestBetter,PlayerAllIn(withP) > 0);
@@ -485,7 +499,7 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 		{
 		    incrPlayerNumber(*(p[curIndex]));
 
-			
+
             if(readyToFinish())
             {
                  finishBettingRound();
@@ -503,7 +517,7 @@ bool HoldemArenaBetting::readyToFinish() const
 
 	const bool bBettorsAvailable = (playersInHand - playersAllIn + allInsNowCount > 1);
 	const bool bReasonToBet = (curIndex != highestBetter || bBlindCheckOpportunity); //There are still players that haven't had their chance
-	
+
 	return ((!bReasonToBet) || (!bBettorsAvailable));
 }
 
@@ -516,7 +530,7 @@ HoldemArenaBetting::~HoldemArenaBetting()
 
 void HoldemArenaShowdown::startShowdown()
 {
-    curIndex = called; 
+    curIndex = called;
 
 	//The player who was called may be all in.
 	// If so, that player won't be IsInHand(curIndex).
@@ -743,7 +757,7 @@ void HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const Com
     ShowdownRep comp(curIndex);
 
     CommunityPlus withHandP;
-    
+
     if( playerHand.IsEmpty() )
     {
         comp.SetMuck();

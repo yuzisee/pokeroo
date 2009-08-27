@@ -153,7 +153,7 @@ float64 ExpectedCallD::chipDenom() const
 
 playernumber_t ExpectedCallD::handsToBeat() const
 {
-    return table->NumberAtRound()-1;  //Number of hands drawn
+    return table->NumberAtFirstAction()-1;  //Number of hands drawn
 }
 
 playernumber_t ExpectedCallD::handsDealt() const

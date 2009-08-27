@@ -215,7 +215,8 @@ void HoldemArena::BeginNewHands(const BlindValues & roundBlindValues, const bool
 {
 	if( IsAlive(newDealer) ) curDealer = newDealer;
 
-    roundPlayers = livePlayers;
+    startRoundPlayers = livePlayers;
+    firstActionRoundPlayers = livePlayers;
 
     myPot        = 0;
     prevRoundPot = 0;
@@ -339,12 +340,12 @@ Player * HoldemArena::FinalizeReportWinner()
 void HoldemArena::PrepBettingRound(bool bFirstBettingRound, uint8 otherBettingRounds)
 {
 	if( bFirstBettingRound ){
-		playersInHand = livePlayers;
+		playersInHand = livePlayers; //Must be called before first initRoundPlayers();
 		playersAllIn = 0;
 	}
 
 	bettingRoundsRemaining = otherBettingRounds;
-	roundPlayers = livePlayers;
+	initRoundPlayers(); //Must be called after playersInHand initialized
 }
 
 

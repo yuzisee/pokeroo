@@ -157,7 +157,7 @@ void HoldemArena::compareAllHands(const CommunityPlus & community, const int8 ca
 
 void HoldemArena::PrepShowdownRound(const CommunityPlus & community)
 {
-	roundPlayers = livePlayers;
+	initRoundPlayers();
 
 	if( bVerbose )
 	{

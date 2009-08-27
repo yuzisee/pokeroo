@@ -234,6 +234,9 @@ class HoldemArena
 
 		uint32 jenkins_one_at_a_time_hash(const char *key_null_termninated); //A simple hash for selecting random botTypes.
 		char randomBotType(const char *key_null_termninated);
+
+
+		void initRoundPlayers() { firstActionRoundPlayers = startRoundPlayers = NumberInHand(); }
     protected:
 
         std::ostream& gamelog;
@@ -247,9 +250,11 @@ class HoldemArena
 
 
 		playernumber_t livePlayers;
-		playernumber_t roundPlayers;
 		playernumber_t playersInHand;
 		playernumber_t playersAllIn;
+
+		playernumber_t startRoundPlayers;
+		playernumber_t firstActionRoundPlayers;
 
         playernumber_t curHighBlind;
 
@@ -290,7 +295,6 @@ class HoldemArena
 
 
 		void prepareRound(const CommunityPlus &, const int8);
-
 
 
 	public:
@@ -403,7 +407,9 @@ class HoldemArena
 //   In-Game Information Accessors
 //===================================
 
-		playernumber_t NumberAtRound() const;
+		playernumber_t NumberStartedRound() const; //Number of players that started the round
+		playernumber_t NumberAtFirstAction() const;//Number of (established) players in the round after the first non-fold action.
+                                                   //In a non-blind round (ie. everything after preflop) NumberStartedRound is the same as NumberEstablishedRound
         playernumber_t NumberInHand() const;
 		playernumber_t NumberAtTable() const;
 
@@ -465,6 +471,7 @@ class HoldemArenaEventBase
     float64 & blindOnlySum;
     playernumber_t & playersInHand;
     playernumber_t & playersAllIn;
+    playernumber_t & firstActionRoundPlayers;
     const playernumber_t & curDealer;
 	playernumber_t & curIndex;
     float64 & myPot;
@@ -511,7 +518,7 @@ class HoldemArenaEventBase
     , gamelog(myTable->gamelog)
     , curHighBlind(table->curHighBlind)
     , highBet(table->highBet), lastRaise(table->lastRaise), forcedBetSum(myTable->forcedBetSum), blindOnlySum(myTable->blindOnlySum)
-    , playersInHand(table->playersInHand),playersAllIn(table->playersAllIn)
+    , playersInHand(table->playersInHand),playersAllIn(table->playersAllIn),firstActionRoundPlayers(table->firstActionRoundPlayers)
 	, curDealer(table->curDealer) , curIndex(table->curIndex)
     , myPot(table->myPot), myFoldedPot(table->myFoldedPot), prevRoundFoldedPot(table->prevRoundFoldedPot), myBetSum(table->myBetSum), p(table->p)
     , bVerbose(table->bVerbose), randRem(table->randRem)
@@ -528,6 +535,7 @@ class HoldemArenaBetting : public HoldemArenaEventBase
     const int8 comSize;
 
     protected:
+    bool bSeenFirstAction;
 	bool bHighBetCalled;
     int8 bBlinds;
     int8 highestBetter;

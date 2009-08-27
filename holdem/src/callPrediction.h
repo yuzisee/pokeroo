@@ -108,7 +108,7 @@ class ExactCallD
         ExactCallD(ExpectedCallD * const tbase, CallCumulationD* data)
     :
     #if defined(ASSUMEFOLDS)
-    eFold(tbase->table->NumberAtRound()-1)
+    eFold(tbase->table->NumberAtFirstAction()-1)
     #endif
 
     , impliedFactor(1)

@@ -215,11 +215,16 @@ float64 HoldemArena::GetAllChips() const
 	return allChips;
 }
 
-playernumber_t HoldemArena::NumberAtRound() const
+playernumber_t HoldemArena::NumberAtFirstAction() const
 {
-	return roundPlayers;
+	return firstActionRoundPlayers;
 }
 
+
+playernumber_t HoldemArena::NumberStartedRound() const
+{
+	return startRoundPlayers;
+}
 
 playernumber_t HoldemArena::NumberInHand() const
 {
