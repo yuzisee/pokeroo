@@ -535,13 +535,15 @@ class HoldemArenaBetting : public HoldemArenaEventBase
     const int8 comSize;
 
     protected:
-    bool bSeenFirstAction;
 	bool bHighBetCalled;
-    int8 bBlinds;
-    int8 highestBetter;
-    int8* allInsNow;
-    int8 allInsNowCount;
+    playernumber_t bBlinds;
+    playernumber_t highestBetter;
+    playernumber_t* allInsNow;
+    playernumber_t allInsNowCount;
 
+    playernumber_t numberOfInitialFolds; //Set to -1 after the first action.
+    void foldActionOccurred();
+    void nonfoldActionOccurred();
 
 
     void startBettingRound();

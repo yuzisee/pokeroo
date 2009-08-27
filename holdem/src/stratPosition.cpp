@@ -293,7 +293,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 void PositionalStrategy::setupPosition()
 {
         #ifdef LOGPOSITION
-            logFile << endl;
+            logFile << endl << "*" << endl;
             HandPlus convertOutput;
             convertOutput.SetUnique(ViewDealtHand());
             convertOutput.DisplayHand(logFile);
@@ -394,7 +394,7 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
             logFile << "Choice Fold " << choiceFold << endl;
 			logFile << "FoldGain()=" << foldgainVal;
 			logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal) << endl;
-            logFile << "f("<< betToCall <<")=" << callGain << endl;
+            logFile << "f("<< betToCall <<")=" << 1.0+callGain << endl;
 
 
         #endif
@@ -420,7 +420,7 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
     if( raiseGain < 0 )
     {
         #ifdef LOGPOSITION
-        logFile << "raiseGain: f("<< choicePoint <<")=" << raiseGain << endl;
+        logFile << "raiseGain: f("<< choicePoint <<")=" << 1.0+raiseGain << endl;
 		logFile << "CHECK/FOLD" << endl;
         #endif
         return myBet;
@@ -889,8 +889,8 @@ exit(1);
     const float64 nextBet = betToCall + ViewTable().GetMinRaise();
     const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? nextBet : bestBet;
 
-    logFile << "\"riskprice\"... " << riskprice << "(" << geom_algb_scaler << ")" << endl;
-    logFile << "When betting b_min=" << min_worst_scaler << ", oppFoldChance is first " << statworse.repeated << endl;
+    logFile << "\"riskprice\"... " << riskprice << "(based on scaler of " << geom_algb_scaler << ")" << endl;
+    logFile << "oppFoldChance is first " << statworse.repeated << ", when betting b_min=" << min_worst_scaler << endl;
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     choicemodel.f(betToCall);
@@ -913,8 +913,8 @@ exit(1);
         logFile << "        Push OtherDeter("<< viewBet <<")=" << choicemodel_right.gainWithFold << endl;
     }
 #endif
-    logFile << "Call Regular("<< viewBet <<")=" << hybridgainDeterred_aggressive.f(bestBet) << endl;
-    logFile << "   Call Fear("<< viewBet <<")=" << hybridgain_fear.f(bestBet) << endl;
+    logFile << "Call Regular("<< viewBet <<")=" << 1.0+hybridgainDeterred_aggressive.f(bestBet) << endl;
+    logFile << "   Call Fear("<< viewBet <<")=" << 1.0+hybridgain_fear.f(bestBet) << endl;
 
 
     printBetGradient< StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  > >
@@ -1040,7 +1040,7 @@ float64 DeterredGainStrategy::MakeBet()
         logFile << "impliedFactor... " << 1 / nearEndOfBets << endl;
         logFile << endl;
     }
-    logFile << "BetToCall " << certainty << ", pct " << left.pct << " ... " << algbModel.ViewShape().pct << " ... " << right.pct << endl;
+    logFile << "Act(0%) or React(100%)? " << certainty << ", pct " << left.pct << " ... " << algbModel.ViewShape().pct << " ... " << right.pct << endl;
 
 #endif
 
@@ -1126,11 +1126,11 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
-        logFile << "\"riskprice\"... " << riskprice << "(" << geom_algb_scaler << ")" << endl;
-        logFile << "When betting b_min = " << min_worst_scaler << ", oppFoldChance is first " << statworse.repeated << endl;
+        logFile << "\"riskprice\"... " << riskprice << "(based on scaler " << geom_algb_scaler << ")" << endl;
+        logFile << "oppFoldChance is first " << statworse.repeated << ", when betting b_min=" << min_worst_scaler << endl;
 
-        logFile << "Geom("<< displaybet <<")=" << geomModel.f(displaybet) << endl;
-        logFile << "Algb("<< displaybet <<")=" << algbModel.f(displaybet) << endl;
+        logFile << "Geom("<< displaybet <<")=" << 1.0+geomModel.f(displaybet) << endl;
+        logFile << "Algb("<< displaybet <<")=" << 1.0+algbModel.f(displaybet) << endl;
     }
 
 

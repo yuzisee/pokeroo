@@ -166,8 +166,8 @@ void HoldemArenaBetting::startBettingRound()
 								//BUT, it also handles the check-check-check
 	bHighBetCalled = false;     //BUT! If the blind is never called, bBlinds is meaningless (eg. all players in the hand are all-in less than the big blind)
 
-	bSeenFirstAction = false;   //Used to facilitate NumberAtFirstAction
-                                //Note: post-flop onward you can't really fold first (you would instead check) so this should have no effect.
+	numberOfInitialFolds = 0; //Used to facilitate NumberAtFirstAction, will be set to -1 after the first nonfold action
+                               //Note: post-flop onward you can't really fold first (you would instead check) so this should have no effect.
 
     curHighBlind = -1;
 
@@ -357,6 +357,22 @@ void HoldemArenaBetting::incrPlayerNumber(Player& currentPlayer)
     }
 }
 
+//Facilitates NumberAtFirstAction
+void HoldemArenaBetting::nonfoldActionOccurred()
+{
+    if(numberOfInitialFolds != -1)
+    {
+        firstActionRoundPlayers -= numberOfInitialFolds;
+    }
+
+    numberOfInitialFolds = -1;
+}
+
+//Facilitates NumberAtFirstAction
+void HoldemArenaBetting::foldActionOccurred()
+{
+    if (numberOfInitialFolds != -1) ++numberOfInitialFolds;
+}
 
 void HoldemArenaBetting::MakeBet(float64 betSize)
 {
@@ -410,7 +426,7 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 				allInsNow[allInsNowCount] = curIndex;
 				++allInsNowCount;
 
-				bSeenFirstAction = true; //(Facilitates NumberAtFirstAction)
+				nonfoldActionOccurred();
 			}
 			else
 			{//Not all-in
@@ -432,10 +448,10 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 					//NumberInHand always decrements with a fold.
 					--playersInHand;
 					//By comparison, NumberAtFirstAction decrements until a non-fold action is taken.
-					if( !bSeenFirstAction ) --firstActionRoundPlayers;
+					foldActionOccurred();
 				}else
 				{ //Not a fold.
-                    bSeenFirstAction = true; //(Facilitates NumberAtFirstAction)
+                    nonfoldActionOccurred();
 
                     if( PlayerBet(withP) > highBet && PlayerBet(withP) < highBet + myTable->GetMinRaise() )
                     {///You raised less than the MinRaise
