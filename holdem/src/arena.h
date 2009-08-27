@@ -70,6 +70,7 @@ class Player
 		float64 allIn;
 		float64 myMoney;
 		float64 handBetTotal; //Sum of bets made during COMPLETED betting rounds
+		float64 forcedBetTotal;
 		float64 myBetSize; //Within a betting round, the current bet on the table
 		float64 lastBetSize; //Within a betting round, the bet before myBetSize
 
@@ -77,7 +78,7 @@ class Player
 
 		Player( float64 money, const std::string name, PlayerStrategy* strat, float64 init_play)
 		: myStrat(strat), allIn(init_play), myMoney(money)
-		 , handBetTotal(0), myBetSize(0), lastBetSize(init_play)
+		 , handBetTotal(0), forcedBetTotal(0), myBetSize(0), lastBetSize(init_play)
 		{
 			myName = name;
 		}
@@ -92,8 +93,14 @@ class Player
 		float64 GetMoney() const
 		{	return myMoney;	}
 
-		float64 GetContribution() const
+		float64 GetOfficialContribution() const
 		{	return handBetTotal;	}
+
+		float64 GetVoluntaryContribution() const
+		{	return (handBetTotal - forcedBetTotal);	}
+
+		float64 GetInvoluntaryContribution() const
+		{	return forcedBetTotal;	}
 
 		//BetSize is since ROUND start, active players only
 		float64 GetBetSize() const
@@ -230,6 +237,7 @@ class HoldemArena
 		float64 & PlayerLastBet(Player& target){ return target.lastBetSize; }
 		float64 & PlayerAllIn(Player& target){ return target.allIn; }
 		float64 & PlayerHandBetTotal(Player& target){ return target.handBetTotal; }
+		float64 & PlayerForcedBetTotal(Player& target){ return target.forcedBetTotal; }
 		float64 & PlayerMoney(Player& target){ return target.myMoney; }
 
 		uint32 jenkins_one_at_a_time_hash(const char *key_null_termninated); //A simple hash for selecting random botTypes.
@@ -494,6 +502,7 @@ class HoldemArenaEventBase
     float64 & PlayerAllIn(Player& target){ return myTable->PlayerAllIn(target); }
     float64 & PlayerLastBet(Player& target){ return myTable->PlayerLastBet(target); }
     float64 & PlayerHandBetTotal(Player& target){ return myTable->PlayerHandBetTotal(target); }
+    float64 & PlayerForcedBetTotal(Player& target){ return myTable->PlayerForcedBetTotal(target); }
 
     void defineSidePotsFor(Player& allInP, const int8 id){myTable->defineSidePotsFor(allInP,id);}
     void resolveActions(Player& withP){myTable->resolveActions(withP);}

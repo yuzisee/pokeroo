@@ -24,11 +24,12 @@
 ExpectedCallD::~ExpectedCallD()
 {
 }
-
+/*
 float64 ExpectedCallD::forfeitChips() const
 {
-    return ( alreadyBet() + stagnantPot() - table->ViewPlayer(playerID)->GetContribution() );
+    return ( alreadyBet() + stagnantPot() - table->ViewPlayer(playerID)->GetVoluntaryContribution() );
 }
+*/
 
 float64 ExpectedCallD::foldGain(CallCumulationD* const e)
 {
@@ -67,7 +68,7 @@ float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, c
     FG.waitLength.bankroll = table->ViewPlayer(playerID)->GetMoney();
     FG.waitLength.amountSacrificeVoluntary = table->ViewPlayer(playerID)->GetBetSize()
     #ifdef SACRIFICE_COMMITTED
-                 + table->ViewPlayer(playerID)->GetContribution()
+                 + table->ViewPlayer(playerID)->GetVoluntaryContribution()
     #endif
                                     + potCommitted + extra;
 	FG.waitLength.amountSacrificeForced = avgBlinds;

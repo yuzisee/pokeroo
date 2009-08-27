@@ -231,6 +231,8 @@ void HoldemArenaBetting::startBettingRound()
             ++allInsNowCount;
         }
 
+        PlayerForcedBetTotal(withP1) = PlayerBet(withP1);
+
             if( bVerbose )
             {
                 broadcastCurrentMove(curIndex, PlayerBet(withP1), PlayerBet(withP1), 0, 1, false, PlayerAllIn(withP1) > 0);
@@ -256,6 +258,9 @@ void HoldemArenaBetting::startBettingRound()
             ++allInsNowCount;
         }
         addBets(PlayerBet(withP1));
+
+        PlayerForcedBetTotal(withP2) = PlayerBet(withP2);
+
             if( bVerbose )
             {
                 broadcastCurrentMove(curIndex, PlayerBet(withP2),PlayerBet(withP2), 0, 2, false, PlayerAllIn(withP2) > 0);
@@ -285,6 +290,11 @@ void HoldemArenaBetting::startBettingRound()
         }
         #endif
 
+        //POSTCONDITION: Player::forcedBetTotal is assigned correctly for BB and SB players
+        //POSTCONDITION: highestBetter is correct as of after both blinds are posted (accounting for short-stack all-in's etc.)
+        //POSTCONDITION: highBet is correct as of after both blinds are posted (accounting for short-stack all-in's etc.)
+        //POSTCONDITION: bBlinds is the BB player's index
+        //POSTCONDITION: pot contains both blinds, accounting for short-stack all-in's etc.
 	}
 
 

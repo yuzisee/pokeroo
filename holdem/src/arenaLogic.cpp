@@ -435,8 +435,16 @@ void HoldemArena::resolveActions(Player& withP)
 
 			withP.lastBetSize = INVALID; //Since lastBetSize is for the same betting round as myBetSize, it doesn't make sense once the round is over
 
-				withP.handBetTotal += withP.GetBetSize();
-				withP.myMoney -= withP.GetBetSize();
+            if(    withP.handBetTotal == 0 //first bet
+                //&& withP.forcedBetTotal > 0 //was forced (OPTIMIZATION: CLAUSE IRRELEVANT)
+                && withP.GetBetSize() > withP.forcedBetTotal //but voluntarily increased
+                )
+            {
+                withP.forcedBetTotal = 0; //Unlabel the bet as forced.
+            }
+
+			withP.handBetTotal += withP.GetBetSize();
+			withP.myMoney -= withP.GetBetSize();
 
 			if( withP.allIn > 0 )
 			{
@@ -543,6 +551,7 @@ void HoldemArena::RefreshPlayers()
 
         }
         withP.handBetTotal = 0;
+        withP.forcedBetTotal = 0;
         withP.allIn = INVALID;
 
 		if( withP.IsBot() )

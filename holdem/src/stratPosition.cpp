@@ -393,7 +393,9 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
 			logFile << "FoldGain()=" << foldgainVal;
-			logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal) << endl;
+			logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
+			if( ViewPlayer().GetInvoluntaryContribution() > 0 ) logFile << "   ->assumes " << ViewPlayer().GetInvoluntaryContribution() << " forced";
+            logFile << endl;
             logFile << "f("<< betToCall <<")=" << 1.0+callGain << endl;
 
 

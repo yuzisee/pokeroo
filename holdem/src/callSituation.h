@@ -71,7 +71,7 @@ public:
 
     virtual ~ExpectedCallD();
 
-    virtual float64 forfeitChips() const;
+    //virtual float64 forfeitChips() const;
     virtual float64 foldGain(CallCumulationD* const e);
     virtual float64 foldGain(CallCumulationD* const e, float64 * const foldWaitLength_out);
     virtual float64 foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet);

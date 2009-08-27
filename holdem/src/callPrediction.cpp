@@ -580,7 +580,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         ///Initialize player bet state
         const Player * withP = tableinfo->table->ViewPlayer(pIndex);
         const float64 oppBetAlready = withP->GetBetSize();
-        const float64 oppPastCommit = withP->GetContribution();
+        const float64 oppPastCommit = withP->GetVoluntaryContribution();
         const float64 oppBankRoll = withP->GetMoney(); //To predict how much the bet will be
 
         if( oppBankRoll - betSize < tableinfo->chipDenom()/4  ) // oppBankRoll <= betSize
@@ -888,7 +888,7 @@ void ExactCallBluffD::query(const float64 betSize)
 		#endif
 
         const float64 oppBetAlready = tableinfo->table->ViewPlayer(pIndex)->GetBetSize();
-        const float64 oppPastCommit = tableinfo->table->ViewPlayer(pIndex)->GetContribution();
+        const float64 oppPastCommit = tableinfo->table->ViewPlayer(pIndex)->GetVoluntaryContribution();
 
         const float64 nLinear =/* 1/countToBeat ;*/ (countMayFold + insuranceDeterrent);
 
