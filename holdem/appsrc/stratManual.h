@@ -24,10 +24,12 @@
 #ifndef HOLDEM_ConsoleStrat
 #define HOLDEM_ConsoleStrat
 
-/*
+//===============================
+//CONFIGURE holdemapp output HERE
+//===============================
 #define INFOASSIST_STRONG
-#define INFOASSIST_UPDATE
-*/
+#undef INFOASSIST_UPDATE
+//===============================
 
 #include "../src/arena.h"
 #ifdef DEBUGSAVEGAME
@@ -68,7 +70,7 @@ class DualInputStream
 class ConsoleStrategy : public PlayerStrategy
 {
     private:
-        #ifdef INFOASSIST
+        #ifdef INFOASSIST_STRONG
             StatResult winMean;
             DistrShape detailPCT;
             float64 rarity;
@@ -76,7 +78,7 @@ class ConsoleStrategy : public PlayerStrategy
 	protected:
         Hand comBuf;
 		bool bNoPrint;
-		#ifdef INFOASSIST
+		#ifdef INFOASSIST_STRONG
             int8 bComSize;
 		#endif
 		void printCommunity();
@@ -89,7 +91,7 @@ class ConsoleStrategy : public PlayerStrategy
 
 
 		ConsoleStrategy() : PlayerStrategy()
-		#ifdef INFOASSIST
+		#ifdef INFOASSIST_STRONG
             , detailPCT(0)
 		#endif
             , bNoPrint(false)

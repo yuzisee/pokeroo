@@ -283,6 +283,8 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
         logFile << "(H.s) " << hybridMagnified.splits * 100 << "%"  << std::endl;
         //logFile << "(H.l) " << hybridMagnified.loss * 100 << "%"  << std::endl;
     }
+
+    logFile << "To beat " << (int)(ViewTable().NumberAtFirstAction() - 1) << std::endl;
 #endif
 
 }

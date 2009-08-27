@@ -281,6 +281,7 @@ void ConsoleStrategy::showSituation()
     UI_DESCRIPTOR << endl << "The pot contains $" << ViewTable().GetPrevPotSize() + ViewTable().GetRoundPotSize() << endl;
     #endif
 
+
     #ifdef INFOASSIST_STRONG
         const float64 xBet = ViewTable().GetBetToCall() - ViewPlayer().GetBetSize();
         if( xBet > 0 )
