@@ -284,7 +284,6 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
         //logFile << "(H.l) " << hybridMagnified.loss * 100 << "%"  << std::endl;
     }
 
-    logFile << "To beat " << (int)(ViewTable().NumberAtFirstAction() - 1) << std::endl;
 #endif
 
 }
@@ -318,7 +317,8 @@ void PositionalStrategy::setupPosition()
 
 
         #ifdef LOGPOSITION
-            logFile << "Bet to call " << betToCall << " (from " << myBet << ") at " << ViewTable().GetPotSize() << " pot" << endl;
+            logFile << "Bet to call " << betToCall << " (from " << myBet << ") at " << ViewTable().GetPotSize() << " pot, ";
+            logFile << (int)(ViewTable().NumberAtFirstAction() - 1) << " to beat" <<  std::endl;
         #endif
 
 }
