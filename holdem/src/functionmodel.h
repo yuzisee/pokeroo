@@ -86,6 +86,9 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 
 class GainModel : public virtual HoldemFunctionModel
 {
+    private:
+        void combineStatResults(const StatResult s_acted, const StatResult s_nonacted);
+        void forceRenormalize();
 
 	protected:
 	ExactCallD & espec;
@@ -108,127 +111,20 @@ class GainModel : public virtual HoldemFunctionModel
             return pow(b,x);
         }
 
+        static inline float64 cleangeomean(float64 b1, float64 x1, float64 b2, float64 x2)
+        {
+            return cleanpow( cleanpow(b1,x1)*cleanpow(b2,x2) , 1/(x1+x2) );
+        }
+
 
 
         const StatResult & ViewShape() { return shape; }
 
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
-	GainModel(const StatResult s,ExactCallD & c)
-		: ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),espec(c),shape(s)
+	GainModel(const StatResult s_acted, const StatResult s_nonacted,ExactCallD & c)
+		: ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),espec(c)
 		{
-
-		    const int8 totalEnemy = c.tableinfo->handsToBeat(); //To beat
-
-		    f_battle = c.callingPlayers(); //Floating point version of totalEnemy, but adjustable by playerStrategy based on expectations
-
-		    e_battle = c.tableinfo->handsIn()-1; //Who can you split with?
-
-		    if( quantum == 0 ) quantum = 1;
-
-			if( shape.splits == 1 || (shape.loss + shape.wins == 0) )
-			{
-				p_cl = 0;
-				p_cw = 0;
-				shape.wins = 1; //You need wins to split, and shape is only used to split so this okay
-			}else
-			{
-
-			///Use f_battle instead of e_battle, convert to equivelant totalEnemy
-				p_cl =  1 - cleanpow(1 - shape.loss,f_battle);
-				p_cw = cleanpow(shape.wins,f_battle);
-
-                #ifdef DEBUG_TRACE_SEARCH
-                std::cout << "\t\t\t(1 -  " << shape.loss  << ")^" << f_battle << "   =   p_cl "  << p_cl << std::endl;
-                std::cout << "\t\t\t" << shape.wins  << "^fbattle   =   p_cw "  << p_cw << std::endl;
-                #endif
-
-				const float64 newTotal = p_cl + p_cw;
-
-				shape.wins = cleanpow(p_cw,1.0/totalEnemy);
-				shape.loss = 1 - cleanpow(1 - p_cl,1.0/totalEnemy);
-			///Normalize, total possibility must add up to 1
-                const float64 hundredTotal = shape.wins + shape.loss + shape.splits;
-                shape = shape * (1.0/hundredTotal);
-                shape.genPCT();
-            ///Normalize, total possibilities must add up to 1 (certain splits are impossible)
-                float64 splitTotal = 0;
-                for( int8 i=1;i<=e_battle;++i )
-                {//Split with i
-                    splitTotal += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i);
-                }
-
-				p_cl *= (1-splitTotal)/newTotal;
-				p_cw *= (1-splitTotal)/newTotal;
-
-                #ifdef DEBUG_TRACE_SEARCH
-                std::cout << "\t\t\t\t" << p_cl << " after totalEnemy is  p_cl "  << std::endl;
-                std::cout << "\t\t\t\t" << p_cw << " after totalEnemy is  p_cw "  << std::endl;
-                #endif
-
-			}
-		}
-
-///When the two-StatResult constructor is used, the .repeated properties represent weights
-	GainModel(const StatResult s, const StatResult opportunity,ExactCallD & c)
-		: ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),espec(c),shape(s)
-		{
-
-		    const int8 totalEnemy = c.tableinfo->handsToBeat();
-
-		    f_battle = c.callingPlayers();
-
-		    e_battle = c.tableinfo->handsIn()-1;
-
-		    if( quantum == 0 ) quantum = 1;
-
-			if( shape.splits == 1 || (shape.loss + shape.wins == 0) )
-			{
-				p_cl = 0;
-				p_cw = 0;
-				shape.wins = 1; //You need wins to split, and shape is only used to split so this okay
-			}else
-			{
-
-                shape.splits = s.splits * s.repeated + opportunity.splits * (1 - s.repeated);
-
-			///Use f_battle instead of e_battle, convert to equivelant totalEnemy
-				p_cl =  1 - cleanpow(1 - shape.loss,f_battle);
-				p_cw = cleanpow(shape.wins,f_battle);
-
-                const float64 p_cl_draw = 1 - cleanpow(1 - opportunity.loss,e_battle);
-                const float64 p_cw_draw = cleanpow(opportunity.wins,e_battle);
-
-                if( p_cw_draw > p_cw && p_cl_draw < p_cl )
-                {
-                    p_cl = p_cl_draw;
-                    p_cw = p_cw_draw;
-                    shape = opportunity;
-                }else
-                {
-                    p_cl = p_cl * s.repeated + p_cl_draw * (1 - s.repeated);
-                    p_cw = p_cw * s.repeated + p_cw_draw * (1 - s.repeated);
-                }
-
-				const float64 newTotal = p_cl + p_cw;
-
-				shape.wins = cleanpow(p_cw,1.0/totalEnemy);
-				shape.loss = 1 - cleanpow(1 - p_cl,1.0/totalEnemy);
-			///Normalize, total possibility must add up to 1
-                const float64 hundredTotal = shape.wins + shape.loss;
-                shape.wins *= (1-shape.splits)/hundredTotal;
-                shape.loss *= (1-shape.splits)/hundredTotal;
-                shape.genPCT();
-            ///Normalize, total possibilities must add up to 1 (certain splits are impossible)
-                float64 splitTotal = 0;
-                for( int8 i=1;i<=e_battle;++i )
-                {//Split with i
-                    splitTotal += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i);
-                }
-
-				p_cl *= (1-splitTotal)/newTotal;
-				p_cw *= (1-splitTotal)/newTotal;
-
-			}
+		    combineStatResults(s_acted,s_nonacted);
 		}
 
 
@@ -302,7 +198,6 @@ class GainModelNoRisk : public virtual GainModel
         virtual float64 g(float64);
         virtual float64 gd(float64,const float64);
     public:
-	GainModelNoRisk(const StatResult s,ExactCallD & c) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),GainModel(s,c){}
 	GainModelNoRisk(const StatResult s,const StatResult sk,ExactCallD & c) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),GainModel(s,sk,c){}
 	virtual ~GainModelNoRisk();
 

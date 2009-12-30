@@ -36,6 +36,79 @@ GainModel::~GainModel()
 
 
 
+void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_nonacted)
+{
+    const int8 totalEnemy = espec.tableinfo->handsToBeat(); //To beat
+
+#ifdef DEBUGASSERT
+        if( espec.tableinfo->handsIn()-1 != totalEnemy || s_acted.repeated + s_nonacted.repeated != totalEnemy )
+        {
+            std::cerr << "handsToBeat should be all the opposing players s_acted.repeated + s_nonacted.repeated!" << std::endl;
+            std::cerr << (int)(espec.tableinfo->handsIn()) << " in hand. ";
+            std::cerr << (s_acted.repeated) << " + " << s_nonacted.repeated << " repeated" << std::endl;
+            exit(1);
+        }
+#endif
+
+        if( quantum == 0 ) quantum = 1;
+
+
+    ///Use f_battle instead of e_battle, convert to equivelant totalEnemy
+        p_cl =  1 - cleangeomean(1 - s_acted.loss,s_acted.repeated , 1 - s_nonacted.loss,s_nonacted.repeated);
+        p_cw = cleangeomean(s_acted.wins,s_acted.repeated , s_nonacted.wins,s_nonacted.repeated);
+
+
+        #ifdef DEBUG_TRACE_SEARCH
+        std::cout << "\t\t\t(1 -  " <<    s_acted.loss << ")^" << s_acted.repeated    << "  *  ";
+        std::cout <<       "(1 -  " << s_nonacted.loss << ")^" << s_nonacted.repeated << "   =   p_cl "  << p_cl << std::endl;
+        std::cout << "\t\t\t" << s_acted.wins  << "^s_acted.repeated  *  " <<
+                    s_nonacted.wins << "^s_nonacted.repeated   =   p_cw "  << p_cw << std::endl;
+        #endif
+
+
+        shape.loss = 1.0 - cleanpow(1.0 - p_cl,1.0/totalEnemy); //The w+s outcome for all players should be a power of w+s for shape
+        shape.wins = cleanpow(p_cw,1.0/totalEnemy);
+        shape.splits = 1.0 - shape.loss - shape.wins;
+
+        forceRenormalize();
+
+        #ifdef DEBUG_TRACE_SEARCH
+        std::cout << "\t\t\t\t p_cl after totalEnemy is  " << p_cl << std::endl;
+        std::cout << "\t\t\t\t p_cw after totalEnemy is  " << p_cw << std::endl;
+        #endif
+
+        shape.repeated = 1;
+}
+
+void GainModel::forceRenormalize()
+{
+        const int8 & e_battle = espec.tableinfo->handsIn()-1; //Number we can split with
+
+        shape.forceRenormalize(); ///Normalize just in case; total possibility must add up to 1
+
+        const float64 newTotal = p_cl + p_cw;
+        //const float64 p_c_split = 1.0 - newTotal;
+
+        ///Normalize, total possibilities must add up to 1 (certain splits are impossible)
+        float64 splitTotal = 0;
+        for( int8 i=1;i<=e_battle;++i )
+        {//Split with i
+            splitTotal += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i);
+        }
+
+        p_cl *= (1-splitTotal)/newTotal;
+        p_cw *= (1-splitTotal)/newTotal;
+
+
+        if( 1 - shape.splits <= DBL_EPSILON  || (shape.loss + shape.wins <= DBL_EPSILON) )
+        {
+            p_cl = 0;
+            p_cw = 0;
+            shape.wins = 1; //You need wins to split, and shape is only used to split so this okay
+        }
+
+}
+
 
 float64 HoldemFunctionModel::FindBestBet()
 {
@@ -132,6 +205,10 @@ float64 HoldemFunctionModel::GetFoldGain(CallCumulationD* const e, float64 * con
 {
     return estat->foldGain(e,foldWaitLength_out);
 }
+
+
+
+
 
 
 float64 GainModel::g(float64 betSize)
