@@ -214,6 +214,8 @@ class HoldemAction
 		bool IsRaise() const {return bet > callAmount && callAmount > 0;}
         bool IsAllIn() const {return bAllIn;}
 
+        bool IsPostBlind() const {return (bBlind != 0);}
+
 }
 ;
 
@@ -244,7 +246,7 @@ class HoldemArena
 		char randomBotType(const char *key_null_termninated);
 
 
-		void initRoundPlayers() { firstActionRoundPlayers = startRoundPlayers = NumberInHand(); }
+		void initRoundPlayers() { startRoundPlayers = NumberInHand(); }
     protected:
 
         std::ostream& gamelog;
@@ -262,7 +264,6 @@ class HoldemArena
 		playernumber_t playersAllIn;
 
 		playernumber_t startRoundPlayers;
-		playernumber_t firstActionRoundPlayers;
 
         playernumber_t curHighBlind;
 
@@ -416,9 +417,7 @@ class HoldemArena
 //===================================
 
 		playernumber_t NumberStartedRound() const; //Number of players that started the round
-		playernumber_t NumberAtFirstAction() const;//Number of (established) players in the round after the first non-fold action.
-                                                   //In a non-blind round (ie. everything after preflop) NumberStartedRound is the same as NumberEstablishedRound
-        playernumber_t NumberInHand() const;
+		playernumber_t NumberInHand() const;
 		playernumber_t NumberAtTable() const;
 
 		playernumber_t GetTotalPlayers() const;
@@ -479,7 +478,6 @@ class HoldemArenaEventBase
     float64 & blindOnlySum;
     playernumber_t & playersInHand;
     playernumber_t & playersAllIn;
-    playernumber_t & firstActionRoundPlayers;
     const playernumber_t & curDealer;
 	playernumber_t & curIndex;
     float64 & myPot;
@@ -527,7 +525,7 @@ class HoldemArenaEventBase
     , gamelog(myTable->gamelog)
     , curHighBlind(table->curHighBlind)
     , highBet(table->highBet), lastRaise(table->lastRaise), forcedBetSum(myTable->forcedBetSum), blindOnlySum(myTable->blindOnlySum)
-    , playersInHand(table->playersInHand),playersAllIn(table->playersAllIn),firstActionRoundPlayers(table->firstActionRoundPlayers)
+    , playersInHand(table->playersInHand),playersAllIn(table->playersAllIn)
 	, curDealer(table->curDealer) , curIndex(table->curIndex)
     , myPot(table->myPot), myFoldedPot(table->myFoldedPot), prevRoundFoldedPot(table->prevRoundFoldedPot), myBetSum(table->myBetSum), p(table->p)
     , bVerbose(table->bVerbose), randRem(table->randRem)
@@ -543,16 +541,16 @@ class HoldemArenaBetting : public HoldemArenaEventBase
     private:
     const int8 comSize;
 
+	playernumber_t* allInsNow;
+    playernumber_t allInsNowCount;
+	void allInsReset();
+	void allInsAppend(const playernumber_t&);
+
     protected:
 	bool bHighBetCalled;
     playernumber_t bBlinds;
     playernumber_t highestBetter;
-    playernumber_t* allInsNow;
-    playernumber_t allInsNowCount;
 
-    playernumber_t numberOfInitialFolds; //Set to -1 after the first action.
-    void foldActionOccurred();
-    void nonfoldActionOccurred();
 
 
     void startBettingRound();
@@ -637,5 +635,5 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
 ;
 
 
-#endif
+#endif // HOLDEM_Arena
 

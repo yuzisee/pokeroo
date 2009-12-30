@@ -20,13 +20,25 @@
 
 #include "arena.h"
 
+#undef DELAYED_NONFOLD_UPDATE
+#define IMMEDIATE_NONFOLD_UPDATE
+
+#if defined(DELAYED_NONFOLD_UPDATE) && defined(IMMEDIATE_NONFOLD_UPDATE)
+#error "Please define only one of DELAYED_NONFOLD_UPDATE or IMMEDIATE_NONFOLD_UPDATE"
+#endif
+
 #include <algorithm>
 using std::sort;
 
 void HoldemArenaBetting::finishBettingRound()
 {
 
-///If the round goes check-check-check, it technically makes/means the dealer (is) the higher better. We want the NEXT person.
+
+///If the round goes check-check-check, as-is highestBetter would suggest that the dealer (is) the higher better.
+///We actually want the NEXT person, though.
+	///---------------------------------
+	///Handle a special case: highestBetter
+	///---------------------------------
 /*
 http://www.playwinningpoker.com/poker/rules/basics/
 If everyone checks (or is all-in) on the final betting round, the player who acted first is the first to show the hand. If there is wagering on the final betting round, the last player to take aggressive action by a bet or raise is the first to show the hand. In order to speed up the game, a player holding a probable winner is encouraged to show the hand without delay. If there is a side pot, players involved in the side pot should show their hands before anyone all-in for only the main pot.
@@ -53,6 +65,7 @@ If everyone checks (or is all-in) on the final betting round, the player who act
             }while( !IsInHand(highestBetter) );
 	    }
 	}
+	///INVARIANT: highestBetter is the "called" player (ie. must show his/her hand first in the showdown)
 
 	///---------------------------------
 	///Resolve actions, and cleanup status...
@@ -154,6 +167,20 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 
 }
 
+void HoldemArenaBetting::allInsAppend(const playernumber_t& a)
+{
+	++playersAllIn;
+
+    allInsNow[allInsNowCount] = a;
+    ++allInsNowCount;
+}
+
+void HoldemArenaBetting::allInsReset()
+{
+	allInsNow = new int8[GetTotalPlayers()];
+	allInsNowCount = 0;
+}
+
 void HoldemArenaBetting::startBettingRound()
 {
 
@@ -166,10 +193,7 @@ void HoldemArenaBetting::startBettingRound()
 								//BUT, it also handles the check-check-check
 	bHighBetCalled = false;     //BUT! If the blind is never called, bBlinds is meaningless (eg. all players in the hand are all-in less than the big blind)
 
-	numberOfInitialFolds = 0; //Used to facilitate NumberAtFirstAction, will be set to -1 after the first nonfold action
-                               //Note: post-flop onward you can't really fold first (you would instead check) so this should have no effect.
-
-    curHighBlind = -1;
+	curHighBlind = -1;
 
     if( comSize == 0 && myTable->NumberInHand() == 2)
     {
@@ -201,8 +225,7 @@ void HoldemArenaBetting::startBettingRound()
 */
 
 
-	allInsNow = new int8[GetTotalPlayers()];
-	allInsNowCount = 0;
+	allInsReset();
 
 
 
@@ -225,17 +248,14 @@ void HoldemArenaBetting::startBettingRound()
             PlayerAllIn(withP1) = PlayerMoney(withP1);
                 //we must remember allIn as above: it's what we can win/person
 
-            ++playersAllIn;
-
-            allInsNow[allInsNowCount] = curIndex;
-            ++allInsNowCount;
+			allInsAppend(curIndex);
         }
 
         PlayerForcedBetTotal(withP1) = PlayerBet(withP1);
 
-            if( bVerbose )
+            if( bVerbose ) //Blinds are not broadcasted without bVerbose
             {
-                broadcastCurrentMove(curIndex, PlayerBet(withP1), PlayerBet(withP1), 0, 1, false, PlayerAllIn(withP1) > 0);
+                broadcastCurrentMove(curIndex, PlayerBet(withP1), PlayerBet(withP1), 0.0, 1, false, PlayerAllIn(withP1) > 0);
             }
 
 		do
@@ -252,18 +272,15 @@ void HoldemArenaBetting::startBettingRound()
             PlayerAllIn(withP2) = PlayerMoney(withP2);
                 //we must remember allIn as above: it's what we can win/person
 
-            ++playersAllIn;
-
-            allInsNow[allInsNowCount] = curIndex;
-            ++allInsNowCount;
+            allInsAppend(curIndex);
         }
         addBets(PlayerBet(withP1));
 
         PlayerForcedBetTotal(withP2) = PlayerBet(withP2);
 
-            if( bVerbose )
+            if( bVerbose ) //Blinds are not broadcasted without bVerbose
             {
-                broadcastCurrentMove(curIndex, PlayerBet(withP2),PlayerBet(withP2), 0, 2, false, PlayerAllIn(withP2) > 0);
+                broadcastCurrentMove(curIndex, PlayerBet(withP2),PlayerBet(withP2), 0.0, 2, false, PlayerAllIn(withP2) > 0);
             }
 
 		bBlinds = curIndex;
@@ -367,22 +384,7 @@ void HoldemArenaBetting::incrPlayerNumber(Player& currentPlayer)
     }
 }
 
-//Facilitates NumberAtFirstAction
-void HoldemArenaBetting::nonfoldActionOccurred()
-{
-    if(numberOfInitialFolds != -1)
-    {
-        firstActionRoundPlayers -= numberOfInitialFolds;
-    }
 
-    numberOfInitialFolds = -1;
-}
-
-//Facilitates NumberAtFirstAction
-void HoldemArenaBetting::foldActionOccurred()
-{
-    if (numberOfInitialFolds != -1) ++numberOfInitialFolds;
-}
 
 void HoldemArenaBetting::MakeBet(float64 betSize)
 {
@@ -431,12 +433,7 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 				PlayerAllIn(withP)  = PlayerHandBetTotal(withP) + PlayerBet(withP);
 					//we must remember allIn as above: it's what we can win/person
 
-				++playersAllIn;
-
-				allInsNow[allInsNowCount] = curIndex;
-				++allInsNowCount;
-
-				nonfoldActionOccurred();
+				allInsAppend(curIndex);
 			}
 			else
 			{//Not all-in
@@ -457,11 +454,8 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 
 					//NumberInHand always decrements with a fold.
 					--playersInHand;
-					//By comparison, NumberAtFirstAction decrements until a non-fold action is taken.
-					foldActionOccurred();
 				}else
 				{ //Not a fold.
-                    nonfoldActionOccurred();
 
                     if( PlayerBet(withP) > highBet && PlayerBet(withP) < highBet + myTable->GetMinRaise() )
                     {///You raised less than the MinRaise

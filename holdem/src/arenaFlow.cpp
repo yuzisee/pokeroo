@@ -216,7 +216,6 @@ void HoldemArena::BeginNewHands(const BlindValues & roundBlindValues, const bool
 	if( IsAlive(newDealer) ) curDealer = newDealer;
 
     startRoundPlayers = livePlayers;
-    firstActionRoundPlayers = livePlayers;
 
     myPot        = 0;
     prevRoundPot = 0;

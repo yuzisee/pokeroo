@@ -210,4 +210,4 @@ class SitAndGoBlinds : virtual public BlindStructure
 }
 ;
 
-#endif
+#endif // HOLDEM_Blinds

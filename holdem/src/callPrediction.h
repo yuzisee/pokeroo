@@ -22,7 +22,7 @@
 #define HOLDEM_CallPredict
 
 
-#define ASSUMEFOLDS
+
 
 //#define DEBUG_CALLPRED_FUNCTION
 #undef DEBUG_TRACE_PWIN
@@ -62,10 +62,6 @@ class ExactCallD
         float64 totalexf;
         float64 totaldexf;
 
-    #if defined(ASSUMEFOLDS)
-    float64 eFold;
-
-    #endif
 
 
 
@@ -106,14 +102,10 @@ class ExactCallD
 #endif
 
         ExactCallD(ExpectedCallD * const tbase, CallCumulationD* data)
-    :
-    #if defined(ASSUMEFOLDS)
-    eFold(tbase->table->NumberAtFirstAction()-1)
-    #endif
-
-    , impliedFactor(1)
-                    ,noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
-                    , ed(data),tableinfo(tbase)
+        :
+        impliedFactor(1)
+        , noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
+        , ed(data),tableinfo(tbase)
 #ifdef DEBUG_TRACE_EXACTCALL
 					,traceOut(0)
 #endif
@@ -135,10 +127,7 @@ class ExactCallD
             virtual void SetImpliedFactor(const float64 bonus);
 
 
-    #ifdef ASSUMEFOLDS
-    virtual float64 callingPlayers() const;
-    virtual void callingPlayers(float64 n);
-    #endif
+
             virtual float64 FoldGain(){ return tableinfo->foldGain(ed);}
             virtual float64 FoldGain(float64 extra, float64 facedbet){ return tableinfo->foldGain(ed,extra,facedbet);}
 
