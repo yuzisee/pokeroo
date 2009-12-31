@@ -55,6 +55,10 @@ struct ChipPositionState
 }
 ;
 
+
+///==============================
+///   Pr{call} and Pr{raiseby}
+///==============================
 class ExactCallD
 {//NO ASSIGNMENT OPERATOR
     private:
@@ -135,6 +139,9 @@ class ExactCallD
 }
 ;
 
+///======================
+///   Pr{opponentFold}
+///======================
 class ExactCallBluffD : public virtual ExactCallD
 {//NO ASSIGNMENT OPERATOR
     private:

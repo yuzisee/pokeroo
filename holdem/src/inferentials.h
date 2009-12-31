@@ -32,7 +32,7 @@
     #endif
 
 
-#undef MODEL_REACTION
+
 
 
 #define COMPENSATE_FOR_BAD_ROUNDING
@@ -150,7 +150,6 @@ class StatResult
 
 	}
 
-
 	float64 genPeripheral() const
 	{
 		if( loss == 0 && wins == 0 )
@@ -162,6 +161,44 @@ class StatResult
 		}
 	}
 
+
+
+    void deterBy(float64 w)
+    {
+        this->wins -= w;
+        this->loss += w;
+        this->pct -= w;
+        //It is possible for zero crossings
+        if( this->pct < 0 || this->wins < 0 )
+        {
+            this->wins = 0;
+            this->loss = 1 - this->splits;
+            genPCT();
+        }
+    }
+
+    void boostBy(float64 w)
+    {
+        this->wins += w;
+        this->loss -= w;
+        this->pct += w;
+
+        if( this->pct > 1 || this->wins > 1-(this->splits) )
+        {
+            this->wins = 1 - this->splits;
+            this->loss = 0;
+			genPCT();
+        }
+    }
+
+    void forceRenormalize()
+    {
+        const float64 scaleTotal = wins + splits + loss;
+        wins /= scaleTotal;
+        splits /= scaleTotal;
+        loss /= scaleTotal;
+        genPCT();
+    }
 }
 ;
 

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005-2007 by Joseph Huang                               *
+ *   Copyright (C) 2009 by Joseph Huang                                    *
  *                                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -18,53 +18,34 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-/* Dev Testing Flags */
-#undef NO_LOG_FILES
-#define DEBUGASSERT
 
-/***********************/
+#ifndef HOLDEM_CallRarity
+#define HOLDEM_CallRarity
 
-/* Game Flags */
-#undef EXTERNAL_DEALER
+#include "debug_flags.h"
+#include "portability.h"
 
-/******************/
+class OpponentStandard
+{
+private:
+	static const playernumber_t NO_FIRST_ACTION_PLAYER;
+protected:
+	playernumber_t foldsObserved;
+	bool bMyActionOccurred;
+	bool bNonBlindNonFoldObserved;
+	playernumber_t firstActionPlayers;
 
-#ifndef NO_LOG_FILES
-/* Mode Flags (Depends on NO_LOG_FILES) */
-#define LOGPOSITION
-#undef WINRELEASE
-/**********************************/
-#undef DEBUG_GAIN
+	/*
+	playernumber_t firstActionPlayers;
+    playernumber_t notActedPlayers;
+	*/
+public:
+	void NewRound();
+	void SeeFold();
+	void SeeNonBlindNonFold(const playernumber_t playersRemaining);
 
-#define GRAPHMONEY "chipcount.csv.txt"
-#undef DUMP_CSV_PLOTS
+}
+;
 
-/* Savegame debugging */
-#undef DEBUG_SINGLE_HAND
-#endif
-
-
-
-
-/* AI Processing Interface */
-
-#undef PROGRESSUPDATE
-#undef SUPERPROGRESSUPDATE
-#undef DEBUG_TESTDEALINTERFACE
-
-/***********************/
-
-/* Randomizer Flags */
-
-#undef FORCESEED
-#undef COOLSEEDINGVIEWER
-
-/*****************/
-
-#define SEATS_AT_TABLE 10
-
-/* functionbase.h Debugging */
-#undef DEBUG_TRACE_ZERO
-#undef DEBUG_TRACE_SEARCH
-
+#endif // HOLDEM_CallRarity
 

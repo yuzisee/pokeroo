@@ -24,12 +24,7 @@
 ExpectedCallD::~ExpectedCallD()
 {
 }
-/*
-float64 ExpectedCallD::forfeitChips() const
-{
-    return ( alreadyBet() + stagnantPot() - table->ViewPlayer(playerID)->GetVoluntaryContribution() );
-}
-*/
+
 
 float64 ExpectedCallD::foldGain(CallCumulationD* const e)
 {
@@ -154,7 +149,7 @@ float64 ExpectedCallD::chipDenom() const
 
 playernumber_t ExpectedCallD::handsToBeat() const
 {
-    return table->NumberAtFirstAction()-1;  //Number of hands drawn
+    return table->NumberInHandInclAllIn()-1;  //Number of hands (drawn) *remaining*
 }
 
 playernumber_t ExpectedCallD::handsDealt() const
@@ -164,7 +159,7 @@ playernumber_t ExpectedCallD::handsDealt() const
 
 playernumber_t ExpectedCallD::handsIn() const //In general, used for "who can you split with" type requests as handsIn()-1?
 {
-    return table->NumberInHand();  //Number of live players not folded
+    return table->NumberInHandInclAllIn();  //Number of live players not folded
 }
 
 float64 ExpectedCallD::prevpotChips() const

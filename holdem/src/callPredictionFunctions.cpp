@@ -27,11 +27,7 @@
 #undef INLINE_INTEGER_POWERS
 
 
-#ifdef MODEL_REACTION
-#define AVG_FOLDWAITPCT 2.0
-#else
 #define AVG_FOLDWAITPCT 1.0
-#endif
 
 
 
