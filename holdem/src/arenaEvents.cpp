@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "arena.h"
+#include "arenaEvents.h"
 
 #undef DELAYED_NONFOLD_UPDATE
 #define IMMEDIATE_NONFOLD_UPDATE
@@ -45,13 +45,13 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 */
 	if ( highBet == 0 )
 	{
-	    if( GetNumberInHand() == playersAllIn)
+	    if( GetNumberInHandInclAllIn() == playersAllIn)
 	    {///Find the first player after the dealer
             do
             {
                 incrIndex(highestBetter);
             }while( PlayerAllIn(*(p[highestBetter])) < 0);
-	    }else if( GetNumberInHand() - 1 == playersAllIn)
+	    }else if( GetNumberInHandExclAllIn() == 1)
 	    {///Find the player that is not allin -- in this (non-standard) implementation, all-in players ALWAYS show their cards
 	        do
             {
@@ -98,7 +98,7 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 
 
 
-	if( GetNumberInHand() > 1 )
+	if( GetNumberInHandInclAllIn() > 1 )
 	{
 		//Except for showdown order, this is only necessarily NOT 'return -1;'
 		playerCalled = highestBetter;
@@ -108,7 +108,7 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 
 
     ///End hand if all folded
-    if( GetNumberInHand() == 1 )
+    if( GetNumberInHandInclAllIn() == 1 )
     {
 
 
@@ -181,6 +181,13 @@ void HoldemArenaBetting::allInsReset()
 	allInsNowCount = 0;
 }
 
+		
+bool HoldemArenaBetting::IsHeadsUp() const
+{
+	return ((comSize == 0) && (myTable->NumberStartedRoundInclAllIn() == 2));
+}
+
+
 void HoldemArenaBetting::startBettingRound()
 {
 
@@ -195,7 +202,7 @@ void HoldemArenaBetting::startBettingRound()
 
 	curHighBlind = -1;
 
-    if( comSize == 0 && myTable->NumberInHand() == 2)
+    if( IsHeadsUp() )
     {
         do
 		{
@@ -230,7 +237,7 @@ void HoldemArenaBetting::startBettingRound()
 
 
 	///Weird stuff to simulate blind bets
-	if( comSize == 0 && myTable->NumberInHand() >= 2)
+	if( comSize == 0 && myTable->NumberInHandInclAllIn() >= 2)
 	{
         curIndex = bBlinds;
 	    do
@@ -317,7 +324,7 @@ void HoldemArenaBetting::startBettingRound()
 
 	incrIndex();
 
-    if( !(GetNumberInHand() - playersAllIn + allInsNowCount > 1) )
+    if( !(GetNumberInHandExclAllIn() + allInsNowCount > 1) )
     {
         finishBettingRound();
     }else{
@@ -338,20 +345,26 @@ void HoldemArenaBetting::startBettingRound()
 
 void HoldemArenaBetting::incrPlayerNumber(Player& currentPlayer)
 {
+///The goal of this function is to increment curIndex to the next player on his left.
+///incrIndex is used to increment curIndex while wrapping back around to 0 as needed.
+///incrPlayerNumber() is generally used in tandem with readyToFinish(), therefore:
+///	 (A)This function is also responsible for updating bBlinds, as the variable is used to determine if subsequent incrPlayerNumber calls will take place
+///  (B)This function must leave curIndex at the player index of the highest better if readyToFinish will report that the round has ended
 
 
     if( curIndex == bBlinds )
     {
-        ///Account for the weird blind structure where a call can be
-        ///reraised by a person in the blinds
+		///See note (A) above:
+        //Account for the weird blind structure where a call can be
+        //reraised by a person in the blinds
 
-        ///But it must also maintain the check-check-check events
+        //But it must also maintain the check-check-check events
 
         bBlinds = -1;
         if ( PlayerBet(currentPlayer) > PlayerLastBet(currentPlayer)
                 ||
             curIndex != highestBetter )
-        {//You only extend play if there is additional bet here
+        {///You only extend play if there is additional bet here: See note (B) above
             incrIndex();
         }
 
@@ -359,7 +372,7 @@ void HoldemArenaBetting::incrPlayerNumber(Player& currentPlayer)
     }
     else
     {
-        if( myTable->NumberInHand() == 1 )
+        if( GetNumberInHandInclAllIn() == 1 )
         {
             bBlinds = -1;
         }
@@ -439,7 +452,7 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 			{//Not all-in
 				if( PlayerBet(withP) < highBet )
 				{///Player folds.
-					randRem /= myBetSum + GetNumberInHand();
+					randRem /= myBetSum + GetNumberInHandInclAllIn() + GetNumberInHandExclAllIn();
 
                     myFoldedPot += PlayerHandBetTotal( withP ) + PlayerLastBet(withP);
                     prevRoundFoldedPot += PlayerHandBetTotal( withP ); //Retroactive

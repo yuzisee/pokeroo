@@ -215,7 +215,7 @@ void HoldemArena::BeginNewHands(const BlindValues & roundBlindValues, const bool
 {
 	if( IsAlive(newDealer) ) curDealer = newDealer;
 
-    startRoundPlayers = livePlayers;
+	startRoundPlayers.ResetNewHands(livePlayers); //This is only until initRoundPlayers is called by PrepBettingRound
 
     myPot        = 0;
     prevRoundPot = 0;
@@ -339,8 +339,7 @@ Player * HoldemArena::FinalizeReportWinner()
 void HoldemArena::PrepBettingRound(bool bFirstBettingRound, uint8 otherBettingRounds)
 {
 	if( bFirstBettingRound ){
-		playersInHand = livePlayers; //Must be called before first initRoundPlayers();
-		playersAllIn = 0;
+		playersInHand.ResetNewHands(livePlayers); //Must be called before first initRoundPlayers();
 	}
 
 	bettingRoundsRemaining = otherBettingRounds;

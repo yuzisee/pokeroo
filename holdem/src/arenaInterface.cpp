@@ -94,7 +94,7 @@ void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
 
 void HoldemArena::PrintPositions(std::ostream& o)
 {
-    o << "(" << (int)(NumberInHand()) << " players)" << endl;
+    o << "(" << (int)(NumberInHandInclAllIn()) << " players)" << endl;
     int8 tempIndex = curDealer;
     do
     {
@@ -216,14 +216,22 @@ float64 HoldemArena::GetAllChips() const
 }
 
 
-playernumber_t HoldemArena::NumberStartedRound() const
+playernumber_t HoldemArena::NumberStartedRoundInclAllIn() const
 {
-	return startRoundPlayers;
+	return startRoundPlayers.total;
+}
+playernumber_t HoldemArena::NumberStartedRoundExclAllIn() const
+{
+	return startRoundPlayers.total - startRoundPlayers.allInsOnly;
 }
 
-playernumber_t HoldemArena::NumberInHand() const
+playernumber_t HoldemArena::NumberInHandInclAllIn() const
 {
-	return playersInHand;
+	return playersInHand.total;
+}
+playernumber_t HoldemArena::NumberInHandExclAllIn() const
+{
+	return playersInHand.total - playersInHand.allInsOnly;
 }
 
 ///Number "remaining" at table

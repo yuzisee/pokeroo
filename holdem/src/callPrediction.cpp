@@ -490,8 +490,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
 
     nearest = (betSize <= tableinfo->callBet() + tableinfo->chipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
-    float64 peopleInHandUpper = tableinfo->table->NumberInHand() - 1; //counting max possibilities
-    const float64 opponents = tableinfo->handsToBeat();
+    
+	const float64 opponents = tableinfo->handsToBeat();
     const float64 myexf = betSize;
     const float64 mydexf = 1;
 
@@ -694,7 +694,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
                     const float64 w = facedOdds_call_Geom(oppCPS,betSize, opponents, ed);
                     nextexf = ed->Pr_haveWinPCT_orbetter(w);
-                    peopleInHandUpper -= 1-nextexf;
+                    
 
                     nextdexf = nextexf + oppBetMake * ed->d_dw_only(w)
                                         * dfacedOdds_dbetSize_Geom(oppCPS,betSize,totaldexf,w, opponents, ed);
@@ -721,8 +721,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                 ChipPositionState oppmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit);
 
                 nextexf = ed->Pr_haveWinPCT_orbetter( facedOdds_call_Geom(oppmaxCPS,oppBankRoll, opponents,ed) );
-                peopleInHandUpper -= 1-nextexf;
-                nextexf *= oppBetMake ;
+                
+				nextexf *= oppBetMake ;
 
                 if( oppBetAlready + nextexf + (betSize - oppBankRoll) > nearest )
                 {
@@ -833,7 +833,9 @@ void ExactCallBluffD::query(const float64 betSize)
 	queryinputbluff = betSize;
 
 
-    float64 countMayFold = tableinfo->table->NumberInHand() - 1 ;
+	///This is one of the iterators over the upcoming while loop.
+	///It represents the count of players an opponent would be folding to.
+    float64 countMayFold = tableinfo->table->NumberInHandInclAllIn() - 1 ;
 
 
     const float64 myexf = betSize;

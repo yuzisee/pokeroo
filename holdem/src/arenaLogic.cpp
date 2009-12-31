@@ -26,7 +26,7 @@
 #include "stratHistory.h"
 #include <algorithm>
 
-
+#include "arenaEvents.h"
 
 
 

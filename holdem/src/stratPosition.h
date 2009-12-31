@@ -21,6 +21,7 @@
 #ifndef HOLDEM_PositionalStrat
 #define HOLDEM_PositionalStrat
 
+#include "callRarity.h"
 #include "BluffGainInc.h"
 //#include "stratSearch.h"
 #include "ai.h"
@@ -60,7 +61,8 @@ class PositionalStrategy : virtual public PlayerStrategy
         float64 myBet;
         float64 maxShowdown;
 
-
+		OpponentStandard firstActionAwareness;
+        
         bool bLogMean;
         bool bLogRanking;
         bool bLogWorse;
@@ -84,7 +86,7 @@ class PositionalStrategy : virtual public PlayerStrategy
 		virtual void SeeCommunity(const Hand&, const int8);
 		virtual float64 MakeBet() = 0;
 		virtual void SeeOppHand(const int8, const Hand&){};
-        virtual void SeeAction(const HoldemAction&) {};
+        virtual void SeeAction(const HoldemAction&);
         virtual void FinishHand(){};
 
     #ifdef DUMP_CSV_PLOTS

@@ -108,6 +108,15 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
         }
     #endif
 
+///=======================
+///   Initialize counts
+///=======================
+
+	firstActionAwareness.NewRound();
+    
+///=====================
+///   Initialize hand
+///=====================
 
     DistrShape w_wl(0);
 
@@ -118,6 +127,13 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     CommunityPlus withCommunity;
     withCommunity.SetUnique(ViewDealtHand());
     withCommunity.AppendUnique(onlyCommunity);
+
+
+
+///=====================
+///   Compute chances
+///=====================
+
 
     //if(bLogWorse)
     {
@@ -216,11 +232,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     statrelation.wins = 1 - rarityA3;
     statrelation.splits = statmean.splits;
     statrelation.loss = rarityA3;
-    const float64 scaleTotalA3 = statrelation.wins + statrelation.splits + statrelation.loss;
-    statrelation.wins /= scaleTotalA3;
-    statrelation.splits /= scaleTotalA3;
-    statrelation.loss /= scaleTotalA3;
-    statrelation.genPCT();
+    statrelation.forceRenormalize();
 
 
     const float64 rarity3 = callcumu.Pr_haveWinPCT_orbetter(statmean.pct);
@@ -228,15 +240,11 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     statranking.wins = 1 - rarity3;
     statranking.splits = statmean.splits;
     statranking.loss = rarity3;
-    const float64 scaleTotal3 = statranking.wins + statranking.splits + statranking.loss;
-    statranking.wins /= scaleTotal3;
-    statranking.splits /= scaleTotal3;
-    statranking.loss /= scaleTotal3;
-    statranking.genPCT();
+    statranking.forceRenormalize();
 
-//Pick the better one for hybrid
+//Pick the worse one for hybrid
     StatResult statHybridR;
-    if( statranking.pct > statrelation.pct )
+    if( statranking.pct < statrelation.pct )
     {
         statHybridR = statranking;
     }else
@@ -251,6 +259,11 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     const float64 adjust = hybridMagnified.wins + hybridMagnified.splits + hybridMagnified.loss;
     hybridMagnified = hybridMagnified * ( 1.0 / adjust );
     hybridMagnified.repeated = 0; ///.repeated WILL otherwise ACCUMULATE!
+
+
+///=================
+///   Log chances
+///=================
 
 
 
@@ -289,6 +302,16 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 }
 
 
+void PositionalStrategy::SeeAction(const HoldemAction& a)
+{
+    if( !a.IsPostBlind() )
+    {
+		if( !(a.IsFold()) ) firstActionAwareness.SeeNonBlindNonFold(ViewTable().NumberInHandInclAllIn());
+    }
+
+	if (a.IsFold() ) firstActionAwareness.SeeFold();
+}
+
 
 void PositionalStrategy::setupPosition()
 {
@@ -316,9 +339,24 @@ void PositionalStrategy::setupPosition()
     //float64 choiceScale = (betToCall - myBet)/(maxShowdown - myBet);
 
 
+///PENDING: http://sourceforge.net/tracker/?func=detail&aid=2905465&group_id=242264&atid=1118658
+#if 0
+    const bool bHaveIActed = (notActedPlayers == 0); //If I have acted before and it's my turn again, everybody should have acted by now.
+
+    //If I have acted, subtract one from ViewTable().NumberInHand() to represent "hands to beat"
+    const float64 moodLevelOpponents = ViewTable().NumberInHand() - notActedPlayers - (bHaveIActed ? 1 : 0);
+
+    //If I haven't acted, one of the notActedPlayers is myself and I don't count within uniformRandomOpponents
+    const float64 uniformRandomOpponents = notActedPlayers - (bHaveIActed ? 1 : 0);
+#endif
+
         #ifdef LOGPOSITION
             logFile << "Bet to call " << betToCall << " (from " << myBet << ") at " << ViewTable().GetPotSize() << " pot, ";
-            logFile << (int)(ViewTable().NumberAtFirstAction() - 1) << " to beat" <<  std::endl;
+///PENDING: http://sourceforge.net/tracker/?func=detail&aid=2905465&group_id=242264&atid=1118658
+#if 0
+			logFile << (int)(moodLevelOpponents) << " acted opponents, ";
+            logFile << (int)(uniformRandomOpponents) << " uniform opponents" << std::endl;
+#endif
         #endif
 
 }
@@ -518,6 +556,21 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
 ///   AceBot, TrapBot, NormBot
 ///==============================
 
+// First, deter low bets using detailPCT.avgDev (uncertainty)
+// Correspondingly, boost high bets by detailPCT.avgDev (uncertainty)
+
+// TRAPBOT:
+//                                              Low Bets  |  High Bets
+// Many Improve Small & Some Worsen Greatly               |  TRAP includes insuranceDeterrent if more hands are improving hands (makes opponents look like they are more likely to fold to a high bet)
+// Some Improve Greatly & Many Worsen Small               |
+//
+// TRAPBOT deters high bets when there is high chance of improving.
+
+// ACTIONBOT:
+//
+// Increases implied odds on Low Bets proportional to detailPCT.avgDev
+// On higher bets: Reduces considered opponents (you probably don't have to beat the people who folded), especially if you are going to improve your hand
+//
 
 
 float64 ImproveGainStrategy::MakeBet()
@@ -536,7 +589,7 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 oppInsuranceBigBet = (improveMod>0)?(improveMod/2):0;
 
 
-    const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHand() - 1);
+    const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHandInclAllIn() - 1);
     StatResult statversus = (statrelation * (awayFromDrawingHands)) + (statranking * (1.0-awayFromDrawingHands));
     statversus.genPCT();
 
@@ -562,110 +615,62 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall,statworse.repeated,riskprice);
 
 
-    const float64 fullVersus = myDeterredCall.callingPlayers();
-    const float64 peopleDrawing = (1 - improvePure) * (ViewTable().NumberInHand() - 1);//You probably don't have to beat the people who folded, especially if you are going to improve your hand
+	const float64 fullVersus = ViewTable().NumberStartedRoundInclAllIn();
+    const float64 peopleDrawing = (1 - improvePure) * (ViewTable().NumberInHandInclAllIn() - 1);//You probably don't have to beat the people who folded, especially if you are going to improve your hand
     const float64 newVersus = (fullVersus - peopleDrawing*(1-improvePure)*detailPCT.stdDev);
 
 
 //bGamble == 2 is ActionBot
 //bGamble == 1 is TrapBot
 
-//In the future actOrReact should be based on opponent betting patterns
-#ifdef MODEL_REACTION
-    float64 actOrReact = myDeterredCall.ActOrReact(betToCall,myBet,maxShowdown);
-	actOrReact = 1 - (1-actOrReact)*(1-actOrReact);
-#endif // MODEL_REACTION
+///In the future actOrReact should be based on opponent betting patterns
 
 
     StatResult left = statversus;
     StatResult base_right = statversus;//statmean;  (NormalBot used this setup.)
 
     StatResult right = statworse;
-//TrapBot and ActionBot are based on statversus only
+
+
+    if( bGamble >= 2 ) //Actionbot only
+    {
+        myDeterredCall_left.SetImpliedFactor(impliedOddsGain);
+
+        //Need scaling (This could adjust RiskPrice or the geom/algb equilibrium as needed)
+        myDeterredCall_right.callingPlayers(newVersus);
+    }
+
+    //Unrelated note: TrapBot and ActionBot are based on statversus only
     if( bGamble >= 1 )
     {
         base_right = statversus;
-        #ifdef MODEL_REACTION
-            const float64 enemyChances = actOrReact;
-        #else
-            const float64 enemyChances = 1.0;//(ViewTable().GetNumberInHand() - 1.0) / ViewTable().GetNumberInHand() / 2;
-        #endif // MODEL_REACTION, with #else
+
+        const float64 enemyChances = 1.0;//(ViewTable().GetNumberInHand() - 1.0) / ViewTable().GetNumberInHand() / 2;
+
         left = statversus;
         #ifndef DEBUG_TRAP_AS_NORMAL
         //targetWorsenBy is here
-        left.wins -= detailPCT.avgDev/2.0*enemyChances; //2.0 is to estimate median
-        left.loss += detailPCT.avgDev/2.0*enemyChances;
-        left.pct -= detailPCT.avgDev/2.0*enemyChances;
-        //Since detailPCT is based on statmean, not statversus, it is possible for zero crossings
-        if( left.pct < 0 || left.wins < 0 )
-        {
-            left.wins = 0;
-            left.loss = 1 - left.splits;
-            left.genPCT();
-        }
+        left.deterBy(detailPCT.avgDev/2.0*enemyChances);//2.0 is to estimate median
         //Need scaling
         #endif
 
         //targetWorsenBy is also here
-		#ifdef MODEL_REACTION
-			base_right.wins += detailPCT.avgDev/2.0;
-			base_right.loss -= detailPCT.avgDev/2.0;
-			base_right.pct += detailPCT.avgDev/2.0;
-			if( base_right.pct > 1 || base_right.wins > 1-base_right.splits )
-			{
-				base_right.wins = 1 - base_right.splits;
-				base_right.loss = 0;
-				base_right.genPCT();
-			}
-        //Need scaling
-		#else
-			right.wins += detailPCT.avgDev/2.0;
-			right.loss -= detailPCT.avgDev/2.0;
-			right.pct += detailPCT.avgDev/2.0;
-			if( right.pct > 1 || right.wins > 1-right.splits )
-			{
-				right.wins = 1 - right.splits;
-				right.loss = 0;
-				right.genPCT();
-			}
-			//Need scaling
-		#endif
+
+
+        right.boostBy(detailPCT.avgDev/2.0);//Need scaling
 
 
 
         myDeterredCall_right.insuranceDeterrent = oppInsuranceBigBet;
 
-
-
-
-
-        if( bGamble >= 2 )
-        {
-            myDeterredCall_left.SetImpliedFactor(impliedOddsGain);
-
-//Need scaling
-            myDeterredCall_right.callingPlayers(newVersus);
-        }
     }
 
-#ifdef MODEL_REACTION
-    right.repeated = (1 - actOrReact);//Generally ignored, only base_right.repeated is really used
-    base_right.repeated = actOrReact;
 
+    GainModel geomModel(left,left,myDeterredCall_left);
+    GainModelNoRisk algbModel(statversus,statversus,myDeterredCall_right);
 
-    left.repeated = 1;
-	GainModel geomModel(left,right,myDeterredCall_left); //"right" probably doesn't have to be there, since left.repeated is 1.
-	GainModel geomModel_fear(base_right,right,myDeterredCall_right);
-	statversus.repeated = 1;
-	GainModelNoRisk algbModel(statversus,right,myDeterredCall_left); //"right" probably doesn't have to be there, since left.repeated is 1.
-	GainModelNoRisk algbModel_fear(base_right,right,myDeterredCall_right);
-#else
-    GainModel geomModel(left,myDeterredCall_left);
-    GainModelNoRisk algbModel(statversus,myDeterredCall_right);
-
-	GainModel geomModel_fear(right,myDeterredCall_left);
-	GainModelNoRisk algbModel_fear(right,myDeterredCall_right);
-#endif // MODEL_REACTION, with #else
+	GainModel geomModel_fear(right,right,myDeterredCall_left);
+	GainModelNoRisk algbModel_fear(right,right,myDeterredCall_right);
 
 
 #ifdef LOGPOSITION
@@ -690,14 +695,7 @@ float64 ImproveGainStrategy::MakeBet()
         #endif
         logFile << endl;
     }
-    logFile <<
-    #ifdef MODEL_REACTION
-     "A bet that is large could have been accumulated due to other bets (react), or initiated by me (act). There is more statworse/fear in the (act) case." << endl <<
-	 " Act(0%) or React(100%)? " << (actOrReact * 100) << "% --> pct of " << base_right.pct << ":React ... " << algbModel_fear.ViewShape().pct <<
-	#else
-	 geomModel.ViewShape().pct << ":React/Main ... " <<
-	#endif // MODEL_REACTION
-	 " ... " << algbModel_fear.ViewShape().pct << ":Act/Fear" << endl;
+    logFile << geomModel.ViewShape().pct << ":React/Main ... " << " ... " << algbModel_fear.ViewShape().pct << ":Act/Fear" << endl;
 #endif
 
 ///From geom to algb
@@ -953,6 +951,7 @@ exit(1);
 ///   DangerBot, SpaceBot, ComBot
 ///=================================
 
+///DeterredGainStrategy is still ActOrReact driven. (By comparison, ImproveGainStrategy is not)
 
 float64 DeterredGainStrategy::MakeBet()
 {
@@ -961,7 +960,7 @@ float64 DeterredGainStrategy::MakeBet()
 	if( maxShowdown <= 0 ) return 0;
 
 
-    const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHand() - 1);
+    const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHandInclAllIn() - 1);
     StatResult statversus = (statrelation * (awayFromDrawingHands)) + (statranking * (1.0-awayFromDrawingHands));
     statversus.genPCT();
 
@@ -985,6 +984,7 @@ float64 DeterredGainStrategy::MakeBet()
     const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall,statworse.repeated,geom_algb_scaler);
 
 
+//
     const float64 certainty = myFearControl.ActOrReact(betToCall,myBet,maxShowdown);
 
     const float64 uncertainty = fabs( statranking.pct - statmean.pct );
@@ -1004,18 +1004,15 @@ float64 DeterredGainStrategy::MakeBet()
     StatResult left = statversus;
 	if( bGamble == 0 ) left = hybridMagnified;
 
-    GainModel geomModel(left,myDeterredCall);
+    GainModel geomModel(left,left,myDeterredCall);
 
     StatResult right = statworse;
     right.repeated = 1-certainty;
 
     left.repeated = certainty;
 
-#ifdef MODEL_REACTION
-	GainModelNoRisk algbModel(left,right,myDeterredCall);
-#else
-	GainModelNoRisk algbModel(right,myDeterredCall);
-#endif // MODEL_REACTION, with #else
+
+	GainModelNoRisk algbModel(right,right,myDeterredCall);
 
 
 #ifdef LOGPOSITION

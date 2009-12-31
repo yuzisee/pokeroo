@@ -122,7 +122,8 @@ float64 MultiThresholdStrategy::MakeBet()
         else                        return defaultBetUp;
     }
 
-    float64 multiThreshhold = pow(w->mean,ViewTable().NumberStartedRound()-1+redundancy); //subtract yourself
+	const playernumber_t toBeat = ViewTable().NumberStartedRoundInclAllIn()-1;
+    float64 multiThreshhold = pow(w->mean,toBeat+redundancy); //subtract yourself
         #ifdef LOGTHRESHOLD
 
             if( !(logFile.is_open()) )
@@ -136,7 +137,8 @@ float64 MultiThresholdStrategy::MakeBet()
             convertOutput.DisplayHand(logFile);
             logFile << "ThresholdAI" << endl;
 
-            logFile << multiThreshhold << " = " << w->mean << "^" << (int)(ViewTable().NumberStartedRound()-1+redundancy) << endl;
+			
+            logFile << multiThreshhold << " = " << w->mean << "^" << (int)(toBeat+redundancy) << endl;
         #endif
 
 	if (multiThreshhold > aiThreshold)
