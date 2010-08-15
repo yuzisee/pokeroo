@@ -25,6 +25,10 @@
 #include "debug_flags.h"
 #include "portability.h"
 
+#include "inferentials.h"
+#include "holdem2.h"
+
+
 class OpponentStandard
 {
 private:
@@ -43,6 +47,36 @@ public:
 	void NewRound();
 	void SeeFold();
 	void SeeNonBlindNonFold(const playernumber_t playersRemaining);
+
+}
+;
+
+
+class StatResultProbabilities
+{
+private:
+///Equations
+
+
+protected:
+
+///Single Opponent Probabilities
+    StatResult statworse;
+    StatResult statranking;
+    StatResult statrelation;
+
+	StatResult hybridMagnified;
+
+///Group Probabilities (a function of 
+
+public:
+///Core Probabilities
+    CallCumulationD foldcumu;
+    CallCumulationD callcumu;
+	StatResult statmean;
+	
+///Initialize foldcumu, callcumu, and statmean, and then call Process_FoldCallMean().
+	void Process_FoldCallMean();
 
 }
 ;

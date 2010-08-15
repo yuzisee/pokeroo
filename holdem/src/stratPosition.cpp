@@ -88,6 +88,11 @@ void PositionalStrategy::ReleaseLogFile()
 
 void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 {
+
+///=============================
+///   Log Community/Situation
+///=============================
+
     #ifdef LOGPOSITION
         HardOpenLogFile();
     #endif
@@ -114,11 +119,11 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
 	firstActionAwareness.NewRound();
     
-///=====================
+///======================
 ///   Initialize hand
-///=====================
+///======================
 
-    DistrShape w_wl(0);
+ DistrShape w_wl(0);
 
 
     CommunityPlus onlyCommunity;
@@ -128,34 +133,32 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     withCommunity.SetUnique(ViewDealtHand());
     withCommunity.AppendUnique(onlyCommunity);
 
-
-
-///=====================
+///======================
 ///   Compute chances
-///=====================
+///======================
 
-
-    //if(bLogWorse)
-    {
-        ///Compute CallStats
-        StatsManager::QueryDefense(foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
-        foldcumu.ReversePerspective();
-    }
-    //else{
-
-
-    //}
-
+    ///Compute CallStats
+    StatsManager::QueryDefense(statprob.foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
+    statprob.foldcumu.ReversePerspective();
+    
     ///Compute CommunityCallStats
-    ViewTable().CachedQueryOffense(callcumu,onlyCommunity, withCommunity);
-    //StatsManager::QueryOffense(callcumu,withCommunity,onlyCommunity,cardsInCommunity );
+    ViewTable().CachedQueryOffense(statprob.callcumu,onlyCommunity, withCommunity);
 
     ///Compute WinStats
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
+	statprob.statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 
-    statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
-    statworse = foldcumu.oddsAgainstBestTwoHands(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
-    //CallStats is foldcumu
+///INVARIANT: statprob.statmean, statprob.callcumu, statprob.foldcumu are all initialized.
+	
+///====================================
+///   Compute Relevant Probabilities
+///====================================
+
+	statprob.Process_FoldCallMean();
+		
+///=============================
+///   Log Stats/Probabilities
+///=============================
 
     #ifdef LOGPOSITION
     logFile << "*" << endl;
@@ -226,39 +229,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
 
 
-    const float64 rarityA3 = foldcumu.Pr_haveWinPCT_orbetter(0.5);
-
-//You can tie in rank if and only if you tie in mean
-    statrelation.wins = 1 - rarityA3;
-    statrelation.splits = statmean.splits;
-    statrelation.loss = rarityA3;
-    statrelation.forceRenormalize();
-
-
-    const float64 rarity3 = callcumu.Pr_haveWinPCT_orbetter(statmean.pct);
-
-    statranking.wins = 1 - rarity3;
-    statranking.splits = statmean.splits;
-    statranking.loss = rarity3;
-    statranking.forceRenormalize();
-
-//Pick the worse one for hybrid
-    StatResult statHybridR;
-    if( statranking.pct < statrelation.pct )
-    {
-        statHybridR = statranking;
-    }else
-    {
-        statHybridR = statrelation;
-    }
-
-    hybridMagnified.wins = sqrt(statmean.wins*statHybridR.wins);
-    hybridMagnified.splits = sqrt(statmean.splits*statHybridR.splits);
-    hybridMagnified.loss = sqrt(statmean.loss*statHybridR.loss);
-    hybridMagnified.genPCT();
-    const float64 adjust = hybridMagnified.wins + hybridMagnified.splits + hybridMagnified.loss;
-    hybridMagnified = hybridMagnified * ( 1.0 / adjust );
-    hybridMagnified.repeated = 0; ///.repeated WILL otherwise ACCUMULATE!
+    
 
 
 ///=================
@@ -268,35 +239,15 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
 
 #ifdef LOGPOSITION
-    if(bLogMean)
-    {
-        logFile << "(M) " << statmean.pct * 100 << "%"  << std::endl;
-        logFile << "(M.w) " << statmean.wins * 100 << "%"  << std::endl;
-        logFile << "(M.s) " << statmean.splits * 100 << "%"  << std::endl;
-        logFile << "(M.l) " << statmean.loss * 100 << "%"  << std::endl;
-    }
-    logFile << "(Worst) " << statworse.pct * 100 << "%"  << std::endl;
-    if(bLogWorse)
-    {
-        logFile << "(W.w) " << statworse.wins * 100 << "%"  << std::endl;
-        logFile << "(W.s) " << statworse.splits * 100 << "%"  << std::endl;
-        logFile << "(W.l) " << statworse.loss * 100 << "%"  << std::endl;
-    }
-    if(bLogRanking)
-    {
-        logFile << "(Better All-in) " << statrelation.pct * 100 << "%"  << std::endl;
-        logFile << "(Re.s) " << statrelation.splits * 100 << "%"  << std::endl;
-        logFile << "(Better Mean Rank) " << statranking.pct * 100 << "%"  << std::endl;
-        logFile << "(Ra.s) " << statranking.splits * 100 << "%"  << std::endl;
-    }
-    if(bLogHybrid)
-    {
-        logFile << "(Geomean Win&Rank) " << hybridMagnified.pct * 100 << "%"  << std::endl;
-        //logFile << "(H.w) " << hybridMagnified.wins * 100 << "%"  << std::endl;
-        logFile << "(H.s) " << hybridMagnified.splits * 100 << "%"  << std::endl;
-        //logFile << "(H.l) " << hybridMagnified.loss * 100 << "%"  << std::endl;
-    }
+	logfileAppendPercentages(bLogMean,"M","M.w","M.s","M.l",statprob.statmean);
+	
+   	logfileAppendPercentage("Worst",statworse.pct);
+	logfileAppendPercentages(bLogWorse,0,"W.w","W.s","W.l",statworse);
 
+	logfileAppendPercentages(bLogRanking,"Better All-in",0,"Re.s",0,statrelation);
+	logfileAppendPercentages(bLogRanking,"Better Mean Rank",0,"Ra.s",0,statranking);
+	
+	logfileAppendPercentages(bLogHybrid,"Geomean Win&Rank",0,"H.s",0,hybridMagnified);
 #endif
 
 }
