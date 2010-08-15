@@ -37,20 +37,20 @@ public class HoldemGameRoundModel {
    native void ShowHoleCardsToBot(int mySeat, HoldemBotCardset myHoleCards);
 
    ///Betting
-   static native long CreateNewBettingRound(long ptr_holdemCPtr, Hand community);
-   static native int DeleteFinishBettingRound(long ptr_eventPtr);
+   native long CreateNewBettingRound(HoldemBotCardset community);
+   native int DeleteFinishBettingRound();
 
-   static native double GetBetDecision(long ptr_holdemCPtr, int playerNumber);
-   static native void PlayerMakesBetTo(long ptr_eventPtr, int playerNumber, double money);
-   static native int WhoIsNext_Betting(long ptr_eventPtr);
+   native double GetBetDecision(int playerNumber);
+   native void PlayerMakesBetTo(int playerNumber, double money);
+   native int WhoIsNext_Betting();
 
    ///Showdown
-   static native long CreateNewShowdown(long ptr_holdemCPtr, int calledPlayer, Hand final_community);
-   static native void DeleteFinishShowdown(long ptr_holdemCPtr, long ptr_eventPtr);
+   native long CreateNewShowdown(int calledPlayer, HoldemBotCardset final_community);
+   native void DeleteFinishShowdown(); // long ptr_holdemCPtr, long ptr_eventPtr
 
-   static native void PlayerShowsHand(long ptr_eventPtr, int playerNumber, Hand playerHand, Hand community);
-   static native void PlayerMucksHand(long ptr_eventPtr, int playerNumber);
-   static native int WhoIsNext_Showdown(long ptr_eventPtr);
+   native void PlayerShowsHand(int playerNumber, HoldemBotCardset playerHand, HoldemBotCardset community);
+   native void PlayerMucksHand(int playerNumber);
+   native int WhoIsNext_Showdown();
 
    //native void FinishHandRefreshPlayers(); //Can be used as an assertion to reconcile money between tables
    native void DeleteTableAndPlayers();
@@ -62,6 +62,26 @@ public class HoldemGameRoundModel {
       if( tableState.isFixedLimit() || ! tableState.isNoLimit() ) { throw new RuntimeException("Currently only no-limit is implemented..."); }
       if( tableState.isReverseBlinds() ) { throw new RuntimeException("Heads-up reverse blinds not yet implemented (should be easy)..."); }
 
+   }
+
+   private void GenerateTableSeatPlayers(char botType, int mySeat)
+   {
+      CreateNewTable(tableState.getNumSeats(), tableState.getSmallBlindSize(), tableState.getGameID());
+
+      for(int seatnum = 1;seatnum < tableState.getNumSeats();++seatnum)
+      {
+         PlayerInfo seatPlayer = tableState.getPlayer(seatnum);
+         double seatMoney = seatPlayer.getBankRoll();
+
+         if( seatnum == mySeat ) CreateNewStrategyBot("PokerAI: " + seatPlayer.getName(), seatMoney, botType);
+         else                    CreateNewHumanOpponent(seatPlayer.getName(), tableState.getPlayer(seatnum).getBankRoll());
+      }
+
+      InitializeNewTableState();
+
+      BeginNewHands(tableState.getSmallBlindSize(), tableState.getButtonSeat());
+
+      ShowHoleCardsToBot(mySeat, myHoleCards);
    }
 
    public HoldemGameRoundModel(GameInfo gi, char botType, int mySeat, HoldemBotCardset c)
@@ -82,30 +102,17 @@ public class HoldemGameRoundModel {
           4.2 ShowHoleCards to all bots who need to know their hand
        */
 
-
-      CreateNewTable(tableState.getNumSeats(), tableState.getSmallBlindSize(), tableState.getGameID());
-
-      for(int seatnum = 1;seatnum < tableState.getNumSeats();++seatnum)
-      {
-         PlayerInfo seatPlayer = tableState.getPlayer(seatnum);
-         double seatMoney = seatPlayer.getBankRoll();
-         
-         if( seatnum == mySeat ) CreateNewStrategyBot("PokerAI: " + seatPlayer.getName(), seatMoney, botType);
-         else                    CreateNewHumanOpponent(seatPlayer.getName(), tableState.getPlayer(seatnum).getBankRoll());
-      }
-
-      InitializeNewTableState();
-
-      BeginNewHands(tableState.getSmallBlindSize(), tableState.getButtonSeat());
-
-      ShowHoleCardsToBot(mySeat, myHoleCards);
+      GenerateTableSeatPlayers(botType,mySeat);
+      
 
    }
 
    @Override
    protected void finalize() throws Throwable {
         try {
-            DeleteTableAndPlayers();        // close open files
+            if( ptr_HoldemArena != 0 ) DeleteTableAndPlayers();
+            if( ptr_bettingEventPtr != 0 ) DeleteFinishBettingRound();
+            if( ptr_showdownEventPtr != 0 ) DeleteFinishShowdown();
         } finally {
             super.finalize();
         }
