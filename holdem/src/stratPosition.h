@@ -37,23 +37,7 @@
 
 class PositionalStrategy : virtual public PlayerStrategy
 {
-	private:
-		void logfileAppendPercentage(const char * label, const float64 vpct)
-		{
-			logFile << "(";
-			logFile << label;
-			logFile << ") " << vpct * 100 << "%"  << std::endl;
-		}
-		void logfileAppendPercentages(const bool bWrite, const char * label, const char * label_w, const char * label_s, const char * label_l, const StatResult vpcts)
-		{
-			if(bWrite)
-			{
-				if( label ) logfileAppendPercentage(label,vpcts.pct);
-				if( label_w ) logfileAppendPercentage(label,vpcts.wins);
-				if( label_s ) logfileAppendPercentage(label,vpcts.splits);
-				if( label_l ) logfileAppendPercentage(label,vpcts.loss);
-			}
-		}
+
 
     protected:
         template< typename T >
@@ -75,11 +59,8 @@ class PositionalStrategy : virtual public PlayerStrategy
         float64 maxShowdown;
 
 		OpponentStandard firstActionAwareness;
-        
-        bool bLogMean;
-        bool bLogRanking;
-        bool bLogWorse;
-        bool bLogHybrid;
+
+        struct PositionalStrategyLogOptions logOptions;
         #ifdef LOGPOSITION
         ofstream logFile;
         #endif
@@ -92,7 +73,13 @@ class PositionalStrategy : virtual public PlayerStrategy
         void SoftOpenLogFile();
         void ReleaseLogFile();
 
-		PositionalStrategy( bool bMean=false,bool bRanking=false,bool bWorse=true,bool bHybrid=false ) : PlayerStrategy(), detailPCT(0), bLogMean(bMean), bLogRanking(bRanking), bLogWorse(bWorse), bLogHybrid(bHybrid) {}
+        PositionalStrategy( bool bMean=false,bool bRanking=false,bool bWorse=true,bool bHybrid=false ) : PlayerStrategy(), detailPCT(0)
+        {
+            logOptions.bLogMean = bMean;
+            logOptions.bLogRanking = bRanking;
+            logOptions.bLogWorse = bWorse;
+            logOptions.bLogHybrid = bHybrid;
+        }
 		virtual ~PositionalStrategy();
 
 

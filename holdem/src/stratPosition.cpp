@@ -239,15 +239,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
 
 #ifdef LOGPOSITION
-	logfileAppendPercentages(bLogMean,"M","M.w","M.s","M.l",statprob.statmean);
-	
-   	logfileAppendPercentage("Worst",statworse.pct);
-	logfileAppendPercentages(bLogWorse,0,"W.w","W.s","W.l",statworse);
-
-	logfileAppendPercentages(bLogRanking,"Better All-in",0,"Re.s",0,statrelation);
-	logfileAppendPercentages(bLogRanking,"Better Mean Rank",0,"Ra.s",0,statranking);
-	
-	logfileAppendPercentages(bLogHybrid,"Geomean Win&Rank",0,"H.s",0,hybridMagnified);
+    statprob.logfileAppendStatResultProbabilities(logOptions, logFile);
 #endif
 
 }
@@ -375,7 +367,7 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
         #ifdef LOGPOSITION
             float64 xw;
             float64 foldgainVal = (targetModel->GetFoldGain(e, &xw));
-			float64 numfolds = xw * e->Pr_haveWinPCT_orbetter_continuous(statmean.pct);
+			float64 numfolds = xw * e->Pr_haveWinPCT_orbetter_continuous(statprob.statmean.pct);
 
             //logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
 
@@ -535,22 +527,22 @@ float64 ImproveGainStrategy::MakeBet()
 
     //const float64 targetImproveBy = detailPCT.avgDev / 2 / improvePure;
     const float64 targetWorsenBy = detailPCT.avgDev / 2 / (1 - improvePure);
-    const float64 impliedOddsGain = (statmean.pct + detailPCT.avgDev / 2) / statmean.pct;
+    const float64 impliedOddsGain = (statprob.statmean.pct + detailPCT.avgDev / 2) / statprob.statmean.pct;
     //const float64 oppInsuranceSmallBet = (1 - statmean.pct + targetWorsenBy) / (1 - statmean.pct);
     const float64 oppInsuranceBigBet = (improveMod>0)?(improveMod/2):0;
 
 
     const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHandInclAllIn() - 1);
-    StatResult statversus = (statrelation * (awayFromDrawingHands)) + (statranking * (1.0-awayFromDrawingHands));
+    StatResult statversus = (statprob.statrelation * (awayFromDrawingHands)) + (statprob.statranking * (1.0-awayFromDrawingHands));
     statversus.genPCT();
 
 
-    CallCumulationD &choicecumu = callcumu;
-    CallCumulationD &raisecumu = foldcumu;
+    CallCumulationD &choicecumu = statprob.callcumu;
+    CallCumulationD &raisecumu = statprob.foldcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statranking.pct, statmean.pct);
+    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.statmean.pct);
     ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
     ExactCallBluffD myDeterredCall_left(&tablestate, &choicecumu, &raisecumu);
     ExactCallBluffD myDeterredCall_right(&tablestate, &choicecumu, &raisecumu);
@@ -563,7 +555,7 @@ float64 ImproveGainStrategy::MakeBet()
 
     const float64 riskprice = myDeterredCall.RiskPrice();
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
-    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall,statworse.repeated,riskprice);
+    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, statprob.statworse.repeated,riskprice);
 
 
 	const float64 fullVersus = ViewTable().NumberStartedRoundInclAllIn();
@@ -580,7 +572,7 @@ float64 ImproveGainStrategy::MakeBet()
     StatResult left = statversus;
     StatResult base_right = statversus;//statmean;  (NormalBot used this setup.)
 
-    StatResult right = statworse;
+    StatResult right = statprob.statworse;
 
 
     if( bGamble >= 2 ) //Actionbot only
@@ -589,6 +581,7 @@ float64 ImproveGainStrategy::MakeBet()
 
         //Need scaling (This could adjust RiskPrice or the geom/algb equilibrium as needed)
         myDeterredCall_right.callingPlayers(newVersus);
+		// TODO(from jdhuang): This is to be implemented by https://sourceforge.net/p/pokerai/feature-requests/8/
     }
 
     //Unrelated note: TrapBot and ActionBot are based on statversus only
@@ -825,7 +818,7 @@ exit(1);
 
 
 
-    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel, &callcumu) : solveGainModel(&rolemodel, &callcumu);
+    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel, &(statprob.callcumu)) : solveGainModel(&rolemodel, &(statprob.callcumu));
 
 #endif
 
@@ -841,7 +834,7 @@ exit(1);
     const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? nextBet : bestBet;
 
     logFile << "\"riskprice\"... " << riskprice << "(based on scaler of " << geom_algb_scaler << ")" << endl;
-    logFile << "oppFoldChance is first " << statworse.repeated << ", when betting b_min=" << min_worst_scaler << endl;
+    logFile << "oppFoldChance is first " << statprob.statworse.repeated << ", when betting b_min=" << min_worst_scaler << endl;
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     choicemodel.f(betToCall);
@@ -912,15 +905,15 @@ float64 DeterredGainStrategy::MakeBet()
 
 
     const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHandInclAllIn() - 1);
-    StatResult statversus = (statrelation * (awayFromDrawingHands)) + (statranking * (1.0-awayFromDrawingHands));
+    StatResult statversus = (statprob.statrelation * (awayFromDrawingHands)) + (statprob.statranking * (1.0-awayFromDrawingHands));
     statversus.genPCT();
 
-    CallCumulationD &choicecumu = callcumu;
-    CallCumulationD &raisecumu = foldcumu;
+    CallCumulationD &choicecumu = statprob.callcumu;
+    CallCumulationD &raisecumu = statprob.foldcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statranking.pct, statmean.pct);
+    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.statmean.pct);
     ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
 #else
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
@@ -932,13 +925,13 @@ float64 DeterredGainStrategy::MakeBet()
 
     const float64 riskprice = myDeterredCall.RiskPrice();
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
-    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall,statworse.repeated,geom_algb_scaler);
+    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, statprob.statworse.repeated,geom_algb_scaler);
 
 
 //
     const float64 certainty = myFearControl.ActOrReact(betToCall,myBet,maxShowdown);
 
-    const float64 uncertainty = fabs( statranking.pct - statmean.pct );
+    const float64 uncertainty = fabs( statprob.statranking.pct - statprob.statmean.pct );
     const float64 timeLeft = (  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
     const float64 nonvolatilityFactor = 1 - timeLeft;
 
@@ -953,11 +946,11 @@ float64 DeterredGainStrategy::MakeBet()
     }
 
     StatResult left = statversus;
-	if( bGamble == 0 ) left = hybridMagnified;
+	if( bGamble == 0 ) left = statprob.hybridMagnified;
 
     GainModel geomModel(left,left,myDeterredCall);
 
-    StatResult right = statworse;
+    StatResult right = statprob.statworse;
     right.repeated = 1-certainty;
 
     left.repeated = certainty;
@@ -1060,7 +1053,7 @@ if( ViewTable().FutureRounds() < 2 )
 }
 */
 
-    const float64 bestBet = solveGainModel(&choicemodel, &callcumu);
+    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.callcumu));
 
 #ifdef LOGPOSITION
 
@@ -1077,7 +1070,7 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
         logFile << "\"riskprice\"... " << riskprice << "(based on scaler " << geom_algb_scaler << ")" << endl;
-        logFile << "oppFoldChance is first " << statworse.repeated << ", when betting b_min=" << min_worst_scaler << endl;
+        logFile << "oppFoldChance is first " << statprob.statworse.repeated << ", when betting b_min=" << min_worst_scaler << endl;
 
         logFile << "Geom("<< displaybet <<")=" << 1.0+geomModel.f(displaybet) << endl;
         logFile << "Algb("<< displaybet <<")=" << 1.0+algbModel.f(displaybet) << endl;

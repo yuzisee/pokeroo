@@ -33,7 +33,20 @@ void OpponentStandard::SeeNonBlindNonFold(const playernumber_t playersRemaining)
 }
 //&& (firstActionPlayers == 1) ) firstActionPlayers = ViewTable().NumberInHandInclAllIn();
 
-void StatResultProbabilities::Process_FoldCallMean(const Hand& holeCards, const CommunityPlus& onlyCommunity)
+void StatResultProbabilities::logfileAppendStatResultProbabilities(struct PositionalStrategyLogOptions const &logOptions, std::ostream &logFile)
+{
+    logfileAppendPercentages(logFile, logOptions.bLogMean,"M","M.w","M.s","M.l",statmean);
+
+    logfileAppendPercentage(logFile, "Worst",statworse.pct);
+    logfileAppendPercentages(logFile, logOptions.bLogWorse,0,"W.w","W.s","W.l",statworse);
+
+    logfileAppendPercentages(logFile, logOptions.bLogRanking,"Better All-in",0,"Re.s",0,statrelation);
+    logfileAppendPercentages(logFile, logOptions.bLogRanking,"Better Mean Rank",0,"Ra.s",0,statranking);
+
+    logfileAppendPercentages(logFile, logOptions.bLogHybrid,"Geomean Win&Rank",0,"H.s",0,hybridMagnified);
+}
+
+void StatResultProbabilities::Process_FoldCallMean(Hand const & holeCards, CommunityPlus const & onlyCommunity)
 {
 ///===============
 ///   statworse
