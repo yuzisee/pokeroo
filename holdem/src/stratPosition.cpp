@@ -580,9 +580,9 @@ float64 ImproveGainStrategy::MakeBet()
         myDeterredCall_left.SetImpliedFactor(impliedOddsGain);
 
         //Need scaling (This could adjust RiskPrice or the geom/algb equilibrium as needed)
-        myDeterredCall_right.callingPlayers(newVersus);
-		// TODO(from jdhuang): This is to be implemented by https://sourceforge.net/p/pokerai/feature-requests/8/
-    }
+        // myDeterredCall_right.callingPlayers(newVersus);
+		//NOTE: The above line is commented out. We no longer set eFolds and I'm not sure it did anything anyway. See revision b71953a3ab52 for more.
+	}
 
     //Unrelated note: TrapBot and ActionBot are based on statversus only
     if( bGamble >= 1 )

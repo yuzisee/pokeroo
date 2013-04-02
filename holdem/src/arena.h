@@ -432,9 +432,12 @@ class HoldemArena
 //===================================
 
 		playernumber_t NumberAtTable() const; //Number of players that have chips (eg. started the gamehand)
-		playercounts_t const NumberStartedRound() const; //Number of players that started the round
-		playercounts_t const NumberStartedRoundBetting() const; //Number of players that were present during the first non-blind bet of the round -- Intuition: the first player to bet "sets the tone" by "announcing" the apparent strength of the round based on how early they bet.
-		playercounts_t const NumberInHand() const;
+		playercounts_t const & NumberStartedRound() const; //Number of players that started the round
+		playercounts_t const & NumberAtFirstActionOfRound() const; //Number of players that were present during the first non-blind bet of the round -- Intuition: the first player to bet "sets the tone" by "announcing" the apparent strength of the round based on how early they bet.
+		                                            //Number of (established) players in the round after the first non-fold action.
+                                                    //In a non-blind round (ie. everything after preflop) NumberStartedRound is the same as NumberAtFirstActionOfRound
+
+		playercounts_t const & NumberInHand() const;
 
 		// ---  Begin deprecated
 		playernumber_t NumberStartedRoundInclAllIn() const //Number of players that started the round

@@ -216,23 +216,16 @@ float64 HoldemArena::GetAllChips() const
 }
 
 
-playernumber_t HoldemArena::NumberStartedRoundInclAllIn() const
+playercounts_t const & HoldemArena::NumberStartedRound() const
 {
-	return startRoundPlayers.total;
-}
-playernumber_t HoldemArena::NumberStartedRoundExclAllIn() const
-{
-	return startRoundPlayers.total - startRoundPlayers.allInsOnly;
+	return startRoundPlayers;
 }
 
-playernumber_t HoldemArena::NumberInHandInclAllIn() const
+playercounts_t const & HoldemArena::NumberInHand() const
 {
-	return playersInHand.total;
+	return playersInHand;
 }
-playernumber_t HoldemArena::NumberInHandExclAllIn() const
-{
-	return playersInHand.total - playersInHand.allInsOnly;
-}
+
 
 ///Number "remaining" at table
 playernumber_t HoldemArena::NumberAtTable() const
