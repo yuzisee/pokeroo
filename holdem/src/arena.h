@@ -226,6 +226,12 @@ struct playercounts
 	playernumber_t allInsOnly;
 
 	void ResetNewHands(playernumber_t numLive) { total = numLive; allInsOnly = 0; }
+
+    //Number of players (e.g. NumberInShowdown)
+	const playernumber_t inclAllIn() const { return total; }
+
+	//Number of players that could bet (e.g. NumberWithBetting)
+	const playernumber_t exclAllIn() const { return total - allInsOnly; }
 }
 playercounts_t
 ;
@@ -272,8 +278,9 @@ class HoldemArena
 
 		playercounts_t playersInHand;
 		playercounts_t startRoundPlayers;
+		playercounts_t playersActiveDuringFirstBetOfRound;
 
-        playernumber_t curHighBlind;
+        playernumber_t curHighBlind; // if not -1, this is the player who has bet the same amount as the current highest bet, but hasn't actually bet yet (i.e. this is the person in the big blind, who has only been called but hasn't taken their own action yet this round)
 
         BlindValues myBlinds;
 		float64 smallestChip;
@@ -425,10 +432,23 @@ class HoldemArena
 //===================================
 
 		playernumber_t NumberAtTable() const; //Number of players that have chips (eg. started the gamehand)
-		playernumber_t NumberStartedRoundInclAllIn() const; //Number of players that started the round
-		playernumber_t NumberStartedRoundExclAllIn() const; //Number of players that started the round and could bet
-		playernumber_t NumberInHandInclAllIn() const; //NumberInShowdown
-		playernumber_t NumberInHandExclAllIn() const; //NumberWithBetting
+		playercounts_t const NumberStartedRound() const; //Number of players that started the round
+		playercounts_t const NumberStartedRoundBetting() const; //Number of players that were present during the first non-blind bet of the round -- Intuition: the first player to bet "sets the tone" by "announcing" the apparent strength of the round based on how early they bet.
+		playercounts_t const NumberInHand() const;
+
+		// ---  Begin deprecated
+		playernumber_t NumberStartedRoundInclAllIn() const //Number of players that started the round
+		   { return NumberStartedRound().inclAllIn(); }
+
+		playernumber_t NumberStartedRoundExclAllIn() const //Number of players that started the round and could bet
+		   { return NumberStartedRound().exclAllIn(); }
+
+		playernumber_t NumberInHandInclAllIn() const //NumberInShowdown
+		   { return NumberInHand().inclAllIn(); }
+
+		playernumber_t NumberInHandExclAllIn() const //NumberWithBetting
+			{ return NumberInHand().exclAllIn(); }
+		// ---  End deprecated
 
 		playernumber_t GetTotalPlayers() const;
 

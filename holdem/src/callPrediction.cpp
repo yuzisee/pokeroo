@@ -1156,7 +1156,7 @@ float64 ExactCallD::dexf(const float64 betSize)
 
 float64 ExactCallBluffD::RiskPrice() const
 {//At what price is it always profitable to fold the average winning hand?
-	const int8 Ne_int = tableinfo->table->NumberStartedRound() - 1;
+	const int8 Ne_int = tableinfo->table->NumberStartedRound().inclAllIn() - 1; // This is the number of players you'd have to beat, regardless of who is betting.
     const float64 Ne = static_cast<float64>(Ne_int);
 
     const float64 estSacrifice = (tableinfo->table->GetPotSize() - tableinfo->alreadyBet());

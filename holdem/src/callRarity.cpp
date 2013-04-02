@@ -46,7 +46,7 @@ void StatResultProbabilities::logfileAppendStatResultProbabilities(struct Positi
     logfileAppendPercentages(logFile, logOptions.bLogHybrid,"Geomean Win&Rank",0,"H.s",0,hybridMagnified);
 }
 
-void StatResultProbabilities::Process_FoldCallMean(Hand const & holeCards, CommunityPlus const & onlyCommunity)
+void StatResultProbabilities::Process_FoldCallMean()
 {
 ///===============
 ///   statworse
