@@ -1,6 +1,7 @@
 
 #include "callRarity.h"
 #include "arenaSave.h"
+#include <cmath>
 
 //TODO: Is there a disparity between notActedPlayers using Excl and firstActionPlayers using Incl?
 
