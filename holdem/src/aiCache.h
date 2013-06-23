@@ -78,7 +78,9 @@ private:
     #endif
 
     static void initPath();
-
+    static bool readPathFromIni();
+    static bool readPathFromEnv();
+    
     static void serializeDistrShape(ofstream& dataf, const DistrShape& d);
     static void serializeStatResult(ofstream& dataf, const StatResult& d);
     static bool unserializeDistrShape(ifstream& dataf, DistrShape* d);
