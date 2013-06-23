@@ -111,7 +111,7 @@ class StatResult
 	float64 wins;
 	float64 splits;
 	float64 loss;
-	float64 repeated;
+	float64 repeated; // weight this result (e.g. for combining two StatResult objects)
 
 	float64 pct;
 

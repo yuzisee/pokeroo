@@ -146,6 +146,16 @@ class DealRemainder : public virtual DealableOrderedDeck
 
    		bool addendSameSuit[4][4];
 	public:
+    
+        /**
+         * DealCard()
+         *  Parameters:
+         *    Hand &h:
+         *      The hand we are looking to evaluate (by dealing out all remaining combinations)
+         *  Return Value:
+         *    The number of possible hands that were dealt.
+         *    (This function will call itself recursively and use this returned count to multiply-accumulate up the stack.)
+         */
         virtual float64 DealCard(Hand&);
 
 

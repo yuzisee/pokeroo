@@ -83,7 +83,9 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 ;
 
 
-
+/**
+ * Geometric mean of two StatResult objects.
+ */
 class GainModel : public virtual HoldemFunctionModel
 {
     private:
@@ -121,7 +123,8 @@ class GainModel : public virtual HoldemFunctionModel
         const StatResult & ViewShape() { return shape; }
 
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
-	GainModel(const StatResult s_acted, const StatResult s_nonacted,ExactCallD & c)
+	
+    GainModel(const StatResult s_acted, const StatResult s_nonacted,ExactCallD & c)
 		: ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),espec(c)
 		{
 		    combineStatResults(s_acted,s_nonacted);
@@ -192,6 +195,9 @@ class GainModel : public virtual HoldemFunctionModel
 }
 ;
 
+/**
+ * Algebraic mean of two StatResult objects.
+ */
 class GainModelNoRisk : public virtual GainModel
 {
     protected:
