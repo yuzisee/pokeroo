@@ -48,15 +48,38 @@ string StatsManager::baseDataPath = "";
 CommunityPlus StatsManager::dsCommunity;
 #endif
 
-void StatsManager::initPath()
+bool StatsManager::readPathFromIni()
 {
-	ifstream configfile(CONFIGFILENAME);
+    ifstream configfile(CONFIGFILENAME);
 
-	if( configfile.is_open() )
+    if( configfile.is_open() )
 	{
 		getline (configfile,baseDataPath);
 		configfile.close();
+        return true;
+    } else {
+        return false;
+    }
+}
 
+bool StatsManager::readPathFromEnv()
+{
+    char* pPath;
+    pPath = getenv ("HOLDEMDB_PATH");
+    if (pPath)
+    {
+        baseDataPath = string(pPath);
+        return true;
+    } else
+    {
+        return false;
+    }
+}
+
+void StatsManager::initPath()
+{
+	if (readPathFromIni() || readPathFromEnv())
+    {
 		size_t endpos = baseDataPath.find_last_not_of("/\r\n \t");
 
 		if( string::npos == endpos )
@@ -73,16 +96,8 @@ void StatsManager::initPath()
 		}
 	}else
 	{
-        char* pPath;
-        pPath = getenv ("HOLDEMDB_PATH");
-        if (pPath)
-        {
-            baseDataPath = string(pPath);
-        } else
-        {
-	        std::cerr << "Using default data path of ./ (Use a holdemdb.ini to specify your own path)" << std::endl;
-            baseDataPath = "./";
-        }
+        std::cerr << "Using default data path of ./ (Use a holdemdb.ini or HOLDEMDB_PATH env to specify your own path)" << std::endl;
+        baseDataPath = "./";
 	}
 }
 
