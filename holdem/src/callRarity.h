@@ -80,9 +80,9 @@ private:
         if(bWrite)
         {
             if( label ) logfileAppendPercentage(logFile, label,vpcts.pct);
-            if( label_w ) logfileAppendPercentage(logFile, label,vpcts.wins);
-            if( label_s ) logfileAppendPercentage(logFile, label,vpcts.splits);
-            if( label_l ) logfileAppendPercentage(logFile, label,vpcts.loss);
+            if( label_w ) logfileAppendPercentage(logFile, label_w,vpcts.wins);
+            if( label_s ) logfileAppendPercentage(logFile, label_s,vpcts.splits);
+            if( label_l ) logfileAppendPercentage(logFile, label_l,vpcts.loss);
         }
     }
 //protected:
