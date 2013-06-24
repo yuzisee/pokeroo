@@ -216,6 +216,11 @@ float64 HoldemArena::GetAllChips() const
 }
 
 
+playercounts_t const & HoldemArena::NumberAtFirstActionOfRound() const
+{
+	return playersActiveDuringFirstBetOfRound;
+}
+
 playercounts_t const & HoldemArena::NumberStartedRound() const
 {
 	return startRoundPlayers;

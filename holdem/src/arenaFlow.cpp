@@ -215,8 +215,12 @@ void HoldemArena::BeginNewHands(const BlindValues & roundBlindValues, const bool
 {
 	if( IsAlive(newDealer) ) curDealer = newDealer;
 
-	startRoundPlayers.ResetNewHands(livePlayers); //This is only until initRoundPlayers is called by PrepBettingRound
-
+    //This is only until initRoundPlayers is called by PrepBettingRound
+	{
+        startRoundPlayers.ResetNewHands(livePlayers);
+        playersActiveDuringFirstBetOfRound = startRoundPlayers; // Note: post-flop onward this should track startRoundPlayers; post-flop you can't really fold first (you would instead check)
+    }
+        
     myPot        = 0;
     prevRoundPot = 0;
     prevRoundFoldedPot = 0;

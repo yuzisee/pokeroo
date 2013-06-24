@@ -435,7 +435,15 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 				PlayerBet(withP) = betSize;
 			}
 
-			///Decide what to do with the bet
+    
+    
+    
+    
+    
+    
+			/// ===== Decide what to do with the bet =====
+    
+    
 			if( PlayerBet(withP) >= PlayerMoney(withP) - GetChipDenom()/2.0 )
 			{
 						randRem *= (PlayerLastBet(withP)+1.0) / PlayerBet(withP) ;
@@ -447,6 +455,8 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
 					//we must remember allIn as above: it's what we can win/person
 
 				allInsAppend(curIndex);
+                                
+                nonfoldActionOccurred();
 			}
 			else
 			{//Not all-in
@@ -464,9 +474,9 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
                     forcedBetSum += PlayerLastBet(withP);
 
 					PlayerBet(withP) = HoldemArena::FOLDED;
-
-					//NumberInHand always decrements with a fold.
-					--playersInHand;
+                    
+                    // Decrement playersInHand, etc.
+                    foldActionOccurred();
 				}else
 				{ //Not a fold.
 
@@ -489,9 +499,17 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
                             PlayerBet(withP) = highBet;
                         }
                     } //end if: raised less than MinRaise
+                    
+                    nonfoldActionOccurred();
 				}//end if: fold, else not fold
 			}//end if: all-in, else not all-in
 ///TODO Reraises need to say RERAISE.
+    
+    
+            // =====     =====
+    
+    
+    
 			broadcastCurrentMove(curIndex, PlayerBet(withP), PlayerBet(withP) - PlayerLastBet(withP), highBet, 0
 					, curIndex == bBlinds && comSize == 0 && curIndex == highestBetter,PlayerAllIn(withP) > 0);
 

@@ -261,7 +261,14 @@ class HoldemArena
 		char randomBotType(const char *key_null_termninated);
 
 
-		void initRoundPlayers() { startRoundPlayers = playersInHand; }
+        /**
+         * Called at the beginning of each betting round.
+         */
+        void initRoundPlayers() {
+            playersActiveDuringFirstBetOfRound = startRoundPlayers = NumberInHand();
+            curFirstNonfold = -1;
+        }
+
     protected:
 
         std::ostream& gamelog;
@@ -279,6 +286,8 @@ class HoldemArena
 		playercounts_t playersInHand;
 		playercounts_t startRoundPlayers;
 		playercounts_t playersActiveDuringFirstBetOfRound;
+    
+        playernumber_t curFirstNonfold; // if -1, all actions (other than posting blinds) so far have been fold. Otherwise, points to the index of the first player not to fold.
 
         playernumber_t curHighBlind; // if not -1, this is the player who has bet the same amount as the current highest bet, but hasn't actually bet yet (i.e. this is the person in the big blind, who has only been called but hasn't taken their own action yet this round)
 
@@ -316,7 +325,8 @@ class HoldemArena
 
         DeckLocation ExternalQueryCard(std::istream& s);
 
-
+        void foldActionOccurred();
+        void nonfoldActionOccurred();
 
 		void prepareRound(const CommunityPlus &, const int8);
 
@@ -394,7 +404,11 @@ class HoldemArena
         void ResetDRseed(); //You may reset the seed here (recommended at the beginning of each hand, before the first HoldemArenaBetting event
         float64 GetDRseed(); //You may get a seed at any time, but it is best to do so after PlayShowdown or when no more HoldemArenaBetting events will take place
 
+        /**
+         * Called just before hands are dealt.
+         */
 		void BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer = -1);
+    
         void DealAllHands(SerializeRandomDeck * tableDealer, std::ofstream & holecardsData);
 
 		void PrepBettingRound(bool bFirstBettingRound, uint8 otherBettingRounds);

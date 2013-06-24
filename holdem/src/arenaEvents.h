@@ -29,7 +29,10 @@
 #include "debug_flags.h"
 #include "arena.h"
 
-
+/**
+ * A "View" onto HoldemArena that can be passed around.
+ * This class contains const references to some fields of HoldemArena and mutable references to others.
+ */
 class HoldemArenaEventBase
 {//NO ASSIGNMENT OPERATOR
     protected:
@@ -76,7 +79,8 @@ class HoldemArenaEventBase
                                     myTable->broadcastCurrentMove(playerID,theBet,theIncrBet,toCall,bBlind,isBlindCheck,isAllIn);
                                 }
     void prepareRound(const CommunityPlus & community, const int8 comSize){ myTable->prepareRound(community, comSize); };
-
+    void foldActionOccurred() { myTable->foldActionOccurred(); }
+    void nonfoldActionOccurred() { myTable->nonfoldActionOccurred(); }
 
     playernumber_t GetTotalPlayers() const { return myTable->GetTotalPlayers(); }
     playernumber_t GetNumberInHandInclAllIn() const { return myTable->NumberInHandInclAllIn(); }
