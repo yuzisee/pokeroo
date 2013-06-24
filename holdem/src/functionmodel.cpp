@@ -40,12 +40,15 @@ void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_
 {
     const int8 totalEnemy = espec.tableinfo->handsToBeat(); //To beat
 
+    
 #ifdef DEBUGASSERT
-        if( espec.tableinfo->handsIn()-1 != totalEnemy || s_acted.repeated + s_nonacted.repeated != totalEnemy )
+         // Note: During forceRenormalize e_battle is espec.tableinfo->handsIn()-1
+        if(    espec.tableinfo->handsIn()-1 != totalEnemy  // For now, just verify that handsIn() == handsToBeat() + 1
+           // eventually, (presumably) handsToBeat will vary between numberStartedRound - 1 and numberAtFirstBet - 1 depending on who is calling this.
+           )
         {
-            std::cerr << "handsToBeat should be all the opposing players s_acted.repeated + s_nonacted.repeated!" << std::endl;
+            std::cerr << "handsToBeat should be all the opposing players" << std::endl;
             std::cerr << (int)(espec.tableinfo->handsIn()) << " in hand. ";
-            std::cerr << (s_acted.repeated) << " + " << s_nonacted.repeated << " repeated" << std::endl;
             exit(1);
         }
 #endif
