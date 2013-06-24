@@ -122,7 +122,9 @@ float64 MultiThresholdStrategy::MakeBet()
         else                        return defaultBetUp;
     }
 
-	const playernumber_t toBeat = ViewTable().NumberStartedRoundInclAllIn()-1;
+	const playernumber_t toBeat = ViewTable().NumberStartedRoundInclAllIn()-1; // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
+    
+
     float64 multiThreshhold = pow(w->mean,toBeat+redundancy); //subtract yourself
         #ifdef LOGTHRESHOLD
 

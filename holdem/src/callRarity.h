@@ -42,16 +42,18 @@ protected:
 	bool bMyActionOccurred;
 	bool bNonBlindNonFoldObserved;
 	playernumber_t firstActionPlayers;
+    playernumber_t roundStartPlayers;
 
 	/*
 	playernumber_t firstActionPlayers;
     playernumber_t notActedPlayers;
 	*/
 public:
-	void NewRound();
+	void NewRound(const playernumber_t playersStartingRound);
 	void SeeFold();
 	void SeeNonBlindNonFold(const playernumber_t playersRemaining);
-
+    
+    playernumber_t getNumPlayersAtFirstAction();
 }
 ;
 

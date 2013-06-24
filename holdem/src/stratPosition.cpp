@@ -117,7 +117,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 ///   Initialize counts
 ///=======================
 
-	firstActionAwareness.NewRound();
+	firstActionAwareness.NewRound(ViewTable().NumberInHand().total);
     
 ///======================
 ///   Initialize hand
@@ -558,7 +558,16 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, statprob.statworse.repeated,riskprice);
 
 
-	const float64 fullVersus = ViewTable().NumberStartedRoundInclAllIn();
+#ifdef DEBUGASSERT
+    if (ViewTable().NumberAtFirstActionOfRound().total != firstActionAwareness.getNumPlayersAtFirstAction()) {
+        std::cerr << "Table predicts number at first action = " << ViewTable().NumberAtFirstActionOfRound().total
+        << " & firstActionAwareness.firstActionPlayers=" << firstActionAwareness.getNumPlayersAtFirstAction() << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+    
+	const float64 fullVersus = ViewTable().NumberStartedRoundInclAllIn(); // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
+    
     const float64 peopleDrawing = (1 - improvePure) * (ViewTable().NumberInHandInclAllIn() - 1);//You probably don't have to beat the people who folded, especially if you are going to improve your hand
     const float64 newVersus = (fullVersus - peopleDrawing*(1-improvePure)*detailPCT.stdDev);
 

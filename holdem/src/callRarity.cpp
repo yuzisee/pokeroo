@@ -7,7 +7,7 @@
 
 const playernumber_t OpponentStandard::NO_FIRST_ACTION_PLAYER = 1;
 
-void OpponentStandard::NewRound()
+void OpponentStandard::NewRound(const playernumber_t playersStartingRound)
 {
 	//firstActionPlayers = 1;
     //notActedPlayers = ViewTable().NumberStartedRoundExclAllIn();
@@ -15,6 +15,7 @@ void OpponentStandard::NewRound()
 	bMyActionOccurred = false;
 	bNonBlindNonFoldObserved = false;
 	firstActionPlayers = NO_FIRST_ACTION_PLAYER;
+    roundStartPlayers = playersStartingRound;
 }
 
 void OpponentStandard::SeeFold()
@@ -33,6 +34,14 @@ void OpponentStandard::SeeNonBlindNonFold(const playernumber_t playersRemaining)
 	}
 }
 //&& (firstActionPlayers == 1) ) firstActionPlayers = ViewTable().NumberInHandInclAllIn();
+
+playernumber_t OpponentStandard::getNumPlayersAtFirstAction()
+{
+    if (firstActionPlayers == NO_FIRST_ACTION_PLAYER) {
+        return roundStartPlayers - foldsObserved;
+    }
+    return firstActionPlayers;
+}
 
 void StatResultProbabilities::logfileAppendStatResultProbabilities(struct PositionalStrategyLogOptions const &logOptions, std::ostream &logFile)
 {
