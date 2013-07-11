@@ -1,5 +1,15 @@
 The following is an audit of all the places we need to know the number of hands we are up against
 (either with or without all-ins, and started-round vs. in-hand vs. "at first action")
+
+
+Overall theme
+ + If we are betting all-in, we would prefer the larger player number (e.g. NumberAtTable vs. NumberFirstAction)
+ + If we are betting small, we can go with the smaller player number (e.g. NumberInHand vs. NumberFirstAction)
+
+For now, consider using NumberFirstAction regardless of bet size.            
+
+In particular, we're looking at a bot in late position with, say, only one opponent, folding to any push.
+
 ===== ExpectedCallD::handsToBeat()
 
  !! NOTE! In all cases, handsToBeat() is one less than the number of players we care about, since it subtracts yourself. But when using NumberAnFirstAction() we may not subtract one, since the first action suggests that that action can beat that many players. Plus, if they can't they are over betting their own strength anyway
@@ -18,10 +28,12 @@ The following is an audit of all the places we need to know the number of hands 
 
   That's fine. When should it use one versus use the other?
 
-  ** Revisit later.
+  ** See below, discussion about ``opponents``
+
 
 ==   GainModel::combineStatResults()
 This implements GainModel's constructor and converts from a single StatResult into a "StatResult of winning" table-wide.
+This affects the bot's own decision making about how the showdown will play out and not the bots prediction of how opponents are likely to respond.
 
   ** This is a candidate for requiring NumberStartedRound instead of handsToBeat()
      In the shipped code (e.g. revision 436fcd512b1560d8ec2474f322a6c2902645dbd3) this is NumberInRound() which was apparently not working correctly?
@@ -34,11 +46,75 @@ More or less it should represent the number of people at the table who
  + can potentially claim the pot
  + etc.
 Some thoughts
-If you're heads up, it wants to apply a factor of 0.5 -- 
+mPlayers = (nPlayers - 1)/nPlayers
+If you're heads up, nPlayers / mPlayers := 1 and the pot-less-raise has to already have sunk the max showdown for one person
+If you're 3-handed, nPlayers / mPlayers := 2 and the pot-less-raise has to already have sunk the max showdown for two people
+
+So basically this is all live hands to determine how many ways to split the sunk pot relative to an all-in showdown.
+
+ ** Fix this bug and clean up the function  --> See below
+
+ // LOOK ! ! ! ! ! ! !
+ // There's a bug here:
+ // If raiseOver is slightly less than limit, actOrReact can return greater than 1.0
+    const float64 actOrReact = (raiseOver > limit) ? mPlayers : (raiseOver / limit);
+    return actOrReact / mPlayers;
+  // Actually, we want
+    const float64 uncappedActOrReact = (raiseOver / limit) / mPlayers;
+    const float actOrReact = (uncappedActOrReact > 1.0) ? 1.0 : uncappedActOrReact;
+
+
+ Moreover,
+    raiseOver = (tablepot - callb) / tableinfo->handsIn();
+              === . . .  /  nPlayers  /* Since {tableinfo->handsIn() === tableinfo->handsToBeat() + 1} */
 
 
 =====  ExpectedCallD::handsDealt()
+
+==  ExpectedCallD::RiskLoss()
+const int8 N = handsDealt();
+
+
+==  ExactCallD::facedOdds_call_Geom and its derivative dfacedOdds_dbetSize_Geom
+    Used by ExactCallD to determine E[callers] (and thus Pr{play})
+
+==  ExactCallD::facedOdds_raise_Geom and its derivative dfacedOdds_dpot_GeomDEXF
+    Similarly, ``opponent`` is used by ExactCallD to predict whether an opponent will profit more at a higher bet size based on his hand strength.
+    ``N`` is used to determine how often the blinds come back
+
+==  ExactCallD::facedOdds_Algb and its derivative facedOddsND_Algb
+    Currently, N = NumberAtTable(), the number of players who still have chips.
+               opponents = handsToBeat(), the number of players who haven't folded yet.
+
+    opponents is used by ExactCallBluffD to determine Pr{opponentFold} based on the cutoff w_mean and w_rank it would have to have in order to profit by playing.
+    N is used to determine how often the blinds come back to you
+
+    If we were to use a larger value for opponents (since NumberAtTable is the largest) opponents would require a higher w_mean & w_rank to still profit by playing and thus Pr{opponentFold} would be less likely, and thus "Bots will be more able to believe they can capture profit by pushing".
+
+  **   Presumably we could still switch this to NumberStartedRound() because that's actually the number of hands you have to beat in order to win against the represented hand. This is consistent with NumberStartedRound(). However, as-is, NumberInHand() may be just fine already.
+
+===== Discussion:
+  If the pre-flop goes raise, fold, fold, fold, fold, fold, re-raise, and now you're two-handed, should we expect opponents who have chosen to play base their chance to win on NumberStartedRound() or NumberInHand()?
+   + Could we push them out? Probably less easily since they e.g. initiated the bet with more opponents still there. Assuming they have that hand strength, we would compute the w_mean & w_rank cutoffs.
+  If four players see the river and it goes check, check, raise, fold, fold and now it's two-handed, should we expect opponents who have chosen to play base their internal win chance on --
+   + Basically, we use the information of when you bet to improve our estimate of your hand strength or how it can be expressed.
+
 =====  ExpectedCallD::handsIn()
+ This is just handsToBeat() + 1
+ Let's see where it's used.
+
+==  OpponentFoldWait::ActOrReact
+ See above discussion about OpponentFoldWait::ActOrReact
+
+==  GainModel::forceRenormalize()
+  const int8 & e_battle = espec.tableinfo->handsIn()-1; //Number we can split with
+
+  Seems fine. The number we can split with is a hard value.
+
+==  ExpectedCallD::RiskLoss's FG.waitLength.amountSacrificeVoluntary = (table->GetPotSize() - stagnantPot() - rpAlreadyBet)/(handsIn()-1);
+    and the derivative of this value.
+
+    Anyway, it seems fine. It's not about hand strength, it's just about how many times you'd have to fold before you can win
 
 =====  HoldemArena::NumberStartedRoundInclAllIn()
 =====  HoldemArena::NumberStartedRoundExclAllIn()
