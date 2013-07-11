@@ -751,7 +751,8 @@ int main(int argc, char* argv[])
                     #endif
                     exit(0);
                     break;
-                case 'c':
+                    
+                case 'c': // For debugging, set two arbitrary hand values and compute the CallStats.
                     CallCumulationD foldcumu;
                     CommunityPlus onlyCommunity;
                     CommunityPlus withCommunity;

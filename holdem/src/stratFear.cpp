@@ -20,12 +20,15 @@
 
 #include "stratFear.h"
 
+// ?? TODO??? --> This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
+
+
 float64 OpponentFoldWait::ActOrReact(float64 callb, float64 lastbet, float64 limit) const //Returns 0 for full act, returns 1 for full react
 {
 //One must consider the possibilities:
-//1. [ACT] The player betting has been folding all this time, and has hit his/her hand ALREADY
-//2. [ACT] The opponents have not bet yet, and would be the reactors of this hand.
-//3. [REACT] The pot is large from previous rounds, opponents can't fold easily
+//1. [  ACT a.k.a. 0.0] The player betting has been folding all this time, and has hit his/her hand ALREADY
+//2. [  ACT a.k.a. 0.0] The opponents have not bet yet, and would be the reactors of this hand.
+//3. [REACT a.k.a. 1.0] The pot is large from previous rounds, opponents can't fold easily
 
 	const float64 nPlayers = 1+tableinfo->handsToBeat();
 	const float64 mPlayers = 1 - (1 / nPlayers); //We need to scale actOrReact based on how many players are at the table...?
@@ -47,6 +50,7 @@ float64 OpponentFoldWait::FearStartingBet(ExactCallBluffD & oppFoldEst, float64 
 {
     ScalarPWinFunction searchFoldPcts(oppFoldEst, tableinfo->chipDenom()/2.0, oppFoldStartingPct);
     return searchFoldPcts.FindZero(0.0,maxScaler);
+    // Solve for the bet that brings Pr{opponentFold} to oppFoldStartingPct
 }
 
 

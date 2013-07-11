@@ -250,11 +250,11 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
                 dataserial.close();
             }
         }else
-	{
-		#ifdef DEBUGASSERT
-		std::cerr << "Cacheable " << datafilename << " being regenereated" << endl;
-		#endif
-    	}
+        {
+            #ifdef DEBUGASSERT
+            std::cerr << "Cacheable " << datafilename << " being regenereated" << endl;
+            #endif
+        }
     }
 
     WinStats ds(withCommunity, onlyCommunity,n);
@@ -268,6 +268,7 @@ std::streamsize old_precision = std::cout.precision();
 std::cout.precision(17);
 std::cout << endl << "totalCount: " <<
 #endif
+    // === Generate everything! ===
     myStatBuilder.AnalyzeComplete(&ds);
 #ifdef QUERYTOTALS
 std::cout << endl;
@@ -553,20 +554,25 @@ int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
     //cout << "%" << oppPocketName << "\t" << (int)(dOcc) << "\t\t(" << myPocketName << ")" <<  endl;
 
     CommunityPlus emptyHand;
+    
+    // === Write the result into myWins[statGroup] ... ===
     StatResult * entryTarget = myWins+statGroup;
     DistrShape pctShape(0);
     DistrShape wlShape(0);
     StatsManager::Query( 0, &pctShape, &wlShape, oppTempStrength, emptyHand, 0);
     *entryTarget = GainModel::ComposeBreakdown(pctShape.mean,wlShape.mean);
     entryTarget->repeated = dOcc;
+    
+    // === ... and then increment statGroup ===
     ++statGroup;
 
     return dOcc;
 }
 
+
 void PreflopCallStats::AutoPopulate()
 {
-    statGroup = 0;
+    statGroup = 0; // Initialize statGroup here. Each call to popSet() will increment it.
 
 
     OrderedDeck myPockets;
@@ -574,19 +580,24 @@ void PreflopCallStats::AutoPopulate()
         #ifdef SUPERPROGRESSUPDATE
             std::cout << "Analyzing...                    \r" << flush;
         #endif
+    
+    // for (carda : all 13 cards of one suit)
     for(int8 carda=0;carda<52;carda+=4)
     {
         int8 cardx = carda+1;
+        // INVARIANT: (carda,cardx) is now the pocket pair
 
         popSet(carda,cardx);
 
+        // for (cards : all cards with the same suit as `carda` and value less than `carda`)
+        // ...  simultaneously, `cardx` is the offsuit equivalent of `cards`
         for( int8 cards=carda;cards>0;)
         {
             cards -= 4;
             cardx -= 4;
 
-            popSet(carda,cardx);
-            popSet(carda,cards);
+            popSet(carda,cardx); // (carda,cardx) is offsuit
+            popSet(carda,cards); // (carda,cards) is suited
         }
     }
     statCount = statGroup;

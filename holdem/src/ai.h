@@ -123,7 +123,15 @@ protected:
 public:
 
     //double myCallPct(double); //give pct of HIS percieved bankroll and returns chance to call
+    
+    /**
+     * Analyze()
+     * 
+     * Discussion:
+     *   Once this->myWins has been populated with raw sampled outcomes, this will reorder and accumulate them into a cumulative histogram for O(log(n)) lookup.
+     */
     virtual void Analyze();
+    
     virtual void DropCard(const DeckLocation);
     virtual StatRequest NewCard(const DeckLocation, const float64 occ);
 

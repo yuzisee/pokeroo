@@ -148,7 +148,6 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
 	statprob.statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 
-///INVARIANT: statprob.statmean, statprob.callcumu, statprob.foldcumu are all initialized.
 	
 ///====================================
 ///   Compute Relevant Probabilities
@@ -156,6 +155,8 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
 	statprob.Process_FoldCallMean();
 		
+///INVARIANT: statprob.statmean, statprob.callcumu, statprob.foldcumu are now all initialized.
+    
 ///=============================
 ///   Log Stats/Probabilities
 ///=============================
@@ -553,7 +554,7 @@ float64 ImproveGainStrategy::MakeBet()
     OpponentFoldWait myFearControl(&tablestate);
 
 
-    const float64 riskprice = myDeterredCall.RiskPrice();
+    const float64 riskprice = myDeterredCall.RiskPrice(); // If you repeatedly bet this price in this situation, even the average best hand on the table is worth throwing down and you'll only get caught by really strong hands.
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
     const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, statprob.statworse.repeated,riskprice);
 
@@ -904,7 +905,14 @@ exit(1);
 ///   DangerBot, SpaceBot, ComBot
 ///=================================
 
+// 0 : ComBot    --  hybridMagnified -> statworse
+// 1 : DangerBot --  statversus --> statworse
+// 2 : SpaceBot  --  statversus --> statworse
+//Here, statversus goes from: (2 players left in hand) statrelation  --> (all players left in hand) statranking
+
 ///DeterredGainStrategy is still ActOrReact driven. (By comparison, ImproveGainStrategy is not)
+// Both ComBot and DangerBot adjust ImpliedFactor heuristically based on whether or not there are still interesting bets to be made this hand (in current & future rounds)
+// SpaceBot is plain vanilla.
 
 float64 DeterredGainStrategy::MakeBet()
 {

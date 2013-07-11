@@ -66,6 +66,7 @@ void StatResultProbabilities::Process_FoldCallMean()
 ///==================
 ///   statrelation
 ///==================
+    // Against what fraction of opponents will you have the better hand?
 	const float64 rarityA3 = foldcumu.Pr_haveWinPCT_orbetter(0.5);
 
 //You can tie in rank if and only if you tie in mean
@@ -77,6 +78,7 @@ void StatResultProbabilities::Process_FoldCallMean()
 ///==================
 ///   statranking
 ///==================
+    // How often do you get a hand this good?
     const float64 rarity3 = callcumu.Pr_haveWinPCT_orbetter(statmean.pct);
 
     statranking.wins = 1 - rarity3;

@@ -33,6 +33,17 @@
 
 typedef bool SuitsUsedBool[13][4];
 
+/**
+// A deck of 52 cards.
+// For each suit, we use a bitfield-type structure to keep track of which card is still in the deck and which are no longer present.
+// The suit order is stored in a doubly-linked list.
+ *
+ * The main value of this class is that you can sort the suits.
+ * The suit with the highest dealt card goes at the front.
+ *
+ * Then, in DealableOrderedDeck we can leverage symmetry as long as suits are always descending.
+ * That is, we don't have to deal higher valued cards in later suits because that would have already been covered when the higher value card was dealt from the previous suit.
+ */
 class OrderedDeck
 {
 	protected:

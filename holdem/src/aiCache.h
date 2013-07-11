@@ -110,7 +110,13 @@ public:
 }
 ;
 
-
+/**
+ * An implementation of CallStats that uses StatsManager::Query() to lookup its values from the "opening book" database.
+ * In contrast, a typical CallStats would compute its values at runtime.
+ *
+ * On a typical machine you'll want to use this for pre-flop because it is too slow to compute dynamically.
+ * Furthermore, StatsManager::Query is designed to ship with an "opening book" database for the 169 the pre-flop hole cards anyway.
+ */
 class PreflopCallStats : public virtual CallStats
 {
     private:
@@ -129,11 +135,15 @@ class PreflopCallStats : public virtual CallStats
                 initPC();
             }
 
+    /** Call popset() once for each of the 169 proflop hole card combinations */
     virtual void AutoPopulate();
 }
 ;
 
-
+/**
+ * NamePockets() will return a unique name for your pocket cards if there are exactly two cards dealt.
+ * If there are more than two cards dealt, the behaviour is undefined probably (or crashes)
+ */
 class NamedTriviaDeck : public TriviaDeck
 {
     public:

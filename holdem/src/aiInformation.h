@@ -131,6 +131,9 @@ public:
 }
 ;
 
+/**
+ * This is an OrderedDeck with slightly expanded functionality.
+ */
 class TriviaDeck : public OrderedDeck
 {
     private:

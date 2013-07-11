@@ -92,9 +92,11 @@ private:
 public:
 
 ///Single Opponent Probabilities
-    StatResult statworse;
-    StatResult statranking;
-    StatResult statrelation;
+    StatResult statworse;   // Probability of winning against the worst-case opposing hand
+    
+    StatResult statrelation; // Against what fraction of opponents will you have the better hand?
+    StatResult statranking; // How often do you get a hand this good?
+    // The distinction here is that some hands with typically high change of winning in general may do poorly against the particular hand you're holding, and vice versa.
 
 	StatResult hybridMagnified;
 
@@ -102,9 +104,9 @@ public:
 
 public:
 ///Core Probabilities
-    CallCumulationD foldcumu;
-    CallCumulationD callcumu;
-	StatResult statmean;
+    CallCumulationD foldcumu; // CallStats (probabiliy of winning against each possible opponent hand)
+    CallCumulationD callcumu; // CommunityCallStats (each hole cards' inherent probability of winning)
+	StatResult statmean; // (Your hole cards' current inherent probability of winning)
 	
 ///Initialize foldcumu, callcumu, and statmean, and then call Process_FoldCallMean().
 	void Process_FoldCallMean();

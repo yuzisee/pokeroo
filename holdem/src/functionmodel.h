@@ -84,7 +84,10 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 
 
 /**
- * Geometric mean of two StatResult objects.
+ * Convert a particular StatResult into the odds of winning at the table.
+ * Supported features:
+ *  + This class will automatically determine the number of hands at the table you would have to beat in order to win, via the ExactCallD's tableInfo
+ *  + Pass in two different StatResult objects and we'll use the geometric mean of them instead.
  */
 class GainModel : public virtual HoldemFunctionModel
 {
@@ -122,6 +125,25 @@ class GainModel : public virtual HoldemFunctionModel
 
         const StatResult & ViewShape() { return shape; }
 
+    /**
+     * ComposeBreakdown()
+     * 
+     *  Discussion:
+     *    Helper function for constructing a StatResult object.
+     *
+     *  Return Value:
+     *    A StatResult with .wins .splits .loss & .pct populated based on a wl ratio and a raw expectation (percentage)
+     *
+     *  Parameters:
+     *    pct:
+     *      Raw expected value (outcome) as a percentage.
+     *      Examples:
+     *        If you have .wins=50%, .splits=0%, and .loss=50%, you would have pct=0.5
+     *        If you have .wins=10%, .splits=40%, and .loss=10%, you would have pct=0.5 as well.
+     *      Thus, we also need the wl parameter to disambiguate.
+     *    wl:
+     *      Ratio "wins / (wins + loss)", or 0.0 if all-split
+     */
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 	
     GainModel(const StatResult s_acted, const StatResult s_nonacted,ExactCallD & c)

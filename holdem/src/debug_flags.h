@@ -33,6 +33,12 @@
 /* Mode Flags (Depends on NO_LOG_FILES) */
 #define LOGPOSITION
 #undef WINRELEASE
+
+// If you define WINRELEASE, we will have one human ConsoleStrategy seat so that you can play against the bots.
+// This typically ships with a script for launching, saving, and restoring state of the game as well as configuring the name of the player
+
+// If you don't define WINRELEASE, the default behaviour is to have the bots play against themselves, while tossing in a few MultiThresholdStrategies
+
 /**********************************/
 #undef DEBUG_GAIN
 

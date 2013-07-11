@@ -1,0 +1,56 @@
+The following is an audit of all the places we need to know the number of hands we are up against
+(either with or without all-ins, and started-round vs. in-hand vs. "at first action")
+===== ExpectedCallD::handsToBeat()
+
+ !! NOTE! In all cases, handsToBeat() is one less than the number of players we care about, since it subtracts yourself. But when using NumberAnFirstAction() we may not subtract one, since the first action suggests that that action can beat that many players. Plus, if they can't they are over betting their own strength anyway
+
+==   ExactCallD::query()  ///   Pr{call} and Pr{raiseby}
+                         // There are different flavours of this:
+                         //  + They know what hand you have
+                         //    (Their win pct is based on foldcumu a.k.a. CallStats)
+                         //  + They don't know what hand you have
+                         //    (Their win pct is based on callcumu a.k.a. CommunityCallStats)
+                         // Then, Pr{call} and Pr{raise by} are just a count of how many of their hands have positive utility against your bet -- with some tweaks for Pr{call} vs. E[callers] and Pr{raise by} vs. Pr{call}, etc.
+
+  So far query() has a single
+    const float64 opponents = tableinfo->handsToBeat();
+  that is used everywhere.
+
+  That's fine. When should it use one versus use the other?
+
+  ** Revisit later.
+
+==   GainModel::combineStatResults()
+This implements GainModel's constructor and converts from a single StatResult into a "StatResult of winning" table-wide.
+
+  ** This is a candidate for requiring NumberStartedRound instead of handsToBeat()
+     In the shipped code (e.g. revision 436fcd512b1560d8ec2474f322a6c2902645dbd3) this is NumberInRound() which was apparently not working correctly?
+    And then something weird happens in revision 6d424a16d618ebbcf439ec193b1d3114a1f2c757 where the commit message claims that there was a bug fix, but I'm not so sure.
+
+==  OpponentFoldWait::ActOrReact()
+Here, it's used heuristically only, so it's probably not that important.
+More or less it should represent the number of people at the table who
+ + could have contributed to the pot
+ + can potentially claim the pot
+ + etc.
+Some thoughts
+If you're heads up, it wants to apply a factor of 0.5 -- 
+
+
+=====  ExpectedCallD::handsDealt()
+=====  ExpectedCallD::handsIn()
+
+=====  HoldemArena::NumberStartedRoundInclAllIn()
+=====  HoldemArena::NumberStartedRoundExclAllIn()
+=====  HoldemArena::NumberInHandInclAllIn()
+=====  HoldemArena::NumberInHandExclAllIn()
+
+
+===== Note:
+In ImproveGainStrategy::MakeBet()
+
+    if (ViewTable().NumberAtFirstActionOfRound().total != firstActionAwareness.getNumPlayersAtFirstAction()) {
+        std::cerr << "Table predicts number at first action = " << ViewTable().NumberAtFirstActionOfRound().total
+        << " & firstActionAwareness.firstActionPlayers=" << firstActionAwareness.getNumPlayersAtFirstAction() << std::endl;
+        exit(1);
+    }
