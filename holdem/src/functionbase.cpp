@@ -436,7 +436,10 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 
         yn = f(xn);
 
-        if( xb == xn )
+        // If x1 and x2 differ by quantum/2, then a golden section search would be
+        //    quantum/2/phi/phi
+        //  = quantum / 2 / (1 + sqrt(5))^2 * 2^2 = quantum * 2 / (1 + sqrt(5))^2 = quantum * 2 / (6 + 2 * sqrt(5)) = quantum / (3 + sqrt(5))
+        if( fabs(xb - xn) < quantum / (3.0 + sqrt(5.0)) )
         {
             x1 = xb;
             x2 = xb;
