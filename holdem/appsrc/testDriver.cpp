@@ -31,7 +31,6 @@
 #include <ctime>
 #include <algorithm>
 #include <string.h>
-//#include <direct.h>
 
 
 #define AUTOEXTRATOKEN "restore.txt"
@@ -47,6 +46,16 @@
 #define DEBUGSITUATION
 //#define SUPERINTOLOG
 
+
+
+#include <stdio.h>  /* defines FILENAME_MAX */
+#ifdef WINDOWS
+#include <direct.h>
+#define GetCwd _getcwd
+#else
+#include <unistd.h>
+#define GetCwd getcwd
+#endif
 
 
 using std::cout;
@@ -698,7 +707,15 @@ static void superGame(char headsUp = 0)
 
 int main(int argc, char* argv[])
 {
+    
+    char cCurrentPath[FILENAME_MAX];
+    cCurrentPath[0] = ':';
+    cCurrentPath[1] = '\0';
+    
+    GetCwd(cCurrentPath, sizeof(cCurrentPath));
 
+    std::cerr << "Current working directory is " << cCurrentPath << std::endl;
+    
 #ifdef WINRELEASE
 	cout << "Final Table: 9 Players" << endl;
 
