@@ -590,7 +590,7 @@ float64 ImproveGainStrategy::MakeBet()
         myDeterredCall_left.SetImpliedFactor(impliedOddsGain);
 
         //Need scaling (This could adjust RiskPrice or the geom/algb equilibrium as needed)
-        // myDeterredCall_right.callingPlayers(newVersus);
+        //myDeterredCall_right.callingPlayers(newVersus);
 		//NOTE: The above line is commented out. We no longer set eFolds and I'm not sure it did anything anyway. See revision b71953a3ab52 for more.
 	}
 

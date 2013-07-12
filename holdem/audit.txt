@@ -117,8 +117,28 @@ const int8 N = handsDealt();
     Anyway, it seems fine. It's not about hand strength, it's just about how many times you'd have to fold before you can win
 
 =====  HoldemArena::NumberStartedRoundInclAllIn()
+
+== ImproveGainStrategy::MakeBet's fullVersus and newVersus 
+This is just heuristic and not even used anyway.
+It's limited by callingPlayers which should be up to NumberInHand(), ultimately.
+But ignore for now.
+
+== MultiThresholdStrategy::MakeBet()
+
+ ** This one is fine. We could go with NumberAtFirstAction() if we wanted here too.
+
+Again, it's roughly heuristic.
+
 =====  HoldemArena::NumberStartedRoundExclAllIn()
 =====  HoldemArena::NumberInHandInclAllIn()
+
+== ExactCallBluffD::query's float64 countMayFold
+Since this a counter that iterates over the number of players that could actually fold, it needs to be NumberInHand.
+
+== ImproveGainStrategy & DeterredGainStrategy's MakeBet
+  const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHandInclAllIn() - 1);
+In general this is a scaling factor that slides between heads-up and not-heads up, so it probably doesn't need to be a value that is fixed during the round. 
+
 =====  HoldemArena::NumberInHandExclAllIn()
 
 
