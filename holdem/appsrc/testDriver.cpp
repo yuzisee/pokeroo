@@ -705,6 +705,8 @@ static void superGame(char headsUp = 0)
     }
 }
 
+
+// For standard debugging and regression testing, undef WINRELEASE set env['HOLDEMDB_PATH'] and then run with no arguments and we'll fall through to testPlay(1) below
 int main(int argc, char* argv[])
 {
     
