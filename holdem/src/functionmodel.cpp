@@ -57,8 +57,8 @@ void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_
 
 
     ///Use f_battle instead of e_battle, convert to equivelant totalEnemy
-        p_cl =  1 - cleangeomean(1 - s_acted.loss,s_acted.repeated , 1 - s_nonacted.loss,s_nonacted.repeated);
-        p_cw = cleangeomean(s_acted.wins,s_acted.repeated , s_nonacted.wins,s_nonacted.repeated);
+        p_cl =  1 - cleangeomeanpow(1 - s_acted.loss,s_acted.repeated , 1 - s_nonacted.loss,s_nonacted.repeated, f_battle);
+        p_cw = cleangeomeanpow(s_acted.wins,s_acted.repeated , s_nonacted.wins,s_nonacted.repeated, f_battle);
 
 
         #ifdef DEBUG_TRACE_SEARCH
@@ -85,7 +85,7 @@ void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_
 
 void GainModel::forceRenormalize()
 {
-        const int8 & e_battle = espec.tableinfo->handsIn()-1; //Number we can split with
+        const int8 e_battle = espec.tableinfo->handsIn()-1; //Number we can split with
 
         shape.forceRenormalize(); ///Normalize just in case; total possibility must add up to 1
 

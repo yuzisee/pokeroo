@@ -116,9 +116,16 @@ class GainModel : public virtual HoldemFunctionModel
             return pow(b,x);
         }
 
-        static inline float64 cleangeomean(float64 b1, float64 x1, float64 b2, float64 x2)
+        /*
+         * Raise s to s^f_battle, where s is the weighted geomean of b1 (weight x1) and b2 (weight x2)
+         */
+        static inline float64 cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle)
         {
-            return cleanpow( cleanpow(b1,x1)*cleanpow(b2,x2) , 1/(x1+x2) );
+            const float64 w1 = x1 * f_battle / (x1+x2);
+            const float64 w2 = x2 * f_battle / (x1+x2);
+            return cleanpow(b1, w1)*cleanpow(b2,w2);
+
+            //return cleanpow( cleanpow(b1,x1)*cleanpow(b2,x2) , f_battle/(x1+x2) );
         }
 
 
