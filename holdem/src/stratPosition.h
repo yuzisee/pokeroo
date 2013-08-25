@@ -58,8 +58,6 @@ class PositionalStrategy : virtual public PlayerStrategy
         float64 myBet;
         float64 maxShowdown;
 
-		OpponentStandard firstActionAwareness;
-
         struct PositionalStrategyLogOptions logOptions;
         #ifdef LOGPOSITION
         ofstream logFile;

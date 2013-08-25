@@ -32,31 +32,6 @@
   #include <iostream>
 #endif
 
-
-class OpponentStandard
-{
-private:
-	static const playernumber_t NO_FIRST_ACTION_PLAYER;
-protected:
-	playernumber_t foldsObserved;
-	bool bMyActionOccurred;
-	bool bNonBlindNonFoldObserved;
-	playernumber_t firstActionPlayers;
-    playernumber_t roundStartPlayers;
-
-	/*
-	playernumber_t firstActionPlayers;
-    playernumber_t notActedPlayers;
-	*/
-public:
-	void NewRound(const playernumber_t playersStartingRound);
-	void SeeFold();
-	void SeeNonBlindNonFold(const playernumber_t playersRemaining);
-    
-    playernumber_t getNumPlayersAtFirstAction();
-}
-;
-
 struct PositionalStrategyLogOptions
 {
     bool bLogMean;

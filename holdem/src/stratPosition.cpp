@@ -113,11 +113,6 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
         }
     #endif
 
-///=======================
-///   Initialize counts
-///=======================
-
-	firstActionAwareness.NewRound(ViewTable().NumberInHand().total);
     
 ///======================
 ///   Initialize hand
@@ -248,12 +243,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
 void PositionalStrategy::SeeAction(const HoldemAction& a)
 {
-    if( !a.IsPostBlind() )
-    {
-		if( !(a.IsFold()) ) firstActionAwareness.SeeNonBlindNonFold(ViewTable().NumberInHandInclAllIn());
-    }
-
-	if (a.IsFold() ) firstActionAwareness.SeeFold();
+    // NOTE: If you are Multibot or Gearbot, remember to pass this on to your individual PlayerStrategy as well.
 }
 
 
@@ -558,14 +548,6 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
     const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, statprob.statworse.repeated,riskprice);
 
-
-#ifdef DEBUGASSERT
-    if (ViewTable().NumberAtFirstActionOfRound().total != firstActionAwareness.getNumPlayersAtFirstAction()) {
-        std::cerr << "Table predicts number at first action = " << ViewTable().NumberAtFirstActionOfRound().total
-        << " & firstActionAwareness.firstActionPlayers=" << firstActionAwareness.getNumPlayersAtFirstAction() << std::endl;
-        exit(1);
-    }
-#endif // DEBUGASSERT
     
 	const float64 fullVersus = ViewTable().NumberStartedRoundInclAllIn(); // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
     
