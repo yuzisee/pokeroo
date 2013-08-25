@@ -38,18 +38,16 @@ GainModel::~GainModel()
 
 void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_nonacted)
 {
-    const int8 totalEnemy = espec.tableinfo->handsToBeat(); //To beat
 
-    
 #ifdef DEBUGASSERT
          // Note: During forceRenormalize e_battle is espec.tableinfo->handsIn()-1
-        if(    espec.tableinfo->handsIn()-1 != totalEnemy  // For now, just verify that handsIn() == handsToBeat() + 1
+        if(    espec.tableinfo->handsIn()-1 != (playernumber_t)f_battle  // For now, just verify that handsIn() == handsToBeat() + 1
            // eventually, (presumably) handsToBeat will vary between numberStartedRound - 1 and numberAtFirstBet - 1 depending on who is calling this.
            )
         {
-            std::cerr << "handsToBeat should be all the opposing players" << std::endl;
-            std::cerr << (int)(espec.tableinfo->handsIn()) << " in hand. ";
-            exit(1);
+            //std::cerr << "handsToBeat should be all the opposing players" << std::endl;
+            //std::cerr << (int)(espec.tableinfo->handsIn()) << " in hand. ";
+            //exit(1);
         }
 #endif
 
@@ -69,8 +67,8 @@ void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_
         #endif
 
 
-        shape.loss = 1.0 - cleanpow(1.0 - p_cl,1.0/totalEnemy); //The w+s outcome for all players should be a power of w+s for shape
-        shape.wins = cleanpow(p_cw,1.0/totalEnemy);
+        shape.loss = 1.0 - cleanpow(1.0 - p_cl,1.0/f_battle); //The w+s outcome for all players should be a power of w+s for shape
+        shape.wins = cleanpow(p_cw,1.0/f_battle);
         shape.splits = 1.0 - shape.loss - shape.wins;
 
         forceRenormalize();
@@ -85,8 +83,6 @@ void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_
 
 void GainModel::forceRenormalize()
 {
-        const int8 e_battle = espec.tableinfo->handsIn()-1; //Number we can split with
-
         shape.forceRenormalize(); ///Normalize just in case; total possibility must add up to 1
 
         const float64 newTotal = p_cl + p_cw;

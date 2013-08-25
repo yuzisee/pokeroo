@@ -98,8 +98,13 @@ class GainModel : public virtual HoldemFunctionModel
 	protected:
 	ExactCallD & espec;
 	StatResult shape;
-	float64 f_battle;
-	uint8 e_battle;
+
+    //Floating point version of totalEnemy (which is handsToBeat), but adjustable by playerStrategy based on expectations
+	const float64 f_battle;
+
+    //Who can you split with?
+	const uint8 e_battle;
+    
 	float64 p_cl;
 	float64 p_cw;
 
@@ -154,7 +159,11 @@ class GainModel : public virtual HoldemFunctionModel
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 	
     GainModel(const StatResult s_acted, const StatResult s_nonacted,ExactCallD & c)
-		: ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),espec(c)
+		: ScalarFunctionModel(c.tableinfo->chipDenom())
+        , HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
+        , espec(c)
+        , f_battle(c.tableinfo->handsToBeat())
+        , e_battle(c.tableinfo->handsIn()-1)
 		{
 		    combineStatResults(s_acted,s_nonacted);
 		}
