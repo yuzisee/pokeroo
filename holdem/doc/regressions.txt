@@ -141,6 +141,11 @@ diff --git a/holdem/src/callSituation.cpp b/holdem/src/callSituation.cpp
  * hybridMagnified worst vs. best
  * handsToBeat() numberInHand vs. numberStartedRound
 
+===== Summary of audit tunables
+ * f_battle [high priority, yet it was already recently fixed to be number started round down from hands dealt]
+ * ExpectedCallD and ExactCallD: opponent [med priority, it could be fine as-is]
+
+
 ===== Summary of notable confusions
  * ro-643 has a bug in roundPlayers
  * rw-654 has two bugs in GainModel

@@ -98,9 +98,11 @@ public:
     virtual float64 maxBet() const;
 	virtual float64 maxBetAtTable() const;
 	virtual float64 maxRaiseAmount() const;
-    
-    virtual playernumber_t handStrengthOfRound() const; // Same units as handsToBeat() -- it's the number of opponents, not the number in the hand
-    virtual playernumber_t handsToBeat() const;
+
+    virtual playernumber_t handsToOutplay() const; // Number of opponents that started this round with you
+    virtual playernumber_t handStrengthOfRound() const; // Same units as handsToOutplay, handsToShowdown, handsToBeat() -- it's the number of opponents, not the number in the hand
+    virtual playernumber_t handsToShowdown() const; // Number of opponents who haven't folded yet
+
     
     virtual playernumber_t handsDealt() const;
     virtual playernumber_t handsIn() const;

@@ -147,6 +147,7 @@ float64 ExpectedCallD::chipDenom() const
     return table->GetChipDenom();
 }
 
+// This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
 playernumber_t ExpectedCallD::handStrengthOfRound() const
 {   // Same units as ExpectedCallD::handsToBeat(), which is number of opponents.
     if ( table->NumberAtFirstActionOfRound().inclAllIn() < table->NumberStartedRound().inclAllIn() )
@@ -166,12 +167,13 @@ playernumber_t ExpectedCallD::handStrengthOfRound() const
     }
 }
 
-playernumber_t ExpectedCallD::handsToBeat() const
+playernumber_t ExpectedCallD::handsToOutplay() const
 {
-    //return table->NumberInHandInclAllIn()-1;  //Number of hands (drawn) *remaining*
     return table->NumberStartedRoundInclAllIn()-1;  // For now, do this to match ro-643-patch2
-    // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
+}
 
+playernumber_t ExpectedCallD::handsToShowdown() const {
+    return table->NumberInHandInclAllIn()-1;  //Number of hands (drawn) *remaining*
 }
 
 playernumber_t ExpectedCallD::handsDealt() const

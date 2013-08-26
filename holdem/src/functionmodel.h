@@ -154,7 +154,7 @@ class GainModel : public virtual HoldemFunctionModel
 		: ScalarFunctionModel(c.tableinfo->chipDenom())
         , HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
         , espec(c)
-        , f_battle(c.tableinfo->handsToBeat())
+        , f_battle(c.tableinfo->handStrengthOfRound())
         , e_battle(c.tableinfo->handsIn()-1)
 		{
 		    combineStatResults(s_acted,s_nonacted);

@@ -491,7 +491,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
     nearest = (betSize <= tableinfo->callBet() + tableinfo->chipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
     
-	const float64 opponents = tableinfo->handsToBeat(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
+	const float64 opponents = tableinfo->handsToShowdown(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
     const float64 myexf = betSize;
     const float64 mydexf = 1;
 
