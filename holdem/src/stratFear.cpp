@@ -32,19 +32,27 @@ float64 OpponentFoldWait::ActOrReact(float64 callb, float64 lastbet, float64 lim
 //3. [REACT a.k.a. 1.0] The pot is large from previous rounds, opponents can't fold easily
 
 	const float64 nPlayers = 1+tableinfo->handsToBeat();
-	const float64 mPlayers = 1 - (1 / nPlayers); //We need to scale actOrReact based on how many players are at the table...?
 
-	const float64 mylimit = tableinfo->maxRaiseAmount();
+    //The share of the pot that others are entitled to on average
+	const float64 othersShare = 1 - (1 / nPlayers);
+    //We need to scale actOrReact based on how many players are at the table...?
+
+	const float64 myAllInEffective = tableinfo->maxRaiseAmount(); // At this price either I'm all-in or everyone else (in the hand) is.
 	float64 tablepot = tableinfo->table->GetPotSize();
-	const float64 maxToShowdownPot = mylimit * (tableinfo->handsIn()-1) + tableinfo->alreadyBet();
+	const float64 maxToShowdownPot = myAllInEffective * (tableinfo->handsIn()-1) + tableinfo->alreadyBet();
 	if( tablepot > maxToShowdownPot ) tablepot = maxToShowdownPot;
 
     //const float64 avgControl = (stagnantPot() + table->GetUnbetBlindsTotal()) / table->GetNumberInHand();
     //const float64 raiseOverBet = (callb + avgControl);// < lastbet) ? 0 : (callb + avgControl - lastbet) ;
     const float64 raiseOverOthers = (tablepot - callb) / tableinfo->handsIn();
     const float64 raiseOver = (raiseOverOthers);// + raiseOverBet)/2;
-    const float64 actOrReact = (raiseOver > limit) ? mPlayers : (raiseOver / limit);
-    return actOrReact / mPlayers;
+
+    // If raiseOver is slightly less than limit, actOrReact should not be greater than 1.0
+    const float64 uncappedActOrReact = (raiseOver / (limit * othersShare));
+    const float actOrReact = (uncappedActOrReact > 1.0) ? 1.0 : uncappedActOrReact;
+    return actOrReact;
+    //const float64 actOrReact = (raiseOver > limit) ? mPlayers : (raiseOver / limit);
+    //return actOrReact / mPlayers;
 }
 
 float64 OpponentFoldWait::FearStartingBet(ExactCallBluffD & oppFoldEst, float64 oppFoldStartingPct, float64 maxScaler)
