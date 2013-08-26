@@ -149,7 +149,10 @@ float64 ExpectedCallD::chipDenom() const
 
 playernumber_t ExpectedCallD::handsToBeat() const
 {
-    return table->NumberInHandInclAllIn()-1;  //Number of hands (drawn) *remaining*
+    //return table->NumberInHandInclAllIn()-1;  //Number of hands (drawn) *remaining*
+    return table->NumberStartedRoundInclAllIn()-1;  // For now, do this to match ro-643-patch2
+    // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
+
 }
 
 playernumber_t ExpectedCallD::handsDealt() const
