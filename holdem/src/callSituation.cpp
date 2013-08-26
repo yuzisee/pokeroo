@@ -150,21 +150,9 @@ float64 ExpectedCallD::chipDenom() const
 // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
 playernumber_t ExpectedCallD::handStrengthOfRound() const
 {   // Same units as ExpectedCallD::handsToBeat(), which is number of opponents.
-    if ( table->NumberAtFirstActionOfRound().inclAllIn() < table->NumberStartedRound().inclAllIn() )
-    {
-        // The thinking is, if someone leads betting when there are 5 players, they expect to be the best in 5 hands.
-        // If you're playing you have to expect to be better than that.
-        // So the effective hand strength people are behaving based on is 6 hands in this example.
-        // Your utility calculation should be based on being the best in 6 hands when the showdown arrives.
-        // In this case, that's 5 opponents, a.k.a. the original NumberAtFirstAction
-        return table->NumberAtFirstActionOfRound().inclAllIn();
-    } else
-    {
-        // If we get here, it means that there was no special NumberAtFirstActionOfRound() reduction
-        // Maybe this is a post-flop round, or maybe we got early-position action pre-flop.
-        // Either way, just list the number of opponents as is correct.
-        return table->NumberStartedRound().inclAllIn() - 1;
-    }
+    return table->NumberAtFirstActionOfRound().inclAllIn()-1;
+    // Don't overcomplicate it for now. At the time of the first action the bettor knows who has folded already and
+    // isn't considering them when establishing the hand strength we will be playing.
 }
 
 playernumber_t ExpectedCallD::handsToOutplay() const

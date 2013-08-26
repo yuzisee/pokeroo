@@ -289,9 +289,11 @@ void PositionalStrategy::setupPosition()
 ///PENDING: http://sourceforge.net/tracker/?func=detail&aid=2905465&group_id=242264&atid=1118658
 #if 0
 			logFile << (int)(moodLevelOpponents) << " acted opponents, ";
-            logFile << (int)(uniformRandomOpponents) << " uniform opponents" << std::endl;
+            logFile << (int)(uniformRandomOpponents) << " uniform opponents";
 #endif
+            logFile << std::endl;
         #endif
+
 
 }
 
@@ -617,6 +619,11 @@ float64 ImproveGainStrategy::MakeBet()
 	else if( bGamble == 2 )
 	{ logFile << " -  ACTION  - " << endl;}
 
+    logFile << (int)tablestate.handsDealt() << " dealt, "
+            << (int)tablestate.handsToOutplay() << " opp. (round), "
+            << (int)tablestate.handStrengthOfRound() << " opp. assumed str., "
+            << (int)tablestate.handsToShowdown() << " opp. still in"
+            << std::endl;
 
     if( bGamble >= 1 )
     {
@@ -971,6 +978,13 @@ float64 DeterredGainStrategy::MakeBet()
     {
         logFile << " -  Danger  - " << endl;
 	}
+
+    logFile << (int)tablestate.handsDealt() << " dealt, "
+    << (int)tablestate.handsToOutplay() << " opp. (round), "
+    << (int)tablestate.handStrengthOfRound() << " opp. assumed str., "
+    << (int)tablestate.handsToShowdown() << " opp. still in"
+    << std::endl;
+
 
 	if( bGamble <= 1 )
 	{
