@@ -548,9 +548,9 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
     const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, statprob.statworse.repeated,riskprice);
 
-    
-	const float64 fullVersus = ViewTable().NumberStartedRoundInclAllIn(); // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
-    
+    // TODO(from yuzisee): handsToBeat() here.
+	const float64 fullVersus = ViewTable().NumberStartedRoundInclAllIn() - 1; // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
+    // TODO TODO (from yuzisee): But peopleDrawing is relative to fullVersus?
     const float64 peopleDrawing = (1 - improvePure) * (ViewTable().NumberInHandInclAllIn() - 1);//You probably don't have to beat the people who folded, especially if you are going to improve your hand
     const float64 newVersus = (fullVersus - peopleDrawing*(1-improvePure)*detailPCT.stdDev);
 
@@ -572,7 +572,7 @@ float64 ImproveGainStrategy::MakeBet()
         myDeterredCall_left.SetImpliedFactor(impliedOddsGain);
 
         //Need scaling (This could adjust RiskPrice or the geom/algb equilibrium as needed)
-        // myDeterredCall_right.callingPlayers(newVersus);
+        // myDeterredCall_right.callingPlayers(newVersus);  // LEGACY ASSUMEFOLDS support here.
 		//NOTE: The above line is commented out. We no longer set eFolds and I'm not sure it did anything anyway. See revision b71953a3ab52 for more.
 	}
 
