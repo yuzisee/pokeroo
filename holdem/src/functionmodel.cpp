@@ -35,6 +35,26 @@ GainModel::~GainModel()
 }
 
 
+float64 GainModel::cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle)
+{
+    if (x1 == x2) {
+        // A common use case is to pass in the same StatResult for s_acted and s_nonacted.
+        // Unless you intend to provide two separate StatResult objects, sometimes even repeated == 0.0 (which causes NaNs in here).
+        // If we notice that you passed in the same StatResult twice, just take the geomean explicitly without considering .repeated
+        return sqrt( cleanpow(b1, f_battle) * cleanpow(b2, f_battle) );
+    } else {
+#ifdef DEBUGASSERT
+        std::cerr << "TODO(from yuzisee): Not yet tested";
+        exit(1);
+#endif // DEBUGASSERT
+        const float64 w1 = x1 * f_battle / (x1+x2);
+        const float64 w2 = x2 * f_battle / (x1+x2);
+        return cleanpow(b1, w1)*cleanpow(b2,w2);
+    }
+
+    //return cleanpow( cleanpow(b1,x1)*cleanpow(b2,x2) , f_battle/(x1+x2) );
+}
+
 
 void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_nonacted)
 {
@@ -71,6 +91,14 @@ void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_
         shape.wins = cleanpow(p_cw,1.0/f_battle);
         shape.splits = 1.0 - shape.loss - shape.wins;
 
+
+#ifdef DEBUGASSERT
+    if ((shape.loss != shape.loss) || (shape.wins != shape.wins) || (shape.splits != shape.splits)) {
+        std::cerr << "NaN encountered in shape" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
         forceRenormalize();
 
         #ifdef DEBUG_TRACE_SEARCH
@@ -105,6 +133,14 @@ void GainModel::forceRenormalize()
             p_cw = 0;
             shape.wins = 1; //You need wins to split, and shape is only used to split so this okay
         }
+
+
+#ifdef DEBUGASSERT
+    if ((p_cl != p_cl) || (p_cw != p_cw)) {
+        std::cerr << "NaN encountered in GainModel" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
 
 }
 
@@ -251,7 +287,7 @@ float64 GainModel::g(float64 betSize)
 
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
 
-    const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
+    const int8 e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
 
 	float64 sav=1;
 	for(int8 i=1;i<=e_call;++i)
@@ -267,7 +303,7 @@ float64 GainModel::g(float64 betSize)
 		sav *=  pow(
                     base - x +( f_pot+x+exf_live*dragCalls )/(i+1)
                         ,
-                        HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
+                        HoldemUtil::nchoosep<float64>(e_battle,i) * pow(shape.wins,e_battle-i) * pow(shape.splits,i)
                 );
 	}
 
