@@ -75,6 +75,15 @@ public:
     virtual float64 foldGain(CallCumulationD* const e, float64 * const foldWaitLength_out);
     virtual float64 foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet);
     virtual float64 foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out);
+    
+    /**
+     * The "opportunity cost of folding" formula can also be applied from the perspective of the raiser,
+        rather than the folder, in a sort of "opportunity cost of raising" heuristic.
+     * The reverse application of the formula is implemented in a function called ``RiskLoss``.
+     * This ``RiskLoss`` heuristic reports a loss (negative value) if your bet is large enough for the average opponent to profit (opportunistically) by folding and waiting for a better hand.
+     * Since making a small bet does not allow an average opponent to profit via his/her opportunity cost of folding, your ``RiskLoss`` remains zero as long as your bet is suffciently small compared to an average opponent's opportunity.
+     * The value returned by the RiskLoss function is used as a deterrent for raising too high.
+     */
     virtual float64 RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo, CallCumulationD * useMean, float64 * out_dPot = 0) const;
     virtual float64 PushGain();
 
@@ -89,7 +98,10 @@ public:
     virtual float64 maxBet() const;
 	virtual float64 maxBetAtTable() const;
 	virtual float64 maxRaiseAmount() const;
+    
+    virtual playernumber_t handStrengthOfRound() const; // Same units as handsToBeat() -- it's the number of opponents, not the number in the hand
     virtual playernumber_t handsToBeat() const;
+    
     virtual playernumber_t handsDealt() const;
     virtual playernumber_t handsIn() const;
     virtual float64 prevpotChips() const;

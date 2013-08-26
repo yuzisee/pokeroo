@@ -147,6 +147,25 @@ float64 ExpectedCallD::chipDenom() const
     return table->GetChipDenom();
 }
 
+playernumber_t ExpectedCallD::handStrengthOfRound() const
+{   // Same units as ExpectedCallD::handsToBeat(), which is number of opponents.
+    if ( table->NumberAtFirstActionOfRound().inclAllIn() < table->NumberStartedRound().inclAllIn() )
+    {
+        // The thinking is, if someone leads betting when there are 5 players, they expect to be the best in 5 hands.
+        // If you're playing you have to expect to be better than that.
+        // So the effective hand strength people are behaving based on is 6 hands in this example.
+        // Your utility calculation should be based on being the best in 6 hands when the showdown arrives.
+        // In this case, that's 5 opponents, a.k.a. the original NumberAtFirstAction
+        return table->NumberAtFirstActionOfRound().inclAllIn();
+    } else
+    {
+        // If we get here, it means that there was no special NumberAtFirstActionOfRound() reduction
+        // Maybe this is a post-flop round, or maybe we got early-position action pre-flop.
+        // Either way, just list the number of opponents as is correct.
+        return table->NumberStartedRound().inclAllIn() - 1;
+    }
+}
+
 playernumber_t ExpectedCallD::handsToBeat() const
 {
     //return table->NumberInHandInclAllIn()-1;  //Number of hands (drawn) *remaining*
@@ -200,8 +219,9 @@ bool ExpectedCallD::inBlinds() const
 
 float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot) const
 {
-
-    const int8 N = handsDealt();
+    const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
+                                 // handsDealt() is appropriate here because it suggests how often they'd have the winning hand in the first place.
+    
     const float64 avgBlind = table->GetBlindValues().OpportunityPerHand(N);
 
     FoldGainModel FG(table->GetChipDenom()/2);
