@@ -122,6 +122,7 @@ float64 MultiThresholdStrategy::MakeBet()
         else                        return defaultBetUp;
     }
 
+    // TODO(from yuzisee): handsToBeat() here.
 	const playernumber_t toBeat = ViewTable().NumberStartedRoundInclAllIn()-1; // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
     
 

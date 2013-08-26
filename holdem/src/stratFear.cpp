@@ -20,6 +20,7 @@
 
 #include "stratFear.h"
 
+// TODO(from yuzisee): handsToBeat() here??
 // ?? TODO??? --> This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
 
 

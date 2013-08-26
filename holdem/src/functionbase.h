@@ -45,7 +45,10 @@ class ScalarFunctionModel
 		bool IsDifferentSign(const float64&,const float64&) const;
 		bool IsSameSignOrZero(const float64&,const float64&) const;
     protected:
+
+        // When no other information is available, just pick an x based on the other x values.
         float64 trisectionStep(float64,float64,float64,float64,float64,float64) const;
+
         float64 searchStep(float64,float64,float64,float64,float64,float64);
         float64 quadraticStep(float64,float64,float64,float64,float64,float64) const;
         float64 newtonStep(float64,float64,float64);

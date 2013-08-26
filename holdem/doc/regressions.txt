@@ -1,0 +1,148 @@
+All revisions have
+ + undef WINRELEASE in debug_flags.h
+ + define FORCESEED in debug_flags.h
+ + backported the following revisions:
+
+-----
+Revision: 678
+Changeset: df6fd360a07118e125b649c3383f0225e9295560 [df6fd360a071]
+Parents: 677
+Author: Joseph Huang <yuzisee@gmail.com>
+Date: 12 July, 2013 11:32:08 AM PDT
+Labels: tip
+
+Fix an infinite loop in FindTurningPoint
+
+-----
+Revision: 677
+Changeset: 460f228e2c3ee5494e5f95d67266054a4b8f846d [460f228e2c3e]
+Parents: 676
+Author: Joseph Huang <yuzisee@gmail.com>
+Date: 12 July, 2013 11:06:36 AM PDT
+
+Print the cwd in main
+
+-----
+The HOLDEMDB_PATH fix started on 4ee3035d0991e17e8f023c6c1d168db04a6fff73 and finished on 0c5dc1d95a833ace4234357199f042f5d68581a8
+
+
+
+=====
+
+Results:
+ro-643 MATCHES rw-643: Reproducible over IDE and working copy
+rw-643 differs rw-644: Attempts to implement NumberAtFirstAction
+  ** We can manually retract the calls to NumberAtFirstAction() and should be able to reproduce rw-643 again.
+   --> rw-644-repro
+    ** bugfix1.diff <== roundPlayers := playersInHand // at the start of each betting round (rather than livePlayers) 
+   --> rw-644-retract
+
+  [OK!]
+   ro-643-bugfix1 MATCHES rw-644-retract
+
+rw-644 differs rw-647: New implementation of firstActionRoundPlayers
+  ** If we have retracted calls to NumberAtFirstAction() we should be able to reconcile this.
+   --> rw-647-retract
+
+  [OK!]
+   rw-644-retract MATCHES rw-647-retract
+   (log format changes, but behaviour same)
+
+rw-647 differs rw-648: An actual change to riskprice and foldprice that excludes a BB check.
+  ** We can backport this revision into our testing.
+
+   --> rw-648-retract
+   --> ro-643-patch2 <== includes:
+                         [] bugfix1.diff
+                         [] backport of r648
+
+  [OK!]
+   ro-643-patch2 matches rw-648-retract
+
+rw-648 MATCHES rw-653: Mostly inconsequential tweaks
+rw-653 differs rw-671: Large refactor including new implementations of NumberAtFirstActionOfRound
+  ** If we have retracted calls to NumberAtFirstActionOfRound() we should be able to reconcile this.
+  ** handsToBeat() is NumberInHand() -- Is that what we always want?
+
+  ** NOTE: rw-657 changed statHybridR from best(statranking, statrelation) to worst(statranking, statrelation)
+  ** NOTE: rw-654 has a bug in f_battle
+
+   --> ro-643-patch3 <== includes:
+                          [] bugfix1.diff
+                          [] backport of r648 (patch2)
+                          [] switch hybridMagnified (patch3)
+
+   --> rw-671-retract2 <== includes:
+                           [] Replace NumberAtFirstAction() with NumberStartedRoundInclAllin()
+                           [] retract2.diff and comment out assertion in GainModel::combineStatResults (functionmodel.cpp)
+
+   --> rw-671-retract3 <== includes: retract2+
+                           [] ACTUAL BUGFIX
+
+  [OK...]
+   ro-643-patch3 ALMOST matches rw-671-retract3b
+    (differ in fullVersus)
+
+   --> rw-671-retract4 <== includes: retract3c+
+                           [] fullVersus is in the correct units (opponent count vs. player count)
+
+   --> ro-643-patch4 <== includes:
+                          [] bugfix1.diff
+                          [] backport of r648 (patch2)
+                          [] switch hybridMagnified (patch3)
+                          [] disable eFolds ASSUMEFOLDS for now.
+
+  [OK!]
+   ro-643-patch4 matches rw-671-retract4 up to rounding error in trisectionStep
+
+===== We did retract3 wrong. With the actual bugfix 
+
+rw-671 matches rw-677 excluding differences from rw-674 to re-675
+rw-673 MATCHES rw-674: Comments only.
+rw-674 differs rw-675: Just slightly, one hand plays just a bit different. ??
+rw-675 MATCHES rw-676: Audit only, no code changes
+rw-676 differs rw-677: Rounding difference???
+rw-677 MATCHES rw-679: Should be comments only (and changes already backported)
+
+=====
+
+bugfix1:
+diff --git a/holdem/src/arenaFlow.cpp b/holdem/src/arenaFlow.cpp
+--- a/holdem/src/arenaFlow.cpp
++++ b/holdem/src/arenaFlow.cpp
+@@ -344,7 +344,7 @@
+ 	}
+ 
+ 	bettingRoundsRemaining = otherBettingRounds;
+-	roundPlayers = livePlayers;
++	roundPlayers = playersInHand;
+ }
+ 
+ 
+
+
+retract2:
+diff --git a/holdem/src/callSituation.cpp b/holdem/src/callSituation.cpp
+--- a/holdem/src/callSituation.cpp
++++ b/holdem/src/callSituation.cpp
+@@ -149,7 +149,8 @@
+ 
+ playernumber_t ExpectedCallD::handsToBeat() const
+ {
+-    return table->NumberInHandInclAllIn()-1;  //Number of hands (drawn) *remaining*
++    //return table->NumberInHandInclAllIn()-1;  //Number of hands (drawn) *remaining*
++    return table->NumberStartedRoundInclAllIn()-1;  // For now, do this to match ro-643-patch2
+ }
+ 
+ playernumber_t ExpectedCallD::handsDealt() const
+
+
+===== Summary of notable tunables
+ * hybridMagnified worst vs. best
+ * handsToBeat() numberInHand vs. numberStartedRound
+
+===== Summary of notable confusions
+ * ro-643 has a bug in roundPlayers
+ * rw-654 has two bugs in GainModel
+ ** uninitialized f_battle and e_battle (which are used elsewhere)
+ ** invalid input assumption in cleangeomeanpow about .repeated
