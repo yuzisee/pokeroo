@@ -135,11 +135,20 @@ class HistoryText(ScrollableText):
         self.my_latest.push_text(self)
 
 class UserEntry(Tkinter.Entry):
+    """A textbox that responds specially to [Return] button presses
+
+    When [Return] is pressed: (This is configured once in self.bind_input_output)
+      + Send the contents of the textbox to our subprocess.Popen's stdin.
+      + We ask all the history frames to rotate themselves.
+      + We append the user's input to the stdin_history and clear it from the textbox
+
+    """
     def __init__(self, parent, **options):
         Tkinter.Entry.__init__(self,parent,options)
         self.insert(0, "Press [Enter] to begin")
 
     def setup_geometry_manager(self):
+        """When called, we will attach ourselves to the bottom of our parent widget, and expand horizontally to fill"""
         self.pack(side=Tkinter.BOTTOM,fill=Tkinter.X,expand=0)
 
     def bind_input_output(self,gui_lock,app_stdin,input_output_pairs):
@@ -198,9 +207,6 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
         self._my_subprocess = my_console_app
 
-        self.stdout_history_frame = HistoryText(self)
-        self.stderr_history_frame = HistoryText(self)
-
         #If Tkinter can't even handle a flood of commands from a single thread,
         #I wouldn't trust its ability to be threadsafe at all.
         #To make any GUI changes, you have to lock our GUI.
@@ -215,14 +221,22 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         #Top is history, Bottom is input
         #
 
+        left_column = Tkinter.Frame(self, background='magenta') # Create a frame and attach it to the parent
+        left_column.grid(row=0, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL)
+        right_column = Tkinter.Frame(self, background='blue') # Create a frame and attach it to the parent
+        right_column.grid(row=0, column=1, sticky=ConsoleSeparateWindow.EXPAND_ALL)
+
+        self.stdout_history_frame = HistoryText(left_column)
+        self.stderr_history_frame = HistoryText(right_column)
+
         self.stdout_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
         self.stderr_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
 
-        stdout_latest = AppendableLabel(self)
+        stdout_latest = AppendableLabel(left_column)
         stdout_latest.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
 
         #The input frame contains the stderr latest with an entry field at the bottom
-        stderr_input_frame = Tkinter.Frame(self, borderwidth=2, relief=Tkinter.GROOVE)
+        stderr_input_frame = Tkinter.Frame(right_column, borderwidth=2, relief=Tkinter.GROOVE, background='green')
         stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0,font=ConsoleSeparateWindow.DEFAULT_INPUT_FONT)
 
         stderr_latest  = AppendableLabel(stderr_input_frame)
@@ -235,17 +249,23 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
 
         self.stdout_history_frame.setup_geometry_manager()
-        self.stdout_history_frame.grid(row=0,column=0,sticky=ConsoleSeparateWindow.EXPAND_ALL)
-        stdout_latest.grid(row=1,column=0,sticky=ConsoleSeparateWindow.EXPAND_BOTTOM_HORIZONTAL)
+        self.stdout_history_frame.grid(row=0, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL)
+        stdout_latest.grid(row=1, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL) 
 
         self.stderr_history_frame.setup_geometry_manager()
-        self.stderr_history_frame.grid(row=0,column=1,sticky=ConsoleSeparateWindow.EXPAND_ALL)
-        stderr_input_frame.grid(row=1,column=1,sticky=ConsoleSeparateWindow.EXPAND_BOTTOM_HORIZONTAL)
+        self.stderr_history_frame.grid(row=0, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL)
+        stderr_input_frame.grid(row=1, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL)
 
-        self.grid_columnconfigure(0,weight=1)
-        self.grid_columnconfigure(1,weight=1)
-        self.grid_rowconfigure(0,weight=1)
-        self.grid_rowconfigure(1,weight=0)
+        # Allow resizing
+        right_column.grid_columnconfigure(0, weight=1, pad=0)
+        right_column.grid_rowconfigure(0, weight=1, pad=0)
+        right_column.grid_rowconfigure(1, weight=0, pad=0)
+        left_column.grid_columnconfigure(0, weight=1, pad=0)
+        left_column.grid_rowconfigure(0, weight=1, pad=0)
+        left_column.grid_rowconfigure(1, weight=0, pad=0)
+        self.grid_columnconfigure(0, weight=1, pad=0)
+        self.grid_columnconfigure(1, weight=1, pad=0)
+        self.grid_rowconfigure(0, weight=1, pad=0)
 
         stderr_input.focus_set()
 
