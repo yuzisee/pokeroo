@@ -159,35 +159,37 @@ class UserEntry(Tkinter.Entry):
         self.uninitialized = True
         self.gui_lock = gui_lock
 
-        self.gui_lock.acquire(True)
+        # self.gui_lock.acquire(True)
+        # To be released on the first capture_return_event, see self.uninitialized
+        # TODO(from yuzisee): Why did we have this?
 
     def capture_return_event(self,event):
 
         if self.uninitialized:
-            event.widget.delete(0, Tkinter.END)
+            with self.gui_lock: # TODO(from yuzisee): This should be just fine. Why did we carry the lock across bind_input_output --> capture_return_event before?
+                event.widget.delete(0, Tkinter.END)
             self.uninitialized = False
-            self.gui_lock.release()
+            #self.gui_lock.release()
             return
 
-        self.gui_lock.acquire(True)
+        with self.gui_lock:
 
-        #Send input text
-        user_input_string = event.widget.get()
-        self._app_stdin.write(user_input_string + '\r\n')
-        self._app_stdin.flush()
+            #Send input text
+            user_input_string = event.widget.get()
+            self._app_stdin.write(user_input_string + '\r\n')
+            self._app_stdin.flush()
 
-        event.widget.delete(0, Tkinter.END)
+            event.widget.delete(0, Tkinter.END)
 
-        #Rotate label text into history
-        for history_frame in self._label_histories:
-            history_frame.rotate_label()
+            #Rotate label text into history
+            for history_frame in self._label_histories:
+                history_frame.rotate_label()
 
-        self._label_histories[0].add_text(user_input_string + '\n')
+            self._label_histories[0].add_text(user_input_string + '\n')
 
-        for history_frame in self._label_histories:
-            history_frame.scroll_down()
+            for history_frame in self._label_histories:
+                history_frame.scroll_down()
 
-        self.gui_lock.release()
 
 
 class ConsoleSeparateWindow(Tkinter.Tk):
@@ -279,15 +281,13 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
     def _destroy_handler(self):
 
-        self.gui_lock.acquire(True)
+        with self.gui_lock:
 
-        #Clean up in a threadsafe manner
-        self._my_subprocess.terminate()
-        self.stdout_history_frame = None
-        self.stderr_history_frame = None
-        self.history_frames_list = []
-
-        self.gui_lock.release()
+            #Clean up in a threadsafe manner
+            self._my_subprocess.terminate()
+            self.stdout_history_frame = None
+            self.stderr_history_frame = None
+            self.history_frames_list = []
 
         self.destroy()
 
@@ -298,15 +298,14 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self._synchronous_append(self.stderr_history_frame,append_text.replace('\r',''))
 
     def _synchronous_append(self,history_frame,append_text):
-        self.gui_lock.acquire(True)
+        with self.gui_lock:
 
-        if not history_frame is None:
-            history_frame.my_latest.add_text(append_text)
+            if not history_frame is None:
+                history_frame.my_latest.add_text(append_text)
 
-        for f in self.history_frames_list:
-            f.scroll_down()
+            for f in self.history_frames_list:
+                f.scroll_down()
 
-        self.gui_lock.release()
 
 
 
