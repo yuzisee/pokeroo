@@ -11,7 +11,7 @@ import Tkinter
 #for Popen
 import subprocess
 
-#for os.read
+#for os.read, os.getcwd
 import os
 
 #for sleep
@@ -20,11 +20,11 @@ import time
 class SubProcessThread(threading.Thread):
     MAXIMUM_BYTE_READ = 2048
 
-    def __init__(self,bytestream,returncode_test,text_append_callback):
+    def __init__(self,bytestream,returncode_test,text_append_callbacks):
         threading.Thread.__init__(self)
         self._fd = bytestream.fileno()
         self._stopreading_test = returncode_test
-        self._txt_callback = text_append_callback
+        self._txt_callbacks = text_append_callbacks
 
     def run(self):
         #From http://mail.python.org/pipermail/python-list/2007-June/618721.html
@@ -36,7 +36,8 @@ class SubProcessThread(threading.Thread):
             next_char = os.read(self._fd, SubProcessThread.MAXIMUM_BYTE_READ)
             #print str(self._fd) + "received [" + repr(next_char) + "]"
             if not next_char is None:
-                self._txt_callback(next_char)
+                for cb in self._txt_callbacks:
+                    cb(next_char)
             #except Exception:
             #    print "CONSOLESEPARATE: abort "
 
@@ -272,8 +273,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
     def append_stdout(self,append_text):
         self._synchronous_append(self.stdout_history_frame,append_text.replace('\r',''))
-        sys.stdout.write(append_text.replace('\r',''))
-
+        
     def append_stderr(self,append_text):
         self._synchronous_append(self.stderr_history_frame,append_text.replace('\r',''))
 
@@ -294,13 +294,14 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 def fake_out(stringme):
     print "STD " + str(stringme)
 
-if __name__=='__main__':
-    print os.path.abspath(os.curdir)
+
+def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.stdout.write(s)):
+
     #================================
     #   Execute our child process
     #================================
     #From http://mail.python.org/pipermail/python-list/2007-June/618721.html
-    console_app = subprocess.Popen(sys.argv[1:], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=1)
+    console_app = subprocess.Popen(cmd_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=1, cwd=cmd_cwd, env=cmd_env)
 
 
     #===============================================
@@ -312,8 +313,8 @@ if __name__=='__main__':
     #===========================================
     #   Bind stdout and stderr to root_window
     #===========================================
-    stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, root_window.append_stdout)
-    stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, root_window.append_stderr)
+    stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, [root_window.append_stdout, stdout_callback])
+    stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, [root_window.append_stderr])
     #stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, fake_out)
     #stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, fake_out)
 
@@ -323,3 +324,9 @@ if __name__=='__main__':
     stdout_capturer.start()
     stderr_capturer.start()
     root_window.mainloop()
+
+if __name__=='__main__':
+    print os.path.abspath(os.curdir)
+
+    run_cmd(sys.argv[1:], os.getcwd())
+

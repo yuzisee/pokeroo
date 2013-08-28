@@ -390,7 +390,7 @@ void ConsoleStrategy::showSituation()
 
 #endif // INFOASSIST_UPDATE
     UI_DESCRIPTOR << endl ;
-    UI_DESCRIPTOR << "Position Strength of first bet = " << ViewTable().NumberAtFirstActionOfRound().total << endl ;
+    UI_DESCRIPTOR << "Position Strength of first bet = " << (int)(ViewTable().NumberAtFirstActionOfRound().total) << endl ;
     UI_DESCRIPTOR << endl ;
 
 	UI_DESCRIPTOR << endl << "You ("<< ViewPlayer().GetIdent() <<") have: " << flush;
