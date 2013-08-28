@@ -2,7 +2,7 @@
 #for argv
 import sys
 
-#for threading.Thread
+#for threading.Thread, threading.Lock
 import threading
 
 #for windows
@@ -134,6 +134,89 @@ class HistoryText(ScrollableText):
     def rotate_label(self):
         self.my_latest.push_text(self)
 
+class StackableTimeout(object):
+    """Similar to threading.Timer but allows you to stack calls.
+
+    Example:
+    >>> a = StackableTimeout(entry_callback, exit_callback)
+    >>> a.set_timeout(1.0) # Since we weren't waiting before, call entry_callback immediately. Then, enter "sleep state". Expect to call exit_callback in 1.0 seconds from now ...
+    >>> time.sleep(0.5) # ... but 0.5 seconds later, ...
+    >>> a.set_timeout(1.0) # ... postpone the exit_callback until another 1.0 seconds from now!
+
+    """
+    def __init__(self, entry_callback, exit_callback):
+        """entry_callback will be called when entering sleep state, and exit_callback will be called when exiting sleep state.
+
+
+        """
+        self._entry_callback = entry_callback
+        self._exit_callback = exit_callback
+        self._lock = threading.Lock()
+        self._active_timeout = None # If in "sleep state", this is set to the unit epoch timestamp of when we should call exit_callback. Otherwise, it's set to None.
+
+    def set_timeout(self, seconds):
+        
+        print "Set Timeout"
+
+        # Enter sleep state if necessary
+        entering_sleep_state = False
+        with self._lock:
+            if self._active_timeout is None:
+                entering_sleep_state = True
+                self._active_timeout = time.time() + seconds
+            else:
+                self._active_timeout = max(time.time() + seconds, self._active_timeout)
+
+
+        # INVARIANT: If multiple threads call set_timeout at the same time, only one will emerge with entering_sleep_state
+        
+        # On transition *into* sleep state, call entry_callback once.
+        if entering_sleep_state:
+            print "Entering Sleep State"
+            self._entry_callback()
+            threading.Timer(seconds, self._try_wakeup) # Now, queue a wakeup event *seconds* seconds into the future.
+            # INVARIANT: There should be only one threading.Timer at one time, ever.
+            
+    def _try_wakeup(self):
+        """Try waking up. If we haven't yet passed self._active_timeout, then sleep a little longer"""
+        wakeup_ok = False
+        while not wakeup_ok:
+            # there should only be one wakeup timer at once, so just acquire the lock to read the value in case it is being written to
+            current_time = time.time()
+            with self._lock:
+                wakeup_time = self._active_timeout
+
+                if current_time > wakeup_time:
+                    # Okay, we're ready to wake up.
+                    wakeup_ok = True
+
+            if current_time < wakeup_time:
+                # No wakeup yet. Sleep and try again later.
+                time.sleep(wakeup_time - current_time)
+
+        # We are waking up now.
+        self._exit_callback()
+
+        # Done! Now all we have to do is clear self._active_timeout
+        # But what if _active_timeout was increased while we were calling exit_callback?
+
+        need_to_return_to_sleep_state = False
+        with self._lock:
+            if wakeup_time == self._active_timeout:
+                # Nobody has increased self._active_timeout since we called exit_callback.
+                # All is good.
+                self._active_timeout = None
+            else:
+                # Someone updated self._active_timeout, but we already called exit_callback.
+                # Since self._active_timeout wasn't None for them, they didn't call entry_callback
+                need_to_return_to_sleep_state = True
+
+        if need_to_return_to_sleep_state:
+            self._entry_callback()
+            theading.Timer(0, self._try_wakeup) # Go ahead and restart this function
+
+        
+
 class UserEntry(Tkinter.Entry):
     """A textbox that responds specially to [Return] button presses
 
@@ -146,6 +229,15 @@ class UserEntry(Tkinter.Entry):
     def __init__(self, parent, **options):
         Tkinter.Entry.__init__(self,parent,options)
         self.insert(0, "Press [Enter] to begin")
+        self._delayer = StackableTimeout(self._set_disabled, self._set_enabled)
+
+    def _set_disabled(self):
+        with self.gui_lock:
+            self.config(state=Tkinter.DISABLED)
+            
+    def _set_enabled(self):
+        with self.gui_lock:
+            self.config(state=Tkinter.ENABLED)
 
     def setup_geometry_manager(self):
         """When called, we will attach ourselves to the bottom of our parent widget, and expand horizontally to fill"""
@@ -190,6 +282,9 @@ class UserEntry(Tkinter.Entry):
             for history_frame in self._label_histories:
                 history_frame.scroll_down()
 
+    def disable_for_one_second(self):
+        if not self.uninitialized:
+            self._delayer.set_timeout(1.0)
 
 
 class ConsoleSeparateWindow(Tkinter.Tk):
@@ -279,6 +374,8 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         stderr_input.bind_input_output(self.gui_lock,self._my_subprocess.stdin,self.history_frames_list)
         self.protocol("WM_DELETE_WINDOW", self._destroy_handler)
 
+        self._delay_after_text = stderr_input.disable_for_one_second
+
     def _destroy_handler(self):
 
         with self.gui_lock:
@@ -292,6 +389,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.destroy()
 
     def append_stdout(self,append_text):
+        self._delay_after_text()
         self._synchronous_append(self.stdout_history_frame,append_text.replace('\r',''))
         
     def append_stderr(self,append_text):
