@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+
+# for Queue.Queue
+import Queue
 
 #for argv
 import sys
@@ -151,6 +155,9 @@ class UserEntry(Tkinter.Entry):
         """When called, we will attach ourselves to the bottom of our parent widget, and expand horizontally to fill"""
         self.pack(side=Tkinter.BOTTOM,fill=Tkinter.X,expand=0)
 
+    def on_first_input(self, callback):
+        self._on_initialize = callback
+
     def bind_input_output(self,gui_lock,app_stdin,input_output_pairs):
         self._label_histories = input_output_pairs
         self._app_stdin = app_stdin
@@ -165,12 +172,15 @@ class UserEntry(Tkinter.Entry):
 
     def capture_return_event(self,event):
 
+        # Capture the first enter key.
         if self.uninitialized:
             with self.gui_lock: # TODO(from yuzisee): This should be just fine. Why did we carry the lock across bind_input_output --> capture_return_event before?
                 event.widget.delete(0, Tkinter.END)
+            self._on_initialize()
             self.uninitialized = False
             #self.gui_lock.release()
             return
+
 
         with self.gui_lock:
 
@@ -209,6 +219,9 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
         self._my_subprocess = my_console_app
 
+        self._stdout_queue = Queue.Queue()
+        self._stderr_queue = Queue.Queue()
+
         #If Tkinter can't even handle a flood of commands from a single thread,
         #I wouldn't trust its ability to be threadsafe at all.
         #To make any GUI changes, you have to lock our GUI.
@@ -239,13 +252,13 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
         #The input frame contains the stderr latest with an entry field at the bottom
         stderr_input_frame = Tkinter.Frame(right_column, borderwidth=2, relief=Tkinter.GROOVE, background='green')
-        stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0,font=ConsoleSeparateWindow.DEFAULT_INPUT_FONT)
+        self.stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0,font=ConsoleSeparateWindow.DEFAULT_INPUT_FONT)
 
         stderr_latest  = AppendableLabel(stderr_input_frame)
         stderr_latest.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
 
         #Grid layout is resizable
-        stderr_input.setup_geometry_manager()
+        self.stderr_input.setup_geometry_manager()
 
         stderr_latest.pack(side=Tkinter.TOP,fill=Tkinter.BOTH,expand=1)
 
@@ -269,14 +282,14 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.grid_columnconfigure(1, weight=1, pad=0)
         self.grid_rowconfigure(0, weight=1, pad=0)
 
-        stderr_input.focus_set()
+        self.stderr_input.focus_set()
 
         #Event capture
         self.stderr_history_frame.bind_label(stderr_latest)
         self.stdout_history_frame.bind_label(stdout_latest)
 
         self.history_frames_list = [self.stderr_history_frame,self.stdout_history_frame]
-        stderr_input.bind_input_output(self.gui_lock,self._my_subprocess.stdin,self.history_frames_list)
+        self.stderr_input.bind_input_output(self.gui_lock,self._my_subprocess.stdin,self.history_frames_list)
         self.protocol("WM_DELETE_WINDOW", self._destroy_handler)
 
     def _destroy_handler(self):
@@ -291,11 +304,36 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
         self.destroy()
 
+    def on_first_input(self, callback):
+        self.stderr_input.on_first_input(callback)
+
     def append_stdout(self,append_text):
-        self._synchronous_append(self.stdout_history_frame,append_text.replace('\r',''))
+        self._stdout_queue.put(append_text.replace('\r',''), True)
+  
         
     def append_stderr(self,append_text):
-        self._synchronous_append(self.stderr_history_frame,append_text.replace('\r',''))
+        self._stderr_queue.put(append_text.replace('\r',''), True)
+
+    def renderloop(self):
+        """Render any queued text to the UI"""
+
+        while True:
+
+            # Favour the stdout. Only show stderr if stdout is done giving us data.
+            if not self._stdout_queue.empty():
+                self._synchronous_append_all(self.stdout_history_frame,self._stdout_queue)
+            elif not self._stderr_queue.empty():
+                self._synchronous_append_all(self.stderr_history_frame,self._stderr_queue)
+           
+            time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
+
+
+    def _synchronous_append_all(self,history_frame,append_queue):
+        new_text = []
+        while not append_queue.empty():
+            new_text.append(append_queue.get())
+        self._synchronous_append(history_frame, ''.join(new_text))
+           
 
     def _synchronous_append(self,history_frame,append_text):
         with self.gui_lock:
@@ -328,6 +366,8 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
     #===============================================
 
     root_window = ConsoleSeparateWindow(console_app)
+    render_queue_thread = threading.Thread(target=root_window.renderloop)
+    root_window.on_first_input(render_queue_thread.start)
 
     #===========================================
     #   Bind stdout and stderr to root_window
