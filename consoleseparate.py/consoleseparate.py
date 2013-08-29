@@ -373,7 +373,7 @@ class RenderLoop(object):
         self._render_queue_thread.start()
 
     def stop(self):
-        self._renderloop_go = False
+        self.renderloop_go = False
 
     def _run(self):
         while self.renderloop_go:
