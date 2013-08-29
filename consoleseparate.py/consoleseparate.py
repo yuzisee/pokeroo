@@ -15,7 +15,7 @@ import Tkinter
 #for Popen
 import subprocess
 
-#for os.read, os.getcwd
+#for os.read, os.getcwd, os.linesep
 import os
 
 #for sleep
@@ -170,6 +170,10 @@ class UserEntry(Tkinter.Entry):
         # To be released on the first capture_return_event, see self.uninitialized
         # TODO(from yuzisee): Why did we have this?
 
+    def enable(self):
+        with self.gui_lock:
+            self.config(state=Tkinter.NORMAL)
+
     def capture_return_event(self,event):
 
         # Capture the first enter key.
@@ -186,7 +190,7 @@ class UserEntry(Tkinter.Entry):
 
             #Send input text
             user_input_string = event.widget.get()
-            self._app_stdin.write(user_input_string + '\r\n')
+            self._app_stdin.write(user_input_string.strip() + os.linesep)
             self._app_stdin.flush()
 
             event.widget.delete(0, Tkinter.END)
@@ -200,12 +204,17 @@ class UserEntry(Tkinter.Entry):
             for history_frame in self._label_histories:
                 history_frame.scroll_down()
 
+            event.widget.config(state=Tkinter.DISABLED)
 
 
 class ConsoleSeparateWindow(Tkinter.Tk):
+    """This is the window itself. The left side contains stdout, the right side contains stderr and echos stdin.
+
+    One line of stdin input is available at a time in a Tkinter.Entry at the bottom of the right side.
+
+    """
 
     EXPAND_ALL = Tkinter.W+Tkinter.E+Tkinter.N+Tkinter.S
-    EXPAND_BOTTOM_HORIZONTAL =Tkinter.W+Tkinter.E+Tkinter.S
 
 #    DEFAULT_CONSOLE_FONT = font=("Lucida Console", 9)
 #    DEFAULT_INPUT_FONT = font=("Courier New", 9,"bold")
@@ -215,6 +224,14 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
 
     def __init__(self, my_console_app):
+        """Constructor
+
+        Parameters:
+          my_console_app:
+            (subprocess.Popen) The app whose stdout/stderr/stdin we are interacting with.
+
+        """
+
         Tkinter.Tk.__init__(self)
 
         self._my_subprocess = my_console_app
@@ -230,6 +247,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self._init_widgets();
 
     def _init_widgets(self):
+        """Layout all our widgets and connect them up as needed. This is a helper function for __init__"""
         #
         #The root window is composed of four quarters:
         #Left is stdout, Right is stderr
@@ -313,20 +331,18 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         
     def append_stderr(self,append_text):
         self._stderr_queue.put(append_text.replace('\r',''), True)
+        if len(append_text.strip()) > 0:
+            self.stderr_input.enable()
 
-    def renderloop(self):
+    def render(self):
         """Render any queued text to the UI"""
 
-        while True:
-
-            # Favour the stdout. Only show stderr if stdout is done giving us data.
-            if not self._stdout_queue.empty():
-                self._synchronous_append_all(self.stdout_history_frame,self._stdout_queue)
-            elif not self._stderr_queue.empty():
-                self._synchronous_append_all(self.stderr_history_frame,self._stderr_queue)
-           
-            time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
-
+        # Favour the stdout. Only show stderr if stdout is done giving us data.
+        if not self._stdout_queue.empty():
+            self._synchronous_append_all(self.stdout_history_frame,self._stdout_queue)
+        elif not self._stderr_queue.empty():
+            self._synchronous_append_all(self.stderr_history_frame,self._stderr_queue)
+       
 
     def _synchronous_append_all(self,history_frame,append_queue):
         new_text = []
@@ -345,6 +361,25 @@ class ConsoleSeparateWindow(Tkinter.Tk):
                 f.scroll_down()
 
 
+class RenderLoop(object):
+    """Call subroutine in a loop. Use this to repeatedly call UI functions such as 'draw' or 'render'"""
+    def __init__(self, subroutine):
+        self.renderloop_go = True
+        self._subroutine = subroutine
+
+    def start(self):
+        assert not hasattr(self, '_render_queue_thread')
+        self._render_queue_thread = threading.Thread(target=self._run)
+        self._render_queue_thread.start()
+
+    def stop(self):
+        self._renderloop_go = False
+
+    def _run(self):
+        while self.renderloop_go:
+            self._subroutine()
+            time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
+        
 
 
 
@@ -365,9 +400,9 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
     #   Create the application window via Tkinter
     #===============================================
 
-    root_window = ConsoleSeparateWindow(console_app)
-    render_queue_thread = threading.Thread(target=root_window.renderloop)
-    root_window.on_first_input(render_queue_thread.start)
+    root_window = ConsoleSeparateWindow(console_app) # Create the window
+    render_loop = RenderLoop(root_window.render)
+    root_window.on_first_input(render_loop.start)
 
     #===========================================
     #   Bind stdout and stderr to root_window
@@ -383,6 +418,7 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
     stdout_capturer.start()
     stderr_capturer.start()
     root_window.mainloop()
+    render_loop.stop()
 
 if __name__=='__main__':
     print os.path.abspath(os.curdir)
