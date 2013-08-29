@@ -598,7 +598,7 @@ float64 ImproveGainStrategy::MakeBet()
         right.boostBy(detailPCT.avgDev/2.0);//Need scaling
 
 
-
+        // We have a drawing hand, so assume opponents would fold to a bet right now. This should encourage us to bet low and see more cards.
         myDeterredCall_right.insuranceDeterrent = oppInsuranceBigBet;
 
     }
