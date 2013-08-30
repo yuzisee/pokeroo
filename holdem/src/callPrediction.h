@@ -124,7 +124,12 @@ class ExactCallD
             virtual float64 exf(const float64 betSize);
             virtual float64 dexf(const float64 betSize);
 
-			virtual float64 RaiseAmount(const float64 betSize, int32 step);
+            // pRaise() is the probability of being raised by RaiseAmount().
+            // betSize is the bet you're considering, step is an iterator (because RasieAmount is a gradient but still discrete, so we only have hard pRaise() for each particular RaiseAmount().
+            // If you want you could interpolate in between, but we typically just average the outcomes, since we're taking an expectation over all raise amounts that we might face.
+            // callSteps is an index that indicates: "all iterator values (of step) starting from this one and higher, are raises that I would fold against)
+            // In other worst, callSteps it the smallest RaiseAmount where we know we would just fold to it.
+            virtual float64 RaiseAmount(const float64 betSize, int32 step);
 			virtual float64 pRaise(const float64 betSize, const int32 step, const int32 callSteps  );
 			virtual float64 pRaiseD(const float64 betSize, const int32 step, const int32 callSteps );
 
@@ -173,8 +178,18 @@ class ExactCallBluffD : public virtual ExactCallD
 
 
 
-
+                            /** 
+                             *  pWin()
+                             *
+                             *   Parameters:
+                             *     betSize:
+                             *       The size of bet you would make
+                             *
+                             *   Return value:
+                             *     The probability that everyone folds to your bet.
+                             */
                             virtual float64 pWin(const float64 betSize);
+
                             virtual float64 pWinD(const float64 betSize);
 
             float64 RiskPrice() const;

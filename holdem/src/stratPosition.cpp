@@ -439,20 +439,22 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
 
     int32 maxcallStep = -1;
     int32 raiseStep = 0;
-    float64 rAmount =  rl.RaiseAmount(betToCall,raiseStep);
-    logFile << endl << "Why didn't I bet lower?" << endl;
-    while( rAmount < separatorBet )
+    float64 orAmount =  rl.RaiseAmount(betToCall,raiseStep);
+    logFile << endl << "Why didn't I call?" << endl;
+    while( orAmount < separatorBet )
     {
-        rAmount =  rl.RaiseAmount(betToCall,raiseStep);
-        const float64 oppRaisedFoldGain = rl.FoldGain(betToCall - tablestate.alreadyBet(),rAmount);
+        orAmount =  rl.RaiseAmount(betToCall,raiseStep);
+        const float64 oppRaisedFoldGain = rl.FoldGain(betToCall - tablestate.alreadyBet(),orAmount);
         logFile << "OppRAISEChance";
-        if( oppRaisedFoldGain > m.g_raised(betToCall,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
+        if( oppRaisedFoldGain > m.g_raised(betToCall,orAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
-        logFile << rl.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << rAmount;
-        logFile << "\tfold -- left" << rl.pWin(rAmount) << "  " << rr.pWin(rAmount) << " right" << endl;
+        // Here, raiseStep is just the iterator. rl.RaiseAmount(betToCall,raiseStep) is the amount, rl.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
+        logFile << rl.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << orAmount;
+
+        logFile << "\tfold -- left" << rl.pWin(orAmount) << "%  " << rr.pWin(orAmount) << "% right" << endl;  // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
 
 
-        if( rAmount >= maxShowdown ) break;
+        if( orAmount >= maxShowdown ) break;
 
         ++raiseStep;
     }
@@ -461,23 +463,23 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
     if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
 
     logFile << "\t--" << endl;
-    logFile << "What am I expecting now?" << endl;
+    logFile << "What am I expecting now, given my actual bet?" << endl;
 
     maxcallStep = -1;
     raiseStep = 0;
-    rAmount =  rl.RaiseAmount(separatorBet,raiseStep);
-    while( rAmount <= maxShowdown )
+    float64 mrAmount =  rl.RaiseAmount(separatorBet,raiseStep);
+    while( mrAmount <= maxShowdown )
     {
-        rAmount =  rl.RaiseAmount(separatorBet,raiseStep);
-        const float64 oppRaisedFoldGain = rl.FoldGain(separatorBet - tablestate.alreadyBet(),rAmount);
+        mrAmount =  rl.RaiseAmount(separatorBet,raiseStep);
+        const float64 oppRaisedFoldGain = rl.FoldGain(separatorBet - tablestate.alreadyBet(),mrAmount);
         logFile << "OppRAISEChance";
-        if( oppRaisedFoldGain > m.g_raised(separatorBet,rAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
+        if( oppRaisedFoldGain > m.g_raised(separatorBet,mrAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
-        logFile << rl.pRaise(separatorBet,raiseStep,maxcallStep) << " @ $" << rAmount;
-        logFile << "\tfold -- left" << rl.pWin(rAmount) << "  " << rr.pWin(rAmount) << " right" << endl;
+        logFile << rl.pRaise(separatorBet,raiseStep,maxcallStep) << " @ $" << mrAmount;
+        logFile << "\tfold -- left" << rl.pWin(mrAmount) << "  " << rr.pWin(mrAmount) << " right" << endl;
 
 
-        if( rAmount >= maxShowdown ) break;
+        if( mrAmount >= maxShowdown ) break;
 
         ++raiseStep;
     }
