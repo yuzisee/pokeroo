@@ -103,6 +103,28 @@ namespace RegressionTests {
     }
     ;
 
+    void testRegression_002() {
+        /*
+        Why didn't I bet lower?
+        OppRAISEChance [*] 0.284004 @ $4.5	fold -- left0.0491339  0.0491339 right
+        OppRAISEChance [*] 0.284004 @ $6.75	fold -- left0.143  0.143 right
+        --
+        What am I expecting now?
+        OppRAISEChance [*] 0.262638 @ $7.25	fold -- left0.156728  0.156728 right
+        OppRAISEChance [*] 0.274272 @ $12.25	fold -- left0.494979  0.494979 right
+        OppRAISEChance [*] 0.276047 @ $22.25	fold -- left0.800282  0.800282 right
+        OppRAISEChance [*] 0.273322 @ $42.25	fold -- left0.855941  0.855941 right
+        OppRAISEChance [*] 0.268886 @ $82.25	fold -- left0.886188  0.886188 right
+        OppRAISEChance [*] 0.254511 @ $162.25	fold -- left0.902322  0.902322 right
+        OppRAISEChance [*] 0.222713 @ $322.25	fold -- left0.909337  0.909337 right
+        OppRAISEChance [F] 0.0312251 @ $642.25	fold -- left0.912856  0.912856 right
+        OppRAISEChance [F] 0 @ $717	fold -- left0.912856  0.912856 right
+        Guaranteed > $0 is in the pot for sure
+            OppFoldChance% ...    0.0640157   d\0.0109861
+            if playstyle is Danger/Conservative, overall utility is 0.0295592
+         */
+    }
+
     
 
     // 2013.08.30-19.58.15

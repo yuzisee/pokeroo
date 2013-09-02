@@ -110,8 +110,8 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
 ;
 
 
-
-
+// Evaluate gainWithFold*gainNormal*gainRaised
+// on an AutoScalingFunction
 template <class LL, class RR>
 class StateModel : public virtual HoldemFunctionModel
 {
@@ -121,7 +121,8 @@ class StateModel : public virtual HoldemFunctionModel
     float64 dy;
 
 
-
+    // I will use <tt>ea</tt> to determine the push and raised chances, and
+    // I call g_raised in two places to determine gainNormal as well as (in a loop,) gainRaised
     void query( const float64 );
 
     protected:
