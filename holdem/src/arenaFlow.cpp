@@ -43,6 +43,33 @@
  */
 
 
+void HoldemArena::PlayGameInner(HoldemArena & my, GameDeck * tableDealer)
+{
+
+	if( my.PlayRound_BeginHand() == -1 ) return;
+
+	CommunityPlus myFlop;
+	my.RequestCards(tableDealer,3,myFlop, "Please enter the flop (no whitespace): ");
+    if( my.PlayRound_Flop(myFlop) == -1 ) return;
+
+
+	DeckLocation myTurn = my.RequestCard(tableDealer);
+    if( my.PlayRound_Turn(myFlop,myTurn) == -1 ) return;
+
+	DeckLocation myRiver = my.RequestCard(tableDealer);
+    int8 playerToReveal = my.PlayRound_River(myFlop,myTurn,myRiver);
+    if( playerToReveal == -1 ) return;
+
+
+	CommunityPlus finalCommunity;
+	finalCommunity.SetUnique(myFlop);
+	finalCommunity.AddToHand(myTurn);
+	finalCommunity.AddToHand(myRiver);
+
+
+	my.PlayShowdown(finalCommunity,playerToReveal);
+}
+
 
 
 DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
@@ -83,7 +110,7 @@ DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
 }
 
 
-void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, CommunityPlus & intoCards, const char * request_str)
+void HoldemArena::RequestCards(GameDeck * myDealer, uint8 numCards, CommunityPlus & intoCards, const char * request_str)
 //, std::ofstream *saveCards)
 {
     if( myDealer )
@@ -117,7 +144,7 @@ void HoldemArena::RequestCards(SerializeRandomDeck * myDealer, uint8 numCards, C
 
 }
 
-DeckLocation HoldemArena::RequestCard(SerializeRandomDeck * myDealer)
+DeckLocation HoldemArena::RequestCard(GameDeck * myDealer)
 //, std::ofstream * saveCards)
 {
     DeckLocation intoCard;
@@ -168,7 +195,7 @@ bool HoldemArena::ShowHoleCards(const Player & withP, const CommunityPlus & deal
 	return false;
 }
 
-void HoldemArena::DealAllHands(SerializeRandomDeck * tableDealer, std::ofstream & holecardsData)
+void HoldemArena::DealAllHands(GameDeck * tableDealer, std::ofstream & holecardsData)
 {
 
 

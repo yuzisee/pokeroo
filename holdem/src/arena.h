@@ -391,6 +391,10 @@ class HoldemArena
 
 		~HoldemArena();
 
+//===============
+//   Main Loop
+//===============
+    static void PlayGameInner(HoldemArena & my, GameDeck * tableDealer);
 
 //============================
 //   Flow Control Functions
@@ -409,7 +413,7 @@ class HoldemArena
          */
 		void BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer = -1);
     
-        void DealAllHands(SerializeRandomDeck * tableDealer, std::ofstream & holecardsData);
+        void DealAllHands(GameDeck * tableDealer, std::ofstream & holecardsData);
 
 		void PrepBettingRound(bool bFirstBettingRound, uint8 otherBettingRounds);
         //returns the first person to reveal cards (-1 if all fold)
@@ -421,8 +425,8 @@ class HoldemArena
 
 		void PlayShowdown(const CommunityPlus &,const playernumber_t );
 
-		void RequestCards(SerializeRandomDeck *, uint8, CommunityPlus &, const char * request_str);//, std::ofstream * saveCards);
-		DeckLocation RequestCard(SerializeRandomDeck *);//, std::ofstream *);
+		void RequestCards(GameDeck *, uint8, CommunityPlus &, const char * request_str);//, std::ofstream * saveCards);
+		DeckLocation RequestCard(GameDeck *);//, std::ofstream *);
         void RefreshPlayers();
 
 
@@ -509,6 +513,9 @@ class HoldemArena
 //======================
 
 		bool OverridePlayerMoney(playernumber_t n, float64 m);
+        void setSmallestChip(float64 smallestChipAmount) {
+            this->smallestChip = smallestChipAmount;
+        }
 }
 ;
 

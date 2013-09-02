@@ -121,7 +121,7 @@ static void InitGameLoop(HoldemArena & my, bool bLoadGame)
 		my.ResetDRseed();
 
         #ifdef DEBUGHOLECARDS
-        holecardsData.open( DEBUGHOLECARDS );
+        holecardsData.open( DEBUGHOLECARDS, std::ios::app);
         #endif
 
 }
@@ -129,32 +129,6 @@ static void InitGameLoop(HoldemArena & my, bool bLoadGame)
 
 
 
-static void PlayGameInner(HoldemArena & my, SerializeRandomDeck * tableDealer)
-{
-
-	if( my.PlayRound_BeginHand() == -1 ) return;
-
-	CommunityPlus myFlop;
-	my.RequestCards(tableDealer,3,myFlop, "Please enter the flop (no whitespace): ");
-    if( my.PlayRound_Flop(myFlop) == -1 ) return;
-
-
-	DeckLocation myTurn = my.RequestCard(tableDealer);
-    if( my.PlayRound_Turn(myFlop,myTurn) == -1 ) return;
-
-	DeckLocation myRiver = my.RequestCard(tableDealer);
-    int8 playerToReveal = my.PlayRound_River(myFlop,myTurn,myRiver);
-    if( playerToReveal == -1 ) return;
-
-
-	CommunityPlus finalCommunity;
-	finalCommunity.SetUnique(myFlop);
-	finalCommunity.AddToHand(myTurn);
-	finalCommunity.AddToHand(myRiver);
-
-
-	my.PlayShowdown(finalCommunity,playerToReveal);
-}
 
 
 static void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindController, SerializeRandomDeck * d, float64 randRem)
@@ -291,7 +265,7 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 #endif
 		my.ResetDRseed();
 
-		PlayGameInner(my, tableDealer);
+        HoldemArena::PlayGameInner(my, tableDealer);
 #ifdef DEBUG_SINGLE_HAND
 		exit(0);
 #endif
