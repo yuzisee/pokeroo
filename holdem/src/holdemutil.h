@@ -161,6 +161,12 @@ public:
 	{
 		return static_cast<uint8>(Suit) + (Rank-1)*4;
 	}
+
+    /**
+     ///THIS ORDERS THE CARDS LIKE: 2S 2H 2C 2D 3S 3H ...
+
+     See HoldemUtil
+     */
 	void SetByIndex(int8 n)
 	{
 		Rank = HoldemUtil::CardRank(n) + 1;
