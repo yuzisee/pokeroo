@@ -537,11 +537,15 @@ float64 GainModelNoRisk::g(float64 betSize)
     }
 #endif
 
+    const float64 onWin = (base+exf) * p_cw;
+    const float64 onLose = (base-x) * p_cl;
+    const float64 onSplit = sav;
+
 	return
 
-		   (base+exf) * p_cw
+		   onWin
         +
-           (base-x) * p_cl
+           onLose
         +
 		   sav
 
@@ -553,7 +557,9 @@ float64 GainModelNoRisk::g(float64 betSize)
 
 float64 GainModelNoRisk::f(const float64 betSize)
 {
-	const float64 fx = g(betSize) - estat->foldGain(espec.ed);
+    const float64 wls = g(betSize);
+    const float64 batna = estat->foldGain(espec.ed);
+	const float64 fx = wls - batna;
     return fx;
 }
 

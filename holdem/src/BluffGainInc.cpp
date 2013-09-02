@@ -213,13 +213,17 @@ StateModel<LL,RR>::~StateModel()
 template <class LL, class RR>
 float64 StateModel<LL,RR>::g_raised(float64 raisefrom, const float64 betSize)
 {
+    // Since AutoScalingFunction's f_raised is just a linear combination of calls to GainModel*::f(), which subtract FoldGain for comparison purposes,
+    // we have to first add it back in to get the pure gain.
+    // In our own StateModel::query() we'll add it back in again
     return fp->f_raised(raisefrom, betSize) + ea.FoldGain();
 }
 
 template <class LL, class RR>
 float64 StateModel<LL,RR>::gd_raised(float64 raisefrom, const float64 betSize, const float64 yval)
 {
-    return fp->fd_raised(raisefrom, betSize, yval - ea.FoldGain());
+    const float64 fp_f_raised = yval - ea.FoldGain(); // Subtract out foldgain, to get f_raised without computing it again.
+    return fp->fd_raised(raisefrom, betSize, fp_f_raised); // There is no derivative of ea.FoldGain() here because it is constant relative to betSize.
 }
 
 template <class LL, class RR>
@@ -246,7 +250,7 @@ float64 StateModel<LL,RR>::fd(const float64 betSize, const float64 yval)
 template <class LL, class RR>
 void StateModel<LL,RR>::query( const float64 betSize )
 {
-
+    // betSize here is always "my" bet size. The perspective of opponents is already covered in <tt>ea</tt>
 
     last_x = betSize;
     const float64 invisiblePercent = quantum / ea.tableinfo->allChips();
