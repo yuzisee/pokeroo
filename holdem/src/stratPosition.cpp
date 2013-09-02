@@ -118,7 +118,6 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 ///   Initialize hand
 ///======================
 
- DistrShape w_wl(0);
 
 
     CommunityPlus onlyCommunity;
@@ -132,6 +131,8 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 ///   Compute chances
 ///======================
 
+    DistrShape w_wl(0);
+    
     ///Compute CallStats
     StatsManager::QueryDefense(statprob.foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
     statprob.foldcumu.ReversePerspective();

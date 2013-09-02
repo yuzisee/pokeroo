@@ -103,6 +103,95 @@ namespace RegressionTests {
     }
     ;
 
+    void testRegression_003() {
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // Td Ad
+
+        card.SetByIndex(35);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(51);
+        withCommunity.AddToHand(card);
+
+
+
+        
+        CommunityPlus communityToTest; // 2d Qd Kc 2s 7c
+        
+        card.SetByIndex(3);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(43);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(46);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+
+        card.SetByIndex(0);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+
+        card.SetByIndex(22);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+
+        const int8 cardsInCommunity = 5;
+        /*
+
+         River:	2d Qd Kc 2s 7c  (Pot: $447.375)
+         */
+
+        DistrShape detailPCT(0);
+        DistrShape w_wl(0);
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+        ///Compute WinStats
+        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        
+        statprob.statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+
+        ///====================================
+        ///   Compute Relevant Probabilities
+        ///====================================
+        
+        statprob.Process_FoldCallMean();
+
+        assert(statprob.statworse.loss = 1.0);
+		
+
+    }
+
+    /**
+     * Discussion about Geom vs. Algb
+     * Bet-fraction is weird mid-game because what is it a fraction of? Your remaining money? Your uncommitted money?
+     * 
+     * It certainly would be simpler with Algb only.
+     *
+     *
+     * Other discussion:
+     *  Why don't you bet all-in? Is it because of the Kelly criterion, or is it because of optimism?
+     *  Why don't you _call_ all-in? Is it because of the Kelley criterion, or is it because of optimism?
+     *
+     * "If someone bets all-in, and you have the option to call it, you pick your spots. You can wait for a better opportunity. Obviously you don't take this one because you are putting too much of your money at risk at once" (thus, use Kelly criterion, a.k.a. GainModel, when calling or less, and use AlgbModel, a.k.a. GainModelNoRisk for raising)
+     * "If you are the one raising all-in, the deterrent for not always doing this is that you will only be called by good hands." (Thus, we should use AlgbModel as the default for raises but scale from X to statworse as your raise gets higher.)
+     * -Nav
+     */
     void testRegression_002() {
         /*
         Why didn't I bet lower?
@@ -312,6 +401,7 @@ int main(int argc, const char * argv[])
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
+    RegressionTests::testRegression_003();
     RegressionTests::testRegression_001();
     
 }
