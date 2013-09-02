@@ -22,7 +22,7 @@ void StatResultProbabilities::Process_FoldCallMean()
 ///===============
 ///   statworse
 ///===============
-	statworse = foldcumu.oddsAgainstBestTwoHands(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
+	statworse = foldcumu.oddsAgainstBestXHands(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
 
 ///==================
 ///   statrelation

@@ -434,7 +434,7 @@ StatResult CallCumulation::oddsAgainstBestHand() const
 }
 
 
-StatResult CallCumulation::oddsAgainstBestTwoHands() const
+StatResult CallCumulation::oddsAgainstBestXHands(/*float64 X*/) const
 {
     #ifdef DEBUGASSERT
         if( cumulation.size() == 0 )
@@ -478,7 +478,7 @@ StatResult CallCumulation::bestHandToHave() const
     StatResult retVal;
     retVal = cumulation[cumulation.size()-1];
     retVal.pct = 1 - retVal.pct;
-    retVal.repeated = cumulation[cumulation.size()-2].repeated;
+    retVal.repeated = cumulation[cumulation.size()-2].repeated; // because cumulation[cumulation.size()-1].repeated = 1.0
     return retVal;
 }
 

@@ -246,10 +246,10 @@ public:
 
 	virtual float64 Pr_haveWinPCT_orbetter(const float64 w_toHave) const;
 	virtual float64 nearest_winPCT_given_rank(const float64 rank);
-	virtual StatResult bestHandToHave() const;
-	virtual StatResult worstHandToHave() const;
+	virtual StatResult bestHandToHave() const; // best hand to have against me
+	virtual StatResult worstHandToHave() const; // worst hand to have against me
 	virtual StatResult oddsAgainstBestHand() const;
-	virtual StatResult oddsAgainstBestTwoHands() const;
+	virtual StatResult oddsAgainstBestXHands(/*float64 X*/) const; // Here, X is the fraction of hands we care about. If X === 0.0, this returns oddsAgainstBestHand(). If X === 1.0, this means just include all hands and effectively returns statmean.
 
 	#ifdef DUMP_CSV_PLOTS
         static void dump_csv_plots(std::ostream &targetoutput, const CallCumulation& calc)
