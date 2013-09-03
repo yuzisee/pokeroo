@@ -23,7 +23,6 @@
 #ifndef HOLDEM_FearManagement
 #define HOLDEM_FearManagement
 
-#define NUM_STARTING_HANDS 169
 
 class OpponentFoldWait
 {
@@ -43,10 +42,10 @@ class OpponentFoldWait
     // It may also be just fine to use minRaise instead. But let's see.
     float64 FearStartingBet(ExactCallBluffD & oppFoldEst, float64 maxScaler);
 
-    // If we hit this percentage, it's possible to get all-fold for one of the 169 hands for each remaining player.
+    // If we hit this percentage, it's possible to get all-fold for one of the 169 hands for each remaining player (the smallest of which has probability 1 in 221)
     // This is the smallest relevant non-zero win percentage we care about.
     float64 oppFoldStartingPct(ExactCallD & oppFoldEst) {
-        return pow(1.0 / NUM_STARTING_HANDS, oppFoldEst.tableinfo->handsToShowdown());
+        return pow(1.0 / RAREST_HAND_CHANCE, oppFoldEst.tableinfo->handsToShowdown());
     }
 }
 ;

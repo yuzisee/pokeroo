@@ -50,6 +50,7 @@ inline float64 round(float64 a)
 #endif
 
 
+// The probability of being dealt, e.g. two aces: 1 in 221
 #define RAREST_HAND_CHANCE 221.0
 
 class FoldWaitLengthModel : public virtual ScalarFunctionModel
