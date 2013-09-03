@@ -48,6 +48,7 @@ namespace NamedTriviaDeckTests {
 }
 
 #include "arena.h"
+#include "arenaEvents.h"
 #include "stratPosition.h"
 namespace RegressionTests {
 
@@ -103,6 +104,23 @@ namespace RegressionTests {
     }
     ;
 
+
+
+    /**
+     * Discussion about Geom vs. Algb
+     * Bet-fraction is weird mid-game because what is it a fraction of? Your remaining money? Your uncommitted money?
+     *
+     * It certainly would be simpler with Algb only.
+     *
+     *
+     * Other discussion:
+     *  Why don't you bet all-in? Is it because of the Kelly criterion, or is it because of optimism?
+     *  Why don't you _call_ all-in? Is it because of the Kelley criterion, or is it because of optimism?
+     *
+     * "If someone bets all-in, and you have the option to call it, you pick your spots. You can wait for a better opportunity. Obviously you don't take this one because you are putting too much of your money at risk at once" (thus, use Kelly criterion, a.k.a. GainModel, when calling or less, and use AlgbModel, a.k.a. GainModelNoRisk for raising)
+     * "If you are the one raising all-in, the deterrent for not always doing this is that you will only be called by good hands." (Thus, we should use AlgbModel as the default for raises but scale from X to statworse as your raise gets higher.)
+     * -Nav
+     */
     void testRegression_003() {
 
         DeckLocation card;
@@ -176,22 +194,115 @@ namespace RegressionTests {
         assert(0.95 <= statWorse.loss);
     }
 
-    /**
-     * Discussion about Geom vs. Algb
-     * Bet-fraction is weird mid-game because what is it a fraction of? Your remaining money? Your uncommitted money?
-     * 
-     * It certainly would be simpler with Algb only.
-     *
-     *
-     * Other discussion:
-     *  Why don't you bet all-in? Is it because of the Kelly criterion, or is it because of optimism?
-     *  Why don't you _call_ all-in? Is it because of the Kelley criterion, or is it because of optimism?
-     *
-     * "If someone bets all-in, and you have the option to call it, you pick your spots. You can wait for a better opportunity. Obviously you don't take this one because you are putting too much of your money at risk at once" (thus, use Kelly criterion, a.k.a. GainModel, when calling or less, and use AlgbModel, a.k.a. GainModelNoRisk for raising)
-     * "If you are the one raising all-in, the deterrent for not always doing this is that you will only be called by good hands." (Thus, we should use AlgbModel as the default for raises but scale from X to statworse as your raise gets higher.)
-     * -Nav
-     */
+    void testRegression_002b() {
+        ChipPositionState oppCPS(2474,7.875,0,0);
+// tableinfo->RiskLoss(0, 2474, 4, 6.75, 0, 0) = 0.0
+// tableinfo->RiskLoss(0, 2474, 4, 11.25, 0, 0) == 0.0
+        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest(0.0, 1.0 /* denom */, 6.75 + oppCPS.alreadyBet, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
+                                                                     ,oppCPS,4.5, 4,false,true,0);
+        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest(w_r_rank0, 1.0, 11.25 + oppCPS.alreadyBet, 0.0 ,  0.31640625
+                                                                     ,oppCPS, 4.5, 4,false,true,0);
+
+        // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
+        assert(w_r_rank0 <= w_r_rank1);
+    }
+
+    // 2013.08.30-19.58.15
+    // Hand #11
+    // Perspective, SpaceBot
     void testRegression_002() {
+
+        /*
+         BEGIN
+
+
+         Preflop
+         (Pot: $0)
+         (8 players)
+         [ConservativeBotV $344]
+         [DangerBotV $1496]
+         [MultiBotV $2657]
+         [NormalBotV $1064]
+         [ActionBotV $475]
+         [SpaceBotV $717]
+         [Nav $2474]
+         [GearBotV $4273]
+         */
+        struct BlindValues b;
+        b.SetSmallBigBlind(1.125);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+
+        const std::vector<float64> foldOnly({0});
+        const std::vector<float64> pA({5.0, 12.5, 49, 168.0, 459.0, 495.0});
+        FixedReplayPlayerStrategy cS(foldOnly);
+        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy nS(foldOnly);
+        FixedReplayPlayerStrategy aS(foldOnly);
+        FixedReplayPlayerStrategy pS(pA);
+        FixedReplayPlayerStrategy gS(foldOnly);
+
+        DeterredGainStrategy * const botToTest = new DeterredGainStrategy(2);
+
+        myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS);
+        myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
+        myTable.ManuallyAddPlayer("MultiBotV", 2657.0, &mS);
+        myTable.ManuallyAddPlayer("NormalBotV", 1064.0, &nS);
+        myTable.ManuallyAddPlayer("ActionBotV", 475.0, &aS);
+        myTable.ManuallyAddPlayer("SpaceBotV", 717.0, botToTest);
+        myTable.ManuallyAddPlayer("Nav", 2474.0, &pS);
+        myTable.ManuallyAddPlayer("GearBotV", 4273.0, &gS); // gearbot is the dealer, since ConservativeBot is the small blind
+
+        const playernumber_t dealer = 7;
+        myTable.setSmallestChip(1.0);
+
+        myTable.BeginInitialState();
+        myTable.BeginNewHands(b, false, dealer);
+
+
+        // 2S 2H 2C 2D 3S 3H 3C 3D 4S 4H
+        // 4C 4D 5S 5H 5C 5D 6S 6H 6C 6D
+        // 7S 7H 7C 7D 8S 8H 8C 8D 9S 9H
+        // 9C 9D TS TH TC TD J. J. J. J.
+        // QS QH QC QD KS KH KC KD AS AH
+        // AC AD
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // Td Ad
+
+            card.SetByIndex(35);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(51);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+        
+        /*
+         ConservativeBotV posts SB of $1.125 ($1.125)
+         DangerBotV posts BB of $2.25 ($3.375)
+         MultiBotV folds
+         NormalBotV folds
+         ActionBotV folds
+         SpaceBotV raises to $5 ($8.375)
+         Nav calls $5 ($13.375)
+         GearBotV folds
+         ConservativeBotV folds
+         DangerBotV folds
+         */
+
+        myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
+        HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 );
+        
+        r.MakeBet(0.0);
+        r.MakeBet(0.0);
+        r.MakeBet(0.0);
+        botToTest->MakeBet(); // ASSERT THAT OppRAISEChance isn't messed up.
+
+
         /*
         Why didn't I bet lower?
         OppRAISEChance [*] 0.284004 @ $4.5	fold -- left0.0491339  0.0491339 right
@@ -400,6 +511,8 @@ int main(int argc, const char * argv[])
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
+    RegressionTests::testRegression_002b();
+    RegressionTests::testRegression_002();
     RegressionTests::testRegression_003();
     RegressionTests::testRegression_001();
     

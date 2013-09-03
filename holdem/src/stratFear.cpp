@@ -58,7 +58,7 @@ float64 OpponentFoldWait::ActOrReact(float64 callb, float64 lastbet, float64 lim
 float64 OpponentFoldWait::FearStartingBet(ExactCallBluffD & oppFoldEst, float64 maxScaler)
 {
     ScalarPWinFunction searchFoldPcts(oppFoldEst, tableinfo->chipDenom()/2.0, oppFoldStartingPct(oppFoldEst));
-    return searchFoldPcts.FindZero(0.0,maxScaler);
+    return searchFoldPcts.FindZero(0.0,maxScaler, true);
     // Solve for the bet that brings Pr{opponentFold} to oppFoldStartingPct
 }
 

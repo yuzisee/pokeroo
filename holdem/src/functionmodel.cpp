@@ -217,7 +217,7 @@ float64 HoldemFunctionModel::FindFoldBet(const float64 bestBet)
 {
 
     const float64& myMoney = estat->maxBet();
-    float64 desiredFold = FindZero(bestBet,myMoney);
+    float64 desiredFold = FindZero(bestBet,myMoney, true);
     ///PURIFY
     float64 nextFold = desiredFold + quantum;
     float64 prevFold = desiredFold - quantum;

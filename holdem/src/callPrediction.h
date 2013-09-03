@@ -89,16 +89,21 @@ class ExactCallD
         float64 dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD * useMean);
 
 
-        float64 facedOdds_raise_Geom(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
+        float64 facedOdds_raise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
         float64 dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
 
-
-		float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
+        float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
         float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n);
 
 
         void query(const float64 betSize, const int32 callSteps);
     public:
+
+    // By default, startingPoint == 0.0
+    // When using this function for the purposes of nextNoRaise_A, you'll want to start at the previous value to avoid rounding errors.
+    static float64 facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 raiseto, float64 riskLoss, float64 avgBlind, const ChipPositionState & cps, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
+
+
         CallCumulationD * const ed;
         ExpectedCallD * const tableinfo;
 #ifdef DEBUG_TRACE_EXACTCALL

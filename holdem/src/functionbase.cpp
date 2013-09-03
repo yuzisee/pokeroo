@@ -609,7 +609,7 @@ float64 ScalarFunctionModel::regularfalsiStep(float64 x1, float64 y1, float64 x2
 	return (x1*y2 - x2*y1)/(y2 - y1);
 }
 
-float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
+float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuantum)
 {
 
     float64 y1 = f(x1);
@@ -699,7 +699,10 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
             if(bTraceEnable) std::cout << "\t\tSelected <xb,yb> = <" << xb << "," << yb << ">" << std::endl;
         #endif
 
-        if( fabs(yb) < DBL_EPSILON ) return xb;
+        if( fabs(yb) < DBL_EPSILON ) {
+            break;
+            // this returns xb.
+        }
 
         if( !IsDifferentSign(yb,y1) ) //same sign as y1
         {
@@ -736,7 +739,13 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2)
         if(bTraceEnable) std::cout << "Done. f(" << round(xb/quantum)*quantum << ") is zero" << endl;
     #endif
 
-    return round(xb/quantum)*quantum;
+    if (bRoundToQuantum) {
+        // e.g. when it's about chip counts, (or bet denominations) we want to round to a valid chip quantity.
+        return round(xb/quantum)*quantum;
+    } else {
+        // e.g. sometimes we're searching for raw probabilities, etc. In this case, just take the value.
+        return xb;
+    }
 }
 
 

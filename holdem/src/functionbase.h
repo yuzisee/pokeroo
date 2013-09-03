@@ -71,7 +71,7 @@ class ScalarFunctionModel
     virtual float64 fd(const float64, const float64) = 0;
 	virtual float64 FindMax(float64,float64) ;
 	virtual float64 FindMin(float64,float64) ;
-	virtual float64 FindZero(float64,float64) ;
+	virtual float64 FindZero(float64,float64, bool) ;
     virtual ~ScalarFunctionModel();
 
 
