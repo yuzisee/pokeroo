@@ -55,21 +55,14 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
     last_sliderx = sliderx;
 
     if( bNoRange )
-    {//Either over or under, completely.
-        if( sliderx >= saturate_min )
-        {
+    {
+        // bNoRange indicates an extreme situation is being explored.
+        // If these are all-in situations, we want to be on the pessimistic side (choose right rather than left). Being pessimistic here is crucial.
+        // If these are no bet situations, it doesn't matter what we pick because we'll probably just check/fold regardless of the model. Being pessimistic here is harmless.
             yr = right.f(x);
             fd_yr = right.fd(x,yr);
 
             y = yr; dy = fd_yr;
-        }
-        else
-        {
-            yl = left.f(x);
-            fd_yl = left.fd(x,yl);
-
-            y = yl; dy = fd_yl;
-        }
 
         #ifdef DEBUG_TRACE_SEARCH
             if(bTraceEnable) std::cout << "\t\t\tbNoRange" << std::flush;

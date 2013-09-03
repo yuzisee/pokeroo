@@ -172,9 +172,8 @@ namespace RegressionTests {
         
         statprob.Process_FoldCallMean();
 
-        assert(statprob.statworse.loss = 1.0);
-		
-
+        StatResult statWorse = statprob.statworse(2);
+        assert(0.95 <= statWorse.loss);
     }
 
     /**
