@@ -318,6 +318,9 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
     }
 
+    // Read the values of ea's pRaise below so they can be combined with the values of g_raised above to get an aggregate gain.
+    // Note that we read from the top down, in case it's not monotonic (which can occur due to pessimistic bWouldCall) and
+    // the higher of the raises takes precedent (which is the Fold outcome, which trumps expecting lower bets to make money if you can be pushed)
     for( int32 i=arraySize-1;i>=0; --i)
     {
 
@@ -349,6 +352,13 @@ void StateModel<LL,RR>::query( const float64 betSize )
         potRaisedWin_A[i] = 1;
         potRaisedWinD_A[i] = 0;
         }
+
+#ifdef DEBUGASSERT
+        if (isnan(oppRaisedChance_A[i])) {
+            std::cerr << "oppRaisedChance_A[i] should not be NaN" << std::endl;
+            exit(1);
+        }
+#endif // DEBUGASSERT
 
             #ifdef DEBUG_TRACE_SEARCH
                 if(bTraceEnable)
