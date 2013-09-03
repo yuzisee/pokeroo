@@ -23,7 +23,7 @@
 #ifndef HOLDEM_FearManagement
 #define HOLDEM_FearManagement
 
-
+#define NUM_STARTING_HANDS 169
 
 class OpponentFoldWait
 {
@@ -37,9 +37,17 @@ class OpponentFoldWait
 
     float64 ActOrReact(float64 callb, float64 lastbet,float64 tablelimit) const;
 
-    float64 FearStartingBet(ExactCallBluffD & oppFoldEst, float64 oppFoldStartingPct, float64 maxScaler);
-    //float64 FearMaxPercentage(ExactCallBluffD & oppFoldEst, float64 maxScaler);
+    // find the bet, between 0.0 and maxScaler, where someone might fold at all.
+    // this allows us to understand which bets aren't a fear threat.
+    // Alternatively, consider that any bet where someone has a choice of folding, he/she will start to wait for better hands.
+    // It may also be just fine to use minRaise instead. But let's see.
+    float64 FearStartingBet(ExactCallBluffD & oppFoldEst, float64 maxScaler);
 
+    // If we hit this percentage, it's possible to get all-fold for one of the 169 hands for each remaining player.
+    // This is the smallest relevant non-zero win percentage we care about.
+    float64 oppFoldStartingPct(ExactCallD & oppFoldEst) {
+        return pow(1.0 / NUM_STARTING_HANDS, oppFoldEst.tableinfo->handsToShowdown());
+    }
 }
 ;
 

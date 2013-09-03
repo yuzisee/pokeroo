@@ -4,12 +4,10 @@
 #include <cmath>
 
 
-void StatResultProbabilities::logfileAppendStatResultProbabilities(struct PositionalStrategyLogOptions const &logOptions, std::ostream &logFile)
+void StatResultProbabilities::logfileAppendStatResultProbabilities(struct PositionalStrategyLogOptions const &logOptions, std::ostream &logFile) const
 {
     logfileAppendPercentages(logFile, logOptions.bLogMean,"M","M.w","M.s","M.l",statmean);
 
-    logfileAppendPercentage(logFile, "Worst",statworse.pct);
-    logfileAppendPercentages(logFile, logOptions.bLogWorse,0,"W.w","W.s","W.l",statworse);
 
     logfileAppendPercentages(logFile, logOptions.bLogRanking,"Better All-in",0,"Re.s",0,statrelation);
     logfileAppendPercentages(logFile, logOptions.bLogRanking,"Better Mean Rank",0,"Ra.s",0,statranking);
@@ -17,13 +15,15 @@ void StatResultProbabilities::logfileAppendStatResultProbabilities(struct Positi
     logfileAppendPercentages(logFile, logOptions.bLogHybrid,"Geomean Win&Rank",0,"H.s",0,hybridMagnified);
 }
 
+void StatResultProbabilities::logfileAppendStatResultProbability_statworse(std::ostream &logFile, const StatResult & p, playernumber_t handsCompeting) const
+{
+    logFile << "Worst.handsCompeting = " << (int)handsCompeting << std::endl;
+    logfileAppendPercentage(logFile, "Worst", p.pct);
+    logfileAppendPercentages(logFile, true,0,"P.w","P.s","P.l",p);
+}
+
 void StatResultProbabilities::Process_FoldCallMean()
 {
-///===============
-///   statworse
-///===============
-	statworse = foldcumu.oddsAgainstBestXHands(); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
-
 ///==================
 ///   statrelation
 ///==================

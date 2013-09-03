@@ -49,15 +49,15 @@ float64 OpponentFoldWait::ActOrReact(float64 callb, float64 lastbet, float64 lim
 
     // If raiseOver is slightly less than limit, actOrReact should not be greater than 1.0
     const float64 uncappedActOrReact = (raiseOver / (limit * othersShare));
-    const float actOrReact = (uncappedActOrReact > 1.0) ? 1.0 : uncappedActOrReact;
+    const float64 actOrReact = (uncappedActOrReact > 1.0) ? 1.0 : uncappedActOrReact;
     return actOrReact;
     //const float64 actOrReact = (raiseOver > limit) ? mPlayers : (raiseOver / limit);
     //return actOrReact / mPlayers;
 }
 
-float64 OpponentFoldWait::FearStartingBet(ExactCallBluffD & oppFoldEst, float64 oppFoldStartingPct, float64 maxScaler)
+float64 OpponentFoldWait::FearStartingBet(ExactCallBluffD & oppFoldEst, float64 maxScaler)
 {
-    ScalarPWinFunction searchFoldPcts(oppFoldEst, tableinfo->chipDenom()/2.0, oppFoldStartingPct);
+    ScalarPWinFunction searchFoldPcts(oppFoldEst, tableinfo->chipDenom()/2.0, oppFoldStartingPct(oppFoldEst));
     return searchFoldPcts.FindZero(0.0,maxScaler);
     // Solve for the bet that brings Pr{opponentFold} to oppFoldStartingPct
 }

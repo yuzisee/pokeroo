@@ -434,7 +434,7 @@ StatResult CallCumulation::oddsAgainstBestHand() const
 }
 
 
-StatResult CallCumulation::oddsAgainstBestXHands(/*float64 X*/) const
+StatResult CallCumulation::oddsAgainstBestXHands(float64 X) const
 {
     #ifdef DEBUGASSERT
         if( cumulation.size() == 0 )
@@ -444,26 +444,44 @@ StatResult CallCumulation::oddsAgainstBestXHands(/*float64 X*/) const
         }
     #endif
 
-///Retrieve stats and reverse the perspective.
+    size_t idx = cumulation.size() - 1; // Start with the best hand to have against me.
 
-    StatResult retVal, retValA, retValB;
-    retValA = cumulation[cumulation.size()-1].ReversedPerspective();
-    retValB = cumulation[cumulation.size()-2].ReversedPerspective();
+    StatResult runningAverage;
+    runningAverage.repeated = 0.0;
 
-    retVal = (retValA + retValB)/2;
+    while (true) {
 
-    if( cumulation.size() >= 3 )
-    {
-        //retValA.repeated = 1 - cumulation[cumulation.size()-3].repeated;
-        //retValB.repeated = 1 - cumulation[cumulation.size()-3].repeated;
-        retVal.repeated = 1 - cumulation[cumulation.size()-3].repeated;
-    }else
-    {
-        retVal.repeated = 1;
+        ///Retrieve stats and reverse the perspective.
+
+        StatResult val = cumulation[idx].ReversedPerspective(); // Get the probability of going up against that hand
+        // retVal.repeated := cumulation[idx].repeated - cumulation[idx-1].repeated;
+        val.repeated -= sampleInBounds_repeated(idx - 1);
+
+        if (X <= val.repeated + runningAverage.repeated) {
+            // Interpolate the edge entry
+            // Add only the remaining weight to reach X.
+            val.repeated = X - runningAverage.repeated;
+            runningAverage.addByWeight(val);
+            return runningAverage;
+        } else
+        {
+            runningAverage.addByWeight(val);
+        }
+
+        if (idx == 0) {
+            // TODO(from yuzisee): Assert that X is very close to 1.0? Assert that runningAverage.repeated is very close to 1.0?
+
+            // Perhaps due to rounding error runningAverage.repeated is very close to 1.0 but didn't reach it.
+            runningAverage.repeated = X;
+            return runningAverage;
+        }
+
+        // INVARIANT: retVal.repeated is the sum of the probability of having all the hands between idx .. size()-1, inclusive.
+        --idx;
+
+        // TODO(from yuzisee): Make this function differentiable?
+        // For now it doesn't matter because X is usually based on the number of players, not the bet amount, so we never need its derivative.
     }
-
-
-    return retVal;
 }
 
 StatResult CallCumulation::bestHandToHave() const
@@ -482,7 +500,7 @@ StatResult CallCumulation::bestHandToHave() const
     return retVal;
 }
 
-float64 CallCumulationD::sampleInBounds_pct(size_t x) const
+float64 CallCumulation::sampleInBounds_pct(size_t x) const
 {
     if( x == cumulation.size() + 1 )
     {
@@ -496,7 +514,7 @@ float64 CallCumulationD::sampleInBounds_pct(size_t x) const
 }
 
 
-float64 CallCumulationD::sampleInBounds_repeated(size_t x) const
+float64 CallCumulation::sampleInBounds_repeated(size_t x) const
 {
     if( x == cumulation.size() + 1 )
     {

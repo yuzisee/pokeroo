@@ -108,6 +108,28 @@ class StatResult
 		return (temp);
 	}
 
+    /**
+     * "Add in" the StatResult given, according to its .repeated value
+     * This StatResult will be modified to become the weighted average of the two StatResults (weighted by both .repeated values) and
+     * our .repeated itself will be replaced with the sum of the two .repeated to represent that both outcomes have been added into one aggregate.
+     *
+     * Examples:
+     *  if a.repeated is 0.0, this is unchanged.
+     *  if this->repeated is 0.0, effectively this := a
+     *
+     *  NOTE: behaviour is undefined if both a.repeated and this->repeated are zero, or either are negative.
+     */
+    const StatResult addByWeight(const StatResult &a) {
+        const float64 netRepeated = this->repeated + a.repeated;
+
+        this->wins   = (  this->wins * this->repeated +   a.wins * a.repeated) / netRepeated;
+        this->splits = (this->splits * this->repeated + a.splits * a.repeated) / netRepeated;
+        this->loss   = (  this->loss * this->repeated +   a.loss * a.repeated) / netRepeated;
+        this->pct    = (   this->pct * this->repeated +    a.pct * a.repeated) / netRepeated;
+
+        this->repeated = netRepeated;
+    }
+
 	float64 wins;
 	float64 splits;
 	float64 loss;
@@ -230,6 +252,9 @@ private:
 protected:
 	size_t searchWinPCT_betterThan_toHave(const float64 winPCT_toHave) const;
 
+    float64 sampleInBounds_pct(size_t x) const;
+    float64 sampleInBounds_repeated(size_t x) const;
+
 public:
     CallCumulation(const CallCumulation& o)
     {
@@ -249,7 +274,7 @@ public:
 	virtual StatResult bestHandToHave() const; // best hand to have against me
 	virtual StatResult worstHandToHave() const; // worst hand to have against me
 	virtual StatResult oddsAgainstBestHand() const;
-	virtual StatResult oddsAgainstBestXHands(/*float64 X*/) const; // Here, X is the fraction of hands we care about. If X === 0.0, this returns oddsAgainstBestHand(). If X === 1.0, this means just include all hands and effectively returns statmean.
+	virtual StatResult oddsAgainstBestXHands(float64 X) const; // Here, X is the fraction of hands we care about. If X === 0.0, this returns oddsAgainstBestHand(). If X === 1.0, this means just include all hands and effectively returns statmean.
 
 	#ifdef DUMP_CSV_PLOTS
         static void dump_csv_plots(std::ostream &targetoutput, const CallCumulation& calc)
@@ -275,8 +300,6 @@ public:
 class CallCumulationD : public virtual CallCumulation
 {
 private:
-    float64 sampleInBounds_pct(size_t x) const;
-    float64 sampleInBounds_repeated(size_t x) const;
     float64 linearInterpolate(float64 x1, float64 y1, float64 x2, float64 y2, float64 x) const;
 	virtual float64 slopeof(size_t x10, size_t x11, size_t x20, size_t x21, size_t, size_t) const;
 public:

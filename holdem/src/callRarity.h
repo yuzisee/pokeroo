@@ -46,13 +46,13 @@ class StatResultProbabilities
 private:
 ///Equations, Logging, etc.
 
-    void logfileAppendPercentage(std::ostream &logFile, const char * label, const float64 vpct)
+    void logfileAppendPercentage(std::ostream &logFile, const char * label, const float64 vpct) const
     {
         logFile << "(";
         logFile << label;
         logFile << ") " << vpct * 100 << "%"  << std::endl;
     }
-    void logfileAppendPercentages(std::ostream &logFile, const bool bWrite, const char * label, const char * label_w, const char * label_s, const char * label_l, const StatResult vpcts)
+    void logfileAppendPercentages(std::ostream &logFile, const bool bWrite, const char * label, const char * label_w, const char * label_s, const char * label_l, const StatResult vpcts) const
     {
         if(bWrite)
         {
@@ -67,8 +67,12 @@ private:
 public:
 
 ///Single Opponent Probabilities
-    StatResult statworse;   // Probability of winning against the worst-case opposing hand
-    
+    StatResult statworse(playernumber_t handsCompeting) const   // Probability of winning against a pessimistic set of opposing hands (Based on handsCompeting)
+    {
+        const float64 fractionOfHandsToBeat = 1.0 / handsCompeting;
+        return foldcumu.oddsAgainstBestXHands(fractionOfHandsToBeat); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
+    }
+
     StatResult statrelation; // Against what fraction of opponents will you have the better hand?
     StatResult statranking; // How often do you get a hand this good?
     // The distinction here is that some hands with typically high change of winning in general may do poorly against the particular hand you're holding, and vice versa.
@@ -86,7 +90,8 @@ public:
 ///Initialize foldcumu, callcumu, and statmean, and then call Process_FoldCallMean().
 	void Process_FoldCallMean();
 
-    void logfileAppendStatResultProbabilities(struct PositionalStrategyLogOptions const &logOptions, std::ostream &logFile);
+    void logfileAppendStatResultProbabilities(struct PositionalStrategyLogOptions const &logOptions, std::ostream &logFile) const;
+    void logfileAppendStatResultProbability_statworse(std::ostream &logFile, const StatResult & p, playernumber_t handsCompeting) const;
 
 
 }

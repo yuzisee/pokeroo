@@ -142,13 +142,15 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
     ///Compute WinStats
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
-	statprob.statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+	
 
 	
 ///====================================
 ///   Compute Relevant Probabilities
 ///====================================
 
+    statprob.statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+	
 	statprob.Process_FoldCallMean();
 		
 ///INVARIANT: statprob.statmean, statprob.callcumu, statprob.foldcumu are now all initialized.
@@ -452,7 +454,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
         // Here, raiseStep is just the iterator. rl.RaiseAmount(betToCall,raiseStep) is the amount, rl.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
         logFile << rl.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << orAmount;
 
-        logFile << "\tfold -- left" << rl.pWin(orAmount) << "%  " << rr.pWin(orAmount) << "% right" << endl;  // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
+        logFile << "\tfold -- left" << rl.pWin(orAmount) << "  " << rr.pWin(orAmount) << " right" << endl;  // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
 
 
         if( orAmount >= maxShowdown ) break;
@@ -546,12 +548,15 @@ float64 ImproveGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
 
+    StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
+    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
+
     OpponentFoldWait myFearControl(&tablestate);
 
 
     const float64 riskprice = myDeterredCall.RiskPrice(); // If you repeatedly bet this price in this situation, even the average best hand on the table is worth throwing down and you'll only get caught by really strong hands.
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
-    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, statprob.statworse.repeated,riskprice);
+    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall,riskprice);
 
     // TODO(from yuzisee): handsToBeat() here.
 	const float64 fullVersus = ViewTable().NumberStartedRoundInclAllIn() - 1; // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
@@ -569,7 +574,7 @@ float64 ImproveGainStrategy::MakeBet()
     StatResult left = statversus;
     StatResult base_right = statversus;//statmean;  (NormalBot used this setup.)
 
-    StatResult right = statprob.statworse;
+    StatResult right = statWorse;
 
 
     if( bGamble >= 2 ) //Actionbot only
@@ -836,7 +841,7 @@ exit(1);
     const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? nextBet : bestBet;
 
     logFile << "\"riskprice\"... " << riskprice << "(based on scaler of " << geom_algb_scaler << ")" << endl;
-    logFile << "oppFoldChance is first " << statprob.statworse.repeated << ", when betting b_min=" << min_worst_scaler << endl;
+    logFile << "oppFoldChance is first " << myFearControl.oppFoldStartingPct(myDeterredCall) << ", when betting b_min=" << min_worst_scaler << endl; // but why do I care?
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     choicemodel.f(betToCall);
@@ -928,13 +933,16 @@ float64 DeterredGainStrategy::MakeBet()
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
+    
+    StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
+    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
 
     OpponentFoldWait myFearControl(&tablestate);
 
 
     const float64 riskprice = myDeterredCall.RiskPrice();
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
-    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, statprob.statworse.repeated,geom_algb_scaler);
+    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, geom_algb_scaler);
 
 
 //
@@ -959,7 +967,7 @@ float64 DeterredGainStrategy::MakeBet()
 
     GainModel geomModel(left,left,myDeterredCall);
 
-    StatResult right = statprob.statworse;
+    StatResult right = statWorse;
     right.repeated = 1-certainty;
 
     left.repeated = certainty;
@@ -1086,7 +1094,7 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
         logFile << "\"riskprice\"... " << riskprice << "(based on scaler " << geom_algb_scaler << ")" << endl;
-        logFile << "oppFoldChance is first " << statprob.statworse.repeated << ", when betting b_min=" << min_worst_scaler << endl;
+        logFile << "oppFoldChance is first " << myFearControl.oppFoldStartingPct(myDeterredCall) << ", when betting b_min=" << min_worst_scaler << endl;
 
         logFile << "Geom("<< displaybet <<")=" << 1.0+geomModel.f(displaybet) << endl;
         logFile << "Algb("<< displaybet <<")=" << 1.0+algbModel.f(displaybet) << endl;
