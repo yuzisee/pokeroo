@@ -104,6 +104,190 @@ namespace RegressionTests {
     }
     ;
 
+    void testRegression_004() {
+        /*
+        Next Dealer is TrapBotV
+        ================================================================
+        ============================New Hand #8========================
+        BEGIN
+
+
+        Preflop
+        (Pot: $0)
+        (9 players)
+        [SpaceBotV $1498]
+        [Nav $2960]
+        [GearBotV $1507] <-- playing as --NORMAL--
+        [ConservativeBotV $346]
+        [DangerBotV $1496]
+        [MultiBotV $2657]
+        [NormalBotV $1064]
+        [ActionBotV $475]
+        [TrapBotV $1497]
+         */
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(1.0);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+
+        const std::vector<float64> foldOnly({0});
+        const std::vector<float64> pA({3.0, 0, 10.0, 31.0, 50.0, 347.0});
+        FixedReplayPlayerStrategy sS(foldOnly);
+        FixedReplayPlayerStrategy pS(pA);
+        
+        FixedReplayPlayerStrategy cS(foldOnly);
+        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy nS(foldOnly);
+        FixedReplayPlayerStrategy aS(foldOnly);
+        FixedReplayPlayerStrategy tS(foldOnly);
+
+
+        ImproveGainStrategy * const botToTest = new ImproveGainStrategy(0);
+
+        myTable.ManuallyAddPlayer("SpaceBotV", 1498.0, &sS);
+        myTable.ManuallyAddPlayer("Nav", 2960.0, &pS);
+        myTable.ManuallyAddPlayer("GearBotV", 1507.0, botToTest); // gearbot is the dealer, since ConservativeBot is the small blind
+        myTable.ManuallyAddPlayer("ConservativeBotV", 346.0, &cS);
+        myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
+        myTable.ManuallyAddPlayer("MultiBotV", 2657.0, &mS);
+        myTable.ManuallyAddPlayer("NormalBotV", 1064.0, &nS);
+        myTable.ManuallyAddPlayer("ActionBotV", 475.0, &aS);
+        myTable.ManuallyAddPlayer("TrapBotV", 1497.0, &tS);
+
+        const playernumber_t dealer = 8;
+        myTable.setSmallestChip(1.0);
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // Qs As
+
+            card.SetByIndex(40);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(48);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+        
+
+        myTable.BeginInitialState();
+        myTable.BeginNewHands(b, false, dealer);
+
+        /*
+
+        SpaceBotV posts SB of $1 ($1)
+        Nav posts BB of $2 ($3)
+        GearBotV raises to $5 ($8)
+        ConservativeBotV folds
+        DangerBotV folds
+        MultiBotV folds
+        NormalBotV folds
+        ActionBotV folds
+        TrapBotV folds
+        SpaceBotV folds
+        Nav calls $3 ($11)
+         */
+        assert(myTable.PlayRound_BeginHand() != -1);
+
+
+        /*
+
+    Flop:	6d Jd Qc    (Pot: $11)
+        (2 players)
+        [Nav $2955]
+        [GearBotV $1502]
+*/
+        CommunityPlus myFlop;
+
+        card.SetByIndex(19);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(39);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(42);
+        myFlop.AddToHand(card);
+        
+        
+
+        
+        /*
+        Nav checks
+        GearBotV checks
+*/
+        assert(myTable.PlayRound_Flop(myFlop) != -1);
+
+        /*
+    Turn:	6d Jd Qc 9d   (Pot: $11)
+        (2 players)
+        [Nav $2955]
+        [GearBotV $1502]
+*/
+        DeckLocation myTurn; // 9d
+        myTurn.SetByIndex(32);
+
+        /*
+        Nav bets $10 ($21)
+        GearBotV raises to $31 ($52)
+        Nav calls $21 ($73)
+         */
+        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+        /*
+
+    River:	6d Jd Qc 9d 5h  (Pot: $73)
+        (2 players)
+        [Nav $2924]
+        [GearBotV $1471]
+*/
+        DeckLocation myRiver; // 5h
+        myRiver.SetByIndex(13);
+        /*
+        Nav bets $50 ($123)
+        GearBotV raises to $347 ($470)
+        Nav calls $297 ($767)
+*/
+        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) != -1);
+        /*
+        ----------
+        |Showdown|
+        ----------
+        Final Community Cards:
+        5h 6d 9d Jd Qc
+
+
+
+        GearBotV reveals: Qs As
+        Making,
+        012		Pair of Queens
+        Q A 5 Q 6 9 J 	AKQJT98765432
+        s s h c d d d 	1--1-1-------
+        
+        Nav mucks 
+        
+        GearBotV can win 384 or less	(controls 767 of 767)
+        * * *Comparing hands* * *
+        GearBotV takes 767 from the pot, earning 384 this round
+        
+        
+        ==========
+        CHIP COUNT
+        MultiBotV now has $2657
+        Nav now has $2577
+        GearBotV now has $1891
+        SpaceBotV now has $1497
+        TrapBotV now has $1497
+        DangerBotV now has $1496
+        NormalBotV now has $1064
+        ActionBotV now has $475
+        ConservativeBotV now has $346
+        
+*/
+    }
+
 
 
     /**
@@ -120,6 +304,8 @@ namespace RegressionTests {
      * "If someone bets all-in, and you have the option to call it, you pick your spots. You can wait for a better opportunity. Obviously you don't take this one because you are putting too much of your money at risk at once" (thus, use Kelly criterion, a.k.a. GainModel, when calling or less, and use AlgbModel, a.k.a. GainModelNoRisk for raising)
      * "If you are the one raising all-in, the deterrent for not always doing this is that you will only be called by good hands." (Thus, we should use AlgbModel as the default for raises but scale from X to statworse as your raise gets higher.)
      * -Nav
+     *
+     * Worst could be based on handsDealt so that it is sufficiently pessimistic, if you think it's not pessimistic enough.
      */
     void testRegression_003() {
 
@@ -206,6 +392,8 @@ namespace RegressionTests {
         // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
         assert(w_r_rank0 <= w_r_rank1);
     }
+
+    
 
     // 2013.08.30-19.58.15
     // Hand #11
@@ -511,6 +699,7 @@ int main(int argc, const char * argv[])
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
+    RegressionTests::testRegression_004();
     RegressionTests::testRegression_002b();
     RegressionTests::testRegression_002();
     RegressionTests::testRegression_003();
