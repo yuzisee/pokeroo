@@ -21,6 +21,9 @@ import os
 #for sleep
 import time
 
+POKER_REPLACE = True
+import re
+
 class SubProcessThread(threading.Thread):
     MAXIMUM_BYTE_READ = 2048
 
@@ -62,6 +65,8 @@ class AppendableLabel(Tkinter.Label):
         self.configure(font=new_font)
 
     def add_text(self,new_text):
+        if POKER_REPLACE:
+            new_text = re.sub(r'\b[2-9TJQKA][cdhs]\b', lambda m: m.group(0).replace('s', u'\u2664').replace('h', u'\u2661').replace('c', u'\u2663').replace('d', u'\u2662'), new_text)
         self._my_str += new_text
         self.configure(text=self._my_str)
 
@@ -219,8 +224,11 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 #    DEFAULT_CONSOLE_FONT = font=("Lucida Console", 9)
 #    DEFAULT_INPUT_FONT = font=("Courier New", 9,"bold")
 #Portable font choices: http://wiki.tcl.tk/451
-    DEFAULT_CONSOLE_FONT = font=("Courier", 9)
-    DEFAULT_INPUT_FONT = font=("Courier", 9,"bold")
+    #DEFAULT_CONSOLE_FONT = font=("Courier", 9)
+    #DEFAULT_INPUT_FONT = font=("Courier", 9,"bold")
+    DEFAULT_GAMELOG_FONT = font=("Halvetica", 11)
+    DEFAULT_CONSOLE_FONT = font=("Monaco", 9)
+    DEFAULT_INPUT_FONT = font=("Helvetica", 9,"bold")
 
 
     def __init__(self, my_console_app):
@@ -262,11 +270,11 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.stdout_history_frame = HistoryText(left_column)
         self.stderr_history_frame = HistoryText(right_column)
 
-        self.stdout_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
-        self.stderr_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
+        self.stdout_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_GAMELOG_FONT)
+        self.stderr_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_GAMELOG_FONT)
 
         stdout_latest = AppendableLabel(left_column)
-        stdout_latest.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
+        stdout_latest.set_font(ConsoleSeparateWindow.DEFAULT_GAMELOG_FONT)
 
         #The input frame contains the stderr latest with an entry field at the bottom
         stderr_input_frame = Tkinter.Frame(right_column, borderwidth=2, relief=Tkinter.GROOVE, background='green')
