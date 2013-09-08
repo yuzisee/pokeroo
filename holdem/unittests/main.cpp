@@ -104,6 +104,175 @@ namespace RegressionTests {
     }
     ;
 
+    // The issue here is the all-in re-raise by ConservativeBot.
+    // I think foldgain uses mean while playgain uses rank -- biasing toward play and against folding.
+    void testRegression_005() {
+        /*
+
+         Next Dealer is NormalBotV
+         ================================================================
+         ============================New Hand #2========================
+         BEGIN
+
+
+         Preflop
+         (Pot: $0)
+         (8 players)
+         [GearBotV $3004.5]
+         [ConservativeBotV $1500]
+         [MultiBotV $1500]
+         [SpaceBotV $1500]
+         [ActionBotV $1500]
+         [DangerBotV $1500]
+         [Ali $1500]
+         [NormalBotV $1495.5]
+         */
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(5.0625);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+
+        const std::vector<float64> foldOnly({0});
+        const std::vector<float64> aA({10.125, 18.0, 805.5, 1489.88});
+        FixedReplayPlayerStrategy gS(foldOnly);
+
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy sS(foldOnly);
+        FixedReplayPlayerStrategy aS(aA);
+        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy pS(foldOnly);
+        FixedReplayPlayerStrategy nS(foldOnly);
+
+
+        DeterredGainStrategy * const botToTest = new DeterredGainStrategy(0);
+
+        myTable.ManuallyAddPlayer("GearBotV", 3004.5, &gS);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, botToTest);
+        myTable.ManuallyAddPlayer("MultiBotV", 1500.0, &mS); // NormalBot is the dealer, since GearBot is the small blind
+        myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
+        myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
+        myTable.ManuallyAddPlayer("DangerBotV", 1500.0, &dS);
+        myTable.ManuallyAddPlayer("Ali", 1500.0, &pS);
+        myTable.ManuallyAddPlayer("NormalBotV", 1495.5, &nS);
+        
+        const playernumber_t dealer = 7;
+        myTable.setSmallestChip(4.5);
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // 5c 7d
+
+            card.SetByIndex(14);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(23);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+        
+        
+        myTable.BeginInitialState();
+        myTable.BeginNewHands(b, false, dealer);
+        
+
+         /*
+
+
+         GearBotV posts SB of $5.0625 ($5.0625)
+         ConservativeBotV posts BB of $10.125 ($15.1875)
+         MultiBotV folds
+         SpaceBotV folds
+         ActionBotV calls $10.125 ($25.3125)
+         DangerBotV folds
+         Ali folds
+         NormalBotV folds
+         GearBotV folds
+         ConservativeBotV checks
+*/
+
+        assert(myTable.PlayRound_BeginHand() != -1);
+
+
+        /*
+         Flop:	4s 5h Kd    (Pot: $25.3125)
+         (2 players)
+         [ConservativeBotV $1489.88]
+         [ActionBotV $1489.88]
+         */
+
+
+        CommunityPlus myFlop;
+
+        card.SetByIndex(9);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(13);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(47);
+        myFlop.AddToHand(card);
+        
+        /*
+
+         ConservativeBotV checks
+         ActionBotV bets $18 ($43.3125)
+         ConservativeBotV raises to $112.5 ($155.812)
+         ActionBotV raises to $805.5 ($943.312)
+         ConservativeBotV raises all-in to $1489.88 ($2320.69)
+         ActionBotV calls $684.375 ($3005.06)
+
+         */
+
+        assert(myTable.PlayRound_Flop(myFlop) == -1);
+        /*
+         Turn:	4s 5h Kd Ah   (Pot: $3005.06)
+         (2 players)
+
+
+         River:	4s 5h Kd Ah Qd  (Pot: $3005.06)
+         (2 players)
+
+
+         ----------
+         |Showdown|
+         ----------
+         Final Community Cards:
+         4s 5h Qd Kd Ah
+
+
+
+         ConservativeBotV is ahead with: 5c 7d
+         Trying to stay alive, makes
+         005		Pair of Fives
+         4 5 A 5 7 Q K 	AKQJT98765432
+         s h h c d d d 	111----------
+         
+         ActionBotV is ahead with: Ks As 
+         Trying to stay alive, makes 
+         092		Aces and Kings
+         4 K A 5 A Q K 	AKQJT98765432
+         s s s h h d d 	--1----------
+         
+         ActionBotV can win 1505.06 or less	(controls 3005.06 of 3005.06)
+         * * *Comparing hands* * *
+         ActionBotV takes 3005.06 from the pot, earning 1505.06 this round
+         
+         
+         ==========
+         CHIP COUNT
+         ActionBotV now has $3005.06
+         GearBotV now has $2999.44
+         DangerBotV now has $1500
+         SpaceBotV now has $1500
+         MultiBotV now has $1500
+         Ali now has $1500
+         NormalBotV now has $1495.5
+         */
+    }
+
     void testRegression_004() {
         /*
         Next Dealer is TrapBotV
@@ -148,7 +317,7 @@ namespace RegressionTests {
 
         myTable.ManuallyAddPlayer("SpaceBotV", 1498.0, &sS);
         myTable.ManuallyAddPlayer("Nav", 2960.0, &pS);
-        myTable.ManuallyAddPlayer("GearBotV", 1507.0, botToTest); // gearbot is the dealer, since ConservativeBot is the small blind
+        myTable.ManuallyAddPlayer("GearBotV", 1507.0, botToTest); // TrapBot is the dealer, since SpaceBot is the small blind
         myTable.ManuallyAddPlayer("ConservativeBotV", 346.0, &cS);
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
         myTable.ManuallyAddPlayer("MultiBotV", 2657.0, &mS);
@@ -305,7 +474,8 @@ namespace RegressionTests {
      * "If you are the one raising all-in, the deterrent for not always doing this is that you will only be called by good hands." (Thus, we should use AlgbModel as the default for raises but scale from X to statworse as your raise gets higher.)
      * -Nav
      *
-     * Worst could be based on handsDealt so that it is sufficiently pessimistic, if you think it's not pessimistic enough.
+     * (A) Worst could be based on handsDealt so that it is sufficiently pessimistic, if you think it's not pessimistic enough.
+     * (B) Also you can cut a couple rank bots to make room for this
      */
     void testRegression_003() {
 
@@ -699,6 +869,7 @@ int main(int argc, const char * argv[])
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
+    RegressionTests::testRegression_005();
     RegressionTests::testRegression_004();
     RegressionTests::testRegression_002b();
     RegressionTests::testRegression_002();
