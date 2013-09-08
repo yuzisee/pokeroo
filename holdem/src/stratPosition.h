@@ -111,7 +111,7 @@ class DeterredGainStrategy : public PositionalStrategy
     protected:
     int8 bGamble;
     public:
-    DeterredGainStrategy(int8 riskymode =0) : PositionalStrategy(false,true,false,true), bGamble(riskymode) {}
+    DeterredGainStrategy(int8 riskymode =0) : PositionalStrategy(true,true,false,false), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }

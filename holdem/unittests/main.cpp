@@ -226,7 +226,7 @@ namespace RegressionTests {
 
          */
 
-        assert(myTable.PlayRound_Flop(myFlop) == -1);
+        //assert(myTable.PlayRound_Flop(myFlop) == -1);
         /*
          Turn:	4s 5h Kd Ah   (Pot: $3005.06)
          (2 players)
@@ -301,7 +301,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({3.0, 0, 10.0, 31.0, 50.0, 347.0});
+        const std::vector<float64> pA({3.0, 0, 2.0, 10.0, 28.0, 50.0, 347.0, 696});
         FixedReplayPlayerStrategy sS(foldOnly);
         FixedReplayPlayerStrategy pS(pA);
         

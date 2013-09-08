@@ -963,7 +963,7 @@ float64 DeterredGainStrategy::MakeBet()
     }
 
     StatResult left = statversus;
-	if( bGamble == 0 ) left = statprob.hybridMagnified;
+	if( bGamble == 0 ) left = statprob.statmean;
 
     GainModel geomModel(left,left,myDeterredCall);
 
