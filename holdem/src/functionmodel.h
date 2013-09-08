@@ -39,6 +39,7 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 
     HoldemFunctionModel(float64 step,ExpectedCallD *c) : ScalarFunctionModel(step),estat(c) {};
 
+    // What would you best bet be, if you were to bet? (This assumes you aren't going to check or fold -- we handle those cases outside of this function)
     virtual float64 FindBestBet();
     virtual float64 FindFoldBet(const float64);
 

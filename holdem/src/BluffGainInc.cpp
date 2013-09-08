@@ -246,7 +246,7 @@ void StateModel<LL,RR>::query( const float64 betSize )
     // betSize here is always "my" bet size. The perspective of opponents is already covered in <tt>ea</tt>
 
     last_x = betSize;
-    const float64 invisiblePercent = quantum / ea.tableinfo->allChips();
+    const float64 invisiblePercent = quantum / ea.tableinfo->allChips(); // TODO(from joseph_huang): Should be based on RAREST_HAND_CHANCE maybe raised to the power of the number of players at the table
 
 ///Establish [PushGain] values
 

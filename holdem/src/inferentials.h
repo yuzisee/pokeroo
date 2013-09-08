@@ -128,6 +128,8 @@ class StatResult
         this->pct    = (   this->pct * this->repeated +    a.pct * a.repeated) / netRepeated;
 
         this->repeated = netRepeated;
+
+        return *this;
     }
 
 	float64 wins;
