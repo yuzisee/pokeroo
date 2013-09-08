@@ -157,7 +157,7 @@ class StateModel : public virtual HoldemFunctionModel
     StateModel(ExactCallBluffD &c, LL & functionL, RR & functionR) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
     ,last_x(-1),ea(c),bSingle(true),firstFoldToRaise(-1)
     {
-        if( (&functionL) != (&functionR) ) //ASSERT: LL == RR !!
+        if( ((HoldemFunctionModel *)(&functionL)) != (HoldemFunctionModel *)(&functionR) ) //ASSERT: LL == RR !!
         {
             std::cerr << "Static Type Error. Use this constructor only when <class LL>==<class RR>." << endl;
             exit(1);

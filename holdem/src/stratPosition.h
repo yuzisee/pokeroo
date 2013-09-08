@@ -63,6 +63,9 @@ class PositionalStrategy : virtual public PlayerStrategy
         ofstream logFile;
         #endif
 
+        // Shared logging code
+        void printCommon(const ExpectedCallD &tablestate);
+
         void setupPosition();
         float64 solveGainModel(HoldemFunctionModel*, CallCumulationD* const e);
 	public:
@@ -111,12 +114,35 @@ class DeterredGainStrategy : public PositionalStrategy
     protected:
     int8 bGamble;
     public:
-    DeterredGainStrategy(int8 riskymode =0) : PositionalStrategy(true,true,false,false), bGamble(riskymode) {}
+    DeterredGainStrategy(int8 riskymode =0) : PositionalStrategy(riskymode ? false : true,true,false,false), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }
 ;
 
+/**
+ * The basic presmise here is based on the following discussion:
+ *  Why don't you bet all-in? Is it because of the Kelly criterion, or is it because of optimism?
+ *  Why don't you _call_ all-in? Is it because of the Kelley criterion, or is it because of optimism?
+ *
+ * "If someone bets all-in, and you have the option to call it, you pick your spots. You can wait for a better opportunity. Obviously you don't take this one because you are putting too much of your money at risk at once" (thus, use Kelly criterion, a.k.a. GainModel, when calling or less, and use AlgbModel, a.k.a. GainModelNoRisk for raising)
+ * "If you are the one raising all-in, the deterrent for not always doing this is that you will only be called by good hands." (Thus, we should use AlgbModel as the default for raises but scale from X to statworse as your raise gets higher.)
+ * -Nav
+ 
+ * So:
+ * + Use stat worse when raising (any amount)
+ * + Use geom to call, always. Since calling is the smallest bet, do we hard algb/worse for any raise? Sure. At least it's simple. Let's try it.
+ */
+class SimpleGainStrategy : public PositionalStrategy
+{
+protected:
+    int8 bGamble;
+public:
+    SimpleGainStrategy(int8 riskymode =0) : PositionalStrategy(true,false,true,false), bGamble(riskymode) {}
+
+    virtual float64 MakeBet();
+}
+;
 
 
 

@@ -436,6 +436,20 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
 
 }
 
+void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
+#ifdef LOGPOSITION
+
+    logFile << (int)tablestate.handsDealt() << " dealt, "
+    << (int)tablestate.handsToOutplay() << " opp. (round), "
+    << (int)tablestate.handStrengthOfRound() << " opp. assumed str., "
+    << (int)tablestate.handsToShowdown() << " opp. still in"
+    << std::endl;
+
+
+#endif
+
+}
+
 template< typename T >
 void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet)
 {
@@ -937,11 +951,12 @@ float64 DeterredGainStrategy::MakeBet()
     StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
     statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
 
-    OpponentFoldWait myFearControl(&tablestate);
-
+   
 
     const float64 riskprice = myDeterredCall.RiskPrice();
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
+
+    OpponentFoldWait myFearControl(&tablestate);
     const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, geom_algb_scaler);
 
 
@@ -989,12 +1004,11 @@ float64 DeterredGainStrategy::MakeBet()
     {
         logFile << " -  Danger  - " << endl;
 	}
+#endif
 
-    logFile << (int)tablestate.handsDealt() << " dealt, "
-    << (int)tablestate.handsToOutplay() << " opp. (round), "
-    << (int)tablestate.handStrengthOfRound() << " opp. assumed str., "
-    << (int)tablestate.handsToShowdown() << " opp. still in"
-    << std::endl;
+    printCommon(tablestate);
+
+#ifdef LOGPOSITION
 
 
 	if( bGamble <= 1 )
@@ -1121,6 +1135,111 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 }
 
 
+
+float64 SimpleGainStrategy::MakeBet()
+{
+	setupPosition();
+
+	if( maxShowdown <= 0 ) return 0;
+
+
+
+    CallCumulationD &choicecumu = statprob.callcumu;
+    CallCumulationD &raisecumu = statprob.foldcumu;
+
+    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.statmean.pct);
+    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
+
+    StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
+    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
+    StatResult statAdversarial = statprob.statworse(tablestate.handsDealt());
+    statprob.logfileAppendStatResultProbability_statworse(logFile, statAdversarial, tablestate.handsDealt());
+
+
+    const float64 riskprice = myDeterredCall.RiskPrice();
+    const float64 maxAllowedBet = (riskprice < maxShowdown) ? riskprice : maxShowdown;
+
+    OpponentFoldWait myFearControl(&tablestate);
+    //const float64 smallestAdversarialBet = myFearControl.FearStartingBet(myDeterredCall, maxAllowedBet); // Starting from this bet the opponent has the choice of whether to fold or not.
+    const float64 smallestAdversarialBet = 0.0; // However, if we've made an adversarial bet earlier this round,  then they've already controlled what they are playing with. Thus, we want a min scaler here that will carry through.
+
+    // TODO(from joseph_huang): Add more bGamble that use things like nonvolatilityFactor and/or nearEndOfBets
+
+    StatResult left = statprob.statmean;
+    GainModel callModel(left,left,myDeterredCall);
+
+    GainModelNoRisk valueRaiseModel(statWorse,statWorse,myDeterredCall);
+    GainModelNoRisk pushRaiseModel(statAdversarial,statAdversarial,myDeterredCall);
+
+#ifdef LOGPOSITION
+    logFile << " -  Simple  - " << endl;
+#endif
+
+    printCommon(tablestate);
+
+    // If we didn't have statWorse --> statAdversarial here, we'd have a static edge for all bets that are a raise.
+    // Of course, oppFoldPct still grows to offset total gain, but we need some way to describe the fact that any bet at riskprice or higher is a death sentence.
+    // TODO(from joseph_huang): We probably need statAdversarial by default on some of the other bots...
+    AutoScalingFunction<GainModelNoRisk,GainModelNoRisk> raiseModel(valueRaiseModel,pushRaiseModel,smallestAdversarialBet,maxAllowedBet,&tablestate);
+
+    ///Choose from geom to algb
+    const float64 belowCall = betToCall - ViewTable().GetChipDenom() / 2.0;
+    const float64 aboveCall = betToCall + ViewTable().GetChipDenom() / 2.0;
+	AutoScalingFunction<GainModel,  AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>   > callOrRaise(callModel,raiseModel,belowCall,aboveCall,&tablestate);
+
+    StateModel<  GainModel, AutoScalingFunction<GainModelNoRisk,GainModelNoRisk> >
+    ap_aggressive( myDeterredCall, &callOrRaise );
+
+
+
+    HoldemFunctionModel& choicemodel = ap_aggressive;
+
+
+    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.callcumu));
+
+#ifdef LOGPOSITION
+
+
+
+
+#ifdef VERBOSE_STATEMODEL_INTERFACE
+    const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
+    choicemodel.f(displaybet); //since choicemodel is ap_aggressive
+    logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
+    logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
+    logFile << "        Push("<< displaybet <<")=" << ap_aggressive.gainWithFold << endl;
+
+#endif
+
+    //if( bestBet < betToCall + ViewTable().GetChipDenom() )
+    {
+        logFile << "\"riskprice\"... " << riskprice << "(so maxAllowedBet " << maxAllowedBet << ")" << endl;
+        
+        logFile << "Geom("<< displaybet <<")=" << 1.0+callModel.f(displaybet) << endl;
+        logFile << "Algb("<< displaybet <<")=" << 1.0+raiseModel.f(displaybet) << endl;
+
+        logFile << "valueAlgb("<< displaybet <<")=" << 1.0+valueRaiseModel.f(displaybet) << endl;
+        logFile << "pushAlgb("<< displaybet <<")=" << 1.0+pushRaiseModel.f(displaybet) << endl;
+    }
+
+
+    printBetGradient< StateModel<  GainModel, AutoScalingFunction<GainModelNoRisk, GainModelNoRisk> > >
+    (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet);
+
+
+    logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
+
+    logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(displaybet) << "   d\\" << myDeterredCall.pWinD(displaybet) << endl;
+    if( myDeterredCall.pWin(displaybet) > 0 )
+    {
+        logFile << "if playstyle is Danger/Conservative, overall utility is " << choicemodel.f(displaybet) << endl;
+    }
+    
+#endif
+
+            return bestBet;
+    
+}
 
 
 

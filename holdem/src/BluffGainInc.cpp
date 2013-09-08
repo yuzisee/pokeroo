@@ -30,7 +30,7 @@
 template class AutoScalingFunction<GainModel,GainModelNoRisk>;
 template class AutoScalingFunction<GainModel,GainModel>;
 template class AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>;
-
+template class AutoScalingFunction<GainModel,AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>>;
 template class AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >;
 
 template class AutoScalingFunction<   StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
@@ -44,7 +44,7 @@ template class StateModel<GainModel,GainModelNoRisk>;
 template class StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >;
 template class StateModel<GainModel,GainModel>;
 template class StateModel<GainModelNoRisk,GainModelNoRisk>;
-
+template class StateModel<GainModel,AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>>;
 
 
 template<class LL, class RR>

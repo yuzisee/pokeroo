@@ -145,7 +145,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy nS(foldOnly);
 
 
-        DeterredGainStrategy * const botToTest = new DeterredGainStrategy(0);
+        SimpleGainStrategy * const botToTest = new SimpleGainStrategy(0);
 
         myTable.ManuallyAddPlayer("GearBotV", 3004.5, &gS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, botToTest);
@@ -226,7 +226,7 @@ namespace RegressionTests {
 
          */
 
-        //assert(myTable.PlayRound_Flop(myFlop) == -1);
+        assert(myTable.PlayRound_Flop(myFlop) != 1);
         /*
          Turn:	4s 5h Kd Ah   (Pot: $3005.06)
          (2 players)
