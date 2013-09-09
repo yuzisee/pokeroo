@@ -145,7 +145,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy nS(foldOnly);
 
 
-        SimpleGainStrategy * const botToTest = new SimpleGainStrategy(0);
+        DeterredGainStrategy * const botToTest = new DeterredGainStrategy(0);
 
         myTable.ManuallyAddPlayer("GearBotV", 3004.5, &gS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, botToTest);
@@ -226,16 +226,20 @@ namespace RegressionTests {
 
          */
 
+        const playernumber_t flopCalledIdx = myTable.PlayRound_Flop(myFlop);
         assert(myTable.PlayRound_Flop(myFlop) != 1);
+        if (flopCalledIdx != -1) {
+
         /*
          Turn:	4s 5h Kd Ah   (Pot: $3005.06)
          (2 players)
 */
 
-        DeckLocation myTurn; // Ah
-        myTurn.SetByIndex(49);
+            DeckLocation myTurn; // Ah
+            myTurn.SetByIndex(49);
 
-        assert(myTable.PlayRound_Turn(myFlop, myTurn) != 1);
+            assert(myTable.PlayRound_Turn(myFlop, myTurn) != 1);
+        }
 
         /*
 
@@ -308,7 +312,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({3.0, 0, 2.0, 10.0, 28.0, 50.0, 347.0, 696});
+        const std::vector<float64> pA({5.0, 0, 5.0, 10.0, 28.0, 50.0, 347.0, 736.0});
         FixedReplayPlayerStrategy sS(foldOnly);
         FixedReplayPlayerStrategy pS(pA);
         
