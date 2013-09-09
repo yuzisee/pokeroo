@@ -632,11 +632,14 @@ float64 ImproveGainStrategy::MakeBet()
 	GainModel geomModel_fear(right,right,false, myDeterredCall_left);
 	GainModelNoRisk algbModel_fear(right,right,false, myDeterredCall_right);
 
-    statprob.logfileAppendStatResultProbability_statworse(logFile, algbModel_fear.ViewShape(), 1);
-
+    
 
 
 #ifdef LOGPOSITION
+    if (tablestate.handsToShowdown() != 1) {
+        statprob.logfileAppendStatResultProbability_statworse(logFile, algbModel_fear.ViewShape(), 1);
+    }
+
 	if( bGamble == 0 )
 	{ logFile << " -  NORMAL  - " << endl;}
 	else if( bGamble == 1 )
@@ -992,12 +995,14 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 	GainModelNoRisk algbModel(right,right,false, myDeterredCall);
-    
-    statprob.logfileAppendStatResultProbability_statworse(logFile, algbModel.ViewShape(), 1);
 
 
 
 #ifdef LOGPOSITION
+    if (tablestate.handsToShowdown() != 1) {
+        statprob.logfileAppendStatResultProbability_statworse(logFile, algbModel.ViewShape(), 1);
+    }
+
     if( bGamble == 0 )
     {
         logFile << " -  Conservative  - " << endl;
@@ -1160,7 +1165,9 @@ float64 SimpleGainStrategy::MakeBet()
     statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
     StatResult statAdversarial = statprob.statworse(tablestate.handsDealt());
     statprob.logfileAppendStatResultProbability_statworse(logFile, statAdversarial, tablestate.handsDealt());
-
+    StatResult statAbort = statprob.statworse((int)(RAREST_HAND_CHANCE/3.0));
+    statprob.logfileAppendStatResultProbability_statworse(logFile, statAbort, (int)(RAREST_HAND_CHANCE/3.0));
+    // TODO(from yuzisee): Create a new GainModelNoRiskDynamic that replaces the static p_cl and p_cw with functions that depend on the bet size. Total each opponent's foldWaitLength plus handStrengthOfRound to get the number of hands!
 
     const float64 riskprice = myDeterredCall.RiskPrice();
     const float64 maxAllowedBet = (riskprice < maxShowdown) ? riskprice : maxShowdown;
@@ -1176,11 +1183,17 @@ float64 SimpleGainStrategy::MakeBet()
 
     GainModelNoRisk valueRaiseModel(statWorse,statWorse,false, myDeterredCall);
     GainModelNoRisk pushRaiseModel(statAdversarial,statAdversarial,false, myDeterredCall);
+    GainModelNoRisk riskRaiseModel(statAbort,statAbort,false, myDeterredCall);
 
-    statprob.logfileAppendStatResultProbability_statworse(logFile, valueRaiseModel.ViewShape(), - tablestate.handStrengthOfRound() - 1);
-    statprob.logfileAppendStatResultProbability_statworse(logFile, pushRaiseModel.ViewShape(), - tablestate.handsDealt());
 
 #ifdef LOGPOSITION
+
+    if (tablestate.handsToShowdown() != 1) {
+        statprob.logfileAppendStatResultProbability_statworse(logFile, valueRaiseModel.ViewShape(), - tablestate.handStrengthOfRound() - 1);
+        statprob.logfileAppendStatResultProbability_statworse(logFile, pushRaiseModel.ViewShape(), - tablestate.handsDealt());
+        statprob.logfileAppendStatResultProbability_statworse(logFile, riskRaiseModel.ViewShape(), - RAREST_HAND_CHANCE / 3.0);
+    }
+    
     logFile << " -  Simple  - " << endl;
 #endif
 
@@ -1189,14 +1202,18 @@ float64 SimpleGainStrategy::MakeBet()
     // If we didn't have statWorse --> statAdversarial here, we'd have a static edge for all bets that are a raise.
     // Of course, oppFoldPct still grows to offset total gain, but we need some way to describe the fact that any bet at riskprice or higher is a death sentence.
     // TODO(from joseph_huang): We probably need statAdversarial by default on some of the other bots...
-    AutoScalingFunction<GainModelNoRisk,GainModelNoRisk> raiseModel(valueRaiseModel,pushRaiseModel,smallestAdversarialBet,maxAllowedBet,&tablestate);
+    AutoScalingFunction<GainModelNoRisk,GainModelNoRisk> controlledRaiseModel(valueRaiseModel,pushRaiseModel,smallestAdversarialBet,maxAllowedBet,&tablestate);
+
+    const float64 belowRiskPrice = riskprice - ViewTable().GetChipDenom() / 2.0;
+    const float64 aboveRiskPrice = riskprice + ViewTable().GetChipDenom() / 2.0;
+    AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk> raiseModel(controlledRaiseModel, riskRaiseModel, belowRiskPrice, aboveRiskPrice, &tablestate);
 
     ///Choose from geom to algb
     const float64 belowCall = betToCall - ViewTable().GetChipDenom() / 2.0;
     const float64 aboveCall = betToCall + ViewTable().GetChipDenom() / 2.0;
-	AutoScalingFunction<GainModel,  AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>   > callOrRaise(callModel,raiseModel,belowCall,aboveCall,&tablestate);
+	AutoScalingFunction<GainModel,  AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk>  > callOrRaise(callModel,raiseModel,belowCall,aboveCall,&tablestate);
 
-    StateModel<  GainModel, AutoScalingFunction<GainModelNoRisk,GainModelNoRisk> >
+    StateModel<  GainModel, AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk> >
     ap_aggressive( myDeterredCall, &callOrRaise );
 
 
@@ -1232,7 +1249,7 @@ float64 SimpleGainStrategy::MakeBet()
     }
 
 
-    printBetGradient< StateModel<  GainModel, AutoScalingFunction<GainModelNoRisk, GainModelNoRisk> > >
+    printBetGradient< StateModel<  GainModel, AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk> > >
     (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet);
 
 

@@ -89,7 +89,12 @@ namespace RegressionTests {
             assert(i < bets.size());
             const float64 myBet = bets[i];
             ++i;
-            return myBet;
+            if (myBet == myBet) {
+                return myBet;
+            } else {
+                // it's nan, which means CALL
+                return ViewTable().GetBetToCall();
+            }
         }
 
         virtual void SeeOppHand(const int8, const Hand&) {};
@@ -722,7 +727,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({5.0, 12.5, 49, 168.0, 459.0, 495.0});
+        const std::vector<float64> pA({std::nan(""), 12.5, 49, 168.0, 459.0, 495.0});
         FixedReplayPlayerStrategy cS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
         FixedReplayPlayerStrategy mS(foldOnly);
@@ -881,11 +886,12 @@ int main(int argc, const char * argv[])
     NamedTriviaDeckTests::testNamePockets();
 
     RegressionTests::testRegression_005();
-    RegressionTests::testRegression_004();
+
     RegressionTests::testRegression_002b();
     RegressionTests::testRegression_002();
     RegressionTests::testRegression_003();
     RegressionTests::testRegression_001();
-    
+
+    RegressionTests::testRegression_004();
 }
 
