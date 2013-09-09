@@ -562,7 +562,7 @@ float64 ImproveGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
 
-    StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
+    StatResult statWorse = statprob.statworse(tablestate.handsDealt());
     statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handsDealt());
 
     OpponentFoldWait myFearControl(&tablestate);
@@ -951,7 +951,7 @@ float64 DeterredGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
     
-    StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
+    StatResult statWorse = statprob.statworse(tablestate.handsDealt());
     statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handsDealt());
 
    
