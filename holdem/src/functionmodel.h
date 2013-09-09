@@ -93,8 +93,11 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 class GainModel : public virtual HoldemFunctionModel
 {
     private:
-        void combineStatResults(const StatResult s_acted, const StatResult s_nonacted);
-        void forceRenormalize();
+        void combineStatResults(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet);
+
+    // Adjust p_cl and p_cw slightly according to split probabilities.
+    // Prior to calling forceRenormalize, you just want the relative weight of p_cl and p_cw to be accurate.
+    void forceRenormalize();
 
 	protected:
 	ExactCallD & espec;
@@ -150,15 +153,21 @@ class GainModel : public virtual HoldemFunctionModel
      *      Ratio "wins / (wins + loss)", or 0.0 if all-split
      */
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
-	
-    GainModel(const StatResult s_acted, const StatResult s_nonacted,ExactCallD & c)
+
+    /**
+     *  Parameters:
+     *    convertToNet:
+     *      Set this to true if the StatResult objects provided are the odds to beat one person.
+     *      If this is false, we will assume the StatResult objects provided are the odds of winning the table.
+     */
+    GainModel(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, ExactCallD & c)
 		: ScalarFunctionModel(c.tableinfo->chipDenom())
         , HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
         , espec(c)
         , f_battle(c.tableinfo->handStrengthOfRound())
         , e_battle(c.tableinfo->handsIn()-1)
 		{
-		    combineStatResults(s_acted,s_nonacted);
+		    combineStatResults(s_acted,s_nonacted, bConvertToNet);
 		}
 
 
@@ -235,7 +244,13 @@ class GainModelNoRisk : public virtual GainModel
         virtual float64 g(float64);
         virtual float64 gd(float64,const float64);
     public:
-	GainModelNoRisk(const StatResult s,const StatResult sk,ExactCallD & c) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),GainModel(s,sk,c){}
+    /**
+     *  Parameters:
+     *    convertToNet:
+     *      Set this to true if the StatResult objects provided are the odds to beat one person.
+     *      If this is false, we will assume the StatResult objects provided are the odds of winning the table.
+     */
+	GainModelNoRisk(const StatResult s,const StatResult sk, bool bConvertToNet, ExactCallD & c) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),GainModel(s,sk,bConvertToNet, c){}
 	virtual ~GainModelNoRisk();
 
 	virtual float64 f(const float64);

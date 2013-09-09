@@ -56,7 +56,7 @@ float64 GainModel::cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x
 }
 
 
-void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_nonacted)
+void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet)
 {
 
 #ifdef DEBUGASSERT
@@ -74,23 +74,30 @@ void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_
         if( quantum == 0 ) quantum = 1;
 
 
+    if (bConvertToNet) {
     ///Use f_battle instead of e_battle, convert to equivelant totalEnemy
         p_cl =  1 - cleangeomeanpow(1 - s_acted.loss,s_acted.repeated , 1 - s_nonacted.loss,s_nonacted.repeated, f_battle);
         p_cw = cleangeomeanpow(s_acted.wins,s_acted.repeated , s_nonacted.wins,s_nonacted.repeated, f_battle);
+    } else {
+        if (s_acted.repeated == s_nonacted.repeated && s_acted.pct == s_nonacted.pct && s_acted.splits == s_nonacted.splits) {
+            p_cl = s_acted.loss;
+            p_cw = s_acted.wins;
+        } else {
+            std::cerr << "TODO(from yuzisee): !bConvertToNet for unequal s_acted s_nonacted is not yet implemented" << std::endl;
+            exit(1);
+        }
+    }
 
+    shape.loss = 1.0 - cleanpow(1.0 - p_cl,1.0/f_battle); //The w+s outcome for all players should be a power of w+s for shape
+    shape.wins = cleanpow(p_cw,1.0/f_battle);
+    shape.splits = 1.0 - shape.loss - shape.wins;
 
-        #ifdef DEBUG_TRACE_SEARCH
-        std::cout << "\t\t\t(1 -  " <<    s_acted.loss << ")^" << s_acted.repeated    << "  *  ";
-        std::cout <<       "(1 -  " << s_nonacted.loss << ")^" << s_nonacted.repeated << "   =   p_cl "  << p_cl << std::endl;
-        std::cout << "\t\t\t" << s_acted.wins  << "^s_acted.repeated  *  " <<
-                    s_nonacted.wins << "^s_nonacted.repeated   =   p_cw "  << p_cw << std::endl;
-        #endif
-
-
-        shape.loss = 1.0 - cleanpow(1.0 - p_cl,1.0/f_battle); //The w+s outcome for all players should be a power of w+s for shape
-        shape.wins = cleanpow(p_cw,1.0/f_battle);
-        shape.splits = 1.0 - shape.loss - shape.wins;
-
+#ifdef DEBUG_TRACE_SEARCH
+    std::cout << "\t\t\t(1 -  " <<    s_acted.loss << ")^" << s_acted.repeated    << "  *  ";
+    std::cout <<       "(1 -  " << s_nonacted.loss << ")^" << s_nonacted.repeated << "   =   p_cl "  << p_cl << std::endl;
+    std::cout << "\t\t\t" << s_acted.wins  << "^s_acted.repeated  *  " <<
+    s_nonacted.wins << "^s_nonacted.repeated   =   p_cw "  << p_cw << std::endl;
+#endif
 
 #ifdef DEBUGASSERT
     if ((shape.loss != shape.loss) || (shape.wins != shape.wins) || (shape.splits != shape.splits)) {

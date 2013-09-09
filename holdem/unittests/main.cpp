@@ -230,7 +230,14 @@ namespace RegressionTests {
         /*
          Turn:	4s 5h Kd Ah   (Pot: $3005.06)
          (2 players)
+*/
 
+        DeckLocation myTurn; // Ah
+        myTurn.SetByIndex(49);
+
+        assert(myTable.PlayRound_Turn(myFlop, myTurn) != 1);
+
+        /*
 
          River:	4s 5h Kd Ah Qd  (Pot: $3005.06)
          (2 players)

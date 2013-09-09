@@ -563,7 +563,7 @@ float64 ImproveGainStrategy::MakeBet()
 #endif
 
     StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
-    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
+    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handsDealt());
 
     OpponentFoldWait myFearControl(&tablestate);
 
@@ -626,11 +626,14 @@ float64 ImproveGainStrategy::MakeBet()
     }
 
 
-    GainModel geomModel(left,left,myDeterredCall_left);
-    GainModelNoRisk algbModel(statversus,statversus,myDeterredCall_right);
+    GainModel geomModel(left,left,true, myDeterredCall_left);
+    GainModelNoRisk algbModel(statversus,statversus,true, myDeterredCall_right);
 
-	GainModel geomModel_fear(right,right,myDeterredCall_left);
-	GainModelNoRisk algbModel_fear(right,right,myDeterredCall_right);
+	GainModel geomModel_fear(right,right,false, myDeterredCall_left);
+	GainModelNoRisk algbModel_fear(right,right,false, myDeterredCall_right);
+
+    statprob.logfileAppendStatResultProbability_statworse(logFile, algbModel_fear.ViewShape(), 1);
+
 
 
 #ifdef LOGPOSITION
@@ -949,7 +952,7 @@ float64 DeterredGainStrategy::MakeBet()
 #endif
     
     StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
-    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
+    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handsDealt());
 
    
 
@@ -980,7 +983,7 @@ float64 DeterredGainStrategy::MakeBet()
     StatResult left = statversus;
 	if( bGamble == 0 ) left = statprob.statmean;
 
-    GainModel geomModel(left,left,myDeterredCall);
+    GainModel geomModel(left,left,true, myDeterredCall);
 
     StatResult right = statWorse;
     right.repeated = 1-certainty;
@@ -988,7 +991,10 @@ float64 DeterredGainStrategy::MakeBet()
     left.repeated = certainty;
 
 
-	GainModelNoRisk algbModel(right,right,myDeterredCall);
+	GainModelNoRisk algbModel(right,right,false, myDeterredCall);
+    
+    statprob.logfileAppendStatResultProbability_statworse(logFile, algbModel.ViewShape(), 1);
+
 
 
 #ifdef LOGPOSITION
@@ -1166,10 +1172,13 @@ float64 SimpleGainStrategy::MakeBet()
     // TODO(from joseph_huang): Add more bGamble that use things like nonvolatilityFactor and/or nearEndOfBets
 
     StatResult left = statprob.statmean;
-    GainModel callModel(left,left,myDeterredCall);
+    GainModel callModel(left,left,true, myDeterredCall);
 
-    GainModelNoRisk valueRaiseModel(statWorse,statWorse,myDeterredCall);
-    GainModelNoRisk pushRaiseModel(statAdversarial,statAdversarial,myDeterredCall);
+    GainModelNoRisk valueRaiseModel(statWorse,statWorse,false, myDeterredCall);
+    GainModelNoRisk pushRaiseModel(statAdversarial,statAdversarial,false, myDeterredCall);
+
+    statprob.logfileAppendStatResultProbability_statworse(logFile, valueRaiseModel.ViewShape(), - tablestate.handStrengthOfRound() - 1);
+    statprob.logfileAppendStatResultProbability_statworse(logFile, pushRaiseModel.ViewShape(), - tablestate.handsDealt());
 
 #ifdef LOGPOSITION
     logFile << " -  Simple  - " << endl;
