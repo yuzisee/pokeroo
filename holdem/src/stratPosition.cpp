@@ -524,7 +524,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
 // ACTIONBOT:
 //
 // Increases implied odds on Low Bets proportional to detailPCT.avgDev
-// On higher bets: Reduces considered opponents (you probably don't have to beat the people who folded), especially if you are going to improve your hand
+// /* On higher bets: Reduces considered opponents (you probably don't have to beat the people who folded), especially if you are going to improve your hand */
 //
 
 
@@ -922,8 +922,10 @@ exit(1);
 ///   DangerBot, SpaceBot, ComBot
 ///=================================
 
-// 0 : ComBot    --  hybridMagnified -> statworse
-// 1 : DangerBot --  statversus --> statworse
+// 0 : ComBot    --  statmean -> statworse
+#if 0
+  // 1 : DangerBot --  statversus --> statworse
+#endif //0
 // 2 : SpaceBot  --  statversus --> statworse
 //Here, statversus goes from: (2 players left in hand) statrelation  --> (all players left in hand) statranking
 

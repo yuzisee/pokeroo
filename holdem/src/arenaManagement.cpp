@@ -170,7 +170,7 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
         botStrat = new DeterredGainStrategy();
         break;
     case 'D':
-        botStrat = new DeterredGainStrategy(1);
+        botStrat = new SimpleGainStrategy();
         break;
     case 'N':
         botStrat = new ImproveGainStrategy(0);
