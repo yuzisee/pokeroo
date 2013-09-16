@@ -316,12 +316,15 @@ float64 GainModel::g(float64 betSize)
 
 //    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
+    const float64 winGain = pow(base+exf , p_cw);
+    const float64 loseGain = pow(base-x , p_cl);
+
 	return
 
         (
-        pow(base+exf , p_cw)
+        winGain
         *
-        pow(base-x , p_cl)
+        loseGain
         *sav)
 	;
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix));  plays more cautiously to account for most people playing better cards only

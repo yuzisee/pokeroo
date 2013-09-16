@@ -211,7 +211,9 @@ float64 StateModel<LL,RR>::g_raised(float64 raisefrom, const float64 betSize)
     // Since AutoScalingFunction's f_raised is just a linear combination of calls to GainModel*::f(), which subtract FoldGain for comparison purposes,
     // we have to first add it back in to get the pure gain.
     // In our own StateModel::query() we'll add it back in again
-    return fp->f_raised(raisefrom, betSize) + ea.FoldGain();
+    const float64 potWin = fp->f_raised(raisefrom, betSize);
+    const float64 foldgainUnref = ea.FoldGain();
+    return potWin + foldgainUnref;
 }
 
 template <class LL, class RR>

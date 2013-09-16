@@ -109,6 +109,190 @@ namespace RegressionTests {
     }
     ;
 
+    // The issue here is ActionBot calls a bet with (known?) zero percent chance of winning.
+    void testRegression_006() {
+        /*
+
+
+         Preflop
+         (Pot: $0)
+         (8 players)
+         [GearBotV $1488.75]
+         [ActionBotV $3031.88]
+         [NormalBotV $2240]
+         [Ali $1500]
+         [DangerBotV $1495]
+         [MultiBotV $760]
+         [ConservativeBotV $1484.38]
+         [SpaceBotV $1500]
+         
+
+         GearBotV posts SB of $5.625 ($5.625)
+         ActionBotV posts BB of $11.25 ($16.875)
+*/
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(5.625);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(5.0);
+
+        const std::vector<float64> foldOnly({0});
+        const std::vector<float64> nA({11.25, 80.0, 30.0, 125.0});
+        FixedReplayPlayerStrategy gS(foldOnly);
+        
+        FixedReplayPlayerStrategy nS(nA);
+        FixedReplayPlayerStrategy pS(foldOnly);
+        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy cS(foldOnly);
+        FixedReplayPlayerStrategy sS(foldOnly);
+
+
+        ImproveGainStrategy * const botToTest = new ImproveGainStrategy(2);
+
+        myTable.ManuallyAddPlayer("GearBotV", 1488.75, &gS);
+        myTable.ManuallyAddPlayer("ActionBotV", 3031.88, botToTest);
+        myTable.ManuallyAddPlayer("NormalBotV", 2240.0, &nS); // NormalBot is the dealer, since GearBot is the small blind
+        myTable.ManuallyAddPlayer("Ali", 1500.0, &pS);
+        myTable.ManuallyAddPlayer("DangerBotV", 1495.0, &dS);
+        myTable.ManuallyAddPlayer("MultiBotV", 760.0, &mS);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 1484.38, &cS);
+        myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
+
+        const playernumber_t dealer = 7;
+
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // 3c Qc
+
+            card.SetByIndex(6);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(42);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+
+
+        myTable.BeginInitialState();
+        myTable.BeginNewHands(b, false, dealer);
+
+
+        /*
+         NormalBotV calls $11.25 ($28.125)
+         Ali folds
+         DangerBotV folds
+         MultiBotV folds
+         ConservativeBotV folds
+         SpaceBotV folds
+         GearBotV folds
+         ActionBotV checks
+*/
+        assert(myTable.PlayRound_BeginHand() != -1);
+
+
+
+        /*
+         Flop:	Jc Ks Ah    (Pot: $28.125)
+*/
+
+        CommunityPlus myFlop;
+
+        card.SetByIndex(38);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(44);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(49);
+        myFlop.AddToHand(card);
+
+        /*
+         (2 players)
+         [ActionBotV $3020.62]
+         [NormalBotV $2228.75]
+         
+         ActionBotV bets $11.25 ($39.375)
+         NormalBotV raises to $80 ($119.375)
+         ActionBotV calls $68.75 ($188.125)
+         */
+
+
+        assert(myTable.PlayRound_Flop(myFlop) != -1);
+/*
+         Turn:	Jc Ks Ah 9d   (Pot: $188.125)
+ */
+        DeckLocation myTurn; // 9d
+        myTurn.SetByIndex(31);
+        
+        /*
+         (2 players)
+         [ActionBotV $2940.62]
+         [NormalBotV $2148.75]
+
+         ActionBotV checks
+         NormalBotV bets $30 ($218.125)
+         ActionBotV calls $30 ($248.125)
+*/
+        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+        
+        /*
+         River:	Jc Ks Ah 9d Ad  (Pot: $248.125)
+         */
+        DeckLocation myRiver; // Ad
+        myRiver.SetByIndex(51);
+        /*
+
+         (2 players)
+         [ActionBotV $2910.62]
+         [NormalBotV $2118.75]
+
+         ActionBotV checks
+         NormalBotV bets $125 ($373.125)
+         ActionBotV calls $125 ($498.125)
+         */
+        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) == -1);
+
+        /*
+
+         ----------
+         |Showdown|
+         ----------
+         Final Community Cards:
+         9d Jc Ks Ah Ad
+
+
+
+         NormalBotV reveals: Qd Ac 
+         Making,
+         105		Trip Aces
+         K A J A 9 Q A 	AKQJT98765432
+         s h c c d d d 	-11----------
+         
+         ActionBotV mucks 
+         
+         NormalBotV can win 251.875 or less	(controls 498.125 of 498.125)
+         * * *Comparing hands* * *
+         NormalBotV takes 498.125 from the pot, earning 251.875 this round
+         
+         
+         ==========
+         CHIP COUNT
+         ActionBotV now has $2785.62
+         NormalBotV now has $2491.88
+         Ali now has $1500
+         SpaceBotV now has $1500
+         DangerBotV now has $1495
+         ConservativeBotV now has $1484.38
+         GearBotV now has $1483.12
+         MultiBotV now has $760
+         */
+    }
+
     // The issue here is the all-in re-raise by ConservativeBot.
     // I think foldgain uses mean while playgain uses rank -- biasing toward play and against folding.
     void testRegression_005() {
@@ -755,13 +939,13 @@ namespace RegressionTests {
         myTable.BeginInitialState();
         myTable.BeginNewHands(b, false, dealer);
 
-
-        // 2S 2H 2C 2D 3S 3H 3C 3D 4S 4H
-        // 4C 4D 5S 5H 5C 5D 6S 6H 6C 6D
-        // 7S 7H 7C 7D 8S 8H 8C 8D 9S 9H
-        // 9C 9D TS TH TC TD J. J. J. J.
-        // QS QH QC QD KS KH KC KD AS AH
-        // AC AD
+        //  [0][1][2][3][4][5][6][7][8][9]
+        //0. 2S 2H 2C 2D 3S 3H 3C 3D 4S 4H
+        //1. 4C 4D 5S 5H 5C 5D 6S 6H 6C 6D
+        //2. 7S 7H 7C 7D 8S 8H 8C 8D 9S 9H
+        //3. 9C 9D TS TH TC TD JS JH JC JD
+        //4. QS QH QC QD KS KH KC KD AS AH
+        //5. AC AD
         DeckLocation card;
 
         {
@@ -885,6 +1069,7 @@ int main(int argc, const char * argv[])
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
+    RegressionTests::testRegression_006();
     RegressionTests::testRegression_005();
 
     RegressionTests::testRegression_002b();

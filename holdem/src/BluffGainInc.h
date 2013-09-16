@@ -45,7 +45,7 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
 
     protected:
         virtual void query(float64 sliderx, float64 x);
-        const float64 saturate_min, saturate_max, saturate_upto;
+        const float64 saturate_min, saturate_max, saturate_upto; // saturate_upto is usually a number between 0.0 and 1.0 that causes a reduced max
         float64 last_x;
         float64 last_sliderx;
         float64 y;
