@@ -586,7 +586,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 
     StatResult left = statversus;
-    StatResult base_right = statmean; // (NormalBot uses statmean, others use statversus.)
+    StatResult base_right = statprob.statmean; // (NormalBot uses statmean, others use statversus.)
 
     StatResult right = statWorse;
 
