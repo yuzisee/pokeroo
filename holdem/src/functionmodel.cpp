@@ -30,12 +30,12 @@ GainModelNoRisk::~GainModelNoRisk()
 }
 
 
-GainModel::~GainModel()
+GainModelGeom::~GainModelGeom()
 {
 }
 
 
-float64 GainModel::cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle)
+float64 CombinedStatResultsGeom::cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle)
 {
     if (x1 == x2) {
         // A common use case is to pass in the same StatResult for s_acted and s_nonacted.
@@ -56,9 +56,10 @@ float64 GainModel::cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x
 }
 
 
-void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet)
+void CombinedStatResultsGeom::combineStatResults(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet)
 {
 
+    /*
 #ifdef DEBUGASSERT
          // Note: During forceRenormalize e_battle is espec.tableinfo->handsIn()-1
         if(    espec.tableinfo->handsIn()-1 != (playernumber_t)f_battle  // For now, just verify that handsIn() == handsToBeat() + 1
@@ -70,9 +71,7 @@ void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_
             //exit(1);
         }
 #endif
-
-        if( quantum == 0 ) quantum = 1;
-
+*/
 
     if (bConvertToNet) {
     ///Use f_battle instead of e_battle, convert to equivelant totalEnemy
@@ -116,7 +115,7 @@ void GainModel::combineStatResults(const StatResult s_acted, const StatResult s_
         shape.repeated = 1;
 }
 
-void GainModel::forceRenormalize()
+void CombinedStatResultsGeom::forceRenormalize()
 {
         shape.forceRenormalize(); ///Normalize just in case; total possibility must add up to 1
 
@@ -253,7 +252,7 @@ float64 HoldemFunctionModel::GetFoldGain(CallCumulationD* const e, float64 * con
 
 
 
-float64 GainModel::g(float64 betSize)
+float64 GainModelGeom::g(float64 betSize) const
 {
 
 	if( betSize > estat->callBet() && betSize < estat->minRaiseTo() )
@@ -294,7 +293,7 @@ float64 GainModel::g(float64 betSize)
 
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
 
-    const int8 e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
+    const int8 e_call = outcome.e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
 
 	float64 sav=1;
 	for(int8 i=1;i<=e_call;++i)
@@ -310,14 +309,14 @@ float64 GainModel::g(float64 betSize)
 		sav *=  pow(
                     base - x +( f_pot+x+exf_live*dragCalls )/(i+1)
                         ,
-                        HoldemUtil::nchoosep<float64>(e_battle,i) * pow(shape.wins,e_battle-i) * pow(shape.splits,i)
+                        HoldemUtil::nchoosep<float64>(outcome.e_battle,i) * pow(ViewShape().wins,outcome.e_battle-i) * pow(ViewShape().splits,i)
                 );
 	}
 
 //    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
-    const float64 winGain = pow(base+exf , p_cw);
-    const float64 loseGain = pow(base-x , p_cl);
+    const float64 winGain = pow(base+exf , outcome.getWinProb());
+    const float64 loseGain = pow(base-x , outcome.getLoseProb());
 
 	return
 
@@ -334,14 +333,14 @@ float64 GainModel::g(float64 betSize)
 	//floor()
 }
 
-float64 GainModel::f(const float64 betSize)
+float64 GainModelGeom::f(const float64 betSize)
 {
 	const float64 fx = g(betSize) - estat->foldGain(espec.ed);
     return fx;
 }
 
 
-float64 GainModel::gd(const float64 betSize, const float64 y)
+float64 GainModelGeom::gd(const float64 betSize, const float64 y) const
 {
 	//const float64 exf = e->pctWillCall(x/qdenom);
 	//const float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
@@ -403,7 +402,7 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
-    const int8 e_call = e_battle; //Probably manditory if dragCalls is used
+    const int8 e_call = outcome.e_battle; //Probably manditory if dragCalls is used
 
 	float64 savd=0;
 	for(int8 i=1;i<=e_call;++i)
@@ -415,7 +414,7 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
 
         if( dragCalls != 0 )
         {
-            savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
+            savd += HoldemUtil::nchoosep<float64>(outcome.e_battle,i)*pow(ViewShape().wins,outcome.e_battle-i)*pow(ViewShape().splits,i)
                     *
                     dexf
                     /
@@ -432,16 +431,16 @@ float64 GainModel::gd(const float64 betSize, const float64 y)
  	return
  	(y)*
 	(
-	p_cw*dexf/(1+exf)
+	outcome.getWinProb()*dexf/(1+exf)
 
-	-(p_cl)/(1-x)
+	-(outcome.getLoseProb())/(1-x)
 	+
 	savd
 	);
 
 }
 
-float64 GainModel::fd(const float64 betSize, const float64 y)
+float64 GainModelGeom::fd(const float64 betSize, const float64 y)
 {
 
     const float64 efg = estat->foldGain(espec.ed);
@@ -455,7 +454,7 @@ float64 GainModel::fd(const float64 betSize, const float64 y)
 }
 
 
-StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
+StatResult CombinedStatResultsGeom::ComposeBreakdown(const float64 pct, const float64 wl)
 {
 	StatResult a;
 
@@ -477,7 +476,7 @@ StatResult GainModel::ComposeBreakdown(const float64 pct, const float64 wl)
 
 
 
-float64 GainModelNoRisk::g(float64 betSize)
+float64 GainModelNoRisk::g(float64 betSize) const
 {
 
 	if( betSize > estat->callBet() && betSize < estat->minRaiseTo() )
@@ -516,7 +515,7 @@ float64 GainModelNoRisk::g(float64 betSize)
 
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
 
-    const int8& e_call = e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
+    const int8& e_call = outcome.e_battle;//const int8 e_call = static_cast<int8>(round(exf/x));
 
 	float64 sav=0;
 	for(int8 i=1;i<=e_call;++i)
@@ -532,7 +531,7 @@ float64 GainModelNoRisk::g(float64 betSize)
 		sav +=
                 (    base - x+( f_pot+x+exf_live*dragCalls )/(i+1)    )
                         *
-                (        HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)    )
+                (        HoldemUtil::nchoosep<float64>(outcome.e_battle,i)*pow(ViewShape().wins,outcome.e_battle-i)*pow(ViewShape().splits,i)    )
                 ;
 	}
 
@@ -547,8 +546,8 @@ float64 GainModelNoRisk::g(float64 betSize)
     }
 #endif
 
-    const float64 onWin = (base+exf) * p_cw;
-    const float64 onLose = (base-x) * p_cl;
+    const float64 onWin = (base+exf) * outcome.getWinProb();
+    const float64 onLose = (base-x) * outcome.getLoseProb();
     const float64 onSplit = sav;
 
 	return
@@ -574,7 +573,7 @@ float64 GainModelNoRisk::f(const float64 betSize)
 }
 
 
-float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
+float64 GainModelNoRisk::gd(float64 betSize, const float64 y) const
 {
 
     const float64 adjQuantum = quantum/4;
@@ -605,7 +604,7 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
-    const int8 e_call = e_battle; //Probably manditory if dragCalls is used
+    const int8 e_call = outcome.e_battle; //Probably manditory if dragCalls is used
 
 	float64 savd=0;
 	for(int8 i=1;i<=e_call;++i)
@@ -617,7 +616,9 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 
         if( dragCalls != 0 )
         {
-            savd += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i)
+            savd += HoldemUtil::nchoosep<float64>(outcome.e_battle,i)
+            *pow(ViewShape().wins,outcome.e_battle-i)
+            *pow(ViewShape().splits,i)
                     *
                     dexf * dragCalls
                     /
@@ -635,9 +636,9 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 
  	return
 	(
-	p_cw*dexf
+	outcome.getWinProb()*dexf
 	-
-	(p_cl)
+	(outcome.getLoseProb())
 	+
 	savd
 	);

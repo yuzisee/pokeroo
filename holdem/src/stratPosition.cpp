@@ -149,7 +149,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 ///   Compute Relevant Probabilities
 ///====================================
 
-    statprob.statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+    statprob.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 	
 	statprob.Process_FoldCallMean();
 		
@@ -626,10 +626,10 @@ float64 ImproveGainStrategy::MakeBet()
     }
 
 
-    GainModel geomModel(left,left,true, myDeterredCall_left);
+    GainModelGeom geomModel(left,left,true, myDeterredCall_left);
     GainModelNoRisk algbModel(statversus,statversus,true, myDeterredCall_right);
 
-	GainModel geomModel_fear(right,right,false, myDeterredCall_left);
+	GainModelGeom geomModel_fear(right,right,false, myDeterredCall_left);
 	GainModelNoRisk algbModel_fear(right,right,false, myDeterredCall_right);
 
     
@@ -988,7 +988,7 @@ float64 DeterredGainStrategy::MakeBet()
     StatResult left = statversus;
 	if( bGamble == 0 ) left = statprob.statmean;
 
-    GainModel geomModel(left,left,true, myDeterredCall);
+    GainModelGeom geomModel(left,left,true, myDeterredCall);
 
     StatResult right = statWorse;
     right.repeated = 1-certainty;
@@ -1181,7 +1181,7 @@ float64 SimpleGainStrategy::MakeBet()
     // TODO(from joseph_huang): Add more bGamble that use things like nonvolatilityFactor and/or nearEndOfBets
 
     StatResult left = statprob.statmean;
-    GainModel callModel(left,left,true, myDeterredCall);
+    GainModelGeom callModel(left,left,true, myDeterredCall);
 
     GainModelNoRisk valueRaiseModel(statWorse,statWorse,false, myDeterredCall);
     GainModelNoRisk pushRaiseModel(statAdversarial,statAdversarial,false, myDeterredCall);

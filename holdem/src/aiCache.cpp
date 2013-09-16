@@ -560,7 +560,7 @@ int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
     DistrShape pctShape(0);
     DistrShape wlShape(0);
     StatsManager::Query( 0, &pctShape, &wlShape, oppTempStrength, emptyHand, 0);
-    *entryTarget = GainModel::ComposeBreakdown(pctShape.mean,wlShape.mean);
+    *entryTarget = CombinedStatResultsGeom::ComposeBreakdown(pctShape.mean,wlShape.mean);
     entryTarget->repeated = dOcc;
     
     // === ... and then increment statGroup ===

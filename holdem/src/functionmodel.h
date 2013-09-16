@@ -83,6 +83,40 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 }
 ;
 
+class GainModel : public virtual HoldemFunctionModel {
+public:
+
+
+    virtual ~GainModel() {}
+
+protected:
+
+    GainModel(float64 step,ExpectedCallD *c)
+    :
+    ScalarFunctionModel(step)
+    ,
+    HoldemFunctionModel(step, c)
+    {
+
+        if( quantum == 0 ) quantum = 1;
+
+    }
+
+    virtual float64 g(float64) const = 0;
+    virtual float64 gd(float64, const float64) const = 0;
+
+}
+;
+
+class ICombinedStatResults {
+public:
+    virtual ~ICombinedStatResults() {}
+    
+    const virtual StatResult & ViewShape() const = 0; // per-player outcome: wins and splits are used to calculate split possibilities
+    virtual float64 getLoseProb() const = 0;
+	virtual float64 getWinProb() const = 0;
+}
+;
 
 /**
  * Convert a particular StatResult into the odds of winning at the table.
@@ -90,52 +124,52 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
  *  + This class will automatically determine the number of hands at the table you would have to beat in order to win, via the ExactCallD's tableInfo
  *  + Pass in two different StatResult objects and we'll use the geometric mean of them instead.
  */
-class GainModel : public virtual HoldemFunctionModel
-{
-    private:
-        void combineStatResults(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet);
+class CombinedStatResultsGeom : public virtual ICombinedStatResults {
+private:
+    void combineStatResults(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet);
 
     // Adjust p_cl and p_cw slightly according to split probabilities.
     // Prior to calling forceRenormalize, you just want the relative weight of p_cl and p_cw to be accurate.
     void forceRenormalize();
 
-	protected:
-	ExactCallD & espec;
+    
+protected:
 	StatResult shape;
+	float64 p_cl;
+	float64 p_cw;
 
+
+
+
+    
+
+public:
     //Floating point version of totalEnemy (which is handsToBeat), but adjustable by playerStrategy based on expectations
 	const float64 f_battle;
 
     //Who can you split with?
 	const uint8 e_battle;
+
     
-	float64 p_cl;
-	float64 p_cw;
+    static inline float64 cleanpow(float64 b, float64 x)
+    {
+        if( b < DBL_EPSILON ) return 0;
+        //if( b > 1 ) return 1;
+        return pow(b,x);
+    }
+    
+    CombinedStatResultsGeom(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, ExactCallD & c)
+    : f_battle(c.tableinfo->handStrengthOfRound())
+    , e_battle(c.tableinfo->handsIn()-1)
+    {
+        combineStatResults(s_acted,s_nonacted, bConvertToNet);
+    }
 
-
-        virtual float64 g(float64);
-        virtual float64 gd(float64, const float64);
-
-	public:
-
-        static inline float64 cleanpow(float64 b, float64 x)
-        {
-            if( b < DBL_EPSILON ) return 0;
-            //if( b > 1 ) return 1;
-            return pow(b,x);
-        }
-
-        /*
-         * Raise s to s^f_battle, where s is the weighted geomean of b1 (weight x1) and b2 (weight x2)
-         */
-    static float64 cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle);
-
-
-        const StatResult & ViewShape() { return shape; }
+    const virtual StatResult & ViewShape() const { return shape; }
 
     /**
      * ComposeBreakdown()
-     * 
+     *
      *  Discussion:
      *    Helper function for constructing a StatResult object.
      *
@@ -154,24 +188,62 @@ class GainModel : public virtual HoldemFunctionModel
      */
 	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
 
+
+    /*
+     * Raise s to s^f_battle, where s is the weighted geomean of b1 (weight x1) and b2 (weight x2)
+     */
+    static float64 cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle);
+
+    virtual float64 getLoseProb() const {
+        return p_cl;
+    }
+
+    virtual float64 getWinProb() const {
+        return p_cw;
+    }
+}
+;
+
+class GainModelGeom : public virtual GainModel
+{
+
+protected:
+
+	ExactCallD & espec;
+    
+    const CombinedStatResultsGeom outcome; // predict the outcome of a showdown
+
+
+
+    virtual float64 g(float64) const;
+    virtual float64 gd(float64, const float64) const;
+    
+	public:
+
+
+        const StatResult & ViewShape() const { return outcome.ViewShape(); }
+
+    
+
     /**
      *  Parameters:
      *    convertToNet:
      *      Set this to true if the StatResult objects provided are the odds to beat one person.
      *      If this is false, we will assume the StatResult objects provided are the odds of winning the table.
      */
-    GainModel(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, ExactCallD & c)
-		: ScalarFunctionModel(c.tableinfo->chipDenom())
-        , HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
+    GainModelGeom(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, ExactCallD & c)
+		:
+    ScalarFunctionModel(c.tableinfo->chipDenom())
+    ,
+    HoldemFunctionModel(c.tableinfo->chipDenom(), c.tableinfo)
+    ,
+    GainModel(c.tableinfo->chipDenom(),c.tableinfo)
         , espec(c)
-        , f_battle(c.tableinfo->handStrengthOfRound())
-        , e_battle(c.tableinfo->handsIn()-1)
-		{
-		    combineStatResults(s_acted,s_nonacted, bConvertToNet);
-		}
+        , outcome(s_acted, s_nonacted, bConvertToNet, c)
+    {}
 
 
-    virtual ~GainModel();
+    virtual ~GainModelGeom();
 
 	virtual float64 f(const float64);
     virtual float64 fd(const float64, const float64);
@@ -241,16 +313,25 @@ class GainModel : public virtual HoldemFunctionModel
 class GainModelNoRisk : public virtual GainModel
 {
     protected:
-        virtual float64 g(float64);
-        virtual float64 gd(float64,const float64);
+    ExactCallD & espec;
+    const CombinedStatResultsGeom outcome; // predict the outcome of a showdown
+    
+        virtual float64 g(float64) const;
+        virtual float64 gd(float64,const float64) const;
     public:
+    const StatResult & ViewShape() const { return outcome.ViewShape(); }
     /**
      *  Parameters:
      *    convertToNet:
      *      Set this to true if the StatResult objects provided are the odds to beat one person.
      *      If this is false, we will assume the StatResult objects provided are the odds of winning the table.
      */
-	GainModelNoRisk(const StatResult s,const StatResult sk, bool bConvertToNet, ExactCallD & c) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo),GainModel(s,sk,bConvertToNet, c){}
+	GainModelNoRisk(const StatResult s,const StatResult sk, bool bConvertToNet, ExactCallD & c)
+    : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
+    ,
+    GainModel(c.tableinfo->chipDenom(),c.tableinfo)
+    ,espec(c)
+    ,outcome(s,sk,bConvertToNet, c){}
 	virtual ~GainModelNoRisk();
 
 	virtual float64 f(const float64);

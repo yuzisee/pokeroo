@@ -737,7 +737,7 @@ namespace RegressionTests {
         ///Compute WinStats
         StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
         
-        statprob.statmean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+        statprob.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 
 
         ///====================================
