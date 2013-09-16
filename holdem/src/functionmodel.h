@@ -211,7 +211,7 @@ protected:
 
 	ExactCallD & espec;
     
-    const CombinedStatResultsGeom outcome; // predict the outcome of a showdown
+    const CombinedStatResultsGeom & fOutcome; // predict the outcome of a showdown
 
 
 
@@ -221,7 +221,7 @@ protected:
 	public:
 
 
-        const StatResult & ViewShape() const { return outcome.ViewShape(); }
+        const StatResult & ViewShape() const { return fOutcome.ViewShape(); }
 
     
 
@@ -231,7 +231,7 @@ protected:
      *      Set this to true if the StatResult objects provided are the odds to beat one person.
      *      If this is false, we will assume the StatResult objects provided are the odds of winning the table.
      */
-    GainModelGeom(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, ExactCallD & c)
+    GainModelGeom(const CombinedStatResultsGeom & outcome, ExactCallD & c)
 		:
     ScalarFunctionModel(c.tableinfo->chipDenom())
     ,
@@ -239,7 +239,7 @@ protected:
     ,
     GainModel(c.tableinfo->chipDenom(),c.tableinfo)
         , espec(c)
-        , outcome(s_acted, s_nonacted, bConvertToNet, c)
+        , fOutcome(outcome)
     {}
 
 
@@ -314,24 +314,24 @@ class GainModelNoRisk : public virtual GainModel
 {
     protected:
     ExactCallD & espec;
-    const CombinedStatResultsGeom outcome; // predict the outcome of a showdown
+    const CombinedStatResultsGeom & fOutcome; // predict the outcome of a showdown
     
         virtual float64 g(float64) const;
         virtual float64 gd(float64,const float64) const;
     public:
-    const StatResult & ViewShape() const { return outcome.ViewShape(); }
+    const StatResult & ViewShape() const { return fOutcome.ViewShape(); }
     /**
      *  Parameters:
      *    convertToNet:
      *      Set this to true if the StatResult objects provided are the odds to beat one person.
      *      If this is false, we will assume the StatResult objects provided are the odds of winning the table.
      */
-	GainModelNoRisk(const StatResult s,const StatResult sk, bool bConvertToNet, ExactCallD & c)
+	GainModelNoRisk(const CombinedStatResultsGeom & outcome, ExactCallD & c)
     : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
     ,
     GainModel(c.tableinfo->chipDenom(),c.tableinfo)
     ,espec(c)
-    ,outcome(s,sk,bConvertToNet, c){}
+    ,fOutcome(outcome){}
 	virtual ~GainModelNoRisk();
 
 	virtual float64 f(const float64);

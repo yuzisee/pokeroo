@@ -626,11 +626,21 @@ float64 ImproveGainStrategy::MakeBet()
     }
 
 
-    GainModelGeom geomModel(left,left,true, myDeterredCall_left);
-    GainModelNoRisk algbModel(statversus,statversus,true, myDeterredCall_right);
+    CombinedStatResultsGeom leftCS(left,left,true, myDeterredCall_left);
+    CombinedStatResultsGeom cornerCS(statversus,statversus,true, myDeterredCall_right);
 
-	GainModelGeom geomModel_fear(right,right,false, myDeterredCall_left);
-	GainModelNoRisk algbModel_fear(right,right,false, myDeterredCall_right);
+
+    CombinedStatResultsGeom cornerCS_fear(right,right,false, myDeterredCall_left);
+
+    CombinedStatResultsGeom rightCS_fear(right,right,false, myDeterredCall_right);
+    // const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet s_acted, s_nonacted, bConvertToNet, c)
+
+
+    GainModelGeom geomModel(leftCS, myDeterredCall_left);
+    GainModelNoRisk algbModel(cornerCS, myDeterredCall_right);
+
+	GainModelGeom geomModel_fear(cornerCS_fear, myDeterredCall_left);
+	GainModelNoRisk algbModel_fear(rightCS_fear, myDeterredCall_right);
 
     
 
@@ -988,15 +998,16 @@ float64 DeterredGainStrategy::MakeBet()
     StatResult left = statversus;
 	if( bGamble == 0 ) left = statprob.statmean;
 
-    GainModelGeom geomModel(left,left,true, myDeterredCall);
+    CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
+    GainModelGeom geomModel(leftCS, myDeterredCall);
 
     StatResult right = statWorse;
     right.repeated = 1-certainty;
 
     left.repeated = certainty;
 
-
-	GainModelNoRisk algbModel(right,right,false, myDeterredCall);
+    CombinedStatResultsGeom rightCS(right, right, false, myDeterredCall);
+	GainModelNoRisk algbModel(rightCS, myDeterredCall);
 
 
 
@@ -1181,11 +1192,15 @@ float64 SimpleGainStrategy::MakeBet()
     // TODO(from joseph_huang): Add more bGamble that use things like nonvolatilityFactor and/or nearEndOfBets
 
     StatResult left = statprob.statmean;
-    GainModelGeom callModel(left,left,true, myDeterredCall);
+    CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
+    GainModelGeom callModel(leftCS, myDeterredCall);
 
-    GainModelNoRisk valueRaiseModel(statWorse,statWorse,false, myDeterredCall);
-    GainModelNoRisk pushRaiseModel(statAdversarial,statAdversarial,false, myDeterredCall);
-    GainModelNoRisk riskRaiseModel(statAbort,statAbort,false, myDeterredCall);
+    CombinedStatResultsGeom valueCS(statWorse,statWorse,false, myDeterredCall);
+    GainModelNoRisk valueRaiseModel(valueCS, myDeterredCall);
+    CombinedStatResultsGeom pushCS(statAdversarial,statAdversarial,false, myDeterredCall);
+    GainModelNoRisk pushRaiseModel(pushCS, myDeterredCall);
+    CombinedStatResultsGeom abortCS(statAbort,statAbort,false, myDeterredCall);
+    GainModelNoRisk riskRaiseModel(abortCS, myDeterredCall);
 
 
 #ifdef LOGPOSITION
