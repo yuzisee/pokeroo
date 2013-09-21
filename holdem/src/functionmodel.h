@@ -113,8 +113,11 @@ public:
     virtual ~ICombinedStatResults() {}
     
     const virtual StatResult & ViewShape() const = 0; // per-player outcome: wins and splits are used to calculate split possibilities
-    virtual float64 getLoseProb() const = 0;
-	virtual float64 getWinProb() const = 0;
+    virtual float64 getLoseProb(float64 betSize) const = 0;
+	virtual float64 getWinProb(float64 betSize) const = 0;
+
+    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) const = 0;
+    virtual float64 get_d_WinProb_dbetSize(float64 betSize) const = 0;
 }
 ;
 
@@ -194,12 +197,20 @@ public:
      */
     static float64 cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle);
 
-    virtual float64 getLoseProb() const {
+    virtual float64 getLoseProb(float64 betSize) const {
         return p_cl;
     }
 
-    virtual float64 getWinProb() const {
+    virtual float64 getWinProb(float64 betSize) const {
         return p_cw;
+    }
+
+    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) const {
+        return 0.0;
+    }
+
+    virtual float64 get_d_WinProb_dbetSize(float64 betSize) const {
+        return 0.0;
     }
 }
 ;

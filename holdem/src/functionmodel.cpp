@@ -315,8 +315,8 @@ float64 GainModelGeom::g(float64 betSize) const
 
 //    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
-    const float64 winGain = pow(base+exf , fOutcome.getWinProb());
-    const float64 loseGain = pow(base-x , fOutcome.getLoseProb());
+    const float64 winGain = pow(base+exf , fOutcome.getWinProb(betSize));
+    const float64 loseGain = pow(base-x , fOutcome.getLoseProb(betSize));
 
 	return
 
@@ -339,7 +339,7 @@ float64 GainModelGeom::f(const float64 betSize)
     return fx;
 }
 
-
+// NOTE: This function is not completely accurate, since ViewShape is affected by betSize but it's derivative is not considered.
 float64 GainModelGeom::gd(const float64 betSize, const float64 y) const
 {
 	//const float64 exf = e->pctWillCall(x/qdenom);
@@ -361,13 +361,19 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y) const
 		return splitDist/(estat->minRaiseTo() - estat->callBet());
 	}
 	float64 x = estat->betFraction(betSize);
- 	if( x >= 1 ) x = 1.0 - fracQuantum; //Approximate extremes to avoide division by zero
-
+    float64 dx = estat->betFraction(1.0);
+ 	if( x >= 1 ){
+        dx = 0.0;
+        x = 1.0 - fracQuantum; //Approximate extremes to avoide division by zero
+    }
 
 
 
     //const float64 qdenom = (2*x+f_pot);
 	float64 exf = estat->betFraction(espec.exf(betSize));
+
+
+    float64 dexf = espec.dexf(betSize); ///This is actually e->betFraction( e->dexf(betSize)*betSize/x ) = e->dexf(betSize)
 
 
     const float64 minexf = estat->minCallFraction(betSize); //Because of say, impliedFactor
@@ -377,12 +383,12 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y) const
             if(bTraceEnable) std::cout << "\t\t\tvery low exf for now: " << exf << " < " << minexf << std::endl;
         #endif
 
-        return 0; //Incremental decrease is zero, so incremental increase must be zero at the limit
+        dexf = 0.0;
     }
 
+     const float64 base = estat->handBetBase();
 
 		//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B  //Note: B is determined by betSize/x
-	const float64 dexf = espec.dexf(betSize); ///This is actually e->betFraction( e->dexf(betSize)*betSize/x ) = e->dexf(betSize)
     const float64 f_pot = estat->betFraction(estat->stagnantPot());
     const float64 exf_live = exf - f_pot;
 	//const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;n
@@ -427,15 +433,29 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y) const
         if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
     #endif
 
-    //y is passed in as (y+e->foldGain())
- 	return
+    //y is passed in as (y+e->foldGain()) which essentially gives you g()
+
+     return
  	(y)*
 	(
-	fOutcome.getWinProb()*dexf/(1+exf)
+	/*fOutcome.getWinProb(betSize)*dexf/(1+exf)
 
-	-(fOutcome.getLoseProb())/(1-x)
-	+
-	savd
+	-(fOutcome.getLoseProb(betSize))/(1-x)
+	*/
+
+     //
+//     d_dbetSize log{const float64 winGain = pow(base+exf , fOutcome.getWinProb(betSize));}
+//     d_dbetSize fOutcome.getWinProb(betSize) log{base+exf}
+//     {d_dbetSize fOutcome.getWinProb(betSize)} log{base+exf} + fOutcome.getWinProb(betSize) d_dbetSize log{base+exf}
+//     fOutcome.get_d_WinProb_dbetSize(betSize) log{base+exf} + fOutcome.getWinProb(betSize) dexf/{base+exf}
+    fOutcome.get_d_WinProb_dbetSize(betSize) * log(base + exf) + fOutcome.getWinProb(betSize) * dexf / (base + exf)
+//     d_dbetSize log{const float64 loseGain = pow(base-x , fOutcome.getLoseProb(betSize));}
+//     d_dbetSize fOutcome.getLoseProb(betSize) log{base-x}
+//     {d_dbetSize fOutcome.getLoseProb(betSize)} log{base-x} + fOutcome.getLoseProb(betSize) d_dbetSize log{base-x}
+//     fOutcome.get_d_LoseProb_dbetSize(betSize) log{base-x} + fOutcome.getLoseProb(betSize) (-dx)/(base-x)
+     + fOutcome.get_d_LoseProb_dbetSize(betSize) * log(base-x) - fOutcome.getLoseProb(betSize) * dx/(base-x)
+     
+	+ savd
 	);
 
 }
@@ -546,8 +566,8 @@ float64 GainModelNoRisk::g(float64 betSize) const
     }
 #endif
 
-    const float64 onWin = (base+exf) * fOutcome.getWinProb();
-    const float64 onLose = (base-x) * fOutcome.getLoseProb();
+    const float64 onWin = (base+exf) * fOutcome.getWinProb(betSize);
+    const float64 onLose = (base-x) * fOutcome.getLoseProb(betSize);
     
 	return
 
@@ -572,6 +592,7 @@ float64 GainModelNoRisk::f(const float64 betSize)
 }
 
 
+// NOTE: This function is not completely accurate, since ViewShape is affected by betSize but it's derivative is not considered.
 float64 GainModelNoRisk::gd(float64 betSize, const float64 y) const
 {
 
@@ -588,12 +609,21 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y) const
 		return splitDist/(estat->minRaiseTo() - estat->callBet());
 	}
 
-//    const float64 x = e->betFraction(betSize);
+    float64 x = estat->betFraction(betSize);
 
-//	const float64 exf = e->betFraction(e->exf(betSize));
 
 	//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B
-	const float64 dexf = espec.dexf(betSize);
+	float64 dexf = espec.dexf(betSize);
+    float64 exf = estat->betFraction(espec.exf(betSize));
+
+    const float64 minexf = estat->minCallFraction(betSize); //Because of say, impliedFactor
+    if( exf < minexf )
+    {
+        exf = minexf;
+        dexf = 0.0;
+    }
+
+    const float64 base = estat->handBetBase();
 
 
 #ifdef DEBUG_TRACE_SEARCH
@@ -635,9 +665,8 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y) const
 
  	return
 	(
-	fOutcome.getWinProb()*dexf
-	-
-	(fOutcome.getLoseProb())
+	fOutcome.getWinProb(betSize)*dexf + fOutcome.get_d_WinProb_dbetSize(betSize)*(base + exf)
+	- (fOutcome.getLoseProb(betSize)) + (base-x) * fOutcome.get_d_LoseProb_dbetSize(betSize)
 	+
 	savd
 	);
