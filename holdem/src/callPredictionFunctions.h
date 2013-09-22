@@ -71,8 +71,11 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     float64 cached_d_dbetSize;
 
 
+    // Describe the hand they would be folding
     CallCumulationD (* meanConv); // Set to null if using RANK for payout simulation
-    float64 w;                    // Set to RANK of meanConv is null. Set to MEAN_winpct if using *meanConv
+    float64 w;                    // Set to RANK if meanConv is null. Set to MEAN_winpct if using *meanConv
+
+    // Describe the situation
     float64 amountSacrificeVoluntary;
     float64 amountSacrificeForced;
     float64 bankroll;

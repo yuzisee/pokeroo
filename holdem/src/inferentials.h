@@ -307,7 +307,7 @@ private:
 public:
     float64 d_dw_only(const float64 w_toHave) const;
 	virtual float64 Pr_haveWinPCT_orbetter_continuous(const float64 w_toHave, float64 *out_d_dw = 0) const;
-	virtual float64 inverseD(const float64, const float64 mean);
+	virtual float64 inverseD(const float64, const float64 mean) const;
 
 /*
         #ifdef DUMP_CSV_PLOTS
