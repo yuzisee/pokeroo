@@ -205,5 +205,41 @@ class ExactCallBluffD : public virtual ExactCallD
 }
 ;
 
+// Based on the bet size I am making, how many times can the opponent afford to fold?
+// We use this value to determine our expected hand strength assuming the opponent knows what we have.
+class OpponentHandOpportunity {
+public:
+    // facedHands: What does the opponent think his/her win percentage is based on rarity?
+    // I guess if we are being pessimistic (which is the point of this exercise: assume that by betting we reveal what we have) they would know what we have.
+    // So this should be foldcumu.
+    OpponentHandOpportunity(playernumber_t myIdx, const HoldemArena& table, CallCumulationD * myWinAgainstFacedHands)
+    :
+    fIdx(myIdx)
+    ,
+    fTable(table)
+    ,
+    e(myWinAgainstFacedHands)
+    {
+    }
+
+    ~OpponentHandOpportunity() {}
+
+    void query(const float64 betSize);
+private:
+    // query inputs
+    float64 fLastBetSize;
+
+    // query outputs
+    float64 fHandsToBeat;
+    float64 f_d_HandsToBeat_dbetSize;
+
+    const HoldemArena &fTable;
+    CallCumulationD * e;
+    const playernumber_t fIdx;
+
+}
+;
+
 
 #endif
+
