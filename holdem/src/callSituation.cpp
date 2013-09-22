@@ -47,16 +47,7 @@ float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, c
 
 
 
-    const float64 bigBlind = table->GetBlindValues().GetBigBlind() ;
-    const float64 smallBlind = table->GetBlindValues().GetSmallBlind();
-#ifdef SAME_WILL_LOSE_BLIND
-    const float64 blindsPow = 1.0 / (playerCount);
-#else
-    const float64 rawLoseFreq = 1 - (2.0 / playerCount) ;
-    const float64 blindsPow = rawLoseFreq / playerCount;
-#endif
-
-    const float64 avgBlinds = (bigBlind+smallBlind)*blindsPow;
+    const float64 avgBlinds = table->GetAvgBlindPerHand();
     FoldGainModel FG(table->GetChipDenom()/2);
     FG.waitLength.meanConv = e;
     FG.waitLength.w = meanW;
@@ -65,7 +56,7 @@ float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, c
     #ifdef SACRIFICE_COMMITTED
                  + table->ViewPlayer(playerID)->GetVoluntaryContribution()
     #endif
-                                    + potCommitted + extra;
+                                    + extra;
 	FG.waitLength.amountSacrificeForced = avgBlinds;
     FG.waitLength.opponents = playerCount - 1;
 
@@ -185,13 +176,13 @@ float64 ExpectedCallD::betFraction(const float64 betSize) const
     return (
             betSize
             /
-            ( table->ViewPlayer(playerID)->GetMoney() + potCommitted )
+            ( table->ViewPlayer(playerID)->GetMoney() )
            );
 }
 
 float64 ExpectedCallD::handBetBase() const
 {
-    return 1-betFraction(potCommitted);
+    return 1;
 }
 
 float64 ExpectedCallD::minRaiseTo() const

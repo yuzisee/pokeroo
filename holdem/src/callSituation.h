@@ -42,8 +42,6 @@
 
 class ExpectedCallD
 {//NO ASSIGNMENT OPERATOR
-protected:
-    const float64 potCommitted;
 
 
 public:
@@ -60,13 +58,14 @@ public:
             , const float64 rankPCT, const float64 meanPCT
 #endif
             )
-    : potCommitted(0)
-
-    , playerID(id)
+    :
+    playerID(id)
+    ,
     #ifdef ANTI_PRESSURE_FOLDGAIN
-    ,handRarity(1-rankPCT), meanW(meanPCT)
+    handRarity(1-rankPCT), meanW(meanPCT)
     #endif
-    , table(base)
+    ,
+    table(base)
     {}
 
     virtual ~ExpectedCallD();

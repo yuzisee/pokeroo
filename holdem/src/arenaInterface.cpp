@@ -363,6 +363,20 @@ float64 HoldemArena::GetUnbetBlindsTotal() const
     return blindOnlySum;
 }
 
+float64 HoldemArena::GetAvgBlindPerHand() const {
+    playernumber_t playerCount = NumberAtTable();
+    const float64 bigBlind = GetBlindValues().GetBigBlind() ;
+    const float64 smallBlind = GetBlindValues().GetSmallBlind();
+#ifdef SAME_WILL_LOSE_BLIND
+    const float64 blindsPow = 1.0 / (playerCount);
+#else
+    const float64 rawLoseFreq = 1 - (2.0 / playerCount) ;
+    const float64 blindsPow = rawLoseFreq / playerCount;
+#endif
+
+    const float64 avgBlinds = (bigBlind+smallBlind)*blindsPow;
+}
+
 
 float64 HoldemArena::GetMinRaise() const
 {
