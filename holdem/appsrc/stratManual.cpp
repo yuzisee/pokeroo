@@ -75,7 +75,7 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
         DistrShape w_wl(0);
 	    StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
-        winMean = GainModel::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+        winMean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 
 
         ViewTable().CachedQueryOffense(possibleHands,onlyCommunity,withCommunity);
