@@ -444,7 +444,9 @@ float64 GainModelGeom::g(float64 betSize)
 
 float64 GainModelGeom::f(const float64 betSize)
 {
-	const float64 fx = g(betSize) - estat->foldGain(espec.ed);
+    const float64 wls = g(betSize);
+    const float64 batna = estat->foldGain(espec.ed);
+	const float64 fx = wls - batna;
     return fx;
 }
 

@@ -501,7 +501,7 @@ class HoldemArena
 		float64 GetPotSize() const;
 		float64 GetBetToCall() const; //since ROUND start
 		float64 GetMaxShowdown(const float64 myMoney = -1) const;
-		float64 GetMinRaise() const;
+		float64 GetMinRaise() const; // Minimum amount to raise BY
 		float64 GetChipDenom() const;
 		const BlindValues & GetBlindValues() const{ return myBlinds; }
 
