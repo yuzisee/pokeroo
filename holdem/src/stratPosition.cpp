@@ -350,29 +350,17 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
     ;
 
 
-#ifdef DEBUGASSERT
-    const float64 raiseGain = targetModel->f(choicePoint)
-    ;
-#endif
-
 
 // #############################################################################
 /// MATHEMATIC SOLVING ENDS HERE
 // #############################################################################
 
         #ifdef LOGPOSITION
-            float64 xw;
-            float64 foldgainVal = (targetModel->GetFoldGain(e, &xw));
-			float64 numfolds = xw * e->Pr_haveWinPCT_orbetter_continuous(statprob.statmean.pct);
-
-            //logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
+                        //logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
 
             logFile << "Choice Optimal " << choicePoint << endl;
             logFile << "Choice Fold " << choiceFold << endl;
-			logFile << "FoldGain()=" << foldgainVal;
-			logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
-			if( ViewPlayer().GetInvoluntaryContribution() > 0 ) logFile << "   ->assumes " << ViewPlayer().GetInvoluntaryContribution() << " forced";
-            logFile << endl;
+
             logFile << "f("<< betToCall <<")=" << 1.0+callGain << endl;
 
 
@@ -396,6 +384,9 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
 
 
 
+    const float64 raiseGain = targetModel->f(choicePoint)
+    ;
+    
     if( raiseGain < 0 )
     {
         #ifdef LOGPOSITION
@@ -449,6 +440,20 @@ void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
 #endif
 
 }
+
+void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat) {
+    float64 xw; // waitlength
+    float64 foldgainVal = (estat.foldGain(e, &xw));
+    logFile << "FoldGain()=" << foldgainVal;
+
+    float64 numfolds = xw * e->Pr_haveWinPCT_orbetter_continuous(statprob.statmean.pct);
+
+
+    logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
+    if( ViewPlayer().GetInvoluntaryContribution() > 0 ) logFile << "   ->assumes " << ViewPlayer().GetInvoluntaryContribution() << " forced";
+    logFile << endl;
+}
+
 void PositionalStrategy::printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp) {
     if (csrp != 0) {
         csrp->query(betSize);
@@ -880,8 +885,11 @@ exit(1);
 
 
 #ifdef LOGPOSITION
+
     const float64 nextBet = betToCall + ViewTable().GetMinRaise();
-    const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? nextBet : bestBet;
+    const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? nextBet : bestBet; // If you fold, then display the callbet instead since we might as well log something.
+
+    printFoldGain((bGamble == 0) ? choicemodel.f(viewBet) : rolemodel.f(viewBet), &(statprob.callcumu), tablestate);
 
     logFile << "\"riskprice\"... " << riskprice << "(based on scaler of " << geom_algb_scaler << ")" << endl;
     logFile << "oppFoldChance is first " << myFearControl.oppFoldStartingPct(myDeterredCall) << ", when betting b_min=" << min_worst_scaler << endl; // but why do I care?
@@ -1135,6 +1143,10 @@ if( ViewTable().FutureRounds() < 2 )
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
 const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
+
+    printFoldGain(choicemodel.f(displaybet), &(statprob.callcumu), tablestate);
+
+
 		choicemodel.f(displaybet); //since choicemodel is ap_aggressive
 		logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
 		logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
@@ -1260,6 +1272,12 @@ float64 SimpleGainStrategy::MakeBet()
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
+
+
+    printFoldGain(choicemodel.f(displaybet), &(statprob.callcumu), tablestate);
+
+
+
     choicemodel.f(displaybet); //since choicemodel is ap_aggressive
     logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
     logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
@@ -1382,6 +1400,10 @@ float64 PureGainStrategy::MakeBet()
 
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
+
+    printFoldGain(choicemodel.f(displaybet), &(statprob.callcumu), tablestate);
+
+
     choicemodel.f(displaybet); //since choicemodel is ap_aggressive
     logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
     logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;

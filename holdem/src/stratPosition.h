@@ -45,8 +45,10 @@ class PositionalStrategy : virtual public PlayerStrategy
         template< typename T >
         void printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * csrp);
 
+        void printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat);
 
-        
+
+
 		DistrShape detailPCT;
 		StatResultProbabilities statprob;
 		

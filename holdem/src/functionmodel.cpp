@@ -350,12 +350,6 @@ float64 HoldemFunctionModel::FindFoldBet(const float64 bestBet)
     return desiredFold;
 }
 
-float64 HoldemFunctionModel::GetFoldGain(CallCumulationD* const e, float64 * const foldWaitLength_out)
-{
-    return estat->foldGain(e,foldWaitLength_out);
-}
-
-
 
 
 
