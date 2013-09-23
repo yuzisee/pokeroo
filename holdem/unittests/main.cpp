@@ -1087,7 +1087,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({std::nan(""), 12.5, 49, 168.0, 459.0, 495.0});
+        const std::vector<float64> pA({std::nan(""), 12.5, std::nan(""), 228.0, 459.0, 495.0});
         FixedReplayPlayerStrategy cS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
         FixedReplayPlayerStrategy mS(foldOnly);
@@ -1248,14 +1248,15 @@ int main(int argc, const char * argv[])
 
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_007();
+    RegressionTests::testRegression_002b();
+    RegressionTests::testRegression_002();
 
+
+    RegressionTests::testRegression_009();
     RegressionTests::testRegression_006();
     RegressionTests::testRegression_005();
 
-    RegressionTests::testRegression_002b();
-    RegressionTests::testRegression_002();
     RegressionTests::testRegression_003();
-    RegressionTests::testRegression_009();
 
     RegressionTests::testRegression_004();
 }
