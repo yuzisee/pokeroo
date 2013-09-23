@@ -128,17 +128,17 @@ public:
  */
 class CombinedStatResultsPessimistic : public virtual ICombinedStatResults {
 public:
-    CombinedStatResultsPessimistic(playernumber_t playerIdx, const HoldemArena & table, CallCumulationD * const foldcumu)
+    CombinedStatResultsPessimistic(OpponentHandOpportunity & opponentHandOpportunity, CallCumulationD * const foldcumu)
     :
     fLastBetSize(std::nan(""))
     ,
     fLoseProb(std::nan("")),fWinProb(std::nan("")),f_d_LoseProb_dbetSize(std::nan("")),f_d_WinProb_dbetSize((std::nan(""))),fHandsToBeat(std::nan(""))
     ,
-    fOpposingHands(playerIdx, table, foldcumu)
+    fOpposingHands(opponentHandOpportunity)
     ,
     fFoldCumu(foldcumu)
     ,
-    fSplitOpponents(table.NumberInHand().inclAllIn() - 1)
+    fSplitOpponents(opponentHandOpportunity.fTable.NumberInHand().inclAllIn() - 1)
     {}
     virtual ~CombinedStatResultsPessimistic() {}
 
@@ -172,8 +172,8 @@ private:
 
     // Count the number of possible opponents, including hypothetical "fold and come back stronger" hands.
     // This accounts for the fact that if you make an overbet in a particular situation, opponents will find only to return to this same situation in the future but with a better hand.
-    OpponentHandOpportunity fOpposingHands;
-    CallCumulationD * const fFoldCumu;
+    OpponentHandOpportunity & fOpposingHands; // All OPPONENT odds against ME.
+    CallCumulationD * const fFoldCumu; // MY odds against all OPPONENTS
 
     const playernumber_t fSplitOpponents;
 }

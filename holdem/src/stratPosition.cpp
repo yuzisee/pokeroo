@@ -1331,7 +1331,14 @@ float64 PureGainStrategy::MakeBet()
     CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
     GainModelGeom callModel(leftCS, myDeterredCall);
 
-    CombinedStatResultsPessimistic csrp(myPositionIndex, ViewTable(), &(statprob.foldcumu));
+    CallCumulationD opponentAttackCumu(statprob.foldcumu);
+    opponentAttackCumu.ReversePerspective();
+    // TODO(from yuzisee): When callgain is based on rank vs. mean, should the comparative opponentHandOpportunity's foldgain be based on rank vs. mean?
+    // Consider: Opponent knows what I have vs. Opponent doesn't know what I have
+    // NOTE: We had a "will call too often with Qc 3c" bug. That might be because we didn't reverse perspective up there.
+    // TODO(from yuzisee): Are the other invokations of foldgain (e.g. Pr{push}) also dependent on reversed perspective?
+    OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, ViewTable(), &opponentAttackCumu);
+    CombinedStatResultsPessimistic csrp(opponentHandOpportunity, &(statprob.foldcumu));
     GainModelNoRisk raiseModel(csrp, myDeterredCall);
 
 
@@ -1356,9 +1363,9 @@ float64 PureGainStrategy::MakeBet()
     ///Choose from geom to algb
     const float64 aboveCallBelowRaise1 = betToCall + ViewTable().GetChipDenom() / 2.0;
     const float64 aboveCallBelowRaise2 = betToCall + ViewTable().GetChipDenom();
-    AutoScalingFunction<GainModel,  GainModelNoRisk> callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
+    AutoScalingFunction<GainModel,  GainModel> callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
 
-    StateModel<  GainModel, GainModelNoRisk >
+    StateModel<  GainModel, GainModel >
     ap_aggressive( myDeterredCall, &callOrRaise );
 
 
@@ -1400,7 +1407,7 @@ float64 PureGainStrategy::MakeBet()
     }
 
 
-    printBetGradient< StateModel<  GainModel, GainModelNoRisk > >
+    printBetGradient< StateModel<  GainModel, GainModel > >
     (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, &csrp);
 
 

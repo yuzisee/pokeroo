@@ -196,12 +196,13 @@ namespace RegressionTests {
 
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        CallCumulationD attackcumu(statprob.foldcumu);
         statprob.foldcumu.ReversePerspective();
 
 
-        const float64 testBet = 8.0;
+        const float64 testBet = 9.5;
         
-        OpponentHandOpportunity test(1, myTable, &(statprob.foldcumu));
+        OpponentHandOpportunity test(1, myTable, &attackcumu);
 
 
 
@@ -212,7 +213,7 @@ namespace RegressionTests {
         assert(actual_y >= 3);
         assert(actual_Dy > 0); // betting more should increase N even more
 
-        CombinedStatResultsPessimistic testC(1, myTable, &(statprob.foldcumu));
+        CombinedStatResultsPessimistic testC(test, &(statprob.foldcumu));
         testC.query(testBet);
 
         const float64 s1 = testC.ViewShape(testBet).splits;

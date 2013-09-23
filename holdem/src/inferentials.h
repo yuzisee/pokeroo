@@ -251,7 +251,7 @@ class StatResult
 class CallCumulation
 {
 private:
-    size_t cached_high_index;
+    size_t cached_high_index; // This is just an extra first guess we will make.
 protected:
 	size_t searchWinPCT_betterThan_toHave(const float64 winPCT_toHave) const;
 
@@ -260,6 +260,7 @@ protected:
 
 public:
     CallCumulation(const CallCumulation& o)
+    : cached_high_index(1)
     {
         *this = o;
     }
