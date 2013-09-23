@@ -375,6 +375,7 @@ float64 HoldemArena::GetAvgBlindPerHand() const {
 #endif
 
     const float64 avgBlinds = (bigBlind+smallBlind)*blindsPow;
+    return avgBlinds;
 }
 
 

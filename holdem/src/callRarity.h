@@ -65,7 +65,7 @@ private:
 //protected:
 // TODO(from jdhuang)
 public:
-
+    
 ///Single Opponent Probabilities
 
     StatResult statworse(playernumber_t handsCompeting) const {
