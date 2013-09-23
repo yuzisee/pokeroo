@@ -1333,9 +1333,9 @@ void OpponentHandOpportunity::query(const float64 betSize) {
 
             const float64 foldGain = FG.f(betSize); // Calling this will invoke query which will populate FG.n
             const float64 foldN = FG.n;
-            const float64 d_foldN_dbetSize_almost = FG.fd(betSize, foldGain) / foldGain * FG.n; // Do somethign weird here to approximate FG.d_n_dbetSize. Take the rate of change of foldgain and multiply that as a fraction into n. That means, if increasing betSize by 1.0 would increase foldGain by 2%, assume it increases n by 2% too. At least they are in the same direction. TODO(from joseph_huang): A proper derivative here?
+            const float64 d_foldN_dbetSize_almost = FG.fd(betSize, foldGain) / foldGain * FG.n; // Do something weird here to approximate FG.d_n_dbetSize. Take the rate of change of foldgain and multiply that as a fraction into n. That means, if increasing betSize by 1.0 would increase foldGain by 2%, assume it increases n by 2% too. At least they are in the same direction. TODO(from joseph_huang): A proper derivative here?
 
-            totalOpposingHandOpportunityCount_dbetSize += 1.0 + foldN; // Add one for the hand they have, and one more for every fold they are (on average) afforded
+            totalOpposingHandOpportunityCount += 1.0 + foldN; // Add one for the hand they have, and one more for every fold they are (on average) afforded
             totalOpposingHandOpportunityCount_dbetSize += d_foldN_dbetSize_almost;
         }
         

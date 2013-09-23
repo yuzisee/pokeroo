@@ -23,6 +23,7 @@
 #define HOLDEM_STATMODELS
 
 #include <vector>
+#include <utility>
 #include "portability.h"
 
 #define DEFAULT_TIE_SCALE_FACTOR 0.5
@@ -276,9 +277,13 @@ public:
 	virtual StatResult bestHandToHave() const; // best hand to have against me
 	virtual StatResult worstHandToHave() const; // worst hand to have against me
 	virtual StatResult oddsAgainstBestHand() const;
-	virtual StatResult oddsAgainstBestXHands(float64 X) const; // Here, X is the fraction of hands we care about. If X === 0.0, this returns oddsAgainstBestHand(). If X === 1.0, this means just include all hands and effectively returns statmean.
 
-	#ifdef DUMP_CSV_PLOTS
+    // Here, X is the fraction of hands we care about. If X === 0.0, this returns oddsAgainstBestHand(). If X === 1.0, this means just include all hands and effectively returns statmean.
+    // Returns both the StatResult at X, as well as d_{StatResult.pct}_dX
+    // The two return values are returned as an std::pair
+	virtual std::pair<StatResult, float64> oddsAgainstBestXHands(float64 X) const;
+
+#ifdef DUMP_CSV_PLOTS
         static void dump_csv_plots(std::ostream &targetoutput, const CallCumulation& calc)
         {
             targetoutput << std::endl << "=============Reduced=============" << std::endl;

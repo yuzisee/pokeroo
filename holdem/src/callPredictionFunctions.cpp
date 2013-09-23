@@ -69,7 +69,9 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 
     if( lastdBetSizeN != n || !bSearching )
     {
+        // The winPCT you would have if you had the best hand you would wait for out of n hands.
 		const float64 rawPCT = ( n < 1 ) ? 0 : lookup(1.0-1.0/(n));
+        
         if( rawPCT != lastRawPCT || !bSearching )
         {
 #ifdef INLINE_INTEGER_POWERS
@@ -80,10 +82,16 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
             }else
             {//opponents isn't an even integer
 #endif
+
+                // Your showdown chance of winning, given the opponent count.
                 cached_d_dbetSize = pow(rawPCT,opponents);
+                
 #ifdef INLINE_INTEGER_POWERS
             }//end if intOpponents == opponents , else
 #endif
+
+
+            // Your profit per betSize. If it's positive, you make money the more betSize gets. If negative you lose money the more betSize gets.
             cached_d_dbetSize = (2*cached_d_dbetSize) - 1;
             lastRawPCT = rawPCT;
         }

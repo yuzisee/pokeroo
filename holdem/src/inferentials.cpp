@@ -434,7 +434,7 @@ StatResult CallCumulation::oddsAgainstBestHand() const
 }
 
 
-StatResult CallCumulation::oddsAgainstBestXHands(float64 X) const
+std::pair<StatResult, float64> CallCumulation::oddsAgainstBestXHands(float64 X) const
 {
     #ifdef DEBUGASSERT
         if( cumulation.size() == 0 )
@@ -446,7 +446,11 @@ StatResult CallCumulation::oddsAgainstBestXHands(float64 X) const
 
     size_t idx = cumulation.size() - 1; // Start with the best hand to have against me.
 
-    StatResult runningAverage;
+    std::pair<StatResult, float64> result;
+    float64 & d_pct_dX = result.second;
+    d_pct_dX = 0.0;
+
+    StatResult & runningAverage = result.first;
     runningAverage.repeated = 0.0;
 
     while (true) {
@@ -458,11 +462,28 @@ StatResult CallCumulation::oddsAgainstBestXHands(float64 X) const
         val.repeated -= sampleInBounds_repeated(idx - 1);
 
         if (X <= val.repeated + runningAverage.repeated) {
+            const float64 thispct = runningAverage.pct;
+            const float64 thisrepeated = runningAverage.repeated;
             // Interpolate the edge entry
             // Add only the remaining weight to reach X.
             val.repeated = X - runningAverage.repeated;
             runningAverage.addByWeight(val);
-            return runningAverage;
+
+            // Now, compute the derivative.
+            // this->pct    := (   this->pct * this->repeated +    a.pct * a.repeated) / netRepeated;
+            // this->pct    := (   this->pct * this->repeated +    a.pct * (X - this->repeated)) / X;
+            // this->pct    :=     this->pct * this->repeated / X + a.pct - a.pct * this->repeated / X;
+            // this->pct    := a.pct + (this->pct - a.pct) * this->repeated / X;
+
+            // d_dX{this->pct} := d_dX(   this->pct * this->repeated / X + a.pct - a.pct * this->repeated / X );
+            // d_dX{this->pct} := d_dX(   a.pct + (this->pct - a.pct) * this->repeated / X; );
+            // d_dX{this->pct} :=          d_dX(  (this->pct - a.pct) * this->repeated / X; );
+            // d_dX{this->pct} :=          (this->pct - a.pct) * this->repeated  * d_dX(  1.0 / X; );
+            // d_dX{this->pct} :=          (this->pct - a.pct) * this->repeated  *     (  - 1.0 / X^2; );
+            // d_dX{this->pct} :=          (a.pct - this->pct) * this->repeated  / X^2
+
+            d_pct_dX = (val.pct - thispct) * thisrepeated / X / X;
+            return result;
         } else
         {
             runningAverage.addByWeight(val);
@@ -473,14 +494,13 @@ StatResult CallCumulation::oddsAgainstBestXHands(float64 X) const
 
             // Perhaps due to rounding error runningAverage.repeated is very close to 1.0 but didn't reach it.
             runningAverage.repeated = X;
-            return runningAverage;
+            d_pct_dX = 0.0;
+            return result;
         }
 
         // INVARIANT: retVal.repeated is the sum of the probability of having all the hands between idx .. size()-1, inclusive.
         --idx;
 
-        // TODO(from yuzisee): Make this function differentiable?
-        // For now it doesn't matter because X is usually based on the number of players, not the bet amount, so we never need its derivative.
     }
 }
 

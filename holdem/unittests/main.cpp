@@ -109,6 +109,159 @@ namespace RegressionTests {
     }
     ;
 
+
+    // Test OpposingHandOpportunity derivatives
+    void testRegression_008() {
+
+        /*
+        Preflop
+        (Pot: $0)
+        (4 players)
+        [A $100.0]
+        [B $150.0]
+        [C $75.0]
+        [D $22.0]
+
+
+        A posts SB of $0.125 ($0.125)
+        B posts BB of $0.25 ($0.375)
+        */
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(0.125);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(0.125);
+
+        const std::vector<float64> aC({0.25});
+        FixedReplayPlayerStrategy cS(aC);
+        FixedReplayPlayerStrategy dS(aC);
+
+        FixedReplayPlayerStrategy aS(aC);
+        FixedReplayPlayerStrategy bS(aC);
+
+        myTable.ManuallyAddPlayer("A", 100.0, &aS);
+        myTable.ManuallyAddPlayer("B", 150.0, &bS);
+        myTable.ManuallyAddPlayer("C", 75.0, &cS);
+        myTable.ManuallyAddPlayer("D", 22.0, &dS);
+        const playernumber_t dealer = 3;
+
+
+        myTable.BeginInitialState();
+        myTable.BeginNewHands(b, false, dealer);
+
+
+        /*
+         C calls $0.25 ($0.625)
+         D calls $0.25 ($0.875)
+         A calls $0.25 ($1.0)
+         B checks
+         */
+        assert(myTable.PlayRound_BeginHand() != -1);
+
+        //myTable.PrepBettingRound(false,2); //turn, river remaining
+
+        // ===
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // 3c Qc
+
+        card.SetByIndex(6);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(42);
+        withCommunity.AddToHand(card);
+
+
+
+        CommunityPlus communityToTest; // Jc Ks Ah
+
+        card.SetByIndex(38);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(44);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(49);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        const int8 cardsInCommunity = 3;
+
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.foldcumu.ReversePerspective();
+
+
+        OpponentHandOpportunity test(1, myTable, &(statprob.foldcumu));
+
+        test.query(7.5);
+        const float64 actual_y = test.handsToBeat();
+        const float64 actual_Dy = test.d_HandsToBeat_dbetSize();
+
+        assert(actual_y >= 3);
+        assert(actual_Dy > 0); // betting more should increase N even more
+    }
+
+    // Test oddsAgainstBestXHands derivative
+    void testRegression_007() {
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // Td Ad
+
+        card.SetByIndex(35);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(51);
+        withCommunity.AddToHand(card);
+
+
+
+
+        CommunityPlus communityToTest; // 2d Qd Kc
+        
+        card.SetByIndex(3);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(43);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(46);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        const int8 cardsInCommunity = 3;
+        
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.foldcumu.ReversePerspective();
+
+
+        // TEST:
+        const float64 xa = 0.3;
+        const float64 xb = 0.3001;
+        std::pair<StatResult, float64> ya = statprob.foldcumu.oddsAgainstBestXHands(xa);
+        std::pair<StatResult, float64> yb = statprob.foldcumu.oddsAgainstBestXHands(xb);
+
+        const float64 expected = (yb.first.pct - ya.first.pct) / (xb - xa);
+        const float64 actual = (ya.second + yb.second) / 2.0;
+
+        assert(fabs(actual - expected) < fabs(expected) * 1.0e-7);
+    }
+
+
     // The issue here is ActionBot calls a bet with (known?) zero percent chance of winning.
     void testRegression_006() {
         /*
@@ -1068,6 +1221,10 @@ int main(int argc, const char * argv[])
 {
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
+
+
+    RegressionTests::testRegression_008();
+    RegressionTests::testRegression_007();
 
     RegressionTests::testRegression_006();
     RegressionTests::testRegression_005();

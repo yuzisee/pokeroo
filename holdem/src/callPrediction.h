@@ -214,9 +214,13 @@ public:
     // So this should be foldcumu.
     OpponentHandOpportunity(playernumber_t myIdx, const HoldemArena& table, CallCumulationD * myWinAgainstFacedHands)
     :
-    fIdx(myIdx)
-    ,
     fTable(table)
+    ,
+    fLastBetSize(std::nan(""))
+    ,
+    fHandsToBeat(std::nan("")),f_d_HandsToBeat_dbetSize(std::nan(""))
+    ,
+    fIdx(myIdx)
     ,
     e(myWinAgainstFacedHands)
     {
@@ -225,6 +229,10 @@ public:
     ~OpponentHandOpportunity() {}
 
     void query(const float64 betSize);
+    float64 handsToBeat() { return fHandsToBeat; }
+    float64 d_HandsToBeat_dbetSize() { return f_d_HandsToBeat_dbetSize; }
+
+    const HoldemArena &fTable;
 private:
     // query inputs
     float64 fLastBetSize;
@@ -233,7 +241,6 @@ private:
     float64 fHandsToBeat;
     float64 f_d_HandsToBeat_dbetSize;
 
-    const HoldemArena &fTable;
     CallCumulationD * e;
     const playernumber_t fIdx;
 

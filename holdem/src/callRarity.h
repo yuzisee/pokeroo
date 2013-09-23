@@ -67,10 +67,15 @@ private:
 public:
 
 ///Single Opponent Probabilities
-    StatResult statworse(playernumber_t handsCompeting) const   // Probability of winning against a pessimistic set of opposing hands (Based on handsCompeting)
+
+    StatResult statworse(playernumber_t handsCompeting) const {
+        return statworse(foldcumu, handsCompeting);
+    }
+
+    static StatResult statworse(const CallCumulationD & foldcumu, playernumber_t handsCompeting)   // Probability of winning against a pessimistic set of opposing hands (Based on handsCompeting)
     {
         const float64 fractionOfHandsToBeat = 1.0 / handsCompeting;
-        return foldcumu.oddsAgainstBestXHands(fractionOfHandsToBeat); //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
+        return foldcumu.oddsAgainstBestXHands(fractionOfHandsToBeat).first; //GainModel::ComposeBreakdown(detailPCT.worst,w_wl.worst);
     }
 
     StatResult statrelation; // Against what fraction of opponents will you have the better hand?
