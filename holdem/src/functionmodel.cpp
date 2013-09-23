@@ -19,8 +19,18 @@
  ***************************************************************************/
 
 #include <iostream>
+#include <float.h>
+
 #include "functionmodel.h"
 #include "ai.h"
+
+
+static inline float64 cleanpow(float64 b, float64 x)
+{
+    if( b < DBL_EPSILON ) return 0;
+    //if( b > 1 ) return 1;
+    return pow(b,x);
+}
 
 
 
@@ -34,6 +44,94 @@ GainModelGeom::~GainModelGeom()
 {
 }
 
+void CombinedStatResultsPessimistic::query(float64 betSize) {
+    if (fLastBetSize == betSize) {
+        return;
+    }
+    fLastBetSize = betSize;
+
+    const playernumber_t splitOpponents = fOpposingHands.fTable.NumberInHand().inclAllIn();
+
+    fOpposingHands.query(betSize);
+    const float64 fractionOfHandsToBeat = 1.0 / fOpposingHands.handsToBeat(); // If you have to beat N hands, expect the worst to be one of the worst 1/Nth
+    const float64 fractionOfHandsToBeat_dbetSize = fOpposingHands.d_HandsToBeat_dbetSize();
+
+    const std::pair<StatResult, float64> oddsAgainstbestXHands = fFoldCumu->oddsAgainstBestXHands(fractionOfHandsToBeat);
+    const StatResult & showdownResults = oddsAgainstbestXHands.first;
+    const float64 & d_showdownPct_dX = oddsAgainstbestXHands.second;
+
+    // da_dbetSize = da_dX * dX_dbetSize
+    // Here, X === fractionOfHandsToBeat === 1.0 / fOpposingHands.handsToBeat()
+    //
+    // d_dbetSize{fWinProb} = d_dbetSize(fFoldCumu->oddsAgainstBestXHands(fractionOfHandsToBeat))
+    //                      = fFoldCumu->oddsAgainstBestXHands ' (fractionOfHandsToBeat) * d_dbetSize(fractionOfHandsToBeat)
+    //                      = fFoldCumu->oddsAgainstBestXHands ' (fractionOfHandsToBeat) * d_dbetSize(1.0 / fOpposingHands.handsToBeat())
+    //                      = fFoldCumu->oddsAgainstBestXHands ' (fractionOfHandsToBeat) * (-1.0 / fOpposingHands.handsToBeat()^2) * d_dbetSize(fOpposingHands.handsToBeat())
+    //                      = d_showdownPct_dX * (-fractionOfHandsToBeat * fractionOfHandsToBeat) * fractionOfHandsToBeat_dbetSize
+
+    // Simplification: Probability of winning the showdown is the probability of beating the single opponent with the best chance to beat you.
+    fWinProb = showdownResults.wins;
+    fLoseProb = showdownResults.loss;
+    f_d_WinProb_dbetSize = d_showdownPct_dX * (-fractionOfHandsToBeat * fractionOfHandsToBeat) * fractionOfHandsToBeat_dbetSize;
+    f_d_LoseProb_dbetSize = -f_d_WinProb_dbetSize;
+    
+    // To evaluate splits we need a per-player (win, split, loss).
+    fSplitShape.loss = 1.0 - cleanpow(1.0 - fLoseProb, 1.0 / splitOpponents); //The w+s outcome for all players should be a power of w+s for shape
+    fSplitShape.wins = cleanpow(fWinProb, 1.0 / splitOpponents);
+    fSplitShape.splits = 1.0 - fSplitShape.loss - fSplitShape.wins;
+
+
+
+#ifdef DEBUGASSERT
+    if ((showdownResults.loss != showdownResults.loss) || (showdownResults.wins != showdownResults.wins) || (showdownResults.splits != showdownResults.splits)) {
+        std::cerr << "NaN encountered in showdownResults shape" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+    
+
+    ///Normalize, total split possibilities must add up to showdownResults.split
+    float64 splitTotal = 0.0;
+    for( int8 i=1;i<=splitOpponents;++i )
+    {//Split with i
+        splitTotal += HoldemUtil::nchoosep<float64>(splitOpponents,i)*pow(fSplitShape.wins,splitOpponents-i)*pow(fSplitShape.splits,i);
+    }
+    const float64 rescaleSplitWin = cleanpow(fSplitShape.splits / splitTotal, 1.0 / splitOpponents); // We will rescale .wins and .splits by this amount. In total, that scales splitTotal by (fSplitShape.splits / splitTotal)
+    fSplitShape.loss -= (fSplitShape.wins + fSplitShape.splits) * (rescaleSplitWin - 1.0); // Subtract any excess that would be created (e.g. if rescaleSplitWin > 1.0)
+    fSplitShape.wins *= rescaleSplitWin;
+    fSplitShape.splits *= rescaleSplitWin;
+    fSplitShape.forceRenormalize();
+
+
+#ifdef DEBUGASSERT
+    if ((fSplitShape.loss != fSplitShape.loss) || (fSplitShape.wins != fSplitShape.wins) || (fSplitShape.splits != fSplitShape.splits)) {
+        std::cerr << "NaN encountered in fSplitShape shape" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+
+    if(   (1 - fSplitShape.splits <= DBL_EPSILON)  || (fSplitShape.loss + fSplitShape.wins <= DBL_EPSILON)
+       || (1 - showdownResults.splits <= DBL_EPSILON)  || (showdownResults.loss + showdownResults.wins <= DBL_EPSILON)
+       )
+    {
+        fLoseProb = 0.0;
+        fWinProb = 0.0;
+        f_d_WinProb_dbetSize = 0.0;
+        f_d_LoseProb_dbetSize = 0.0;
+        fSplitShape.wins = 1.0; //You need wins to split, and shape is only used to split so this okay
+    }
+
+
+#ifdef DEBUGASSERT
+    if ((fLoseProb != fLoseProb) || (fWinProb != fWinProb)) {
+        std::cerr << "NaN encountered in fWinProb and/or fLoseProb" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+
+}
 
 float64 CombinedStatResultsGeom::cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle)
 {

@@ -25,7 +25,6 @@
 #include "inferentials.h"
 #include "callPrediction.h"
 #include <math.h>
-#include <float.h>
 
 
 
@@ -122,6 +121,56 @@ public:
 ;
 
 /**
+ * Determine your chance to win by counting how many times your opponent can wait before calling you, assuming they know what you have.
+ *
+ * If you use this exclusively as your winPct, then the bot should bet small enough that it can be called by the distribution of hands it expects.
+ */
+class CombinedStatResultsPessimistic : public virtual ICombinedStatResults {
+public:
+    CombinedStatResultsPessimistic(playernumber_t playerIdx, const HoldemArena & table, CallCumulationD * const foldcumu)
+    :
+    fLastBetSize(std::nan(""))
+    ,
+    fLoseProb(std::nan("")),fWinProb(std::nan("")),f_d_LoseProb_dbetSize(std::nan("")),f_d_WinProb_dbetSize((std::nan("")))
+    ,
+    fOpposingHands(playerIdx, table, foldcumu)
+    ,
+    fFoldCumu(foldcumu)
+    {}
+    virtual ~CombinedStatResultsPessimistic() {}
+
+    // per-player outcome: wins and splits are used to calculate split possibilities across NumPlayersInHand()
+    const virtual StatResult & ViewShape() const { return fSplitShape; }
+
+    virtual float64 getLoseProb(float64 betSize) const { return fLoseProb; }
+	virtual float64 getWinProb(float64 betSize) const { return fWinProb; }
+
+    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) const { return f_d_LoseProb_dbetSize; }
+    virtual float64 get_d_WinProb_dbetSize(float64 betSize) const { return f_d_WinProb_dbetSize; }
+
+    void query(float64 betSize);
+    
+private:
+    // query inputs
+    float64 fLastBetSize;
+
+    // query outputs
+    StatResult fSplitShape;
+    float64 fLoseProb;
+    float64 fWinProb;
+    float64 f_d_LoseProb_dbetSize;
+    float64 f_d_WinProb_dbetSize;
+
+    // Count the number of possible opponents, including hypothetical "fold and come back stronger" hands.
+    // This accounts for the fact that if you make an overbet in a particular situation, opponents will find only to return to this same situation in the future but with a better hand.
+    OpponentHandOpportunity fOpposingHands;
+    CallCumulationD * const fFoldCumu;
+
+}
+;
+
+
+/**
  * Convert a particular StatResult into the odds of winning at the table.
  * Supported features:
  *  + This class will automatically determine the number of hands at the table you would have to beat in order to win, via the ExactCallD's tableInfo
@@ -152,14 +201,6 @@ public:
 
     //Who can you split with?
 	const uint8 e_battle;
-
-    
-    static inline float64 cleanpow(float64 b, float64 x)
-    {
-        if( b < DBL_EPSILON ) return 0;
-        //if( b > 1 ) return 1;
-        return pow(b,x);
-    }
     
     CombinedStatResultsGeom(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, ExactCallD & c)
     : f_battle(c.tableinfo->handStrengthOfRound())

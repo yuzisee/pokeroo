@@ -207,6 +207,21 @@ namespace RegressionTests {
 
         assert(actual_y >= 3);
         assert(actual_Dy > 0); // betting more should increase N even more
+
+        CombinedStatResultsPessimistic testC(1, myTable, &(statprob.foldcumu));
+        testC.query(7.5);
+
+        const float64 s1 = testC.ViewShape().splits;
+        const float64 w = testC.getWinProb(7.5);
+        const float64 l = testC.getLoseProb(7.5);
+        const float64 dw = testC.get_d_WinProb_dbetSize(7.5);
+        const float64 dl = testC.get_d_LoseProb_dbetSize(7.5);
+
+        assert(w < 0.1);
+        assert(l+w > 0.89);
+        assert(s1 < 0.20);
+        assert(dw < 0);
+        assert(dl == -dw);
     }
 
     // Test oddsAgainstBestXHands derivative
