@@ -101,8 +101,8 @@ protected:
 
     }
 
-    virtual float64 g(float64) const = 0;
-    virtual float64 gd(float64, const float64) const = 0;
+    virtual float64 g(float64) = 0;
+    virtual float64 gd(float64, const float64) = 0;
 
 }
 ;
@@ -110,13 +110,14 @@ protected:
 class ICombinedStatResults {
 public:
     virtual ~ICombinedStatResults() {}
-    
-    const virtual StatResult & ViewShape() const = 0; // per-player outcome: wins and splits are used to calculate split possibilities
-    virtual float64 getLoseProb(float64 betSize) const = 0;
-	virtual float64 getWinProb(float64 betSize) const = 0;
 
-    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) const = 0;
-    virtual float64 get_d_WinProb_dbetSize(float64 betSize) const = 0;
+    virtual playernumber_t splitOpponents() const = 0;
+    const virtual StatResult & ViewShape(float64 betSize) = 0; // per-player outcome: wins and splits are used to calculate split possibilities
+    virtual float64 getLoseProb(float64 betSize) = 0;
+	virtual float64 getWinProb(float64 betSize) = 0;
+
+    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) = 0;
+    virtual float64 get_d_WinProb_dbetSize(float64 betSize) = 0;
 }
 ;
 
@@ -131,7 +132,7 @@ public:
     :
     fLastBetSize(std::nan(""))
     ,
-    fLoseProb(std::nan("")),fWinProb(std::nan("")),f_d_LoseProb_dbetSize(std::nan("")),f_d_WinProb_dbetSize((std::nan("")))
+    fLoseProb(std::nan("")),fWinProb(std::nan("")),f_d_LoseProb_dbetSize(std::nan("")),f_d_WinProb_dbetSize((std::nan(""))),fHandsToBeat(std::nan(""))
     ,
     fOpposingHands(playerIdx, table, foldcumu)
     ,
@@ -139,14 +140,18 @@ public:
     {}
     virtual ~CombinedStatResultsPessimistic() {}
 
+    virtual playernumber_t splitOpponents() const { return fSplitOpponents; }
+
     // per-player outcome: wins and splits are used to calculate split possibilities across NumPlayersInHand()
-    const virtual StatResult & ViewShape() const { return fSplitShape; }
+    const virtual StatResult & ViewShape(float64 betSize) { query(betSize); return fSplitShape; }
 
-    virtual float64 getLoseProb(float64 betSize) const { return fLoseProb; }
-	virtual float64 getWinProb(float64 betSize) const { return fWinProb; }
+    virtual float64 getLoseProb(float64 betSize) { query(betSize); return fLoseProb; }
+	virtual float64 getWinProb(float64 betSize) { query(betSize); return fWinProb; }
 
-    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) const { return f_d_LoseProb_dbetSize; }
-    virtual float64 get_d_WinProb_dbetSize(float64 betSize) const { return f_d_WinProb_dbetSize; }
+    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) { query(betSize); return f_d_LoseProb_dbetSize; }
+    virtual float64 get_d_WinProb_dbetSize(float64 betSize) { query(betSize); return f_d_WinProb_dbetSize; }
+
+    virtual float64 getHandsToBeat() const { return fHandsToBeat; }
 
     void query(float64 betSize);
     
@@ -155,11 +160,14 @@ private:
     float64 fLastBetSize;
 
     // query outputs
+    playernumber_t fSplitOpponents;
     StatResult fSplitShape;
     float64 fLoseProb;
     float64 fWinProb;
     float64 f_d_LoseProb_dbetSize;
     float64 f_d_WinProb_dbetSize;
+
+    float64 fHandsToBeat;
 
     // Count the number of possible opponents, including hypothetical "fold and come back stronger" hands.
     // This accounts for the fact that if you make an overbet in a particular situation, opponents will find only to return to this same situation in the future but with a better hand.
@@ -185,13 +193,13 @@ private:
     void forceRenormalize();
 
     
-protected:
 	StatResult shape;
 	float64 p_cl;
 	float64 p_cw;
 
 
-
+    //Who can you split with?
+	const uint8 e_battle;
 
     
 
@@ -199,8 +207,7 @@ public:
     //Floating point version of totalEnemy (which is handsToBeat), but adjustable by playerStrategy based on expectations
 	const float64 f_battle;
 
-    //Who can you split with?
-	const uint8 e_battle;
+
     
     CombinedStatResultsGeom(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, ExactCallD & c)
     : f_battle(c.tableinfo->handStrengthOfRound())
@@ -209,7 +216,9 @@ public:
         combineStatResults(s_acted,s_nonacted, bConvertToNet);
     }
 
-    const virtual StatResult & ViewShape() const { return shape; }
+    virtual playernumber_t splitOpponents() const { return e_battle; }
+    const virtual StatResult & ViewShape(float64 betSize) { return shape; }
+    const StatResult & ViewShape() { return shape; }
 
     /**
      * ComposeBreakdown()
@@ -238,19 +247,19 @@ public:
      */
     static float64 cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle);
 
-    virtual float64 getLoseProb(float64 betSize) const {
+    virtual float64 getLoseProb(float64 betSize) {
         return p_cl;
     }
 
-    virtual float64 getWinProb(float64 betSize) const {
+    virtual float64 getWinProb(float64 betSize) {
         return p_cw;
     }
 
-    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) const {
+    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) {
         return 0.0;
     }
 
-    virtual float64 get_d_WinProb_dbetSize(float64 betSize) const {
+    virtual float64 get_d_WinProb_dbetSize(float64 betSize) {
         return 0.0;
     }
 }
@@ -263,18 +272,14 @@ protected:
 
 	ExactCallD & espec;
     
-    const CombinedStatResultsGeom & fOutcome; // predict the outcome of a showdown
+    ICombinedStatResults & fOutcome; // predict the outcome of a showdown
 
 
 
-    virtual float64 g(float64) const;
-    virtual float64 gd(float64, const float64) const;
+    virtual float64 g(float64);
+    virtual float64 gd(float64, const float64);
     
 	public:
-
-
-        const StatResult & ViewShape() const { return fOutcome.ViewShape(); }
-
     
 
     /**
@@ -283,7 +288,7 @@ protected:
      *      Set this to true if the StatResult objects provided are the odds to beat one person.
      *      If this is false, we will assume the StatResult objects provided are the odds of winning the table.
      */
-    GainModelGeom(const CombinedStatResultsGeom & outcome, ExactCallD & c)
+    GainModelGeom(ICombinedStatResults & outcome, ExactCallD & c)
 		:
     ScalarFunctionModel(c.tableinfo->chipDenom())
     ,
@@ -366,19 +371,18 @@ class GainModelNoRisk : public virtual GainModel
 {
     protected:
     ExactCallD & espec;
-    const CombinedStatResultsGeom & fOutcome; // predict the outcome of a showdown
+    ICombinedStatResults & fOutcome; // predict the outcome of a showdown
     
-        virtual float64 g(float64) const;
-        virtual float64 gd(float64,const float64) const;
+        virtual float64 g(float64);
+        virtual float64 gd(float64,const float64);
     public:
-    const StatResult & ViewShape() const { return fOutcome.ViewShape(); }
     /**
      *  Parameters:
      *    convertToNet:
      *      Set this to true if the StatResult objects provided are the odds to beat one person.
      *      If this is false, we will assume the StatResult objects provided are the odds of winning the table.
      */
-	GainModelNoRisk(const CombinedStatResultsGeom & outcome, ExactCallD & c)
+	GainModelNoRisk(ICombinedStatResults & outcome, ExactCallD & c)
     : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
     ,
     GainModel(c.tableinfo->chipDenom(),c.tableinfo)

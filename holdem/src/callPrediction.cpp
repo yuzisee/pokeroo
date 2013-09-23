@@ -1317,26 +1317,44 @@ void OpponentHandOpportunity::query(const float64 betSize) {
         // ... but only showdown-eligible opponents
         if (fTable.IsInHand(pIndex)) {
 
+            if (betSize > fTable.ViewPlayer(pIndex)->GetBetSize()) {
+                // They would face an action on this bet, so see whether our overbet gives them an opportunity to profitably fold
 
-            FoldGainModel FG(fTable.GetChipDenom()/2);
-            FG.waitLength.meanConv = e;
-            // ( 1 / (x+1) )  ^ (1/x)
-            FG.waitLength.bankroll = fTable.ViewPlayer(pIndex)->GetMoney();
-            FG.waitLength.amountSacrificeVoluntary = fTable.ViewPlayer(pIndex)->GetBetSize()
-#ifdef SACRIFICE_COMMITTED
-            + fTable.ViewPlayer(pIndex)->GetVoluntaryContribution()
-#endif
-            ;
-            FG.waitLength.amountSacrificeForced = fTable.GetAvgBlindPerHand();
-            FG.waitLength.opponents = fTable.NumberInHand().inclAllIn() - 1;
-            FG.waitLength.w = pow(1.0 / tableStrength, 1.0 / FG.waitLength.opponents); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
+                FoldGainModel FG(fTable.GetChipDenom()/2);
+                FG.waitLength.meanConv = e;
+                // ( 1 / (x+1) )  ^ (1/x)
+                FG.waitLength.bankroll = fTable.ViewPlayer(pIndex)->GetMoney();
+                FG.waitLength.amountSacrificeVoluntary = fTable.ViewPlayer(pIndex)->GetBetSize()
+    #ifdef SACRIFICE_COMMITTED
+                + fTable.ViewPlayer(pIndex)->GetVoluntaryContribution()
+    #endif
+                ;
+                FG.waitLength.amountSacrificeForced = fTable.GetAvgBlindPerHand();
+                FG.waitLength.opponents = fTable.NumberInHand().inclAllIn() - 1;
+                FG.waitLength.w = pow(1.0 / tableStrength, 1.0 / FG.waitLength.opponents); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
 
-            const float64 foldGain = FG.f(betSize); // Calling this will invoke query which will populate FG.n
-            const float64 foldN = FG.n;
-            const float64 d_foldN_dbetSize_almost = FG.fd(betSize, foldGain) / foldGain * FG.n; // Do something weird here to approximate FG.d_n_dbetSize. Take the rate of change of foldgain and multiply that as a fraction into n. That means, if increasing betSize by 1.0 would increase foldGain by 2%, assume it increases n by 2% too. At least they are in the same direction. TODO(from joseph_huang): A proper derivative here?
+                const float64 foldGain = FG.f(betSize); // Calling this will invoke query which will populate FG.n
+                if (foldGain > 0.0) {
+                    // This opponent can profit from folding.
 
-            totalOpposingHandOpportunityCount += 1.0 + foldN; // Add one for the hand they have, and one more for every fold they are (on average) afforded
-            totalOpposingHandOpportunityCount_dbetSize += d_foldN_dbetSize_almost;
+                    const float64 foldN = FG.n;
+                    const float64 d_foldN_dbetSize_almost = FG.fd(betSize, foldGain) / foldGain * FG.n; // Do something weird here to approximate FG.d_n_dbetSize. Take the rate of change of foldgain and multiply that as a fraction into n. That means, if increasing betSize by 1.0 would increase foldGain by 2%, assume it increases n by 2% too. At least they are in the same direction. TODO(from joseph_huang): A proper derivative here?
+                    totalOpposingHandOpportunityCount += 1.0 + foldN; // Add one for the hand they have, and one more for every fold they are (on average) afforded
+                    totalOpposingHandOpportunityCount_dbetSize += d_foldN_dbetSize_almost;
+
+                } else {
+                    // The user's best chance to win is playing now.
+                    // If they continue to fold they will lose more than they could gain.
+                    // They contribute only the hand they have.
+                    totalOpposingHandOpportunityCount += 1.0;
+                    // totalOpposingHandOpportunityCount_dbetSize += 0.0;
+                }
+            } else {
+                // You are checking or calling their bet. They contribute only the hand they have.
+                // This is not an overbet situation where we need to be pessimistic.
+                totalOpposingHandOpportunityCount += 1.0;
+                // totalOpposingHandOpportunityCount_dbetSize += 0.0;
+            }
         }
         
         fTable.incrIndex(pIndex);
