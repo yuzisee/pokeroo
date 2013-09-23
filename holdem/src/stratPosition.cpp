@@ -1311,11 +1311,23 @@ float64 PureGainStrategy::MakeBet()
     CallCumulationD &raisecumu = statprob.foldcumu;
 
     ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.statmean.pct);
+
+    
+    StatResult left;
+
+    if (bGamble == 2) {
+        left = statprob.statranking; // Action
+    } else if (bGamble == 0) {
+        left = statprob.statmean; // Normal
+    } else if (bGamble == 1) {
+        const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHandInclAllIn() - 1);
+        StatResult statversus = (statprob.statrelation * (awayFromDrawingHands)) + (statprob.statranking * (1.0-awayFromDrawingHands));
+        statversus.genPCT();
+        left = statversus; // Trap
+    }
+
     ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
 
-    // TODO(from joseph_huang): Add more bGamble that use things like nonvolatilityFactor and/or nearEndOfBets
-
-    StatResult left = statprob.statranking;
     CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
     GainModelGeom callModel(leftCS, myDeterredCall);
 
@@ -1329,7 +1341,14 @@ float64 PureGainStrategy::MakeBet()
     printPessimisticWinPct(logFile, betToCall + ViewTable().GetMinRaise(), &csrp);
     logFile << endl;
 
-    logFile << " -  Pure  - " << endl;
+
+	if( bGamble == 0 )
+	{ logFile << " -  Mean  - " << endl;}
+	else if( bGamble == 1 )
+	{ logFile << " -  Versus  - " << endl;}
+	else if( bGamble == 2 )
+	{ logFile << " -  Pure  - " << endl;}
+
 #endif
 
     printCommon(tablestate);

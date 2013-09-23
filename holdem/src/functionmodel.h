@@ -137,6 +137,8 @@ public:
     fOpposingHands(playerIdx, table, foldcumu)
     ,
     fFoldCumu(foldcumu)
+    ,
+    fSplitOpponents(table.NumberInHand().inclAllIn() - 1)
     {}
     virtual ~CombinedStatResultsPessimistic() {}
 
@@ -160,7 +162,6 @@ private:
     float64 fLastBetSize;
 
     // query outputs
-    playernumber_t fSplitOpponents;
     StatResult fSplitShape;
     float64 fLoseProb;
     float64 fWinProb;
@@ -174,6 +175,7 @@ private:
     OpponentHandOpportunity fOpposingHands;
     CallCumulationD * const fFoldCumu;
 
+    const playernumber_t fSplitOpponents;
 }
 ;
 

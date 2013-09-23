@@ -50,8 +50,6 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
     }
     fLastBetSize = betSize;
 
-    fSplitOpponents = fOpposingHands.fTable.NumberInHand().inclAllIn();
-
     fOpposingHands.query(betSize);
     fHandsToBeat = fOpposingHands.handsToBeat();
     const float64 fractionOfHandsToBeat_dbetSize = fOpposingHands.d_HandsToBeat_dbetSize();
@@ -91,24 +89,26 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
 #endif // DEBUGASSERT
     
 
-    float64 splitTotal = 0.0;
-    for( int8 i=1;i<=fSplitOpponents;++i )
-    {//Split with i
-        splitTotal += HoldemUtil::nchoosep<float64>(fSplitOpponents,i)*pow(fSplitShape.wins,fSplitOpponents-i)*pow(fSplitShape.splits,i);
-    }
-
-    ///Normalize, total split possibilities must add up to showdownResults.split
-    if (splitTotal > 0) {
-        const float64 rescaleSplitWin = cleanpow(fSplitShape.splits / splitTotal, 1.0 / fSplitOpponents); // We will rescale .wins and .splits by this amount. In total, that scales splitTotal by (fSplitShape.splits / splitTotal)
-    #ifdef DEBUGASSERT
-        if (rescaleSplitWin != rescaleSplitWin) {
-            std::cerr << "NaN encountered in rescaleSplitWin" << endl;
-            exit(1);
+    if (fSplitOpponents > 1) {
+        float64 splitTotal = 0.0;
+        for( int8 i=1;i<=fSplitOpponents;++i )
+        {//Split with i
+            splitTotal += HoldemUtil::nchoosep<float64>(fSplitOpponents,i)*pow(fSplitShape.wins,fSplitOpponents-i)*pow(fSplitShape.splits,i);
         }
-    #endif // DEBUGASSERT
-        fSplitShape.loss -= (fSplitShape.wins + fSplitShape.splits) * (rescaleSplitWin - 1.0); // Subtract any excess that would be created (e.g. if rescaleSplitWin > 1.0)
-        fSplitShape.wins *= rescaleSplitWin;
-        fSplitShape.splits *= rescaleSplitWin;
+
+        ///Normalize, total split possibilities must add up to showdownResults.split
+        if (splitTotal > 0) {
+            const float64 rescaleSplitWin = cleanpow(fSplitShape.splits / splitTotal, 1.0 / fSplitOpponents); // We will rescale .wins and .splits by this amount. In total, that scales splitTotal by (fSplitShape.splits / splitTotal)
+        #ifdef DEBUGASSERT
+            if (rescaleSplitWin != rescaleSplitWin) {
+                std::cerr << "NaN encountered in rescaleSplitWin" << endl;
+                exit(1);
+            }
+        #endif // DEBUGASSERT
+            fSplitShape.loss -= (fSplitShape.wins + fSplitShape.splits) * (rescaleSplitWin - 1.0); // Subtract any excess that would be created (e.g. if rescaleSplitWin > 1.0)
+            fSplitShape.wins *= rescaleSplitWin;
+            fSplitShape.splits *= rescaleSplitWin;
+        }
     }
     fSplitShape.forceRenormalize();
 
@@ -134,8 +134,8 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
 
 
 #ifdef DEBUGASSERT
-    if ((fLoseProb != fLoseProb) || (fWinProb != fWinProb)) {
-        std::cerr << "NaN encountered in fWinProb and/or fLoseProb" << endl;
+    if (!((0 <= fLoseProb) && (0 <= fWinProb))) {
+        std::cerr << "Invalid encountered in fWinProb and/or fLoseProb" << endl;
         exit(1);
     }
 #endif // DEBUGASSERT

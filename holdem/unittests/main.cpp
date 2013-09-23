@@ -282,6 +282,7 @@ namespace RegressionTests {
 
 
     // The issue here is ActionBot calls a bet with (known?) zero percent chance of winning.
+    // ImproveGainStrategy never passed this, and was retired in favour of PureGainStrategy because of it.
     void testRegression_006() {
         /*
 
@@ -321,7 +322,8 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(0); // originally ImproveGainStrategy(2)
+        //PlayerStrategy * const botToTest = new DeterredGainStrategy(0);
+        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally ImproveGainStrategy(2);
 
         myTable.ManuallyAddPlayer("GearBotV", 1488.75, &gS);
         myTable.ManuallyAddPlayer("ActionBotV", 3031.88, botToTest);
@@ -432,6 +434,9 @@ namespace RegressionTests {
          ActionBotV calls $125 ($498.125)
          */
         assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) == -1);
+        // NOTE: Other than the bet of 80.0 after the flop, all of these bets are relatively low compared to the pot, and we call and don't raise.
+        // If you assume that we don't have any information about the opposing hand due to these small bets, then we are getting decently good odds on these small bets.
+        // Therefore, go investigate the 80.0
 
         /*
 
@@ -1096,7 +1101,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy pS(pA);
         FixedReplayPlayerStrategy gS(foldOnly);
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(0); // originally DeterredGainStrategy(2);
+        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally DeterredGainStrategy(2);
 
         myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS);
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
@@ -1252,8 +1257,8 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_002();
 
 
-    RegressionTests::testRegression_009();
     RegressionTests::testRegression_006();
+    RegressionTests::testRegression_009();
     RegressionTests::testRegression_005();
 
     RegressionTests::testRegression_003();
