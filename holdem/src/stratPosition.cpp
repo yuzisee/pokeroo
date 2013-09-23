@@ -464,7 +464,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
     int32 raiseStep = 0;
     float64 orAmount =  rl.RaiseAmount(betToCall,raiseStep);
     logFile << endl << "Why didn't I call?" << endl;
-    while( orAmount < separatorBet )
+    while( orAmount < maxShowdown )
     {
         orAmount =  rl.RaiseAmount(betToCall,raiseStep);
         const float64 oppRaisedFoldGain = rl.FoldGain(betToCall - tablestate.alreadyBet(),orAmount);
@@ -501,8 +501,11 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
         if( oppRaisedFoldGain > m.g_raised(separatorBet,mrAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
         logFile << rl.pRaise(separatorBet,raiseStep,maxcallStep) << " @ $" << mrAmount;
+
+        /*
         logFile << "\tfold -- left" << rl.pWin(mrAmount) << "  " << rr.pWin(mrAmount) << " right";
         printPessimisticWinPct(logFile, mrAmount, csrp);
+        */
         logFile << endl;
 
 
@@ -1144,8 +1147,8 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
         logFile << "\"riskprice\"... " << riskprice << "(based on scaler " << geom_algb_scaler << ")" << endl;
         logFile << "oppFoldChance is first " << myFearControl.oppFoldStartingPct(myDeterredCall) << ", when betting b_min=" << min_worst_scaler << endl;
 
-        logFile << "Geom("<< displaybet <<")=" << 1.0+geomModel.f(displaybet) << endl;
-        logFile << "Algb("<< displaybet <<")=" << 1.0+algbModel.f(displaybet) << endl;
+        logFile << "Against("<< displaybet <<")Geom=" << 1.0+geomModel.f(displaybet) << endl;
+        logFile << "Against("<< displaybet <<")Algb=" << 1.0+algbModel.f(displaybet) << endl;
     }
 
 
@@ -1236,9 +1239,9 @@ float64 SimpleGainStrategy::MakeBet()
     AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk> raiseModel(controlledRaiseModel, riskRaiseModel, belowRiskPrice, aboveRiskPrice, &tablestate);
 
     ///Choose from geom to algb
-    const float64 belowCall = betToCall - ViewTable().GetChipDenom() / 2.0;
-    const float64 aboveCall = betToCall + ViewTable().GetChipDenom() / 2.0;
-	AutoScalingFunction<GainModel,  AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk>  > callOrRaise(callModel,raiseModel,belowCall,aboveCall,&tablestate);
+    const float64 aboveCallBelowRaise1 = betToCall + ViewTable().GetChipDenom() / 2.0;
+    const float64 aboveCallBelowRaise2 = betToCall + ViewTable().GetChipDenom();
+    AutoScalingFunction<GainModel,  AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk>  > callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
 
     StateModel<  GainModel, AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk> >
     ap_aggressive( myDeterredCall, &callOrRaise );
@@ -1268,11 +1271,11 @@ float64 SimpleGainStrategy::MakeBet()
     {
         logFile << "\"riskprice\"... " << riskprice << "(so maxAllowedBet " << maxAllowedBet << ")" << endl;
         
-        logFile << "Geom("<< displaybet <<")=" << 1.0+callModel.f(displaybet) << endl;
-        logFile << "Algb("<< displaybet <<")=" << 1.0+raiseModel.f(displaybet) << endl;
+        logFile << "Against("<< displaybet <<")Geom=" << 1.0+callModel.f(displaybet) << endl;
+        logFile << "Against("<< displaybet <<")Algb=" << 1.0+raiseModel.f(displaybet) << endl;
 
-        logFile << "valueAlgb("<< displaybet <<")=" << 1.0+valueRaiseModel.f(displaybet) << endl;
-        logFile << "pushAlgb("<< displaybet <<")=" << 1.0+pushRaiseModel.f(displaybet) << endl;
+        logFile << "Against("<< displaybet <<")valueAlgb=" << 1.0+valueRaiseModel.f(displaybet) << endl;
+        logFile << "Against("<< displaybet <<")pushAlgb=" << 1.0+pushRaiseModel.f(displaybet) << endl;
     }
 
 
@@ -1312,7 +1315,7 @@ float64 PureGainStrategy::MakeBet()
 
     // TODO(from joseph_huang): Add more bGamble that use things like nonvolatilityFactor and/or nearEndOfBets
 
-    StatResult left = statprob.statmean;
+    StatResult left = statprob.statranking;
     CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
     GainModelGeom callModel(leftCS, myDeterredCall);
 
@@ -1322,8 +1325,8 @@ float64 PureGainStrategy::MakeBet()
 
 #ifdef LOGPOSITION
 
-    logFile << "(Call) ";
-    printPessimisticWinPct(logFile, betToCall, &csrp);
+    logFile << "(MinRaise) ";
+    printPessimisticWinPct(logFile, betToCall + ViewTable().GetMinRaise(), &csrp);
     logFile << endl;
 
     logFile << " -  Pure  - " << endl;
@@ -1332,9 +1335,9 @@ float64 PureGainStrategy::MakeBet()
     printCommon(tablestate);
 
     ///Choose from geom to algb
-    const float64 belowCall = betToCall - ViewTable().GetChipDenom() / 2.0;
-    const float64 aboveCall = betToCall + ViewTable().GetChipDenom() / 2.0;
-	AutoScalingFunction<GainModel,  GainModelNoRisk> callOrRaise(callModel,raiseModel,belowCall,aboveCall,&tablestate);
+    const float64 aboveCallBelowRaise1 = betToCall + ViewTable().GetChipDenom() / 2.0;
+    const float64 aboveCallBelowRaise2 = betToCall + ViewTable().GetChipDenom();
+    AutoScalingFunction<GainModel,  GainModelNoRisk> callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
 
     StateModel<  GainModel, GainModelNoRisk >
     ap_aggressive( myDeterredCall, &callOrRaise );
@@ -1358,6 +1361,13 @@ float64 PureGainStrategy::MakeBet()
     logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
     logFile << "        Push("<< displaybet <<")=" << ap_aggressive.gainWithFold << endl;
 
+    if (betToCall < displaybet) {
+        choicemodel.f(betToCall); //since choicemodel is ap_aggressive
+        logFile << " AgainstCall("<< betToCall <<")=" << ap_aggressive.gainNormal << endl;
+        logFile << "AgainstRaise("<< betToCall <<")=" << ap_aggressive.gainRaised << endl;
+        logFile << "        Push("<< betToCall <<")=" << ap_aggressive.gainWithFold << endl;
+    }
+
 #endif
 
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
@@ -1366,8 +1376,8 @@ float64 PureGainStrategy::MakeBet()
         printPessimisticWinPct(logFile, betToCall, &csrp);
         logFile << endl;
 
-        logFile << "Geom("<< displaybet <<")=" << 1.0+callModel.f(displaybet) << endl;
-        logFile << "Algb("<< displaybet <<")=" << 1.0+raiseModel.f(displaybet) << endl;
+        logFile << "Against("<< displaybet <<")Geom=" << 1.0+callModel.f(displaybet) << endl;
+        logFile << "Against("<< displaybet <<")Algb=" << 1.0+raiseModel.f(displaybet) << endl;
     }
 
 

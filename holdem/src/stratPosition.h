@@ -155,7 +155,7 @@ class PureGainStrategy : public PositionalStrategy
 protected:
     int8 bGamble;
 public:
-    PureGainStrategy(int8 riskymode =0) : PositionalStrategy(true,false,true,false), bGamble(riskymode) {}
+    PureGainStrategy(int8 riskymode =0) : PositionalStrategy(true,true,false,false), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }
