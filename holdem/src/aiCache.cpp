@@ -178,7 +178,7 @@ bool StatsManager::UnserializeW( ifstream& dataf, StatResult* myAvg, DistrShape*
 
 void StatsManager::SerializeC( ofstream& dataf, const CallCumulation& q )
 {
-    cachesize_t vcount = q.cumulation.size();
+    cachesize_t vcount = static_cast<cachesize_t>(q.cumulation.size());
 #ifdef DEBUGASSERT
 	if (vcount != q.cumulation.size())
 	{

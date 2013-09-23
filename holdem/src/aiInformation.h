@@ -103,9 +103,9 @@ public:
 	}
     CommunityCallStats(const CommunityCallStats& covered, const CommunityPlus& withCommunity, const CommunityPlus& onlycommunity)
         : PlayStats(withCommunity,onlycommunity)
-        ,CallStats(withCommunity,onlycommunity,static_cast<int8>(7)-covered.moreCards)
+        ,CallStats(withCommunity,onlycommunity,static_cast<int8>(7-covered.moreCards))
     {
-        initCC(static_cast<int8>(7)-covered.moreCards);
+        initCC(static_cast<int8>(7-covered.moreCards));
         showdownIndex = covered.showdownIndex;
         showdownCount = covered.showdownCount;
         showdownMax = covered.showdownMax;

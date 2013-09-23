@@ -235,7 +235,7 @@ void CommunityCallStats::Analyze()
 {
     #ifdef DEBUGASSERT
         const int32 countedDealt = static_cast<int32>(showdownMax);
-        int8 cardsAvail = realCardsAvailable(7 - moreCards);
+        int8 cardsAvail = realCardsAvailable(static_cast<int8>(7 - moreCards));
         const int32 expectedDealt = cardsAvail*(cardsAvail-1)/2 * HoldemUtil::nchoosep<int32>(cardsAvail-2,moreCards-2) ;
         if( showdownIndex != showdownCount )
         {
@@ -345,7 +345,7 @@ void CommunityCallStats::Analyze()
     ///we tend to generate the result correponding to the line below, due to
     ///the fact that the iHave.diff~emptyDeck comparison isn't as easily acheived when
     ///performing our "pyramid" algorithm. We instead fall back on iHave~oHave.
-    const float64 dealout = HoldemUtil::nchoosep<float64>(realCardsAvailable(7-moreCards),2) * HoldemUtil::nchoosep<float64>(realCardsAvailable(7-moreCards)-2,moreCards-2);
+    const float64 dealout = HoldemUtil::nchoosep<float64>(realCardsAvailable(static_cast<int8>(7-moreCards)),2) * HoldemUtil::nchoosep<float64>(realCardsAvailable(static_cast<int8>(7-moreCards)-2),moreCards-2);
     myChancesEach = ( dealout - myChancesEach )*myChancesEach;
 
     CallStats::Analyze();
