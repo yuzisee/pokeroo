@@ -40,8 +40,10 @@ class PositionalStrategy : virtual public PlayerStrategy
 
 
     protected:
+        static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp);
+
         template< typename T >
-        void printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet);
+        void printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * csrp);
 
 
         
@@ -143,6 +145,22 @@ public:
     virtual float64 MakeBet();
 }
 ;
+
+
+/**
+ * Same as SimpleGainStrategy, but instead of AutoScalingFunction for statworse, use CombinedStatResultsPessimistic
+ */
+class PureGainStrategy : public PositionalStrategy
+{
+protected:
+    int8 bGamble;
+public:
+    PureGainStrategy(int8 riskymode =0) : PositionalStrategy(true,false,true,false), bGamble(riskymode) {}
+
+    virtual float64 MakeBet();
+}
+;
+
 
 
 

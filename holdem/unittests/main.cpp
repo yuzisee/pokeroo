@@ -199,9 +199,13 @@ namespace RegressionTests {
         statprob.foldcumu.ReversePerspective();
 
 
+        const float64 testBet = 8.0;
+        
         OpponentHandOpportunity test(1, myTable, &(statprob.foldcumu));
 
-        test.query(7.5);
+
+
+        test.query(testBet);
         const float64 actual_y = test.handsToBeat();
         const float64 actual_Dy = test.d_HandsToBeat_dbetSize();
 
@@ -209,13 +213,13 @@ namespace RegressionTests {
         assert(actual_Dy > 0); // betting more should increase N even more
 
         CombinedStatResultsPessimistic testC(1, myTable, &(statprob.foldcumu));
-        testC.query(7.5);
+        testC.query(testBet);
 
-        const float64 s1 = testC.ViewShape().splits;
-        const float64 w = testC.getWinProb(7.5);
-        const float64 l = testC.getLoseProb(7.5);
-        const float64 dw = testC.get_d_WinProb_dbetSize(7.5);
-        const float64 dl = testC.get_d_LoseProb_dbetSize(7.5);
+        const float64 s1 = testC.ViewShape(testBet).splits;
+        const float64 w = testC.getWinProb(testBet);
+        const float64 l = testC.getLoseProb(testBet);
+        const float64 dw = testC.get_d_WinProb_dbetSize(testBet);
+        const float64 dl = testC.get_d_LoseProb_dbetSize(testBet);
 
         assert(w < 0.1);
         assert(l+w > 0.89);
@@ -317,7 +321,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        ImproveGainStrategy * const botToTest = new ImproveGainStrategy(2);
+        PlayerStrategy * const botToTest = new ImproveGainStrategy(2);
 
         myTable.ManuallyAddPlayer("GearBotV", 1488.75, &gS);
         myTable.ManuallyAddPlayer("ActionBotV", 3031.88, botToTest);
@@ -1238,8 +1242,8 @@ int main(int argc, const char * argv[])
     NamedTriviaDeckTests::testNamePockets();
 
 
-    RegressionTests::testRegression_008();
-    RegressionTests::testRegression_007();
+    //RegressionTests::testRegression_008();
+    //RegressionTests::testRegression_007();
 
     RegressionTests::testRegression_006();
     RegressionTests::testRegression_005();

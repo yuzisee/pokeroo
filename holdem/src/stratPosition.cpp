@@ -449,9 +449,15 @@ void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
 #endif
 
 }
+void PositionalStrategy::printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp) {
+    if (csrp != 0) {
+        csrp->query(betSize);
+        logF << "\tW(" << csrp->getHandsToBeat() << ")=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "x.w,s=" << csrp->ViewShape(betSize).wins << "," << csrp->ViewShape(betSize).splits;
+    }
+}
 
 template< typename T >
-void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet)
+void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp)
 {
 
     int32 maxcallStep = -1;
@@ -468,7 +474,9 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
         // Here, raiseStep is just the iterator. rl.RaiseAmount(betToCall,raiseStep) is the amount, rl.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
         logFile << rl.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << orAmount;
 
-        logFile << "\tfold -- left" << rl.pWin(orAmount) << "  " << rr.pWin(orAmount) << " right" << endl;  // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
+        logFile << "\tfold -- left" << rl.pWin(orAmount) << "  " << rr.pWin(orAmount) << " right"; // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
+        printPessimisticWinPct(logFile, orAmount, csrp);
+        logFile << endl;
 
 
         if( orAmount >= maxShowdown ) break;
@@ -493,7 +501,9 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
         if( oppRaisedFoldGain > m.g_raised(separatorBet,mrAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
         logFile << rl.pRaise(separatorBet,raiseStep,maxcallStep) << " @ $" << mrAmount;
-        logFile << "\tfold -- left" << rl.pWin(mrAmount) << "  " << rr.pWin(mrAmount) << " right" << endl;
+        logFile << "\tfold -- left" << rl.pWin(mrAmount) << "  " << rr.pWin(mrAmount) << " right";
+        printPessimisticWinPct(logFile, mrAmount, csrp);
+        logFile << endl;
 
 
         if( mrAmount >= maxShowdown ) break;
@@ -647,7 +657,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 #ifdef LOGPOSITION
     if (tablestate.handsToShowdown() != 1) {
-        statprob.logfileAppendStatResultProbability_statworse(logFile, algbModel_fear.ViewShape(), 1);
+        statprob.logfileAppendStatResultProbability_statworse(logFile, rightCS_fear.ViewShape(), 1);
     }
 
 	if( bGamble == 0 )
@@ -676,7 +686,7 @@ float64 ImproveGainStrategy::MakeBet()
         #endif
         logFile << endl;
     }
-    logFile << geomModel.ViewShape().pct << ":React/Main ... " << " ... " << algbModel_fear.ViewShape().pct << ":Act/Fear" << endl;
+    logFile << leftCS.ViewShape().pct << ":React/Main ... " << " ... " << rightCS_fear.ViewShape().pct << ":Act/Fear" << endl;
 #endif
 
 ///From geom to algb
@@ -899,7 +909,7 @@ exit(1);
 
 
     printBetGradient< StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  > >
-                     (myDeterredCall_left, myDeterredCall_right, choicemodel, tablestate, viewBet);
+                     (myDeterredCall_left, myDeterredCall_right, choicemodel, tablestate, viewBet, 0);
 
 
     logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
@@ -1013,7 +1023,7 @@ float64 DeterredGainStrategy::MakeBet()
 
 #ifdef LOGPOSITION
     if (tablestate.handsToShowdown() != 1) {
-        statprob.logfileAppendStatResultProbability_statworse(logFile, algbModel.ViewShape(), 1);
+        statprob.logfileAppendStatResultProbability_statworse(logFile, rightCS.ViewShape(), 1);
     }
 
     if( bGamble == 0 )
@@ -1045,7 +1055,7 @@ float64 DeterredGainStrategy::MakeBet()
         logFile << "impliedFactor... " << 1 / nearEndOfBets << endl;
         logFile << endl;
     }
-    logFile << "Act(0%) or React(100%)? " << certainty << ", pct " << left.pct << " ... " << algbModel.ViewShape().pct << " ... " << right.pct << endl;
+    logFile << "Act(0%) or React(100%)? " << certainty << ", pct " << left.pct << " ... " << rightCS.ViewShape().pct << " ... " << right.pct << endl;
 
 #endif
 
@@ -1140,7 +1150,7 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
 
         printBetGradient< StateModel<  GainModel, GainModelNoRisk > >
-            (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet);
+            (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, 0);
 
 
     logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
@@ -1206,9 +1216,9 @@ float64 SimpleGainStrategy::MakeBet()
 #ifdef LOGPOSITION
 
     if (tablestate.handsToShowdown() != 1) {
-        statprob.logfileAppendStatResultProbability_statworse(logFile, valueRaiseModel.ViewShape(), - tablestate.handStrengthOfRound() - 1);
-        statprob.logfileAppendStatResultProbability_statworse(logFile, pushRaiseModel.ViewShape(), - tablestate.handsDealt());
-        statprob.logfileAppendStatResultProbability_statworse(logFile, riskRaiseModel.ViewShape(), - RAREST_HAND_CHANCE / 3.0);
+        statprob.logfileAppendStatResultProbability_statworse(logFile, valueCS.ViewShape(), - tablestate.handStrengthOfRound() - 1);
+        statprob.logfileAppendStatResultProbability_statworse(logFile, pushCS.ViewShape(), - tablestate.handsDealt());
+        statprob.logfileAppendStatResultProbability_statworse(logFile, abortCS.ViewShape(), - static_cast<playernumber_t>(RAREST_HAND_CHANCE / 3.0));
     }
     
     logFile << " -  Simple  - " << endl;
@@ -1267,7 +1277,7 @@ float64 SimpleGainStrategy::MakeBet()
 
 
     printBetGradient< StateModel<  GainModel, AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk> > >
-    (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet);
+    (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, 0);
 
 
     logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
@@ -1284,6 +1294,100 @@ float64 SimpleGainStrategy::MakeBet()
     
 }
 
+
+
+float64 PureGainStrategy::MakeBet()
+{
+	setupPosition();
+
+	if( maxShowdown <= 0 ) return 0;
+
+
+
+    CallCumulationD &choicecumu = statprob.callcumu;
+    CallCumulationD &raisecumu = statprob.foldcumu;
+
+    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.statmean.pct);
+    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
+
+    // TODO(from joseph_huang): Add more bGamble that use things like nonvolatilityFactor and/or nearEndOfBets
+
+    StatResult left = statprob.statmean;
+    CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
+    GainModelGeom callModel(leftCS, myDeterredCall);
+
+    CombinedStatResultsPessimistic csrp(myPositionIndex, ViewTable(), &(statprob.foldcumu));
+    GainModelNoRisk raiseModel(csrp, myDeterredCall);
+
+
+#ifdef LOGPOSITION
+
+    logFile << "(Call) ";
+    printPessimisticWinPct(logFile, betToCall, &csrp);
+    logFile << endl;
+
+    logFile << " -  Pure  - " << endl;
+#endif
+
+    printCommon(tablestate);
+
+    ///Choose from geom to algb
+    const float64 belowCall = betToCall - ViewTable().GetChipDenom() / 2.0;
+    const float64 aboveCall = betToCall + ViewTable().GetChipDenom() / 2.0;
+	AutoScalingFunction<GainModel,  GainModelNoRisk> callOrRaise(callModel,raiseModel,belowCall,aboveCall,&tablestate);
+
+    StateModel<  GainModel, GainModelNoRisk >
+    ap_aggressive( myDeterredCall, &callOrRaise );
+
+
+
+    HoldemFunctionModel& choicemodel = ap_aggressive;
+
+
+    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.callcumu));
+
+#ifdef LOGPOSITION
+
+
+
+
+#ifdef VERBOSE_STATEMODEL_INTERFACE
+    const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
+    choicemodel.f(displaybet); //since choicemodel is ap_aggressive
+    logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
+    logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
+    logFile << "        Push("<< displaybet <<")=" << ap_aggressive.gainWithFold << endl;
+
+#endif
+
+    //if( bestBet < betToCall + ViewTable().GetChipDenom() )
+    {
+        logFile << "(" << displaybet << ") ";
+        printPessimisticWinPct(logFile, betToCall, &csrp);
+        logFile << endl;
+
+        logFile << "Geom("<< displaybet <<")=" << 1.0+callModel.f(displaybet) << endl;
+        logFile << "Algb("<< displaybet <<")=" << 1.0+raiseModel.f(displaybet) << endl;
+    }
+
+
+    printBetGradient< StateModel<  GainModel, GainModelNoRisk > >
+    (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, &csrp);
+
+
+    logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
+
+    logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(displaybet) << "   d\\" << myDeterredCall.pWinD(displaybet) << endl;
+    if( myDeterredCall.pWin(displaybet) > 0 )
+    {
+        logFile << "if playstyle is Danger/Conservative, overall utility is " << choicemodel.f(displaybet) << endl;
+    }
+    
+#endif
+    
+    return bestBet;
+    
+}
 
 
 

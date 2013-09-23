@@ -53,9 +53,10 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
     fSplitOpponents = fOpposingHands.fTable.NumberInHand().inclAllIn();
 
     fOpposingHands.query(betSize);
-    const float64 fractionOfHandsToBeat = 1.0 / fOpposingHands.handsToBeat(); // If you have to beat N hands, expect the worst to be one of the worst 1/Nth
+    fHandsToBeat = fOpposingHands.handsToBeat();
     const float64 fractionOfHandsToBeat_dbetSize = fOpposingHands.d_HandsToBeat_dbetSize();
 
+    const float64 fractionOfHandsToBeat = 1.0 / fHandsToBeat; // If you have to beat N hands, expect the worst to be one of the worst 1/Nth
     const std::pair<StatResult, float64> oddsAgainstbestXHands = fFoldCumu->oddsAgainstBestXHands(fractionOfHandsToBeat);
     const StatResult & showdownResults = oddsAgainstbestXHands.first;
     const float64 & d_showdownPct_dX = oddsAgainstbestXHands.second;
@@ -359,7 +360,7 @@ float64 HoldemFunctionModel::GetFoldGain(CallCumulationD* const e, float64 * con
 
 
 
-float64 GainModelGeom::g(float64 betSize) const
+float64 GainModelGeom::g(float64 betSize)
 {
 
 	if( betSize > estat->callBet() && betSize < estat->minRaiseTo() )
@@ -401,6 +402,7 @@ float64 GainModelGeom::g(float64 betSize) const
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     const int8 e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(round(exf/x));
+    const StatResult & splitShape = fOutcome.ViewShape(betSize);
 
 	float64 sav=1;
 	for(int8 i=1;i<=e_call;++i)
@@ -416,7 +418,7 @@ float64 GainModelGeom::g(float64 betSize) const
 		sav *=  pow(
                     base - x +( f_pot+x+exf_live*dragCalls )/(i+1)
                         ,
-                        HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i) * pow(ViewShape().wins,fOutcome.splitOpponents()-i) * pow(ViewShape().splits,i)
+                        HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i) * pow(splitShape.wins,fOutcome.splitOpponents()-i) * pow(splitShape.splits,i)
                 );
 	}
 
@@ -447,7 +449,7 @@ float64 GainModelGeom::f(const float64 betSize)
 }
 
 // NOTE: This function is not completely accurate, since ViewShape is affected by betSize but it's derivative is not considered.
-float64 GainModelGeom::gd(const float64 betSize, const float64 y) const
+float64 GainModelGeom::gd(const float64 betSize, const float64 y)
 {
 	//const float64 exf = e->pctWillCall(x/qdenom);
 	//const float64 dexf = e->pctWillCallD(x/qdenom) * f_pot/qdenom/qdenom;
@@ -516,6 +518,8 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y) const
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
     const int8 e_call = fOutcome.splitOpponents(); //Probably manditory if dragCalls is used
+    const StatResult & splitShape = fOutcome.ViewShape(betSize);
+
 
 	float64 savd=0;
 	for(int8 i=1;i<=e_call;++i)
@@ -527,7 +531,7 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y) const
 
         if( dragCalls != 0 )
         {
-            savd += HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(ViewShape().wins,fOutcome.splitOpponents()-i)*pow(ViewShape().splits,i)
+            savd += HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i)
                     *
                     dexf
                     /
@@ -603,7 +607,7 @@ StatResult CombinedStatResultsGeom::ComposeBreakdown(const float64 pct, const fl
 
 
 
-float64 GainModelNoRisk::g(float64 betSize) const
+float64 GainModelNoRisk::g(float64 betSize)
 {
 
 	if( betSize > estat->callBet() && betSize < estat->minRaiseTo() )
@@ -643,6 +647,8 @@ float64 GainModelNoRisk::g(float64 betSize) const
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     const int8& e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(round(exf/x));
+    const StatResult & splitShape = fOutcome.ViewShape(betSize);
+
 
 	float64 sav=0;
 	for(int8 i=1;i<=e_call;++i)
@@ -658,7 +664,7 @@ float64 GainModelNoRisk::g(float64 betSize) const
 		sav +=
                 (    base - x+( f_pot+x+exf_live*dragCalls )/(i+1)    )
                         *
-                (        HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(ViewShape().wins,fOutcome.splitOpponents()-i)*pow(ViewShape().splits,i)    )
+                (        HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i)    )
                 ;
 	}
 
@@ -700,7 +706,7 @@ float64 GainModelNoRisk::f(const float64 betSize)
 
 
 // NOTE: This function is not completely accurate, since ViewShape is affected by betSize but it's derivative is not considered.
-float64 GainModelNoRisk::gd(float64 betSize, const float64 y) const
+float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 {
 
     const float64 adjQuantum = quantum/4;
@@ -741,6 +747,8 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y) const
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
     const int8 e_call = fOutcome.splitOpponents(); //Probably manditory if dragCalls is used
+    const StatResult & splitShape = fOutcome.ViewShape(betSize);
+
 
 	float64 savd=0;
 	for(int8 i=1;i<=e_call;++i)
@@ -753,8 +761,8 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y) const
         if( dragCalls != 0 )
         {
             savd += HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)
-            *pow(ViewShape().wins,fOutcome.splitOpponents()-i)
-            *pow(ViewShape().splits,i)
+            *pow(splitShape.wins,fOutcome.splitOpponents()-i)
+            *pow(splitShape.splits,i)
                     *
                     dexf * dragCalls
                     /
