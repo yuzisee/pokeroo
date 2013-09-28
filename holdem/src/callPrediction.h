@@ -141,7 +141,7 @@ class ExactCallD
             virtual void SetImpliedFactor(const float64 bonus);
 
 
-
+    
             virtual float64 FoldGain(){ return tableinfo->foldGain(ed);}
             virtual float64 FoldGain(float64 extra, float64 facedbet){ return tableinfo->foldGain(ed,extra,facedbet);}
 
@@ -212,7 +212,7 @@ public:
     // facedHands: What does the opponent think his/her win percentage is based on rarity?
     // I guess if we are being pessimistic (which is the point of this exercise: assume that by betting we reveal what we have) they would know what we have.
     // So this should be foldcumu.
-    OpponentHandOpportunity(playernumber_t myIdx, const HoldemArena& table, CallCumulationD * myWinAgainstFacedHands)
+    OpponentHandOpportunity(playernumber_t myIdx, const HoldemArena& table, CallCumulationD * oppWinAgainstMyHands)
     :
     fTable(table)
     ,
@@ -222,7 +222,7 @@ public:
     ,
     fIdx(myIdx)
     ,
-    e(myWinAgainstFacedHands)
+    e_opp(oppWinAgainstMyHands)
     {
     }
 
@@ -241,7 +241,7 @@ private:
     float64 fHandsToBeat;
     float64 f_d_HandsToBeat_dbetSize;
 
-    CallCumulationD * e;
+    CallCumulationD * e_opp;
     const playernumber_t fIdx;
 
 }

@@ -112,6 +112,7 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
 
 // Evaluate gainWithFold*gainNormal*gainRaised
 // on an AutoScalingFunction
+// and relative to foldGain and everything.
 template <class LL, class RR>
 class StateModel : public virtual HoldemFunctionModel
 {

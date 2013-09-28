@@ -208,18 +208,14 @@ StateModel<LL,RR>::~StateModel()
 template <class LL, class RR>
 float64 StateModel<LL,RR>::g_raised(float64 raisefrom, const float64 betSize)
 {
-    // Since AutoScalingFunction's f_raised is just a linear combination of calls to GainModel*::f(), which subtract FoldGain for comparison purposes,
-    // we have to first add it back in to get the pure gain.
-    // In our own StateModel::query() we'll add it back in again
     const float64 potWin = fp->f_raised(raisefrom, betSize);
-    const float64 foldgainUnref = ea.FoldGain();
-    return potWin + foldgainUnref;
+    return potWin;
 }
 
 template <class LL, class RR>
 float64 StateModel<LL,RR>::gd_raised(float64 raisefrom, const float64 betSize, const float64 yval)
 {
-    const float64 fp_f_raised = yval - ea.FoldGain(); // Subtract out foldgain, to get f_raised without computing it again.
+    const float64 fp_f_raised = yval; // Subtract out foldgain, to get f_raised without computing it again.
     return fp->fd_raised(raisefrom, betSize, fp_f_raised); // There is no derivative of ea.FoldGain() here because it is constant relative to betSize.
 }
 
@@ -311,12 +307,12 @@ void StateModel<LL,RR>::query( const float64 betSize )
         potRaisedWin_A[i] = g_raised(betSize,raiseAmount_A[i]);
         potRaisedWinD_A[i] = gd_raised(betSize,raiseAmount_A[i],potRaisedWin_A[i]);
 
-        const float64 oppRaisedFoldGain = ea.FoldGain(betSize - ea.tableinfo->alreadyBet(),raiseAmount_A[i]); //You would fold the additional (betSize - ea->alreadyBet() )
+        const float64 oppRaisedMyFoldGain = ea.FoldGain(betSize - ea.tableinfo->alreadyBet(),raiseAmount_A[i]); //You would fold the additional (betSize - ea->alreadyBet() )
 
-        if( potRaisedWin_A[i] < oppRaisedFoldGain )
+        if( potRaisedWin_A[i] < oppRaisedMyFoldGain )
         {
 			if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
-            potRaisedWin_A[i] = oppRaisedFoldGain;
+            potRaisedWin_A[i] = oppRaisedMyFoldGain;
             potRaisedWinD_A[i] = 0;
         }
 

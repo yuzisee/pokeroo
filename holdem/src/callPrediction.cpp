@@ -1321,7 +1321,7 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 // They would face an action on this bet, so see whether our overbet gives them an opportunity to profitably fold
 
                 FoldGainModel FG(fTable.GetChipDenom()/2);
-                FG.waitLength.meanConv = e;
+                FG.waitLength.meanConv = e_opp;
                 // ( 1 / (x+1) )  ^ (1/x)
                 FG.waitLength.bankroll = fTable.ViewPlayer(pIndex)->GetMoney();
                 FG.waitLength.amountSacrificeVoluntary = fTable.ViewPlayer(pIndex)->GetBetSize()

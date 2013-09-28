@@ -79,6 +79,8 @@ class HoldemFunctionModel : public virtual ScalarFunctionModel
 }
 ;
 
+// Evaluate gain at showdown of any price.
+// This does NOT evaluate relative to foldGain
 class GainModel : public virtual HoldemFunctionModel {
 public:
 

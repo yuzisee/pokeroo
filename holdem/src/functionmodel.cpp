@@ -439,8 +439,7 @@ float64 GainModelGeom::g(float64 betSize)
 float64 GainModelGeom::f(const float64 betSize)
 {
     const float64 wls = g(betSize);
-    const float64 batna = estat->foldGain(espec.ed);
-	const float64 fx = wls - batna;
+	const float64 fx = wls;
     return fx;
 }
 
@@ -569,9 +568,7 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
 
 float64 GainModelGeom::fd(const float64 betSize, const float64 y)
 {
-
-    const float64 efg = estat->foldGain(espec.ed);
-    const float64 betVal = gd(betSize, y+efg);
+    const float64 betVal = gd(betSize, y);
 
     #ifdef DEBUG_TRACE_SEARCH
     if(bTraceEnable) std::cout << "\t\tfd figures " << betVal << std::endl;
@@ -695,8 +692,7 @@ float64 GainModelNoRisk::g(float64 betSize)
 float64 GainModelNoRisk::f(const float64 betSize)
 {
     const float64 wls = g(betSize);
-    const float64 batna = estat->foldGain(espec.ed);
-	const float64 fx = wls - batna;
+	const float64 fx = wls;
     return fx;
 }
 
@@ -786,7 +782,7 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 
 float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)
 {
-    return gd(betSize, y+estat->foldGain(espec.ed));
+    return gd(betSize, y);
 }
 
 
