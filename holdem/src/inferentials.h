@@ -426,4 +426,12 @@ public:
 }
 ;
 
+struct CoreProbabilities {
+    CallCumulationD foldcumu; // CallStats (probabiliy of winning against each possible opponent hand)
+    CallCumulationD callcumu; // CommunityCallStats (each hole cards' inherent probability of winning)
+	StatResult statmean; // (Your hole cards' current inherent probability of winning)
+}
+;
+
+
 #endif

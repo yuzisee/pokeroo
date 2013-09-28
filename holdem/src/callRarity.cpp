@@ -6,7 +6,7 @@
 
 void StatResultProbabilities::logfileAppendStatResultProbabilities(struct PositionalStrategyLogOptions const &logOptions, std::ostream &logFile) const
 {
-    logfileAppendPercentages(logFile, logOptions.bLogMean,"M","M.w","M.s","M.l",statmean);
+    logfileAppendPercentages(logFile, logOptions.bLogMean,"M","M.w","M.s","M.l",core.statmean);
 
 
     logfileAppendPercentages(logFile, logOptions.bLogRanking,"Better All-in",0,"Re.s",0,statrelation);
@@ -28,11 +28,11 @@ void StatResultProbabilities::Process_FoldCallMean()
 ///   statrelation
 ///==================
     // Against what fraction of opponents will you have the better hand?
-	const float64 rarityA3 = foldcumu.Pr_haveWinPCT_orbetter(0.5);
+	const float64 rarityA3 = core.foldcumu.Pr_haveWinPCT_orbetter(0.5);
 
 //You can tie in rank if and only if you tie in mean
     statrelation.wins = 1 - rarityA3;
-    statrelation.splits = statmean.splits;
+    statrelation.splits = core.statmean.splits;
     statrelation.loss = rarityA3;
     statrelation.forceRenormalize();
 
@@ -40,10 +40,10 @@ void StatResultProbabilities::Process_FoldCallMean()
 ///   statranking
 ///==================
     // How often do you get a hand this good?
-    const float64 rarity3 = callcumu.Pr_haveWinPCT_orbetter(statmean.pct);
+    const float64 rarity3 = core.callcumu.Pr_haveWinPCT_orbetter(core.statmean.pct);
 
     statranking.wins = 1 - rarity3;
-    statranking.splits = statmean.splits;
+    statranking.splits = core.statmean.splits;
     statranking.loss = rarity3;
     statranking.forceRenormalize();
 
@@ -60,9 +60,9 @@ void StatResultProbabilities::Process_FoldCallMean()
         statHybridR = statrelation;
     }
 
-    hybridMagnified.wins = sqrt(statmean.wins*statHybridR.wins);
-    hybridMagnified.splits = sqrt(statmean.splits*statHybridR.splits);
-    hybridMagnified.loss = sqrt(statmean.loss*statHybridR.loss);
+    hybridMagnified.wins = sqrt(core.statmean.wins*statHybridR.wins);
+    hybridMagnified.splits = sqrt(core.statmean.splits*statHybridR.splits);
+    hybridMagnified.loss = sqrt(core.statmean.loss*statHybridR.loss);
     hybridMagnified.genPCT();
     const float64 adjust = hybridMagnified.wins + hybridMagnified.splits + hybridMagnified.loss;
     hybridMagnified = hybridMagnified * ( 1.0 / adjust );

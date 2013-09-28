@@ -69,7 +69,7 @@ public:
 ///Single Opponent Probabilities
 
     StatResult statworse(playernumber_t handsCompeting) const {
-        return statworse(foldcumu, handsCompeting);
+        return statworse(core.foldcumu, handsCompeting);
     }
 
     static StatResult statworse(const CallCumulationD & foldcumu, playernumber_t handsCompeting)   // Probability of winning against a pessimistic set of opposing hands (Based on handsCompeting)
@@ -88,10 +88,8 @@ public:
 
 public:
 ///Core Probabilities
-    CallCumulationD foldcumu; // CallStats (probabiliy of winning against each possible opponent hand)
-    CallCumulationD callcumu; // CommunityCallStats (each hole cards' inherent probability of winning)
-	StatResult statmean; // (Your hole cards' current inherent probability of winning)
-	
+    struct CoreProbabilities core;
+    
 ///Initialize foldcumu, callcumu, and statmean, and then call Process_FoldCallMean().
 	void Process_FoldCallMean();
 

@@ -134,11 +134,11 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     DistrShape w_wl(0);
     
     ///Compute CallStats
-    StatsManager::QueryDefense(statprob.foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
-    statprob.foldcumu.ReversePerspective();
+    StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
+    statprob.core.foldcumu.ReversePerspective();
     
     ///Compute CommunityCallStats
-    ViewTable().CachedQueryOffense(statprob.callcumu,onlyCommunity, withCommunity);
+    ViewTable().CachedQueryOffense(statprob.core.callcumu,onlyCommunity, withCommunity);
 
     ///Compute WinStats
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
@@ -149,7 +149,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 ///   Compute Relevant Probabilities
 ///====================================
 
-    statprob.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+    statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 	
 	statprob.Process_FoldCallMean();
 		
@@ -446,7 +446,7 @@ void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, E
     float64 foldgainVal = (estat.foldGain(e, &xw));
     logFile << "FoldGain()=" << foldgainVal;
 
-    float64 numfolds = xw * e->Pr_haveWinPCT_orbetter_continuous(statprob.statmean.pct);
+    float64 numfolds = xw * e->Pr_haveWinPCT_orbetter_continuous(statprob.core.statmean.pct);
 
 
     logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
@@ -557,7 +557,7 @@ float64 ImproveGainStrategy::MakeBet()
 
     //const float64 targetImproveBy = detailPCT.avgDev / 2 / improvePure;
     const float64 targetWorsenBy = detailPCT.avgDev / 2 / (1 - improvePure);
-    const float64 impliedOddsGain = (statprob.statmean.pct + detailPCT.avgDev / 2) / statprob.statmean.pct;
+    const float64 impliedOddsGain = (statprob.core.statmean.pct + detailPCT.avgDev / 2) / statprob.core.statmean.pct;
     //const float64 oppInsuranceSmallBet = (1 - statmean.pct + targetWorsenBy) / (1 - statmean.pct);
     const float64 oppInsuranceBigBet = (improveMod>0)?(improveMod/2):0;
 
@@ -567,12 +567,12 @@ float64 ImproveGainStrategy::MakeBet()
     statversus.genPCT();
 
 
-    CallCumulationD &choicecumu = statprob.callcumu;
-    CallCumulationD &raisecumu = statprob.foldcumu;
+    CallCumulationD &choicecumu = statprob.core.callcumu;
+    CallCumulationD &raisecumu = statprob.core.foldcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.statmean.pct);
+    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
     ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
     ExactCallBluffD myDeterredCall_left(&tablestate, &choicecumu, &raisecumu);
     ExactCallBluffD myDeterredCall_right(&tablestate, &choicecumu, &raisecumu);
@@ -604,7 +604,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 
     StatResult left = statversus;
-    StatResult base_right = statprob.statmean; // (NormalBot uses statmean, others use statversus.)
+    StatResult base_right = statprob.core.statmean; // (NormalBot uses statmean, others use statversus.)
 
     StatResult right = statWorse;
 
@@ -873,7 +873,7 @@ exit(1);
 
 
 
-    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel, &(statprob.callcumu)) : solveGainModel(&rolemodel, &(statprob.callcumu));
+    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel, &(statprob.core.callcumu)) : solveGainModel(&rolemodel, &(statprob.core.callcumu));
 
 #endif
 
@@ -889,7 +889,7 @@ exit(1);
     const float64 nextBet = betToCall + ViewTable().GetMinRaise();
     const float64 viewBet = ( bestBet < betToCall + ViewTable().GetChipDenom() ) ? nextBet : bestBet; // If you fold, then display the callbet instead since we might as well log something.
 
-    printFoldGain((bGamble == 0) ? choicemodel.f(viewBet) : rolemodel.f(viewBet), &(statprob.callcumu), tablestate);
+    printFoldGain((bGamble == 0) ? choicemodel.f(viewBet) : rolemodel.f(viewBet), &(statprob.core.callcumu), tablestate);
 
     logFile << "\"riskprice\"... " << riskprice << "(based on scaler of " << geom_algb_scaler << ")" << endl;
     logFile << "oppFoldChance is first " << myFearControl.oppFoldStartingPct(myDeterredCall) << ", when betting b_min=" << min_worst_scaler << endl; // but why do I care?
@@ -975,12 +975,12 @@ float64 DeterredGainStrategy::MakeBet()
     StatResult statversus = (statprob.statrelation * (awayFromDrawingHands)) + (statprob.statranking * (1.0-awayFromDrawingHands));
     statversus.genPCT();
 
-    CallCumulationD &choicecumu = statprob.callcumu;
-    CallCumulationD &raisecumu = statprob.foldcumu;
+    CallCumulationD &choicecumu = statprob.core.callcumu;
+    CallCumulationD &raisecumu = statprob.core.foldcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
-    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.statmean.pct);
+    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
     ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
 #else
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
@@ -1002,7 +1002,7 @@ float64 DeterredGainStrategy::MakeBet()
 //
     const float64 certainty = myFearControl.ActOrReact(betToCall,myBet,maxShowdown);
 
-    const float64 uncertainty = fabs( statprob.statranking.pct - statprob.statmean.pct );
+    const float64 uncertainty = fabs( statprob.statranking.pct - statprob.core.statmean.pct );
     const float64 timeLeft = (  detailPCT.stdDev*detailPCT.stdDev + uncertainty*uncertainty  );
     const float64 nonvolatilityFactor = 1 - timeLeft;
 
@@ -1017,7 +1017,7 @@ float64 DeterredGainStrategy::MakeBet()
     }
 
     StatResult left = statversus;
-	if( bGamble == 0 ) left = statprob.statmean;
+	if( bGamble == 0 ) left = statprob.core.statmean;
 
     CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
     GainModelGeom geomModel(leftCS, myDeterredCall);
@@ -1136,7 +1136,7 @@ if( ViewTable().FutureRounds() < 2 )
 }
 */
 
-    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.callcumu));
+    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.core.callcumu));
 
 #ifdef LOGPOSITION
 
@@ -1144,7 +1144,7 @@ if( ViewTable().FutureRounds() < 2 )
 #ifdef VERBOSE_STATEMODEL_INTERFACE
 const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
-    printFoldGain(choicemodel.f(displaybet), &(statprob.callcumu), tablestate);
+    printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
 
 
 		choicemodel.f(displaybet); //since choicemodel is ap_aggressive
@@ -1193,10 +1193,10 @@ float64 SimpleGainStrategy::MakeBet()
 
 
 
-    CallCumulationD &choicecumu = statprob.callcumu;
-    CallCumulationD &raisecumu = statprob.foldcumu;
+    CallCumulationD &choicecumu = statprob.core.callcumu;
+    CallCumulationD &raisecumu = statprob.core.foldcumu;
 
-    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.statmean.pct);
+    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
     ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
 
     StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
@@ -1216,7 +1216,7 @@ float64 SimpleGainStrategy::MakeBet()
 
     // TODO(from joseph_huang): Add more bGamble that use things like nonvolatilityFactor and/or nearEndOfBets
 
-    StatResult left = statprob.statmean;
+    StatResult left = statprob.core.statmean;
     CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
     GainModelGeom callModel(leftCS, myDeterredCall);
 
@@ -1263,7 +1263,7 @@ float64 SimpleGainStrategy::MakeBet()
     HoldemFunctionModel& choicemodel = ap_aggressive;
 
 
-    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.callcumu));
+    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.core.callcumu));
 
 #ifdef LOGPOSITION
 
@@ -1274,7 +1274,7 @@ float64 SimpleGainStrategy::MakeBet()
     const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
 
-    printFoldGain(choicemodel.f(displaybet), &(statprob.callcumu), tablestate);
+    printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
 
 
 
@@ -1325,10 +1325,10 @@ float64 PureGainStrategy::MakeBet()
 
 
 
-    CallCumulationD &choicecumu = statprob.callcumu;
-    CallCumulationD &raisecumu = statprob.foldcumu;
+    CallCumulationD &choicecumu = statprob.core.callcumu;
+    CallCumulationD &raisecumu = statprob.core.foldcumu;
 
-    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.statmean.pct);
+    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
 
     
     StatResult left;
@@ -1336,7 +1336,7 @@ float64 PureGainStrategy::MakeBet()
     if (bGamble == 2) {
         left = statprob.statranking; // Action
     } else if (bGamble == 0) {
-        left = statprob.statmean; // Normal
+        left = statprob.core.statmean; // Normal
     } else if (bGamble == 1) {
         const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHandInclAllIn() - 1);
         StatResult statversus = (statprob.statrelation * (awayFromDrawingHands)) + (statprob.statranking * (1.0-awayFromDrawingHands));
@@ -1349,14 +1349,14 @@ float64 PureGainStrategy::MakeBet()
     CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
     GainModelGeom callModel(leftCS, myDeterredCall);
 
-    CallCumulationD opponentAttackCumu(statprob.foldcumu);
+    CallCumulationD opponentAttackCumu(statprob.core.foldcumu);
     opponentAttackCumu.ReversePerspective();
     // TODO(from yuzisee): When callgain is based on rank vs. mean, should the comparative opponentHandOpportunity's foldgain be based on rank vs. mean?
     // Consider: Opponent knows what I have vs. Opponent doesn't know what I have
     // NOTE: We had a "will call too often with Qc 3c" bug. That might be because we didn't reverse perspective up there.
     // TODO(from yuzisee): Are the other invokations of foldgain (e.g. Pr{push}) also dependent on reversed perspective?
     OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, ViewTable(), &opponentAttackCumu);
-    CombinedStatResultsPessimistic csrp(opponentHandOpportunity, &(statprob.foldcumu));
+    CombinedStatResultsPessimistic csrp(opponentHandOpportunity, &(statprob.core.foldcumu));
     GainModelNoRisk raiseModel(csrp, myDeterredCall);
 
 
@@ -1391,7 +1391,7 @@ float64 PureGainStrategy::MakeBet()
     HoldemFunctionModel& choicemodel = ap_aggressive;
 
 
-    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.callcumu));
+    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.core.callcumu));
 
 #ifdef LOGPOSITION
 
@@ -1401,7 +1401,7 @@ float64 PureGainStrategy::MakeBet()
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
-    printFoldGain(choicemodel.f(displaybet), &(statprob.callcumu), tablestate);
+    printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
 
 
     choicemodel.f(displaybet); //since choicemodel is ap_aggressive
