@@ -61,7 +61,7 @@ float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, c
 	FG.waitLength.amountSacrificeForced = avgBlinds;
     FG.waitLength.opponents = playerCount - 1;
 
-	const float64 totalFG = 1 + betFraction(  FG.f((facedBet > FG.waitLength.bankroll) ? (FG.waitLength.bankroll) : facedBet)  );
+	const float64 totalFG = 1 + ExpectedCallD::betFraction(p,  FG.f((facedBet > FG.waitLength.bankroll) ? (FG.waitLength.bankroll) : facedBet)  );
 
     if( totalFG < 0 )
     {
@@ -181,10 +181,10 @@ float64 ExpectedCallD::betFraction(const Player & player, const float64 betSize)
     return (
             betSize
             /
-
             ( player.GetMoney() )
             );
 }
+
 
 float64 ExpectedCallD::handBetBase() const
 {
