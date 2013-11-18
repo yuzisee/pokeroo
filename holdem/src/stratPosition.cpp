@@ -572,15 +572,12 @@ float64 ImproveGainStrategy::MakeBet()
     statversus.genPCT();
 
 
-    CallCumulationD &choicecumu = statprob.core.callcumu;
-    CallCumulationD &raisecumu = statprob.core.foldcumu;
-
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
     ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
-    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
-    ExactCallBluffD myDeterredCall_left(&tablestate, &choicecumu, &raisecumu);
-    ExactCallBluffD myDeterredCall_right(&tablestate, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
+    ExactCallBluffD myDeterredCall_left(&tablestate, statprob.core);
+    ExactCallBluffD myDeterredCall_right(&tablestate, statprob.core);
 #else
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
@@ -980,13 +977,11 @@ float64 DeterredGainStrategy::MakeBet()
     StatResult statversus = (statprob.statrelation * (awayFromDrawingHands)) + (statprob.statranking * (1.0-awayFromDrawingHands));
     statversus.genPCT();
 
-    CallCumulationD &choicecumu = statprob.core.callcumu;
-    CallCumulationD &raisecumu = statprob.core.foldcumu;
 
 
 #ifdef ANTI_PRESSURE_FOLDGAIN
     ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
-    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
 #else
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
@@ -1198,11 +1193,9 @@ float64 SimpleGainStrategy::MakeBet()
 
 
 
-    CallCumulationD &choicecumu = statprob.core.callcumu;
-    CallCumulationD &raisecumu = statprob.core.foldcumu;
 
     ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
-    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
 
     StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
     statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
@@ -1330,9 +1323,6 @@ float64 PureGainStrategy::MakeBet()
 
 
 
-    CallCumulationD &choicecumu = statprob.core.callcumu;
-    CallCumulationD &raisecumu = statprob.core.foldcumu;
-
     ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
 
     
@@ -1349,7 +1339,7 @@ float64 PureGainStrategy::MakeBet()
         left = statversus; // Trap
     }
 
-    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
+    ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
 
     CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
     GainModelGeom callModel(leftCS, myDeterredCall);

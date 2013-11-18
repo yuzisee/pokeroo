@@ -663,7 +663,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                                 const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
                                                                                                                                         //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
 								const bool bMyWouldCall = i < callSteps;
-                                float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,ed);
+                                float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,ed());
                                 float64 w_r_rank = facedOdds_raise_Geom(oppCPS,prev_w_r_rank, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
                                 #ifdef ANTI_CHECK_PLAY
                                 if( bOppCouldCheck )
@@ -676,8 +676,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
                                 const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
-                                const float64 noRaiseMean = 1 - ed->Pr_haveWinPCT_orbetter(w_r_mean);
-                                const float64 noraiseMeanD = -ed->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, ed);
+                                const float64 noRaiseMean = 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean);
+                                const float64 noraiseMeanD = -ed()->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, ed());
 
                                 //nextNoRaise_A[i] = w_r_rank;
                                 //nextNoRaiseD_A[i] = noraiseRankD;
@@ -762,12 +762,12 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                 {
 
 
-                    const float64 w = facedOdds_call_Geom(oppCPS,betSize, opponents, ed);
-                    nextexf = ed->Pr_haveWinPCT_orbetter(w);
+                    const float64 w = facedOdds_call_Geom(oppCPS,betSize, opponents, ed());
+                    nextexf = ed()->Pr_haveWinPCT_orbetter(w);
                     
 
-                    nextdexf = nextexf + oppBetMake * ed->d_dw_only(w)
-                                        * dfacedOdds_dbetSize_Geom(oppCPS,betSize,totaldexf,w, opponents, ed);
+                    nextdexf = nextexf + oppBetMake * ed()->d_dw_only(w)
+                                        * dfacedOdds_dbetSize_Geom(oppCPS,betSize,totaldexf,w, opponents, ed());
 
                     nextexf *= oppBetMake;
                     if( oppBetAlready + nextexf > nearest )
@@ -790,7 +790,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
                 ChipPositionState oppmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit);
 
-                nextexf = ed->Pr_haveWinPCT_orbetter( facedOdds_call_Geom(oppmaxCPS,oppBankRoll, opponents,ed) );
+                nextexf = ed()->Pr_haveWinPCT_orbetter( facedOdds_call_Geom(oppmaxCPS,oppBankRoll, opponents,ed()) );
                 
 				nextexf *= oppBetMake ;
 
@@ -1001,7 +1001,7 @@ void ExactCallBluffD::query(const float64 betSize)
 
 
                 float64 w_rank = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,0);
-                float64 w_mean = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,ed);
+                float64 w_mean = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,ed());
                 if( nLinear <= 0 )
                 {
                     w_mean = 1;
@@ -1014,9 +1014,9 @@ void ExactCallBluffD::query(const float64 betSize)
                     //float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
                     //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
                     //ea-> is if they know your hand
-                    const float64 eaFold = (1 - ef->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
+                    const float64 eaFold = (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
                     //e-> is if they don't know your hand
-                    const float64 meanFold = 1 - ed->Pr_haveWinPCT_orbetter( w_mean );
+                    const float64 meanFold = 1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
                     //w is if they don't know your hand
                     const float64 rankFold = w_rank;
                     //handRarity is based on if they know your hand
@@ -1035,8 +1035,8 @@ void ExactCallBluffD::query(const float64 betSize)
 
 
                     const float64 rankFoldPartial = dw_dbetSize_rank;
-                    const float64 meanFoldPartial = -ed->d_dw_only( w_mean ) * dw_dbetSize_mean;
-                    const float64 eaFoldPartial = -ef->d_dw_only( w_mean ) * dw_dbetSize_mean;
+                    const float64 meanFoldPartial = -ed()->d_dw_only( w_mean ) * dw_dbetSize_mean;
+                    const float64 eaFoldPartial = -ef()->d_dw_only( w_mean ) * dw_dbetSize_mean;
                     const float64 eaRkFoldPartial = 0;
 
                     ///topTwoOfThree is on a player-by-player basis
@@ -1074,7 +1074,7 @@ void ExactCallBluffD::query(const float64 betSize)
                 {
                     ChipPositionState opporigmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit);
 
-                    float64 w_mean = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,ed);
+                    float64 w_mean = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,ed());
                     float64 w_rank = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,0);
 
                     if( nLinear <= 0 )
@@ -1085,8 +1085,8 @@ void ExactCallBluffD::query(const float64 betSize)
 
                     //float64 oppCommitted = table->ViewPlayer(pIndex)->GetContribution();
                     //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
-                    const float64 eaFold = (1 - ef->Pr_haveWinPCT_orbetter_continuous( w_mean ));//*(1 - oppCommitted);
-                    const float64 meanFold = 1 - ed->Pr_haveWinPCT_orbetter( w_mean );
+                    const float64 eaFold = (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));//*(1 - oppCommitted);
+                    const float64 meanFold = 1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
                     const float64 rankFold = w_rank;
                     const float64 eaRkFold = 1-tableinfo->handRarity;
 
@@ -1265,12 +1265,12 @@ float64 ExactCallBluffD::RiskPrice() const
     FoldGainModel FG(tableinfo->chipDenom());
 	//FG.bTraceEnable = true;
 
-    FG.waitLength.w = ef->nearest_winPCT_given_rank(1.0 - 1.0/Ne); //If you're past the flop, we need definitely consider only the true number of opponents
+    FG.waitLength.w = ef()->nearest_winPCT_given_rank(1.0 - 1.0/Ne); //If you're past the flop, we need definitely consider only the true number of opponents
     FG.waitLength.amountSacrificeVoluntary = estSacrifice; //rarity() already implies the Ne
 	FG.waitLength.amountSacrificeForced = 0; //estSacrifice*rarity() already implies a forced avgBlinds
     FG.waitLength.bankroll = maxStack;
     FG.waitLength.opponents = 1;
-    FG.waitLength.meanConv = ef;
+    FG.waitLength.meanConv = ef();
     const float64 riskprice = FG.FindZero(tableinfo->table->GetMinRaise() + tableinfo->callBet(),maxStack/2, true);
 
 

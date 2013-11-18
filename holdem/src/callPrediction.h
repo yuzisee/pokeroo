@@ -104,18 +104,30 @@ class ExactCallD
     static float64 facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 raiseto, float64 riskLoss, float64 avgBlind, const ChipPositionState & cps, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
 
 
-        CallCumulationD * const ed;
+
+    // CallCumulationD &choicecumu = statprob.core.callcumu;
+    // CallCumulationD &raisecumu = statprob.core.foldcumu;
+    //    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
+    struct CoreProbabilities &fCore;
+    CallCumulationD * const ed() const {
+        return &(fCore.callcumu);
+    }
         ExpectedCallD * const tableinfo;
 #ifdef DEBUG_TRACE_EXACTCALL
 		std::ostream * traceOut;
 #endif
 
-        ExactCallD(ExpectedCallD * const tbase, CallCumulationD* data)
+        ExactCallD(ExpectedCallD * const tbase //, CallCumulationD* data
+                   ,
+                   CoreProbabilities &core
+                   )
         :
         impliedFactor(1)
         , noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
+
         ,
-        ed(data)
+        //ed(data)
+        fCore(core)
         ,
         tableinfo(tbase)
 #ifdef DEBUG_TRACE_EXACTCALL
@@ -145,8 +157,8 @@ class ExactCallD
 
 
     
-            virtual float64 FoldGain(){ return tableinfo->foldGain(ed);}
-            virtual float64 FoldGain(float64 extra, float64 facedbet){ return tableinfo->foldGain(ed,extra,facedbet);}
+            virtual float64 FoldGain(){ return tableinfo->foldGain(ed());}
+            virtual float64 FoldGain(float64 extra, float64 facedbet){ return tableinfo->foldGain(ed(),extra,facedbet);}
 
 
 }
@@ -172,15 +184,21 @@ class ExactCallBluffD : public virtual ExactCallD
         float64 queryinputbluff;
 
         void query(const float64 betSize);
-        CallCumulationD * const ef;
+
+    CallCumulationD * const ef() const {
+        return &(fCore.foldcumu);
+    }
     public:
         float64 insuranceDeterrent;
 
-        ExactCallBluffD( ExpectedCallD * const tbase
+        ExactCallBluffD( ExpectedCallD * const tbase, struct CoreProbabilities &core
 
-                        , CallCumulationD* data, CallCumulationD* foldData)
+
+                        //, CallCumulationD* data, CallCumulationD* foldData*
+                        )
     :
-    ExactCallD(tbase,data), ef(foldData)
+    //ExactCallD(tbase,data), ef(foldData)
+    ExactCallD(tbase,core)
     ,
     insuranceDeterrent(0)
                             {
