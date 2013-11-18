@@ -70,11 +70,6 @@ public:
 
     virtual ~ExpectedCallD();
 
-    virtual float64 foldGain(CallCumulationD* const e);
-    virtual float64 foldGain(CallCumulationD* const e, float64 * const foldWaitLength_out);
-    virtual float64 foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet);
-    virtual float64 foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out);
-    
     /**
      * The "opportunity cost of folding" formula can also be applied from the perspective of the raiser,
         rather than the folder, in a sort of "opportunity cost of raising" heuristic.
@@ -138,7 +133,70 @@ public:
 }
 ;
 
+/**
+ * For comparing whether we should fold or call, provide an offset that would set callGain to zero if it were just as valuable as folding.
+ */
+class FoldOrCall {
+private:
 
+     //float64 foldGain(CallCumulationD* const e);
+     //float64 foldGain(CallCumulationD* const e, float64 * const foldWaitLength_out);
+     //float64 foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet);
+
+    /**
+     * foldGain()
+     *
+     *  Parameters:
+     *    extra:
+     *      How much more is it to call the current bet to call?
+     *      i.e. currentBetToCall - currentAlreadyBet
+     *      We know we're a bot, so we calculate your gain assuming that if you call now, you'll call every time this exact situation arises.
+     *      `extra` is assumed to be lost on top of your current commitment every time you fold (while waiting for a better hand).
+     *    facedBet:
+     *      How much will you win if you have the better hand?
+     *
+     *
+     *  Return Value:
+     *    If the returned value is greater than callGain, you should fold instead of call.
+     *    If the returned value is less than callGain, you should at least call.
+     *
+     *   This extends to bets (raises) as well.
+     */
+     float64 foldGain(MeanOrRank meanOrRank, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out);
+
+    const HoldemArena & fTable;
+    const Player & fPlayer;
+    struct CoreProbabilities & fCore;
+public:
+    /**
+     *
+     *  Parameters:
+     *    table:
+     *      A view of the current table.
+     *    p:
+     *      The player deciding whether to fold.
+     *    core:
+     *      The odds of winning (now) of player p, as well as the rarity of player p's current hand.
+     */
+    FoldOrCall(const HoldemArena & table, struct CoreProbabilities & core)
+    :
+    fTable(table)
+    ,
+    fPlayer(*(table.ViewPlayer(core.playerID)))
+    ,
+    fCore(core)
+    {}
+
+    int8 getPlayerId() const {
+        return fCore.playerID;
+    }
+
+    float64 myFoldGainAgainstPredictedRaise(MeanOrRank meanOrRank,float64 currentBetToCall, float64 currentAlreadyBet, float64 predictedRaiseTo);
+    float64 myFoldGain(MeanOrRank meanOrRank);
+    std::pair<float64,float64> myFoldGainAndWaitlength(MeanOrRank meanOrRank);
+
+}
+;
 
 
 

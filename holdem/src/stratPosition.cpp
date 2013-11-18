@@ -443,8 +443,10 @@ void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
 }
 
 void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat) {
-    float64 xw; // waitlength
-    float64 foldgainVal = (estat.foldGain(e, &xw));
+    FoldOrCall foldGainCalculator(ViewTable(), statprob.core);
+    std::pair<float64, float64> foldgainVal_xw = foldGainCalculator.myFoldGainAndWaitlength(MEAN);
+    const float64 &foldgainVal = foldgainVal_xw.first; // waitlength
+    const float64 &xw = foldgainVal_xw.second; // waitlength
     logFile << "FoldGain()=" << foldgainVal;
 
     float64 numfolds = xw * e->Pr_haveWinPCT_orbetter_continuous(statprob.core.statmean.pct);
@@ -466,15 +468,20 @@ template< typename T >
 void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp)
 {
 
+
+
     int32 maxcallStep = -1;
     int32 raiseStep = 0;
+
     {
+        FoldOrCall rlF(*(tablestate.table), rl.fCore);
+
     float64 orAmount =  rl.RaiseAmount(betToCall,raiseStep);
     logFile << endl << "Why didn't I call?" << endl;
     while( orAmount < maxShowdown )
     {
         orAmount =  rl.RaiseAmount(betToCall,raiseStep);
-        const float64 oppRaisedFoldGain = rl.FoldGain(betToCall - tablestate.alreadyBet(),orAmount);
+        const float64 oppRaisedFoldGain = rlF.myFoldGainAgainstPredictedRaise(MEAN, betToCall, tablestate.alreadyBet(), orAmount);
         logFile << "OppRAISEChance";
         if( oppRaisedFoldGain > m.g_raised(betToCall,orAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
@@ -501,11 +508,13 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
     maxcallStep = -1;
     raiseStep = 0;
     {
+        FoldOrCall rrF(*(tablestate.table), rr.fCore);
+
     float64 mrAmount =  rl.RaiseAmount(separatorBet,raiseStep);
     while( mrAmount <= maxShowdown )
     {
         mrAmount =  rl.RaiseAmount(separatorBet,raiseStep);
-        const float64 oppRaisedFoldGain = rl.FoldGain(separatorBet - tablestate.alreadyBet(),mrAmount);
+        const float64 oppRaisedFoldGain = rrF.myFoldGainAgainstPredictedRaise(MEAN, separatorBet, tablestate.alreadyBet(), mrAmount);
         logFile << "OppRAISEChance";
         if( oppRaisedFoldGain > m.g_raised(separatorBet,mrAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 

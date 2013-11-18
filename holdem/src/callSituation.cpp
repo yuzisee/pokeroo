@@ -25,36 +25,59 @@ ExpectedCallD::~ExpectedCallD()
 {
 }
 
-
-float64 ExpectedCallD::foldGain(CallCumulationD* const e)
+/*
+float64 FoldOrCall::foldGain(CallCumulationD* const e)
 {
     return foldGain(e,0);
 }
 
-float64 ExpectedCallD::foldGain(CallCumulationD* const e, float64 * const foldWaitLength_out)
+
+float64 FoldOrCall::foldGain(CallCumulationD* const e, float64 * const foldWaitLength_out)
 {
     return foldGain(e,0,callBet(),foldWaitLength_out);
 }
 
-float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet)
+float64 FoldOrCall::foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet)
 {
     return foldGain(e,extra, facedBet, 0);
 }
+*/
 
-float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out)
+float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out)
 {
-    const Player &p = *(table->ViewPlayer(playerID));
-    const float64 playerCount = table->NumberAtTable();
+    const Player &p = fPlayer;
+    const float64 playerCount = fTable.NumberAtTable();
+
+    const float64 avgBlinds = fTable.GetAvgBlindPerHand();
+    FoldGainModel FG(fTable.GetChipDenom()/2);
+
+    // CoreProbabilities & myOdds;
+    // If using RANK for payout simulation:
+    //   w = rank of current hand <-- from myOdds
+    // If using meanConv for payout simulation:
+    //   w = MEAN_winpct of current hand <-- from myOdds
+    switch (meanOrRank) {
+        case MEAN:
+            // Since ExactCallD::ed() returns fCore.callcumu
+            FG.waitLength.meanConv = &(fCore.callcumu); //  &(fCore.____); // Which *e is this usually called with?
+            // One vote for: ea.ed from BluffGainInc's oppRaisedMyFoldGain
+            // One vote for: ea.ed from BluffGainInc's "y -= myFoldGain"
+
+            FG.waitLength.w = fCore.statmean.pct;// meanW; // When called with e, what is the winPct -- how do we get that from fCore?
+            // One vote for: core.statmean.pct from statProbability constructor of ExpectedCallD
+            break;
+        case RANK:
+            FG.waitLength.meanConv = 0;
+            FG.waitLength.w = fCore.callcumu.Pr_haveWinPCT_orbetter(fCore.statmean.pct); // rankW; // When called with e is 0, what is the rank -- how do we get that from fCore?
+            // One vote for: const float64 rarity3 = core.callcumu.Pr_haveWinPCT_orbetter(core.statmean.pct); from StatResultProbabilities::Process_FoldCallMean
+
+            break;
+    }
 
 
-
-    const float64 avgBlinds = table->GetAvgBlindPerHand();
-    FoldGainModel FG(table->GetChipDenom()/2);
-    FG.waitLength.meanConv = e;
-    FG.waitLength.w = meanW;
     FG.waitLength.bankroll = p.GetMoney();
     FG.waitLength.amountSacrificeVoluntary = p.GetBetSize()
-    #ifdef SACRIFICE_COMMITTED
+#ifdef SACRIFICE_COMMITTED
                  + p.GetVoluntaryContribution()
     #endif
                                     + extra;
@@ -248,7 +271,19 @@ float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 
 	return riskLoss;
 }
 
+float64 FoldOrCall::myFoldGainAgainstPredictedRaise(MeanOrRank meanOrRank, float64 currentBetToCall, float64 currentAlreadyBet, float64 predictedRaiseTo) {
+    return foldGain(meanOrRank, currentBetToCall - currentAlreadyBet, predictedRaiseTo, (float64*) 0);
+}
 
+float64 FoldOrCall::myFoldGain(MeanOrRank meanOrRank) {
+    return foldGain(meanOrRank, 0, fTable.GetBetToCall(), (float64*)0);
+}
+
+std::pair<float64,float64> FoldOrCall::myFoldGainAndWaitlength(MeanOrRank meanOrRank) {
+    std::pair<float64,float64> result;
+    result.first = foldGain(meanOrRank, 0, fTable.GetBetToCall(), &(result.second));
+    return result;
+}
 
 
 

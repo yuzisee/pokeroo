@@ -124,7 +124,6 @@ class ExactCallD
         :
         impliedFactor(1)
         , noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
-
         ,
         //ed(data)
         fCore(core)
@@ -154,12 +153,6 @@ class ExactCallD
 			virtual float64 pRaiseD(const float64 betSize, const int32 step, const int32 callSteps );
 
             virtual void SetImpliedFactor(const float64 bonus);
-
-
-    
-            virtual float64 FoldGain(){ return tableinfo->foldGain(ed());}
-            virtual float64 FoldGain(float64 extra, float64 facedbet){ return tableinfo->foldGain(ed(),extra,facedbet);}
-
 
 }
 ;
@@ -192,7 +185,6 @@ class ExactCallBluffD : public virtual ExactCallD
         float64 insuranceDeterrent;
 
         ExactCallBluffD( ExpectedCallD * const tbase, struct CoreProbabilities &core
-
 
                         //, CallCumulationD* data, CallCumulationD* foldData*
                         )

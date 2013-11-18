@@ -307,7 +307,8 @@ void StateModel<LL,RR>::query( const float64 betSize )
         potRaisedWin_A[i] = g_raised(betSize,raiseAmount_A[i]);
         potRaisedWinD_A[i] = gd_raised(betSize,raiseAmount_A[i],potRaisedWin_A[i]);
 
-        const float64 oppRaisedMyFoldGain = ea.FoldGain(betSize - ea.tableinfo->alreadyBet(),raiseAmount_A[i]); //You would fold the additional (betSize - ea->alreadyBet() )
+        const float64 oppRaisedMyFoldGain = fMyFoldGain.myFoldGainAgainstPredictedRaise(MEAN /* called with ea.ed */,
+                                                                                        betSize, ea.tableinfo->alreadyBet(), raiseAmount_A[i]); //You would fold the additional (betSize - ea->alreadyBet() )
 
         if( potRaisedWin_A[i] < oppRaisedMyFoldGain )
         {
@@ -475,7 +476,18 @@ void StateModel<LL,RR>::query( const float64 betSize )
 
     dy = (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
 
-    y -= ea.FoldGain();
+    y -= fMyFoldGain.myFoldGain(MEAN);
+                                /* called with ea.ed */
+#ifdef DEBUGASSERT
+                                if (fMyFoldGain.getPlayerId() != estat->playerID) {
+                                //estat->ViewPlayer()
+
+                                    std::cerr << "myFoldGain initialized with a player other than that which we intended to call myFoldGain on!" << std::endl;
+                                    std::cerr << (int)(fMyFoldGain.getPlayerId()) << " != " << (int)(estat->playerID) << std::endl;
+                                    exit(1);
+                                }
+                                //);
+#endif // DEBUGASSERT
 
 
     delete [] raiseAmount_A;

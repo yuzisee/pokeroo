@@ -128,6 +128,7 @@ class StateModel : public virtual HoldemFunctionModel
 
     protected:
         ExactCallBluffD & ea;
+        FoldOrCall fMyFoldGain; // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
         AutoScalingFunction<LL,RR> *fp;
         bool bSingle;
 
@@ -153,6 +154,8 @@ class StateModel : public virtual HoldemFunctionModel
     ,
     ea(c)
     ,
+    fMyFoldGain(*(c.tableinfo->table),c.fCore)
+    ,
     fp(function),bSingle(false),firstFoldToRaise(-1)
     {
         query(0);
@@ -163,6 +166,8 @@ class StateModel : public virtual HoldemFunctionModel
     ,last_x(-1)
     ,
     ea(c)
+    ,
+    fMyFoldGain(*(c.tableinfo->table), c.fCore)
     ,
     bSingle(true),firstFoldToRaise(-1)
     {
