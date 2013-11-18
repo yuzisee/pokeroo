@@ -426,10 +426,24 @@ public:
 }
 ;
 
+// TODO(from yuzisee): For now, this is used to denote whether FoldGain reads the MEAN or RANK from CoreProbabilities
+// We should make this automatic based on the number of players for which our win probability is being evaluated.
+// Extra discussion: With large folds, if you call is it less likely for others to call?
+//   On the one hand, if it's better to be pessimistic here, we can assume no which also ensures that FoldGain is always MEAN and not RANK.
+//   On the other hand, if you do call, the payout improves for the third player (although their odds decrease.)
+enum MeanOrRank {
+    MEAN,
+    RANK
+};
+
 struct CoreProbabilities {
+    int8 playerID = -1;
+
     CallCumulationD foldcumu; // CallStats (probabiliy of winning against each possible opponent hand)
     CallCumulationD callcumu; // CommunityCallStats (each hole cards' inherent probability of winning)
 	StatResult statmean; // (Your hole cards' current inherent probability of winning)
+
+    // TODO(from joseph_huang): Refactor this (or where it is used) to supply mean vs. rank when dealing with heads-up vs. multi-hand.
 }
 ;
 

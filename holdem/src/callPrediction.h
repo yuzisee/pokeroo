@@ -114,7 +114,10 @@ class ExactCallD
         :
         impliedFactor(1)
         , noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
-        , ed(data),tableinfo(tbase)
+        ,
+        ed(data)
+        ,
+        tableinfo(tbase)
 #ifdef DEBUG_TRACE_EXACTCALL
 					,traceOut(0)
 #endif
@@ -176,7 +179,10 @@ class ExactCallBluffD : public virtual ExactCallD
         ExactCallBluffD( ExpectedCallD * const tbase
 
                         , CallCumulationD* data, CallCumulationD* foldData)
-    : ExactCallD(tbase,data), ef(foldData), insuranceDeterrent(0)
+    :
+    ExactCallD(tbase,data), ef(foldData)
+    ,
+    insuranceDeterrent(0)
                             {
                                 queryinputbluff = UNITIALIZED_QUERY;
                             }

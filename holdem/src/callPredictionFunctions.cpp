@@ -173,6 +173,8 @@ float64 FoldWaitLengthModel::f( const float64 n )
         playbet = 0;
     }
 
+    // TODO(from joseph_huang): Should this include the pot money from previous rounds if SACRIFICE_COMMITTED is defined?
+    // Set up a unit test with clear situations and see.
     const float64 lastF = playbet*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
     return lastF;
 }

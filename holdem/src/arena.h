@@ -136,7 +136,7 @@ class PlayerStrategy
 		const Player& ViewPlayer() const {return *me;}
 		const HoldemArena& ViewTable() const {return *game; }
 
-		PlayerStrategy() : me(0), game(0), myPositionIndex(0) {}
+		PlayerStrategy() : me(0), game(0), myPositionIndex(-1) {}
 		virtual ~PlayerStrategy(){};
 
         virtual void Link(PlayerStrategy * o)

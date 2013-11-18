@@ -149,14 +149,22 @@ class StateModel : public virtual HoldemFunctionModel
     float64 g_raised(float64 raisefrom, float64);
 
     StateModel(ExactCallBluffD & c, AutoScalingFunction<LL,RR> *function) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
-    ,last_x(-1),ea(c),fp(function),bSingle(false),firstFoldToRaise(-1)
+    ,last_x(-1)
+    ,
+    ea(c)
+    ,
+    fp(function),bSingle(false),firstFoldToRaise(-1)
     {
         query(0);
     }
 
 
     StateModel(ExactCallBluffD &c, LL & functionL, RR & functionR) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
-    ,last_x(-1),ea(c),bSingle(true),firstFoldToRaise(-1)
+    ,last_x(-1)
+    ,
+    ea(c)
+    ,
+    bSingle(true),firstFoldToRaise(-1)
     {
         if( ((HoldemFunctionModel *)(&functionL)) != (HoldemFunctionModel *)(&functionR) ) //ASSERT: LL == RR !!
         {

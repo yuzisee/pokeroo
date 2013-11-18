@@ -43,6 +43,7 @@ float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, c
 
 float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out)
 {
+    const Player &p = *(table->ViewPlayer(playerID));
     const float64 playerCount = table->NumberAtTable();
 
 
@@ -51,10 +52,10 @@ float64 ExpectedCallD::foldGain(CallCumulationD* const e, const float64 extra, c
     FoldGainModel FG(table->GetChipDenom()/2);
     FG.waitLength.meanConv = e;
     FG.waitLength.w = meanW;
-    FG.waitLength.bankroll = table->ViewPlayer(playerID)->GetMoney();
-    FG.waitLength.amountSacrificeVoluntary = table->ViewPlayer(playerID)->GetBetSize()
+    FG.waitLength.bankroll = p.GetMoney();
+    FG.waitLength.amountSacrificeVoluntary = p.GetBetSize()
     #ifdef SACRIFICE_COMMITTED
-                 + table->ViewPlayer(playerID)->GetVoluntaryContribution()
+                 + p.GetVoluntaryContribution()
     #endif
                                     + extra;
 	FG.waitLength.amountSacrificeForced = avgBlinds;
@@ -170,14 +171,19 @@ float64 ExpectedCallD::prevpotChips() const
     return (  table->GetPrevPotSize()  );
 }
 
-
 float64 ExpectedCallD::betFraction(const float64 betSize) const
+{
+    return betFraction(*(ViewPlayer()), betSize);
+}
+
+float64 ExpectedCallD::betFraction(const Player & player, const float64 betSize)
 {
     return (
             betSize
             /
-            ( table->ViewPlayer(playerID)->GetMoney() )
-           );
+
+            ( player.GetMoney() )
+            );
 }
 
 float64 ExpectedCallD::handBetBase() const
@@ -196,7 +202,9 @@ bool ExpectedCallD::inBlinds() const
     return ( table->GetUnbetBlindsTotal() > 0 );
 }
 
-
+const Player * ExpectedCallD::ViewPlayer() const {
+    return table->ViewPlayer(playerID);
+}
 
 float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot) const
 {

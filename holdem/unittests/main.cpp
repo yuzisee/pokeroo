@@ -195,9 +195,9 @@ namespace RegressionTests {
         StatResultProbabilities statprob;
 
         ///Compute CallStats
-        StatsManager::QueryDefense(statprob.foldcumu,withCommunity,communityToTest,cardsInCommunity);
-        CallCumulationD attackcumu(statprob.foldcumu);
-        statprob.foldcumu.ReversePerspective();
+        StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        CallCumulationD attackcumu(statprob.core.foldcumu);
+        statprob.core.foldcumu.ReversePerspective();
 
 
         const float64 testBet = 9.5;
@@ -213,7 +213,7 @@ namespace RegressionTests {
         assert(actual_y >= 3);
         assert(actual_Dy > 0); // betting more should increase N even more
 
-        CombinedStatResultsPessimistic testC(test, &(statprob.foldcumu));
+        CombinedStatResultsPessimistic testC(test, &(statprob.core.foldcumu));
         testC.query(testBet);
 
         const float64 s1 = testC.ViewShape(testBet).splits;
@@ -265,15 +265,15 @@ namespace RegressionTests {
         StatResultProbabilities statprob;
 
         ///Compute CallStats
-        StatsManager::QueryDefense(statprob.foldcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.foldcumu.ReversePerspective();
+        StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu.ReversePerspective();
 
 
         // TEST:
         const float64 xa = 0.3;
         const float64 xb = 0.3001;
-        std::pair<StatResult, float64> ya = statprob.foldcumu.oddsAgainstBestXHands(xa);
-        std::pair<StatResult, float64> yb = statprob.foldcumu.oddsAgainstBestXHands(xb);
+        std::pair<StatResult, float64> ya = statprob.core.foldcumu.oddsAgainstBestXHands(xa);
+        std::pair<StatResult, float64> yb = statprob.core.foldcumu.oddsAgainstBestXHands(xb);
 
         const float64 expected = (yb.first.pct - ya.first.pct) / (xb - xa);
         const float64 actual = (ya.second + yb.second) / 2.0;
@@ -910,16 +910,16 @@ namespace RegressionTests {
         StatResultProbabilities statprob;
 
         ///Compute CallStats
-        StatsManager::QueryDefense(statprob.foldcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.foldcumu.ReversePerspective();
+        StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu.ReversePerspective();
 
         ///Compute CommunityCallStats
-        StatsManager::QueryOffense(statprob.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
 
         ///Compute WinStats
         StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
         
-        statprob.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 
 
         ///====================================
@@ -1251,6 +1251,7 @@ int main(int argc, const char * argv[])
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
+    // TODO(from joseph_huang): Set up a simple situation (e.g. post-river) with FoldGainWaitLength and then FoldGainModel.
 
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_007();

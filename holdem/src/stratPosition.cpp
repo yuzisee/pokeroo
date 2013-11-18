@@ -149,6 +149,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 ///   Compute Relevant Probabilities
 ///====================================
 
+    statprob.core.playerID = myPositionIndex;
     statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 	
 	statprob.Process_FoldCallMean();
@@ -467,6 +468,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
 
     int32 maxcallStep = -1;
     int32 raiseStep = 0;
+    {
     float64 orAmount =  rl.RaiseAmount(betToCall,raiseStep);
     logFile << endl << "Why didn't I call?" << endl;
     while( orAmount < maxShowdown )
@@ -488,6 +490,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
 
         ++raiseStep;
     }
+    }
 
     const float64 minNextRaiseTo = (separatorBet*2-betToCall);
     if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
@@ -497,6 +500,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
 
     maxcallStep = -1;
     raiseStep = 0;
+    {
     float64 mrAmount =  rl.RaiseAmount(separatorBet,raiseStep);
     while( mrAmount <= maxShowdown )
     {
@@ -517,6 +521,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
         if( mrAmount >= maxShowdown ) break;
 
         ++raiseStep;
+    }
     }
 }
 
