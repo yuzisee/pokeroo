@@ -68,7 +68,7 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
             break;
         case RANK:
             FG.waitLength.meanConv = 0;
-            FG.waitLength.w = fCore.callcumu.Pr_haveWinPCT_orbetter(fCore.statmean.pct); // rankW; // When called with e is 0, what is the rank -- how do we get that from fCore?
+            FG.waitLength.w = fCore.statRanking().pct; //fCore.callcumu.Pr_haveWinPCT_orbetter(fCore.statmean.pct); // rankW; // When called with e is 0, what is the rank -- how do we get that from fCore?
             // One vote for: const float64 rarity3 = core.callcumu.Pr_haveWinPCT_orbetter(core.statmean.pct); from StatResultProbabilities::Process_FoldCallMean
 
             break;

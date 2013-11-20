@@ -229,6 +229,120 @@ namespace RegressionTests {
         assert(dl == -dw);
     }
 
+
+
+    // Test callcumu sanity checks
+    void testRegression_007c() {
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // Kd Ad
+
+        card.SetByIndex(47);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(51);
+        withCommunity.AddToHand(card);
+
+
+
+
+        CommunityPlus communityToTest;
+
+        const int8 cardsInCommunity = 0;
+
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+        ///Compute WinStats
+        DistrShape w_wl(0);
+        DistrShape detailPCT(0);
+        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.playerID = 0;
+        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+        // TEST:
+        assert(statprob.core.statRelation().pct > 0.95); // This hand is very good. StatRelation should do very well.
+        assert(statprob.core.statRanking().pct > 0.97); // This is one of the best hands you can have in this situation. StatRanking should do very well.
+
+        // Against most opponents, I have a very strong chance to win.
+        assert(statprob.core.getFractionOfOpponentsWhereMyWinrateIsAtLeast(0.85) > 0.9);
+
+        // 19th strongest out of 20 hands
+        const float64 actualWinPct = statprob.core.callcumu.nearest_winPCT_given_rank(0.95);
+        assert(actualWinPct < 0.8); // Such a hand has about a 65% chance to win? Even aces have only 70 something right?
+        assert(0.65 < actualWinPct);
+        
+    }
+
+
+    // Test foldcumu sanity checks
+    void testRegression_007b() {
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // Td Ad
+
+        card.SetByIndex(35);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(51);
+        withCommunity.AddToHand(card);
+
+
+
+
+        CommunityPlus communityToTest; // 2d Qd Kd
+
+        card.SetByIndex(3);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(43);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(47);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        const int8 cardsInCommunity = 3;
+
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+        ///Compute WinStats
+        DistrShape w_wl(0);
+        DistrShape detailPCT(0);
+        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.playerID = 0;
+        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+        // TEST:
+        assert(statprob.core.statRelation().pct > 0.95); // This hand is very good. StatRelation should do very well.
+        assert(statprob.core.statRanking().pct > 0.97); // This is one of the best hands you can have in this situation. StatRanking should do very well.
+
+        // Against most opponents, I have a very strong chance to win.
+        assert(statprob.core.getFractionOfOpponentsWhereMyWinrateIsAtLeast(0.85) > 0.9);
+
+    }
+    
+
+
     // Test oddsAgainstBestXHands derivative
     void testRegression_007() {
 
@@ -1255,6 +1369,8 @@ int main(int argc, const char * argv[])
 
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_007();
+    RegressionTests::testRegression_007c();
+    RegressionTests::testRegression_007b();
     RegressionTests::testRegression_002b();
     RegressionTests::testRegression_002();
 

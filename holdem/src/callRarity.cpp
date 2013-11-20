@@ -24,28 +24,8 @@ void StatResultProbabilities::logfileAppendStatResultProbability_statworse(std::
 
 void StatResultProbabilities::Process_FoldCallMean()
 {
-///==================
-///   statrelation
-///==================
-    // Against what fraction of opponents will you have the better hand?
-	const float64 rarityA3 = core.foldcumu.Pr_haveWinPCT_orbetter(0.5);
-
-//You can tie in rank if and only if you tie in mean
-    statrelation.wins = 1 - rarityA3;
-    statrelation.splits = core.statmean.splits;
-    statrelation.loss = rarityA3;
-    statrelation.forceRenormalize();
-
-///==================
-///   statranking
-///==================
-    // How often do you get a hand this good?
-    const float64 rarity3 = core.callcumu.Pr_haveWinPCT_orbetter(core.statmean.pct);
-
-    statranking.wins = 1 - rarity3;
-    statranking.splits = core.statmean.splits;
-    statranking.loss = rarity3;
-    statranking.forceRenormalize();
+    statrelation = core.statRelation();
+    statranking = core.statRanking();
 
 ///=====================
 ///   hybridMagnified
