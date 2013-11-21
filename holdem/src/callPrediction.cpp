@@ -246,7 +246,7 @@ float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 
         return 0;
     }
 */
-    return a.FindZero(startingPoint,1, false);
+    return a.FindZero(startingPoint,1.0, false);
 
 
 }

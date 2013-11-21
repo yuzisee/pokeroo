@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <limits>
 #include <math.h>
 #include <algorithm>
 #include "inferentials.h"
@@ -412,13 +413,13 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
     }
 //These boundaries form a region with start and end.
     // Okay we lie somewhere between firstBetterThan and firstBetterThan-1
-    float64 prevKeypointPct;
-    float64 prevKeypointRepeated;
-    float64 nextKeypointPct;
-    float64 nextKeypointRepeated;
+    float64 prevKeypointPct = std::numeric_limits<float64>::quiet_NaN();
+    float64 prevKeypointRepeated = std::numeric_limits<float64>::quiet_NaN();
+    float64 nextKeypointPct = std::numeric_limits<float64>::quiet_NaN();
+    float64 nextKeypointRepeated = std::numeric_limits<float64>::quiet_NaN();
     // Which side of the horizontal midpoint are we on?
     float64 horizontalMidpointPCT = (cumulation[firstBetterThan-1].pct + cumulation[firstBetterThan].pct)/2.0;
-    float64 horizontalMidpointRepeated = (cumulation[firstBetterThan-1].repeated + cumulation[firstBetterThan].repeated)/2.0;
+    float64 horizontalMidpointRepeated = cumulation[firstBetterThan-1].repeated;
     if (horizontalMidpointPCT < winPCT_toHave) {
         // The prevKeypoint is on the horizontal.
         //
@@ -430,11 +431,11 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
         prevKeypointPct = horizontalMidpointPCT;
         nextKeypointPct = cumulation[firstBetterThan].pct;
 
-        prevKeypointRepeated = cumulation[firstBetterThan-1].repeated;
+        prevKeypointRepeated = horizontalMidpointRepeated;
         if (firstBetterThan == maxsize - 1) {
             nextKeypointRepeated = cumulation[firstBetterThan].repeated;
         } else {
-            nextKeypointRepeated = horizontalMidpointRepeated;
+            nextKeypointRepeated = (cumulation[firstBetterThan-1].repeated + cumulation[firstBetterThan].repeated) / 2.0;
         }
 
     } else if (winPCT_toHave < horizontalMidpointPCT) {
@@ -445,12 +446,13 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
         if (firstBetterThan-1 == 0) {
             prevKeypointRepeated = 0.0;
         } else {
-            prevKeypointRepeated = horizontalMidpointRepeated;
+            prevKeypointRepeated = (cumulation[firstBetterThan-2].repeated + cumulation[firstBetterThan-1].repeated) / 2.0;
         }
-        nextKeypointRepeated = cumulation[firstBetterThan].repeated;
+        nextKeypointRepeated = horizontalMidpointRepeated;
     } else {
+        const float64 prevRepeated = (firstBetterThan == 1) ? 0.0 : cumulation[firstBetterThan-2].repeated;
         // We're right on the midpoint. Pick any slope in between (it's instantaneous)
-            const float64 rise = (cumulation[firstBetterThan].repeated - cumulation[firstBetterThan-1].repeated)/2.0;
+            const float64 rise = (cumulation[firstBetterThan].repeated - prevRepeated)/2.0;
             const float64 run = cumulation[firstBetterThan].pct - cumulation[firstBetterThan-1].pct;
 
 
@@ -463,8 +465,18 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
     const float64 run = nextKeypointPct - prevKeypointPct;
     const float64 slope = rise/run;
 
+    const float64 result = horizontalMidpointRepeated + slope * (winPCT_toHave - horizontalMidpointPCT);
 
-    return std::pair<float64, float64> (horizontalMidpointRepeated + slope * (winPCT_toHave - horizontalMidpointPCT)
+#ifdef DEBUGASSERT
+    if( !(0.0 <= result && result <= 1.0) )
+    {
+        std::cout << "INVALID result in Pr_haveWorsePCT_continuous! " << result;
+        exit(1);
+    }
+#endif
+
+
+    return std::pair<float64, float64> (result
                                         ,
                                         slope
                                         );

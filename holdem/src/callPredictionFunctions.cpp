@@ -21,7 +21,7 @@
 
 #include "callPredictionFunctions.h"
 
-
+#include <iostream>
 
 
 #undef INLINE_INTEGER_POWERS
@@ -63,6 +63,8 @@ const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) con
     );
 }
 
+// Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
+// Return value is between -1.0 and +1.0
 float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 {
 
@@ -119,7 +121,8 @@ float64 FoldWaitLengthModel::d_dC( const float64 n )
     return -(n*rarity())/AVG_FOLDWAITPCT;
 }
 
-
+// See {const float64 remainingbet = ( bankroll - grossSacrifice(n)  );} in f()
+// This is the derivative of that expression with respect to n
 const float64 FoldWaitLengthModel::dRemainingBet_dn( )
 {
 	//CHANGE #2
@@ -130,7 +133,9 @@ const float64 FoldWaitLengthModel::dRemainingBet_dn( )
 
 const float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
 {
-	//CHANGE #3
+	//CHANGE #3:
+    // numFolds (a.k.a. sacrificeCount) sacrifies amountForced + amountVoluntary
+    // numHands (a.k.a. n) sacrifices amountForced
     const float64 sacrificeCount = n*rarity();
     const float64 gross = sacrificeCount*(amountSacrificeForced+amountSacrificeVoluntary);
     return gross;
@@ -144,6 +149,15 @@ const float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
 // When evaluating your own folds, it must be core.handcumu
 const float64 FoldWaitLengthModel::rarity( )
 {
+
+#ifdef DEBUGASSERT
+    if(w != w)
+    {
+        std::cout << " w uninitialized (NaN) in FoldWaitLengthModel!" << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
     if( cacheRarity >= 0 ) return cacheRarity;
 
     // In RANK mode, if you have a strong hand (e.g. w = 0.9) then you'll get something this strong every 10 hands.
@@ -175,11 +189,12 @@ float64 FoldWaitLengthModel::f( const float64 n )
     const float64 PW = d_dbetSize(n);
     const float64 remainingbet = ( bankroll - grossSacrifice(n)  );
     float64 playbet = (remainingbet < betSize ) ? remainingbet : betSize;
-
     if( playbet < 0 )
     {
         playbet = 0;
     }
+
+    // If I call and don't fold, we'll have "playbet" winnable in a showdown.
 
     // TODO(from joseph_huang): Should this include the pot money from previous rounds if SACRIFICE_COMMITTED is defined?
     // Set up a unit test with clear situations and see.
@@ -302,7 +317,7 @@ void FoldGainModel::query( const float64 betSize )
         n = waitLength.FindBestLength();
 
 		const float64 gain_ref = waitLength.f(n);
-		const float64 FB_ref = waitLength.cached_d_dbetSize;
+		const float64 FB_ref = waitLength.get_cached_d_dbetSize();
 /*
 		const float64 m_restored = round(n*waitLength.rarity());
 		const float64 n_restored = m_restored/waitLength.rarity();

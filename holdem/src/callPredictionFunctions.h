@@ -73,15 +73,17 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     const float64 lookup(const float64 rank) const;
     const float64 dlookup(const float64 rank, const float64 mean) const;
 
-    public:
-    bool bSearching;
-
     float64 cached_d_dbetSize;
+    bool bSearching;
+    
+    public:
 
+
+    float64 get_cached_d_dbetSize() const { return cached_d_dbetSize; }
 
     // Describe the hand they would be folding
-    CallCumulationD (* meanConv); // Set to null if using RANK for payout simulation
     float64 w;                    // Set to RANK if meanConv is null. Set to MEAN_winpct if using *meanConv
+    CallCumulationD (* meanConv); // Set to null if using RANK for payout simulation
 
     // Describe the situation
     float64 amountSacrificeVoluntary;
@@ -90,14 +92,23 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     float64 opponents;
     float64 betSize;
 
-    FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0), bSearching(false), meanConv(0), w(0), amountSacrificeVoluntary(0), amountSacrificeForced(0), bankroll(0), opponents(1){};
-    FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0), w(o.w), amountSacrificeVoluntary(o.amountSacrificeVoluntary), amountSacrificeForced(o.amountSacrificeForced), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize){};
+    // NOTE: quantum is 1/3rd of a hand. We don't need more precision than that when evaluating f(n).
+    FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0),
+        cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), bSearching(false),
+    w(std::nan("")), meanConv(0), amountSacrificeVoluntary(0), amountSacrificeForced(0), bankroll(0), opponents(1), betSize(std::nan(""))
+    {}
+
+    // NOTE: Although this is the copy constructor, it doesn't copy caches. This lets you clone a configuration and re-evaluate it.
+    FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0),
+        cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), bSearching(false),
+        w(o.w), meanConv(o.meanConv), amountSacrificeVoluntary(o.amountSacrificeVoluntary), amountSacrificeForced(o.amountSacrificeForced), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize){};
 
     const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o );
     const bool operator== ( const FoldWaitLengthModel & o ) const;
 
     virtual ~FoldWaitLengthModel();
 
+    /*! @brief Here, n, is the number of HANDS, not the number of folds. */
     virtual float64 f(const float64);
     virtual float64 fd(const float64, const float64);
     virtual float64 d_dbetSize( const float64 n );

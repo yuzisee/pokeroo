@@ -111,6 +111,92 @@ namespace RegressionTests {
     ;
 
 
+
+
+    // Set up a simple situation (e.g. post-river) with FoldGainWaitLength and then FoldGainModel
+    //  + make sure there is a bunch of pot money from previous rounds, to test whether past pot is correctly accounted for in winnings
+    //  + make sure there is a high voluntary but high rarity so that numHands is high but numFolds is still relatively low, to test that amountSacrificedVoluntary isn't overestimated.
+    void testRegression_010() {
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // Td Ad
+
+        card.SetByIndex(35);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(51);
+        withCommunity.AddToHand(card);
+
+
+
+
+        CommunityPlus communityToTest; // 2d Qd Kd 2h 2s
+
+        card.SetByIndex(3);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(43);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(47);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(0);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(1);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        const int8 cardsInCommunity = 5;
+        const float64 avgBlind = 0.5;
+        const float64 pastPot = 60.0;
+        const float64 myConstributionToPastPot = 5.0; // so lots of limpers out of the 60.0 that's there
+        const float64 myBetThisRound = 2.0;
+        const float64 iveBeenReraisedTo = 40.0;
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+        ///Compute WinStats
+        DistrShape w_wl(0);
+        DistrShape detailPCT(0);
+        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.playerID = 0;
+        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+        FoldWaitLengthModel fw;
+        // From the opponent's point of view if he knows he's against a flush
+        fw.w = 0.0; // Their current hand does not pair the board so loses to an ace-high flush (but note there is a ~30% chance that they hit a pair other than a deuce and a ~4% chance of having one deuce)
+        fw.meanConv = &(statprob.core.foldcumu);
+        fw.amountSacrificeForced = avgBlind;
+        fw.bankroll = 1000.0;
+        fw.amountSacrificeVoluntary = myConstributionToPastPot + myBetThisRound;
+        fw.opponents = 1; // Keep it simple for now
+        fw.betSize = iveBeenReraisedTo;
+
+//    TEST:
+        assert(fw.f(15) < 0); // Profit of waiting 15 opportunities is... probably too much. You're burning at least 200 chips to win what? ~100?
+        
+
+
+        
+    }
+    
+
+
     // Test OpposingHandOpportunity derivatives
     void testRegression_008() {
 
@@ -1473,8 +1559,7 @@ int main(int argc, const char * argv[])
  // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
-    // TODO(from joseph_huang): Set up a simple situation (e.g. post-river) with FoldGainWaitLength and then FoldGainModel.
-
+    RegressionTests::testRegression_010();
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_007();
     RegressionTests::testRegression_007b();
