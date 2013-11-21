@@ -165,6 +165,7 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
     }
 }
 
+// useMean is a table metric here (see RiskLoss), so always use callcumu
 float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrRaise, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
 {
 
@@ -385,6 +386,8 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
     ;
 }
 
+// useMean must be from the perspective of ChipPositionState, if any.
+// Thus, it can't be handcumu but can be foldcumu or callcumu depending on how much information the opponent has.
 float64 ExactCallD::facedOdds_Algb(const ChipPositionState & cps, float64 betSize, float64 opponents, CallCumulationD * useMean)
 {
     FacedOddsAlgb a(tableinfo->chipDenom());
@@ -663,7 +666,11 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                                 const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
                                                                                                                                         //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
 								const bool bMyWouldCall = i < callSteps;
-                                float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,ed());
+                                // Be adversarial:
+                                //   If you know you'd fold (weak hand), let the opponent know your hand so you more chance of raiseAgain.
+                                //   If you know you'd call (good hand), let the opponent not know your hand so you only get the average amount of raiseAgainst
+                                CallCumulationD * const src = bMyWouldCall ? (&fCore.callcumu) : (&fCore.foldcumu);
+                                float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,src);
                                 float64 w_r_rank = facedOdds_raise_Geom(oppCPS,prev_w_r_rank, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
                                 #ifdef ANTI_CHECK_PLAY
                                 if( bOppCouldCheck )
@@ -676,8 +683,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
                                 const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
-                                const float64 noRaiseMean = 1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean);
-                                const float64 noraiseMeanD = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, ed());
+                                const float64 noRaiseMean = 1.0 - src->Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean);
+                                const float64 noraiseMeanD = src->Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, src);
 
                                 //nextNoRaise_A[i] = w_r_rank;
                                 //nextNoRaiseD_A[i] = noraiseRankD;
@@ -761,7 +768,10 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                 }else
                 {
 
-
+                    // Since this is Pr{call}, we're using table stats, i.e. ed()
+                    // Nothing special going on here.
+                    // TODO(from yuzisee): if you feel that predicted calls are too loose, we can switch to ef() which is more adversarial.f
+                    // We don't use RANK here. RANK might overestimate the amount of calls from strong hands.
                     const float64 w = facedOdds_call_Geom(oppCPS,betSize, opponents, ed());
                     nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan(w - EPS_WIN_PCT);
                     
@@ -999,14 +1009,17 @@ void ExactCallBluffD::query(const float64 betSize)
                 const float64 oppBetMake = betSize - oppBetAlready;
                 //To understand the above, consider that totalexf includes already made bets
 
-
+                // TODO(from yuzisee): Since this is Pr{opponentFold}, do we use Algb still? See updated PureGainStrategy.
                 float64 w_rank = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,0);
                 float64 w_mean = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,ed());
+                float64 w_pess = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,ef());
                 if( nLinear <= 0 )
                 {
-                    w_mean = 1;
+                    w_mean = 1.0;
+                    w_pess = 1.0;
                     w_rank = 0;
                 }
+                const float64 dw_dbetSize_pess = facedOddsND_Algb( opporigCPS,oppBetMake,origPotD,w_pess, nLinear); // for eaFold
                 const float64 dw_dbetSize_mean = facedOddsND_Algb( opporigCPS,oppBetMake,origPotD,w_mean, nLinear);
                 const float64 dw_dbetSize_rank = facedOddsND_Algb( opporigCPS,oppBetMake,origPotD,w_rank, nLinear);
 
@@ -1014,7 +1027,7 @@ void ExactCallBluffD::query(const float64 betSize)
                     //float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
                     //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
                     //ea-> is if they know your hand
-                    std::pair<float64,float64> eaFold = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_mean); // (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
+                    std::pair<float64,float64> eaFold = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_pess); // (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
                     //e-> is if they don't know your hand
                     std::pair<float64,float64> meanFold = ed()->Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
                     //w is if they don't know your hand
@@ -1036,7 +1049,7 @@ void ExactCallBluffD::query(const float64 betSize)
 
                     const float64 rankFoldPartial = dw_dbetSize_rank;
                     meanFold.second *= dw_dbetSize_mean;
-                    eaFold.second *= dw_dbetSize_mean;
+                    eaFold.second *= dw_dbetSize_pess;
                     const float64 eaRkFoldPartial = 0;
 
                     ///topTwoOfThree is on a player-by-player basis
@@ -1251,7 +1264,7 @@ float64 ExactCallD::dexf(const float64 betSize)
 }
 
 
-
+// RiskPrice is only used as a heuristic and only for the bot itself during stratPosition so it's fine to use either ef() here (if pessimistic) or ed() here (if no information has been revealed yet)
 float64 ExactCallBluffD::RiskPrice() const
 {//At what price is it always profitable to fold if one has the average winning hand?
 	const int8 Ne_int = tableinfo->table->NumberStartedRound().inclAllIn() - 1; // This is the number of players you'd have to beat, regardless of who is betting.
@@ -1265,8 +1278,11 @@ float64 ExactCallBluffD::RiskPrice() const
     FoldGainModel FG(tableinfo->chipDenom());
 	//FG.bTraceEnable = true;
 
-    // TODO(from yuzisee): Reverse perspective? foldcumu is the distribution of your probability of winning
-    // TODO(from yuzisee): MEAN vs. RANK to match call and fold? I guess the "pessimistic" is neither.
+    // TODO(from yuzisee): MEAN (callcumu) vs. RANK vs "pessimistic" to:
+    //   + match call and fold?
+    //   + distinguish between (information given to opponent)
+    // ef() is pessimistic
+    // NOTE: below that opponents = 1, so RANK is not necessary here.
     FG.waitLength.w = ef()->nearest_winPCT_given_rank(1.0 - 1.0/Ne); //If you're past the flop, we need definitely consider only the true number of opponents
     FG.waitLength.amountSacrificeVoluntary = estSacrifice; //rarity() already implies the Ne
 	FG.waitLength.amountSacrificeForced = 0; //estSacrifice*rarity() already implies a forced avgBlinds
