@@ -62,8 +62,16 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     protected:
     const float64 dRemainingBet_dn();
     const float64 grossSacrifice(const float64 n);
-    const float64 lookup(const float64 x) const;
-    const float64 dlookup(const float64 x, const float64 mean) const;
+
+    /**
+     *  Parameters:
+     *    rank:
+     *      Your rank
+     *  Returns:
+     *    Either mean or rank (depending on mode) of the hand with the given rank
+     */
+    const float64 lookup(const float64 rank) const;
+    const float64 dlookup(const float64 rank, const float64 mean) const;
 
     public:
     bool bSearching;
@@ -103,7 +111,11 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 ;
 
 
-
+// NOTE:
+// You never use FoldGainModel or FoldWaitLengthModel with handcumu.
+// If it's an opponent against you that knows your hand, they use foldcumu.
+// If it's you, you use callcumu.
+// If it's an opponent that doesn't know your hand, you use callcumu.
 class FoldGainModel : public virtual ScalarFunctionModel
 {
     protected:

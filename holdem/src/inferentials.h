@@ -346,7 +346,11 @@ private:
     float64 linearInterpolate(float64 x1, float64 y1, float64 x2, float64 y2, float64 x) const;
 	virtual float64 slopeof(size_t x10, size_t x11, size_t x20, size_t x21, size_t, size_t) const;
 public:
+
+    // Actual and Derivative of {1.0-Pr_haveWinPct_strictlyBetterThan}
     virtual std::pair<float64, float64> Pr_haveWorsePCT_continuous(const float64 w_toHave) const;
+
+    // derivative of nearestWinPctGivenRank
 	virtual float64 inverseD(const float64, const float64 mean) const;
 
 /*

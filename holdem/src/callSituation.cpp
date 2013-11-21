@@ -229,6 +229,7 @@ const Player * ExpectedCallD::ViewPlayer() const {
     return table->ViewPlayer(playerID);
 }
 
+// TODO: Let's say riskLoss is a table metric. In that case, if you use mean it's callcumu always.
 float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot) const
 {
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.

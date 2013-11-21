@@ -257,6 +257,8 @@ private:
     float64 fHandsToBeat;
     float64 f_d_HandsToBeat_dbetSize;
 
+
+    // Used strictly with FoldGain: What would your opponent be willing to lay down, knowing what you have.
     CallCumulationD * e_opp;
     const playernumber_t fIdx;
 

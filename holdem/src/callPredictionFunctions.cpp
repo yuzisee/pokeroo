@@ -136,15 +136,21 @@ const float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
     return gross;
 }
 
-// A divisor == how many hands rare is this hand?
+// A divisor == how many hands rare is {this->w}
 // If w is close to 1.0, then Pr_haveWorsePCT_continuous(w) is close to 1.0, and cacheRarity is a small value.
 // 1.0 / rarity() should be how often you can expect to get a hand this good again
+// NOTE: this->meanConv if specified must be the view of the player who is choosing whether to fold.
+// When predicting opponent folds, it must be core.foldcumu
+// When evaluating your own folds, it must be core.handcumu
 const float64 FoldWaitLengthModel::rarity( )
 {
     if( cacheRarity >= 0 ) return cacheRarity;
 
-
+    // In RANK mode, if you have a strong hand (e.g. w = 0.9) then you'll get something this strong every 10 hands.
+    // Thus:
     if( meanConv == 0 ){cacheRarity = 1-w;}
+    // In MEAN mode, if you have a strong hand (e.g. w = 0.65) you may get something this strong every 10 hands or so,
+    // e.g. ...
     else{cacheRarity= 1.0 - meanConv->Pr_haveWorsePCT_continuous(w).first;}
 
     if( cacheRarity < 1.0/RAREST_HAND_CHANCE ){ cacheRarity = 1.0/RAREST_HAND_CHANCE; }

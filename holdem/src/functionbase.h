@@ -37,6 +37,8 @@
 
 class IFunctionDifferentiable {
 public:
+    virtual ~IFunctionDifferentiable() {}
+
     virtual float64 f(const float64) = 0;
     virtual float64 fd(const float64, const float64) = 0;
 

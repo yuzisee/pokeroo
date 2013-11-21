@@ -32,14 +32,6 @@
 enum AutoScaleType { ALGEBRAIC_AUTOSCALE, LOGARITHMIC_AUTOSCALE };
 #endif
 
-class IAutoScalingFunction {
-public:
-
-    virtual float64 f_raised(float64 raisefrom, const float64) = 0;
-    virtual float64 fd_raised(float64 raisefrom, const float64, const float64) = 0;
-}
-;
-
 class AutoScalingFunction : public virtual HoldemFunctionModel
 {//NO ASSIGNMENT OPERATOR
     private:
