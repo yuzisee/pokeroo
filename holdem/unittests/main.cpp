@@ -1469,7 +1469,7 @@ static void regenerateDb() {
 
 int main(int argc, const char * argv[])
 {
-/*
+
  // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
@@ -1477,8 +1477,8 @@ int main(int argc, const char * argv[])
 
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_007();
-    RegressionTests::testRegression_007c();
     RegressionTests::testRegression_007b();
+    RegressionTests::testRegression_007c();
     RegressionTests::testRegression_002b();
     RegressionTests::testRegression_002();
 
@@ -1490,9 +1490,9 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_003();
 
     RegressionTests::testRegression_004();
-*/
+
 
     // Regenerate the DB?
-    regenerateDb();
+    //regenerateDb();
  }
 
