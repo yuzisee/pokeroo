@@ -712,16 +712,14 @@ float64 ImproveGainStrategy::MakeBet()
 #endif
 
 ///From geom to algb
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred_aggressive(geomModel,algbModel,0.0,geom_algb_scaler,left.pct*base_right.pct,&tablestate);
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgain_fear(geomModel_fear,algbModel_fear,0.0,geom_algb_scaler,left.pct*base_right.pct,&tablestate);
+	AutoScalingFunction hybridgainDeterred_aggressive(geomModel,algbModel,0.0,geom_algb_scaler,left.pct*base_right.pct,&tablestate);
+	AutoScalingFunction hybridgain_fear(geomModel_fear,algbModel_fear,0.0,geom_algb_scaler,left.pct*base_right.pct,&tablestate);
 
 
 ///From regular to fear A(x2)
-	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            ap(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate);
+	AutoScalingFunction ap(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate);
 
-	StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-	        choicemodel( myDeterredCall_left, &ap );
+	StateModel choicemodel( myDeterredCall_left, &ap );
 #ifdef DEBUG_TRAP_AS_NORMAL
 #ifdef LOGPOSITION
 logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
@@ -731,17 +729,12 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
     StateModel & rolemodel = choicemodel;
 #else
 	///From regular to fear B(x2)
-	AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            ap_right(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate);
-    StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-            choicemodel_right( myDeterredCall_right, &ap_right );
+	AutoScalingFunction ap_right(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate);
+    StateModel choicemodel_right( myDeterredCall_right, &ap_right );
 
 
 
-    AutoScalingFunction<   StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-                         , StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-                       >
-            rolemodel(choicemodel,choicemodel_right,betToCall,riskprice,&tablestate);
+    AutoScalingFunction rolemodel(choicemodel,choicemodel_right,betToCall,riskprice,&tablestate);
 
 
 
@@ -933,7 +926,7 @@ exit(1);
     logFile << "   Call Fear("<< viewBet <<")=" << 1.0+hybridgain_fear.f(bestBet) << endl;
 
 
-    printBetGradient< StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  > >
+    printBetGradient< StateModel >
                      (myDeterredCall_left, myDeterredCall_right, choicemodel, tablestate, viewBet, 0);
 
 
@@ -1083,11 +1076,10 @@ float64 DeterredGainStrategy::MakeBet()
 #endif
 
     ///Choose from geom to algb
-	AutoScalingFunction<GainModel,GainModelNoRisk> hybridgainDeterred(geomModel,algbModel,min_worst_scaler,geom_algb_scaler,&tablestate);
+	AutoScalingFunction hybridgainDeterred(geomModel,algbModel,min_worst_scaler,geom_algb_scaler,&tablestate);
 
 
-    StateModel<  GainModel, GainModelNoRisk >
-            ap_aggressive( myDeterredCall, &hybridgainDeterred );
+    StateModel ap_aggressive( myDeterredCall, &hybridgainDeterred );
 
 
 
@@ -1176,7 +1168,7 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
     }
 
 
-        printBetGradient< StateModel<  GainModel, GainModelNoRisk > >
+        printBetGradient< StateModel >
             (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, 0);
 
 
@@ -1254,19 +1246,18 @@ float64 SimpleGainStrategy::MakeBet()
     // If we didn't have statWorse --> statAdversarial here, we'd have a static edge for all bets that are a raise.
     // Of course, oppFoldPct still grows to offset total gain, but we need some way to describe the fact that any bet at riskprice or higher is a death sentence.
     // TODO(from joseph_huang): We probably need statAdversarial by default on some of the other bots...
-    AutoScalingFunction<GainModelNoRisk,GainModelNoRisk> controlledRaiseModel(valueRaiseModel,pushRaiseModel,smallestAdversarialBet,maxAllowedBet,&tablestate);
+    AutoScalingFunction controlledRaiseModel(valueRaiseModel,pushRaiseModel,smallestAdversarialBet,maxAllowedBet,&tablestate);
 
     const float64 belowRiskPrice = riskprice - ViewTable().GetChipDenom() / 2.0;
     const float64 aboveRiskPrice = riskprice + ViewTable().GetChipDenom() / 2.0;
-    AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk> raiseModel(controlledRaiseModel, riskRaiseModel, belowRiskPrice, aboveRiskPrice, &tablestate);
+    AutoScalingFunction raiseModel(controlledRaiseModel, riskRaiseModel, belowRiskPrice, aboveRiskPrice, &tablestate);
 
     ///Choose from geom to algb
     const float64 aboveCallBelowRaise1 = betToCall + ViewTable().GetChipDenom() / 2.0;
     const float64 aboveCallBelowRaise2 = betToCall + ViewTable().GetChipDenom();
-    AutoScalingFunction<GainModel,  AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk>  > callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
+    AutoScalingFunction callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
 
-    StateModel<  GainModel, AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk> >
-    ap_aggressive( myDeterredCall, &callOrRaise );
+    StateModel  ap_aggressive( myDeterredCall, &callOrRaise );
 
 
 
@@ -1307,7 +1298,7 @@ float64 SimpleGainStrategy::MakeBet()
     }
 
 
-    printBetGradient< StateModel<  GainModel, AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk> > >
+    printBetGradient< StateModel>
     (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, 0);
 
 
@@ -1386,10 +1377,9 @@ float64 PureGainStrategy::MakeBet()
     ///Choose from geom to algb
     const float64 aboveCallBelowRaise1 = betToCall + ViewTable().GetChipDenom() / 2.0;
     const float64 aboveCallBelowRaise2 = betToCall + ViewTable().GetChipDenom();
-    AutoScalingFunction<GainModel,  GainModel> callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
+    AutoScalingFunction callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
 
-    StateModel<  GainModel, GainModel >
-    ap_aggressive( myDeterredCall, &callOrRaise );
+    StateModel ap_aggressive( myDeterredCall, &callOrRaise );
 
 
 
@@ -1434,7 +1424,7 @@ float64 PureGainStrategy::MakeBet()
     }
 
 
-    printBetGradient< StateModel<  GainModel, GainModel > >
+    printBetGradient< StateModel >
     (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, &csrp);
 
 

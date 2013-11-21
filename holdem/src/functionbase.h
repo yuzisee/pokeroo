@@ -35,7 +35,17 @@
 #include <iostream>
 #endif
 
-class ScalarFunctionModel
+class IFunctionDifferentiable {
+public:
+    virtual float64 f(const float64) = 0;
+    virtual float64 fd(const float64, const float64) = 0;
+
+    virtual float64 getQuantum() = 0;
+}
+;
+
+
+class ScalarFunctionModel : public IFunctionDifferentiable
 {
     private:
         #ifndef SINGLETURNINGPOINT
@@ -57,6 +67,7 @@ class ScalarFunctionModel
 		virtual float64 FindTurningPoint(float64 x1,float64 y1,float64 xb,float64 yb,float64 x2,float64 y2,float64 signDir);
     public:
     float64 quantum;
+    float64 getQuantum() override final { return quantum; }
 
     #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
     bool bTraceEnable;
@@ -67,8 +78,6 @@ class ScalarFunctionModel
     ,bTraceEnable(false)
     #endif
     {};
-    virtual float64 f(const float64) = 0;
-    virtual float64 fd(const float64, const float64) = 0;
 	virtual float64 FindMax(float64,float64) ;
 	virtual float64 FindMin(float64,float64) ;
 	virtual float64 FindZero(float64,float64, bool) ;

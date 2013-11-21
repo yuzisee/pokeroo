@@ -26,33 +26,7 @@
 
 
 
-
-template class AutoScalingFunction<GainModel,GainModelNoRisk>;
-template class AutoScalingFunction<GainModel,GainModel>;
-template class AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>;
-template class AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk>;
-template class AutoScalingFunction<GainModel,AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk>>;
-
-template class AutoScalingFunction<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >;
-
-template class AutoScalingFunction<   StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-                                      , StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >
-                                    >;
-
-
-
-// Explicit template instantiation gets stripped during -O2 and higher if nothing calls it from the library.
-// Since only the applications that link libHoldem will call these templates, we should refactor the design here so that it doesn't need templates and return to -O3 (or whatever the XCode default is for release)
-
-template class StateModel<GainModel,GainModelNoRisk>;
-template class StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >;
-template class StateModel<GainModel,GainModel>;
-template class StateModel<GainModelNoRisk,GainModelNoRisk>;
-template class StateModel<  GainModel, AutoScalingFunction<AutoScalingFunction<GainModelNoRisk,GainModelNoRisk>, GainModelNoRisk> >;
-
-
-template<class LL, class RR>
-void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
+void AutoScalingFunction::query(float64 sliderx, float64 x)
 {
 
     last_x = x;
@@ -153,8 +127,7 @@ void AutoScalingFunction<LL,RR>::query(float64 sliderx, float64 x)
     }
 }
 
-template<class LL, class RR>
-float64 AutoScalingFunction<LL,RR>::f(const float64 x)
+float64 AutoScalingFunction::f(const float64 x)
 {
     if( last_x != x || last_sliderx != x)
     {
@@ -163,8 +136,8 @@ float64 AutoScalingFunction<LL,RR>::f(const float64 x)
     return y;
 }
 
-template<class LL, class RR>
-float64 AutoScalingFunction<LL,RR>::fd(const float64 x, const float64 y_dummy)
+
+float64 AutoScalingFunction::fd(const float64 x, const float64 y_dummy)
 {
     if( last_x != x || last_sliderx != x)
     {
@@ -173,8 +146,7 @@ float64 AutoScalingFunction<LL,RR>::fd(const float64 x, const float64 y_dummy)
     return dy;
 }
 
-template<class LL, class RR>
-float64 AutoScalingFunction<LL,RR>::f_raised(float64 sliderx, const float64 x)
+float64 AutoScalingFunction::f_raised(float64 sliderx, const float64 x)
 {
     if( last_x != x || last_sliderx != sliderx)
     {
@@ -183,8 +155,7 @@ float64 AutoScalingFunction<LL,RR>::f_raised(float64 sliderx, const float64 x)
     return y;
 }
 
-template<class LL, class RR>
-float64 AutoScalingFunction<LL,RR>::fd_raised(float64 sliderx, const float64 x, const float64 y_dummy)
+float64 AutoScalingFunction::fd_raised(float64 sliderx, const float64 x, const float64 y_dummy)
 {
     if( last_x != x || last_sliderx != sliderx)
     {
@@ -197,8 +168,7 @@ float64 AutoScalingFunction<LL,RR>::fd_raised(float64 sliderx, const float64 x, 
 
 
 
-template <class LL, class RR>
-StateModel<LL,RR>::~StateModel()
+StateModel::~StateModel()
 {
     if( bSingle && fp != 0 )
     {
@@ -207,22 +177,21 @@ StateModel<LL,RR>::~StateModel()
 }
 
 
-template <class LL, class RR>
-float64 StateModel<LL,RR>::g_raised(float64 raisefrom, const float64 betSize)
+float64 StateModel::g_raised(float64 raisefrom, const float64 betSize)
 {
     const float64 potWin = fp->f_raised(raisefrom, betSize);
     return potWin;
 }
 
-template <class LL, class RR>
-float64 StateModel<LL,RR>::gd_raised(float64 raisefrom, const float64 betSize, const float64 yval)
+
+float64 StateModel::gd_raised(float64 raisefrom, const float64 betSize, const float64 yval)
 {
     const float64 fp_f_raised = yval; // Subtract out foldgain, to get f_raised without computing it again.
     return fp->fd_raised(raisefrom, betSize, fp_f_raised); // There is no derivative of ea.FoldGain() here because it is constant relative to betSize.
 }
 
-template <class LL, class RR>
-float64 StateModel<LL,RR>::f(const float64 betSize)
+
+float64 StateModel::f(const float64 betSize)
 {
     if( last_x != betSize )
     {
@@ -232,8 +201,8 @@ float64 StateModel<LL,RR>::f(const float64 betSize)
     return y;
 }
 
-template <class LL, class RR>
-float64 StateModel<LL,RR>::fd(const float64 betSize, const float64 yval)
+
+float64 StateModel::fd(const float64 betSize, const float64 yval)
 {
     if( last_x != betSize )
     {
@@ -242,8 +211,8 @@ float64 StateModel<LL,RR>::fd(const float64 betSize, const float64 yval)
     return dy;
 }
 
-template <class LL, class RR>
-void StateModel<LL,RR>::query( const float64 betSize )
+
+void StateModel::query( const float64 betSize )
 {
     // betSize here is always "my" bet size. The perspective of opponents is already covered in <tt>ea</tt>
 
