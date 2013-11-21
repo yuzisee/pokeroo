@@ -6,6 +6,7 @@
 //  Copyright (c) 2013 Joseph Huang. All rights reserved.
 //
 
+#include <ctime>
 #include <cassert>
 
 
@@ -195,14 +196,13 @@ namespace RegressionTests {
         StatResultProbabilities statprob;
 
         ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,communityToTest,cardsInCommunity);
-        CallCumulationD attackcumu(statprob.core.foldcumu);
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
-
 
         const float64 testBet = 9.5;
         
-        OpponentHandOpportunity test(1, myTable, &attackcumu);
+        OpponentHandOpportunity test(1, myTable, statprob.core);
 
 
 
@@ -210,10 +210,10 @@ namespace RegressionTests {
         const float64 actual_y = test.handsToBeat();
         const float64 actual_Dy = test.d_HandsToBeat_dbetSize();
 
-        assert(actual_y >= 3);
+        assert(actual_y >= 3.5);
         assert(actual_Dy > 0); // betting more should increase N even more
 
-        CombinedStatResultsPessimistic testC(test, &(statprob.core.foldcumu));
+        CombinedStatResultsPessimistic testC(test, statprob.core);
         testC.query(testBet);
 
         const float64 s1 = testC.ViewShape(testBet).splits;
@@ -255,7 +255,8 @@ namespace RegressionTests {
         StatResultProbabilities statprob;
 
         ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
 
         ///Compute CommunityCallStats
@@ -319,7 +320,8 @@ namespace RegressionTests {
         StatResultProbabilities statprob;
 
         ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
 
         ///Compute CommunityCallStats
@@ -379,15 +381,16 @@ namespace RegressionTests {
         StatResultProbabilities statprob;
 
         ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
 
 
         // TEST:
         const float64 xa = 0.3;
         const float64 xb = 0.3001;
-        std::pair<StatResult, float64> ya = statprob.core.foldcumu.oddsAgainstBestXHands(xa);
-        std::pair<StatResult, float64> yb = statprob.core.foldcumu.oddsAgainstBestXHands(xb);
+        std::pair<StatResult, float64> ya = statprob.core.handcumu.bestXHands(xa);
+        std::pair<StatResult, float64> yb = statprob.core.handcumu.bestXHands(xb);
 
         const float64 expected = (yb.first.pct - ya.first.pct) / (xb - xa);
         const float64 actual = (ya.second + yb.second) / 2.0;
@@ -1024,7 +1027,8 @@ namespace RegressionTests {
         StatResultProbabilities statprob;
 
         ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,communityToTest,cardsInCommunity);
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
 
         ///Compute CommunityCallStats
@@ -1360,9 +1364,113 @@ namespace RegressionTests {
     }
 }
 
+static void regenerateDb() {
+
+    const int8 cardsInCommunity = 0;
+
+
+
+    std::vector<std::pair<DeckLocation,DeckLocation>> handList;
+
+    // Pocket-pairs
+    for (int8 pocketRank = 0; pocketRank < 13; ++ pocketRank) {
+        DeckLocation card1;
+        card1.SetByIndex(pocketRank * 4);
+
+        DeckLocation card2;
+        card2.SetByIndex(pocketRank * 4 + 1);
+
+        handList.emplace_back(std::pair<DeckLocation, DeckLocation>(card1, card2));
+
+    }
+
+    // All non-pairs
+    for (int8 firstCardRank = 0; firstCardRank < 13; ++firstCardRank) {
+        for(int8 secondCardRank = firstCardRank + 1; secondCardRank < 13; ++secondCardRank) {
+            // Suited
+            {
+                DeckLocation card1;
+                card1.SetByIndex(firstCardRank * 4);
+
+                DeckLocation card2;
+                card2.SetByIndex(secondCardRank * 4 + 1);
+
+                handList.emplace_back(std::pair<DeckLocation, DeckLocation>(card1, card2));
+            }
+
+
+            // Not suited
+            {
+                DeckLocation card1;
+                card1.SetByIndex(firstCardRank * 4);
+
+                DeckLocation card2;
+                card2.SetByIndex(secondCardRank * 4);
+
+                handList.emplace_back(std::pair<DeckLocation, DeckLocation>(card1, card2));
+
+            }
+        }
+
+    }
+
+
+    assert(handList.size() == 169);
+
+    std::cout << "Begin.\n";
+    size_t counter = 0;
+    for (const std::pair<DeckLocation,DeckLocation> & holeCards : handList) {
+        CommunityPlus withCommunity;
+
+        withCommunity.AddToHand(holeCards.first);
+
+        withCommunity.AddToHand(holeCards.second);
+
+        NamedTriviaDeck o;
+        o.OmitCards(withCommunity);
+        o.DiffHand(CommunityPlus::EMPTY_COMPLUS);
+        o.sortSuits();
+        string handName = o.NamePockets();
+
+
+
+        StatResultProbabilities statprob;
+
+        {
+            const time_t now = time(nullptr);
+            std::cout << asctime(std::localtime(&now));
+            std::cout << "Computing   " << handName << "   CallStats (.holdemC)\n";
+            std::cout.flush(); // Flush for timestamping
+        }
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
+
+        {
+            const time_t now = time(nullptr);
+            std::cout << asctime(std::localtime(&now));
+            std::cout << "Computing   " << handName << "   CommunityCallStats (.holdemW)\n";
+            std::cout.flush(); // Flush for timestamping
+        }
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity,0);
+        ++counter;
+
+        std::cout << "=== Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size()) << "   ===\n\n";
+        std::cout.flush(); // Flush for timestamping
+    }
+
+    const time_t now = time(nullptr);
+    std::cout << asctime(std::localtime(&now));
+
+
+}
+
 int main(int argc, const char * argv[])
 {
-    // Run all unit tests.
+/*
+ // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
     // TODO(from joseph_huang): Set up a simple situation (e.g. post-river) with FoldGainWaitLength and then FoldGainModel.
@@ -1382,5 +1490,9 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_003();
 
     RegressionTests::testRegression_004();
-}
+*/
+
+    // Regenerate the DB?
+    regenerateDb();
+ }
 

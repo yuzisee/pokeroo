@@ -41,6 +41,8 @@ template class AutoScalingFunction<   StateModel<  AutoScalingFunction<GainModel
 
 
 
+// Explicit template instantiation gets stripped during -O2 and higher if nothing calls it from the library.
+// Since only the applications that link libHoldem will call these templates, we should refactor the design here so that it doesn't need templates and return to -O3 (or whatever the XCode default is for release)
 
 template class StateModel<GainModel,GainModelNoRisk>;
 template class StateModel<  AutoScalingFunction<GainModel,GainModelNoRisk>  ,  AutoScalingFunction<GainModel,GainModelNoRisk>  >;
