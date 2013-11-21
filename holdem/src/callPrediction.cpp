@@ -676,8 +676,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
                                 const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
-                                const float64 noRaiseMean = 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean);
-                                const float64 noraiseMeanD = -ed()->d_dw_only(w_r_mean) * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, ed());
+                                const float64 noRaiseMean = 1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean);
+                                const float64 noraiseMeanD = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, ed());
 
                                 //nextNoRaise_A[i] = w_r_rank;
                                 //nextNoRaiseD_A[i] = noraiseRankD;
@@ -763,10 +763,10 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
 
                     const float64 w = facedOdds_call_Geom(oppCPS,betSize, opponents, ed());
-                    nextexf = ed()->Pr_haveWinPCT_orbetter(w);
+                    nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan(w - EPS_WIN_PCT);
                     
 
-                    nextdexf = nextexf + oppBetMake * ed()->d_dw_only(w)
+                    nextdexf = nextexf + oppBetMake * (- ed()->Pr_haveWorsePCT_continuous(w - EPS_WIN_PCT).second)
                                         * dfacedOdds_dbetSize_Geom(oppCPS,betSize,totaldexf,w, opponents, ed());
 
                     nextexf *= oppBetMake;
@@ -790,7 +790,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
                 ChipPositionState oppmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit);
 
-                nextexf = ed()->Pr_haveWinPCT_orbetter( facedOdds_call_Geom(oppmaxCPS,oppBankRoll, opponents,ed()) );
+                nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan( facedOdds_call_Geom(oppmaxCPS,oppBankRoll, opponents,ed()) - EPS_WIN_PCT );
                 
 				nextexf *= oppBetMake ;
 
@@ -1014,9 +1014,9 @@ void ExactCallBluffD::query(const float64 betSize)
                     //float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
                     //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
                     //ea-> is if they know your hand
-                    const float64 eaFold = (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
+                    std::pair<float64,float64> eaFold = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_mean); // (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
                     //e-> is if they don't know your hand
-                    const float64 meanFold = 1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
+                    std::pair<float64,float64> meanFold = ed()->Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
                     //w is if they don't know your hand
                     const float64 rankFold = w_rank;
                     //handRarity is based on if they know your hand
@@ -1035,12 +1035,12 @@ void ExactCallBluffD::query(const float64 betSize)
 
 
                     const float64 rankFoldPartial = dw_dbetSize_rank;
-                    const float64 meanFoldPartial = -ed()->d_dw_only( w_mean ) * dw_dbetSize_mean;
-                    const float64 eaFoldPartial = -ef()->d_dw_only( w_mean ) * dw_dbetSize_mean;
+                    meanFold.second *= dw_dbetSize_mean;
+                    eaFold.second *= dw_dbetSize_mean;
                     const float64 eaRkFoldPartial = 0;
 
                     ///topTwoOfThree is on a player-by-player basis
-                    nextFoldPartial = bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,eaFoldPartial,meanFoldPartial,rankFoldPartial,eaRkFoldPartial,nextFold);
+                    nextFoldPartial = bottomThreeOfFour(eaFold.first,meanFold.first,rankFold,eaRkFold,eaFold.second,meanFold.second,rankFoldPartial,eaRkFoldPartial,nextFold);
                     //nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
                     //nextFoldPartial=(eaFoldPartial+meanFoldPartial+rankFoldPartial+eaRkFoldPartial)/4;
 
@@ -1085,13 +1085,13 @@ void ExactCallBluffD::query(const float64 betSize)
 
                     //float64 oppCommitted = table->ViewPlayer(pIndex)->GetContribution();
                     //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
-                    const float64 eaFold = (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));//*(1 - oppCommitted);
-                    const float64 meanFold = 1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
+                    std::pair<float64, float64> eaFold = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_mean); //(1 - ef()->Pr_haveWorsePCT_continuous( w_mean ));//*(1 - oppCommitted);
+                    std::pair<float64, float64> meanFold = ed()->Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
                     const float64 rankFold = w_rank;
                     const float64 eaRkFold = 1-tableinfo->handRarity;
 
                     ///topTwoOfThree is on a player-by-player basis
-                    bottomThreeOfFour(eaFold,meanFold,rankFold,eaRkFold,0,0,0,0,nextFold);
+                    bottomThreeOfFour(eaFold.first,meanFold.first,rankFold,eaRkFold,0,0,0,0,nextFold);
 //                    nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
 
 
@@ -1265,6 +1265,8 @@ float64 ExactCallBluffD::RiskPrice() const
     FoldGainModel FG(tableinfo->chipDenom());
 	//FG.bTraceEnable = true;
 
+    // TODO(from yuzisee): Reverse perspective? foldcumu is the distribution of your probability of winning
+    // TODO(from yuzisee): MEAN vs. RANK to match call and fold? I guess the "pessimistic" is neither.
     FG.waitLength.w = ef()->nearest_winPCT_given_rank(1.0 - 1.0/Ne); //If you're past the flop, we need definitely consider only the true number of opponents
     FG.waitLength.amountSacrificeVoluntary = estSacrifice; //rarity() already implies the Ne
 	FG.waitLength.amountSacrificeForced = 0; //estSacrifice*rarity() already implies a forced avgBlinds
@@ -1321,6 +1323,9 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 // They would face an action on this bet, so see whether our overbet gives them an opportunity to profitably fold
 
                 FoldGainModel FG(fTable.GetChipDenom()/2);
+
+                // TODO(from joseph_huang): Should we assume that the opponents also choose mean when {1 == handsShowdown()} and rank otherwise??
+                // I guess technically this is mean but they know what you have, so pessimistically we're talking about them trying to beat only you.
                 FG.waitLength.meanConv = e_opp;
                 // ( 1 / (x+1) )  ^ (1/x)
                 FG.waitLength.bankroll = fTable.ViewPlayer(pIndex)->GetMoney();

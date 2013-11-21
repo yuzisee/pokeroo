@@ -110,7 +110,7 @@ float64 FoldWaitLengthModel::d_dw( const float64 n )
 	//CHANGE #1
 	//remove amountSacrificeForced from this expression if it occurs every round, because it doesn't interact with w
     if( meanConv == 0 ) return (n)*(amountSacrificeForced+amountSacrificeVoluntary)/AVG_FOLDWAITPCT;
-    return -(n)*(amountSacrificeForced+amountSacrificeVoluntary)/AVG_FOLDWAITPCT * meanConv->d_dw_only( w );
+    return (n)*(amountSacrificeForced+amountSacrificeVoluntary)/AVG_FOLDWAITPCT * meanConv->Pr_haveWorsePCT_continuous( w ).second;
 }
 
 
@@ -136,14 +136,16 @@ const float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
     return gross;
 }
 
-
+// A divisor == how many hands rare is this hand?
+// If w is close to 1.0, then Pr_haveWorsePCT_continuous(w) is close to 1.0, and cacheRarity is a small value.
+// 1.0 / rarity() should be how often you can expect to get a hand this good again
 const float64 FoldWaitLengthModel::rarity( )
 {
     if( cacheRarity >= 0 ) return cacheRarity;
 
 
     if( meanConv == 0 ){cacheRarity = 1-w;}
-    else{cacheRarity= meanConv->Pr_haveWinPCT_orbetter_continuous(w);}
+    else{cacheRarity= 1.0 - meanConv->Pr_haveWorsePCT_continuous(w).first;}
 
     if( cacheRarity < 1.0/RAREST_HAND_CHANCE ){ cacheRarity = 1.0/RAREST_HAND_CHANCE; }
     return cacheRarity;

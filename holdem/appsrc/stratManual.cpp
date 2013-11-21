@@ -80,7 +80,7 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
         ViewTable().CachedQueryOffense(possibleHands,onlyCommunity,withCommunity);
 
-        rarity = possibleHands.Pr_haveWinPCT_orbetter(winMean.pct);
+        rarity = possibleHands.Pr_haveWinPCT_strictlyBetterThan(winMean.pct - EPS_WIN_PCT);
 
 //You can tie in rank if and only if you tie in mean
         rankPCT.wins = 1 - rarity;

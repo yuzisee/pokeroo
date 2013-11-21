@@ -228,7 +228,7 @@ class StatResult
 ;
 
 
-//In CallCumulation[n], .pct represents the opponents PCT if YOU had hand #n
+//In CallCumulation[n]
 //.wins, .splits, .loss represent the YOUR rating with hand #n
 //.repeated is rank (1.0 for the best hand to have, and slightly above 0 for the worst hand to have)
 //1 - .repeated  is rarity (chance of having this or better)
@@ -239,21 +239,57 @@ class StatResult
 //AA has .splits = 0.54%
 //AA has .loss = 14.6%
 //AA has .repeated = 1
-//AA has .pct = 0.148
+//AA has .pct = 0.832
 
-//32o is probably cumulation[0]
+//32o is probably cumulation[low]
 //32o has .wins = 29.2%
 //32o has .splits = 6.12%
 //32o has .loss = 64.6%
 //32o has .repeated = 0.00980
-//32o has .pct = 0.677
+//32o has .pct = 0.323
+
+// example CallCumulation
+/*
+ [0] = {
+ wins = 0.03636363636363636
+ splits = 0.1303030303030303
+ loss = 0.8333333333333334
+ repeated = 0.002775208140610546
+ pct = 0.1015151515151515
+ }
+ [1] = {
+ wins = 0.04545454545454546
+ splits = 0.1212121212121212
+ loss = 0.8333333333333334
+ repeated = 0.01110083256244218
+ pct = 0.1060606060606061
+ }
+ .
+ .
+ .
+ [91] = {
+ wins = 0.8383838383838383
+ splits = 0.05252525252525252
+ loss = 0.1090909090909091
+ repeated = 0.9740980573543015
+ pct = 0.8646464646464647
+ }
+ [92] = {
+ wins = 0.8464646464646465
+ splits = 0.05252525252525252
+ loss = 0.101010101010101
+ repeated = 1
+ pct = 0.8727272727272727
+ }
+
+ */
 
 class CallCumulation
 {
 private:
     size_t cached_high_index; // This is just an extra first guess we will make.
 protected:
-	size_t searchWinPCT_betterThan_toHave(const float64 winPCT_toHave) const;
+	size_t searchWinPCT_strictlyBetterThan(const float64 winPCT) const;
 
     float64 sampleInBounds_pct(size_t x) const;
     float64 sampleInBounds_repeated(size_t x) const;
@@ -273,16 +309,15 @@ public:
     virtual void ReversePerspective();
 
 
-	virtual float64 Pr_haveWinPCT_orbetter(const float64 w_toHave) const;
+	virtual float64 Pr_haveWinPCT_strictlyBetterThan(const float64 w_toHave) const;
 	virtual float64 nearest_winPCT_given_rank(const float64 rank);
-	virtual StatResult bestHandToHave() const; // best hand to have against me
-	virtual StatResult worstHandToHave() const; // worst hand to have against me
-	virtual StatResult oddsAgainstBestHand() const;
+	virtual StatResult bestHandToHave() const;
+	virtual StatResult worstHandToHave() const;
 
     // Here, X is the fraction of hands we care about. If X === 0.0, this returns oddsAgainstBestHand(). If X === 1.0, this means just include all hands and effectively returns statmean.
     // Returns both the StatResult at X, as well as d_{StatResult.pct}_dX
     // The two return values are returned as an std::pair
-	virtual std::pair<StatResult, float64> oddsAgainstBestXHands(float64 X) const;
+	virtual std::pair<StatResult, float64> bestXHands(float64 X) const;
 
 #ifdef DUMP_CSV_PLOTS
         static void dump_csv_plots(std::ostream &targetoutput, const CallCumulation& calc)
@@ -311,8 +346,7 @@ private:
     float64 linearInterpolate(float64 x1, float64 y1, float64 x2, float64 y2, float64 x) const;
 	virtual float64 slopeof(size_t x10, size_t x11, size_t x20, size_t x21, size_t, size_t) const;
 public:
-    float64 d_dw_only(const float64 w_toHave) const;
-	virtual float64 Pr_haveWinPCT_orbetter_continuous(const float64 w_toHave, float64 *out_d_dw = 0) const;
+    virtual std::pair<float64, float64> Pr_haveWorsePCT_continuous(const float64 w_toHave) const;
 	virtual float64 inverseD(const float64, const float64 mean) const;
 
 /*
@@ -436,12 +470,54 @@ enum MeanOrRank {
     RANK
 };
 
+#define EPS_WIN_PCT (1.0 / 2118760.0 / 990.0)
+
 struct CoreProbabilities {
     int8 playerID = -1;
 
-    CallCumulationD foldcumu; // CallStats (probabiliy of winning against each possible opponent hand)
+    CallCumulationD handcumu; // CallStats (your odds of winning against each possible opponent)
+    CallCumulationD foldcumu; // CallStats, REVERSED PERSPECTIVE (each opposing hand's chance to win)
     CallCumulationD callcumu; // CommunityCallStats (each hole cards' inherent probability of winning)
 	StatResult statmean; // (Your hole cards' current inherent probability of winning)
+
+    // Against what fraction of opponents will you have the better hand?
+    // This is high for good all-in hands.
+    StatResult statRelation() {
+        StatResult statrelation;
+        const float64 strictlyLosingOutcomes = foldcumu.Pr_haveWinPCT_strictlyBetterThan(0.5); // how often does your opponent have better than 50% against you
+        const float64 strictlyWinningOutcomes = handcumu.Pr_haveWinPCT_strictlyBetterThan(0.5); // how often you have better than 50% against your opponent
+
+        //You can tie in rank if and only if you tie in mean
+        statrelation.wins = strictlyWinningOutcomes;
+        statrelation.loss = strictlyLosingOutcomes;
+        statrelation.splits = 1.0 - statrelation.wins - statrelation.loss;
+        statrelation.forceRenormalize();
+        return statrelation;
+    }
+
+    // How often do you get a hand this good?
+    // This is high for strong playing hands.
+    StatResult statRanking() {
+        StatResult statranking;
+        const float64 handsThatCanDoBetterThanYou = callcumu.Pr_haveWinPCT_strictlyBetterThan(statmean.pct);
+        const float64 handsThatYouCanDoBetterThan = 1.0 - callcumu.Pr_haveWinPCT_strictlyBetterThan(statmean.pct - EPS_WIN_PCT);
+
+        // TODO(from yuzisee): Should this be pct preserving instead? If so, what if pct < splits?
+        // TODO(from yuzisee): Perhaps win should be the probability of having strictly better hand and lose should be probability of having strictly worse.
+        //                     Then we can be ratio preserving. Right now ranking is biased high.
+        //                     The problem is, when you get to the showdown, outcomes are known, so hands only have W L or S.
+        //                     Then, "strictly better" might be small compared to splits. Maybe that's okay.
+        // TODO(from yuzisee): Maybe split can be probability of having the same hand?
+        statranking.loss = handsThatCanDoBetterThanYou;
+        statranking.wins = handsThatYouCanDoBetterThan;
+        statranking.splits = 1.0 - statranking.loss - statranking.wins;
+        statranking.forceRenormalize();
+        return statranking;
+    }
+
+    double getFractionOfOpponentsWhereMyWinrateIsAtLeast(double winrate) {
+        return handcumu.Pr_haveWinPCT_strictlyBetterThan(winrate);
+    }
 
     // TODO(from joseph_huang): Refactor this (or where it is used) to supply mean vs. rank when dealing with heads-up vs. multi-hand.
 }

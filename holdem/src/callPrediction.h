@@ -228,7 +228,7 @@ public:
     // facedHands: What does the opponent think his/her win percentage is based on rarity?
     // I guess if we are being pessimistic (which is the point of this exercise: assume that by betting we reveal what we have) they would know what we have.
     // So this should be foldcumu.
-    OpponentHandOpportunity(playernumber_t myIdx, const HoldemArena& table, CallCumulationD * oppWinAgainstMyHands)
+    OpponentHandOpportunity(playernumber_t myIdx, const HoldemArena& table, CoreProbabilities &core)
     :
     fTable(table)
     ,
@@ -238,7 +238,7 @@ public:
     ,
     fIdx(myIdx)
     ,
-    e_opp(oppWinAgainstMyHands)
+    e_opp(&core.foldcumu)
     {
     }
 

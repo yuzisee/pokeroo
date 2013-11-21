@@ -121,13 +121,14 @@ public:
 ;
 
 /**
+ * // TODO: Do we ever use rank here in the non heads-up case?
  * Determine your chance to win by counting how many times your opponent can wait before calling you, assuming they know what you have.
  *
  * If you use this exclusively as your winPct, then the bot should bet small enough that it can be called by the distribution of hands it expects.
  */
 class CombinedStatResultsPessimistic : public virtual ICombinedStatResults {
 public:
-    CombinedStatResultsPessimistic(OpponentHandOpportunity & opponentHandOpportunity, CallCumulationD * const foldcumu)
+    CombinedStatResultsPessimistic(OpponentHandOpportunity & opponentHandOpportunity, CoreProbabilities & core)
     :
     fLastBetSize(std::nan(""))
     ,
@@ -135,7 +136,7 @@ public:
     ,
     fOpposingHands(opponentHandOpportunity)
     ,
-    fFoldCumu(foldcumu)
+    fFoldCumu(&(core.foldcumu))
     ,
     fSplitOpponents(opponentHandOpportunity.fTable.NumberInHand().inclAllIn() - 1)
     {}
@@ -172,12 +173,42 @@ private:
     // Count the number of possible opponents, including hypothetical "fold and come back stronger" hands.
     // This accounts for the fact that if you make an overbet in a particular situation, opponents will find only to return to this same situation in the future but with a better hand.
     OpponentHandOpportunity & fOpposingHands; // All OPPONENT odds against ME.
-    CallCumulationD * const fFoldCumu; // MY odds against all OPPONENTS
+    CallCumulationD * const fFoldCumu; // OPPOSING hands (as faring against me)
 
     const playernumber_t fSplitOpponents;
 }
 ;
 
+struct NetStatResult {
+    StatResult fShape;
+    float64 fLoseProb;
+	float64 fOutrightWinProb;
+}
+;
+
+// Use rank for multi-handed, mean for heads-up
+class PureStatResultGeom : public virtual ICombinedStatResults {
+private:
+    const playernumber_t fDifficultyOpponents;
+    const playernumber_t fShowdownOpponents;
+
+    const struct NetStatResult fNet;
+
+public:
+    PureStatResultGeom(const StatResult mean, const StatResult rank, const ExpectedCallD &tableinfo);
+
+    ~PureStatResultGeom() {}
+
+    playernumber_t splitOpponents() const override final { return fShowdownOpponents; }
+    
+    const StatResult & ViewShape(float64 betSize) override final { return fNet.fShape; } // per-player outcome: wins and splits are used to calculate split possibilities
+    float64 getLoseProb(float64 betSize) override final { return fNet.fLoseProb; }
+	float64 getWinProb(float64 betSize) override final { return fNet.fOutrightWinProb; }
+
+    float64 get_d_LoseProb_dbetSize(float64 betSize) override final { return 0.0; }
+    float64 get_d_WinProb_dbetSize(float64 betSize) override final { return 0.0; }
+}
+;
 
 /**
  * Convert a particular StatResult into the odds of winning at the table.
@@ -248,19 +279,19 @@ public:
      */
     static float64 cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle);
 
-    virtual float64 getLoseProb(float64 betSize) {
+    float64 getLoseProb(float64 betSize) override final {
         return p_cl;
     }
 
-    virtual float64 getWinProb(float64 betSize) {
+    float64 getWinProb(float64 betSize) override final {
         return p_cw;
     }
 
-    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) {
+    float64 get_d_LoseProb_dbetSize(float64 betSize) override final {
         return 0.0;
     }
 
-    virtual float64 get_d_WinProb_dbetSize(float64 betSize) {
+    float64 get_d_WinProb_dbetSize(float64 betSize) override final {
         return 0.0;
     }
 }
@@ -277,8 +308,8 @@ protected:
 
 
 
-    virtual float64 g(float64);
-    virtual float64 gd(float64, const float64);
+    virtual float64 g(float64) override final;
+    virtual float64 gd(float64, const float64) override final;
     
 	public:
     
@@ -391,8 +422,8 @@ class GainModelNoRisk : public virtual GainModel
     ,fOutcome(outcome){}
 	virtual ~GainModelNoRisk();
 
-	virtual float64 f(const float64);
-    virtual float64 fd(const float64, const float64);
+	virtual float64 f(const float64) override final;
+    virtual float64 fd(const float64, const float64) override final;
 }
 ;
 

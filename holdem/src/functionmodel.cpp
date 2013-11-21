@@ -54,10 +54,17 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
     fHandsToBeat = fOpposingHands.handsToBeat();
     const float64 fractionOfHandsToBeat_dbetSize = fOpposingHands.d_HandsToBeat_dbetSize();
 
+#ifdef DEBUGASSERT
+    if (fractionOfHandsToBeat_dbetSize != fractionOfHandsToBeat_dbetSize) {
+        std::cerr << "NaN encountered in fractionOfHandsToBeat_dbetSize" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
     const float64 fractionOfHandsToBeat = 1.0 / fHandsToBeat; // If you have to beat N hands, expect the worst to be one of the worst 1/Nth
-    const std::pair<StatResult, float64> oddsAgainstbestXHands = fFoldCumu->oddsAgainstBestXHands(fractionOfHandsToBeat);
-    const StatResult & showdownResults = oddsAgainstbestXHands.first;
-    const float64 & d_showdownPct_dX = oddsAgainstbestXHands.second;
+    const std::pair<StatResult, float64> bestXOpponents = fFoldCumu->bestXHands(fractionOfHandsToBeat);
+    const StatResult showdownResults = bestXOpponents.first.ReversedPerspective(); // oddsAgainstbestXHands.first;
+    const float64 d_showdownPct_dX = -bestXOpponents.second; // oddsAgainstbestXHands.second;
 
     // da_dbetSize = da_dX * dX_dbetSize
     // Here, X === fractionOfHandsToBeat === 1.0 / fOpposingHands.handsToBeat()
@@ -143,6 +150,82 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
 
 }
 
+
+static struct NetStatResult init(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, StatResult baseShape) {
+    struct NetStatResult result;
+
+
+#ifdef DEBUGASSERT
+    if ((baseShape.loss != baseShape.loss) || (baseShape.wins != baseShape.wins) || (baseShape.splits != baseShape.splits)) {
+        std::cerr << "NaN encountered in shape" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+
+    result.fOutrightWinProb = cleanpow(baseShape.wins, difficultyOpponents);
+
+    // Now, adjust fShape so that it applies per showdownOpponents rather than per difficultOpponents
+    result.fShape = baseShape;
+    result.fShape.wins =       cleanpow(      result.fOutrightWinProb, 1.0 / static_cast<double>(showdownOpponents));
+    // Normalize, preserving splits
+    result.fShape.loss = 1.0 - result.fShape.splits - result.fShape.wins;
+    result.fShape.forceRenormalize();
+    result.fShape.repeated = 1;
+
+    result.fLoseProb =  1 - cleanpow(1 - baseShape.loss, showdownOpponents);
+
+
+        // TODO(yuzisee): Unit test
+        //  If showdownOpponents == difficultyOpponents: assert baseShape === fShape
+        //  If split is large, then imagine difficultOpponents = 2 and showdownOpponents = 1
+        //    Should outright win / outright lose ratio be preserved or "overall pct" preserved??
+
+        if( 1.0 - result.fShape.splits <= DBL_EPSILON  || (result.fShape.loss + result.fShape.wins <= DBL_EPSILON) )
+        {
+            result.fLoseProb = 0;
+            result.fOutrightWinProb = 0;
+            result.fShape.wins = 1; //You need wins to split, and shape is only used to split so this okay
+        }
+
+
+#ifdef DEBUGASSERT
+        if ((result.fLoseProb != result.fLoseProb) || (result.fOutrightWinProb != result.fOutrightWinProb)) {
+            std::cerr << "NaN encountered in NetStatResult probabilities" << endl;
+            exit(1);
+        }
+#endif // DEBUGASSERT
+
+#ifdef DEBUGASSERT
+    if ((result.fShape.loss != result.fShape.loss) || (result.fShape.wins != result.fShape.wins) || (result.fShape.splits != result.fShape.splits)) {
+        std::cerr << "NaN encountered in NetStatResult.fShape" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+    return result;
+}
+
+PureStatResultGeom::PureStatResultGeom(const StatResult mean, const StatResult rank, const ExpectedCallD &tableinfo)
+:
+fDifficultyOpponents(tableinfo.handStrengthOfRound())
+,
+fShowdownOpponents(tableinfo.handsToShowdown())
+,
+fNet(init(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdown()
+          ,
+          (tableinfo.handsToShowdown() > 1) ?
+          // The odds of beating multiple people isn't based on the odds of beating one person.
+          // Since it's more complicated than that, just go with rank for now.
+          rank
+          :
+          mean
+          )
+     )
+{
+}
+
+
 float64 CombinedStatResultsGeom::cleangeomeanpow(float64 b1, float64 x1, float64 b2, float64 x2, float64 f_battle)
 {
     if (x1 == x2) {
@@ -186,6 +269,7 @@ void CombinedStatResultsGeom::combineStatResults(const StatResult s_acted, const
         p_cl =  1 - cleangeomeanpow(1 - s_acted.loss,s_acted.repeated , 1 - s_nonacted.loss,s_nonacted.repeated, f_battle);
         p_cw = cleangeomeanpow(s_acted.wins,s_acted.repeated , s_nonacted.wins,s_nonacted.repeated, f_battle);
     } else {
+        // When bConvertToNet is false, that means we've already received a net win percentage.
         if (s_acted.repeated == s_nonacted.repeated && s_acted.pct == s_nonacted.pct && s_acted.splits == s_nonacted.splits) {
             p_cl = s_acted.loss;
             p_cw = s_acted.wins;

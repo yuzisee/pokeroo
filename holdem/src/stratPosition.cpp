@@ -134,7 +134,8 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     DistrShape w_wl(0);
     
     ///Compute CallStats
-    StatsManager::QueryDefense(statprob.core.foldcumu,withCommunity,onlyCommunity,cardsInCommunity);
+    StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,onlyCommunity,cardsInCommunity);
+    statprob.core.foldcumu = statprob.core.handcumu;
     statprob.core.foldcumu.ReversePerspective();
     
     ///Compute CommunityCallStats
@@ -445,11 +446,11 @@ void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
 void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat) {
     FoldOrCall foldGainCalculator(ViewTable(), statprob.core);
     std::pair<float64, float64> foldgainVal_xw = foldGainCalculator.myFoldGainAndWaitlength(MEAN);
-    const float64 &foldgainVal = foldgainVal_xw.first; // waitlength
-    const float64 &xw = foldgainVal_xw.second; // waitlength
+    const float64 &foldgainVal = foldgainVal_xw.first; // gain
+    const float64 &xw = foldgainVal_xw.second; // waitlength (in total hands dealt)
     logFile << "FoldGain()=" << foldgainVal;
 
-    float64 numfolds = xw * e->Pr_haveWinPCT_orbetter_continuous(statprob.core.statmean.pct);
+    float64 numfolds = xw * e->Pr_haveWinPCT_strictlyBetterThan(statprob.core.statmean.pct - EPS_WIN_PCT); // waitlength (in folds)
 
 
     logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
@@ -463,6 +464,8 @@ void PositionalStrategy::printPessimisticWinPct(std::ofstream & logF, float64 be
         logF << "\tW(" << csrp->getHandsToBeat() << ")=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "x.w,s=" << csrp->ViewShape(betSize).wins << "," << csrp->ViewShape(betSize).splits;
     }
 }
+
+
 
 template< typename T >
 void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp)
@@ -1353,14 +1356,12 @@ float64 PureGainStrategy::MakeBet()
     CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
     GainModelGeom callModel(leftCS, myDeterredCall);
 
-    CallCumulationD opponentAttackCumu(statprob.core.foldcumu);
-    opponentAttackCumu.ReversePerspective();
     // TODO(from yuzisee): When callgain is based on rank vs. mean, should the comparative opponentHandOpportunity's foldgain be based on rank vs. mean?
     // Consider: Opponent knows what I have vs. Opponent doesn't know what I have
     // NOTE: We had a "will call too often with Qc 3c" bug. That might be because we didn't reverse perspective up there.
     // TODO(from yuzisee): Are the other invocations of foldgain (e.g. Pr{push}) also dependent on reversed perspective?
-    OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, ViewTable(), &opponentAttackCumu);
-    CombinedStatResultsPessimistic csrp(opponentHandOpportunity, &(statprob.core.foldcumu));
+    OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, ViewTable(), statprob.core);
+    CombinedStatResultsPessimistic csrp(opponentHandOpportunity, statprob.core);
     GainModelNoRisk raiseModel(csrp, myDeterredCall);
 
 

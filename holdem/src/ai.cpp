@@ -471,7 +471,8 @@ void CallStats::Analyze()
 		temptarget.wins /= myChancesEach;
 		temptarget.loss /= myChancesEach;
 		temptarget.splits /= myChancesEach;
-		temptarget.pct = 1 - temptarget.pct/myChancesEach;///This is where we convert myPCT to oppPCT.
+        ///All outcomes so far are myPCT (having the first hand dealt. For CallStats that's the fixed hand I have. For CommunityCallStats that's the pockets named in the distribution.
+        temptarget.pct = temptarget.pct/myChancesEach;
 		temptarget.repeated /= myTotalChances;
 	}
 
