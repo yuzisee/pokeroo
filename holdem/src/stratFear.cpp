@@ -31,7 +31,7 @@ float64 OpponentFoldWait::ActOrReact(float64 callb, float64 lastbet, float64 lim
 //2. [  ACT a.k.a. 0.0] The opponents have not bet yet, and would be the reactors of this hand.
 //3. [REACT a.k.a. 1.0] The pot is large from previous rounds, opponents can't fold easily
 
-	const float64 nPlayers = 1+tableinfo->handsToShowdown();
+	const float64 nPlayers = 1+tableinfo->handsToShowdownAgainst();
 
     //The share of the pot that others are entitled to on average
 	const float64 othersShare = 1 - (1 / nPlayers);

@@ -284,8 +284,10 @@ void StateModel::query( const float64 betSize )
         if( potRaisedWin_A[i] < oppRaisedMyFoldGain )
         {
 			if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
-            potRaisedWin_A[i] = oppRaisedMyFoldGain;
-            potRaisedWinD_A[i] = 0;
+
+            //Since g_raised isn't pessimistic based on raiseAmount (especially when we're just calling), don't add additional gain opportunity -- we should instead assume that if we would fold against such a raise that the opponent has us as beat as we are 
+            //potRaisedWin_A[i] = oppRaisedMyFoldGain;
+            //potRaisedWinD_A[i] = 0;
         }
 
     }
@@ -303,6 +305,7 @@ void StateModel::query( const float64 betSize )
             newRaisedChanceD = - oppFoldChanceD;
         }else{
             //Standard calculation
+            // NOTE! Pr{Raise} includes the probability of being raised later in future rounds too
             newRaisedChance = ea.pRaise(betSize,i,firstFoldToRaise);
             newRaisedChanceD = ea.pRaiseD(betSize,i,firstFoldToRaise);
         }

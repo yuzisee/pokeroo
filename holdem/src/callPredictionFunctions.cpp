@@ -73,6 +73,7 @@ const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) con
 
 // Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
 // Return value is between -1.0 and +1.0
+// Will memoize while searching
 float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 {
 
@@ -196,6 +197,11 @@ float64 FoldWaitLengthModel::f( const float64 n )
     if(amountSacrificeVoluntary < 0.0)
     {
         std::cout << "amountSacrificeVoluntary cannot be negative" << std::endl;
+        exit(1);
+    }
+
+    if(std::isnan(betSize)) {
+        std::cout << "NaN betSize uninitialized?" << std::endl;
         exit(1);
     }
 #endif // DEBUGASSERT

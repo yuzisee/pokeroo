@@ -62,7 +62,7 @@ class ExactCallD
         float64 queryinput;
 		int32 querycallSteps;
 
-        float64 nearest;
+        float64 nearest; // If you're raising and in exf we assume you have been called, tell us what else would have had to be added to the player most likely to make the smallest call to call you. This ensures that exf is accurate (pessimistic) when raising.
         float64 impliedFactor;
 
 

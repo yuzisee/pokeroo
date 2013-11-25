@@ -1707,9 +1707,9 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_007();
     RegressionTests::testRegression_007b();
     RegressionTests::testRegression_007c();
+
     RegressionTests::testRegression_002b();
     RegressionTests::testRegression_002();
-
 
     RegressionTests::testRegression_006();
     RegressionTests::testRegression_009();

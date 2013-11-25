@@ -46,7 +46,10 @@ float64 FoldOrCall::foldGain(CallCumulationD* const e, const float64 extra, cons
 float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out)
 {
     const Player &p = fPlayer;
-    const float64 playerCount = fTable.NumberAtTable();
+
+    // If we fold now and expect to win in the future we'd have to beat all the players who would have gotten us into this situation.
+    // When we come back, you'll still have to beat everyone who got an opportunity to see a hand this time.
+    const float64 playerCount = fTable.NumberStartedRound().inclAllIn();
 
     const float64 avgBlinds = fTable.GetAvgBlindPerHand();
     FoldGainModel FG(fTable.GetChipDenom()/2);
@@ -178,7 +181,7 @@ playernumber_t ExpectedCallD::handsToOutplay() const
     return table->NumberStartedRoundInclAllIn()-1;  // For now, do this to match ro-643-patch2
 }
 
-playernumber_t ExpectedCallD::handsToShowdown() const {
+playernumber_t ExpectedCallD::handsToShowdownAgainst() const {
     return table->NumberInHandInclAllIn()-1;  //Number of hands (drawn) *remaining*
 }
 

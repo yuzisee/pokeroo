@@ -210,11 +210,11 @@ PureStatResultGeom::PureStatResultGeom(const StatResult mean, const StatResult r
 :
 fDifficultyOpponents(tableinfo.handStrengthOfRound())
 ,
-fShowdownOpponents(tableinfo.handsToShowdown())
+fShowdownOpponents(tableinfo.handsToShowdownAgainst())
 ,
-fNet(init(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdown()
+fNet(init(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst()
           ,
-          (tableinfo.handsToShowdown() > 1) ?
+          (tableinfo.handsToShowdownAgainst() > 1) ?
           // The odds of beating multiple people isn't based on the odds of beating one person.
           // Since it's more complicated than that, just go with rank for now.
           rank

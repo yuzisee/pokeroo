@@ -435,7 +435,7 @@ void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
     logFile << (int)tablestate.handsDealt() << " dealt, "
     << (int)tablestate.handsToOutplay() << " opp. (round), "
     << (int)tablestate.handStrengthOfRound() << " opp. assumed str., "
-    << (int)tablestate.handsToShowdown() << " opp. still in"
+    << (int)tablestate.handsToShowdownAgainst() << " opp. still in"
     << std::endl;
 
 
@@ -678,7 +678,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 
 #ifdef LOGPOSITION
-    if (tablestate.handsToShowdown() != 1) {
+    if (tablestate.handsToShowdownAgainst() != 1) {
         statprob.logfileAppendStatResultProbability_statworse(logFile, rightCS_fear.ViewShape(), 1);
     }
 
@@ -692,7 +692,7 @@ float64 ImproveGainStrategy::MakeBet()
     logFile << (int)tablestate.handsDealt() << " dealt, "
             << (int)tablestate.handsToOutplay() << " opp. (round), "
             << (int)tablestate.handStrengthOfRound() << " opp. assumed str., "
-            << (int)tablestate.handsToShowdown() << " opp. still in"
+            << (int)tablestate.handsToShowdownAgainst() << " opp. still in"
             << std::endl;
 
     if( bGamble >= 1 )
@@ -1038,7 +1038,7 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 #ifdef LOGPOSITION
-    if (tablestate.handsToShowdown() != 1) {
+    if (tablestate.handsToShowdownAgainst() != 1) {
         statprob.logfileAppendStatResultProbability_statworse(logFile, rightCS.ViewShape(), 1);
     }
 
@@ -1232,7 +1232,7 @@ float64 SimpleGainStrategy::MakeBet()
 
 #ifdef LOGPOSITION
 
-    if (tablestate.handsToShowdown() != 1) {
+    if (tablestate.handsToShowdownAgainst() != 1) {
         statprob.logfileAppendStatResultProbability_statworse(logFile, valueCS.ViewShape(), - tablestate.handStrengthOfRound() - 1);
         statprob.logfileAppendStatResultProbability_statworse(logFile, pushCS.ViewShape(), - tablestate.handsDealt());
         statprob.logfileAppendStatResultProbability_statworse(logFile, abortCS.ViewShape(), - static_cast<playernumber_t>(RAREST_HAND_CHANCE / 3.0));
@@ -1328,23 +1328,23 @@ float64 PureGainStrategy::MakeBet()
 
     ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
 
-    
+
     StatResult left;
 
     if (bGamble == 2) {
-        left = statprob.statranking; // Action
+        left = statprob.statrelation; // Action
     } else if (bGamble == 0) {
-        left = statprob.core.statmean; // Normal
+        left = statprob.statranking; // Normal
     } else if (bGamble == 1) {
         const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHandInclAllIn() - 1);
         StatResult statversus = (statprob.statrelation * (awayFromDrawingHands)) + (statprob.statranking * (1.0-awayFromDrawingHands));
         statversus.genPCT();
-        left = statversus; // Trap
+        // Trap
     }
 
+    PureStatResultGeom leftCS(statprob.core.statmean, left, tablestate);
     ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
 
-    CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
     GainModelGeom callModel(leftCS, myDeterredCall);
 
     // TODO(from yuzisee): When callgain is based on rank vs. mean, should the comparative opponentHandOpportunity's foldgain be based on rank vs. mean?
