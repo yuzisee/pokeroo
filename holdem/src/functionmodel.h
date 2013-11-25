@@ -215,6 +215,8 @@ public:
  * Supported features:
  *  + This class will automatically determine the number of hands at the table you would have to beat in order to win, via the ExactCallD's tableInfo
  *  + Pass in two different StatResult objects and we'll use the geometric mean of them instead.
+ *
+ * DEPRECATED( Use PureStatResultGeom instead. It's simpler, more robust (e.g. fewer knobs), and should be closer to optimal. )
  */
 class CombinedStatResultsGeom : public virtual ICombinedStatResults {
 private:

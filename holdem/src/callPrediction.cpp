@@ -406,6 +406,7 @@ float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incr
     FoldGainModel FG(tableinfo->chipDenom());
     FG.waitLength.load(cps, avgBlind);
     FG.waitLength.opponents = opponents;
+    FG.waitLength.setW(w);
 //derivative of algebraic uses FG_a and FG_b which are independent of useMean
 
 
@@ -601,6 +602,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                     //if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
 
                     float64 prevRaise = 0.0;
+                    float64 prev_w_r_pess = 0.0;
                     float64 prev_w_r_mean = 0.0;
                     float64 prev_w_r_rank = 0.0;
                     ///Check for each raise percentage
@@ -632,11 +634,9 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                                 const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
                                                                                                                                         //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
 								const bool bMyWouldCall = i < callSteps;
-                                // Be adversarial:
-                                //   If you know you'd fold (weak hand), let the opponent know your hand so you more chance of raiseAgain.
-                                //   If you know you'd call (good hand), let the opponent not know your hand so you only get the average amount of raiseAgainst
-                                CallCumulationD * const src = bMyWouldCall ? (&fCore.callcumu) : (&fCore.foldcumu);
-                                float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,src);
+                                // TODO(from yuzisee): Raises are now Algb instead of Geom?
+                                float64 w_r_pess = facedOdds_raise_Geom(oppCPS,prev_w_r_pess, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.foldcumu));
+                                float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.callcumu));
                                 float64 w_r_rank = facedOdds_raise_Geom(oppCPS,prev_w_r_rank, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
                                 #ifdef ANTI_CHECK_PLAY
                                 if( bOppCouldCheck )
@@ -649,30 +649,100 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
                                 const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
-                                const float64 noRaiseMean = 1.0 - src->Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean);
-                                const float64 noraiseMeanD = src->Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, src);
+                                float64 noRaise;
+                                float64 noraiseD;
+                                float64 w_r_adversarial;
+                                {
+                                const float64 noRaisePess = 1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_pess - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess);
+                                const float64 noraisePessD = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu));
+
+                                const float64 noRaiseMean = 1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean);
+                                const float64 noraiseMeanD = fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu));
 
                                 //nextNoRaise_A[i] = w_r_rank;
                                 //nextNoRaiseD_A[i] = noraiseRankD;
 
-                                nextNoRaise_A[i] = (noRaiseMean+w_r_rank)/2;
-                                nextNoRaiseD_A[i] = (noraiseMeanD+noraiseRankD)/2;
+                                // But the opponent may or may not know your hand!
+                                // Unforunately, knowing your hand is weak doesn't always make more opponents want to raise.
+                                // However, we can guide the choice between callcumu and foldcumu, in this case, adversarially:
+                                //   If you know you'd fold (weak hand), let the opponent raise the worse amount (larger)
+                                //   If you know you'd call (good hand), let the opponent raise the worse amount (smaller)
 
-#ifdef DEBUGASSERT
+                                    float64 noRaise_smaller;
+                                    float64 noRaise_smallerD;
+                                    float64 noRaise_larger;
+                                    float64 noRaise_largerD;
+                                    float64 prev_w_r_smaller;
+                                    float64 prev_w_r_larger;
+                                    if (noRaisePess < noRaiseMean) {
+                                        noRaise_smaller = noRaisePess;
+                                        noRaise_smallerD = noraisePessD;
+                                        prev_w_r_smaller = w_r_pess;
+                                        noRaise_larger = noRaiseMean;
+                                        noRaise_largerD = noraiseMeanD;
+                                        prev_w_r_larger = w_r_mean;
+                                    } else if (noRaiseMean < noRaisePess) {
+                                        noRaise_smaller = noRaiseMean;
+                                        noRaise_smallerD = noraiseMeanD;
+                                        prev_w_r_smaller = w_r_mean;
+                                        noRaise_larger = noRaisePess;
+                                        noRaise_largerD = noraisePessD;
+                                        prev_w_r_larger = w_r_pess;
+                                    } else {
+                                        if (noraisePessD < noraiseMeanD) {
+                                            noRaise_smaller = noRaisePess;
+                                            noRaise_smallerD = noraisePessD;
+                                            prev_w_r_smaller = w_r_pess;
+                                            noRaise_larger = noRaiseMean;
+                                            noRaise_largerD = noraiseMeanD;
+                                            prev_w_r_larger = w_r_mean;
+                                        } else {
+                                            noRaise_smaller = noRaiseMean;
+                                            noRaise_smallerD = noraiseMeanD;
+                                            prev_w_r_smaller = w_r_mean;
+                                            noRaise_larger = noRaisePess;
+                                            noRaise_largerD = noraisePessD;
+                                            prev_w_r_larger = w_r_pess;
+                                        }
+                                    }
+
+                                    noRaise = bMyWouldCall ?
+                                        noRaise_smaller : // I would call. I want them to raise. (Adversarial is smaller)
+                                        noRaise_larger; // I won't call. I want them not to raise. (Adversarial is larger)
+                                    noraiseD = bMyWouldCall ? noRaise_smallerD : noRaise_larger;
+                                    w_r_adversarial = bMyWouldCall ? prev_w_r_smaller : prev_w_r_larger;
+                                }
+
+                                nextNoRaise_A[i] = (noRaise+w_r_rank)/2;
+                                nextNoRaiseD_A[i] = (noraiseD+noraiseRankD)/2;
+
                                 // nextNoRaise should be monotonically increasing. That is, the probability of being raised all-in is lower than the probabilty of being raised at least minRaise.
                                 if (i>0) {
+                                    //if (nextNoRaise_A[i] < nextNoRaise_A[i-1]) {
+                                        // The returned total cumulative probability distributions won't be allowed to drop.
+                                        // However, this can happen in many cases.
+                                        // For example, say you have a Q3o
+                                        // A bunch of the _better_ hands have a slightly better chance to win against most hands, but although they fare better against random hands they fare just the same against your Q3o.
+                                        // When this happens it means: if the opponent knew your hand, fewer of them would want to raise -- even if those that do would beat you by more or those that don't have better odds against random hands.
+                                    //}
+#ifdef DEBUGASSERT
                                     if (!(nextNoRaise_A[i-1] <= nextNoRaise_A[i])) {
-                                        std::cerr << "Invalid nextNoRaise_A for player " << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << std::endl;
+                                        std::cerr << "Invalid nextNoRaise_A for player " << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << " raising to " << thisRaise << std::endl;
+                                        // If you get here, look at prev_w_r_mean, prev_w_r_rank, etc. to help debug.
+                                        // They are populated just below.
+                                        // Also, check callSteps!
                                         for( int32 k=0;k<=i;++k) {
                                             std::cerr << "nextNoRaise_A[" << (int)k << "]=" << nextNoRaise_A[k] << std::endl;
                                         }
                                         exit(1);
                                     }
-                                }
 #endif //DEBUGASSERT
+
+                                }
 
                                 prevRaise = thisRaise;
 
+                                prev_w_r_pess = w_r_pess;
                                 prev_w_r_mean = w_r_mean;
                                 prev_w_r_rank = w_r_rank;
 

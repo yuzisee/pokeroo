@@ -58,6 +58,8 @@ inline float64 round(float64 a)
 
 
 // The probability of being dealt, e.g. two aces: 1 in 221
+// HOWEVER, when used as a proxy for callcumulation, it might be too low because there is "same suit as you" as well as "different suits as you" optionality.
+// Ideally this would be 50 * 49 or something.
 #define RAREST_HAND_CHANCE 221.0
 
 
