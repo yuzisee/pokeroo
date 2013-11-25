@@ -678,7 +678,7 @@ namespace RegressionTests {
 
 
         //PlayerStrategy * const botToTest = new DeterredGainStrategy(0);
-        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally ImproveGainStrategy(2);
+        PlayerStrategy * const botToTest = new ImproveGainStrategy(2); // originally ImproveGainStrategy(2);
 
         myTable.ManuallyAddPlayer("GearBotV", 1488.75, &gS);
         myTable.ManuallyAddPlayer("ActionBotV", 3031.88, botToTest);
@@ -870,7 +870,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy nS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(0); // Originally DeterredGainStrategy(0);
+        PlayerStrategy * const botToTest = new ImproveGainStrategy(2); // Originally DeterredGainStrategy(0);
 
         myTable.ManuallyAddPlayer("GearBotV", 3004.5, &gS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, botToTest);
@@ -1037,7 +1037,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({std::nan(""), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0});
+        const std::vector<float64> pA({std::nan(""), 0, std::nan(""), 10.0, 28.0, 50.0, 347.0, 736.0, 927.0});
         FixedReplayPlayerStrategy sS(foldOnly);
         FixedReplayPlayerStrategy pS(pA);
         
@@ -1049,11 +1049,11 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy tS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(0); // originally ImproveGainStrategy(0);
+        PlayerStrategy * const botToTest = new DeterredGainStrategy(2); // originally ImproveGainStrategy(0);
 
         myTable.ManuallyAddPlayer("SpaceBotV", 1498.0, &sS);
         myTable.ManuallyAddPlayer("Nav", 2960.0, &pS);
-        myTable.ManuallyAddPlayer("GearBotV", 1507.0, botToTest); // TrapBot is the dealer, since SpaceBot is the small blind
+        myTable.ManuallyAddPlayer("GearBot4", 1507.0, botToTest); // TrapBot is the dealer, since SpaceBot is the small blind
         myTable.ManuallyAddPlayer("ConservativeBotV", 346.0, &cS);
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
         myTable.ManuallyAddPlayer("MultiBotV", 2657.0, &mS);
@@ -1458,7 +1458,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy pS(pA);
         FixedReplayPlayerStrategy gS(foldOnly);
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally DeterredGainStrategy(2);
+        PlayerStrategy * const botToTest = new ImproveGainStrategy(2); // originally DeterredGainStrategy(2);
 
         myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS);
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);

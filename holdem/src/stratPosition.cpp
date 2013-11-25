@@ -641,12 +641,31 @@ float64 ImproveGainStrategy::MakeBet()
 ///In the future actOrReact should be based on opponent betting patterns
 
 
-    StatResult left = statversus;
+    //StatResult left = statversus;
+
+    StatResult left;
+    StatResult left_lower;
+    StatResult left_higher;
+
+    if (statprob.statrelation.pct < statprob.statranking.pct) {
+        left_lower = statprob.statrelation;
+        left_higher = statprob.statranking;
+    } else {
+        left_lower = statprob.statranking;
+        left_higher = statprob.statrelation;
+    }
+
+    if (bGamble == 2) {
+        left = left_higher; // Action
+    } else if (bGamble == 0) {
+        left = left_lower; // Normal
+    }
+
     StatResult base_right = statprob.core.statmean; // (NormalBot uses statmean, others use statversus.)
 
     StatResult right = statWorse;
 
-
+/*
     if( bGamble >= 2 ) //Actionbot only
     {
         myDeterredCall_left.SetImpliedFactor(impliedOddsGain);
@@ -655,7 +674,7 @@ float64 ImproveGainStrategy::MakeBet()
         // myDeterredCall_right.callingPlayers(newVersus);  // LEGACY ASSUMEFOLDS support here.
 		//NOTE: The above line is commented out. We no longer set eFolds and I'm not sure it did anything anyway. See revision b71953a3ab52 for more.
 	}
-
+*/
     //Unrelated note: TrapBot and ActionBot are based on statversus only
     if( bGamble >= 1 )
     {
@@ -682,7 +701,7 @@ float64 ImproveGainStrategy::MakeBet()
     }
 
 
-    CombinedStatResultsGeom leftCS(left,left,true, myDeterredCall_left);
+    PureStatResultGeom leftCS(statprob.core.statmean, left, tablestate); // CombinedStatResultsGeom leftCS(left,left,true, myDeterredCall_left);
     CombinedStatResultsGeom cornerCS(statversus,statversus,true, myDeterredCall_right);
 
 
@@ -732,7 +751,7 @@ float64 ImproveGainStrategy::MakeBet()
         #endif
         logFile << endl;
     }
-    logFile << leftCS.ViewShape().pct << ":React/Main ... " << " ... " << rightCS_fear.ViewShape().pct << ":Act/Fear" << endl;
+    logFile << leftCS.ViewShape(betToCall).pct << ":React/Main ... " << " ... " << rightCS_fear.ViewShape().pct << ":Act/Fear" << endl;
 #endif
 
 ///From geom to algb
