@@ -291,7 +291,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
 
     //USE myFG for F_a and F_b
         myFG.waitLength.meanConv = useMean;
-        myFG.waitLength.w = w;
+        myFG.waitLength.setW(w);
         myFG.waitLength.load(cps, avgBlind);
         myFG.waitLength.opponents = opponents;
         //myFG.dw_dbet = 0; //Again, we don't need this
@@ -342,7 +342,7 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
     const float64 base_minus_1 = (cps.pot+humanbet)/(cps.bankroll-humanbet);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
 
     FoldGainModel FG(tableinfo->chipDenom());
-    FG.waitLength.w = w;
+    FG.waitLength.setW(w);
     FG.waitLength.load(cps, avgBlind);
     FG.waitLength.opponents = opponents;
     FG.waitLength.meanConv = useMean;
@@ -1250,7 +1250,7 @@ float64 ExactCallBluffD::RiskPrice() const
     //   + distinguish between (information given to opponent)
     // ef() is pessimistic
     // NOTE: below that opponents = 1, so RANK is not necessary here.
-    FG.waitLength.w = ef()->nearest_winPCT_given_rank(1.0 - 1.0/Ne); //If you're past the flop, we need definitely consider only the true number of opponents
+    FG.waitLength.setW( ef()->nearest_winPCT_given_rank(1.0 - 1.0/Ne) ); //If you're past the flop, we need definitely consider only the true number of opponents
     FG.waitLength.amountSacrificeVoluntary = estSacrifice; //rarity() already implies the Ne
 	FG.waitLength.amountSacrificeForced = 0; //estSacrifice*rarity() already implies a forced avgBlinds
     FG.waitLength.bankroll = maxStack;
@@ -1321,7 +1321,7 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 - FG.waitLength.amountSacrificeForced // exclude forced portion since it wasn't voluntary.
                 );
                 FG.waitLength.opponents = fTable.NumberInHand().inclAllIn() - 1;
-                FG.waitLength.w = pow(1.0 / tableStrength, 1.0 / FG.waitLength.opponents); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
+                FG.waitLength.setW( pow(1.0 / tableStrength, 1.0 / FG.waitLength.opponents) ); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
                 FG.waitLength.prevPot = fTable.GetPrevPotSize();
 
                 const float64 foldGain = FG.f(betSize); // Calling this will invoke query which will populate FG.n

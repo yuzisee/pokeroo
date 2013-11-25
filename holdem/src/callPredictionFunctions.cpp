@@ -37,7 +37,7 @@ FoldGainModel::~FoldGainModel(){}
 FoldWaitLengthModel::~FoldWaitLengthModel(){}
 
 
-
+/*
 const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengthModel & o )
 {
     this->amountSacrificeVoluntary = o.amountSacrificeVoluntary;
@@ -49,6 +49,7 @@ const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengt
     this->meanConv = o.meanConv;
     return *this;
 }
+ */
 
 const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) const
 {
@@ -58,10 +59,17 @@ const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) con
         && (o.bankroll == bankroll)
         && (o.opponents == opponents)
         && (o.betSize == betSize)
+        && (o.prevPot == prevPot)
         && (o.w == w)
         && (o.meanConv == meanConv)
+
+        && (o.cacheRarity == cacheRarity)
+        && (o.lastdBetSizeN == lastdBetSizeN)
+        && (o.lastRawPCT == lastRawPCT)
+        && (o.cached_d_dbetSize == cached_d_dbetSize)
     );
 }
+
 
 // Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
 // Return value is between -1.0 and +1.0
@@ -110,8 +118,7 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 // The derivative with respect to w is here.
 float64 FoldWaitLengthModel::d_dw( const float64 n )
 {
-	//CHANGE #1
-	//remove amountSacrificeForced from this expression if it occurs every round, because it doesn't interact with w
+	//NOTE: amountSacrificeForced is not in expression since it occurs every round regardless of rarity (i.e. it doesn't interact with w)
     if( meanConv == 0 ) return (n)*(amountSacrificeVoluntary)/AVG_FOLDWAITPCT;
     return (n)*(amountSacrificeVoluntary)/AVG_FOLDWAITPCT * meanConv->Pr_haveWorsePCT_continuous( w ).second;
 }
@@ -332,6 +339,16 @@ void FoldWaitLengthModel::load(const ChipPositionState &cps, float64 avgBlind) {
     prevPot = cps.prevPot;
 }
 
+// Rarity depends on cached_d_dBetSize, so we have to clear the cache if we are updating w
+void FoldWaitLengthModel::setW(float64 neww) {
+    cacheRarity = std::nan("");
+    w = neww;
+}
+
+float64 FoldWaitLengthModel::getW() const {
+    return w;
+}
+
 
 void FoldGainModel::query( const float64 betSize )
 {
@@ -354,7 +371,7 @@ void FoldGainModel::query( const float64 betSize )
 
 	const float64 concedeGain = -waitLength.amountSacrificeVoluntary -waitLength.amountSacrificeForced;
 
-    if( betSize <= 0 || waitLength.w <= 0 )
+    if( betSize <= 0 || waitLength.getW() <= 0 )
     {//singularity
         n = 0;
         lastf = concedeGain;
@@ -470,7 +487,7 @@ void FacedOddsCallGeom::query( const float64 w )
     if( lastW == w ) return;
     lastW = w;
 
-    FG.waitLength.w = w;
+    FG.waitLength.setW( w );
 //Chip scale
     const float64 fw = pow(w,FG.waitLength.opponents);
     const float64 U = pow(B+pot,fw)*pow(B-outsidebet,1-fw);
@@ -507,7 +524,7 @@ void FacedOddsAlgb::query( const float64 w )
     if( lastW == w ) return;
     lastW = w;
 
-    FG.waitLength.w = w;
+    FG.waitLength.setW( w );
 //Chip scale
     const float64 fw = pow(w,FG.waitLength.opponents);
     const float64 U = (pot + betSize)*fw;
@@ -548,7 +565,7 @@ void FacedOddsRaiseGeom::query( const float64 w )
     if( lastW == w ) return;
     lastW = w;
 
-    FG.waitLength.w = w;
+    FG.waitLength.setW( w );
 //Fraction scale
     const float64 fw = pow(w,FG.waitLength.opponents);
 

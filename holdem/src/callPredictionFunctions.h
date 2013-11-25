@@ -99,13 +99,13 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     float64 cached_d_dbetSize;
     bool bSearching;
     
-    public:
 
 
-    float64 get_cached_d_dbetSize() const { return cached_d_dbetSize; }
+
 
     // Describe the hand they would be folding
     float64 w;                    // Set to RANK if meanConv is null. Set to MEAN_winpct if using *meanConv
+public:
     CallCumulationD (* meanConv); // Set to null if using RANK for payout simulation
 
     // Describe the situation
@@ -118,19 +118,21 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     float64 prevPot; // if you do call, this is the amount you will win from previous rounds
                      // NOTE: The way HoldemArena works, your total bets from previous rounds are not part of your money, so you win the total prevPot including that which you committed.
 
+
     // NOTE: quantum is 1/3rd of a hand. We don't need more precision than that when evaluating f(n).
     FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0),
-        cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), bSearching(false),
+    cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), cached_d_dbetSize(std::nan("")), bSearching(false),
     w(std::nan("")), meanConv(0), amountSacrificeVoluntary(std::nan("")), amountSacrificeForced(std::nan("")), bankroll(std::nan("")), opponents(std::nan("")), betSize(std::nan("")), prevPot(std::nan(""))
     {}
 
     // NOTE: Although this is the copy constructor, it doesn't copy caches. This lets you clone a configuration and re-evaluate it.
     FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0),
-        cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), bSearching(false),
+        cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), cached_d_dbetSize(std::nan("")), bSearching(false),
         w(o.w), meanConv(o.meanConv), amountSacrificeVoluntary(o.amountSacrificeVoluntary), amountSacrificeForced(o.amountSacrificeForced), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize), prevPot(o.prevPot)
     {};
 
-    const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o );
+    //const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o );
+
     const bool operator== ( const FoldWaitLengthModel & o ) const;
 
     virtual ~FoldWaitLengthModel();
@@ -150,6 +152,11 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     void setAmountSacrificeVoluntary(float64 amount) {
         amountSacrificeVoluntary = (amount < 0) ? 0.0 : amount;
     }
+
+    void setW(float64 neww);
+    float64 getW() const;
+
+    float64 get_cached_d_dbetSize() const { return cached_d_dbetSize; }
 
 
 }
@@ -171,7 +178,7 @@ class FoldGainModel : public virtual ScalarFunctionModel
     float64 lastfd;
     float64 lastFA; // df_dw
     float64 lastFB;
-    float64 lastFC;
+    float64 lastFC; // d_dAmountSacrificePerHand
 
     void query(const float64 betSize);
 

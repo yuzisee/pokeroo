@@ -63,12 +63,12 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
             // One vote for: ea.ed from BluffGainInc's oppRaisedMyFoldGain
             // One vote for: ea.ed from BluffGainInc's "y -= myFoldGain"
 
-            FG.waitLength.w = fCore.statmean.pct;// meanW; // When called with e, what is the winPct -- how do we get that from fCore?
+            FG.waitLength.setW( fCore.statmean.pct );// meanW; // When called with e, what is the winPct -- how do we get that from fCore?
             // One vote for: core.statmean.pct from statProbability constructor of ExpectedCallD
             break;
         case RANK:
             FG.waitLength.meanConv = 0;
-            FG.waitLength.w = fCore.statRanking().pct; //fCore.callcumu.Pr_haveWinPCT_orbetter(fCore.statmean.pct); // rankW; // When called with e is 0, what is the rank -- how do we get that from fCore?
+            FG.waitLength.setW( fCore.statRanking().pct ); //fCore.callcumu.Pr_haveWinPCT_orbetter(fCore.statmean.pct); // rankW; // When called with e is 0, what is the rank -- how do we get that from fCore?
             // One vote for: const float64 rarity3 = core.callcumu.Pr_haveWinPCT_orbetter(core.statmean.pct); from StatResultProbabilities::Process_FoldCallMean
 
             break;
@@ -246,10 +246,10 @@ float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 
 
     if(useMean == 0)
     {
-        FG.waitLength.w = 1.0 - 1.0/N;
+        FG.waitLength.setW( 1.0 - 1.0/N );
     }else
     {
-        FG.waitLength.w = useMean->nearest_winPCT_given_rank(1.0 - 1.0/N);
+        FG.waitLength.setW( useMean->nearest_winPCT_given_rank(1.0 - 1.0/N) );
     }
 	FG.waitLength.amountSacrificeForced = avgBlind;
     FG.waitLength.setAmountSacrificeVoluntary( (table->GetPotSize() - stagnantPot() - rpAlreadyBet)/(handsIn()-1) );

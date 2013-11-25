@@ -187,7 +187,7 @@ namespace RegressionTests {
 
         FoldWaitLengthModel fw;
         // From the opponent's point of view if he knows he's against a flush
-        fw.w = 0.0; // Their current hand does not pair the board so loses to an ace-high flush (but note there is a ~30% chance that they hit a pair other than a deuce and a ~4% chance of having one deuce)
+        fw.setW( 0.0 ); // Their current hand does not pair the board so loses to an ace-high flush (but note there is a ~30% chance that they hit a pair other than a deuce and a ~4% chance of having one deuce)
         fw.meanConv = &(statprob.core.foldcumu);
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 1000.0;
@@ -224,7 +224,7 @@ namespace RegressionTests {
 
         FoldWaitLengthModel fw;
 
-        fw.w = 0.75; // You have a decent hand, but it could be better and the re-raise was ridiculously enormous.
+        fw.setW( 0.75 ); // You have a decent hand, but it could be better and the re-raise was ridiculously enormous.
         fw.meanConv = nullptr;
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 1000.0;
@@ -244,6 +244,32 @@ namespace RegressionTests {
         
         // Need a test to expose whether derivatives match
 
+        { // Test dF_dAmountSacrifice per hand
+            const float64 n = 40.0;
+            const float64 xa = fw.amountSacrificeVoluntary - 0.01;
+            const float64 xb = fw.amountSacrificeVoluntary + 0.01;
+            const float64 xd = fw.amountSacrificeVoluntary;
+
+            fw.amountSacrificeVoluntary = xa; const float64 ya = fw.f(n);
+            fw.amountSacrificeVoluntary = xb; const float64 yb = fw.f(n);
+            fw.amountSacrificeVoluntary = xd; fw.f(n); const float64 actual = fw.d_dC(n);
+            const float64 expected = (yb - ya) / (xb - xa);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-13);
+        }
+
+
+        { // Test d_dw
+            const float64 n = 40.0;
+            const float64 xa = fw.getW() - 0.01;
+            const float64 xb = fw.getW() + 0.01;
+            const float64 xd = fw.getW();
+
+            fw.setW( xa ); const float64 ya = fw.f(n);
+            fw.setW( xb ); const float64 yb = fw.f(n);
+            fw.setW( xd ); fw.f(n); const float64 actual = fw.d_dw(n);
+            const float64 expected = (yb - ya) / (xb - xa);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-14);
+        }
     }
 
 
@@ -261,7 +287,7 @@ namespace RegressionTests {
 
         FoldWaitLengthModel fw;
 
-        fw.w = 0.75; // You have a decent hand, but it could be better and the raise was large.
+        fw.setW(0.75); // You have a decent hand, but it could be better and the raise was large.
         fw.meanConv = nullptr;
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 2000.0;
@@ -270,7 +296,7 @@ namespace RegressionTests {
         fw.betSize = iveBeenReraisedTo;
         fw.prevPot = pastPot;
 
-        const float64 evPlay = iveBeenReraisedTo * (2.0 * fw.w - 1.0);
+        const float64 evPlay = iveBeenReraisedTo * (2.0 * fw.getW() - 1.0);
         assert(evPlay == 500.0); // sanity check only
 
         //    TEST:
@@ -295,7 +321,20 @@ namespace RegressionTests {
 
         // Need a test to expose whether derivatives match
         assertDerivative(fw, 7.99, 8.01, 1e-4);
-        
+
+        { // Test d_dBetsize
+            const float64 n = 8.0;
+            const float64 xa = fw.betSize - 0.01;
+            const float64 xb = fw.betSize + 0.01;
+            const float64 xd = fw.betSize;
+
+            fw.betSize = xa; const float64 ya = fw.f(n);
+            fw.betSize = xb; const float64 yb = fw.f(n);
+            fw.betSize = xd; fw.f(n); const float64 actual = fw.d_dbetSize(n);
+            const float64 expected = (yb - ya) / (xb - xa);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-11);
+        }
+
     }
 
 
