@@ -120,6 +120,103 @@ namespace RegressionTests {
         assert(fabs(expected - actual) < fabs(expected) * eps_rel);
     }
 
+    // DangerBot bets a lot 3-handed
+    // Why doesn't Pessimistic trigger at such bet sizes?
+    //  --> Why doesn't OpponentHandOpportunity return extra hands at this bet size?
+    //  HYPOTHESIS: It's because if your win percentage is tied to mean and there are multiple players, your profit can't make it worthwhile to wait.
+    //              In practice, we can either switch this to RANK when {1 < opponents} or we can make it like Pessimistic where they only need to want to beat you. 
+    void testRegression_011() {
+/*
+        Preflop
+        (Pot: $0)
+        (9 players)
+        [DangerBotV $1500]
+        [MultiBotV $1500]
+        [ConservativeBotV $1500]
+        [SpaceBotV $1500]
+        [GearBotV $1500]
+        [ActionBotV $1500]
+        [NormalBotV $1500]
+        [TrapBotV $1500]
+        [Ali $1500]
+
+        DangerBotV posts SB of $5 ($5)
+        MultiBotV posts BB of $10 ($15)
+ */
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(5.0);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(5.0);
+
+        const std::vector<float64> foldOnly({0});
+        const std::vector<float64> pA({std::nan(""), std::nan("")});
+        FixedReplayPlayerStrategy gS(foldOnly);
+        FixedReplayPlayerStrategy tS(foldOnly);
+        FixedReplayPlayerStrategy nS(foldOnly);
+        FixedReplayPlayerStrategy pS(pA);
+        FixedReplayPlayerStrategy aS(foldOnly);
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy cS(foldOnly);
+        FixedReplayPlayerStrategy sS(foldOnly);
+
+
+        //PlayerStrategy * const botToTest = new DeterredGainStrategy(0);
+        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally ImproveGainStrategy(2);
+
+        myTable.ManuallyAddPlayer("GearBotV", 1500.0, &gS);
+        myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
+        myTable.ManuallyAddPlayer("NormalBotV", 1500.0, &nS);
+        myTable.ManuallyAddPlayer("TrapBotV", 1500.0, &tS);
+        myTable.ManuallyAddPlayer("Ali", 1500.0, &pS); // Ali is the dealer, since DangerBot is the small blind
+        myTable.ManuallyAddPlayer("DangerBot11", 1500.0, botToTest);
+        myTable.ManuallyAddPlayer("MultiBotV", 1500.0, &mS);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 1500, &cS);
+        myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
+
+        const playernumber_t dealer = 4;
+
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // Jh Qd
+
+            card.SetByIndex(37);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(43);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+        
+        
+        myTable.BeginInitialState(11);
+        myTable.BeginNewHands(b, false, dealer);
+        
+
+        /*
+        ConservativeBotV folds
+        SpaceBotV folds
+        GearBotV folds
+        ActionBotV folds
+        NormalBotV folds
+        TrapBotV folds
+        Ali calls $10 ($25)
+        DangerBotV raises to $385 ($405)
+        MultiBotV folds
+        Ali folds
+        
+        All fold! DangerBotV wins $20
+        
+        
+*/
+        myTable.PlayRound_BeginHand();
+        assert(myTable.GetPotSize() < 120);
+
+    }
 
 
     // Set up a simple situation (e.g. post-river) with FoldGainWaitLength and then FoldGainModel
@@ -435,7 +532,7 @@ namespace RegressionTests {
         statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
 
-        const float64 testBet = 13.0;
+        const float64 testBet = 1.5;
         
         OpponentHandOpportunity test(1, myTable, statprob.core);
 
@@ -460,7 +557,7 @@ namespace RegressionTests {
         assert(testC.ViewShape(testBet).wins + testC.ViewShape(testBet).splits + testC.ViewShape(testBet).loss == 1.0);
 
         assert(w < 0.1);
-        assert(l+w > 0.87);
+        assert(l+w > 0.86);
         assert(s1 < 0.25);
         assert(dw < 0);
         assert(dl == -dw);
@@ -678,7 +775,7 @@ namespace RegressionTests {
 
 
         //PlayerStrategy * const botToTest = new DeterredGainStrategy(0);
-        PlayerStrategy * const botToTest = new ImproveGainStrategy(2); // originally ImproveGainStrategy(2);
+        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally ImproveGainStrategy(2);
 
         myTable.ManuallyAddPlayer("GearBotV", 1488.75, &gS);
         myTable.ManuallyAddPlayer("ActionBotV", 3031.88, botToTest);
@@ -870,7 +967,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy nS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new ImproveGainStrategy(2); // Originally DeterredGainStrategy(0);
+        PlayerStrategy * const botToTest = new PureGainStrategy(2); // Originally DeterredGainStrategy(0);
 
         myTable.ManuallyAddPlayer("GearBotV", 3004.5, &gS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, botToTest);
@@ -1037,7 +1134,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({std::nan(""), 0, std::nan(""), 10.0, 28.0, 50.0, 347.0, 736.0, 927.0});
+        const std::vector<float64> pA({std::nan(""), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0});
         FixedReplayPlayerStrategy sS(foldOnly);
         FixedReplayPlayerStrategy pS(pA);
         
@@ -1049,7 +1146,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy tS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new DeterredGainStrategy(2); // originally ImproveGainStrategy(0);
+        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally ImproveGainStrategy(0);
 
         myTable.ManuallyAddPlayer("SpaceBotV", 1498.0, &sS);
         myTable.ManuallyAddPlayer("Nav", 2960.0, &pS);
@@ -1339,7 +1436,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy pS(pA);
         FixedReplayPlayerStrategy gS(foldOnly);
 
-        DeterredGainStrategy * const botToTest = new DeterredGainStrategy(2);
+        PureGainStrategy * const botToTest = new PureGainStrategy(2);
 
         myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS);
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
@@ -1458,7 +1555,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy pS(pA);
         FixedReplayPlayerStrategy gS(foldOnly);
 
-        PlayerStrategy * const botToTest = new ImproveGainStrategy(2); // originally DeterredGainStrategy(2);
+        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally DeterredGainStrategy(2);
 
         myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS);
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
@@ -1718,6 +1815,8 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_007();
     RegressionTests::testRegression_007b();
     RegressionTests::testRegression_007c();
+
+    RegressionTests::testRegression_011();
 
 
     RegressionTests::testRegression_005();

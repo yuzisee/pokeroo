@@ -164,7 +164,8 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
     switch( botType )
     {
     case 'A':
-        botStrat = new ImproveGainStrategy(2);
+        botStrat = new PureGainStrategy(4);
+            //new ImproveGainStrategy(2);
         break;
     case 'C':
         botStrat = new DeterredGainStrategy();
@@ -181,17 +182,18 @@ playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, 
         botStrat = new DeterredGainStrategy(2);
         break;
     case 'T':
-        botStrat = new ImproveGainStrategy(1);
+        botStrat = new PureGainStrategy(3);
+            //new ImproveGainStrategy(1);
         break;
     case 'G':
     case 'M':
     	PositionalStrategy *(children[NUMBER_OF_BOTS_COMBINED]);
 
-        children[0] = new ImproveGainStrategy(0); //Norm
-        children[1] = new ImproveGainStrategy(1); //Trap
-        children[2] = new ImproveGainStrategy(2); //Action
-        children[3] = new DeterredGainStrategy(); //Com
-        children[4] = new DeterredGainStrategy(1);//Danger
+        children[0] = new PureGainStrategy(0); //Norm
+        children[1] = new PureGainStrategy(2); //Danger
+        children[2] = new PureGainStrategy(3); //Trap
+        children[3] = new PureGainStrategy(4); //Action
+        children[4] = new DeterredGainStrategy(); //Com
         children[5] = new DeterredGainStrategy(2);//Space
 
         combined = new MultiStrategy(children,NUMBER_OF_BOTS_COMBINED);

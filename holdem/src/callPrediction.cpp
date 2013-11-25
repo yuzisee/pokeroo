@@ -1338,6 +1338,64 @@ float64 ExactCallBluffD::RiskPrice() const
 
 }
 
+// Count the number of hands that would be committed along with mine if I made a huge bet right now.
+// Arguments:
+//   fBettor:
+//     The player considering the bet myBetSize
+//   fTable:
+//     A view of the table
+//   myBetSize:
+//     The size of bet being considered
+//   fReceiver:
+//     Evaluate the situation where this overbet has gotten around to player "fReceiver".
+// Returns:
+//   We want to know how many opponents would player "fReceiver" expect to be against such an overbet?
+//   It would only really be more than 1.0 if there were a sizeable amount of chips already committed into the pot.
+static float64 handsCommitted(playernumber_t fBettor, const HoldemArena & fTable, float64 myBetSize, playernumber_t fReceiver) {
+    float64 result = 1.0; // Include fBettor's hypothetical bet completely.
+
+    playernumber_t pIndex = fBettor;
+    // Loop over every opponent of fBettor ...
+    do
+    {
+        fTable.incrIndex(pIndex);
+
+        // ... but only showdown-eligible opponents
+        if (!fTable.IsInHand(pIndex)) {
+            continue;
+        }
+
+        // ... who have the potential to call your bet ...
+        if (fTable.ViewPlayer(pIndex)->GetMoney() < myBetSize) {
+            continue;
+        }
+
+        // ... and don't include fReceiver.
+        if (pIndex == fReceiver) {
+            continue;
+        }
+
+
+            // Get existing bet...
+            const float64 commitmentLevel = fTable.ViewPlayer(pIndex)->GetBetSize();
+
+#ifdef DEBUGASSERT
+            if (myBetSize < commitmentLevel) {
+                std::cerr << "We shouldn't be betting less than any existing bet." << std::endl;
+                exit(1);
+            }
+#endif // DEBUGASSERT
+
+            // ... and count it as up to 1.0 player (if we're calling them)
+            result += commitmentLevel / myBetSize;
+
+    }while( pIndex != fBettor);
+    // This condition allows us to skip fBettor.
+    // We've already included that bet as 1.0 regardless of the actual bet on the table, since this is the hypothesis bet.
+
+    return result;
+}
+
 // Inputs:
 //   betSize
 // Outputs:
@@ -1350,7 +1408,6 @@ void OpponentHandOpportunity::query(const float64 betSize) {
 
     float64 tableStrength = fTable.NumberAtFirstActionOfRound().inclAllIn();
     float64 tableStrengthToBeat = tableStrength - 1.0;
-    
 
     playernumber_t pIndex = fIdx;
     fTable.incrIndex(pIndex);
@@ -1362,8 +1419,14 @@ void OpponentHandOpportunity::query(const float64 betSize) {
         // ... but only showdown-eligible opponents
         if (fTable.IsInHand(pIndex)) {
 
-            if (betSize > fTable.ViewPlayer(pIndex)->GetBetSize()) {
+            const float64 theirMoney = fTable.ViewPlayer(pIndex)->GetMoney();
+            const float64 betSizeFacingThem = (betSize < theirMoney) ? betSize : theirMoney;
+
+            if (betSizeFacingThem > fTable.ViewPlayer(pIndex)->GetBetSize()) {
                 // They would face an action on this bet, so see whether our overbet gives them an opportunity to profitably fold
+
+                // If (betSize < theirMoney) they would not have been considered for allOpponents, so the existing value of allOpponents is fine.
+                const float64 opponentsFacingThem = handsCommitted(fIdx, fTable, betSize, pIndex);
 
                 FoldGainModel FG(fTable.GetChipDenom()/2);
 
@@ -1379,16 +1442,16 @@ void OpponentHandOpportunity::query(const float64 betSize) {
     #endif
                 - FG.waitLength.amountSacrificeForced // exclude forced portion since it wasn't voluntary.
                 );
-                FG.waitLength.opponents = fTable.NumberInHand().inclAllIn() - 1;
+                FG.waitLength.opponents = opponentsFacingThem;
                 FG.waitLength.setW( pow(1.0 / tableStrength, 1.0 / FG.waitLength.opponents) ); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
                 FG.waitLength.prevPot = fTable.GetPrevPotSize();
 
-                const float64 foldGain = FG.f(betSize); // Calling this will invoke query which will populate FG.n
+                const float64 foldGain = FG.f(betSizeFacingThem); // Calling this will invoke query which will populate FG.n
                 if (foldGain > 0.0) {
                     // This opponent can profit from folding.
 
                     const float64 foldN = FG.n;
-                    const float64 d_foldN_dbetSize_almost = FG.fd(betSize, foldGain) / foldGain * FG.n; // Do something weird here to approximate FG.d_n_dbetSize. Take the rate of change of foldgain and multiply that as a fraction into n. That means, if increasing betSize by 1.0 would increase foldGain by 2%, assume it increases n by 2% too. At least they are in the same direction. TODO(from joseph_huang): A proper derivative here?
+                    const float64 d_foldN_dbetSize_almost = FG.fd(betSizeFacingThem, foldGain) / foldGain * FG.n; // Do something weird here to approximate FG.d_n_dbetSize. Take the rate of change of foldgain and multiply that as a fraction into n. That means, if increasing betSize by 1.0 would increase foldGain by 2%, assume it increases n by 2% too. At least they are in the same direction. TODO(from joseph_huang): A proper derivative here?
                     totalOpposingHandOpportunityCount += 1.0 + foldN; // Add one for the hand they have, and one more for every fold they are (on average) afforded
                     totalOpposingHandOpportunityCount_dbetSize += d_foldN_dbetSize_almost;
 
