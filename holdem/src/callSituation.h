@@ -190,6 +190,8 @@ public:
         return fCore.playerID;
     }
 
+    MeanOrRank suggestMeanOrRank() const;
+
     float64 myFoldGainAgainstPredictedRaise(MeanOrRank meanOrRank,float64 currentBetToCall, float64 currentAlreadyBet, float64 predictedRaiseTo);
     float64 myFoldGain(MeanOrRank meanOrRank);
     std::pair<float64,float64> myFoldGainAndWaitlength(MeanOrRank meanOrRank);

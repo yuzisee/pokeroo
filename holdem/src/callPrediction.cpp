@@ -651,7 +651,6 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
                                 float64 noRaise;
                                 float64 noraiseD;
-                                float64 w_r_adversarial;
                                 {
                                 const float64 noRaisePess = 1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_pess - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess);
                                 const float64 noraisePessD = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu));
@@ -672,45 +671,34 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                                     float64 noRaise_smallerD;
                                     float64 noRaise_larger;
                                     float64 noRaise_largerD;
-                                    float64 prev_w_r_smaller;
-                                    float64 prev_w_r_larger;
                                     if (noRaisePess < noRaiseMean) {
                                         noRaise_smaller = noRaisePess;
                                         noRaise_smallerD = noraisePessD;
-                                        prev_w_r_smaller = w_r_pess;
                                         noRaise_larger = noRaiseMean;
                                         noRaise_largerD = noraiseMeanD;
-                                        prev_w_r_larger = w_r_mean;
                                     } else if (noRaiseMean < noRaisePess) {
                                         noRaise_smaller = noRaiseMean;
                                         noRaise_smallerD = noraiseMeanD;
-                                        prev_w_r_smaller = w_r_mean;
                                         noRaise_larger = noRaisePess;
                                         noRaise_largerD = noraisePessD;
-                                        prev_w_r_larger = w_r_pess;
                                     } else {
                                         if (noraisePessD < noraiseMeanD) {
                                             noRaise_smaller = noRaisePess;
                                             noRaise_smallerD = noraisePessD;
-                                            prev_w_r_smaller = w_r_pess;
                                             noRaise_larger = noRaiseMean;
                                             noRaise_largerD = noraiseMeanD;
-                                            prev_w_r_larger = w_r_mean;
                                         } else {
                                             noRaise_smaller = noRaiseMean;
                                             noRaise_smallerD = noraiseMeanD;
-                                            prev_w_r_smaller = w_r_mean;
                                             noRaise_larger = noRaisePess;
                                             noRaise_largerD = noraisePessD;
-                                            prev_w_r_larger = w_r_pess;
                                         }
                                     }
 
                                     noRaise = bMyWouldCall ?
                                         noRaise_smaller : // I would call. I want them to raise. (Adversarial is smaller)
                                         noRaise_larger; // I won't call. I want them not to raise. (Adversarial is larger)
-                                    noraiseD = bMyWouldCall ? noRaise_smallerD : noRaise_larger;
-                                    w_r_adversarial = bMyWouldCall ? prev_w_r_smaller : prev_w_r_larger;
+                                    noraiseD = bMyWouldCall ? noRaise_smallerD : noRaise_largerD;
                                 }
 
                                 nextNoRaise_A[i] = (noRaise+w_r_rank)/2;
@@ -1004,6 +992,7 @@ void ExactCallBluffD::query(const float64 betSize)
         allFoldChanceD = 0;
         nextFold = 0;
         nextFoldPartial = 0;
+        // TODO(from joseph_huang): Early return?
 
 		#ifdef DEBUG_TRACE_PWIN
 		    if( traceOut != 0 ) *traceOut << "N/A. Call doesn't pWin" << endl;

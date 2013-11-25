@@ -330,11 +330,12 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 		return xb;
 		#else
         xn = trisectionStep(x1,y1,xb,yb,x2,y2);
-        yn = f(xn);
+        //yn = f(xn);
         return SplitTurningPoint(x1, xn, xb ,x2 ,signDir);
 		#endif
 	}
 
+    {
 	bool bSlopes = false;
     float64 dy1 = 0.0;
     float64 dy2 = 0.0;
@@ -399,7 +400,8 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
             if(bTraceEnable) std::cout << "\t\t\tSlide x<" << x1 << "," << xb << "," << x2 << ">  y<" << y1 << "," << yb << "," << y2 << ">" << std::endl;
         #endif
 	}
-
+    }
+    /*
     if( !bSlopes )
     {
         dy1 = fd(x1,y1);
@@ -407,7 +409,8 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
         //bSlopes = true;
     }
     dyb = fd(xb,yb);
-
+*/
+    
     while(x2 - x1 > quantum/2)
     {
         #ifdef DEBUG_TRACE_SEARCH

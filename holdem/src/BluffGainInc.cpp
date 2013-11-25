@@ -278,7 +278,7 @@ void StateModel::query( const float64 betSize )
         potRaisedWin_A[i] = g_raised(betSize,raiseAmount_A[i]);
         potRaisedWinD_A[i] = gd_raised(betSize,raiseAmount_A[i],potRaisedWin_A[i]);
 
-        const float64 oppRaisedMyFoldGain = fMyFoldGain.myFoldGainAgainstPredictedRaise(MEAN /* called with ea.ed */,
+        const float64 oppRaisedMyFoldGain = fMyFoldGain.myFoldGainAgainstPredictedRaise(fMyFoldGain.suggestMeanOrRank(), //MEAN /* called with ea.ed */,
                                                                                         betSize, ea.tableinfo->alreadyBet(), raiseAmount_A[i]); //You would fold the additional (betSize - ea->alreadyBet() )
 
         if( potRaisedWin_A[i] < oppRaisedMyFoldGain )
@@ -450,7 +450,7 @@ void StateModel::query( const float64 betSize )
 
     dy = (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
 
-    y -= fMyFoldGain.myFoldGain(MEAN);
+    y -= fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank());
                                 /* called with ea.ed */
 #ifdef DEBUGASSERT
                                 if (fMyFoldGain.getPlayerId() != estat->playerID) {

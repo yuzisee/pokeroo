@@ -445,23 +445,32 @@ void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
 
 void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat) {
     FoldOrCall foldGainCalculator(ViewTable(), statprob.core);
-    std::pair<float64, float64> foldgainVal_xw = foldGainCalculator.myFoldGainAndWaitlength(MEAN);
+    std::pair<float64, float64> foldgainVal_xw = foldGainCalculator.myFoldGainAndWaitlength(foldGainCalculator.suggestMeanOrRank());
     const float64 &foldgainVal = foldgainVal_xw.first; // gain
     const float64 &xw = foldgainVal_xw.second; // waitlength (in total hands dealt)
-    logFile << "FoldGain()=" << foldgainVal;
+    logFile << "FoldGain()";
+    switch (foldGainCalculator.suggestMeanOrRank()) {
+        case MEAN:
+            logFile << "M";
+            break;
+        case RANK:
+            logFile << "R";
+            break;
+    }
+    logFile << "=" << foldgainVal;
 
     float64 numfolds = xw * e->Pr_haveWinPCT_strictlyBetterThan(statprob.core.statmean.pct - EPS_WIN_PCT); // waitlength (in folds)
 
 
     logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
-    if( ViewPlayer().GetInvoluntaryContribution() > 0 ) logFile << "   ->assumes " << ViewPlayer().GetInvoluntaryContribution() << " forced";
+    if( ViewPlayer().GetInvoluntaryContribution() > 0 ) logFile << "   ->assumes $" << ViewPlayer().GetInvoluntaryContribution() << " forced";
     logFile << endl;
 }
 
 void PositionalStrategy::printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp) {
     if (csrp != 0) {
-        csrp->query(betSize);
-        logF << "\tW(" << csrp->getHandsToBeat() << ")=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "x.w,s=" << csrp->ViewShape(betSize).wins << "," << csrp->ViewShape(betSize).splits;
+        //csrp->query(betSize);
+        logF << "\tW(" << csrp->getHandsToBeat() << "x)=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "o.w_s=(" << csrp->ViewShape(betSize).wins << "," << csrp->ViewShape(betSize).splits << ")";
     }
 }
 
@@ -484,8 +493,16 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
     while( orAmount < maxShowdown )
     {
         orAmount =  rl.RaiseAmount(betToCall,raiseStep);
-        const float64 oppRaisedFoldGain = rlF.myFoldGainAgainstPredictedRaise(MEAN, betToCall, tablestate.alreadyBet(), orAmount);
+        const float64 oppRaisedFoldGain = rlF.myFoldGainAgainstPredictedRaise(rlF.suggestMeanOrRank(), betToCall, tablestate.alreadyBet(), orAmount);
         logFile << "OppRAISEChance";
+        switch (rlF.suggestMeanOrRank()) {
+            case MEAN:
+                logFile << "M";
+                break;
+            case RANK:
+                logFile << "R";
+                break;
+        }
         if( oppRaisedFoldGain > m.g_raised(betToCall,orAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
         // Here, raiseStep is just the iterator. rl.RaiseAmount(betToCall,raiseStep) is the amount, rl.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
@@ -517,8 +534,16 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
     while( mrAmount <= maxShowdown )
     {
         mrAmount =  rl.RaiseAmount(separatorBet,raiseStep);
-        const float64 oppRaisedFoldGain = rrF.myFoldGainAgainstPredictedRaise(MEAN, separatorBet, tablestate.alreadyBet(), mrAmount);
+        const float64 oppRaisedFoldGain = rrF.myFoldGainAgainstPredictedRaise(rrF.suggestMeanOrRank(), separatorBet, tablestate.alreadyBet(), mrAmount);
         logFile << "OppRAISEChance";
+        switch (rrF.suggestMeanOrRank()) {
+            case MEAN:
+                logFile << "M";
+                break;
+            case RANK:
+                logFile << "R";
+                break;
+        }
         if( oppRaisedFoldGain > m.g_raised(separatorBet,mrAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
 
         logFile << rl.pRaise(separatorBet,raiseStep,maxcallStep) << " @ $" << mrAmount;
@@ -1357,9 +1382,9 @@ float64 PureGainStrategy::MakeBet()
 
 
 #ifdef LOGPOSITION
-
-    logFile << "(MinRaise) ";
-    printPessimisticWinPct(logFile, betToCall + ViewTable().GetMinRaise(), &csrp);
+    const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
+    logFile << "(MinRaise to $" << minRaiseTo << ") ";
+    printPessimisticWinPct(logFile, minRaiseTo, &csrp);
     logFile << endl;
 
 
@@ -1400,27 +1425,27 @@ float64 PureGainStrategy::MakeBet()
 
 
     choicemodel.f(displaybet); //since choicemodel is ap_aggressive
-    logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
-    logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
-    logFile << "        Push("<< displaybet <<")=" << ap_aggressive.gainWithFold << endl;
+    logFile << " AgainstCall($"<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
+    logFile << "AgainstRaise($"<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
+    logFile << "        Push($"<< displaybet <<")=" << ap_aggressive.gainWithFold << endl;
 
     if (betToCall < displaybet) {
         choicemodel.f(betToCall); //since choicemodel is ap_aggressive
-        logFile << " AgainstCall("<< betToCall <<")=" << ap_aggressive.gainNormal << endl;
-        logFile << "AgainstRaise("<< betToCall <<")=" << ap_aggressive.gainRaised << endl;
-        logFile << "        Push("<< betToCall <<")=" << ap_aggressive.gainWithFold << endl;
+        logFile << " AgainstCall($"<< betToCall <<")=" << ap_aggressive.gainNormal << endl;
+        logFile << "AgainstRaise($"<< betToCall <<")=" << ap_aggressive.gainRaised << endl;
+        logFile << "        Push($"<< betToCall <<")=" << ap_aggressive.gainWithFold << endl;
     }
 
 #endif
 
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
-        logFile << "(" << displaybet << ") ";
+        logFile << "($" << displaybet << ") ";
         printPessimisticWinPct(logFile, betToCall, &csrp);
         logFile << endl;
 
-        logFile << "Against("<< displaybet <<")Geom=" << 1.0+callModel.f(displaybet) << endl;
-        logFile << "Against("<< displaybet <<")Algb=" << 1.0+raiseModel.f(displaybet) << endl;
+        logFile << "Against($"<< displaybet <<")Geom=" << 1.0+callModel.f(displaybet) << endl;
+        logFile << "Against($"<< displaybet <<")Algb=" << 1.0+raiseModel.f(displaybet) << endl;
     }
 
 

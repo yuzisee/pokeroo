@@ -441,7 +441,7 @@ namespace RegressionTests {
         assert(actual_Dy > 0); // betting more should increase N even more
 
         CombinedStatResultsPessimistic testC(test, statprob.core);
-        testC.query(testBet);
+        //testC.query(testBet);
 
         const float64 s1 = testC.ViewShape(testBet).splits;
         const float64 w = testC.getWinProb(testBet);
@@ -942,7 +942,7 @@ namespace RegressionTests {
          */
 
         const playernumber_t flopCalledIdx = myTable.PlayRound_Flop(myFlop);
-        assert(myTable.PlayRound_Flop(myFlop) != 1);
+        //assert(myTable.PlayRound_Flop(myFlop) != 1);
         if (flopCalledIdx != -1) {
 
         /*
@@ -1027,7 +1027,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({5.0, 0, 5.0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0});
+        const std::vector<float64> pA({std::nan(""), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0});
         FixedReplayPlayerStrategy sS(foldOnly);
         FixedReplayPlayerStrategy pS(pA);
         
@@ -1145,7 +1145,8 @@ namespace RegressionTests {
         Nav calls $297 ($767)
 */
         playernumber_t highBet = myTable.PlayRound_River(myFlop, myTurn, myRiver);
-        assert (highBet == -1);
+        //assert (myTable.ViewPlayer(highBet) == &botToTest->ViewPlayer());
+        assert(highBet != -1); // do not get pushed out, you have a winning hand
         /*
         ----------
         |Showdown|
@@ -1708,16 +1709,17 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_007b();
     RegressionTests::testRegression_007c();
 
+
+    RegressionTests::testRegression_005();
+    RegressionTests::testRegression_004();
     RegressionTests::testRegression_002b();
     RegressionTests::testRegression_002();
 
     RegressionTests::testRegression_006();
-    RegressionTests::testRegression_009();
-    RegressionTests::testRegression_005();
 
     RegressionTests::testRegression_003();
+    RegressionTests::testRegression_009();
 
-    RegressionTests::testRegression_004();
 
 
     // Regenerate the DB?

@@ -154,10 +154,10 @@ public:
     virtual float64 get_d_WinProb_dbetSize(float64 betSize) { query(betSize); return f_d_WinProb_dbetSize; }
 
     virtual float64 getHandsToBeat() const { return fHandsToBeat; }
-
-    void query(float64 betSize);
     
 private:
+    void query(float64 betSize);
+    
     // query inputs
     float64 fLastBetSize;
 

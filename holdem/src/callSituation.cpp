@@ -43,13 +43,20 @@ float64 FoldOrCall::foldGain(CallCumulationD* const e, const float64 extra, cons
 }
 */
 
+
+static playercounts_t suggestPlayerCount(const HoldemArena & table) {
+    return table.NumberStartedRound();
+}
+
+
+
 float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out)
 {
     const Player &p = fPlayer;
 
     // If we fold now and expect to win in the future we'd have to beat all the players who would have gotten us into this situation.
     // When we come back, you'll still have to beat everyone who got an opportunity to see a hand this time.
-    const float64 playerCount = fTable.NumberStartedRound().inclAllIn();
+    const float64 playerCount = suggestPlayerCount(fTable).inclAllIn();
 
     const float64 avgBlinds = fTable.GetAvgBlindPerHand();
     FoldGainModel FG(fTable.GetChipDenom()/2);
@@ -281,6 +288,16 @@ float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 
 	}
 
 	return riskLoss;
+}
+
+MeanOrRank FoldOrCall::suggestMeanOrRank() const {
+    if (suggestPlayerCount(fTable).inclAllIn() > 2) {
+    // The odds of beating multiple people isn't based on the odds of beating one person.
+    // Since it's more complicated than that, just go with rank for now.
+        return RANK;
+    } else {
+        return MEAN;
+    }
 }
 
 float64 FoldOrCall::myFoldGainAgainstPredictedRaise(MeanOrRank meanOrRank, float64 currentBetToCall, float64 currentAlreadyBet, float64 predictedRaiseTo) {
