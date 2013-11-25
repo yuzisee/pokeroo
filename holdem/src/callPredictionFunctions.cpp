@@ -126,7 +126,7 @@ float64 FoldWaitLengthModel::d_dC( const float64 n )
 // This is the derivative of that expression with respect to n
 const float64 FoldWaitLengthModel::dRemainingBet_dn( )
 {
-    return -(amountSacrificeVoluntary)*rarity() + amountSacrificeForced;
+    return - (amountSacrificeVoluntary)*rarity() - amountSacrificeForced;
 }
 
 
@@ -196,18 +196,19 @@ float64 FoldWaitLengthModel::f( const float64 n )
 
     const float64 PW = d_dbetSize(n); // Your expected win rate EV fraction of the pot (after waiting for the best hand in n hands)
     const float64 remainingbet = ( bankroll - grossSacrifice(n)  );
-    float64 playbet = (remainingbet < betSize) ? remainingbet : betSize;
+
     float64 winShowdown; // If I finally call (after n hands) and don't fold, we'll have ``winShowdown`` winnable in a showdown
-    if( playbet < 0 )
-    {
-        playbet = 0;
+    if (remainingbet < 0) {
+        // Wouldn't be allowed in the showdown.
         winShowdown = 0.0;
+    } else if (remainingbet < betSize) {
+        // This call would be reduced slightly
+        winShowdown = remainingbet + prevPot;
     } else {
     // This should include the pot money from previous rounds if SACRIFICE_COMMITTED is defined?
     // See also: unit tests
-        winShowdown = playbet + prevPot;
+        winShowdown = betSize + prevPot;
     }
-
 
 
     const float64 lastF = winShowdown*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
@@ -225,19 +226,34 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
     const float64 wmean  = lookup(1.0-1.0/n);
     const float64 dPW_dn = 2*pow(wmean,opponents-1)*opponents/n/n*dlookup(1.0-1.0/n,wmean);
 
+    const float64 dRemainingbet = dRemainingBet_dn();
+
     if(remainingbet < betSize )
     {
-        //Since float64 playbet = (remainingbet < betSize ) ? remainingbet : betSize;
-        //And lastF = playbet*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
-        const float64 PW = (y + grossSacrifice(n)/AVG_FOLDWAITPCT)/remainingbet; //d_dbetSize(n);
-        const float64 dRemainingbet = dRemainingBet_dn();
+        const float64 winShowdown = remainingbet + prevPot;
+        const float64 PW = (y + grossSacrifice(n)/AVG_FOLDWAITPCT)/winShowdown; //Faster than computing: d_dbetSize(n)
+
+        //Since lastF = winShowdown*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
+        //          === (remainingbet + prevPot) * PW - grossSacrifice(n) / AVG_FOLDWAITPCT
+        ///         === (remainingbet          ) * PW - grossSacrifice(n) / AVG_FOLDWAITPCT  + prevPot * PW
+        //          === (bankroll - grossSacrifice(n)) * PW - grossSacrifice(n) / AVG_FOLDWAITPCT + prevPot * PW
+        //          === (         - grossSacrifice(n)) * PW - grossSacrifice(n) / AVG_FOLDWAITPCT + prevPot * PW + bankroll * PW
+        //          ===           -grossSacrifice(n)   *(PW + 1.0 / AVG_FOLDWAITPCT)              +(prevPot + bankroll) * PW
+        // Taking the derivative with respect to n...
+        //      lastF_dn =        dRemainingbet * (PW + 1.0 / AVG_FOLDWAITPCT) - grossSacrifice(n) * dPW_dn + (prevPot + bankroll) * dPW_dn
+        return dRemainingbet * (PW + 1.0 / AVG_FOLDWAITPCT) + (prevPot + remainingbet) * dPW_dn;
+
+
 
         //d{  remainingbet*PW - n*amountSacrifice/AVG_FOLDWAITPCT  }/dn
-        return (dRemainingbet*PW + remainingbet*dPW_dn - grossSacrifice(n)/AVG_FOLDWAITPCT);
+        //return (dRemainingbet*PW + remainingbet*dPW_dn - grossSacrifice(n)/AVG_FOLDWAITPCT);
 
     }else{
+        //Since lastF = winShowdown*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
+        //          === (betSize + prevPot) * PW - grossSacrifice(n) / AVG_FOLDWAITPCT
+
         const float64 winShowdown = betSize + prevPot;
-        return (winShowdown*dPW_dn - grossSacrifice(n)/AVG_FOLDWAITPCT);
+        return (winShowdown * dPW_dn  +  dRemainingbet / AVG_FOLDWAITPCT);
     }
 
 }

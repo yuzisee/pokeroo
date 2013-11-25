@@ -110,6 +110,15 @@ namespace RegressionTests {
     }
     ;
 
+    void assertDerivative(IFunctionDifferentiable &f, float64 xa, float64 xb, float64 eps_rel) {
+        const float64 ya = f.f(xa);
+        const float64 yb = f.f(xb);
+        const float64 xd = (xa + xb)/2.0;
+        const float64 yd = f.f(xd);
+        const float64 actual = f.fd(xd, yd);
+        const float64 expected = (yb - ya) / (xb - xa);
+        assert(fabs(expected - actual) < fabs(expected) * eps_rel);
+    }
 
 
 
@@ -285,6 +294,7 @@ namespace RegressionTests {
         assert(f8 > evPlay); // If we wait 8 hands, we'll lose 240.0 chips, but put ourselves in a 87.5% chance position to win 1000.0 (= EV 750.0), which is better than taking a 75% gamble on 1000.0 now.
 
         // Need a test to expose whether derivatives match
+        assertDerivative(fw, 7.99, 8.01, 1e-4);
         
     }
 
@@ -1627,7 +1637,7 @@ static void regenerateDb() {
         {
             const time_t now = time(nullptr);
             std::cout << asctime(std::localtime(&now));
-            std::cout << "Computing   " << handName << "   CommunityCallStats (.holdemW)\n";
+            std::cout << "Computing CommunityCallStats (depends on *.holdemW)\n";
             std::cout.flush(); // Flush for timestamping
         }
 
