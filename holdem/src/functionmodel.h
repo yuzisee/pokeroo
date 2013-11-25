@@ -153,7 +153,7 @@ public:
     virtual float64 get_d_LoseProb_dbetSize(float64 betSize) { query(betSize); return f_d_LoseProb_dbetSize; }
     virtual float64 get_d_WinProb_dbetSize(float64 betSize) { query(betSize); return f_d_WinProb_dbetSize; }
 
-    virtual float64 getHandsToBeat() const { return fHandsToBeat; }
+    virtual float64 getHandsToBeat(float64 betSize) { query(betSize); return fHandsToBeat; }
     
 private:
     void query(float64 betSize);

@@ -378,8 +378,7 @@ const int8 CommunityCallStats::realCardsAvailable(const int8 cardsInCommunity) c
 void CommunityCallStats::initCC(const int8 cardsInCommunity)
 {
 
-	int8 cardsAvail = realCardsAvailable(cardsInCommunity);
-	int8 preCardsAvail = cardsAvail - 2;
+	const int8 cardsAvail = realCardsAvailable(cardsInCommunity);
 
 
     int32 oppHands = cardsAvail*(cardsAvail-1)/2;
@@ -401,8 +400,11 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
 		std::cout << "Received @ " << myHands << std::endl;
 	#endif
 
-    oppHands = preCardsAvail*(preCardsAvail-1)/2;
+
 #ifdef PERFECT_IHAVE
+    const int8 preCardsAvail = cardsAvail - 2;
+
+    oppHands = preCardsAvail*(preCardsAvail-1)/2;
     myTotalChances = oppHands;
 #endif
     myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);

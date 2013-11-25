@@ -55,6 +55,13 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
     const float64 fractionOfHandsToBeat_dbetSize = fOpposingHands.d_HandsToBeat_dbetSize();
 
 #ifdef DEBUGASSERT
+    if (std::isnan(fHandsToBeat)) {
+        std::cerr << "NaN encountered in fHandsToBeat" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+#ifdef DEBUGASSERT
     if (fractionOfHandsToBeat_dbetSize != fractionOfHandsToBeat_dbetSize) {
         std::cerr << "NaN encountered in fractionOfHandsToBeat_dbetSize" << endl;
         exit(1);

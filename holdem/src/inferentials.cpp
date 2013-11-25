@@ -450,7 +450,7 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
         }
         nextKeypointRepeated = horizontalMidpointRepeated;
     } else {
-        const float64 prevRepeated = (firstBetterThan == 1) ? 0.0 : cumulation[firstBetterThan-2].repeated;
+        const float64 prevRepeated = sampleSafe_prevrepeated(firstBetterThan-1); // (firstBetterThan == 1) ? 0.0 : cumulation[firstBetterThan-2].repeated;
         // We're right on the midpoint. Pick any slope in between (it's instantaneous)
             const float64 rise = (cumulation[firstBetterThan].repeated - prevRepeated)/2.0;
             const float64 run = cumulation[firstBetterThan].pct - cumulation[firstBetterThan-1].pct;
@@ -526,7 +526,7 @@ std::pair<StatResult, float64> CallCumulation::bestXHands(float64 X) const
 
         StatResult val = cumulation[idx]; // Get the next outcome
         // retVal.repeated := cumulation[idx].repeated - cumulation[idx-1].repeated;
-        val.repeated -= sampleInBounds_repeated(idx - 1);
+        val.repeated -= sampleSafe_prevrepeated(idx);
 
         if (X <= val.repeated + runningAverage.repeated) {
             const float64 thispct = runningAverage.pct;
@@ -586,6 +586,8 @@ StatResult CallCumulation::bestHandToHave() const
     return retVal;
 }
 
+/*
+
 float64 CallCumulation::sampleInBounds_pct(size_t x) const
 {
     if( x == cumulation.size() + 1 )
@@ -612,8 +614,20 @@ float64 CallCumulation::sampleInBounds_repeated(size_t x) const
 
     return cumulation[x].repeated;
 }
+*/
 
+float64 CallCumulation::sampleSafe_prevrepeated(size_t x) const
+{
+    if( x == 0 )
+    {
+        return 0.0;
+    }else
+    {
+        return cumulation[x-1].repeated;
+    }
+}
 
+/*
 float64 CallCumulationD::slopeof(size_t x10, size_t x11, size_t x20, size_t x21,size_t y_index0, size_t y_index1) const
 {
     #ifdef SMOOTHED_CALLCUMULATION_D
@@ -648,7 +662,7 @@ float64 CallCumulationD::slopeof(size_t x10, size_t x11, size_t x20, size_t x21,
 	return (y1 - y0)/(p1 - p0);
 }
 
-/*
+
 float64 SlidingPairCallCumulationD::pctWillCall(const float64 oddsFaced) const
 {
     return left->pctWillCall(oddsFaced) * (1-slider) + right->pctWillCall(oddsFaced) * (slider);

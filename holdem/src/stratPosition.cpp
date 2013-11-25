@@ -469,8 +469,7 @@ void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, E
 
 void PositionalStrategy::printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp) {
     if (csrp != 0) {
-        //csrp->query(betSize);
-        logF << "\tW(" << csrp->getHandsToBeat() << "x)=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "o.w_s=(" << csrp->ViewShape(betSize).wins << "," << csrp->ViewShape(betSize).splits << ")";
+        logF << "\tW(" << csrp->getHandsToBeat(betSize) << "x)=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "o.w_s=(" << csrp->ViewShape(betSize).wins << "," << csrp->ViewShape(betSize).splits << ")";
     }
 }
 

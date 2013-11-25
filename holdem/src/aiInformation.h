@@ -79,7 +79,7 @@ private:
 protected:
 
 	int8 indexHistory[2];
-	PocketHand* myHands;
+	PocketHand* myHands; // Keeps track of all the individual showdown outcomes so we can sort and group them.
 	int32 showdownIndex;
 	int32 showdownCount;
 	float64 showdownMax;
