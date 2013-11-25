@@ -233,6 +233,9 @@ namespace RegressionTests {
         fw.betSize = iveBeenReraisedTo;
         fw.prevPot = pastPot;
 
+        const float64 evPlay = (pastPot + iveBeenReraisedTo) * (2.0 * fw.getW() - 1.0);
+        assert(evPlay == 100.0); // sanity check only
+
         //    TEST:
         // Since w == 0.75, we expect to be in this situation every 4 hands. This costs us 4 avgBlinds (2.0 total) and one fold (loss of 7.0 total) every 4 hands.
         // So we lose 9.0 every 4 hands we wait.
@@ -240,7 +243,7 @@ namespace RegressionTests {
         assert(f1 < 0); // It's not profitable to fold this hand and play the next hand.
 
         const float64 f40 = fw.f(40);
-        assert(f40 > 0); // If we wait 40 hands, we'll lose 90 chips, but put ourselves in a good position to win 200.0
+        assert(f40 > evPlay); // If we wait 40 hands, we'll lose 90 chips, but put ourselves in a good position to win 200.0
         
         // Need a test to expose whether derivatives match
 
@@ -254,21 +257,21 @@ namespace RegressionTests {
             fw.amountSacrificeVoluntary = xb; const float64 yb = fw.f(n);
             fw.amountSacrificeVoluntary = xd; fw.f(n); const float64 actual = fw.d_dC(n);
             const float64 expected = (yb - ya) / (xb - xa);
-            assert(fabs(expected - actual) < fabs(expected) * 1e-13);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-12);
         }
 
 
         { // Test d_dw
             const float64 n = 40.0;
-            const float64 xa = fw.getW() - 0.01;
-            const float64 xb = fw.getW() + 0.01;
+            const float64 xa = fw.getW() - 0.001;
+            const float64 xb = fw.getW() + 0.001;
             const float64 xd = fw.getW();
 
             fw.setW( xa ); const float64 ya = fw.f(n);
             fw.setW( xb ); const float64 yb = fw.f(n);
             fw.setW( xd ); fw.f(n); const float64 actual = fw.d_dw(n);
             const float64 expected = (yb - ya) / (xb - xa);
-            assert(fabs(expected - actual) < fabs(expected) * 1e-14);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-4);
         }
     }
 
@@ -282,7 +285,7 @@ namespace RegressionTests {
         const float64 pastPot = 0.0; // We're pre-flop
         const float64 myConstributionToPastPot = 0.0;
         const float64 myBetThisRound = 20.0; // we're in the small blind
-        const float64 iveBeenReraisedTo = 1000.0;
+        const float64 iveBeenReraisedTo = 5000.0;
 
 
         FoldWaitLengthModel fw;
@@ -290,40 +293,45 @@ namespace RegressionTests {
         fw.setW(0.75); // You have a decent hand, but it could be better and the raise was large.
         fw.meanConv = nullptr;
         fw.amountSacrificeForced = avgBlind;
-        fw.bankroll = 2000.0;
+        fw.bankroll = 10000.0;
         fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
         fw.opponents = 1; // Keep it simple for now
         fw.betSize = iveBeenReraisedTo;
         fw.prevPot = pastPot;
 
-        const float64 evPlay = iveBeenReraisedTo * (2.0 * fw.getW() - 1.0);
-        assert(evPlay == 500.0); // sanity check only
+        const float64 evPlay = (pastPot + iveBeenReraisedTo) * (2.0 * fw.getW() - 1.0);
+        assert(evPlay == 2500.0); // sanity check only
 
         //    TEST:
-        // Since w == 0.75, we expect to be in this situation every 4 hands. This costs us 4 avgBlinds (120.0 total) and one fold (loss of 0.0 total) every 4 hands.
-        // So we lose 120.0 every 4 hands we wait.
+        // Since w == 0.75, we expect the opponent to be in this situation every 4 hands.
+        // Each time the opponent is in this situation, we except to also be in this situation one out of every 4 of those.
+        // This, we can repeat this situation every 16 hands if we want, and wait for a better hand next time.
+        // This costs us 16 avgBlinds (480.0 total) and one fold (loss of 0.0 total) every 16 hands.
+        // So we lose 480.0 every 16 hands we wait.
 
+    /*
         // Argument: But we should only expense this blind once out of every 4 hands. Other hands we should break even (each player on averaging having the best hand once, winning the blinds).
-        // Rebuttal: But we will only receive a raise of 1000.0 with some frequency too.
+        // Rebuttal: But we will only receive a raise of 5000.0 with some frequency too.
         // If we were truly heads-up and we choose to play every Nth hand, we _do_ change our average hand strength but we do sacrifice every blind -- not just the ones we play.
-
+     */
         const float64 f1 = fw.f(1);
         assert(f1 < 0); // It's not profitable to fold this hand and play the next hand.
 
-        const float64 f5 = fw.f(5);
-        // If we play now, we can win EV 500.0 chips based on a 75% gamble on 1000.0 chips.
-        // If we wait 5 hands, we sacrifice 5 big blinds, which loses 150.0 (not 37.5), but gives us a 80% gamble on 1000.0 which nets EV 600.0
-        // It's 100 chips more profitable of a gamble, but costs 150.0 to get there.
-        assert(f5 < evPlay);
+        const float64 f20 = fw.f(20);
+        // If we play now, we can win EV 2500.0 chips based on a 75% gamble on 5000.0 chips.
+        // If we wait 20 hands, we sacrifice 20 big blinds, which loses 600.0 (not 150.0), but gives us a 80% gamble on 5000.0 which nets EV 3000.0
+        // It's 500.0 chips more profitable of a gamble, but costs 600.0 to get there.
+        assert(0.0 < f20);
+        assert(f20 < evPlay);
 
-        const float64 f8 = fw.f(8);
-        assert(f8 > evPlay); // If we wait 8 hands, we'll lose 240.0 chips, but put ourselves in a 87.5% chance position to win 1000.0 (= EV 750.0), which is better than taking a 75% gamble on 1000.0 now.
+        const float64 f40 = fw.f(40);
+        assert(f40 > evPlay); // If we wait 40 hands, we'll lose 1200.0 chips, but put ourselves in a 90% chance position to win 5000.0 (= EV 4000.0), which is better than taking a 75% gamble on 5000.0 now.
 
         // Need a test to expose whether derivatives match
-        assertDerivative(fw, 7.99, 8.01, 1e-4);
+        assertDerivative(fw, 39.99, 40.01, 1e-6);
 
         { // Test d_dBetsize
-            const float64 n = 8.0;
+            const float64 n = 40.0;
             const float64 xa = fw.betSize - 0.01;
             const float64 xb = fw.betSize + 0.01;
             const float64 xd = fw.betSize;
@@ -332,7 +340,7 @@ namespace RegressionTests {
             fw.betSize = xb; const float64 yb = fw.f(n);
             fw.betSize = xd; fw.f(n); const float64 actual = fw.d_dbetSize(n);
             const float64 expected = (yb - ya) / (xb - xa);
-            assert(fabs(expected - actual) < fabs(expected) * 1e-11);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-10);
         }
 
     }
@@ -427,7 +435,7 @@ namespace RegressionTests {
         statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
 
-        const float64 testBet = 9.5;
+        const float64 testBet = 13.0;
         
         OpponentHandOpportunity test(1, myTable, statprob.core);
 
@@ -449,9 +457,11 @@ namespace RegressionTests {
         const float64 dw = testC.get_d_WinProb_dbetSize(testBet);
         const float64 dl = testC.get_d_LoseProb_dbetSize(testBet);
 
+        assert(testC.ViewShape(testBet).wins + testC.ViewShape(testBet).splits + testC.ViewShape(testBet).loss == 1.0);
+
         assert(w < 0.1);
-        assert(l+w > 0.89);
-        assert(s1 < 0.20);
+        assert(l+w > 0.87);
+        assert(s1 < 0.25);
         assert(dw < 0);
         assert(dl == -dw);
     }

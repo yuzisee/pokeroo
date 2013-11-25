@@ -26,12 +26,6 @@
 
 #undef INLINE_INTEGER_POWERS
 
-
-#define AVG_FOLDWAITPCT 1.0
-
-
-
-
 FoldGainModel::~FoldGainModel(){}
 
 FoldWaitLengthModel::~FoldWaitLengthModel(){}
@@ -70,6 +64,55 @@ const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) con
     );
 }
 
+float64 FoldWaitLengthModel::getRawPCT(const float64 n) {
+    const float64 opponentInstances = n * rarity(); // After waiting n hands, the opponent will put you in this situation opponentInstances times.
+    // The winPCT you would have if you had the best hand you would wait for out of opponentInstances hands.
+    const float64 rawPCT = ( n < 1 ) ? 0 : lookup(1.0-1.0/(opponentInstances));
+    return rawPCT;
+}
+
+float64 FoldWaitLengthModel::d_rawPCT_d_n(const float64 n, const float64 rawPCT) {
+    if (n < 1) {
+        return 0.0;
+    }
+
+    const float64 opponentInstances = n * rarity();
+    // rawPCT = lookup(1.0-1.0/(opponentInstances))
+    // d_rawPCT_d_n = d_dn lookup(1.0 - 1.0/(opponentInstances))
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) * d_dn { - 1.0/opponentInstances }
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) * { - d_dn opponentInstances^(-1) }
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) * {        opponentInstances^(-2) } * d_dn opponentInstances
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) * {        opponentInstances^(-2) } * rarity()
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) * {        1.0 / n^2 / rarity^2 } * rarity()
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) *          1.0 / n^2 / rarity
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) *          1.0 / n / opponentInstaces
+    return dlookup(1.0 - 1.0 / opponentInstances, rawPCT) / opponentInstances / n;
+}
+
+float64 FoldWaitLengthModel::d_rawPCT_d_w(const float64 n, float64 rawPCT) {
+    if (n < 1) {
+        return 0.0;
+    }
+
+    const float64 opponentInstances = n * rarity();
+    // rawPCT = lookup(1.0-1.0/(opponentInstances))
+    // d_rawPCT_d_w = d_dw lookup(1.0 - 1.0/(opponentInstances))
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) * d_dw { - 1.0/opponentInstances }
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) * { - d_dw opponentInstances^(-1) }
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) * {        opponentInstances^(-2) } * d_dw opponentInstances
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) * {        opponentInstances^(-2) } * n * d_dw rarity
+
+    // d_dw rarity = {
+    //                 - meanConv->Pr_haveWorsePCT_continuous( w ).second
+    //               ,
+    //                 - 1
+    //               }
+    // Depending on meanConv
+
+    const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).second);
+
+    return dlookup(1.0 - 1.0 / opponentInstances, rawPCT) / opponentInstances / opponentInstances * n * d_rarity_d_w;
+}
 
 // Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
 // Return value is between -1.0 and +1.0
@@ -80,9 +123,8 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 
     if( lastdBetSizeN != n || !bSearching )
     {
-        // The winPCT you would have if you had the best hand you would wait for out of n hands.
-		const float64 rawPCT = ( n < 1 ) ? 0 : lookup(1.0-1.0/(n));
-        
+        const float64 rawPCT = getRawPCT(n);
+
         if( rawPCT != lastRawPCT || !bSearching )
         {
 #ifdef INLINE_INTEGER_POWERS
@@ -115,26 +157,63 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
     return cached_d_dbetSize;
 }
 
-// The only term in f() that is a function of w is -grossSacrifice()
-// The derivative with respect to w is here.
+// The derivative with f() to w is here.
 float64 FoldWaitLengthModel::d_dw( const float64 n )
 {
-	//NOTE: amountSacrificeForced is not in expression since it occurs every round regardless of rarity (i.e. it doesn't interact with w)
-    if( meanConv == 0 ) return (n)*(amountSacrificeVoluntary)/AVG_FOLDWAITPCT;
-    return (n)*(amountSacrificeVoluntary)/AVG_FOLDWAITPCT * meanConv->Pr_haveWorsePCT_continuous( w ).second;
+
+    // d_dw PW =             d_dw { 2 * pow(getRawPCT, opponents) - 1 }
+    //         = 2             * d_dw { pow(getRawPCT, opponents) - 1 }
+    //         = 2             * d_dw { pow(getRawPCT, opponents) }
+    //         = 2 * (opponents) * pow(getRawPCT, opponents - 1) * d_dw {getRawPCT}
+
+    const float64 rawPCT = getRawPCT(n);
+    const float64 d_PW_d_w = 2.0 * opponents * pow(rawPCT, opponents - 1) * d_rawPCT_d_w(n, rawPCT);
+
+    const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).second);
+
+    // d_dw rarity = {
+    //                 - meanConv->Pr_haveWorsePCT_continuous( w ).second
+    //               ,
+    //                 - 1
+    //               }
+
+    const float64 chanceOfFoldEachHand = rarity();
+
+    const float64 d_grossSacrifice_dw = n * amountSacrificeVoluntary * 2.0 * chanceOfFoldEachHand * d_rarity_d_w;
+    //  grossSacrifice = n * (amountSacrificeVoluntary * chanceOfFoldEachHand * chanceOfFoldEachHand + amountSacrificeForced);
+    //  d_grossSacrifice_dw = n * d_dw (amountSacrificeVoluntary * chanceOfFoldEachHand * chanceOfFoldEachHand + amountSacrificeForced)
+    //                      = n * amountSacrificeVoluntary (d_dw (chanceOfFoldEachHand^2))
+    //                      = n * amountSacrificeVoluntary 2 chanceOfFoldEachHand (d_dw (chanceOfFoldEachHand))
+    //                      = n * amountSacrificeVoluntary 2 chanceOfFoldEachHand (d_dw (rarity))
+    //
+
+    const float64 winShowdown = prevPot + betSize;
+
+    // lastF = winShowdown*PW - grossSacrifice(n)
+    // d_lastF_dw = winShowdown { d_dw PW } - d_dw grossSacrifice
+
+    return winShowdown * d_PW_d_w - d_grossSacrifice_dw;
+
+
+
 }
 
-
+// This is the derivative of f() with respect to amountSacrifice
+// For now it's only used as heuristic, so assume grossSacrifice is the only user of amountSacrifice.
 float64 FoldWaitLengthModel::d_dC( const float64 n )
 {
-    return -(n*rarity())/AVG_FOLDWAITPCT;
+    const float64 chanceOfFoldEachHand = rarity();
+    const float64 chanceOfSameSituationFoldEachHand = chanceOfFoldEachHand * chanceOfFoldEachHand;
+    return -(n*chanceOfSameSituationFoldEachHand);
 }
 
 // See {const float64 remainingbet = ( bankroll - grossSacrifice(n)  );} in f()
 // This is the derivative of that expression with respect to n
 const float64 FoldWaitLengthModel::dRemainingBet_dn( )
 {
-    return - (amountSacrificeVoluntary)*rarity() - amountSacrificeForced;
+    const float64 chanceOfFoldEachHand = rarity();
+    const float64 chanceOfSameSituationFoldEachHand = chanceOfFoldEachHand * chanceOfFoldEachHand;
+    return - (amountSacrificeVoluntary)*chanceOfSameSituationFoldEachHand - amountSacrificeForced;
 }
 
 
@@ -142,7 +221,8 @@ const float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
 {
 
     const float64 numHandsPerFold = 1.0 / rarity();
-	const float64 amountSacrificePerHand = (amountSacrificeVoluntary / numHandsPerFold + amountSacrificeForced);
+    const float64 numHandsPerSameSituationFold = numHandsPerFold * numHandsPerFold; // To really get this situation again, both of you have to have comparably good hands. This is how often that happens.
+	const float64 amountSacrificePerHand = (amountSacrificeVoluntary / numHandsPerSameSituationFold + amountSacrificeForced);
 
     const float64 gross = n * amountSacrificePerHand;
     return gross;
@@ -224,7 +304,7 @@ float64 FoldWaitLengthModel::f( const float64 n )
     }
 
 
-    const float64 lastF = winShowdown*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
+    const float64 lastF = winShowdown*PW - grossSacrifice(n);
     return lastF;
 }
 
@@ -236,15 +316,15 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
         return 0;
     }
 
-    const float64 wmean  = lookup(1.0-1.0/n);
-    const float64 dPW_dn = 2*pow(wmean,opponents-1)*opponents/n/n*dlookup(1.0-1.0/n,wmean);
+    const float64 wmean  = getRawPCT(n);
+    const float64 dPW_dn = 2*pow(wmean,opponents-1)*opponents * d_rawPCT_d_n(n, wmean);
 
     const float64 dRemainingbet = dRemainingBet_dn();
 
     if(remainingbet < betSize )
     {
         const float64 winShowdown = remainingbet + prevPot;
-        const float64 PW = (y + grossSacrifice(n)/AVG_FOLDWAITPCT)/winShowdown; //Faster than computing: d_dbetSize(n)
+        const float64 PW = (y + grossSacrifice(n))/winShowdown; //Faster than computing: d_dbetSize(n)
 
         //Since lastF = winShowdown*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
         //          === (remainingbet + prevPot) * PW - grossSacrifice(n) / AVG_FOLDWAITPCT
@@ -254,7 +334,7 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
         //          ===           -grossSacrifice(n)   *(PW + 1.0 / AVG_FOLDWAITPCT)              +(prevPot + bankroll) * PW
         // Taking the derivative with respect to n...
         //      lastF_dn =        dRemainingbet * (PW + 1.0 / AVG_FOLDWAITPCT) - grossSacrifice(n) * dPW_dn + (prevPot + bankroll) * dPW_dn
-        return dRemainingbet * (PW + 1.0 / AVG_FOLDWAITPCT) + (prevPot + remainingbet) * dPW_dn;
+        return dRemainingbet * (PW + 1.0) + (prevPot + remainingbet) * dPW_dn;
 
 
 
@@ -266,7 +346,7 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
         //          === (betSize + prevPot) * PW - grossSacrifice(n) / AVG_FOLDWAITPCT
 
         const float64 winShowdown = betSize + prevPot;
-        return (winShowdown * dPW_dn  +  dRemainingbet / AVG_FOLDWAITPCT);
+        return (winShowdown * dPW_dn  +  dRemainingbet);
     }
 
 }
@@ -280,9 +360,9 @@ float64 FoldWaitLengthModel::FindBestLength()
 
     quantum = (1.0/3.0); // Get to the number of hands played.
 
-    const float64 numHandsPerFold = 1.0 / rarity();
-	const float64 amountSacrificePerHand = (amountSacrificeVoluntary / numHandsPerFold + amountSacrificeForced);
-    const float64 amountSacrificePerFOLD = (amountSacrificeVoluntary + amountSacrificeForced * numHandsPerFold);
+    const float64 numHandsPerSameSituationFold = 1.0 / rarity() / rarity();
+	const float64 amountSacrificePerHand = (amountSacrificeVoluntary / numHandsPerSameSituationFold + amountSacrificeForced);
+    const float64 amountSacrificePerFOLD = (amountSacrificeVoluntary + amountSacrificeForced * numHandsPerSameSituationFold);
 
     float64 maxTurns[2];
     maxTurns[0] = bankroll / amountSacrificePerHand;

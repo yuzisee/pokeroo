@@ -85,6 +85,11 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     float64 lastdBetSizeN;
     float64 lastRawPCT;
     protected:
+    float64 getRawPCT(const float64 n);
+    float64 d_rawPCT_d_n(const float64 n, const float64 rawPCT);
+    float64 d_rawPCT_d_w(const float64 n, float64 rawPCT);
+
+
     const float64 dRemainingBet_dn();
     const float64 grossSacrifice(const float64 n);
 
