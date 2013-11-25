@@ -774,6 +774,14 @@ exit(0);
 
 }
 
+//  [0][1][2][3][4][5][6][7][8][9]
+//0. 2S 2H 2C 2D 3S 3H 3C 3D 4S 4H
+//1. 4C 4D 5S 5H 5C 5D 6S 6H 6C 6D
+//2. 7S 7H 7C 7D 8S 8H 8C 8D 9S 9H
+//3. 9C 9D TS TH TC TD JS JH JC JD
+//4. QS QH QC QD KS KH KC KD AS AH
+//5. AC AD
+
 /*
 #set tabstop=4 shiftwidth=4 incsearch nowrap
 */

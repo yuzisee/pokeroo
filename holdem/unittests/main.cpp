@@ -120,6 +120,189 @@ namespace RegressionTests {
         assert(fabs(expected - actual) < fabs(expected) * eps_rel);
     }
 
+    // When you have top pair on the river and there are no flush threats and not a significant straight threat, shouldn't you bet?
+    void testRegression_012() {
+
+        /*
+        Next Dealer is Ali
+        ================================================================
+        ============================New Hand #1========================
+        BEGIN
+
+
+        Preflop
+        (Pot: $0)
+        (9 players)
+        [DangerBotV $1500]
+        [MultiBotV $1500]
+        [ConservativeBotV $1500]
+        [SpaceBotV $1500]
+        [GearBotV $1500]
+        [ActionBotV $1500]
+        [NormalBotV $1500]
+        [TrapBotV $1500]
+        [Ali $1500]
+*/
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(5.0);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(5.0);
+
+        const std::vector<float64> foldOnly({0});
+        const std::vector<float64> mA({std::nan(""), std::nan(""), std::nan(""), std::nan(""), std::nan(""), std::nan("")});
+        FixedReplayPlayerStrategy gS(foldOnly);
+        FixedReplayPlayerStrategy tS(foldOnly);
+        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy pS(foldOnly);
+        FixedReplayPlayerStrategy aS(foldOnly);
+        FixedReplayPlayerStrategy mS(mA);
+        FixedReplayPlayerStrategy cS(foldOnly);
+        FixedReplayPlayerStrategy sS(foldOnly);
+
+
+        //PlayerStrategy * const botToTest = new DeterredGainStrategy(0);
+        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally ImproveGainStrategy(2);
+
+        myTable.ManuallyAddPlayer("GearBotV", 1500.0, &gS);
+        myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
+        myTable.ManuallyAddPlayer("NormalBot12", 1500.0, botToTest);
+        myTable.ManuallyAddPlayer("TrapBotV", 1500.0, &tS);
+        myTable.ManuallyAddPlayer("Ali", 1500.0, &pS); // Ali is the dealer, since DangerBot is the small blind
+        myTable.ManuallyAddPlayer("DangerBotV", 1500.0, &dS);
+        myTable.ManuallyAddPlayer("MultiBotV", 1500.0, &mS);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 1500, &cS);
+        myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
+
+        const playernumber_t dealer = 4;
+
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // Ts Ah
+
+            card.SetByIndex(32);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(49);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+
+        
+        myTable.BeginInitialState(11);
+        myTable.BeginNewHands(b, false, dealer);
+        
+
+         /*
+
+        DangerBotV posts SB of $5 ($5)
+        MultiBotV posts BB of $10 ($15)
+        ConservativeBotV folds
+        SpaceBotV folds
+        GearBotV folds
+        ActionBotV folds
+        NormalBotV calls $10 ($25)
+        TrapBotV folds
+        Ali folds
+        DangerBotV folds
+        MultiBotV checks
+          */
+
+        assert(myTable.PlayRound_BeginHand() != -1);
+
+        /*
+    Flop:	4d 7h 9d    (Pot: $25)
+        (2 players)
+        [MultiBotV $1490]
+        [NormalBotV $1490]
+         */
+
+
+        CommunityPlus myFlop;
+
+        card.SetByIndex(11);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(21);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(31);
+        myFlop.AddToHand(card);
+        
+
+        /*
+
+        MultiBotV checks
+        NormalBotV checks
+*/
+        assert(myTable.PlayRound_Flop(myFlop) != -1);
+        /*
+    Turn:	4d 7h 9d Ad   (Pot: $25)
+        (2 players)
+        [MultiBotV $1490]
+        [NormalBotV $1490]
+         */
+
+        DeckLocation myTurn; // Ad
+        myTurn.SetByIndex(51);
+
+        /*
+
+        MultiBotV checks
+        NormalBotV checks
+         */
+        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+
+/*
+    River:	4d 7h 9d Ad 8h  (Pot: $25)
+        (2 players)
+        [MultiBotV $1490]
+        [NormalBotV $1490]
+*/
+
+            DeckLocation myRiver; // 8h
+            myRiver.SetByIndex(25);
+
+ /*
+
+        MultiBotV checks
+        NormalBotV checks
+*/
+            assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) != -1);
+        assert(30 < myTable.GetPotSize());
+
+        /*
+        ----------
+        |Showdown|
+        ----------
+        Final Community Cards:
+        4d 7h 8h 9d Ad 
+        
+        
+        
+        MultiBotV reveals: 3c 7s 
+        Making,
+        007		Pair of Sevens
+        7 7 8 3 4 9 A 	AKQJT98765432
+        s h h c d d d 	1----11------
+        
+        NormalBotV reveals: Ts Ah 
+        Making,
+        014		Pair of Aces
+        T 7 8 A 4 9 A 	AKQJT98765432
+        s h h h d d d 	----111------
+        
+        NormalBotV can win 15 or less	(controls 25 of 25)
+        * * *Comparing hands* * *
+        NormalBotV takes 25 from the pot, earning 15 this round
+        
+*/
+    }
+
     // DangerBot bets a lot 3-handed
     // Why doesn't Pessimistic trigger at such bet sizes?
     //  --> Why doesn't OpponentHandOpportunity return extra hands at this bet size?
@@ -1816,6 +1999,7 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_007b();
     RegressionTests::testRegression_007c();
 
+    RegressionTests::testRegression_012();
     RegressionTests::testRegression_011();
 
 

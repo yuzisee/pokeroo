@@ -1443,16 +1443,23 @@ float64 PureGainStrategy::MakeBet()
     printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
 
 
-    choicemodel.f(displaybet); //since choicemodel is ap_aggressive
-    logFile << " AgainstCall($"<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
+    choicemodel.f(displaybet); // query
+    logFile << " AgainstCall($"<< displaybet <<")=" << ap_aggressive.gainNormal << " from f_raised? " << callOrRaise.f_raised(displaybet, displaybet) << endl;
     logFile << "AgainstRaise($"<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
-    logFile << "        Push($"<< displaybet <<")=" << ap_aggressive.gainWithFold << endl;
+    logFile << "        Push($"<< displaybet <<")=" << ap_aggressive.gainWithFold << " of pWin? " << myDeterredCall.pWin(displaybet) << endl;
 
     if (betToCall < displaybet) {
-        choicemodel.f(betToCall); //since choicemodel is ap_aggressive
-        logFile << " AgainstCall($"<< betToCall <<")=" << ap_aggressive.gainNormal << endl;
+        choicemodel.f(betToCall); // query CALL (vs. raised)
+        logFile << " AgainstCall($"<< betToCall <<")=" << ap_aggressive.gainNormal << " from f_raised " << callOrRaise.f_raised(betToCall, betToCall) <<endl;
         logFile << "AgainstRaise($"<< betToCall <<")=" << ap_aggressive.gainRaised << endl;
         logFile << "        Push($"<< betToCall <<")=" << ap_aggressive.gainWithFold << endl;
+    }
+
+    if (betToCall == displaybet) {
+        choicemodel.f(minRaiseTo); // query MINRAISE (vs. called)
+        logFile << " AgainstCall($"<< minRaiseTo <<")=" << ap_aggressive.gainNormal << " from f_raised " << callOrRaise.f_raised(minRaiseTo, minRaiseTo) << endl;
+        logFile << "AgainstRaise($"<< minRaiseTo <<")=" << ap_aggressive.gainRaised << endl;
+        logFile << "        Push($"<< minRaiseTo <<")=" << ap_aggressive.gainWithFold << " of pWin " << myDeterredCall.pWin(minRaiseTo) << endl;
     }
 
 #endif
