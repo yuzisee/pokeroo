@@ -186,11 +186,15 @@ namespace RegressionTests {
         fw.amountSacrificeVoluntary = myConstributionToPastPot + myBetThisRound;
         fw.opponents = 1; // Keep it simple for now
         fw.betSize = iveBeenReraisedTo;
+        fw.prevPot = pastPot;
 
 //    TEST:
-        assert(fw.f(15) < 0); // Profit of waiting 15 opportunities is... probably too much. You're burning at least 200 chips to win what? ~100?
+        // Since w == 0.0, we have numHands === numOpportunities here. We'll add a separate test to test w > 0.0
+        assert(fw.f(16) < 0); // Profit of waiting 15 hands is... probably too much. You're burning at ~200 chips to win what? ~100?
         
+        assert(fw.f(3) > 0); // Waiting three hands costs ~20 chips. Is it enough to win the 100 in the pot?
 
+        assert(fw.f(6) > 0); // Waiting six hands costs ~40 chips. Is it enough to win the 100 in the pot?
 
         
     }
@@ -1137,7 +1141,7 @@ namespace RegressionTests {
     }
 
     void testRegression_002b() {
-        ChipPositionState oppCPS(2474,7.875,0,0);
+        ChipPositionState oppCPS(2474,7.875,0,0, 0.0);
 // tableinfo->RiskLoss(0, 2474, 4, 6.75, 0, 0) = 0.0
 // tableinfo->RiskLoss(0, 2474, 4, 11.25, 0, 0) == 0.0
         float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest(0.0, 1.0 /* denom */, 6.75 + oppCPS.alreadyBet, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */

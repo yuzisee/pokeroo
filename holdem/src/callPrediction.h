@@ -41,19 +41,6 @@
 #include <iostream>
 #endif
 
-struct ChipPositionState
-{
-    ChipPositionState(float64 stack, float64 tablepot, float64 sofar, float64 commit)
-       : bankroll(stack), pot(tablepot), alreadyBet(sofar), alreadyContributed(commit)
-    {}
-
-    float64 bankroll;
-    float64 pot;
-    float64 alreadyBet;
-    float64 alreadyContributed;
-
-}
-;
 
 
 ///==============================

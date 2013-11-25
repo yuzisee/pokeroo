@@ -27,6 +27,13 @@
 #include "inferentials.h"
 #include <math.h>
 
+
+
+
+#define SACRIFICE_COMMITTED
+
+
+
 #ifndef log1p
 inline float64 log1p(float64 x)
 {
@@ -52,6 +59,22 @@ inline float64 round(float64 a)
 
 // The probability of being dealt, e.g. two aces: 1 in 221
 #define RAREST_HAND_CHANCE 221.0
+
+
+struct ChipPositionState
+{
+    ChipPositionState(float64 stack, float64 tablepot, float64 sofar, float64 commit, float64 pastpot)
+    : bankroll(stack), pot(tablepot), alreadyBet(sofar), alreadyContributed(commit), prevPot(pastpot)
+    {}
+
+    float64 bankroll;
+    float64 pot;
+    float64 alreadyBet; // What is my bet so far, this round?
+    float64 alreadyContributed;
+    float64 prevPot;
+
+}
+;
 
 class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
@@ -90,18 +113,22 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     float64 amountSacrificeForced;
     float64 bankroll;
     float64 opponents;
-    float64 betSize;
+    float64 betSize; // if you do call, this is the amount you will win from this round
+                     // NOTE: The way HoldemArena works, your total bets this round are still part of your money, so you only win the extra bets from other players.
+    float64 prevPot; // if you do call, this is the amount you will win from previous rounds
+                     // NOTE: The way HoldemArena works, your total bets from previous rounds are not part of your money, so you win the total prevPot including that which you committed.
 
     // NOTE: quantum is 1/3rd of a hand. We don't need more precision than that when evaluating f(n).
     FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0),
         cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), bSearching(false),
-    w(std::nan("")), meanConv(0), amountSacrificeVoluntary(0), amountSacrificeForced(0), bankroll(0), opponents(1), betSize(std::nan(""))
+    w(std::nan("")), meanConv(0), amountSacrificeVoluntary(0), amountSacrificeForced(0), bankroll(0), opponents(1), betSize(std::nan("")), prevPot(std::nan(""))
     {}
 
     // NOTE: Although this is the copy constructor, it doesn't copy caches. This lets you clone a configuration and re-evaluate it.
     FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0),
         cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), bSearching(false),
-        w(o.w), meanConv(o.meanConv), amountSacrificeVoluntary(o.amountSacrificeVoluntary), amountSacrificeForced(o.amountSacrificeForced), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize){};
+        w(o.w), meanConv(o.meanConv), amountSacrificeVoluntary(o.amountSacrificeVoluntary), amountSacrificeForced(o.amountSacrificeForced), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize), prevPot(o.prevPot)
+    {};
 
     const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o );
     const bool operator== ( const FoldWaitLengthModel & o ) const;
@@ -117,6 +144,10 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 
     virtual float64 FindBestLength();
     const float64 rarity();
+
+
+    void load(const ChipPositionState &cps, float64 avgBlind);
+
 
 }
 ;
@@ -135,13 +166,15 @@ class FoldGainModel : public virtual ScalarFunctionModel
     float64 last_dw_dbet;
     float64 lastf;
     float64 lastfd;
-    float64 lastFA, lastFB,lastFC;
+    float64 lastFA; // df_dw
+    float64 lastFB;
+    float64 lastFC;
 
     void query(const float64 betSize);
 
     public:
     float64 n;
-    float64 dw_dbet;
+    // float64 dw_dbet; // input for lastFA
 
 
 
@@ -149,7 +182,7 @@ class FoldGainModel : public virtual ScalarFunctionModel
 
     FoldGainModel(float64 myQuantum) : ScalarFunctionModel(myQuantum)
             , lastWaitLength(), lastBetSize(-1), last_dw_dbet(0) //Cache variables
-            , dw_dbet(0) //Input variables
+            //, dw_dbet(0) // optional input variables
             {};
 
     virtual ~FoldGainModel();

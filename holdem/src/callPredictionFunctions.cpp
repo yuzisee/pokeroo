@@ -186,15 +186,18 @@ const float64 FoldWaitLengthModel::dlookup( const float64 rank, const float64 lo
 //Maximizing this function gives you the best length that you want to wait for a fold for
 float64 FoldWaitLengthModel::f( const float64 n )
 {
-    const float64 PW = d_dbetSize(n);
+    const float64 PW = d_dbetSize(n); // Your expected win rate EV fraction of the pot (after waiting for the best hand in n hands)
     const float64 remainingbet = ( bankroll - grossSacrifice(n)  );
-    float64 playbet = (remainingbet < betSize ) ? remainingbet : betSize;
+    float64 playbet = (remainingbet < betSize) ? remainingbet : betSize;
+    float64 winShowdown; // If I finally call (after n hands) and don't fold, we'll have ``winShowdown`` winnable in a showdown
     if( playbet < 0 )
     {
         playbet = 0;
+        winShowdown = 0.0;
+    } else {
+        winShowdown = playbet + prevPot;
     }
 
-    // If I call and don't fold, we'll have "playbet" winnable in a showdown.
 
     // TODO(from joseph_huang): Should this include the pot money from previous rounds if SACRIFICE_COMMITTED is defined?
     // Set up a unit test with clear situations and see.
@@ -280,6 +283,16 @@ float64 FoldWaitLengthModel::FindBestLength()
     return bestN;
 }
 
+void FoldWaitLengthModel::load(const ChipPositionState &cps, float64 avgBlind) {
+#ifdef SACRIFICE_COMMITTED
+    amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
+    amountSacrificeForced = avgBlind;
+#else
+    amountSacrifice = cps.alreadyBet + avgBlind;
+#endif
+    bankroll = cps.bankroll;
+    prevPot = cps.prevPot;
+}
 
 
 void FoldGainModel::query( const float64 betSize )
@@ -287,7 +300,7 @@ void FoldGainModel::query( const float64 betSize )
 
 
     if(     lastBetSize == betSize
-         && last_dw_dbet == dw_dbet
+         //&& last_dw_dbet == dw_dbet
          && lastWaitLength == waitLength
       )
     {
@@ -297,7 +310,7 @@ void FoldGainModel::query( const float64 betSize )
     waitLength.betSize = betSize;
 
     lastBetSize = betSize;
-    last_dw_dbet = dw_dbet;
+    //last_dw_dbet = dw_dbet;
     lastWaitLength = waitLength;
 
 
@@ -307,7 +320,7 @@ void FoldGainModel::query( const float64 betSize )
     {//singularity
         n = 0;
         lastf = concedeGain;
-        lastFA = 0;
+        //lastFA = 0;
         lastFB = 0;
         lastFC = 0;
         lastfd = 0;
@@ -370,12 +383,35 @@ void FoldGainModel::query( const float64 betSize )
         lastFA = waitLength.d_dw( n );
         lastFC = waitLength.d_dC( n );
     }
-    lastfd = lastFA * dw_dbet + lastFB ;
 
+    // NOTE: dw_dbet == 0.0 so for now this part is simple.
+    // TODO(from yuzisee): If later dw_dbet is to be provided, you can uncomment below.
+    lastfd = // lastFA * dw_dbet +
+    lastFB ;
+
+#ifdef DEBUGASSERT
+    if(std::isnan(lastf))
+    {
+        std::cout << " lastf (NaN) in FoldWaitLengthModel! Probably you forgot to initalize something..." << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+
+#ifdef DEBUGASSERT
+    if(std::isnan(lastfd))
+    {
+        std::cout << " lastfd (NaN) in FoldWaitLengthModel! Probably you forgot to initalize something..." << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
 }
 
 float64 FoldGainModel::F_a( const float64 betSize ) {   query(betSize);return lastFA;   }
+
+// Given a fixed number of hands to wait, this is FoldWaitLengthModel's d_dbetsize, a.k.a. winnings fraction.
 float64 FoldGainModel::F_b( const float64 betSize ) {   query(betSize);return lastFB;   }
+
 float64 FoldGainModel::dF_dAmountSacrifice( const float64 betSize) {    query(betSize);return lastFC;   }
 
 float64 FoldGainModel::f( const float64 betSize )

@@ -83,6 +83,7 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
                                     + extra;
 	FG.waitLength.amountSacrificeForced = avgBlinds;
     FG.waitLength.opponents = playerCount - 1;
+    FG.waitLength.prevPot = fTable.GetPrevPotSize();
 
 	const float64 totalFG = 1 + ExpectedCallD::betFraction(p,  FG.f((facedBet > FG.waitLength.bankroll) ? (FG.waitLength.bankroll) : facedBet)  );
 
@@ -251,7 +252,7 @@ float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 
 	FG.waitLength.amountSacrificeForced = avgBlind;
     FG.waitLength.bankroll = (allChips() - bankroll)/(N-1);
     FG.waitLength.opponents = 1;
-    FG.dw_dbet = 0; //Again, we don't need this
+    //FG.dw_dbet = 0; //Again, we don't need this
 	float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced;
 	float64 drisk;
 

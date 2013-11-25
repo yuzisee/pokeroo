@@ -225,17 +225,12 @@ float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 
 
 
     
-        //We don't need to set w, because a.FindZero searches over w
-    #ifdef SACRIFICE_COMMITTED
-    a.FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
-	a.FG.waitLength.amountSacrificeForced = avgBlind;
-    #else
-    a.FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
-    #endif
-    a.FG.waitLength.bankroll = cps.bankroll;
+    // We don't need to set w, because a.FindZero searches over w
+    a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
     a.FG.waitLength.meanConv = useMean;
-    a.FG.dw_dbet = 0; //We don't need this, unless we want the derivative of FG.f; Since we don't need any extrema or zeros of FG, we can set this to anything
+    
+    //a.FG.dw_dbet = 0; //We don't need this, unless we want the derivative of FG.f; Since we don't need any extrema or zeros of FG, we can set this to anything
 
 
 /*
@@ -297,15 +292,9 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
     //USE myFG for F_a and F_b
         myFG.waitLength.meanConv = useMean;
         myFG.waitLength.w = w;
-    #ifdef SACRIFICE_COMMITTED
-        myFG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
-		myFG.waitLength.amountSacrificeForced = avgBlind;
-    #else
-        myFG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
-    #endif
-        myFG.waitLength.bankroll = cps.bankroll;
+        myFG.waitLength.load(cps, avgBlind);
         myFG.waitLength.opponents = opponents;
-        myFG.dw_dbet = 0; //Again, we don't need this
+        //myFG.dw_dbet = 0; //Again, we don't need this
 
 
         return (h_times_remaining*C*dexfy - myFG.F_b(fold_bet) + dRiskLoss_pot*dexfy) / (myFG.F_a(fold_bet) - h_times_remaining*A);
@@ -334,16 +323,10 @@ float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 h
 
     const int8 N = tableinfo->handsDealt();
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
-    #ifdef SACRIFICE_COMMITTED
-    a.FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
-	a.FG.waitLength.amountSacrificeForced = avgBlind;
-    #else
-    a.FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
-    #endif
-    a.FG.waitLength.bankroll = cps.bankroll;
+    a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
     a.FG.waitLength.meanConv = useMean;
-    a.FG.dw_dbet = 0; //We don't need this, unless we want the derivative of FG.f; Since we don't need any extrema or zeros of FG, we can set this to anything
+    //a.FG.dw_dbet = 0; //We don't need this, unless we want the derivative of FG.f; Since we don't need any extrema or zeros of FG, we can set this to anything
 
     return a.FindZero(0,1, false);
 }
@@ -360,16 +343,10 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
 
     FoldGainModel FG(tableinfo->chipDenom());
     FG.waitLength.w = w;
-    #ifdef SACRIFICE_COMMITTED
-    FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
-	FG.waitLength.amountSacrificeForced = avgBlind;
-    #else
-    FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
-    #endif
-    FG.waitLength.bankroll = cps.bankroll;
+    FG.waitLength.load(cps, avgBlind);
     FG.waitLength.opponents = opponents;
     FG.waitLength.meanConv = useMean;
-    FG.dw_dbet = 0; //Again, we don't need this
+    //FG.dw_dbet = 0; //Again, we don't need this
 
     const float64 wN_1 = pow(w,opponents-1);
     float64 fw = wN_1 * w;
@@ -397,16 +374,10 @@ float64 ExactCallD::facedOdds_Algb(const ChipPositionState & cps, float64 betSiz
 
     const int8 N = tableinfo->handsDealt();
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
-    #ifdef SACRIFICE_COMMITTED
-    a.FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
-	a.FG.waitLength.amountSacrificeForced = avgBlind;
-    #else
-    a.FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
-    #endif
-    a.FG.waitLength.bankroll = cps.bankroll;
+    a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
     a.FG.waitLength.meanConv = useMean;
-    a.FG.dw_dbet = 0; //We don't need this...
+    //a.FG.dw_dbet = 0; //We don't need this...
 
     #if defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_SEARCH)
 		a.bTraceEnable = traceOut != 0 && useMean == 0;
@@ -433,13 +404,7 @@ float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incr
     const int8 N = tableinfo->handsDealt();
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     FoldGainModel FG(tableinfo->chipDenom());
-    #ifdef SACRIFICE_COMMITTED
-    FG.waitLength.amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
-	FG.waitLength.amountSacrificeForced = avgBlind;
-    #else
-    FG.waitLength.amountSacrifice = cps.alreadyBet + avgBlind;
-    #endif
-    FG.waitLength.bankroll = cps.bankroll;
+    FG.waitLength.load(cps, avgBlind);
     FG.waitLength.opponents = opponents;
 //derivative of algebraic uses FG_a and FG_b which are independent of useMean
 
@@ -520,6 +485,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 	const float64 opponents = tableinfo->handsToShowdown(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
     const float64 myexf = betSize;
     const float64 mydexf = 1;
+    const float64 prevPot = tableinfo->table->GetPrevPotSize();
 
     float64 overexf = 0;
     float64 overdexf = 0;
@@ -623,7 +589,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
             if( betSize - oppBankRoll < tableinfo->chipDenom()/4  ) // betSize <= oppBankRoll
             {	//Can still call, at least
 
-                ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit);
+                ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit, prevPot);
 
 			///=========================
 			///   1. Estimate noRaise
@@ -798,7 +764,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                 const float64 effroundpot = (totalexf - oldpot) * oppBankRoll / betSize;
                 const float64 oppBetMake = oppBankRoll - oppBetAlready;
 
-                ChipPositionState oppmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit);
+                ChipPositionState oppmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit, prevPot);
 
                 nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan( facedOdds_call_Geom(oppmaxCPS,oppBankRoll, opponents,ed()) - EPS_WIN_PCT );
                 
@@ -959,6 +925,7 @@ void ExactCallBluffD::query(const float64 betSize)
     allFoldChanceD = 0;
     const float64 origPot = tableinfo->table->GetPotSize() - tableinfo->alreadyBet()  +  myexf;
     const float64 origPotD = mydexf;
+    const float64 prevPot = tableinfo->table->GetPrevPotSize();
 
 
     if( betSize < tableinfo->minRaiseTo() - tableinfo->chipDenom()/4 || tableinfo->callBet() >= tableinfo->table->GetMaxShowdown(tableinfo->maxBet()) )
@@ -1005,7 +972,7 @@ void ExactCallBluffD::query(const float64 betSize)
 		    if( traceOut != 0 ) *traceOut << "\t\tCan raise" << endl;
 		#endif
 
-                ChipPositionState opporigCPS(oppBankRoll,origPot,oppBetAlready,oppPastCommit);
+                ChipPositionState opporigCPS(oppBankRoll,origPot,oppBetAlready,oppPastCommit,prevPot);
                 const float64 oppBetMake = betSize - oppBetAlready;
                 //To understand the above, consider that totalexf includes already made bets
 
@@ -1085,7 +1052,7 @@ void ExactCallBluffD::query(const float64 betSize)
                     nextFold = 0;
                 }else
                 {
-                    ChipPositionState opporigmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit);
+                    ChipPositionState opporigmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit,prevPot);
 
                     float64 w_mean = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,ed());
                     float64 w_rank = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,0);
@@ -1288,6 +1255,7 @@ float64 ExactCallBluffD::RiskPrice() const
 	FG.waitLength.amountSacrificeForced = 0; //estSacrifice*rarity() already implies a forced avgBlinds
     FG.waitLength.bankroll = maxStack;
     FG.waitLength.opponents = 1;
+    FG.waitLength.prevPot = tableinfo->table->GetPrevPotSize();
     FG.waitLength.meanConv = ef();
     const float64 riskprice = FG.FindZero(tableinfo->table->GetMinRaise() + tableinfo->callBet(),maxStack/2, true);
 
@@ -1353,6 +1321,7 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 FG.waitLength.amountSacrificeForced = fTable.GetAvgBlindPerHand();
                 FG.waitLength.opponents = fTable.NumberInHand().inclAllIn() - 1;
                 FG.waitLength.w = pow(1.0 / tableStrength, 1.0 / FG.waitLength.opponents); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
+                FG.waitLength.prevPot = fTable.GetPrevPotSize();
 
                 const float64 foldGain = FG.f(betSize); // Calling this will invoke query which will populate FG.n
                 if (foldGain > 0.0) {
