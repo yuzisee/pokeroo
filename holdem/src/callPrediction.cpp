@@ -1313,12 +1313,13 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 FG.waitLength.meanConv = e_opp;
                 // ( 1 / (x+1) )  ^ (1/x)
                 FG.waitLength.bankroll = fTable.ViewPlayer(pIndex)->GetMoney();
-                FG.waitLength.amountSacrificeVoluntary = fTable.ViewPlayer(pIndex)->GetBetSize()
+                FG.waitLength.amountSacrificeForced = fTable.GetAvgBlindPerHand();
+                FG.waitLength.setAmountSacrificeVoluntary( fTable.ViewPlayer(pIndex)->GetBetSize()
     #ifdef SACRIFICE_COMMITTED
                 + fTable.ViewPlayer(pIndex)->GetVoluntaryContribution()
     #endif
-                ;
-                FG.waitLength.amountSacrificeForced = fTable.GetAvgBlindPerHand();
+                - FG.waitLength.amountSacrificeForced // exclude forced portion since it wasn't voluntary.
+                );
                 FG.waitLength.opponents = fTable.NumberInHand().inclAllIn() - 1;
                 FG.waitLength.w = pow(1.0 / tableStrength, 1.0 / FG.waitLength.opponents); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
                 FG.waitLength.prevPot = fTable.GetPrevPotSize();

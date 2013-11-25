@@ -106,13 +106,14 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
     return cached_d_dbetSize;
 }
 
-
+// The only term in f() that is a function of w is -grossSacrifice()
+// The derivative with respect to w is here.
 float64 FoldWaitLengthModel::d_dw( const float64 n )
 {
 	//CHANGE #1
 	//remove amountSacrificeForced from this expression if it occurs every round, because it doesn't interact with w
-    if( meanConv == 0 ) return (n)*(amountSacrificeForced+amountSacrificeVoluntary)/AVG_FOLDWAITPCT;
-    return (n)*(amountSacrificeForced+amountSacrificeVoluntary)/AVG_FOLDWAITPCT * meanConv->Pr_haveWorsePCT_continuous( w ).second;
+    if( meanConv == 0 ) return (n)*(amountSacrificeVoluntary)/AVG_FOLDWAITPCT;
+    return (n)*(amountSacrificeVoluntary)/AVG_FOLDWAITPCT * meanConv->Pr_haveWorsePCT_continuous( w ).second;
 }
 
 
@@ -125,19 +126,17 @@ float64 FoldWaitLengthModel::d_dC( const float64 n )
 // This is the derivative of that expression with respect to n
 const float64 FoldWaitLengthModel::dRemainingBet_dn( )
 {
-	//CHANGE #2
-	//use forced + voluntary*rarity if forced occurs every round
-    return -(amountSacrificeVoluntary+amountSacrificeForced)*rarity();
+    return -(amountSacrificeVoluntary)*rarity() + amountSacrificeForced;
 }
 
 
 const float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
 {
-	//CHANGE #3:
-    // numFolds (a.k.a. sacrificeCount) sacrifies amountForced + amountVoluntary
-    // numHands (a.k.a. n) sacrifices amountForced
-    const float64 sacrificeCount = n*rarity();
-    const float64 gross = sacrificeCount*(amountSacrificeForced+amountSacrificeVoluntary);
+
+    const float64 numHandsPerFold = 1.0 / rarity();
+	const float64 amountSacrificePerHand = (amountSacrificeVoluntary / numHandsPerFold + amountSacrificeForced);
+
+    const float64 gross = n * amountSacrificePerHand;
     return gross;
 }
 
@@ -186,6 +185,15 @@ const float64 FoldWaitLengthModel::dlookup( const float64 rank, const float64 lo
 //Maximizing this function gives you the best length that you want to wait for a fold for
 float64 FoldWaitLengthModel::f( const float64 n )
 {
+#ifdef DEBUGASSERT
+    if(amountSacrificeVoluntary < 0.0)
+    {
+        std::cout << "amountSacrificeVoluntary cannot be negative" << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+
     const float64 PW = d_dbetSize(n); // Your expected win rate EV fraction of the pot (after waiting for the best hand in n hands)
     const float64 remainingbet = ( bankroll - grossSacrifice(n)  );
     float64 playbet = (remainingbet < betSize) ? remainingbet : betSize;
@@ -195,13 +203,14 @@ float64 FoldWaitLengthModel::f( const float64 n )
         playbet = 0;
         winShowdown = 0.0;
     } else {
+    // This should include the pot money from previous rounds if SACRIFICE_COMMITTED is defined?
+    // See also: unit tests
         winShowdown = playbet + prevPot;
     }
 
 
-    // TODO(from joseph_huang): Should this include the pot money from previous rounds if SACRIFICE_COMMITTED is defined?
-    // Set up a unit test with clear situations and see.
-    const float64 lastF = playbet*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
+
+    const float64 lastF = winShowdown*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
     return lastF;
 }
 
@@ -227,7 +236,8 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
         return (dRemainingbet*PW + remainingbet*dPW_dn - grossSacrifice(n)/AVG_FOLDWAITPCT);
 
     }else{
-        return (betSize*dPW_dn - grossSacrifice(n)/AVG_FOLDWAITPCT);
+        const float64 winShowdown = betSize + prevPot;
+        return (winShowdown*dPW_dn - grossSacrifice(n)/AVG_FOLDWAITPCT);
     }
 
 }
@@ -239,43 +249,53 @@ float64 FoldWaitLengthModel::FindBestLength()
     lastdBetSizeN = -1;
     lastRawPCT = -1;
 
-    quantum = 1.0/3.0/rarity();
+    quantum = (1.0/3.0); // Get to the number of hands played.
 
-	const float64 amountSacrificeTotal = (amountSacrificeVoluntary+amountSacrificeForced);
+    const float64 numHandsPerFold = 1.0 / rarity();
+	const float64 amountSacrificePerHand = (amountSacrificeVoluntary / numHandsPerFold + amountSacrificeForced);
+    const float64 amountSacrificePerFOLD = (amountSacrificeVoluntary + amountSacrificeForced * numHandsPerFold);
 
     float64 maxTurns[2];
-    maxTurns[0] = bankroll / amountSacrificeTotal / rarity();
+    maxTurns[0] = bankroll / amountSacrificePerHand;
 
+    // Assuming no cost to folding, what's the best hand we could end up with and how much would it win?
     float64 maxProfit = d_dbetSize( maxTurns[0] ) * betSize ;
-    if ( maxProfit < amountSacrificeTotal )
+    if ( maxProfit < amountSacrificePerFOLD )
     {
+        // Can't even win back the cost of folding once, even if we automatically started with the best hand in maxTurns[0] hands.
+        // So return 0.0
         return 0;
     }
 
 
-    maxTurns[1] = maxTurns[0];
-    maxTurns[0] = maxProfit/amountSacrificeTotal/rarity();
+    // Dummy value to get the loop started.
+    //maxTurns[1] = std::numeric_limits<float64>::infinity();
 
-
-    while( maxTurns[0] < maxTurns[1]/2 )
+    do
     {
+        // Okay, so let's consider the most you could win.
+        // How many folds does that afford you at most?
+        maxTurns[1] = maxTurns[0]; // (store the old value of maxTurns[0])
+        maxTurns[0] = maxProfit/amountSacrificePerHand;
 
-        maxProfit = d_dbetSize(  maxTurns[0] ) * betSize ;
-
-        if ( maxProfit < amountSacrificeTotal )
-        {
-            return 0;
-        }
-
-
-        maxTurns[1] = maxTurns[0];
-        maxTurns[0] = maxProfit/amountSacrificeTotal/rarity();
 
         if( maxTurns[1] - maxTurns[0] < quantum )
         {
+            // There exists some chance of profitability.
+            // Break out of this loop and call FindMax() below.
             break;
         }
-    }
+
+        maxProfit = d_dbetSize(  maxTurns[0] ) * betSize ;
+
+        if ( maxProfit < amountSacrificePerFOLD )
+        {
+            // So to wait so long and we wouldn't even earn back the cost of the first fold? Then there is no fold length that is worthwhile.
+            return 0;
+        }
+
+    }while( maxTurns[0] < maxTurns[1]/2 );
+    // UNTIL: These two guys are reasonably close enough that a search makes sense.
 
     bSearching = true;
     const float64 bestN = FindMax(1/rarity(), ceil(maxTurns[0] + 1) );
@@ -285,8 +305,10 @@ float64 FoldWaitLengthModel::FindBestLength()
 
 void FoldWaitLengthModel::load(const ChipPositionState &cps, float64 avgBlind) {
 #ifdef SACRIFICE_COMMITTED
-    amountSacrificeVoluntary = cps.alreadyContributed + cps.alreadyBet;
     amountSacrificeForced = avgBlind;
+    setAmountSacrificeVoluntary(cps.alreadyContributed + cps.alreadyBet
+    // Since the blind is already included in forced.
+                                - avgBlind);
 #else
     amountSacrifice = cps.alreadyBet + avgBlind;
 #endif

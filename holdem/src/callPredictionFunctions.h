@@ -121,7 +121,7 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     // NOTE: quantum is 1/3rd of a hand. We don't need more precision than that when evaluating f(n).
     FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0),
         cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), bSearching(false),
-    w(std::nan("")), meanConv(0), amountSacrificeVoluntary(0), amountSacrificeForced(0), bankroll(0), opponents(1), betSize(std::nan("")), prevPot(std::nan(""))
+    w(std::nan("")), meanConv(0), amountSacrificeVoluntary(std::nan("")), amountSacrificeForced(std::nan("")), bankroll(std::nan("")), opponents(std::nan("")), betSize(std::nan("")), prevPot(std::nan(""))
     {}
 
     // NOTE: Although this is the copy constructor, it doesn't copy caches. This lets you clone a configuration and re-evaluate it.
@@ -147,6 +147,9 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 
 
     void load(const ChipPositionState &cps, float64 avgBlind);
+    void setAmountSacrificeVoluntary(float64 amount) {
+        amountSacrificeVoluntary = (amount < 0) ? 0.0 : amount;
+    }
 
 
 }

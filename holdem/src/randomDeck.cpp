@@ -32,7 +32,7 @@ void RandomDeck::ShuffleDeck()
 	#ifdef FORCESEED
 	srand(75);
 	#else
-	srand(time(0));
+	srand(static_cast<unsigned int>(time(0)));
 	#endif
 
     bDeckEmpty = false;

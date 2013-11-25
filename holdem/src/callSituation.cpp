@@ -76,13 +76,15 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
 
 
     FG.waitLength.bankroll = p.GetMoney();
-    FG.waitLength.amountSacrificeVoluntary = p.GetBetSize()
+    FG.waitLength.amountSacrificeForced = avgBlinds;
+    FG.waitLength.setAmountSacrificeVoluntary( p.GetBetSize()
 #ifdef SACRIFICE_COMMITTED
                  + p.GetVoluntaryContribution()
     #endif
-                                    + extra;
-	FG.waitLength.amountSacrificeForced = avgBlinds;
-    FG.waitLength.opponents = playerCount - 1;
+                                    + extra
+        - avgBlinds
+    );
+	FG.waitLength.opponents = playerCount - 1;
     FG.waitLength.prevPot = fTable.GetPrevPotSize();
 
 	const float64 totalFG = 1 + ExpectedCallD::betFraction(p,  FG.f((facedBet > FG.waitLength.bankroll) ? (FG.waitLength.bankroll) : facedBet)  );
@@ -230,6 +232,7 @@ const Player * ExpectedCallD::ViewPlayer() const {
     return table->ViewPlayer(playerID);
 }
 
+// DEPRECATED: Use OpponentHandOpportunity and CombinedStatResultsPessemistic instead.
 // TODO: Let's say riskLoss is a table metric. In that case, if you use mean it's callcumu always.
 float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot) const
 {
@@ -248,10 +251,14 @@ float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 
     {
         FG.waitLength.w = useMean->nearest_winPCT_given_rank(1.0 - 1.0/N);
     }
-    FG.waitLength.amountSacrificeVoluntary = (table->GetPotSize() - stagnantPot() - rpAlreadyBet)/(handsIn()-1);
 	FG.waitLength.amountSacrificeForced = avgBlind;
+    FG.waitLength.setAmountSacrificeVoluntary( (table->GetPotSize() - stagnantPot() - rpAlreadyBet)/(handsIn()-1) );
+
     FG.waitLength.bankroll = (allChips() - bankroll)/(N-1);
     FG.waitLength.opponents = 1;
+    FG.waitLength.prevPot = table->GetPrevPotSize();
+    // We don't need FG.waitLength.betSize because FG.f() will set betSize;
+
     //FG.dw_dbet = 0; //Again, we don't need this
 	float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced;
 	float64 drisk;

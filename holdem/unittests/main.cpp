@@ -115,7 +115,6 @@ namespace RegressionTests {
 
     // Set up a simple situation (e.g. post-river) with FoldGainWaitLength and then FoldGainModel
     //  + make sure there is a bunch of pot money from previous rounds, to test whether past pot is correctly accounted for in winnings
-    //  + make sure there is a high voluntary but high rarity so that numHands is high but numFolds is still relatively low, to test that amountSacrificedVoluntary isn't overestimated.
     void testRegression_010() {
 
         DeckLocation card;
@@ -183,7 +182,7 @@ namespace RegressionTests {
         fw.meanConv = &(statprob.core.foldcumu);
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 1000.0;
-        fw.amountSacrificeVoluntary = myConstributionToPastPot + myBetThisRound;
+        fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
         fw.opponents = 1; // Keep it simple for now
         fw.betSize = iveBeenReraisedTo;
         fw.prevPot = pastPot;
@@ -192,13 +191,102 @@ namespace RegressionTests {
         // Since w == 0.0, we have numHands === numOpportunities here. We'll add a separate test to test w > 0.0
         assert(fw.f(16) < 0); // Profit of waiting 15 hands is... probably too much. You're burning at ~200 chips to win what? ~100?
         
-        assert(fw.f(3) > 0); // Waiting three hands costs ~20 chips. Is it enough to win the 100 in the pot?
+        assert(fw.f(3) > 0); // Waiting three hands costs ~20 chips, but it gives good chances of winning the 100 in the pot
 
-        assert(fw.f(6) > 0); // Waiting six hands costs ~40 chips. Is it enough to win the 100 in the pot?
+        assert(fw.f(6) > 0); // Waiting six hands costs ~40 chips, but it gives great changes of winning the 100 in the pot
+
+        // Need a test to expose whether derivatives match
 
         
     }
-    
+
+
+    // Need a test to expose whether grossSacrifice is too large.
+    //  + make sure there is a high voluntary but high rarity so that numHands is high but numFolds is still relatively low, to test that amountSacrificedVoluntary isn't overestimated.
+    void testRegression_010b() {
+
+
+        const float64 avgBlind = 0.5;
+        const float64 pastPot = 10.0;
+        const float64 myConstributionToPastPot = 5.0; // so heads-up, battle of the blinds, no antes
+        const float64 myBetThisRound = 2.0;
+        const float64 iveBeenReraisedTo = 190.0;
+
+
+        FoldWaitLengthModel fw;
+
+        fw.w = 0.75; // You have a decent hand, but it could be better and the re-raise was ridiculously enormous.
+        fw.meanConv = nullptr;
+        fw.amountSacrificeForced = avgBlind;
+        fw.bankroll = 1000.0;
+        fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
+        fw.opponents = 1; // Keep it simple for now
+        fw.betSize = iveBeenReraisedTo;
+        fw.prevPot = pastPot;
+
+        //    TEST:
+        // Since w == 0.75, we expect to be in this situation every 4 hands. This costs us 4 avgBlinds (2.0 total) and one fold (loss of 7.0 total) every 4 hands.
+        // So we lose 9.0 every 4 hands we wait.
+        const float64 f1 = fw.f(1);
+        assert(f1 < 0); // It's not profitable to fold this hand and play the next hand.
+
+        const float64 f40 = fw.f(40);
+        assert(f40 > 0); // If we wait 40 hands, we'll lose 90 chips, but put ourselves in a good position to win 200.0
+        
+        // Need a test to expose whether derivatives match
+
+    }
+
+
+    // Need a test to expose whether grossSacrifice is too small.
+    //  + make sure there is a high blind and high rarity so that numHands is high but numFolds is still relatively low, to test that amountSacrificedVoluntary isn't underestimated.
+    void testRegression_010c() {
+
+
+        const float64 avgBlind = 30.0; // Blinds are 40.0/20.0, heads-up. No antes
+        const float64 pastPot = 0.0; // We're pre-flop
+        const float64 myConstributionToPastPot = 0.0;
+        const float64 myBetThisRound = 20.0; // we're in the small blind
+        const float64 iveBeenReraisedTo = 1000.0;
+
+
+        FoldWaitLengthModel fw;
+
+        fw.w = 0.75; // You have a decent hand, but it could be better and the raise was large.
+        fw.meanConv = nullptr;
+        fw.amountSacrificeForced = avgBlind;
+        fw.bankroll = 2000.0;
+        fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
+        fw.opponents = 1; // Keep it simple for now
+        fw.betSize = iveBeenReraisedTo;
+        fw.prevPot = pastPot;
+
+        const float64 evPlay = iveBeenReraisedTo * (2.0 * fw.w - 1.0);
+        assert(evPlay == 500.0); // sanity check only
+
+        //    TEST:
+        // Since w == 0.75, we expect to be in this situation every 4 hands. This costs us 4 avgBlinds (120.0 total) and one fold (loss of 0.0 total) every 4 hands.
+        // So we lose 120.0 every 4 hands we wait.
+
+        // Argument: But we should only expense this blind once out of every 4 hands. Other hands we should break even (each player on averaging having the best hand once, winning the blinds).
+        // Rebuttal: But we will only receive a raise of 1000.0 with some frequency too.
+        // If we were truly heads-up and we choose to play every Nth hand, we _do_ change our average hand strength but we do sacrifice every blind -- not just the ones we play.
+
+        const float64 f1 = fw.f(1);
+        assert(f1 < 0); // It's not profitable to fold this hand and play the next hand.
+
+        const float64 f5 = fw.f(5);
+        // If we play now, we can win EV 500.0 chips based on a 75% gamble on 1000.0 chips.
+        // If we wait 5 hands, we sacrifice 5 big blinds, which loses 150.0 (not 37.5), but gives us a 80% gamble on 1000.0 which nets EV 600.0
+        // It's 100 chips more profitable of a gamble, but costs 150.0 to get there.
+        assert(f5 < evPlay);
+
+        const float64 f8 = fw.f(8);
+        assert(f8 > evPlay); // If we wait 8 hands, we'll lose 240.0 chips, but put ourselves in a 87.5% chance position to win 1000.0 (= EV 750.0), which is better than taking a 75% gamble on 1000.0 now.
+
+        // Need a test to expose whether derivatives match
+        
+    }
 
 
     // Test OpposingHandOpportunity derivatives
@@ -359,7 +447,7 @@ namespace RegressionTests {
         statprob.core.playerID = 0;
         statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 
-        // TEST:
+        // TEST (from CACHE!!):
         assert(statprob.core.statRelation().pct > 0.95); // This hand is very good. StatRelation should do very well.
         assert(statprob.core.statRanking().pct > 0.97); // This is one of the best hands you can have in this situation. StatRanking should do very well.
 
@@ -1563,6 +1651,8 @@ int main(int argc, const char * argv[])
  // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
+    RegressionTests::testRegression_010c();
+    RegressionTests::testRegression_010b();
     RegressionTests::testRegression_010();
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_007();
