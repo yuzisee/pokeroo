@@ -21,7 +21,6 @@ import os
 #for sleep
 import time
 
-POKER_REPLACE = True
 import re
 
 class SubProcessThread(threading.Thread):
@@ -54,18 +53,19 @@ class SubProcessThread(threading.Thread):
 #
 
 class AppendableLabel(Tkinter.Label):
-    def __init__(self,parent):
+    def __init__(self,parent, POKER_REPLACE=False):
         Tkinter.Label.__init__(self,parent)
 
         self.configure(anchor=Tkinter.SW,justify=Tkinter.LEFT)
 
         self._my_str = ""
+        self.POKER_REPLACE = POKER_REPLACE
 
     def set_font(self,new_font):
         self.configure(font=new_font)
 
     def add_text(self,new_text):
-        if POKER_REPLACE:
+        if self.POKER_REPLACE:
             new_text = re.sub(r'\b[2-9TJQKA][cdhs]\b', lambda m: m.group(0).replace('s', u'\u2664').replace('h', u'\u2661').replace('c', u'\u2663').replace('d', u'\u2662'), new_text)
         self._my_str += new_text
         self.configure(text=self._my_str)
@@ -273,7 +273,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         self.stdout_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_GAMELOG_FONT)
         self.stderr_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_GAMELOG_FONT)
 
-        stdout_latest = AppendableLabel(left_column)
+        stdout_latest = AppendableLabel(left_column, POKER_REPLACE=True)
         stdout_latest.set_font(ConsoleSeparateWindow.DEFAULT_GAMELOG_FONT)
 
         #The input frame contains the stderr latest with an entry field at the bottom
