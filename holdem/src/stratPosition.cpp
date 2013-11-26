@@ -743,7 +743,8 @@ float64 ImproveGainStrategy::MakeBet()
 ///From regular to fear A(x2)
 	AutoScalingFunction ap(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate);
 
-	StateModel choicemodel( myDeterredCall_left, &ap );
+    GeomStateCombiner cg;
+	StateModel choicemodel( myDeterredCall_left, &ap, cg );
 #ifdef DEBUG_TRAP_AS_NORMAL
 #ifdef LOGPOSITION
 logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
@@ -754,7 +755,7 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
 #else
 	///From regular to fear B(x2)
 	AutoScalingFunction ap_right(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate);
-    StateModel choicemodel_right( myDeterredCall_right, &ap_right );
+    StateModel choicemodel_right( myDeterredCall_right, &ap_right, cg );
 
 
 
@@ -925,27 +926,6 @@ exit(1);
     logFile << "\"riskprice\"... " << riskprice << "(based on scaler of " << geom_algb_scaler << ")" << endl;
     logFile << "oppFoldChance is first " << myFearControl.oppFoldStartingPct(myDeterredCall) << ", when betting b_min=" << min_worst_scaler << endl; // but why do I care?
 
-#ifdef VERBOSE_STATEMODEL_INTERFACE
-    choicemodel.f(betToCall);
-    logFile << " AgainstCall("<< betToCall <<")=" << choicemodel.gainNormal << endl;
-    logFile << "AgainstRaise("<< betToCall <<")=" << choicemodel.gainRaised << endl;
-    logFile << "        Push("<< betToCall <<")=" << choicemodel.gainWithFold << endl;
-
-
-
-    choicemodel.f(viewBet);
-    logFile << " AgainstCall("<< viewBet <<")=" << choicemodel.gainNormal << endl;
-    logFile << "AgainstRaise("<< viewBet <<")=" << choicemodel.gainRaised << endl;
-    logFile << "        Push("<< viewBet <<")=" << choicemodel.gainWithFold << endl;
-
-    if( bGamble != 0 )
-    {
-        choicemodel_right.f(viewBet);
-        logFile << " AgainstCall OtherDeter("<< viewBet <<")=" << choicemodel_right.gainNormal << endl;
-        logFile << "AgainstRaise OtherDeter("<< viewBet <<")=" << choicemodel_right.gainRaised << endl;
-        logFile << "        Push OtherDeter("<< viewBet <<")=" << choicemodel_right.gainWithFold << endl;
-    }
-#endif
     logFile << "Call Regular("<< viewBet <<")=" << 1.0+hybridgainDeterred_aggressive.f(bestBet) << endl;
     logFile << "   Call Fear("<< viewBet <<")=" << 1.0+hybridgain_fear.f(bestBet) << endl;
 
@@ -1102,8 +1082,8 @@ float64 DeterredGainStrategy::MakeBet()
     ///Choose from geom to algb
 	AutoScalingFunction hybridgainDeterred(geomModel,algbModel,min_worst_scaler,geom_algb_scaler,&tablestate);
 
-
-    StateModel ap_aggressive( myDeterredCall, &hybridgainDeterred );
+    GeomStateCombiner cg;
+    StateModel ap_aggressive( myDeterredCall, &hybridgainDeterred, cg );
 
 
 
@@ -1176,9 +1156,9 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
 
 		choicemodel.f(displaybet); //since choicemodel is ap_aggressive
-		logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
-		logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
-		logFile << "        Push("<< displaybet <<")=" << ap_aggressive.gainWithFold << endl;
+		logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.outcomeCalled.contribution << " from $" << ap_aggressive.outcomeCalled.value << " @ " << ap_aggressive.outcomeCalled.pr << endl;
+		logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.blendedRaises.contribution << " from $" << ap_aggressive.blendedRaises.value << " @ " << ap_aggressive.blendedRaises.pr  << endl;
+		logFile << "        Push("<< displaybet <<")=" << ap_aggressive.outcomePush.contribution << " from $" << ap_aggressive.outcomePush.value << " @ " << ap_aggressive.outcomePush.pr << endl;
 
 #endif
 
@@ -1281,7 +1261,8 @@ float64 SimpleGainStrategy::MakeBet()
     const float64 aboveCallBelowRaise2 = betToCall + ViewTable().GetChipDenom();
     AutoScalingFunction callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
 
-    StateModel  ap_aggressive( myDeterredCall, &callOrRaise );
+    GeomStateCombiner cg;
+    StateModel  ap_aggressive( myDeterredCall, &callOrRaise, cg );
 
 
 
@@ -1300,13 +1281,6 @@ float64 SimpleGainStrategy::MakeBet()
 
 
     printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
-
-
-
-    choicemodel.f(displaybet); //since choicemodel is ap_aggressive
-    logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.gainNormal << endl;
-    logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
-    logFile << "        Push("<< displaybet <<")=" << ap_aggressive.gainWithFold << endl;
 
 #endif
 
@@ -1386,7 +1360,11 @@ float64 PureGainStrategy::MakeBet()
     PureStatResultGeom leftCS(statprob.core.statmean, left, tablestate);
     ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
 
-    GainModelGeom callModel(leftCS, myDeterredCall);
+    // TODO(from joseph_huang): Switch this back to GainModelGeom for better bankroll management?
+    // For now, simplify so we can debug other bugs easier.
+    // Also, consider that true bankroll management would never call all-in without a guaranteed win.
+    // Unfortunately, the Kelly criterion approach has corner cases that make it hard to get working off the bat. We'll revisit this later.
+    GainModelNoRisk callModel(leftCS, myDeterredCall);
 
     // TODO(from yuzisee): When callgain is based on rank vs. mean, should the comparative opponentHandOpportunity's foldgain be based on rank vs. mean?
     // Consider: Opponent knows what I have vs. Opponent doesn't know what I have
@@ -1394,7 +1372,10 @@ float64 PureGainStrategy::MakeBet()
     // TODO(from yuzisee): Are the other invocations of foldgain (e.g. Pr{push}) also dependent on reversed perspective?
     OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, ViewTable(), statprob.core);
     CombinedStatResultsPessimistic csrp(opponentHandOpportunity, statprob.core);
-    GainModelNoRisk raiseModel(csrp, myDeterredCall);
+    GainModelNoRisk raiseModelAlgb(csrp, myDeterredCall);
+    GainModelGeom raiseModelGeom(csrp, myDeterredCall);
+
+    GainModel &raiseModel = (bGamble < 3) ? dynamic_cast<GainModel &>(raiseModelAlgb) : dynamic_cast<GainModel &>(raiseModelGeom);
 
 
 #ifdef LOGPOSITION
@@ -1405,16 +1386,22 @@ float64 PureGainStrategy::MakeBet()
 
 
 	if( bGamble == 0 )
-	{ logFile << " -  statranking  - " << endl;}
+	{ logFile << " -  statranking ca (algb) - " << endl;}
 	else if( bGamble == 1 )
 	{ logFile << " -  detailPCT  - " << endl;}
 	else if( bGamble == 2 )
-	{ logFile << " -  statrelation  - " << endl;}
+	{ logFile << " -  statrelation cg (algb) - " << endl;}
 	else if( bGamble == 3 )
-	{ logFile << " -  stat_low  - " << endl;}
+	{ logFile << " -  stat_low cg (geom)  - " << endl;}
 	else if( bGamble == 4 )
-	{ logFile << " -  stat_high  - " << endl;}
+	{ logFile << " -  stat_high ca (geom) - " << endl;}
 #endif
+
+    // Choose from ca or cg
+    AlgbStateCombiner ca;
+    GeomStateCombiner cg;
+    IStateCombiner &stateCombiner = (bGamble / 2 == 1) ? dynamic_cast<IStateCombiner &>(cg) : dynamic_cast<IStateCombiner &>(raiseModelGeom);
+
 
     printCommon(tablestate);
 
@@ -1423,7 +1410,7 @@ float64 PureGainStrategy::MakeBet()
     const float64 aboveCallBelowRaise2 = betToCall + ViewTable().GetChipDenom();
     AutoScalingFunction callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
 
-    StateModel ap_aggressive( myDeterredCall, &callOrRaise );
+    StateModel ap_aggressive( myDeterredCall, &callOrRaise, stateCombiner );
 
 
 
@@ -1444,22 +1431,23 @@ float64 PureGainStrategy::MakeBet()
 
 
     choicemodel.f(displaybet); // query
-    logFile << " AgainstCall($"<< displaybet <<")=" << ap_aggressive.gainNormal << " from f_raised? " << callOrRaise.f_raised(displaybet, displaybet) << endl;
-    logFile << "AgainstRaise($"<< displaybet <<")=" << ap_aggressive.gainRaised << endl;
-    logFile << "        Push($"<< displaybet <<")=" << ap_aggressive.gainWithFold << " of pWin? " << myDeterredCall.pWin(displaybet) << endl;
+    logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.outcomeCalled.contribution << " from $" << ap_aggressive.outcomeCalled.value << " @ " << ap_aggressive.outcomeCalled.pr << endl;
+    logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.blendedRaises.contribution << " from $" << ap_aggressive.blendedRaises.value << " @ " << ap_aggressive.blendedRaises.pr  << endl;
+    logFile << "        Push("<< displaybet <<")=" << ap_aggressive.outcomePush.contribution << " from $" << ap_aggressive.outcomePush.value << " @ " << ap_aggressive.outcomePush.pr << endl;
+
 
     if (betToCall < displaybet) {
         choicemodel.f(betToCall); // query CALL (vs. raised)
-        logFile << " AgainstCall($"<< betToCall <<")=" << ap_aggressive.gainNormal << " from f_raised " << callOrRaise.f_raised(betToCall, betToCall) <<endl;
-        logFile << "AgainstRaise($"<< betToCall <<")=" << ap_aggressive.gainRaised << endl;
-        logFile << "        Push($"<< betToCall <<")=" << ap_aggressive.gainWithFold << endl;
+        logFile << " AgainstCall("<< betToCall <<")=" << ap_aggressive.outcomeCalled.contribution << " from $" << ap_aggressive.outcomeCalled.value << " @ " << ap_aggressive.outcomeCalled.pr << endl;
+        logFile << "AgainstRaise("<< betToCall <<")=" << ap_aggressive.blendedRaises.contribution << " from $" << ap_aggressive.blendedRaises.value << " @ " << ap_aggressive.blendedRaises.pr  << endl;
+        logFile << "        Push("<< betToCall <<")=" << ap_aggressive.outcomePush.contribution << " from $" << ap_aggressive.outcomePush.value << " @ " << ap_aggressive.outcomePush.pr << endl;
     }
 
     if (betToCall == displaybet) {
         choicemodel.f(minRaiseTo); // query MINRAISE (vs. called)
-        logFile << " AgainstCall($"<< minRaiseTo <<")=" << ap_aggressive.gainNormal << " from f_raised " << callOrRaise.f_raised(minRaiseTo, minRaiseTo) << endl;
-        logFile << "AgainstRaise($"<< minRaiseTo <<")=" << ap_aggressive.gainRaised << endl;
-        logFile << "        Push($"<< minRaiseTo <<")=" << ap_aggressive.gainWithFold << " of pWin " << myDeterredCall.pWin(minRaiseTo) << endl;
+        logFile << " AgainstCall("<< minRaiseTo <<")=" << ap_aggressive.outcomeCalled.contribution << " from $" << ap_aggressive.outcomeCalled.value << " @ " << ap_aggressive.outcomeCalled.pr << endl;
+        logFile << "AgainstRaise("<< minRaiseTo <<")=" << ap_aggressive.blendedRaises.contribution << " from $" << ap_aggressive.blendedRaises.value << " @ " << ap_aggressive.blendedRaises.pr  << endl;
+        logFile << "        Push("<< minRaiseTo <<")=" << ap_aggressive.outcomePush.contribution << " from $" << ap_aggressive.outcomePush.value << " @ " << ap_aggressive.outcomePush.pr << endl;
     }
 
 #endif
@@ -1470,8 +1458,8 @@ float64 PureGainStrategy::MakeBet()
         printPessimisticWinPct(logFile, betToCall, &csrp);
         logFile << endl;
 
-        logFile << "Against($"<< displaybet <<")Geom=" << 1.0+callModel.f(displaybet) << endl;
-        logFile << "Against($"<< displaybet <<")Algb=" << 1.0+raiseModel.f(displaybet) << endl;
+        logFile << "PlayAt($"<< displaybet <<")Call=" << callModel.f(displaybet) << endl;
+        logFile << "PlayAt($"<< displaybet <<")Raise=" << raiseModel.f(displaybet) << endl;
     }
 
 

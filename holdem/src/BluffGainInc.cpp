@@ -167,6 +167,172 @@ float64 AutoScalingFunction::fd_raised(float64 sliderx, const float64 x, const f
 
 
 
+struct AggregatedState GeomStateCombiner::createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const {
+    struct AggregatedState result;
+    result.pr = probability;
+    if (probability < EPS_WIN_PCT) {
+        // otherwise pow(0.0, 0.0) might be undefined
+        result.value = 1.0;
+        result.contribution = 1.0;
+    } else {
+        result.value = value;
+        result.contribution = std::pow(value, probability);
+    }
+
+    // y = std::pow(value, probability)
+    // log(y) = probability * log(value)
+    // d log(y) = d probability * log(value) + probability * d log(value)
+    // dy / y = d probability * log(value) + probability * (d value) / value
+    // dy = y * (d probability * log(value) + probability * (d value) / value)
+
+    result.dContribution = result.contribution * ( probability*dValue/value + dProbability*log(value) );
+
+    return result;
+}
+
+struct AggregatedState GeomStateCombiner::createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const {
+    struct AggregatedState result;
+    result.pr = 0.0;
+    result.contribution = 1.0;
+    result.dContribution = 0.0;
+
+    for (size_t i = 0; i < arraySize; ++i) {
+        if (probabilities[i] < EPS_WIN_PCT) {
+            result.contribution = 1.0; // "no change"
+            // log(values) ~= 0.0
+            // probability ~= 0.0
+        } else if (values[i] < DBL_EPSILON) {
+            result.contribution = 0.0; // "lose everything"
+            // 1.0 / values ~= \infty
+            result.dContribution = std::numeric_limits<float64>::infinity();
+        } else {
+            result.contribution *= std::pow(values[i], probabilities[i]);
+            result.dContribution += dProbabilities[i] * std::log(values[i]) + probabilities[i] * dValues[i] / values[i];
+        }
+
+        result.pr += probabilities[i];
+    }
+
+    result.dContribution *= result.contribution;
+    // y = std::pow(value1, probability1) * ... * std::pow(valueN, probabilityN)
+    // log(y) = probability1 * log(value1) + ... + probabilityN * log(valueN)
+    // d log(y) = d probability1 * log(value1) + probability1 * d log(value1) + ... + d probabilityN * log(valueN) + probabilityN * d log(valueN)
+    // dy / y = d probability1 * log(value1) + probability1 * (d value1) / value1 + ... + d probabilityN * log(valueN) + probabilityN * (d valueN) / valueN
+    // dy = y * (d probability1 * log(value1) + probability1 * (d value1) / value1 + ... + d probabilityN * log(valueN) + probabilityN * (d valueN) / valueN)
+
+
+    // result.value is the blended value @ result.pr probability
+    result.value = std::pow(result.contribution, 1.0 / result.pr);
+
+    return result;
+}
+
+struct AggregatedState GeomStateCombiner::combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const {
+    struct AggregatedState result;
+    result.contribution = a.contribution * b.contribution * c.contribution;
+    result.pr = a.pr + b.pr + c.pr;
+    result.value = pow(result.contribution, 1.0 / result.pr);
+
+    // y = a * b * c
+    // log(y) = log(a) + log(b) + log(c)
+    // dy / y =  da / a + db / b + dc / c
+    // dy = y * (da / a + db / b + dc / c)
+    result.dContribution = result.contribution * ( a.dContribution / a.contribution + b.dContribution / b.contribution + c.dContribution / c.contribution );
+    return result;
+}
+
+
+
+
+
+struct AggregatedState AlgbStateCombiner::createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const {
+    const float64 profit = value - 1.0;
+
+
+#ifdef DEBUGASSERT
+    if (profit < -1.0) {
+        std::cerr << "AlgbStateCombiner given value < 0.0 which should be impossible!" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+    struct AggregatedState result;
+    result.pr = probability;
+    result.value = value;
+    result.contribution = 1.0 + profit * probability;
+
+    // y = 1.0 + (v             - 1.0) * prb;
+    // y = 1.0 +  v * prb         - prb;
+    // dy =     dv * prb + v * dprb - dprb;
+    // dy =     dv * prb + (v - 1.0) * dprb;
+
+    result.dContribution = dValue * probability + profit * dProbability;
+
+    return result;
+}
+struct AggregatedState AlgbStateCombiner::createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const {
+    struct AggregatedState result;
+    result.pr = 0.0;
+    result.dContribution = 0.0;
+
+    float64 blendedProfit = 0.0;
+    for (size_t i = 0; i < arraySize; ++i) {
+        const float64 profit = values[i] - 1.0;
+
+#ifdef DEBUGASSERT
+        if (profit < -1.0) {
+            std::cerr << "AlgbStateCombiner given value < 0.0 which should be impossible!" << endl;
+            exit(1);
+        }
+#endif // DEBUGASSERT
+        
+        blendedProfit += profit * probabilities[i];
+
+        result.dContribution += dValues[i] * probabilities[i] + profit * dProbabilities[i];
+
+        result.pr += probabilities[i];
+    }
+
+    // y = 1.0 + (v1 - 1.0) * prb1          + ... + (vN - 1.0) * prbN;
+    // dy = dv1 * prb1 + (v1 - 1.0) * dprb1 + ... + dvN * prbN + (vN - 1.0) * dprbN;
+
+
+#ifdef DEBUGASSERT
+    if (blendedProfit < -1.0) {
+        std::cerr << "AlgbStateCombiner resulting contribution < 0.0 due to rounding error?" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+    result.contribution = 1.0 + blendedProfit;
+
+    // result.value is the blended value @ result.pr probability
+    result.value = 1.0 + blendedProfit / result.pr;
+
+#ifdef DEBUGASSERT
+    if (result.value < 0.0) {
+        std::cerr << "Can't lose more than everything -- please debug" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+    return result;
+
+}
+
+struct AggregatedState AlgbStateCombiner::combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const {
+    struct AggregatedState result;
+    result.pr = a.pr + b.pr + c.pr;
+    result.contribution = a.contribution + b.contribution + c.contribution - 2.0;
+    result.value = 1.0 + (result.contribution - 1.0) / result.pr;
+
+    // y = a + b + c - 2.0
+    // dy = da + db + dc
+    result.dContribution = a.dContribution + b.dContribution + c.dContribution;
+
+    return result;
+}
+
 
 StateModel::~StateModel()
 {
@@ -217,7 +383,7 @@ void StateModel::query( const float64 betSize )
     // betSize here is always "my" bet size. The perspective of opponents is already covered in <tt>ea</tt>
 
     last_x = betSize;
-    const float64 invisiblePercent = quantum / ea.tableinfo->allChips(); // TODO(from joseph_huang): Should be based on RAREST_HAND_CHANCE maybe raised to the power of the number of players at the table
+    const float64 invisiblePercent = EPS_WIN_PCT;// quantum / ea.tableinfo->allChips(); 
 
 ///Establish [PushGain] values
 
@@ -324,7 +490,7 @@ void StateModel::query( const float64 betSize )
 	    raiseAmount_A[i] = 0;
         oppRaisedChance_A[i] = 0;
         oppRaisedChanceD_A[i] = 0;
-        potRaisedWin_A[i] = 1;
+        potRaisedWin_A[i] = 1; // "no change"
         potRaisedWinD_A[i] = 0;
         }
 
@@ -371,8 +537,8 @@ void StateModel::query( const float64 betSize )
         const float64 totalChance = 1 - playChance;
         for( int32 i=arraySize-1;i>=0; --i)
         {
-            potRaisedWin_A[i] /= totalChance;
-            potRaisedWinD_A[i] /= totalChance;
+            oppRaisedChance_A[i] /= totalChance;
+            oppRaisedChanceD_A[i] /= totalChance;
         }
         oppFoldChance /= totalChance;
         oppFoldChanceD /= totalChance;
@@ -389,22 +555,17 @@ void StateModel::query( const float64 betSize )
 
 
 ///Calculate factors
-#ifdef VERBOSE_STATEMODEL_INTERFACE
-  #define STATEMODEL_ACCESS
-#else
-  #define STATEMODEL_ACCESS const float64
-#endif
-
-	STATEMODEL_ACCESS gainWithFold = (potFoldWin < DBL_EPSILON) ? 0 : pow(potFoldWin , oppFoldChance);
-	const float64 gainWithFoldlnD = oppFoldChance*potFoldWinD/potFoldWin + oppFoldChanceD*log(potFoldWin);
-	STATEMODEL_ACCESS gainNormal =  (potNormalWin < DBL_EPSILON) ? 0 : pow( potNormalWin,playChance );
 
 
-	float64 gainNormallnD = playChance*potNormalWinD/potNormalWin + playChanceD*log(potNormalWin);
+    outcomePush = fStateCombiner.createOutcome(potFoldWin, oppFoldChance, potFoldWinD, oppFoldChanceD);
+    outcomeCalled = fStateCombiner.createOutcome(potNormalWin, playChance, potNormalWinD, playChanceD);
+
+    blendedRaises = fStateCombiner.createBlendedOutcome(arraySize, potRaisedWin_A, oppRaisedChance_A, potRaisedWinD_A, oppRaisedChanceD_A);
+
+/*
     STATEMODEL_ACCESS gainRaised = 1;
     float64 gainRaisedlnD = 0;
 
-#undef STATEMODEL_ACCESS
 
     for( int32 i=0;i<arraySize;++i )
     {
@@ -434,7 +595,7 @@ void StateModel::query( const float64 betSize )
 	{
 		gainNormallnD = playChance*potNormalWinD/g_raised(betSize,betSize-quantum/2) + playChanceD*log(g_raised(betSize,betSize-quantum/2));
 	}
-
+*/
 
 		#ifdef DEBUG_TRACE_SEARCH
 			if(bTraceEnable)
@@ -446,9 +607,10 @@ void StateModel::query( const float64 betSize )
 		#endif
 
 ///Store results
-    y = gainWithFold*gainNormal*gainRaised;
+    struct AggregatedState gainCombined = fStateCombiner.combinedContributionOf(outcomePush, outcomeCalled, blendedRaises);
+    y = gainCombined.contribution; // e.g. gainWithFold*gainNormal*gainRaised;
 
-    dy = (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
+    dy = gainCombined.dContribution; // e.g. (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
 
     y -= fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank());
                                 /* called with ea.ed */

@@ -109,6 +109,53 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
 ;
 
 
+struct AggregatedState {
+    // Overall contribution: outcome value combined with probability of that outcome
+    float64 contribution = std::nan("");
+    float64 dContribution = std::nan("");
+
+    // Value of this particular outcome, if it were certain
+    // If this outcome is a combination of sub-outcomes, this value will represent a "blended" value
+    float64 value = std::nan("");
+
+    // Probability of this outcome.
+    float64 pr = std::nan("");
+}
+;
+
+// All values should be expressed as a fraction of your bankroll (so that Geom and Algb can be compared directly)
+// 1.0 is "no change"
+class IStateCombiner {
+public:
+    virtual ~IStateCombiner() {}
+
+    virtual struct AggregatedState createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const = 0;
+    virtual struct AggregatedState createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const = 0;
+
+    virtual struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const = 0;
+}
+;
+
+class GeomStateCombiner : public IStateCombiner {
+public:
+    virtual ~GeomStateCombiner() {}
+
+    struct AggregatedState createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const override final;
+    struct AggregatedState createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const override final;
+
+    struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const override final;
+};
+
+class AlgbStateCombiner : public IStateCombiner {
+public:
+    virtual ~AlgbStateCombiner() {}
+
+    struct AggregatedState createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const override final;
+    struct AggregatedState createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const override final;
+
+    struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const override final;
+};
+
 // Evaluate gainWithFold*gainNormal*gainRaised
 // on an AutoScalingFunction
 // and relative to foldGain and everything.
@@ -127,6 +174,7 @@ class StateModel : public virtual HoldemFunctionModel
     protected:
         ExactCallBluffD & ea;
         FoldOrCall fMyFoldGain; // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
+    const IStateCombiner & fStateCombiner;
         AutoScalingFunction *fp;
         bool bSingle;
 
@@ -138,21 +186,30 @@ class StateModel : public virtual HoldemFunctionModel
     float64 gd_raised(float64 raisefrom, float64, const float64);
     public:
 
-		int32 firstFoldToRaise;
-#ifdef VERBOSE_STATEMODEL_INTERFACE
-		float64 gainWithFold;
-		float64 gainNormal;
-		float64 gainRaised;
-#endif
+    int32 firstFoldToRaise;
+
+    // Outcome if push succeeds (e.g. all fold to you)
+    struct AggregatedState outcomePush;
+
+    // Outcome if bet is called with no raises (e.g. calls only)
+    struct AggregatedState outcomeCalled;
+
+    // "Effective outcome" of all possibilities where bet is eventually raised (either now or in a future round)
+    // It's blended because there are actually several raise possibilities and this blends them into one.
+    struct AggregatedState blendedRaises;
+
 
     float64 g_raised(float64 raisefrom, float64);
 
-    StateModel(ExactCallBluffD & c, AutoScalingFunction *function) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
+    StateModel(ExactCallBluffD & c, AutoScalingFunction *function, const IStateCombiner & stateCombiner)
+    : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
     ,last_x(-1)
     ,
     ea(c)
     ,
     fMyFoldGain(*(c.tableinfo->table),c.fCore)
+    ,
+    fStateCombiner(stateCombiner)
     ,
     fp(function),bSingle(false),firstFoldToRaise(-1)
     {
