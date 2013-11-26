@@ -444,7 +444,7 @@ float64 HoldemFunctionModel::FindFoldBet(const float64 bestBet)
 
 
 
-
+// Returns a value as a fraction of your bankroll. Returning 0.0 means "lose everything"
 float64 GainModelGeom::g(float64 betSize)
 {
 
@@ -484,7 +484,7 @@ float64 GainModelGeom::g(float64 betSize)
         const float64 t_1lp = pow(t_1l, t_cl);
     #endif
 
-    if( betSize < estat->callBet() && betSize < estat->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
+    if( betSize < estat->callBet() && betSize < estat->maxBet() ) return 0.0; ///"Negative raise" means betting less than the minimum call = FOLD
 
     const int8 e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(round(exf/x));
     const StatResult & splitShape = fOutcome.ViewShape(betSize);
@@ -690,7 +690,7 @@ StatResult CombinedStatResultsGeom::ComposeBreakdown(const float64 pct, const fl
 }
 
 
-
+// Returns a value as a fraction of your bankroll. Returning 0.0 means "lose everything"
 float64 GainModelNoRisk::g(float64 betSize)
 {
 
@@ -728,7 +728,7 @@ float64 GainModelNoRisk::g(float64 betSize)
 
         #endif
 
-    if( betSize < estat->callBet() && betSize < estat->maxBet() ) return -1; ///"Negative raise" means betting less than the minimum call = FOLD
+    if( betSize < estat->callBet() && betSize < estat->maxBet() ) return 0.0; ///"Negative raise" means betting less than the minimum call = FOLD
 
     const int8& e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(round(exf/x));
     const StatResult & splitShape = fOutcome.ViewShape(betSize);

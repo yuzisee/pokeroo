@@ -1400,7 +1400,7 @@ float64 PureGainStrategy::MakeBet()
     // Choose from ca or cg
     AlgbStateCombiner ca;
     GeomStateCombiner cg;
-    IStateCombiner &stateCombiner = (bGamble / 2 == 1) ? dynamic_cast<IStateCombiner &>(cg) : dynamic_cast<IStateCombiner &>(raiseModelGeom);
+    IStateCombiner &stateCombiner = (bGamble / 2 == 1) ? dynamic_cast<IStateCombiner &>(cg) : dynamic_cast<IStateCombiner &>(ca);
 
 
     printCommon(tablestate);

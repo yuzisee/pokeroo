@@ -198,7 +198,7 @@ struct AggregatedState GeomStateCombiner::createBlendedOutcome(size_t arraySize,
 
     for (size_t i = 0; i < arraySize; ++i) {
         if (probabilities[i] < EPS_WIN_PCT) {
-            result.contribution = 1.0; // "no change"
+            //result.contribution *= 1.0; // "no change"
             // log(values) ~= 0.0
             // probability ~= 0.0
         } else if (values[i] < DBL_EPSILON) {
@@ -220,9 +220,14 @@ struct AggregatedState GeomStateCombiner::createBlendedOutcome(size_t arraySize,
     // dy / y = d probability1 * log(value1) + probability1 * (d value1) / value1 + ... + d probabilityN * log(valueN) + probabilityN * (d valueN) / valueN
     // dy = y * (d probability1 * log(value1) + probability1 * (d value1) / value1 + ... + d probabilityN * log(valueN) + probabilityN * (d valueN) / valueN)
 
+    if (result.pr > 0.0) {
 
-    // result.value is the blended value @ result.pr probability
-    result.value = std::pow(result.contribution, 1.0 / result.pr);
+        // result.value is the blended value @ result.pr probability
+        result.value = std::pow(result.contribution, 1.0 / result.pr);
+
+    } else {
+        result.value = 1.0;
+    }
 
     return result;
 }
@@ -297,6 +302,7 @@ struct AggregatedState AlgbStateCombiner::createBlendedOutcome(size_t arraySize,
     // dy = dv1 * prb1 + (v1 - 1.0) * dprb1 + ... + dvN * prbN + (vN - 1.0) * dprbN;
 
 
+
 #ifdef DEBUGASSERT
     if (blendedProfit < -1.0) {
         std::cerr << "AlgbStateCombiner resulting contribution < 0.0 due to rounding error?" << endl;
@@ -304,10 +310,17 @@ struct AggregatedState AlgbStateCombiner::createBlendedOutcome(size_t arraySize,
     }
 #endif // DEBUGASSERT
 
-    result.contribution = 1.0 + blendedProfit;
+    if (result.pr > 0.0) {
 
-    // result.value is the blended value @ result.pr probability
-    result.value = 1.0 + blendedProfit / result.pr;
+        result.contribution = 1.0 + blendedProfit;
+
+        // result.value is the blended value @ result.pr probability
+        result.value = 1.0 + blendedProfit / result.pr;
+
+    } else {
+        result.contribution = 1.0;
+        result.value = 1.0;
+    }
 
 #ifdef DEBUGASSERT
     if (result.value < 0.0) {
@@ -531,7 +544,7 @@ void StateModel::query( const float64 betSize )
     float64 potNormalWin = g_raised(betSize,betSize);
     float64 potNormalWinD = gd_raised(betSize,betSize,potNormalWin);
 
-    if( playChance <= invisiblePercent ) //roundoff, but {playChance == 0} is push-fold for the opponent
+    if( 0.0 < playChance && playChance <= invisiblePercent ) //roundoff, but {playChance == 0} is push-fold for the opponent
     {
         //Correct other odds
         const float64 totalChance = 1 - playChance;
