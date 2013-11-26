@@ -225,7 +225,7 @@ public:
     ,
     fIdx(myIdx)
     ,
-    e_opp(&core.foldcumu)
+    fCore(core)
     {
     }
 
@@ -246,7 +246,7 @@ private:
 
 
     // Used strictly with FoldGain: What would your opponent be willing to lay down, knowing what you have.
-    CallCumulationD * e_opp;
+    CoreProbabilities &fCore;
     const playernumber_t fIdx;
 
 }

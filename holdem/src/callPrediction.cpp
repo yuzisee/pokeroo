@@ -1375,6 +1375,12 @@ static float64 handsCommitted(playernumber_t fBettor, const HoldemArena & fTable
             continue;
         }
 
+        // Finally, skip fBettor as well.
+        // We've already included that bet as 1.0 regardless of the actual bet on the table, since this is the hypothesis bet.
+        if (pIndex == fBettor) {
+            continue;
+        }
+
 
             // Get existing bet...
             const float64 commitmentLevel = fTable.ViewPlayer(pIndex)->GetBetSize();
@@ -1390,8 +1396,6 @@ static float64 handsCommitted(playernumber_t fBettor, const HoldemArena & fTable
             result += commitmentLevel / myBetSize;
 
     }while( pIndex != fBettor);
-    // This condition allows us to skip fBettor.
-    // We've already included that bet as 1.0 regardless of the actual bet on the table, since this is the hypothesis bet.
 
     return result;
 }
@@ -1432,7 +1436,13 @@ void OpponentHandOpportunity::query(const float64 betSize) {
 
                 // TODO(from joseph_huang): Should we assume that the opponents also choose mean when {1 == handsShowdown()} and rank otherwise??
                 // I guess technically this is mean but they know what you have, so pessimistically we're talking about them trying to beat only you.
-                FG.waitLength.meanConv = e_opp;
+                // The problem is, we usually talk about being pessimistic to prevent overbets when _you_ have a good hand.
+                // In that case, e_opp would be counter-productive. Let's consider callcumu or even rank here instead.
+                FG.waitLength.meanConv =
+                //(opponentsFacingThem > 1.0) ?
+                0
+                //: &(fCore.callcumu)
+                ;
                 // ( 1 / (x+1) )  ^ (1/x)
                 FG.waitLength.bankroll = fTable.ViewPlayer(pIndex)->GetMoney();
                 FG.waitLength.amountSacrificeForced = fTable.GetAvgBlindPerHand();

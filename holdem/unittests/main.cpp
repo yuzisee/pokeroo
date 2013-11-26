@@ -120,6 +120,221 @@ namespace RegressionTests {
         assert(fabs(expected - actual) < fabs(expected) * eps_rel);
     }
 
+
+
+    // You'll fold Ks Kd pre-flop after raising to $705 yourself only because you got reraised an extra ~$100?
+    void testRegression_014a() {
+
+        /*
+
+         Next Dealer is GearBotV
+         ================================================================
+         ============================New Hand #15========================
+         BEGIN
+
+
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [ActionBotV $810]
+         [NormalBotV $1630]
+         [TrapBotV $1485]
+         [Ali $1945]
+         [DangerBotV $1590]
+         [MultiBotV $1485]
+         [ConservativeBotV $1585]
+         [SpaceBotV $1500]
+         [GearBotV $1470]
+
+         */
+
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(5.0);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(5.0);
+
+        const std::vector<float64> foldOnly({0});
+        const std::vector<float64> nA({365, 1045});
+        FixedReplayPlayerStrategy gS(foldOnly);
+        FixedReplayPlayerStrategy tS(foldOnly);
+        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy pS(foldOnly);
+        FixedReplayPlayerStrategy nS(nA);
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy cS(foldOnly);
+        FixedReplayPlayerStrategy sS(foldOnly);
+
+
+        PlayerStrategy * const botToTest = new PureGainStrategy(2); 
+
+        myTable.ManuallyAddPlayer("ActionBot14", 810.0, botToTest);
+        myTable.ManuallyAddPlayer("NormalBotV", 1630.0, &nS);
+        myTable.ManuallyAddPlayer("TrapBotV", 1485.0, &tS);
+        myTable.ManuallyAddPlayer("Ali", 1945.0, &pS); // Ali is the dealer, since DangerBot is the small blind
+        myTable.ManuallyAddPlayer("DangerBotV", 1590.0, &dS);
+        myTable.ManuallyAddPlayer("MultiBotV", 1485.0, &mS);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 1585.0, &cS);
+        myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
+        myTable.ManuallyAddPlayer("GearBotV", 1470.0, &gS);
+
+        const playernumber_t dealer = 8;
+
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // Ks Kd
+
+            card.SetByIndex(44);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(47);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+
+
+        myTable.BeginInitialState(14);
+        myTable.BeginNewHands(b, false, dealer);
+
+
+        /*
+
+         ActionBotV posts SB of $5 ($5)
+         NormalBotV posts BB of $10 ($15)
+         TrapBotV folds
+         Ali folds
+         DangerBotV folds
+         MultiBotV folds
+         ConservativeBotV folds
+         SpaceBotV folds
+         GearBotV folds
+         ActionBotV raises to $55 ($65)
+         NormalBotV raises to $365 ($420)
+         ActionBotV raises to $705 ($1070)
+         NormalBotV raises to $1045 ($1750)
+         ActionBotV folds
+         
+         All fold! NormalBotV wins $705
+         
+         
+         */
+        assert (myTable.PlayRound_BeginHand() != -1);
+        
+    }
+
+    // You're pushing this hard pre-flop with Jc Qd? Why
+    void testRegression_013a() {
+
+/*
+
+ Next Dealer is GearBotV
+ ================================================================
+ ============================New Hand #15========================
+ BEGIN
+
+
+ Preflop
+ (Pot: $0)
+ (9 players)
+ [ActionBotV $810]
+ [NormalBotV $1630]
+ [TrapBotV $1485]
+ [Ali $1945]
+ [DangerBotV $1590]
+ [MultiBotV $1485]
+ [ConservativeBotV $1585]
+ [SpaceBotV $1500]
+ [GearBotV $1470]
+ 
+ */
+
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(5.0);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(5.0);
+
+        const std::vector<float64> foldOnly({0});
+        const std::vector<float64> aA({55, 705, std::nan("")});
+        FixedReplayPlayerStrategy gS(foldOnly);
+        FixedReplayPlayerStrategy tS(foldOnly);
+        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy pS(foldOnly);
+        FixedReplayPlayerStrategy aS(aA);
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy cS(foldOnly);
+        FixedReplayPlayerStrategy sS(foldOnly);
+
+
+        //PlayerStrategy * const botToTest = new DeterredGainStrategy(0);
+        PlayerStrategy * const botToTest = new PureGainStrategy(3); // originally ImproveGainStrategy(2);
+
+        myTable.ManuallyAddPlayer("ActionBotV", 810.0, &aS);
+        myTable.ManuallyAddPlayer("NormalBot13", 1630.0, botToTest);
+        myTable.ManuallyAddPlayer("TrapBotV", 1485.0, &tS);
+        myTable.ManuallyAddPlayer("Ali", 1945.0, &pS); // Ali is the dealer, since DangerBot is the small blind
+        myTable.ManuallyAddPlayer("DangerBotV", 1590.0, &dS);
+        myTable.ManuallyAddPlayer("MultiBotV", 1485.0, &mS);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 1585.0, &cS);
+        myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
+        myTable.ManuallyAddPlayer("GearBotV", 1470.0, &gS);
+
+        const playernumber_t dealer = 8;
+
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // Qd Jc
+
+            card.SetByIndex(38);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(43);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+        
+        
+        myTable.BeginInitialState(13);
+        myTable.BeginNewHands(b, false, dealer);
+        
+
+        /*
+
+ ActionBotV posts SB of $5 ($5)
+ NormalBotV posts BB of $10 ($15)
+ TrapBotV folds
+ Ali folds
+ DangerBotV folds
+ MultiBotV folds
+ ConservativeBotV folds
+ SpaceBotV folds
+ GearBotV folds
+ ActionBotV raises to $55 ($65)
+ NormalBotV raises to $365 ($420)
+ ActionBotV raises to $705 ($1070)
+ NormalBotV raises to $1045 ($1750)
+ ActionBotV folds
+
+ All fold! NormalBotV wins $705
+
+
+ */
+        if (myTable.PlayRound_BeginHand() == -1) {
+            assert(myTable.GetPotSize() < 100);
+        } else {
+            assert(myTable.GetPotSize() < 200);
+        }
+
+    }
+
     // When you have top pair on the river and there are no flush threats and not a significant straight threat, shouldn't you bet?
     void testRegression_012() {
 
@@ -162,8 +377,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        //PlayerStrategy * const botToTest = new DeterredGainStrategy(0);
-        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally ImproveGainStrategy(2);
+        PlayerStrategy * const botToTest = new PureGainStrategy(2);
 
         myTable.ManuallyAddPlayer("GearBotV", 1500.0, &gS);
         myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
@@ -689,7 +903,7 @@ namespace RegressionTests {
         card.SetByIndex(42);
         withCommunity.AddToHand(card);
 
-
+        std::cout << "Starting next round..." << endl;
 
         CommunityPlus communityToTest; // Jc Ks Ah
 
@@ -715,7 +929,11 @@ namespace RegressionTests {
         statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
 
-        const float64 testBet = 1.5;
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+
+        const float64 testBet = 2.0;
         
         OpponentHandOpportunity test(1, myTable, statprob.core);
 
@@ -1991,6 +2209,8 @@ int main(int argc, const char * argv[])
  // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
+    RegressionTests::testRegression_013a();
+    RegressionTests::testRegression_014a();
     RegressionTests::testRegression_010c();
     RegressionTests::testRegression_010b();
     RegressionTests::testRegression_010();
