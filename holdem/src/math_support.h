@@ -19,12 +19,11 @@ inline float64 log1p(float64 x)
 }
 #endif // log1p
 
-#ifndef isnan
-inline bool isnan(float64 x)
+
+inline bool is_nan(float64 x)
 {
     return x != x;
 }
-#endif // isnan
 
 #include <limits>
 //#ifndef nan

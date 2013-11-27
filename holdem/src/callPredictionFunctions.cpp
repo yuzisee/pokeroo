@@ -20,6 +20,7 @@
 
 
 #include "callPredictionFunctions.h"
+#include "math_support.h"
 
 #include <iostream>
 
@@ -296,7 +297,7 @@ float64 FoldWaitLengthModel::f( const float64 n )
         exit(1);
     }
 
-    if(std::isnan(betSize)) {
+    if(is_nan(betSize)) {
         std::cout << "NaN betSize uninitialized?" << std::endl;
         exit(1);
     }
@@ -324,7 +325,7 @@ float64 FoldWaitLengthModel::f( const float64 n )
 
 
 #ifdef DEBUGASSERT
-    if(std::isnan(lastF)) {
+    if(is_nan(lastF)) {
         std::cout << "NaN lastF result" << std::endl;
         exit(1);
     }
@@ -566,7 +567,7 @@ void FoldGainModel::query( const float64 betSize )
     lastFB ;
 
 #ifdef DEBUGASSERT
-    if(std::isnan(lastf))
+    if(is_nan(lastf))
     {
         std::cout << " lastf (NaN) in FoldWaitLengthModel! Probably you forgot to initalize something..." << std::endl;
         exit(1);
@@ -575,7 +576,7 @@ void FoldGainModel::query( const float64 betSize )
 
 
 #ifdef DEBUGASSERT
-    if(std::isnan(lastfd))
+    if(is_nan(lastfd))
     {
         std::cout << " lastfd (NaN) in FoldWaitLengthModel! Probably you forgot to initalize something..." << std::endl;
         exit(1);
@@ -674,7 +675,7 @@ void FacedOddsAlgb::query( const float64 w )
 
 
 #ifdef DEBUGASSERT
-    if(std::isnan(lastF))
+    if(is_nan(lastF))
     {
         std::cout << " (NaN) returned by FacedOddsAlgb" << std::endl;
         exit(1);

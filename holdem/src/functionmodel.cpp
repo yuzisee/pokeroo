@@ -22,6 +22,7 @@
 #include <float.h>
 
 #include "functionmodel.h"
+#include "math_support.h"
 #include "ai.h"
 
 
@@ -55,7 +56,7 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
     const float64 fractionOfHandsToBeat_dbetSize = fOpposingHands.d_HandsToBeat_dbetSize();
 
 #ifdef DEBUGASSERT
-    if (std::isnan(fHandsToBeat)) {
+    if (is_nan(fHandsToBeat)) {
         std::cerr << "NaN encountered in fHandsToBeat" << endl;
         exit(1);
     }
