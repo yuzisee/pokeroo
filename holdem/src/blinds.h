@@ -79,6 +79,8 @@ class BlindValues
             return averageForced;
         }
 
+
+        // If you were to fold each hand continuously, return total money lost divided by number of times folded.
         float64 OpportunityPerHand(const playernumber_t livePlayers) const
         {
             const float64 averageForced = AverageForcedBetPerHand(livePlayers);
@@ -86,12 +88,20 @@ class BlindValues
             //Flat odds to win each hand before cards are dealt, is 1.0/livePlayers.
             // That's one hand on average each time the button goes around.
             // Your EV/equity here is +averageForced/livePlayers.
+
             //Likewise, someone else is going to win the other livePlayers-1 hands.
             // That's gives you an EV/equity of -averageForced*(livePlayers-1)/livePlayers
             //Adding these together means the net opportunity of each hand is:
+
             // + averageForced/livePlayers - averageForced*(livePlayers-1)/livePlayers
             // = averageForced*(1.0-livePlayers+1)/livePlayers
             // = averageForced*(2.0-livePlayers)/livePlayers
+
+            // HOWEVER, if you're calling OpportunityPerHand in the first place you are considering the opportunity as if you were folding now.
+            // If you do fold here, then consider this particular hand breakeven (e.g. 50% win)
+            // This leaves:
+            // + 0.5 * averageForced/livePlayers - averageForced*(livePlayers-1)/livePlayers
+            // = averageForced*(1.5-livePlayers)/livePlayers
 
             //Opportunity cost is the negative of net opportunity
             const float64 averageOpporunityCost = (averageForced*(livePlayers - 2))/livePlayers;

@@ -505,9 +505,7 @@ class HoldemArena
 		float64 GetChipDenom() const;
 		const BlindValues & GetBlindValues() const{ return myBlinds; }
 
-        // If you were to fold each hand continuously, return total money lost divided by number of times folded.
-        float64 GetAvgBlindPerHand() const;
-
+        
 
 //======================
 //   In-Game Mutators
