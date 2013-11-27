@@ -443,6 +443,8 @@ void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
 
 }
 
+
+
 void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat) {
     FoldOrCall foldGainCalculator(ViewTable(), statprob.core);
     std::pair<float64, float64> foldgainVal_xw = foldGainCalculator.myFoldGainAndWaitlength(foldGainCalculator.suggestMeanOrRank());
@@ -465,6 +467,30 @@ void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, E
     logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
     if( ViewPlayer().GetInvoluntaryContribution() > 0 ) logFile << "   ->assumes $" << ViewPlayer().GetInvoluntaryContribution() << " forced";
     logFile << endl;
+}
+
+static const char * chipSignToString(const struct AggregatedState & state) {
+    const float64 val = state.value;
+
+    if (val > 1.0) {
+        return "+$";
+    }
+    if (val < 1.0) {
+        return "-$";
+    }
+    if (val == 1.0) {
+        return "$";
+    }
+    return "~";
+}
+
+void PositionalStrategy::printStateModel(std::ofstream &logF, float64 displaybet, StateModel &ap_aggressive, const Player &me) {
+
+    ap_aggressive.f(displaybet); // query
+    logF << " AgainstCall("<< displaybet <<")=" << ap_aggressive.outcomeCalled.contribution << " from " << chipSignToString(ap_aggressive.outcomeCalled) << (fabs(ap_aggressive.outcomeCalled.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.outcomeCalled.pr << endl;
+    logF << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.blendedRaises.contribution << " from " << chipSignToString(ap_aggressive.blendedRaises) << (fabs(ap_aggressive.blendedRaises.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.blendedRaises.pr  << endl;
+    logF << "        Push("<< displaybet <<")=" << ap_aggressive.outcomePush.contribution << " from " << chipSignToString(ap_aggressive.outcomePush) << ((ap_aggressive.outcomePush.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.outcomePush.pr << endl;
+
 }
 
 void PositionalStrategy::printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp) {
@@ -1379,6 +1405,7 @@ float64 PureGainStrategy::MakeBet()
 
 
 #ifdef LOGPOSITION
+    logFile << "CallStrength W(*)=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
     const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
     logFile << "(MinRaise to $" << minRaiseTo << ") ";
     printPessimisticWinPct(logFile, minRaiseTo, &csrp);
@@ -1429,37 +1456,27 @@ float64 PureGainStrategy::MakeBet()
 
     printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
 
-
-    choicemodel.f(displaybet); // query
-    logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.outcomeCalled.contribution << " from $" << ap_aggressive.outcomeCalled.value << " @ " << ap_aggressive.outcomeCalled.pr << endl;
-    logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.blendedRaises.contribution << " from $" << ap_aggressive.blendedRaises.value << " @ " << ap_aggressive.blendedRaises.pr  << endl;
-    logFile << "        Push("<< displaybet <<")=" << ap_aggressive.outcomePush.contribution << " from $" << ap_aggressive.outcomePush.value << " @ " << ap_aggressive.outcomePush.pr << endl;
-
+    printStateModel(logFile, displaybet, ap_aggressive, ViewPlayer());
 
     if (betToCall < displaybet) {
-        choicemodel.f(betToCall); // query CALL (vs. raised)
-        logFile << " AgainstCall("<< betToCall <<")=" << ap_aggressive.outcomeCalled.contribution << " from $" << ap_aggressive.outcomeCalled.value << " @ " << ap_aggressive.outcomeCalled.pr << endl;
-        logFile << "AgainstRaise("<< betToCall <<")=" << ap_aggressive.blendedRaises.contribution << " from $" << ap_aggressive.blendedRaises.value << " @ " << ap_aggressive.blendedRaises.pr  << endl;
-        logFile << "        Push("<< betToCall <<")=" << ap_aggressive.outcomePush.contribution << " from $" << ap_aggressive.outcomePush.value << " @ " << ap_aggressive.outcomePush.pr << endl;
+        // If you raised, also show CALL
+        printStateModel(logFile, betToCall, ap_aggressive, ViewPlayer());
     }
 
     if (betToCall == displaybet) {
-        choicemodel.f(minRaiseTo); // query MINRAISE (vs. called)
-        logFile << " AgainstCall("<< minRaiseTo <<")=" << ap_aggressive.outcomeCalled.contribution << " from $" << ap_aggressive.outcomeCalled.value << " @ " << ap_aggressive.outcomeCalled.pr << endl;
-        logFile << "AgainstRaise("<< minRaiseTo <<")=" << ap_aggressive.blendedRaises.contribution << " from $" << ap_aggressive.blendedRaises.value << " @ " << ap_aggressive.blendedRaises.pr  << endl;
-        logFile << "        Push("<< minRaiseTo <<")=" << ap_aggressive.outcomePush.contribution << " from $" << ap_aggressive.outcomePush.value << " @ " << ap_aggressive.outcomePush.pr << endl;
+        // If you called, also show MINRAISE
+        printStateModel(logFile, minRaiseTo, ap_aggressive, ViewPlayer());
     }
 
 #endif
 
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
-        logFile << "($" << displaybet << ") ";
-        printPessimisticWinPct(logFile, betToCall, &csrp);
-        logFile << endl;
-
+/*
         logFile << "PlayAt($"<< displaybet <<")Call=" << callModel.f(displaybet) << endl;
         logFile << "PlayAt($"<< displaybet <<")Raise=" << raiseModel.f(displaybet) << endl;
+*/
+
     }
 
 

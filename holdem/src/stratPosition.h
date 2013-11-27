@@ -40,6 +40,7 @@ class PositionalStrategy : virtual public PlayerStrategy
 
 
     protected:
+        static void printStateModel(std::ofstream &logF, float64 betSize, StateModel &choicemodel, const Player &me);
         static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp);
 
         template< typename T >
