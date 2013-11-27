@@ -222,7 +222,7 @@ float64 ExpectedCallD::betFraction(const Player & player, const float64 betSize)
 }
 
 
-float64 ExpectedCallD::handBetBase() const
+float64 ExpectedCallD::handBetBase()
 {
     return 1;
 }

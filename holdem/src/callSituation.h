@@ -99,12 +99,12 @@ public:
     virtual playernumber_t handsDealt() const;
     virtual playernumber_t handsIn() const;
     virtual float64 prevpotChips() const;
-    virtual float64 stagnantPot() const;
+    virtual float64 stagnantPot() const; // All the folded chips from this round, and all the chips from previous rounds. These chips are always avalable to you and will not go away for sure.
 
     float64 betFraction(const float64 betSize) const;
     static float64 betFraction(const Player &, const float64 betSize);
 
-    virtual float64 handBetBase() const; //The B (bankroll) in calculations
+    static float64 handBetBase(); //The B (bankroll) in calculations
 	virtual float64 minRaiseTo() const;
 	virtual bool inBlinds() const;
 

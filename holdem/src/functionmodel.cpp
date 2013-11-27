@@ -468,9 +468,6 @@ float64 GainModelGeom::g(float64 betSize)
     }
 
     const float64 f_pot = estat->betFraction( estat->stagnantPot() );
-    const float64 exf_live = exf - f_pot;
-
-    const float64 base = estat->handBetBase();
 
     #ifdef DEBUGVIEWINTERMEDIARIES
         const float64& t_w = shape.wins;
@@ -486,8 +483,20 @@ float64 GainModelGeom::g(float64 betSize)
 
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return 0.0; ///"Negative raise" means betting less than the minimum call = FOLD
 
+    return h(x, betSize, exf, f_pot, fOutcome);
+}
+
+
+
+
+float64 GainModelGeom::h(float64 betFraction, float64 betSize, float64 exf, float64 f_pot, ICombinedStatResults & fOutcome) {
+    const float64 base = ExpectedCallD::handBetBase();
+    const float64 x = betFraction;
+
     const int8 e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(round(exf/x));
     const StatResult & splitShape = fOutcome.ViewShape(betSize);
+
+    const float64 exf_live = exf - f_pot;
 
 	float64 sav=1;
 	for(int8 i=1;i<=e_call;++i)
@@ -502,23 +511,23 @@ float64 GainModelGeom::g(float64 betSize)
 
 		sav *=  pow(
                     base - x +( f_pot+x+exf_live*dragCalls )/(i+1)
-                        ,
-                        HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i) * pow(splitShape.wins,fOutcome.splitOpponents()-i) * pow(splitShape.splits,i)
-                );
+                    ,
+                    HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i) * pow(splitShape.wins,fOutcome.splitOpponents()-i) * pow(splitShape.splits,i)
+                    );
 	}
 
-//    const float64 t_result = t_1wp * t_1lp * sav - 1;
+    //    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
     const float64 winGain = pow(base+exf , fOutcome.getWinProb(betSize));
     const float64 loseGain = pow(base-x , fOutcome.getLoseProb(betSize));
 
 	return
 
-        (
-        winGain
-        *
-        loseGain
-        *sav)
+    (
+     winGain
+     *
+     loseGain
+     *sav)
 	;
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix));  plays more cautiously to account for most people playing better cards only
 	//return pow(1+f_pot+e_fix*e->pctWillCall()*x , pow(shape.wins,e_fix*e->pctWillCall()));
@@ -526,6 +535,7 @@ float64 GainModelGeom::g(float64 betSize)
 	//let's round e_fix downward on input
 	//floor()
 }
+
 
 float64 GainModelGeom::f(const float64 betSize)
 {
@@ -581,11 +591,10 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
         dexf = 0.0;
     }
 
-     const float64 base = estat->handBetBase();
 
 		//const float64 dexf = e->dexf(betSize)*betSize/x; //Chain rule where d{ exf(x*B) } = dexf(x*B)*B  //Note: B is determined by betSize/x
     const float64 f_pot = estat->betFraction(estat->stagnantPot());
-    const float64 exf_live = exf - f_pot;
+
 	//const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;n
     //const int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
 
@@ -601,6 +610,15 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
     #endif
 
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
+
+    return hd(x, betSize, exf, dexf, f_pot, dx, fOutcome, y);
+
+}
+
+float64 GainModelGeom::hd(float64 betFraction, float64 betSize, float64 exf, float64 dexf, float64 f_pot, float64 dx, ICombinedStatResults & fOutcome, float64 y) {
+    const float64 base = ExpectedCallD::handBetBase();
+    const float64 x = betFraction;
+    const float64 exf_live = exf - f_pot;
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
     const int8 e_call = fOutcome.splitOpponents(); //Probably manditory if dragCalls is used
@@ -618,43 +636,42 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
         if( dragCalls != 0 )
         {
             savd += HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i)
-                    *
-                    dexf
-                    /
-                    ( (i+1+f_pot + x)/dragCalls + exf_live )
-                    ;
+            *
+            dexf
+            /
+            ( (i+1+f_pot + x)/dragCalls + exf_live )
+            ;
         }///Else you'd just {savd+=0;} anyways
 	}
 
-    #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
-    #endif
+#ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
+#endif
 
     //y is passed in as (y+e->foldGain()) which essentially gives you g()
 
-     return
+    return
  	(y)*
 	(
-	/*fOutcome.getWinProb(betSize)*dexf/(1+exf)
+     /*fOutcome.getWinProb(betSize)*dexf/(1+exf)
 
-	-(fOutcome.getLoseProb(betSize))/(1-x)
-	*/
+      -(fOutcome.getLoseProb(betSize))/(1-x)
+      */
 
      //
-//     d_dbetSize log{const float64 winGain = pow(base+exf , fOutcome.getWinProb(betSize));}
-//     d_dbetSize fOutcome.getWinProb(betSize) log{base+exf}
-//     {d_dbetSize fOutcome.getWinProb(betSize)} log{base+exf} + fOutcome.getWinProb(betSize) d_dbetSize log{base+exf}
-//     fOutcome.get_d_WinProb_dbetSize(betSize) log{base+exf} + fOutcome.getWinProb(betSize) dexf/{base+exf}
-    fOutcome.get_d_WinProb_dbetSize(betSize) * log(base + exf) + fOutcome.getWinProb(betSize) * dexf / (base + exf)
-//     d_dbetSize log{const float64 loseGain = pow(base-x , fOutcome.getLoseProb(betSize));}
-//     d_dbetSize fOutcome.getLoseProb(betSize) log{base-x}
-//     {d_dbetSize fOutcome.getLoseProb(betSize)} log{base-x} + fOutcome.getLoseProb(betSize) d_dbetSize log{base-x}
-//     fOutcome.get_d_LoseProb_dbetSize(betSize) log{base-x} + fOutcome.getLoseProb(betSize) (-dx)/(base-x)
+     //     d_dbetSize log{const float64 winGain = pow(base+exf , fOutcome.getWinProb(betSize));}
+     //     d_dbetSize fOutcome.getWinProb(betSize) log{base+exf}
+     //     {d_dbetSize fOutcome.getWinProb(betSize)} log{base+exf} + fOutcome.getWinProb(betSize) d_dbetSize log{base+exf}
+     //     fOutcome.get_d_WinProb_dbetSize(betSize) log{base+exf} + fOutcome.getWinProb(betSize) dexf/{base+exf}
+     fOutcome.get_d_WinProb_dbetSize(betSize) * log(base + exf) + fOutcome.getWinProb(betSize) * dexf / (base + exf)
+     //     d_dbetSize log{const float64 loseGain = pow(base-x , fOutcome.getLoseProb(betSize));}
+     //     d_dbetSize fOutcome.getLoseProb(betSize) log{base-x}
+     //     {d_dbetSize fOutcome.getLoseProb(betSize)} log{base-x} + fOutcome.getLoseProb(betSize) d_dbetSize log{base-x}
+     //     fOutcome.get_d_LoseProb_dbetSize(betSize) log{base-x} + fOutcome.getLoseProb(betSize) (-dx)/(base-x)
      + fOutcome.get_d_LoseProb_dbetSize(betSize) * log(base-x) - fOutcome.getLoseProb(betSize) * dx/(base-x)
      
-	+ savd
-	);
-
+     + savd
+     );
 }
 
 float64 GainModelGeom::fd(const float64 betSize, const float64 y)
@@ -710,9 +727,6 @@ float64 GainModelNoRisk::g(float64 betSize)
 
 
     const float64 f_pot = estat->betFraction(estat->stagnantPot());
-    const float64 exf_live = exf - f_pot;
-
-    const float64 base = estat->handBetBase();
 
         #ifdef DEBUGVIEWINTERMEDIARIES
 
@@ -730,6 +744,15 @@ float64 GainModelNoRisk::g(float64 betSize)
 
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return 0.0; ///"Negative raise" means betting less than the minimum call = FOLD
 
+    return h(x, betSize, exf, f_pot, fOutcome);
+}
+
+float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, float64 f_pot,  ICombinedStatResults & fOutcome) {
+    const float64 base = ExpectedCallD::handBetBase();
+    const float64 x = betFraction;
+    const float64 exf_live = exf - f_pot;
+    
+
     const int8& e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(round(exf/x));
     const StatResult & splitShape = fOutcome.ViewShape(betSize);
 
@@ -746,39 +769,39 @@ float64 GainModelNoRisk::g(float64 betSize)
         dragCalls = dragCalls * dragCalls - dragCalls + 1;
 
 		sav +=
-                (    base - x+( f_pot+x+exf_live*dragCalls )/(i+1)    )
-                        *
-                (        HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i)    )
-                ;
+        (    - x+( f_pot+x+exf_live*dragCalls )/(i+1)    )
+        *
+        (        HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i)    )
+        ;
 	}
 
-//    const float64 t_result = t_1wp * t_1lp * sav - 1;
+    //    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
 #ifdef DEBUG_TRACE_SEARCH
     if(bTraceEnable)
     {
-         std::cout << "\t\t\tbase+exf " << (base+exf)  << "   *   p_cw "  << p_cw << std::endl;
-         std::cout << "\t\t\tbase-x " << (base-x)  << "   *   p_cl "  << p_cl << std::endl;
-         std::cout << "\t\t\tsav " << (sav)  << std::endl;
+        std::cout << "\t\t\tbase+exf " << (base+exf)  << "   *   p_cw "  << p_cw << std::endl;
+        std::cout << "\t\t\tbase-x " << (base-x)  << "   *   p_cl "  << p_cl << std::endl;
+        std::cout << "\t\t\tsav " << (sav)  << std::endl;
     }
 #endif
 
-    const float64 onWin = (base+exf) * fOutcome.getWinProb(betSize);
-    const float64 onLose = (base-x) * fOutcome.getLoseProb(betSize);
-    
-	return
+    const float64 onWin = exf * fOutcome.getWinProb(betSize);
+    const float64 onLose = -x * fOutcome.getLoseProb(betSize);
 
-		   onWin
-        +
-           onLose
-        +
-		   sav
+	return base +
+
+    onWin
+    +
+    onLose
+    +
+    sav
 
 	;
-
 	//let's round e_fix downward on input
 	//floor()
 }
+
 
 float64 GainModelNoRisk::f(const float64 betSize)
 {
@@ -819,7 +842,6 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
         dexf = 0.0;
     }
 
-    const float64 base = estat->handBetBase();
 
 
 #ifdef DEBUG_TRACE_SEARCH
@@ -827,6 +849,12 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 #endif
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
+    return hd(x, betSize, exf, dexf, fOutcome, y);
+
+}
+
+float64 GainModelNoRisk::hd(float64 betFraction, float64 betSize, float64 exf, float64 dexf, ICombinedStatResults & fOutcome, float64 y) {
+    const float64 x = betFraction;
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
     const int8 e_call = fOutcome.splitOpponents(); //Probably manditory if dragCalls is used
@@ -846,29 +874,28 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
             savd += HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)
             *pow(splitShape.wins,fOutcome.splitOpponents()-i)
             *pow(splitShape.splits,i)
-                    *
-                    dexf * dragCalls
-                    /
-					(i+1)
-                    ;
+            *
+            dexf * dragCalls
+            /
+            (i+1)
+            ;
         }///Else you'd just {savd+=0;} anyways
 	}
 
 
 
-			#ifdef DEBUG_TRACE_SEARCH
-				if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
-			#endif
+#ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
+#endif
 
 
  	return
 	(
-	fOutcome.getWinProb(betSize)*dexf + fOutcome.get_d_WinProb_dbetSize(betSize)*(base + exf)
-	- (fOutcome.getLoseProb(betSize)) + (base-x) * fOutcome.get_d_LoseProb_dbetSize(betSize)
-	+
-	savd
-	);
-
+     fOutcome.getWinProb(betSize)*dexf + fOutcome.get_d_WinProb_dbetSize(betSize)*(exf)
+     - (fOutcome.getLoseProb(betSize)) + (-x) * fOutcome.get_d_LoseProb_dbetSize(betSize)
+     +
+     savd
+     );
 }
 
 float64 GainModelNoRisk::fd(const float64 betSize, const float64 y)

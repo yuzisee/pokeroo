@@ -197,7 +197,7 @@ private:
 public:
     PureStatResultGeom(const StatResult mean, const StatResult rank, const ExpectedCallD &tableinfo);
 
-    ~PureStatResultGeom() {}
+    virtual ~PureStatResultGeom() {}
 
     playernumber_t splitOpponents() const override final { return fShowdownOpponents; }
     
@@ -304,7 +304,7 @@ class GainModelGeom : public virtual GainModel
 
 protected:
 
-	ExactCallD & espec;
+	IExf & espec;
     
     ICombinedStatResults & fOutcome; // predict the outcome of a showdown
 
@@ -314,7 +314,9 @@ protected:
     virtual float64 gd(float64, const float64) override final;
     
 	public:
-    
+
+    static float64 h(float64 betFraction, float64 betSize, float64 exf, float64 f_pot, ICombinedStatResults & fOutcome);
+    static float64 hd(float64 betFraction, float64 betSize, float64 exf, float64 dexf, float64 f_pot, float64 dx, ICombinedStatResults & fOutcome, float64 h);
 
     /**
      *  Parameters:
@@ -404,12 +406,18 @@ protected:
 class GainModelNoRisk : public virtual GainModel
 {
     protected:
-    ExactCallD & espec;
+    IExf & espec;
     ICombinedStatResults & fOutcome; // predict the outcome of a showdown
     
         virtual float64 g(float64);
         virtual float64 gd(float64,const float64);
     public:
+
+
+    static float64 h(float64 betFraction, float64 betSize, float64 exf, float64 f_pot, ICombinedStatResults & fOutcome);
+    static float64 hd(float64 betFraction, float64 betSize, float64 exf, float64 dexf, ICombinedStatResults & fOutcome, float64 h);
+
+
     /**
      *  Parameters:
      *    convertToNet:

@@ -43,7 +43,6 @@
 
 class IExf {
 public:
-
     virtual ~IExf() {}
 
 

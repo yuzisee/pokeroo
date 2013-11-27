@@ -48,6 +48,472 @@ namespace NamedTriviaDeckTests {
     }
 }
 
+#include "callRarity.h"
+#include "functionmodel.h"
+namespace UnitTests {
+
+
+    class FixedStatResult : public ICombinedStatResults {
+    public:
+        playernumber_t fOpponents;
+
+        struct StatResult fShape;
+
+
+        FixedStatResult() {}
+
+        virtual ~FixedStatResult() {}
+
+        playernumber_t splitOpponents() const override final { return fOpponents; }
+
+        const StatResult & ViewShape(float64 betSize) override final { return fShape; } // per-player outcome: wins and splits are used to calculate split possibilities
+        float64 getLoseProb(float64 betSize) override final {
+            return 1.0 - std::pow(1.0 - fShape.loss, fOpponents);
+        }
+        float64 getWinProb(float64 betSize) override final {
+            return std::pow(fShape.wins, fOpponents);
+        }
+
+        float64 get_d_LoseProb_dbetSize(float64 betSize) override final { return 0.0; }
+        float64 get_d_WinProb_dbetSize(float64 betSize) override final { return 0.0; }
+    }
+    ;
+
+    void assertDerivative(IFunctionDifferentiable &f, float64 xa, float64 xb, float64 eps_rel) {
+        const float64 ya = f.f(xa);
+        const float64 yb = f.f(xb);
+        const float64 xd = (xa + xb)/2.0;
+        const float64 yd = f.f(xd);
+        const float64 actual = f.fd(xd, yd);
+        const float64 expected = (yb - ya) / (xb - xa);
+        assert(fabs(expected - actual) < fabs(expected) * eps_rel);
+    }
+
+    // Sanity check that GainModelGeom probabilities add up to 1.0
+    // Take some known simple win percentages and measure the outcome.
+    void testRegression_015() {
+        //GainModelGeom
+        //GainModelNoRisk
+
+        FixedStatResult a;
+        // No funny business, just two opponents.
+        a.fOpponents = 2.0;
+
+        a.fShape.wins = 0.75;
+        a.fShape.splits = 0.10;
+        a.fShape.loss = 0.15;
+
+        const float64 betFraction = 0.2;
+        const float64 betSize = std::nan("");
+        const float64 exf = 0.5; // there's a lot of money in previous rounds and/or predicted money in this round
+        const float64 f_pot = 0.1; // only a small amount is from previous rounds or from players who have folded this round
+
+        // Drop to 0.8, 27.75% the time (because betFraction == 0.2)
+        // Increase to 1.5, 9.0/16.0 of the time (because exf == 0.5)
+        // Split three ways has probability 0.1*0.1, and payout 1.0 + (0.5 + 0.2) / 3
+        // Split two ways has probability 0.1 * 0.75 * 2 and payout 1.0 + (0.5 + 0.2) / 2
+        float64 expected = 0.8 * 0.2775 + 1.5 * 9.0/16.0 + 0.1*0.1 * (1.0 + 0.7 / 3) + 0.1 * 0.75 * 2 * (1.0 + 0.7 / 2);
+        float64 actual = GainModelNoRisk::h(betFraction, betSize, exf, f_pot, a);
+        
+        assert(fabs(expected - actual) < fabs(expected) * 1e-14);
+    }
+
+
+    // Set up a simple situation (e.g. post-river) with FoldGainWaitLength and then FoldGainModel
+    //  + make sure there is a bunch of pot money from previous rounds, to test whether past pot is correctly accounted for in winnings
+    void testRegression_010() {
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // Td Ad
+
+        card.SetByIndex(35);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(51);
+        withCommunity.AddToHand(card);
+
+
+
+
+        CommunityPlus communityToTest; // 2d Qd Kd 2h 2s
+
+        card.SetByIndex(3);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(43);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(47);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(0);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(1);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        const int8 cardsInCommunity = 5;
+        const float64 avgBlind = 0.5;
+        const float64 pastPot = 60.0;
+        const float64 myConstributionToPastPot = 5.0; // so lots of limpers out of the 60.0 that's there
+        const float64 myBetThisRound = 2.0;
+        const float64 iveBeenReraisedTo = 40.0;
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+        ///Compute WinStats
+        DistrShape w_wl(0);
+        DistrShape detailPCT(0);
+        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.playerID = 0;
+        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+        FoldWaitLengthModel fw;
+        // From the opponent's point of view if he knows he's against a flush
+        fw.setW( 0.0 ); // Their current hand does not pair the board so loses to an ace-high flush (but note there is a ~30% chance that they hit a pair other than a deuce and a ~4% chance of having one deuce)
+        fw.meanConv = &(statprob.core.foldcumu);
+        fw.amountSacrificeForced = avgBlind;
+        fw.bankroll = 1000.0;
+        fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
+        fw.opponents = 1; // Keep it simple for now
+        fw.betSize = iveBeenReraisedTo;
+        fw.prevPot = pastPot;
+
+        //    TEST:
+        // Since w == 0.0, we have numHands === numOpportunities here. We'll add a separate test to test w > 0.0
+        assert(fw.f(16) < 0); // Profit of waiting 15 hands is... probably too much. You're burning at ~200 chips to win what? ~100?
+
+        assert(fw.f(3) > 0); // Waiting three hands costs ~20 chips, but it gives good chances of winning the 100 in the pot
+
+        assert(fw.f(6) > 0); // Waiting six hands costs ~40 chips, but it gives great changes of winning the 100 in the pot
+
+        // Need a test to expose whether derivatives match
+
+
+    }
+
+
+    // Need a test to expose whether grossSacrifice is too large.
+    //  + make sure there is a high voluntary but high rarity so that numHands is high but numFolds is still relatively low, to test that amountSacrificedVoluntary isn't overestimated.
+    void testRegression_010b() {
+
+
+        const float64 avgBlind = 0.5;
+        const float64 pastPot = 10.0;
+        const float64 myConstributionToPastPot = 5.0; // so heads-up, battle of the blinds, no antes
+        const float64 myBetThisRound = 2.0;
+        const float64 iveBeenReraisedTo = 190.0;
+
+
+        FoldWaitLengthModel fw;
+
+        fw.setW( 0.75 ); // You have a decent hand, but it could be better and the re-raise was ridiculously enormous.
+        fw.meanConv = nullptr;
+        fw.amountSacrificeForced = avgBlind;
+        fw.bankroll = 1000.0;
+        fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
+        fw.opponents = 1; // Keep it simple for now
+        fw.betSize = iveBeenReraisedTo;
+        fw.prevPot = pastPot;
+
+        const float64 evPlay = (pastPot + iveBeenReraisedTo) * (2.0 * fw.getW() - 1.0);
+        assert(evPlay == 100.0); // sanity check only
+
+        //    TEST:
+        // Since w == 0.75, we expect to be in this situation every 4 hands. This costs us 4 avgBlinds (2.0 total) and one fold (loss of 7.0 total) every 4 hands.
+        // So we lose 9.0 every 4 hands we wait.
+        const float64 f1 = fw.f(1);
+        assert(f1 < 0); // It's not profitable to fold this hand and play the next hand.
+
+        const float64 f40 = fw.f(40);
+        assert(f40 > evPlay); // If we wait 40 hands, we'll lose 90 chips, but put ourselves in a good position to win 200.0
+
+        // Need a test to expose whether derivatives match
+
+        { // Test dF_dAmountSacrifice per hand
+            const float64 n = 40.0;
+            const float64 xa = fw.amountSacrificeVoluntary - 0.01;
+            const float64 xb = fw.amountSacrificeVoluntary + 0.01;
+            const float64 xd = fw.amountSacrificeVoluntary;
+
+            fw.amountSacrificeVoluntary = xa; const float64 ya = fw.f(n);
+            fw.amountSacrificeVoluntary = xb; const float64 yb = fw.f(n);
+            fw.amountSacrificeVoluntary = xd; fw.f(n); const float64 actual = fw.d_dC(n);
+            const float64 expected = (yb - ya) / (xb - xa);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-12);
+        }
+
+
+        { // Test d_dw
+            const float64 n = 40.0;
+            const float64 xa = fw.getW() - 0.001;
+            const float64 xb = fw.getW() + 0.001;
+            const float64 xd = fw.getW();
+
+            fw.setW( xa ); const float64 ya = fw.f(n);
+            fw.setW( xb ); const float64 yb = fw.f(n);
+            fw.setW( xd ); fw.f(n); const float64 actual = fw.d_dw(n);
+            const float64 expected = (yb - ya) / (xb - xa);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-4);
+        }
+    }
+
+
+    // Need a test to expose whether grossSacrifice is too small.
+    //  + make sure there is a high blind and high rarity so that numHands is high but numFolds is still relatively low, to test that amountSacrificedVoluntary isn't underestimated.
+    void testRegression_010c() {
+
+
+        const float64 avgBlind = 30.0; // Blinds are 40.0/20.0, heads-up. No antes
+        const float64 pastPot = 0.0; // We're pre-flop
+        const float64 myConstributionToPastPot = 0.0;
+        const float64 myBetThisRound = 20.0; // we're in the small blind
+        const float64 iveBeenReraisedTo = 5000.0;
+
+
+        FoldWaitLengthModel fw;
+
+        fw.setW(0.75); // You have a decent hand, but it could be better and the raise was large.
+        fw.meanConv = nullptr;
+        fw.amountSacrificeForced = avgBlind;
+        fw.bankroll = 10000.0;
+        fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
+        fw.opponents = 1; // Keep it simple for now
+        fw.betSize = iveBeenReraisedTo;
+        fw.prevPot = pastPot;
+
+        const float64 evPlay = (pastPot + iveBeenReraisedTo) * (2.0 * fw.getW() - 1.0);
+        assert(evPlay == 2500.0); // sanity check only
+
+        //    TEST:
+        // Since w == 0.75, we expect the opponent to be in this situation every 4 hands.
+        // Each time the opponent is in this situation, we except to also be in this situation one out of every 4 of those.
+        // This, we can repeat this situation every 16 hands if we want, and wait for a better hand next time.
+        // This costs us 16 avgBlinds (480.0 total) and one fold (loss of 0.0 total) every 16 hands.
+        // So we lose 480.0 every 16 hands we wait.
+
+        /*
+         // Argument: But we should only expense this blind once out of every 4 hands. Other hands we should break even (each player on averaging having the best hand once, winning the blinds).
+         // Rebuttal: But we will only receive a raise of 5000.0 with some frequency too.
+         // If we were truly heads-up and we choose to play every Nth hand, we _do_ change our average hand strength but we do sacrifice every blind -- not just the ones we play.
+         */
+        const float64 f1 = fw.f(1);
+        assert(f1 < 0); // It's not profitable to fold this hand and play the next hand.
+
+        const float64 f20 = fw.f(20);
+        // If we play now, we can win EV 2500.0 chips based on a 75% gamble on 5000.0 chips.
+        // If we wait 20 hands, we sacrifice 20 big blinds, which loses 600.0 (not 150.0), but gives us a 80% gamble on 5000.0 which nets EV 3000.0
+        // It's 500.0 chips more profitable of a gamble, but costs 600.0 to get there.
+        assert(0.0 < f20);
+        assert(f20 < evPlay);
+
+        const float64 f40 = fw.f(40);
+        assert(f40 > evPlay); // If we wait 40 hands, we'll lose 1200.0 chips, but put ourselves in a 90% chance position to win 5000.0 (= EV 4000.0), which is better than taking a 75% gamble on 5000.0 now.
+
+        // Need a test to expose whether derivatives match
+        assertDerivative(fw, 39.99, 40.01, 1e-6);
+
+        { // Test d_dBetsize
+            const float64 n = 40.0;
+            const float64 xa = fw.betSize - 0.01;
+            const float64 xb = fw.betSize + 0.01;
+            const float64 xd = fw.betSize;
+
+            fw.betSize = xa; const float64 ya = fw.f(n);
+            fw.betSize = xb; const float64 yb = fw.f(n);
+            fw.betSize = xd; fw.f(n); const float64 actual = fw.d_dbetSize(n);
+            const float64 expected = (yb - ya) / (xb - xa);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-10);
+        }
+
+    }
+
+
+
+    // Test callcumu sanity checks
+    void testRegression_007c() {
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // Kd Ad
+
+        card.SetByIndex(47);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(51);
+        withCommunity.AddToHand(card);
+
+
+
+
+        CommunityPlus communityToTest;
+
+        const int8 cardsInCommunity = 0;
+
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+        ///Compute WinStats
+        DistrShape w_wl(0);
+        DistrShape detailPCT(0);
+        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.playerID = 0;
+        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+        // TEST (from CACHE!!):
+        assert(statprob.core.statRelation().pct > 0.94); // This hand is very good. StatRelation should do very well.
+        assert(statprob.core.statRanking().pct > 0.96); // This is one of the best hands you can have in this situation. StatRanking should do very well.
+
+        // Against most opponents, I have a strong chance to win.
+        assert(statprob.core.getFractionOfOpponentsWhereMyWinrateIsAtLeast(0.6) > 0.93);
+
+        // 19th strongest out of 20 hands
+        const float64 actualWinPct = statprob.core.callcumu.nearest_winPCT_given_rank(0.95);
+        assert(actualWinPct < 0.8); // Such a hand has about a 65% chance to win? Even aces have only 70 something right?
+        assert(0.6457 < actualWinPct);
+
+    }
+
+
+    // Test foldcumu sanity checks
+    void testRegression_007b() {
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // Td Ad
+
+        card.SetByIndex(35);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(51);
+        withCommunity.AddToHand(card);
+
+
+
+
+        CommunityPlus communityToTest; // 2d Qd Kd
+
+        card.SetByIndex(3);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(43);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(47);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        const int8 cardsInCommunity = 3;
+
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+        ///Compute WinStats
+        DistrShape w_wl(0);
+        DistrShape detailPCT(0);
+        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.playerID = 0;
+        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+        // TEST:
+        assert(statprob.core.statRelation().pct > 0.95); // This hand is very good. StatRelation should do very well.
+        assert(statprob.core.statRanking().pct > 0.97); // This is one of the best hands you can have in this situation. StatRanking should do very well.
+
+        // Against most opponents, I have a very strong chance to win.
+        assert(statprob.core.getFractionOfOpponentsWhereMyWinrateIsAtLeast(0.85) > 0.9);
+
+    }
+
+
+
+    // Test oddsAgainstBestXHands derivative
+    void testRegression_007() {
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // Td Ad
+
+        card.SetByIndex(35);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(51);
+        withCommunity.AddToHand(card);
+
+
+
+
+        CommunityPlus communityToTest; // 2d Qd Kc
+        
+        card.SetByIndex(3);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+        
+        card.SetByIndex(43);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+        
+        card.SetByIndex(46);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+        
+        const int8 cardsInCommunity = 3;
+        
+        
+        StatResultProbabilities statprob;
+        
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+        
+        
+        // TEST:
+        const float64 xa = 0.3;
+        const float64 xb = 0.3001;
+        std::pair<StatResult, float64> ya = statprob.core.handcumu.bestXHands(xa);
+        std::pair<StatResult, float64> yb = statprob.core.handcumu.bestXHands(xb);
+        
+        const float64 expected = (yb.first.pct - ya.first.pct) / (xb - xa);
+        const float64 actual = (ya.second + yb.second) / 2.0;
+        
+        assert(fabs(actual - expected) < fabs(expected) * 1.0e-7);
+    }
+
+
+}
+
 #include "arena.h"
 #include "arenaEvents.h"
 #include "stratPosition.h"
@@ -110,16 +576,130 @@ namespace RegressionTests {
     }
     ;
 
-    void assertDerivative(IFunctionDifferentiable &f, float64 xa, float64 xb, float64 eps_rel) {
-        const float64 ya = f.f(xa);
-        const float64 yb = f.f(xb);
-        const float64 xd = (xa + xb)/2.0;
-        const float64 yd = f.f(xd);
-        const float64 actual = f.fd(xd, yd);
-        const float64 expected = (yb - ya) / (xb - xa);
-        assert(fabs(expected - actual) < fabs(expected) * eps_rel);
-    }
 
+    // Test OpposingHandOpportunity derivatives
+    void testRegression_008() {
+
+        /*
+         Preflop
+         (Pot: $0)
+         (4 players)
+         [A $100.0]
+         [B $150.0]
+         [C $75.0]
+         [D $22.0]
+
+
+         A posts SB of $0.125 ($0.125)
+         B posts BB of $0.25 ($0.375)
+         */
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(0.125);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(0.125);
+
+        const std::vector<float64> aC({0.25});
+        FixedReplayPlayerStrategy cS(aC);
+        FixedReplayPlayerStrategy dS(aC);
+
+        FixedReplayPlayerStrategy aS(aC);
+        FixedReplayPlayerStrategy bS(aC);
+
+        myTable.ManuallyAddPlayer("A", 100.0, &aS);
+        myTable.ManuallyAddPlayer("B", 150.0, &bS);
+        myTable.ManuallyAddPlayer("C", 75.0, &cS);
+        myTable.ManuallyAddPlayer("D", 22.0, &dS);
+        const playernumber_t dealer = 3;
+
+
+        myTable.BeginInitialState();
+        myTable.BeginNewHands(b, false, dealer);
+
+
+        /*
+         C calls $0.25 ($0.625)
+         D calls $0.25 ($0.875)
+         A calls $0.25 ($1.0)
+         B checks
+         */
+        assert(myTable.PlayRound_BeginHand() != -1);
+
+        //myTable.PrepBettingRound(false,2); //turn, river remaining
+
+        // ===
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // 3c Qc
+
+        card.SetByIndex(6);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(42);
+        withCommunity.AddToHand(card);
+
+        std::cout << "Starting next round..." << endl;
+
+        CommunityPlus communityToTest; // Jc Ks Ah
+
+        card.SetByIndex(38);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(44);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(49);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        const int8 cardsInCommunity = 3;
+
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+
+        const float64 testBet = 2.0;
+
+        OpponentHandOpportunity test(1, myTable, statprob.core);
+
+
+
+        test.query(testBet);
+        const float64 actual_y = test.handsToBeat();
+        const float64 actual_Dy = test.d_HandsToBeat_dbetSize();
+
+        assert(actual_y >= 3.5);
+        assert(actual_Dy > 0); // betting more should increase N even more
+
+        CombinedStatResultsPessimistic testC(test, statprob.core);
+        //testC.query(testBet);
+
+        const float64 s1 = testC.ViewShape(testBet).splits;
+        const float64 w = testC.getWinProb(testBet);
+        const float64 l = testC.getLoseProb(testBet);
+        const float64 dw = testC.get_d_WinProb_dbetSize(testBet);
+        const float64 dl = testC.get_d_LoseProb_dbetSize(testBet);
+        
+        assert(testC.ViewShape(testBet).wins + testC.ViewShape(testBet).splits + testC.ViewShape(testBet).loss == 1.0);
+        
+        assert(w < 0.1);
+        assert(l+w > 0.86);
+        assert(s1 < 0.25);
+        assert(dw < 0);
+        assert(dl == -dw);
+    }
 
 
     // You'll fold Ks Kd pre-flop after raising to $705 yourself only because you got reraised an extra ~$100?
@@ -613,524 +1193,6 @@ namespace RegressionTests {
         myTable.PlayRound_BeginHand();
         assert(myTable.GetPotSize() < 120);
 
-    }
-
-
-    // Set up a simple situation (e.g. post-river) with FoldGainWaitLength and then FoldGainModel
-    //  + make sure there is a bunch of pot money from previous rounds, to test whether past pot is correctly accounted for in winnings
-    void testRegression_010() {
-
-        DeckLocation card;
-
-        CommunityPlus withCommunity; // Td Ad
-
-        card.SetByIndex(35);
-        withCommunity.AddToHand(card);
-
-        card.SetByIndex(51);
-        withCommunity.AddToHand(card);
-
-
-
-
-        CommunityPlus communityToTest; // 2d Qd Kd 2h 2s
-
-        card.SetByIndex(3);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(43);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(47);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(0);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(1);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        const int8 cardsInCommunity = 5;
-        const float64 avgBlind = 0.5;
-        const float64 pastPot = 60.0;
-        const float64 myConstributionToPastPot = 5.0; // so lots of limpers out of the 60.0 that's there
-        const float64 myBetThisRound = 2.0;
-        const float64 iveBeenReraisedTo = 40.0;
-
-        StatResultProbabilities statprob;
-
-        ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
-
-        ///Compute CommunityCallStats
-        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
-
-        ///Compute WinStats
-        DistrShape w_wl(0);
-        DistrShape detailPCT(0);
-        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.playerID = 0;
-        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
-
-        FoldWaitLengthModel fw;
-        // From the opponent's point of view if he knows he's against a flush
-        fw.setW( 0.0 ); // Their current hand does not pair the board so loses to an ace-high flush (but note there is a ~30% chance that they hit a pair other than a deuce and a ~4% chance of having one deuce)
-        fw.meanConv = &(statprob.core.foldcumu);
-        fw.amountSacrificeForced = avgBlind;
-        fw.bankroll = 1000.0;
-        fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
-        fw.opponents = 1; // Keep it simple for now
-        fw.betSize = iveBeenReraisedTo;
-        fw.prevPot = pastPot;
-
-//    TEST:
-        // Since w == 0.0, we have numHands === numOpportunities here. We'll add a separate test to test w > 0.0
-        assert(fw.f(16) < 0); // Profit of waiting 15 hands is... probably too much. You're burning at ~200 chips to win what? ~100?
-        
-        assert(fw.f(3) > 0); // Waiting three hands costs ~20 chips, but it gives good chances of winning the 100 in the pot
-
-        assert(fw.f(6) > 0); // Waiting six hands costs ~40 chips, but it gives great changes of winning the 100 in the pot
-
-        // Need a test to expose whether derivatives match
-
-        
-    }
-
-
-    // Need a test to expose whether grossSacrifice is too large.
-    //  + make sure there is a high voluntary but high rarity so that numHands is high but numFolds is still relatively low, to test that amountSacrificedVoluntary isn't overestimated.
-    void testRegression_010b() {
-
-
-        const float64 avgBlind = 0.5;
-        const float64 pastPot = 10.0;
-        const float64 myConstributionToPastPot = 5.0; // so heads-up, battle of the blinds, no antes
-        const float64 myBetThisRound = 2.0;
-        const float64 iveBeenReraisedTo = 190.0;
-
-
-        FoldWaitLengthModel fw;
-
-        fw.setW( 0.75 ); // You have a decent hand, but it could be better and the re-raise was ridiculously enormous.
-        fw.meanConv = nullptr;
-        fw.amountSacrificeForced = avgBlind;
-        fw.bankroll = 1000.0;
-        fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
-        fw.opponents = 1; // Keep it simple for now
-        fw.betSize = iveBeenReraisedTo;
-        fw.prevPot = pastPot;
-
-        const float64 evPlay = (pastPot + iveBeenReraisedTo) * (2.0 * fw.getW() - 1.0);
-        assert(evPlay == 100.0); // sanity check only
-
-        //    TEST:
-        // Since w == 0.75, we expect to be in this situation every 4 hands. This costs us 4 avgBlinds (2.0 total) and one fold (loss of 7.0 total) every 4 hands.
-        // So we lose 9.0 every 4 hands we wait.
-        const float64 f1 = fw.f(1);
-        assert(f1 < 0); // It's not profitable to fold this hand and play the next hand.
-
-        const float64 f40 = fw.f(40);
-        assert(f40 > evPlay); // If we wait 40 hands, we'll lose 90 chips, but put ourselves in a good position to win 200.0
-        
-        // Need a test to expose whether derivatives match
-
-        { // Test dF_dAmountSacrifice per hand
-            const float64 n = 40.0;
-            const float64 xa = fw.amountSacrificeVoluntary - 0.01;
-            const float64 xb = fw.amountSacrificeVoluntary + 0.01;
-            const float64 xd = fw.amountSacrificeVoluntary;
-
-            fw.amountSacrificeVoluntary = xa; const float64 ya = fw.f(n);
-            fw.amountSacrificeVoluntary = xb; const float64 yb = fw.f(n);
-            fw.amountSacrificeVoluntary = xd; fw.f(n); const float64 actual = fw.d_dC(n);
-            const float64 expected = (yb - ya) / (xb - xa);
-            assert(fabs(expected - actual) < fabs(expected) * 1e-12);
-        }
-
-
-        { // Test d_dw
-            const float64 n = 40.0;
-            const float64 xa = fw.getW() - 0.001;
-            const float64 xb = fw.getW() + 0.001;
-            const float64 xd = fw.getW();
-
-            fw.setW( xa ); const float64 ya = fw.f(n);
-            fw.setW( xb ); const float64 yb = fw.f(n);
-            fw.setW( xd ); fw.f(n); const float64 actual = fw.d_dw(n);
-            const float64 expected = (yb - ya) / (xb - xa);
-            assert(fabs(expected - actual) < fabs(expected) * 1e-4);
-        }
-    }
-
-
-    // Need a test to expose whether grossSacrifice is too small.
-    //  + make sure there is a high blind and high rarity so that numHands is high but numFolds is still relatively low, to test that amountSacrificedVoluntary isn't underestimated.
-    void testRegression_010c() {
-
-
-        const float64 avgBlind = 30.0; // Blinds are 40.0/20.0, heads-up. No antes
-        const float64 pastPot = 0.0; // We're pre-flop
-        const float64 myConstributionToPastPot = 0.0;
-        const float64 myBetThisRound = 20.0; // we're in the small blind
-        const float64 iveBeenReraisedTo = 5000.0;
-
-
-        FoldWaitLengthModel fw;
-
-        fw.setW(0.75); // You have a decent hand, but it could be better and the raise was large.
-        fw.meanConv = nullptr;
-        fw.amountSacrificeForced = avgBlind;
-        fw.bankroll = 10000.0;
-        fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
-        fw.opponents = 1; // Keep it simple for now
-        fw.betSize = iveBeenReraisedTo;
-        fw.prevPot = pastPot;
-
-        const float64 evPlay = (pastPot + iveBeenReraisedTo) * (2.0 * fw.getW() - 1.0);
-        assert(evPlay == 2500.0); // sanity check only
-
-        //    TEST:
-        // Since w == 0.75, we expect the opponent to be in this situation every 4 hands.
-        // Each time the opponent is in this situation, we except to also be in this situation one out of every 4 of those.
-        // This, we can repeat this situation every 16 hands if we want, and wait for a better hand next time.
-        // This costs us 16 avgBlinds (480.0 total) and one fold (loss of 0.0 total) every 16 hands.
-        // So we lose 480.0 every 16 hands we wait.
-
-    /*
-        // Argument: But we should only expense this blind once out of every 4 hands. Other hands we should break even (each player on averaging having the best hand once, winning the blinds).
-        // Rebuttal: But we will only receive a raise of 5000.0 with some frequency too.
-        // If we were truly heads-up and we choose to play every Nth hand, we _do_ change our average hand strength but we do sacrifice every blind -- not just the ones we play.
-     */
-        const float64 f1 = fw.f(1);
-        assert(f1 < 0); // It's not profitable to fold this hand and play the next hand.
-
-        const float64 f20 = fw.f(20);
-        // If we play now, we can win EV 2500.0 chips based on a 75% gamble on 5000.0 chips.
-        // If we wait 20 hands, we sacrifice 20 big blinds, which loses 600.0 (not 150.0), but gives us a 80% gamble on 5000.0 which nets EV 3000.0
-        // It's 500.0 chips more profitable of a gamble, but costs 600.0 to get there.
-        assert(0.0 < f20);
-        assert(f20 < evPlay);
-
-        const float64 f40 = fw.f(40);
-        assert(f40 > evPlay); // If we wait 40 hands, we'll lose 1200.0 chips, but put ourselves in a 90% chance position to win 5000.0 (= EV 4000.0), which is better than taking a 75% gamble on 5000.0 now.
-
-        // Need a test to expose whether derivatives match
-        assertDerivative(fw, 39.99, 40.01, 1e-6);
-
-        { // Test d_dBetsize
-            const float64 n = 40.0;
-            const float64 xa = fw.betSize - 0.01;
-            const float64 xb = fw.betSize + 0.01;
-            const float64 xd = fw.betSize;
-
-            fw.betSize = xa; const float64 ya = fw.f(n);
-            fw.betSize = xb; const float64 yb = fw.f(n);
-            fw.betSize = xd; fw.f(n); const float64 actual = fw.d_dbetSize(n);
-            const float64 expected = (yb - ya) / (xb - xa);
-            assert(fabs(expected - actual) < fabs(expected) * 1e-10);
-        }
-
-    }
-
-
-    // Test OpposingHandOpportunity derivatives
-    void testRegression_008() {
-
-        /*
-        Preflop
-        (Pot: $0)
-        (4 players)
-        [A $100.0]
-        [B $150.0]
-        [C $75.0]
-        [D $22.0]
-
-
-        A posts SB of $0.125 ($0.125)
-        B posts BB of $0.25 ($0.375)
-        */
-
-        struct BlindValues b;
-        b.SetSmallBigBlind(0.125);
-
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
-        myTable.setSmallestChip(0.125);
-
-        const std::vector<float64> aC({0.25});
-        FixedReplayPlayerStrategy cS(aC);
-        FixedReplayPlayerStrategy dS(aC);
-
-        FixedReplayPlayerStrategy aS(aC);
-        FixedReplayPlayerStrategy bS(aC);
-
-        myTable.ManuallyAddPlayer("A", 100.0, &aS);
-        myTable.ManuallyAddPlayer("B", 150.0, &bS);
-        myTable.ManuallyAddPlayer("C", 75.0, &cS);
-        myTable.ManuallyAddPlayer("D", 22.0, &dS);
-        const playernumber_t dealer = 3;
-
-
-        myTable.BeginInitialState();
-        myTable.BeginNewHands(b, false, dealer);
-
-
-        /*
-         C calls $0.25 ($0.625)
-         D calls $0.25 ($0.875)
-         A calls $0.25 ($1.0)
-         B checks
-         */
-        assert(myTable.PlayRound_BeginHand() != -1);
-
-        //myTable.PrepBettingRound(false,2); //turn, river remaining
-
-        // ===
-
-        DeckLocation card;
-
-        CommunityPlus withCommunity; // 3c Qc
-
-        card.SetByIndex(6);
-        withCommunity.AddToHand(card);
-
-        card.SetByIndex(42);
-        withCommunity.AddToHand(card);
-
-        std::cout << "Starting next round..." << endl;
-
-        CommunityPlus communityToTest; // Jc Ks Ah
-
-        card.SetByIndex(38);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(44);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(49);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        const int8 cardsInCommunity = 3;
-
-
-        StatResultProbabilities statprob;
-
-        ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
-
-        ///Compute CommunityCallStats
-        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
-
-
-        const float64 testBet = 2.0;
-        
-        OpponentHandOpportunity test(1, myTable, statprob.core);
-
-
-
-        test.query(testBet);
-        const float64 actual_y = test.handsToBeat();
-        const float64 actual_Dy = test.d_HandsToBeat_dbetSize();
-
-        assert(actual_y >= 3.5);
-        assert(actual_Dy > 0); // betting more should increase N even more
-
-        CombinedStatResultsPessimistic testC(test, statprob.core);
-        //testC.query(testBet);
-
-        const float64 s1 = testC.ViewShape(testBet).splits;
-        const float64 w = testC.getWinProb(testBet);
-        const float64 l = testC.getLoseProb(testBet);
-        const float64 dw = testC.get_d_WinProb_dbetSize(testBet);
-        const float64 dl = testC.get_d_LoseProb_dbetSize(testBet);
-
-        assert(testC.ViewShape(testBet).wins + testC.ViewShape(testBet).splits + testC.ViewShape(testBet).loss == 1.0);
-
-        assert(w < 0.1);
-        assert(l+w > 0.86);
-        assert(s1 < 0.25);
-        assert(dw < 0);
-        assert(dl == -dw);
-    }
-
-
-
-    // Test callcumu sanity checks
-    void testRegression_007c() {
-
-        DeckLocation card;
-
-        CommunityPlus withCommunity; // Kd Ad
-
-        card.SetByIndex(47);
-        withCommunity.AddToHand(card);
-
-        card.SetByIndex(51);
-        withCommunity.AddToHand(card);
-
-
-
-
-        CommunityPlus communityToTest;
-
-        const int8 cardsInCommunity = 0;
-
-
-        StatResultProbabilities statprob;
-
-        ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
-
-        ///Compute CommunityCallStats
-        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
-
-        ///Compute WinStats
-        DistrShape w_wl(0);
-        DistrShape detailPCT(0);
-        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.playerID = 0;
-        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
-
-        // TEST (from CACHE!!):
-        assert(statprob.core.statRelation().pct > 0.94); // This hand is very good. StatRelation should do very well.
-        assert(statprob.core.statRanking().pct > 0.96); // This is one of the best hands you can have in this situation. StatRanking should do very well.
-
-        // Against most opponents, I have a strong chance to win.
-        assert(statprob.core.getFractionOfOpponentsWhereMyWinrateIsAtLeast(0.6) > 0.93);
-
-        // 19th strongest out of 20 hands
-        const float64 actualWinPct = statprob.core.callcumu.nearest_winPCT_given_rank(0.95);
-        assert(actualWinPct < 0.8); // Such a hand has about a 65% chance to win? Even aces have only 70 something right?
-        assert(0.6457 < actualWinPct);
-        
-    }
-
-
-    // Test foldcumu sanity checks
-    void testRegression_007b() {
-
-        DeckLocation card;
-
-        CommunityPlus withCommunity; // Td Ad
-
-        card.SetByIndex(35);
-        withCommunity.AddToHand(card);
-
-        card.SetByIndex(51);
-        withCommunity.AddToHand(card);
-
-
-
-
-        CommunityPlus communityToTest; // 2d Qd Kd
-
-        card.SetByIndex(3);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(43);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(47);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        const int8 cardsInCommunity = 3;
-
-
-        StatResultProbabilities statprob;
-
-        ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
-
-        ///Compute CommunityCallStats
-        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
-
-        ///Compute WinStats
-        DistrShape w_wl(0);
-        DistrShape detailPCT(0);
-        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.playerID = 0;
-        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
-
-        // TEST:
-        assert(statprob.core.statRelation().pct > 0.95); // This hand is very good. StatRelation should do very well.
-        assert(statprob.core.statRanking().pct > 0.97); // This is one of the best hands you can have in this situation. StatRanking should do very well.
-
-        // Against most opponents, I have a very strong chance to win.
-        assert(statprob.core.getFractionOfOpponentsWhereMyWinrateIsAtLeast(0.85) > 0.9);
-
-    }
-    
-
-
-    // Test oddsAgainstBestXHands derivative
-    void testRegression_007() {
-
-        DeckLocation card;
-
-        CommunityPlus withCommunity; // Td Ad
-
-        card.SetByIndex(35);
-        withCommunity.AddToHand(card);
-
-        card.SetByIndex(51);
-        withCommunity.AddToHand(card);
-
-
-
-
-        CommunityPlus communityToTest; // 2d Qd Kc
-        
-        card.SetByIndex(3);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(43);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(46);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        const int8 cardsInCommunity = 3;
-        
-
-        StatResultProbabilities statprob;
-
-        ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
-
-
-        // TEST:
-        const float64 xa = 0.3;
-        const float64 xb = 0.3001;
-        std::pair<StatResult, float64> ya = statprob.core.handcumu.bestXHands(xa);
-        std::pair<StatResult, float64> yb = statprob.core.handcumu.bestXHands(xb);
-
-        const float64 expected = (yb.first.pct - ya.first.pct) / (xb - xa);
-        const float64 actual = (ya.second + yb.second) / 2.0;
-
-        assert(fabs(actual - expected) < fabs(expected) * 1.0e-7);
     }
 
 
@@ -2208,21 +2270,20 @@ int main(int argc, const char * argv[])
  // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
-
-    RegressionTests::testRegression_010c();
-    RegressionTests::testRegression_010b();
-    RegressionTests::testRegression_010();
     RegressionTests::testRegression_008();
-    RegressionTests::testRegression_007();
-    RegressionTests::testRegression_007b();
-    RegressionTests::testRegression_007c();
+    UnitTests::testRegression_015();
+    UnitTests::testRegression_010c();
+    UnitTests::testRegression_010b();
+    UnitTests::testRegression_010();
+    UnitTests::testRegression_007();
+    UnitTests::testRegression_007b();
+    UnitTests::testRegression_007c();
 
 
-    RegressionTests::testRegression_006();
+    RegressionTests::testRegression_011();
     RegressionTests::testRegression_013a();
     RegressionTests::testRegression_014a();
     RegressionTests::testRegression_012();
-    RegressionTests::testRegression_011();
 
 
     RegressionTests::testRegression_005();
@@ -2234,6 +2295,7 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_003();
     RegressionTests::testRegression_009();
 
+    RegressionTests::testRegression_006();
 
 
     // Regenerate the DB?
