@@ -609,6 +609,11 @@ float64 ScalarFunctionModel::bisectionStep(float64 x1, float64 x2) const
 
 float64 ScalarFunctionModel::regularfalsiStep(float64 x1, float64 y1, float64 x2, float64 y2) const
 {//A single step from the method of False Positions
+    if (y2 == y1) {
+        return bisectionStep(x1, x2);
+    }
+
+
 	return (x1*y2 - x2*y1)/(y2 - y1);
 }
 
