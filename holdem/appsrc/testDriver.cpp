@@ -141,7 +141,7 @@ static void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindCont
 
 
 	return;
-#endif
+#else // thus, ifdef DEBUGSAVEGAME
 
 	std::ofstream newSaveState(DEBUGSAVEGAME);
 		//First save the round state
@@ -156,6 +156,7 @@ static void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindCont
 	}
 
 	newSaveState.close();
+#endif // ifndef DEBUGSAVEGAME, else
 
 #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
             char handnumtxt
@@ -253,12 +254,18 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 		my.BeginNewHands(thisRoundBlinds.b, thisRoundBlinds.bNew);
 
 
-        my.DealAllHands(tableDealer,holecardsData);
+        my.DealAllHands(tableDealer,
+#ifdef DEBUGHOLECARDS
+                        holecardsData
+#else
+                        std::cout
+#endif
+                        );
 
 #ifdef DEBUGASSERT
 		if( my.GetDRseed() != 1 )
 		{
-			std::cerr << "randRem is out of control!" << endl;
+			std::cerr << "randRem is out of control! " << my.GetDRseed() << endl;
 			std::cerr << "We ResetDRseed at the end of this while loop, and it's never expected to change until PlayGameInner. What happenned?" << endl;
 			exit(1);
 		}
@@ -299,17 +306,21 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 		my.RefreshPlayers(); ///New Hand (handnum is also incremented now)
 
 
-		if( closeFile.is_open() ) closeFile.close();
+		if( closeFile.is_open() ) { closeFile.close(); }
 #ifdef DEBUGSAVEGAME
     #ifdef RELOAD_LAST_HAND
 	        if( NumberAtTable() > 1 )
     #endif
         	{
 				SaveStateShuffleNextHand(my, blindController, tableDealer, my.GetDRseed() );
-	            my.ResetDRseed();
 			}
-#endif
+#else // #ifdef DEBUGSAVEGAME, else
 
+        // TODO(from joseph_huang): DRSEED WHAT????
+            SaveStateShuffleNextHand(my, blindController, tableDealer, my.GetDRseed() );
+            my.ResetDRseed();
+
+#endif // #ifdef DEBUGSAVEGAME, else
 	}
 
 #ifdef GRAPHMONEY
@@ -681,6 +692,7 @@ static void superGame(char headsUp = 0)
 
 
 // For standard debugging and regression testing, undef WINRELEASE set env['HOLDEMDB_PATH'] and then run with no arguments and we'll fall through to testPlay(1) below
+// Are you profiling? Remove WINRELEASE and run without arguments.
 int main(int argc, char* argv[])
 {
     

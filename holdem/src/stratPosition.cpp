@@ -446,6 +446,7 @@ void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
 
 
 void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat) {
+#ifdef LOGPOSITION
     FoldOrCall foldGainCalculator(ViewTable(), statprob.core);
     std::pair<float64, float64> foldgainVal_xw = foldGainCalculator.myFoldGainAndWaitlength(foldGainCalculator.suggestMeanOrRank());
     const float64 &foldgainVal = foldgainVal_xw.first; // gain
@@ -467,6 +468,7 @@ void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, E
     logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
     if( ViewPlayer().GetInvoluntaryContribution() > 0 ) logFile << "   ->assumes $" << ViewPlayer().GetInvoluntaryContribution() << " forced";
     logFile << endl;
+#endif // #ifdef LOGPOSITION
 }
 
 static const char * chipSignToString(const struct AggregatedState & state) {
@@ -504,7 +506,7 @@ void PositionalStrategy::printPessimisticWinPct(std::ofstream & logF, float64 be
 template< typename T >
 void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp)
 {
-
+#ifdef LOGPOSITION
 
 
     int32 maxcallStep = -1;
@@ -585,6 +587,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
         ++raiseStep;
     }
     }
+#endif // LOGPOSITION
 }
 
 
@@ -620,10 +623,14 @@ float64 ImproveGainStrategy::MakeBet()
 	if( maxShowdown <= 0 ) return 0;
 
     const float64 improveMod = detailPCT.improve; //Generally preflop is negative here, so you probably don't want to accentuate that
+#ifdef LOGPOSITION
+
     const float64 improvePure= (improveMod+1)/2;
 
     //const float64 targetImproveBy = detailPCT.avgDev / 2 / improvePure;
+
     const float64 targetWorsenBy = detailPCT.avgDev / 2 / (1 - improvePure);
+#endif //    #ifdef LOGPOSITION
     const float64 impliedOddsGain = (statprob.core.statmean.pct + detailPCT.avgDev / 2) / statprob.core.statmean.pct;
     //const float64 oppInsuranceSmallBet = (1 - statmean.pct + targetWorsenBy) / (1 - statmean.pct);
     const float64 oppInsuranceBigBet = (improveMod>0)?(improveMod/2):0;
@@ -644,8 +651,6 @@ float64 ImproveGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
 
-    StatResult statWorse = statprob.statworse(tablestate.handsDealt());
-    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handsDealt());
 
     OpponentFoldWait myFearControl(&tablestate);
 
@@ -654,12 +659,17 @@ float64 ImproveGainStrategy::MakeBet()
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
     const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall,riskprice);
 
+    StatResult statWorse = statprob.statworse(tablestate.handsDealt());
+
+#ifdef LOGPOSITION
+    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handsDealt());
+
     // TODO(from yuzisee): handsToBeat() here.
 	const float64 fullVersus = ViewTable().NumberStartedRoundInclAllIn() - 1; // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
     // TODO TODO (from yuzisee): But peopleDrawing is relative to fullVersus?
     const float64 peopleDrawing = (1 - improvePure) * (ViewTable().NumberInHandInclAllIn() - 1);//You probably don't have to beat the people who folded, especially if you are going to improve your hand
     const float64 newVersus = (fullVersus - peopleDrawing*(1-improvePure)*detailPCT.stdDev);
-
+#endif // #ifdef LOGPOSITION
 
 //bGamble == 2 is ActionBot
 //bGamble == 1 is TrapBot
@@ -1023,8 +1033,9 @@ float64 DeterredGainStrategy::MakeBet()
 #endif
     
     StatResult statWorse = statprob.statworse(tablestate.handsDealt());
+#ifdef LOGPOSITION
     statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handsDealt());
-
+#endif // LOGPOSITION
    
 
     const float64 riskprice = myDeterredCall.RiskPrice();
@@ -1232,11 +1243,13 @@ float64 SimpleGainStrategy::MakeBet()
     ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
 
     StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
-    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
     StatResult statAdversarial = statprob.statworse(tablestate.handsDealt());
-    statprob.logfileAppendStatResultProbability_statworse(logFile, statAdversarial, tablestate.handsDealt());
     StatResult statAbort = statprob.statworse((int)(RAREST_HAND_CHANCE/3.0));
+#ifdef LOGPOSITION
+    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
+    statprob.logfileAppendStatResultProbability_statworse(logFile, statAdversarial, tablestate.handsDealt());
     statprob.logfileAppendStatResultProbability_statworse(logFile, statAbort, (int)(RAREST_HAND_CHANCE/3.0));
+#endif // LOGPOSITION
     // TODO(from yuzisee): Create a new GainModelNoRiskDynamic that replaces the static p_cl and p_cw with functions that depend on the bet size. Total each opponent's foldWaitLength plus handStrengthOfRound to get the number of hands!
 
     const float64 riskprice = myDeterredCall.RiskPrice();
