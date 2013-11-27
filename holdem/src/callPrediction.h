@@ -41,12 +41,22 @@
 #include <iostream>
 #endif
 
+class IExf {
+public:
 
+    virtual ~IExf() {}
+
+
+    virtual float64 exf(const float64 betSize) = 0;
+    virtual float64 dexf(const float64 betSize) = 0;
+
+}
+;
 
 ///==============================
 ///   Pr{call} and Pr{raiseby}
 ///==============================
-class ExactCallD
+class ExactCallD : public IExf
 {//NO ASSIGNMENT OPERATOR
     private:
 
@@ -127,8 +137,8 @@ class ExactCallD
             virtual ~ExactCallD();
 
 
-            virtual float64 exf(const float64 betSize);
-            virtual float64 dexf(const float64 betSize);
+             float64 exf(const float64 betSize) override final;
+             float64 dexf(const float64 betSize) override final;
 
             // pRaise() is the probability of being raised by RaiseAmount().
             // betSize is the bet you're considering, step is an iterator (because RasieAmount is a gradient but still discrete, so we only have hard pRaise() for each particular RaiseAmount().

@@ -584,7 +584,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
             }
         }
 
-        if( tableinfo->table->CanStillBet(pIndex) ) //CanStillBet means CanStillPlay
+        if( tableinfo->table->CanStillBet(pIndex) ) // Make sure the player is still fit to bet ( in this or any future round )
         {
 
             if( betSize - oppBankRoll < tableinfo->chipDenom()/4  ) // betSize <= oppBankRoll
@@ -1385,16 +1385,14 @@ static float64 handsCommitted(playernumber_t fBettor, const HoldemArena & fTable
             // Get existing bet...
             const float64 commitmentLevel = fTable.ViewPlayer(pIndex)->GetBetSize();
 
-#ifdef DEBUGASSERT
-            if (myBetSize < commitmentLevel) {
-                std::cerr << "We shouldn't be betting less than any existing bet." << std::endl;
-                exit(1);
+            if (myBetSize >= commitmentLevel) {
+                // ... and count it as up to 1.0 player (if we're calling them)
+                result += commitmentLevel / myBetSize;
+            } else {
+                // You're betting less than the high bet? You must be all in!
+                // Count whoever you'd be calling to be playing as well anyway.
+                result += 1.0;
             }
-#endif // DEBUGASSERT
-
-            // ... and count it as up to 1.0 player (if we're calling them)
-            result += commitmentLevel / myBetSize;
-
     }while( pIndex != fBettor);
 
     return result;
