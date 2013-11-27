@@ -67,7 +67,16 @@ const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) con
 float64 FoldWaitLengthModel::getRawPCT(const float64 n) {
     const float64 opponentInstances = n * rarity(); // After waiting n hands, the opponent will put you in this situation opponentInstances times.
     // The winPCT you would have if you had the best hand you would wait for out of opponentInstances hands.
-    const float64 rawPCT = ( n < 1 ) ? 0 : lookup(1.0-1.0/(opponentInstances));
+    const float64 rawPCT = ( opponentInstances < 1 ) ? 0 : lookup(1.0-1.0/(opponentInstances));
+
+
+#ifdef DEBUGASSERT
+    if(rawPCT < 0.0) {
+        std::cout << "negative rawPCT?" << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
     return rawPCT;
 }
 
@@ -85,14 +94,15 @@ float64 FoldWaitLengthModel::d_rawPCT_d_n(const float64 n, const float64 rawPCT)
     //              =    (dlookup(1.0 - 1.0/opponentInstances )) * {        opponentInstances^(-2) } * rarity()
     //              =    (dlookup(1.0 - 1.0/opponentInstances )) * {        1.0 / n^2 / rarity^2 } * rarity()
     //              =    (dlookup(1.0 - 1.0/opponentInstances )) *          1.0 / n^2 / rarity
-    //              =    (dlookup(1.0 - 1.0/opponentInstances )) *          1.0 / n / opponentInstaces
-    return dlookup(1.0 - 1.0 / opponentInstances, rawPCT) / opponentInstances / n;
+    //              =    (dlookup(1.0 - 1.0/opponentInstances )) *          1.0 / n / opponentInstances
+    if (opponentInstances >= 1.0) {
+        return dlookup(1.0 - 1.0 / opponentInstances, rawPCT) / opponentInstances / n;
+    } else {
+        return EPS_WIN_PCT; // some small positive number. If you want to increase rawPCT you have to increase n.
+    }
 }
 
 float64 FoldWaitLengthModel::d_rawPCT_d_w(const float64 n, float64 rawPCT) {
-    if (n < 1) {
-        return 0.0;
-    }
 
     const float64 opponentInstances = n * rarity();
     // rawPCT = lookup(1.0-1.0/(opponentInstances))
@@ -111,7 +121,12 @@ float64 FoldWaitLengthModel::d_rawPCT_d_w(const float64 n, float64 rawPCT) {
 
     const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).second);
 
-    return dlookup(1.0 - 1.0 / opponentInstances, rawPCT) / opponentInstances / opponentInstances * n * d_rarity_d_w;
+    if (opponentInstances < 1.0) {
+        // n is too low, so we're stuck right now
+        return 0.0;
+    } else {
+        return dlookup(1.0 - 1.0 / opponentInstances, rawPCT) / opponentInstances / opponentInstances * n * d_rarity_d_w;
+    }
 }
 
 // Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
@@ -124,6 +139,7 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
     if( lastdBetSizeN != n || !bSearching )
     {
         const float64 rawPCT = getRawPCT(n);
+
 
         if( rawPCT != lastRawPCT || !bSearching )
         {
@@ -305,6 +321,15 @@ float64 FoldWaitLengthModel::f( const float64 n )
 
 
     const float64 lastF = winShowdown*PW - grossSacrifice(n);
+
+
+#ifdef DEBUGASSERT
+    if(std::isnan(lastF)) {
+        std::cout << "NaN lastF result" << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
     return lastF;
 }
 
