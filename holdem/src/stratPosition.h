@@ -109,7 +109,7 @@ protected:
 public:
     ImproveGainStrategy(int8 riskymode =0) : PositionalStrategy(riskymode ? false : true,true,riskymode ? true : false,false), bGamble(riskymode) {}
 
-    virtual float64 MakeBet();
+    float64 MakeBet() override final;
 }
 ;
 

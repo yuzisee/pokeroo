@@ -385,6 +385,16 @@ float64 FoldWaitLengthModel::FindBestLength()
 
     quantum = (1.0/3.0); // Get to the number of hands played.
 
+
+#ifdef DEBUGASSERT
+    if(amountSacrificeForced <= 0.0 && amountSacrificeVoluntary <= 0.0)
+    {
+        std::cout << "amountSacrificeForced should always be positive or we'll have maxTurns == \\infty which breaks things. It can't really be zero anyway." << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+
     const float64 numHandsPerSameSituationFold = 1.0 / rarity() / rarity();
 	const float64 amountSacrificePerHand = (amountSacrificeVoluntary / numHandsPerSameSituationFold + amountSacrificeForced);
     const float64 amountSacrificePerFOLD = (amountSacrificeVoluntary + amountSacrificeForced * numHandsPerSameSituationFold);

@@ -616,6 +616,47 @@ if( bLoadGame )
 
                 break;
 
+            case 0:
+                // This is supergame mode.
+
+                opponentorder = Permute(NUM_OPPONENTS,randSeed);
+                for(i=0;i<NUM_OPPONENTS;++i)
+                {
+                    switch(opponentorder[i])
+                    {
+                        case 0:
+                            myTable.AddStrategyBot("D0", AUTO_CHIP_COUNT, 'C');
+                            break;
+                        case 1:
+                            myTable.AddStrategyBot("D2", AUTO_CHIP_COUNT, 'S');
+                            break;
+                        case 2:
+                            myTable.AddStrategyBot("P0", AUTO_CHIP_COUNT, 'N');
+                            break;
+                        case 3:
+                            myTable.AddStrategyBot("P2", AUTO_CHIP_COUNT, 'D');
+                            break;
+                        case 4:
+                            myTable.AddStrategyBot("P3", AUTO_CHIP_COUNT, 'T');
+                            break;
+                        case 5:
+                            myTable.AddStrategyBot("P4", AUTO_CHIP_COUNT, 'A');
+                            break;
+                        case 6:
+                            myTable.AddStrategyBot("Gear", AUTO_CHIP_COUNT, 'G');
+                            break;
+                        case 7:
+                            myTable.AddStrategyBot("Multi", AUTO_CHIP_COUNT, 'M');
+                            break;
+                    }
+
+                }//End of for(i...
+
+                delete [] opponentorder;
+
+
+                break;
+
 
             default:
 
