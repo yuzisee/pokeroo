@@ -104,8 +104,8 @@ class BlindValues
             // = averageForced*(1.5-livePlayers)/livePlayers
 
             //Opportunity cost is the negative of net opportunity
-            const float64 averageOpporunityCost = (averageForced*(livePlayers - 2))/livePlayers;
-            return averageOpporunityCost;
+            const float64 averageOpportunityCost = (averageForced*(livePlayers - 1.5))/livePlayers;
+            return averageOpportunityCost;
 
 
         }
