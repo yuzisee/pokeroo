@@ -32,7 +32,6 @@
 
 
 #define BLIND_ADJUSTED_FOLD
-//#define SAME_WILL_LOSE_BLIND
 //#define GEOM_COMBO_FOLDPCT
 
 
