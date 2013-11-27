@@ -496,11 +496,13 @@ float64 GainModelGeom::h(float64 betFraction, float64 betSize, float64 exf, floa
     const int8 e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(round(exf/x));
     const StatResult & splitShape = fOutcome.ViewShape(betSize);
 
-    const float64 exf_live = exf - f_pot;
+    //const float64 exf_live = exf - f_pot;
 
 	float64 sav=1;
 	for(int8 i=1;i<=e_call;++i)
 	{
+        const float64 C = HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i) * pow(splitShape.wins,fOutcome.splitOpponents()-i) * pow(splitShape.splits,i);
+        /*
         //In our model, we can assume that if it is obvious many (everyone) will split, only those who don't see that opportunity will definitely fold
         //  however if it is not clear there will be a split (few split) everybody will call as expected
         //The dragCalls multiplier achieves this:
@@ -512,8 +514,10 @@ float64 GainModelGeom::h(float64 betFraction, float64 betSize, float64 exf, floa
 		sav *=  pow(
                     base - x +( f_pot+x+exf_live*dragCalls )/(i+1)
                     ,
-                    HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i) * pow(splitShape.wins,fOutcome.splitOpponents()-i) * pow(splitShape.splits,i)
+                    C
                     );
+         */
+        sav *= pow(base + f_pot / (i+1), C);
 	}
 
     //    const float64 t_result = t_1wp * t_1lp * sav - 1;
@@ -619,14 +623,15 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
 float64 GainModelGeom::hdx(float64 betFraction, float64 betSize, float64 exf, float64 dexf, float64 f_pot, float64 dx, ICombinedStatResults & fOutcome, float64 y) {
     const float64 base = ExpectedCallD::handBetBase();
     const float64 x = betFraction;
-    const float64 exf_live = exf - f_pot;
+    //const float64 exf_live = exf - f_pot;
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
-    const int8 e_call = fOutcome.splitOpponents(); //Probably manditory if dragCalls is used
-    const StatResult & splitShape = fOutcome.ViewShape(betSize);
+    //const int8 e_call = fOutcome.splitOpponents(); //Probably manditory if dragCalls is used
+    //const StatResult & splitShape = fOutcome.ViewShape(betSize);
 
 
 	float64 savd=0;
+    /*
 	for(int8 i=1;i<=e_call;++i)
 	{
         float64 dragCalls = e_call - i;
@@ -655,7 +660,7 @@ float64 GainModelGeom::hdx(float64 betFraction, float64 betSize, float64 exf, fl
 
             savd += C * (-1.0 + (1.0 + dexf * dragCalls) / (i+1)) / sav_root;
         }///Else you'd just {savd+=0;} anyways
-	}
+	}*/
 
 #ifdef DEBUG_TRACE_SEARCH
     if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
@@ -781,39 +786,73 @@ float64 GainModelNoRisk::g(float64 betSize)
 float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, float64 f_pot,  ICombinedStatResults & fOutcome) {
     const float64 base = ExpectedCallD::handBetBase();
     const float64 x = betFraction;
-    const float64 exf_live = exf - f_pot;
+    //const float64 exf_live = exf - f_pot;
     
 
     const int8& e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(round(exf/x));
     const StatResult & splitShape = fOutcome.ViewShape(betSize);
 
+    // Sometimes exf is lower than the number of people we'd consider for split.
+    // Only people who have put their money in can be part of the split, of course.
+    //float64 maxOpposingSplittersBasedOnExf = std::floor(exf / x);
 
-	float64 sav=0;
+	float64 sav=0.0;
 	for(int8 i=1;i<=e_call;++i)
 	{
+
         //In our model, we can assume that if it is obvious many (everyone) will split, only those who don't see that opportunity will definately fold
         //  however if it is not clear there will be a split (few split) everybody will call as expected
         //The dragCalls multiplier achieves this:
-        float64 dragCalls = i;
+        /*float64 dragCalls = 1; *//*i;
         dragCalls /= e_call;
         dragCalls = 1 - dragCalls;
         dragCalls = dragCalls * dragCalls - dragCalls + 1;
+*/
 
-		sav +=
+         // Probability of this split
+        const float64 C =  HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i)  ;
 
-        // Bet to split acrss (i+1) players
-        (
-             - x + // your current bet is deduced from your current money so it can be added to the prize pool
+        //if (i - maxOpposingSplittersBasedOnExf <= DBL_EPSILON) {
+            // This number of splitters is okay. Let's go ahead with it.
+
+		const float64 sav_base =
+
+        // Bet to split across (i+1) players
+
+        // SIMPLIFYING ASSUMPTION:
+        // Everyone who would know they're in the split for this outcome will call, anyone else will fold.
+        // Then, it's just f_pot which is split amongst the splittors.
+        // Everything else is
+
+        // Otherwise, we have to use dragCalls to avoid extra exf from third players from falling into obvious two-player split situations.
+        // And, if you don't do it right, sav can end up negative, which makes no sense.
+
+        f_pot / (i+1)
+
+        /*
+        - x + // your current bet is deduced from your current money so it can be added to the prize pool
              ( x // Your current bet is shared among the splittors
                + f_pot+exf_live*dragCalls // The pot is split too (with the exf_live fraction discounted -- note: "f_pot + exf_live === exf"
              )/(i+1)
-        )
-
-        *
-        // Probability of this split
-        (        HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i)    )
+*/
         ;
+
+        sav += sav_base * C;
+
+        //    savPrbUsed += C;
+        //} else {
+        //    savPrbUnused += C;
+        //}
 	}
+
+
+
+#ifdef DEBUGASSERT
+    if (sav < 0.0) {
+        std::cerr << "Splits are never negative because the people who split all had to call." << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
 
     //    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
@@ -829,7 +868,7 @@ float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, fl
     const float64 onWin = exf * fOutcome.getWinProb(betSize);
     const float64 onLose = -x * fOutcome.getLoseProb(betSize);
 
-	return base +
+	const float64 result = base +
 
     onWin
     +
@@ -838,8 +877,16 @@ float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, fl
     sav
 
 	;
-	//let's round e_fix downward on input
-	//floor()
+
+
+#ifdef DEBUGASSERT
+    if (result < 0.0) {
+        std::cerr << "You can't lose more than all your money: GainModelNoRisk" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+    return result;
 }
 
 
@@ -897,13 +944,23 @@ float64 GainModelNoRisk::hdx(float64 betFraction, float64 betSize, float64 exf, 
     const float64 x = betFraction;
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
-    const int8 e_call = fOutcome.splitOpponents(); //Probably manditory if dragCalls is used
-    const StatResult & splitShape = fOutcome.ViewShape(betSize);
+    //const int8 e_call = fOutcome.splitOpponents(); //Probably manditory if dragCalls is used
+    //const StatResult & splitShape = fOutcome.ViewShape(betSize);
 
 
 	float64 savd=0;
+/*
 	for(int8 i=1;i<=e_call;++i)
 	{
+        const float64 C = HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)
+        *pow(splitShape.wins,fOutcome.splitOpponents()-i)
+        *pow(splitShape.splits,i);
+
+        // sav = C * ( f_pot / (i+1))
+
+        savd +=
+*/
+        /*
         float64 dragCalls = e_call - i;
         dragCalls *= dragCalls;
         dragCalls /= static_cast<float64>(e_call);
@@ -914,14 +971,13 @@ float64 GainModelNoRisk::hdx(float64 betFraction, float64 betSize, float64 exf, 
             // sav = C * ( -x + ( x + f_pot + exf_live * dragCalls) / (i+1))
             // d sav = C * ( - 1.0 dx + ( 1.0 dx + dexf * dragCalls ) / (i+1))
 
-            savd += HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)
-            *pow(splitShape.wins,fOutcome.splitOpponents()-i)
-            *pow(splitShape.splits,i)
+            savd += C
             *
             ((1.0 + dexf * dragCalls) / (i+1) - 1.0)
             ;
         }///Else you'd just {savd+=0;} anyways
-	}
+         */
+	//}
 
 
 

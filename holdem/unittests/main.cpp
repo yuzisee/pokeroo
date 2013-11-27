@@ -8,7 +8,7 @@
 
 #include <ctime>
 #include <cassert>
-
+#include <limits>
 
 #include "aiCache.h"
 namespace NamedTriviaDeckTests {
@@ -97,7 +97,7 @@ namespace UnitTests {
 
 
         const float64 betFraction = 0.2;
-        const float64 betSize = std::nan("");
+        const float64 betSize = std::numeric_limits<float64>::signaling_NaN();
         const float64 exf = 0.5; // there's a lot of money in previous rounds and/or predicted money in this round
         const float64 f_pot = 0.1; // only a small amount is from previous rounds or from players who have folded this round
 
@@ -150,8 +150,8 @@ namespace UnitTests {
 
             // Drop to 0.8, 15% the time (because betFraction == 0.2)
             // Increase to 1.5, 75% of the time (because exf == 0.5)
-            // Split two ways has probability 0.1 and payout 0.8 + (0.2 + 0.5) / 2
-            float64 expected = pow(0.8, 0.15) * pow(1.5, 0.75) * pow(0.8 + 0.7 / 2, 0.1);
+            // Split two ways has probability 0.1 and payout 0.8 + (0.2 + 0.3) / 2
+            float64 expected = pow(0.8, 0.15) * pow(1.5, 0.75) * pow(0.8 + 0.5 / 2, 0.1);
             float64 actual = GainModelGeom::h(betFraction, betSize, exf, f_pot, a);
             assert(fabs(expected - actual) < fabs(expected) * 1e-14);
 
@@ -186,9 +186,9 @@ namespace UnitTests {
             // Drop to 0.8, 27.75% the time (because betFraction == 0.2)
             // Increase to 1.5, 9.0/16.0 of the time (because exf == 0.5)
             // Split three ways has probability 0.1*0.1, and payout 0.8 + (0.2 + 0.5) / 3
-            // Split two ways has probability 0.1 * 0.75 * 2 and payout 0.8 + (0.2 + 0.5) / 2
-            float64 dragCalls2 = 0.75;
-            float64 expected = pow(0.8, 0.2775) * pow(1.5, 9.0/16.0) * pow((0.8 + 0.7 / 3), 0.1*0.1) * pow(0.8 + (0.1 + 0.2 + 0.4 * dragCalls2) / 2, 0.1 * 0.75 * 2);
+            // Split two ways has probability 0.1 * 0.75 * 2 and payout 0.8 + (0.2 + 0.3) / 2
+
+            float64 expected = pow(0.8, 0.2775) * pow(1.5, 9.0/16.0) * pow((0.8 + 0.7 / 3), 0.1*0.1) * pow(0.8 + (0.1 + 0.2 + 0.2) / 2, 0.1 * 0.75 * 2);
             float64 actual = GainModelGeom::h(betFraction, betSize, exf, f_pot, a);
             
             assert(fabs(expected - actual) < fabs(expected) * 1e-14);
@@ -204,7 +204,7 @@ namespace UnitTests {
 
 
         const float64 betFraction = 0.2;
-        const float64 betSize = std::nan("");
+        const float64 betSize = std::numeric_limits<float64>::signaling_NaN();
         const float64 exf = 0.5; // there's a lot of money in previous rounds and/or predicted money in this round
         const float64 f_pot = 0.1; // only a small amount is from previous rounds or from players who have folded this round
 
@@ -224,8 +224,8 @@ namespace UnitTests {
 
         // Drop to 0.8, 15% the time (because betFraction == 0.2)
         // Increase to 1.5, 75% of the time (because exf == 0.5)
-        // Split two ways has probability 0.1 and payout 0.8 + (0.2 + 0.5) / 2
-        float64 expected = 0.8 * 0.15 + 1.5 * 0.75 + 0.1 * (0.8 + 0.7 / 2);
+        // Split two ways has probability 0.1 and payout 0.8 + (0.2 + 0.3) / 2
+        float64 expected = 0.8 * 0.15 + 1.5 * 0.75 + 0.1 * (0.8 + (0.2 + 0.3) / 2);
         float64 actual = GainModelNoRisk::h(betFraction, betSize, exf, f_pot, a);
         assert(fabs(expected - actual) < fabs(expected) * 1e-14);
 
@@ -260,9 +260,8 @@ FixedStatResult a;
         // Drop to 0.8, 27.75% the time (because betFraction == 0.2)
         // Increase to 1.5, 9.0/16.0 of the time (because exf == 0.5)
         // Split three ways has probability 0.1*0.1, and payout 0.8 + (0.2 + 0.5) / 3
-        // Split two ways has probability 0.1 * 0.75 * 2 and payout 0.8 + (0.2 + 0.5) / 2
-        float64 dragCalls2 = 0.75;
-        float64 expected = 0.8 * 0.2775 + 1.5 * 9.0/16.0 + 0.1*0.1 * (0.8 + 0.7 / 3) + 0.1 * 0.75 * 2 * (0.8 + (0.1 + 0.2 + 0.4 * dragCalls2) / 2);
+        // Split two ways has probability 0.1 * 0.75 * 2 and payout 0.8 + (0.2 + 0.3) / 2
+        float64 expected = 0.8 * 0.2775 + 1.5 * 9.0/16.0 + 0.1*0.1 * (0.8 + 0.7 / 3) + 0.1 * 0.75 * 2 * (0.8 + (0.1 + 0.2 + 0.2) / 2);
         float64 actual = GainModelNoRisk::h(betFraction, betSize, exf, f_pot, a);
         
         assert(fabs(expected - actual) < fabs(expected) * 1e-14);
@@ -373,7 +372,7 @@ FixedStatResult a;
         FoldWaitLengthModel fw;
 
         fw.setW( 0.75 ); // You have a decent hand, but it could be better and the re-raise was ridiculously enormous.
-        fw.meanConv = nullptr;
+        fw.meanConv = 0;
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 1000.0;
         fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
@@ -439,7 +438,7 @@ FixedStatResult a;
         FoldWaitLengthModel fw;
 
         fw.setW(0.75); // You have a decent hand, but it could be better and the raise was large.
-        fw.meanConv = nullptr;
+        fw.meanConv = 0;
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 10000.0;
         fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
@@ -751,7 +750,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
         myTable.setSmallestChip(0.125);
 
-        const std::vector<float64> aC({0.25});
+        std::vector<float64> aC; aC.push_back(0.25);
         FixedReplayPlayerStrategy cS(aC);
         FixedReplayPlayerStrategy dS(aC);
 
@@ -886,8 +885,8 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
         myTable.setSmallestChip(5.0);
 
-        const std::vector<float64> foldOnly({0});
-        const std::vector<float64> nA({365, 1045});
+        const std::vector<float64> foldOnly(1, 0.0);
+        std::vector<float64> nA; nA.push_back(365); nA.push_back(1045);
         FixedReplayPlayerStrategy gS(foldOnly);
         FixedReplayPlayerStrategy tS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
@@ -990,8 +989,9 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
         myTable.setSmallestChip(5.0);
 
-        const std::vector<float64> foldOnly({0});
-        const std::vector<float64> aA({55, 705, std::nan("")});
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const int arr[] = {55, 705, std::numeric_limits<float64>::signaling_NaN()};
+        const std::vector<float64> aA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
         FixedReplayPlayerStrategy tS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
@@ -1096,8 +1096,14 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
         myTable.setSmallestChip(5.0);
 
-        const std::vector<float64> foldOnly({0});
-        const std::vector<float64> mA({std::nan(""), std::nan(""), std::nan(""), std::nan(""), std::nan(""), std::nan("")});
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const int arr[] = {std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN()};
+        const std::vector<float64> mA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
         FixedReplayPlayerStrategy tS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
@@ -1278,8 +1284,10 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
         myTable.setSmallestChip(5.0);
 
-        const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({std::nan(""), std::nan("")});
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const int arr[] = {std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN()};
+        const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
         FixedReplayPlayerStrategy tS(foldOnly);
         FixedReplayPlayerStrategy nS(foldOnly);
@@ -1376,8 +1384,9 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
         myTable.setSmallestChip(5.0);
 
-        const std::vector<float64> foldOnly({0});
-        const std::vector<float64> nA({11.25, 80.0, 30.0, 125.0});
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const int arr[] = {11.25, 80.0, 30.0, 125.0};
+        const std::vector<float64> nA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
         
         FixedReplayPlayerStrategy nS(nA);
@@ -1568,8 +1577,9 @@ namespace RegressionTests {
 
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
-        const std::vector<float64> foldOnly({0});
-        const std::vector<float64> aA({10.125, 18.0, 805.5, 1489.88});
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const int arr[] = {10.125, 18.0, 805.5, 1489.88};
+        const std::vector<float64> aA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
 
         FixedReplayPlayerStrategy mS(foldOnly);
@@ -1746,8 +1756,10 @@ namespace RegressionTests {
 
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
-        const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({std::nan(""), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0});
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const int arr[] = {std::numeric_limits<float64>::signaling_NaN(), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0};
+        const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
+
         FixedReplayPlayerStrategy sS(foldOnly);
         FixedReplayPlayerStrategy pS(pA);
         
@@ -2039,8 +2051,11 @@ namespace RegressionTests {
 
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
-        const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({5.0, 12.5, 49, 168.0, 459.0, 495.0});
+
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const int arr[] = {5.0, 12.5, 49, 168.0, 459.0, 495.0};
+        const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
+
         FixedReplayPlayerStrategy cS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
         FixedReplayPlayerStrategy mS(foldOnly);
@@ -2158,8 +2173,10 @@ namespace RegressionTests {
 
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
-        const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({std::nan(""), 12.5, std::nan(""), 228.0, 459.0, 495.0});
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const int arr[] = {std::numeric_limits<float64>::signaling_NaN(), 12.5, std::numeric_limits<float64>::signaling_NaN(), 228.0, 459.0, 495.0};
+        const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
+
         FixedReplayPlayerStrategy cS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
         FixedReplayPlayerStrategy mS(foldOnly);
@@ -2312,13 +2329,25 @@ namespace RegressionTests {
     }
 }
 
+struct DeckLocationPair {
+    DeckLocation first;
+    DeckLocation second;
+
+    DeckLocationPair(DeckLocation a, DeckLocation b)
+    :
+    first(a)
+    ,
+    second(b)
+    {}
+};
+
 static void regenerateDb() {
 
     const int8 cardsInCommunity = 0;
 
 
 
-    std::vector<std::pair<DeckLocation,DeckLocation>> handList;
+    std::vector<struct DeckLocationPair> handList;
 
     // Pocket-pairs
     for (int8 pocketRank = 0; pocketRank < 13; ++ pocketRank) {
@@ -2328,7 +2357,7 @@ static void regenerateDb() {
         DeckLocation card2;
         card2.SetByIndex(pocketRank * 4 + 1);
 
-        handList.emplace_back(std::pair<DeckLocation, DeckLocation>(card1, card2));
+        handList.push_back(DeckLocationPair(card1, card2));
 
     }
 
@@ -2343,7 +2372,7 @@ static void regenerateDb() {
                 DeckLocation card2;
                 card2.SetByIndex(secondCardRank * 4 + 1);
 
-                handList.emplace_back(std::pair<DeckLocation, DeckLocation>(card1, card2));
+                handList.push_back(DeckLocationPair(card1, card2));
             }
 
 
@@ -2355,7 +2384,7 @@ static void regenerateDb() {
                 DeckLocation card2;
                 card2.SetByIndex(secondCardRank * 4);
 
-                handList.emplace_back(std::pair<DeckLocation, DeckLocation>(card1, card2));
+                handList.push_back(DeckLocationPair(card1, card2));
 
             }
         }
@@ -2367,7 +2396,7 @@ static void regenerateDb() {
 
     std::cout << "Begin.\n";
     size_t counter = 0;
-    for (const std::pair<DeckLocation,DeckLocation> & holeCards : handList) {
+    for (const DeckLocationPair & holeCards : handList) {
         CommunityPlus withCommunity;
 
         withCommunity.AddToHand(holeCards.first);
@@ -2385,7 +2414,7 @@ static void regenerateDb() {
         StatResultProbabilities statprob;
 
         {
-            const time_t now = time(nullptr);
+            const time_t now = time(0);
             std::cout << asctime(std::localtime(&now));
             std::cout << "Computing   " << handName << "   CallStats (.holdemC)\n";
             std::cout.flush(); // Flush for timestamping
@@ -2395,7 +2424,7 @@ static void regenerateDb() {
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
 
         {
-            const time_t now = time(nullptr);
+            const time_t now = time(0);
             std::cout << asctime(std::localtime(&now));
             std::cout << "Computing CommunityCallStats (depends on *.holdemW)\n";
             std::cout.flush(); // Flush for timestamping
@@ -2409,7 +2438,7 @@ static void regenerateDb() {
         std::cout.flush(); // Flush for timestamping
     }
 
-    const time_t now = time(nullptr);
+    const time_t now = time(0);
     std::cout << asctime(std::localtime(&now));
 
 
