@@ -25,8 +25,7 @@
 
 #include "functionbase.h"
 #include "inferentials.h"
-#include <math.h>
-#include <limits>
+#include "math_support.h"
 
 
 
@@ -34,12 +33,6 @@
 
 
 
-#ifndef log1p
-inline float64 log1p(float64 x)
-{
-    return log(1+x);
-}
-#endif
 /*
 #ifndef log1p
 #define log1p( _X_ ) log( (_X_) + 1 )
