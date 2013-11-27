@@ -91,11 +91,164 @@ namespace UnitTests {
 
     // Sanity check that GainModelGeom probabilities add up to 1.0
     // Take some known simple win percentages and measure the outcome.
+    void testRegression_016() {
+        //GainModelGeom
+        //GainModelNoRisk
+
+
+        const float64 betFraction = 0.2;
+        const float64 betSize = std::nan("");
+        const float64 exf = 0.5; // there's a lot of money in previous rounds and/or predicted money in this round
+        const float64 f_pot = 0.1; // only a small amount is from previous rounds or from players who have folded this round
+
+
+
+        {
+            FixedStatResult a;
+            // Simple case: One opponent
+            a.fOpponents = 1.0;
+
+            a.fShape.wins = 0.75;
+            a.fShape.splits = 0.0;
+            a.fShape.loss = 0.25;
+
+
+            // Drop to 0.8, 15% the time (because betFraction == 0.2)
+            // Increase to 1.5, 75% of the time (because exf == 0.5)
+            float64 expected = pow(0.8, 0.25) * pow(1.5, 0.75);
+            float64 actual = GainModelGeom::h(betFraction, betSize, exf, f_pot, a);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-14);
+
+            float64 dx = 0.001;
+            float64 dexf = 0.3;
+
+            float64 x1 = betFraction;
+            float64 x2 = betFraction + dx;
+            float64 y1 = actual;
+            float64 y2 = GainModelGeom::h(x2, betSize, exf + dexf * dx, f_pot, a);
+
+            float64 xd = (x1 + x2)/2;
+            float64 yd = GainModelGeom::h(xd, betSize, exf + dexf * dx/2, f_pot, a);
+
+            float64 actualD = GainModelGeom::hdx(xd, betSize, exf + dexf * dx/2, dexf, f_pot, dx, a, yd);
+            float64 expectedD = (y2 - y1)/(x2-x1);
+            assert(fabs(expectedD - actualD) < fabs(expectedD) * 1e-6);
+            
+        }
+
+
+
+        {
+            FixedStatResult a;
+            // Simple case: One opponent
+            a.fOpponents = 1.0;
+
+            a.fShape.wins = 0.75;
+            a.fShape.splits = 0.10;
+            a.fShape.loss = 0.15;
+
+
+            // Drop to 0.8, 15% the time (because betFraction == 0.2)
+            // Increase to 1.5, 75% of the time (because exf == 0.5)
+            // Split two ways has probability 0.1 and payout 0.8 + (0.2 + 0.5) / 2
+            float64 expected = pow(0.8, 0.15) * pow(1.5, 0.75) * pow(0.8 + 0.7 / 2, 0.1);
+            float64 actual = GainModelGeom::h(betFraction, betSize, exf, f_pot, a);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-14);
+
+            float64 dx = 0.001;
+            float64 dexf = 0.3;
+
+            float64 x1 = betFraction;
+            float64 x2 = betFraction + dx;
+            float64 y1 = actual;
+            float64 y2 = GainModelGeom::h(x2, betSize, exf + dexf * dx, f_pot, a);
+
+            float64 xd = (x1 + x2)/2;
+            float64 yd = GainModelGeom::h(xd, betSize, exf + dexf * dx/2, f_pot, a);
+
+            float64 actualD = GainModelGeom::hdx(xd, betSize, exf + dexf * dx/2, dexf, f_pot, dx, a, yd);
+            float64 expectedD = (y2 - y1)/(x2-x1);
+            assert(fabs(expectedD - actualD) < fabs(expectedD) * 1e-6);
+
+        }
+
+        // =====
+        {
+            FixedStatResult a;
+            // No funny business, just two opponents.
+            a.fOpponents = 2.0;
+
+            a.fShape.wins = 0.75;
+            a.fShape.splits = 0.10;
+            a.fShape.loss = 0.15;
+
+
+            // Drop to 0.8, 27.75% the time (because betFraction == 0.2)
+            // Increase to 1.5, 9.0/16.0 of the time (because exf == 0.5)
+            // Split three ways has probability 0.1*0.1, and payout 0.8 + (0.2 + 0.5) / 3
+            // Split two ways has probability 0.1 * 0.75 * 2 and payout 0.8 + (0.2 + 0.5) / 2
+            float64 dragCalls2 = 0.75;
+            float64 expected = pow(0.8, 0.2775) * pow(1.5, 9.0/16.0) * pow((0.8 + 0.7 / 3), 0.1*0.1) * pow(0.8 + (0.1 + 0.2 + 0.4 * dragCalls2) / 2, 0.1 * 0.75 * 2);
+            float64 actual = GainModelGeom::h(betFraction, betSize, exf, f_pot, a);
+            
+            assert(fabs(expected - actual) < fabs(expected) * 1e-14);
+        }
+    }
+
+
+    // Sanity check that GainModelNoRisk probabilities add up to 1.0
+    // Take some known simple win percentages and measure the outcome.
     void testRegression_015() {
         //GainModelGeom
         //GainModelNoRisk
 
-        FixedStatResult a;
+
+        const float64 betFraction = 0.2;
+        const float64 betSize = std::nan("");
+        const float64 exf = 0.5; // there's a lot of money in previous rounds and/or predicted money in this round
+        const float64 f_pot = 0.1; // only a small amount is from previous rounds or from players who have folded this round
+
+
+
+
+
+        {
+            FixedStatResult a;
+        // Simple case: One opponent
+        a.fOpponents = 1.0;
+
+        a.fShape.wins = 0.75;
+        a.fShape.splits = 0.10;
+        a.fShape.loss = 0.15;
+
+
+        // Drop to 0.8, 15% the time (because betFraction == 0.2)
+        // Increase to 1.5, 75% of the time (because exf == 0.5)
+        // Split two ways has probability 0.1 and payout 0.8 + (0.2 + 0.5) / 2
+        float64 expected = 0.8 * 0.15 + 1.5 * 0.75 + 0.1 * (0.8 + 0.7 / 2);
+        float64 actual = GainModelNoRisk::h(betFraction, betSize, exf, f_pot, a);
+        assert(fabs(expected - actual) < fabs(expected) * 1e-14);
+
+            float64 dx = 0.001;
+            float64 dexf = 0.3;
+
+            float64 x1 = betFraction;
+            float64 x2 = betFraction + dx;
+            float64 y1 = actual;
+            float64 y2 = GainModelNoRisk::h(x2, betSize, exf + dexf * dx, f_pot, a);
+
+            float64 xd = (x1 + x2)/2;
+            float64 yd = GainModelNoRisk::h(xd, betSize, exf + dexf * dx/2, f_pot, a);
+
+            float64 actualD = GainModelNoRisk::hdx(xd, betSize, exf + dexf * dx/2, dexf, a, yd);
+            float64 expectedD = (y2 - y1)/(x2-x1);
+            assert(fabs(expectedD - actualD) < fabs(expectedD) * 1e-11);
+
+        }
+
+        // =====
+        {
+FixedStatResult a;
         // No funny business, just two opponents.
         a.fOpponents = 2.0;
 
@@ -103,19 +256,17 @@ namespace UnitTests {
         a.fShape.splits = 0.10;
         a.fShape.loss = 0.15;
 
-        const float64 betFraction = 0.2;
-        const float64 betSize = std::nan("");
-        const float64 exf = 0.5; // there's a lot of money in previous rounds and/or predicted money in this round
-        const float64 f_pot = 0.1; // only a small amount is from previous rounds or from players who have folded this round
 
         // Drop to 0.8, 27.75% the time (because betFraction == 0.2)
         // Increase to 1.5, 9.0/16.0 of the time (because exf == 0.5)
-        // Split three ways has probability 0.1*0.1, and payout 1.0 + (0.5 + 0.2) / 3
-        // Split two ways has probability 0.1 * 0.75 * 2 and payout 1.0 + (0.5 + 0.2) / 2
-        float64 expected = 0.8 * 0.2775 + 1.5 * 9.0/16.0 + 0.1*0.1 * (1.0 + 0.7 / 3) + 0.1 * 0.75 * 2 * (1.0 + 0.7 / 2);
+        // Split three ways has probability 0.1*0.1, and payout 0.8 + (0.2 + 0.5) / 3
+        // Split two ways has probability 0.1 * 0.75 * 2 and payout 0.8 + (0.2 + 0.5) / 2
+        float64 dragCalls2 = 0.75;
+        float64 expected = 0.8 * 0.2775 + 1.5 * 9.0/16.0 + 0.1*0.1 * (0.8 + 0.7 / 3) + 0.1 * 0.75 * 2 * (0.8 + (0.1 + 0.2 + 0.4 * dragCalls2) / 2);
         float64 actual = GainModelNoRisk::h(betFraction, betSize, exf, f_pot, a);
         
         assert(fabs(expected - actual) < fabs(expected) * 1e-14);
+        }
     }
 
 
@@ -2270,7 +2421,7 @@ int main(int argc, const char * argv[])
  // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
-    RegressionTests::testRegression_008();
+    UnitTests::testRegression_016();
     UnitTests::testRegression_015();
     UnitTests::testRegression_010c();
     UnitTests::testRegression_010b();
@@ -2278,7 +2429,9 @@ int main(int argc, const char * argv[])
     UnitTests::testRegression_007();
     UnitTests::testRegression_007b();
     UnitTests::testRegression_007c();
+    RegressionTests::testRegression_008();
 
+    // Regression tests
 
     RegressionTests::testRegression_011();
     RegressionTests::testRegression_013a();

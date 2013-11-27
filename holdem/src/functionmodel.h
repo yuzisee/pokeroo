@@ -316,7 +316,7 @@ protected:
 	public:
 
     static float64 h(float64 betFraction, float64 betSize, float64 exf, float64 f_pot, ICombinedStatResults & fOutcome);
-    static float64 hd(float64 betFraction, float64 betSize, float64 exf, float64 dexf, float64 f_pot, float64 dx, ICombinedStatResults & fOutcome, float64 h);
+    static float64 hdx(float64 betFraction, float64 betSize, float64 exf, float64 dexf, float64 f_pot, float64 dx, ICombinedStatResults & fOutcome, float64 h);
 
     /**
      *  Parameters:
@@ -415,7 +415,7 @@ class GainModelNoRisk : public virtual GainModel
 
 
     static float64 h(float64 betFraction, float64 betSize, float64 exf, float64 f_pot, ICombinedStatResults & fOutcome);
-    static float64 hd(float64 betFraction, float64 betSize, float64 exf, float64 dexf, ICombinedStatResults & fOutcome, float64 h);
+    static float64 hdx(float64 betFraction, float64 betSize, float64 exf, float64 dexf, ICombinedStatResults & fOutcome, float64 h);
 
 
     /**

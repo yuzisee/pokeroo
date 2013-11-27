@@ -568,8 +568,8 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
 	float64 x = estat->betFraction(betSize);
     float64 dx = estat->betFraction(1.0);
  	if( x >= 1 ){
-        dx = 0.0;
-        x = 1.0 - fracQuantum; //Approximate extremes to avoide division by zero
+        //dx = 0.0;
+        x = 1.0 - fracQuantum; //Approximate extremes to avoid division by zero
     }
 
 
@@ -611,11 +611,12 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
 
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
-    return hd(x, betSize, exf, dexf, f_pot, dx, fOutcome, y);
+    return hdx(x, betSize, exf, dexf, f_pot, dx, fOutcome, y) * estat->betFraction(1.0);
 
 }
 
-float64 GainModelGeom::hd(float64 betFraction, float64 betSize, float64 exf, float64 dexf, float64 f_pot, float64 dx, ICombinedStatResults & fOutcome, float64 y) {
+        // NOTE: This function is not completely accurate, since ViewShape is affected by betSize but it's derivative is not considered.
+float64 GainModelGeom::hdx(float64 betFraction, float64 betSize, float64 exf, float64 dexf, float64 f_pot, float64 dx, ICombinedStatResults & fOutcome, float64 y) {
     const float64 base = ExpectedCallD::handBetBase();
     const float64 x = betFraction;
     const float64 exf_live = exf - f_pot;
@@ -635,12 +636,24 @@ float64 GainModelGeom::hd(float64 betFraction, float64 betSize, float64 exf, flo
 
         if( dragCalls != 0 )
         {
-            savd += HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i)
-            *
-            dexf
-            /
-            ( (i+1+f_pot + x)/dragCalls + exf_live )
-            ;
+            //     log sav = C *   log ( base -x + ( x + f_pot + exf_live * dragCalls) / (i+1))
+            // d sav / sav = C * d log ( base -x + ( x + f_pot + exf_live * dragCalls) / (i+1))
+            // d sav = sav * C *    {d ( base -x + ( x + f_pot + exf_live * dragCalls) / (i+1)) } / sav_root
+            // d sav = sav * C *       ( base - 1.0 dx + ( 1.0 dx + dexf * dragCalls ) / (i+1))  / sav_root
+            // d sav / sav = C *       ( base - 1.0 dx + ( 1.0 dx + dexf * dragCalls ) / (i+1))  / sav_root
+            //
+            // OR
+            //
+            //         sav =     ( -x + ( x + f_pot + exf_live * dragCalls) / (i+1)) ^ C
+            //       d sav = C * ( -x + ( x + f_pot + exf_live * dragCalls) / (i+1)) ^ (C-1) * d ( -x + ( x + f_pot + exf_live * dragCalls) / (i+1))
+            //       d sav / sav = C * sav_root^(C-2) * d ( -x + ( x + f_pot + exf_live * dragCalls) / (i+1))
+            //       d sav / sav = C * sav_root^(C-2) *  ( - 1.0 dx + ( 1.0 dx + dexf * dragCalls) / (i+1))
+            //
+            const float64 sav_root = ( base -x + ( x + f_pot + exf_live * dragCalls) / (i+1));
+            const float64 C = HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i);
+
+
+            savd += C * (-1.0 + (1.0 + dexf * dragCalls) / (i+1)) / sav_root;
         }///Else you'd just {savd+=0;} anyways
 	}
 
@@ -658,17 +671,35 @@ float64 GainModelGeom::hd(float64 betFraction, float64 betSize, float64 exf, flo
       -(fOutcome.getLoseProb(betSize))/(1-x)
       */
 
+
+//             d log pow(base+exf , fOutcome.getWinProb(betSize))
+//             d fOutcome.getWinProb(betSize) log (base+exf)
+     //     {           d getWinProb(betSize)            } log (base+exf) + getWinProb(betSize) * d log (base+exf)
+     //     { get_d_WinProb_dbetSize(betSize) dBetSize   } log (base+exf) + getWinProb(betSize) * dexf / (base+exf) dx
+     //     { get_d_WinProb_dbetSize(betSize) dx * MONEY } log (base+exf) + getWinProb(betSize) * dexf / (base+exf) dx
+     // betSize / MONEY = x
+     // dBetSize = dx * MONEY
+
+
+     //             d fOutcome.getLoseProb(betSize) log (base-x)
+     //     { get_d_LoseProb_dbetSize(betSize) dx * MONEY } log (base-x) + getLoseProb(betSize) * d log (base-x)
+     //     { get_d_LoseProb_dbetSize(betSize) dx * MONEY } log (base-x) + getLoseProb(betSize) * (-1.0 dx) / (base-x)
+
+//     const float64 loseGain = pow(base-x , fOutcome.getLoseProb(betSize));
+
+//  df_dx = df_dBetSize * dBetsize_dx
+
      //
      //     d_dbetSize log{const float64 winGain = pow(base+exf , fOutcome.getWinProb(betSize));}
      //     d_dbetSize fOutcome.getWinProb(betSize) log{base+exf}
      //     {d_dbetSize fOutcome.getWinProb(betSize)} log{base+exf} + fOutcome.getWinProb(betSize) d_dbetSize log{base+exf}
      //     fOutcome.get_d_WinProb_dbetSize(betSize) log{base+exf} + fOutcome.getWinProb(betSize) dexf/{base+exf}
-     fOutcome.get_d_WinProb_dbetSize(betSize) * log(base + exf) + fOutcome.getWinProb(betSize) * dexf / (base + exf)
+     fOutcome.get_d_WinProb_dbetSize(betSize) * log(base + exf) / dx + fOutcome.getWinProb(betSize) * dexf / (base + exf)
      //     d_dbetSize log{const float64 loseGain = pow(base-x , fOutcome.getLoseProb(betSize));}
      //     d_dbetSize fOutcome.getLoseProb(betSize) log{base-x}
      //     {d_dbetSize fOutcome.getLoseProb(betSize)} log{base-x} + fOutcome.getLoseProb(betSize) d_dbetSize log{base-x}
      //     fOutcome.get_d_LoseProb_dbetSize(betSize) log{base-x} + fOutcome.getLoseProb(betSize) (-dx)/(base-x)
-     + fOutcome.get_d_LoseProb_dbetSize(betSize) * log(base-x) - fOutcome.getLoseProb(betSize) * dx/(base-x)
+     + fOutcome.get_d_LoseProb_dbetSize(betSize) * log(base-x) / dx + fOutcome.getLoseProb(betSize) * (-1.0) / (base-x)
      
      + savd
      );
@@ -769,8 +800,17 @@ float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, fl
         dragCalls = dragCalls * dragCalls - dragCalls + 1;
 
 		sav +=
-        (    - x+( f_pot+x+exf_live*dragCalls )/(i+1)    )
+
+        // Bet to split acrss (i+1) players
+        (
+             - x + // your current bet is deduced from your current money so it can be added to the prize pool
+             ( x // Your current bet is shared among the splittors
+               + f_pot+exf_live*dragCalls // The pot is split too (with the exf_live fraction discounted -- note: "f_pot + exf_live === exf"
+             )/(i+1)
+        )
+
         *
+        // Probability of this split
         (        HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i)    )
         ;
 	}
@@ -811,7 +851,6 @@ float64 GainModelNoRisk::f(const float64 betSize)
 }
 
 
-// NOTE: This function is not completely accurate, since ViewShape is affected by betSize but it's derivative is not considered.
 float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 {
 
@@ -849,11 +888,12 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 #endif
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
-    return hd(x, betSize, exf, dexf, fOutcome, y);
+    //     dh/dx * dx/dbetSize
+    return hdx(x, betSize, exf, dexf, fOutcome, y) * estat->betFraction(1.0);
 
 }
 
-float64 GainModelNoRisk::hd(float64 betFraction, float64 betSize, float64 exf, float64 dexf, ICombinedStatResults & fOutcome, float64 y) {
+float64 GainModelNoRisk::hdx(float64 betFraction, float64 betSize, float64 exf, float64 dexf, ICombinedStatResults & fOutcome, float64 y) {
     const float64 x = betFraction;
 
     //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
@@ -871,13 +911,14 @@ float64 GainModelNoRisk::hd(float64 betFraction, float64 betSize, float64 exf, f
 
         if( dragCalls != 0 )
         {
+            // sav = C * ( -x + ( x + f_pot + exf_live * dragCalls) / (i+1))
+            // d sav = C * ( - 1.0 dx + ( 1.0 dx + dexf * dragCalls ) / (i+1))
+
             savd += HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)
             *pow(splitShape.wins,fOutcome.splitOpponents()-i)
             *pow(splitShape.splits,i)
             *
-            dexf * dragCalls
-            /
-            (i+1)
+            ((1.0 + dexf * dragCalls) / (i+1) - 1.0)
             ;
         }///Else you'd just {savd+=0;} anyways
 	}
