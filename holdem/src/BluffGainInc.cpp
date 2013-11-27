@@ -464,9 +464,10 @@ void StateModel::query( const float64 betSize )
         {
 			if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
 
-            //Since g_raised isn't pessimistic based on raiseAmount (especially when we're just calling), don't add additional gain opportunity -- we should instead assume that if we would fold against such a raise that the opponent has us as beat as we are 
-            //potRaisedWin_A[i] = oppRaisedMyFoldGain;
-            //potRaisedWinD_A[i] = 0;
+            //Since g_raised isn't pessimistic based on raiseAmount (especially when we're just calling), don't add additional gain opportunity -- we should instead assume that if we would fold against such a raise that the opponent has us as beat as we are.
+            // Deduct the bet you make and fold
+            potRaisedWin_A[i] = 1.0 - ea.tableinfo->betFraction(betSize);
+            potRaisedWinD_A[i] = 0;
         }
 
     }
@@ -500,7 +501,7 @@ void StateModel::query( const float64 betSize )
 		else
 #endif
         {
-	    raiseAmount_A[i] = 0;
+	    //raiseAmount_A[i] = 0;
         oppRaisedChance_A[i] = 0;
         oppRaisedChanceD_A[i] = 0;
         potRaisedWin_A[i] = 1; // "no change"
