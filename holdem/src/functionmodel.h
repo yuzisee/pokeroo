@@ -130,9 +130,9 @@ class CombinedStatResultsPessimistic : public virtual ICombinedStatResults {
 public:
     CombinedStatResultsPessimistic(OpponentHandOpportunity & opponentHandOpportunity, CoreProbabilities & core)
     :
-    fLastBetSize(std::nan(""))
+    fLastBetSize(std::numeric_limits<float64>::signaling_NaN())
     ,
-    fLoseProb(std::nan("")),fWinProb(std::nan("")),f_d_LoseProb_dbetSize(std::nan("")),f_d_WinProb_dbetSize((std::nan(""))),fHandsToBeat(std::nan(""))
+    fLoseProb(std::numeric_limits<float64>::signaling_NaN()),fWinProb(std::numeric_limits<float64>::signaling_NaN()),f_d_LoseProb_dbetSize(std::numeric_limits<float64>::signaling_NaN()),f_d_WinProb_dbetSize(std::numeric_limits<float64>::signaling_NaN()),fHandsToBeat(std::numeric_limits<float64>::signaling_NaN())
     ,
     fOpposingHands(opponentHandOpportunity)
     ,

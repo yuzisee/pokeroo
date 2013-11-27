@@ -111,15 +111,26 @@ class AutoScalingFunction : public virtual HoldemFunctionModel
 
 struct AggregatedState {
     // Overall contribution: outcome value combined with probability of that outcome
-    float64 contribution = std::nan("");
-    float64 dContribution = std::nan("");
+    float64 contribution;
+    float64 dContribution;
 
     // Value of this particular outcome, if it were certain
     // If this outcome is a combination of sub-outcomes, this value will represent a "blended" value
-    float64 value = std::nan("");
+    float64 value;
 
     // Probability of this outcome.
-    float64 pr = std::nan("");
+    float64 pr;
+
+    AggregatedState()
+    :
+    contribution(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    dContribution(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    value(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    pr(std::numeric_limits<float64>::signaling_NaN())
+    {}
 }
 ;
 

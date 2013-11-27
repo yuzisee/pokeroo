@@ -26,7 +26,7 @@
 #include "functionbase.h"
 #include "inferentials.h"
 #include <math.h>
-
+#include <limits>
 
 
 
@@ -128,13 +128,13 @@ public:
 
     // NOTE: quantum is 1/3rd of a hand. We don't need more precision than that when evaluating f(n).
     FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0),
-    cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), cached_d_dbetSize(std::nan("")), bSearching(false),
-    w(std::nan("")), meanConv(0), amountSacrificeVoluntary(std::nan("")), amountSacrificeForced(std::nan("")), bankroll(std::nan("")), opponents(std::nan("")), betSize(std::nan("")), prevPot(std::nan(""))
+    cacheRarity(std::numeric_limits<float64>::signaling_NaN()), lastdBetSizeN(std::numeric_limits<float64>::signaling_NaN()), lastRawPCT(std::numeric_limits<float64>::signaling_NaN()), cached_d_dbetSize(std::numeric_limits<float64>::signaling_NaN()), bSearching(false),
+    w(std::numeric_limits<float64>::signaling_NaN()), meanConv(0), amountSacrificeVoluntary(std::numeric_limits<float64>::signaling_NaN()), amountSacrificeForced(std::numeric_limits<float64>::signaling_NaN()), bankroll(std::numeric_limits<float64>::signaling_NaN()), opponents(std::numeric_limits<float64>::signaling_NaN()), betSize(std::numeric_limits<float64>::signaling_NaN()), prevPot(std::numeric_limits<float64>::signaling_NaN())
     {}
 
     // NOTE: Although this is the copy constructor, it doesn't copy caches. This lets you clone a configuration and re-evaluate it.
     FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0),
-        cacheRarity(std::nan("")), lastdBetSizeN(std::nan("")), lastRawPCT(std::nan("")), cached_d_dbetSize(std::nan("")), bSearching(false),
+        cacheRarity(std::numeric_limits<float64>::signaling_NaN()), lastdBetSizeN(std::numeric_limits<float64>::signaling_NaN()), lastRawPCT(std::numeric_limits<float64>::signaling_NaN()), cached_d_dbetSize(std::numeric_limits<float64>::signaling_NaN()), bSearching(false),
         w(o.w), meanConv(o.meanConv), amountSacrificeVoluntary(o.amountSacrificeVoluntary), amountSacrificeForced(o.amountSacrificeForced), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize), prevPot(o.prevPot)
     {};
 

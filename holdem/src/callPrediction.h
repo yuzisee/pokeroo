@@ -228,9 +228,9 @@ public:
     :
     fTable(table)
     ,
-    fLastBetSize(std::nan(""))
+    fLastBetSize(std::numeric_limits<float64>::signaling_NaN())
     ,
-    fHandsToBeat(std::nan("")),f_d_HandsToBeat_dbetSize(std::nan(""))
+    fHandsToBeat(std::numeric_limits<float64>::signaling_NaN()),f_d_HandsToBeat_dbetSize(std::numeric_limits<float64>::signaling_NaN())
     ,
     fIdx(myIdx)
     ,

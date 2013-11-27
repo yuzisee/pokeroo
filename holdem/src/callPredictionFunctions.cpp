@@ -462,7 +462,7 @@ void FoldWaitLengthModel::load(const ChipPositionState &cps, float64 avgBlind) {
 
 // Rarity depends on cached_d_dBetSize, so we have to clear the cache if we are updating w
 void FoldWaitLengthModel::setW(float64 neww) {
-    cacheRarity = std::nan("");
+    cacheRarity = std::numeric_limits<float64>::signaling_NaN();
     w = neww;
 }
 
@@ -669,6 +669,17 @@ void FacedOddsAlgb::query( const float64 w )
     #endif
 
     const float64 dU_dw = U*FG.waitLength.opponents/w;
+
+
+
+
+#ifdef DEBUGASSERT
+    if(std::isnan(lastF))
+    {
+        std::cout << " (NaN) returned by FacedOddsAlgb" << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
 
     lastFD = dU_dw;
     if( FG.n > 0 )
