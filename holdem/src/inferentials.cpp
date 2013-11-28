@@ -399,7 +399,13 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
 
     if (maxsize == 1) {
         // All outcomes constant
-        return std::pair<float64, float64>(0.5, 0.0);
+        if (cumulation[0].pct < winPCT_toHave) {
+            return std::pair<float64, float64>(1.0, 0.0);
+        } else if (winPCT_toHave < cumulation[0].pct) {
+            return std::pair<float64, float64>(0.0, 0.0);
+        } else {
+            return std::pair<float64, float64>(0.5, 0.0);
+        }
     }
 
     if( firstBetterThan == maxsize )

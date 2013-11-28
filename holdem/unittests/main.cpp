@@ -726,129 +726,200 @@ namespace RegressionTests {
     }
     ;
 
-
-    // Test OpposingHandOpportunity derivatives
-    void testRegression_008() {
-
-        /*
-         Preflop
-         (Pot: $0)
-         (4 players)
-         [A $100.0]
-         [B $150.0]
-         [C $75.0]
-         [D $22.0]
+    // _____ needs to be more adversarial.
+    // If you have a good hand and raise, who is likely to call? Why doesn't pessimistic work there?
+    // It's fine if you say only re-raise and fold are possible, but fold should be higher with such an overbet, shouldn't it?
+    void testRegression_017() {
 
 
-         A posts SB of $0.125 ($0.125)
-         B posts BB of $0.25 ($0.375)
-         */
 
         struct BlindValues b;
-        b.SetSmallBigBlind(0.125);
+        b.SetSmallBigBlind(5.0);
 
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
-        myTable.setSmallestChip(0.125);
+        myTable.setSmallestChip(5.0);
 
-        std::vector<float64> aC; aC.push_back(0.25);
-        FixedReplayPlayerStrategy cS(aC);
-        FixedReplayPlayerStrategy dS(aC);
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const float64 aa[] = {10.0,
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            100.0};
+        const std::vector<float64> aA(aa, aa + sizeof(aa) / sizeof(aa[0]) );
+        static const float64 pa[] = {std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            100.0};
+        const std::vector<float64> pA(pa, pa + sizeof(pa) / sizeof(pa[0]) );
+        FixedReplayPlayerStrategy gS(foldOnly);
+        FixedReplayPlayerStrategy tS(foldOnly);
+        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy pS(pA);
+        FixedReplayPlayerStrategy aS(aA);
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy cS(aA);
+        FixedReplayPlayerStrategy sS(foldOnly);
 
-        FixedReplayPlayerStrategy aS(aC);
-        FixedReplayPlayerStrategy bS(aC);
 
-        myTable.ManuallyAddPlayer("A", 100.0, &aS);
-        myTable.ManuallyAddPlayer("B", 150.0, &bS);
-        myTable.ManuallyAddPlayer("C", 75.0, &cS);
-        myTable.ManuallyAddPlayer("D", 22.0, &dS);
-        const playernumber_t dealer = 3;
+        PlayerStrategy * const botToTest = new PureGainStrategy(2);
 
+        myTable.ManuallyAddPlayer("MultiBotV", 1502.5, &mS);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, &cS);
+        myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
+        myTable.ManuallyAddPlayer("GearBotV", 1500.0, &gS);
+        myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
+        myTable.ManuallyAddPlayer("NormalBot17", 1502.5, botToTest);
+        myTable.ManuallyAddPlayer("TrapBotV", 1500.0, &tS);
+        myTable.ManuallyAddPlayer("Nav", 1500.0, &pS);
+        myTable.ManuallyAddPlayer("DangerBotV", 1495.0, &dS);
 
-        myTable.BeginInitialState();
-        myTable.BeginNewHands(b, false, dealer);
-
+        const playernumber_t dealer = 8;
+        
+        
 
         /*
-         C calls $0.25 ($0.625)
-         D calls $0.25 ($0.875)
-         A calls $0.25 ($1.0)
-         B checks
-         */
-        assert(myTable.PlayRound_BeginHand() != -1);
 
-        //myTable.PrepBettingRound(false,2); //turn, river remaining
 
-        // ===
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [MultiBotV $1502.5]
+         [ConservativeBotV $1500]
+         [SpaceBotV $1500]
+         [GearBotV $1500]
+         [ActionBotV $1500]
+         [NormalBotV $1502.5]
+         [TrapBotV $1500]
+         [Nav $1500]
+         [DangerBotV $1495]
+*/
+
+
 
         DeckLocation card;
 
-        CommunityPlus withCommunity; // 3c Qc
+        {
+            CommunityPlus handToTest; // Ah 7h
 
-        card.SetByIndex(6);
-        withCommunity.AddToHand(card);
+            card.SetByIndex(21);
+            handToTest.AddToHand(card);
 
-        card.SetByIndex(42);
-        withCommunity.AddToHand(card);
+            card.SetByIndex(49);
+            handToTest.AddToHand(card);
 
-        std::cout << "Starting next round..." << endl;
-
-        CommunityPlus communityToTest; // Jc Ks Ah
-
-        card.SetByIndex(38);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(44);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(49);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        const int8 cardsInCommunity = 3;
-
-
-        StatResultProbabilities statprob;
-
-        ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
-
-        ///Compute CommunityCallStats
-        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
-
-
-        const float64 testBet = 2.0;
-
-        OpponentHandOpportunity test(1, myTable, statprob.core);
-
-
-
-        test.query(testBet);
-        const float64 actual_y = test.handsToBeat();
-        const float64 actual_Dy = test.d_HandsToBeat_dbetSize();
-
-        assert(actual_y >= 3.5);
-        assert(actual_Dy > 0); // betting more should increase N even more
-
-        CombinedStatResultsPessimistic testC(test, statprob.core);
-        //testC.query(testBet);
-
-        const float64 s1 = testC.ViewShape(testBet).splits;
-        const float64 w = testC.getWinProb(testBet);
-        const float64 l = testC.getLoseProb(testBet);
-        const float64 dw = testC.get_d_WinProb_dbetSize(testBet);
-        const float64 dl = testC.get_d_LoseProb_dbetSize(testBet);
+            botToTest->StoreDealtHand(handToTest);
+        }
         
-        assert(testC.ViewShape(testBet).wins + testC.ViewShape(testBet).splits + testC.ViewShape(testBet).loss == 1.0);
+
+
+        myTable.BeginInitialState(17);
+        myTable.BeginNewHands(b, false, dealer);
         
-        assert(w < 0.1);
-        assert(l+w > 0.86);
-        assert(s1 < 0.25);
-        assert(dw < 0);
-        assert(dl == -dw);
+/*
+
+ MultiBotV posts SB of $5 ($5)
+ ConservativeBotV posts BB of $10 ($15)
+ */
+        assert(myTable.PlayRound_BeginHand() != -1);
+
+        /*
+         SpaceBotV folds
+         GearBotV folds
+         ActionBotV calls $10 ($25)
+         NormalBotV calls $10 ($35)
+         TrapBotV folds
+         Nav calls $10 ($45)
+         DangerBotV folds
+         MultiBotV folds
+         ConservativeBotV checks
+         */
+
+
+        CommunityPlus myFlop;
+
+        card.SetByIndex(5);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(26);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(47);
+        myFlop.AddToHand(card);
+        /*
+
+         Flop:	3h 8c Kd    (Pot: $45)
+         */
+
+
+
+        assert(myTable.PlayRound_Flop(myFlop) != -1);
+
+        /*
+         (4 players)
+         [ConservativeBotV $1490]
+         [ActionBotV $1490]
+         [NormalBotV $1492.5]
+         [Nav $1490]
+
+         ConservativeBotV checks
+         ActionBotV checks
+         NormalBotV checks
+         Nav checks
+*/
+
+        DeckLocation myTurn;
+        myTurn.SetByIndex(37);
+        /*
+         Turn:	3h 8c Kd Jh   (Pot: $45)
+         */
+
+
+        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+        
+        /*
+         (4 players)
+         [ConservativeBotV $1490]
+         [ActionBotV $1490]
+         [NormalBotV $1492.5]
+         [Nav $1490]
+         
+         ConservativeBotV checks
+         ActionBotV checks
+         NormalBotV checks
+         Nav checks
+         */
+
+        DeckLocation myRiver;
+        myRiver.SetByIndex(9);
+        /*
+
+         River:	3h 8c Kd Jh 4h  (Pot: $45)
+         */
+
+
+
+        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) != -1);
+
+        /*
+         (4 players)
+         [ConservativeBotV $1490]
+         [ActionBotV $1490]
+         [NormalBotV $1492.5]
+         [Nav $1490]
+         
+         ConservativeBotV checks
+         ActionBotV checks
+         NormalBotV bets $750 ($795)
+         Nav folds
+         ConservativeBotV folds
+         ActionBotV folds
+         
+         All fold! NormalBotV wins $35
+
+         */
+        // You have the nuts, don't let everyone fold.
     }
 
 
@@ -990,7 +1061,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const int arr[] = {55, 705, std::numeric_limits<float64>::signaling_NaN()};
+        static const float64 arr[] = {55, 705, std::numeric_limits<float64>::signaling_NaN()};
         const std::vector<float64> aA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
         FixedReplayPlayerStrategy tS(foldOnly);
@@ -1097,7 +1168,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const int arr[] = {std::numeric_limits<float64>::signaling_NaN(),
+        static const float64 arr[] = {std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN(),
@@ -1146,6 +1217,8 @@ namespace RegressionTests {
         
         myTable.BeginInitialState(11);
         myTable.BeginNewHands(b, false, dealer);
+
+
         
 
          /*
@@ -1285,7 +1358,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const int arr[] = {std::numeric_limits<float64>::signaling_NaN(),
+        static const float64 arr[] = {std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN()};
         const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
@@ -1385,7 +1458,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const int arr[] = {11.25, 80.0, 30.0, 125.0};
+        static const float64 arr[] = {11.25, 80.0, 30.0, 125.0};
         const std::vector<float64> nA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
         
@@ -1578,7 +1651,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const int arr[] = {10.125, 18.0, 805.5, 1489.88};
+        static const float64 arr[] = {10.125, 18.0, 805.5, 1489.88};
         const std::vector<float64> aA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
 
@@ -1757,7 +1830,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const int arr[] = {std::numeric_limits<float64>::signaling_NaN(), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0};
+        static const float64 arr[] = {std::numeric_limits<float64>::signaling_NaN(), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0};
         const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
 
         FixedReplayPlayerStrategy sS(foldOnly);
@@ -2053,7 +2126,7 @@ namespace RegressionTests {
 
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const int arr[] = {5.0, 12.5, 49, 168.0, 459.0, 495.0};
+        static const float64 arr[] = {5.0, 12.5, 49, 168.0, 459.0, 495.0};
         const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
 
         FixedReplayPlayerStrategy cS(foldOnly);
@@ -2174,7 +2247,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const int arr[] = {std::numeric_limits<float64>::signaling_NaN(), 12.5, std::numeric_limits<float64>::signaling_NaN(), 228.0, 459.0, 495.0};
+        static const float64 arr[] = {std::numeric_limits<float64>::signaling_NaN(), 12.5, std::numeric_limits<float64>::signaling_NaN(), 228.0, 459.0, 495.0};
         const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
 
         FixedReplayPlayerStrategy cS(foldOnly);
@@ -2327,6 +2400,132 @@ namespace RegressionTests {
      
      */
     }
+
+
+    // Test OpposingHandOpportunity derivatives
+    void testRegression_008() {
+
+        /*
+         Preflop
+         (Pot: $0)
+         (4 players)
+         [A $100.0]
+         [B $150.0]
+         [C $75.0]
+         [D $22.0]
+
+
+         A posts SB of $0.125 ($0.125)
+         B posts BB of $0.25 ($0.375)
+         */
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(0.125);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(0.125);
+
+        std::vector<float64> aC; aC.push_back(0.25);
+        FixedReplayPlayerStrategy cS(aC);
+        FixedReplayPlayerStrategy dS(aC);
+
+        FixedReplayPlayerStrategy aS(aC);
+        FixedReplayPlayerStrategy bS(aC);
+
+        myTable.ManuallyAddPlayer("A", 100.0, &aS);
+        myTable.ManuallyAddPlayer("B", 150.0, &bS);
+        myTable.ManuallyAddPlayer("C", 75.0, &cS);
+        myTable.ManuallyAddPlayer("D", 22.0, &dS);
+        const playernumber_t dealer = 3;
+
+
+        myTable.BeginInitialState();
+        myTable.BeginNewHands(b, false, dealer);
+
+
+        /*
+         C calls $0.25 ($0.625)
+         D calls $0.25 ($0.875)
+         A calls $0.25 ($1.0)
+         B checks
+         */
+        assert(myTable.PlayRound_BeginHand() != -1);
+
+        //myTable.PrepBettingRound(false,2); //turn, river remaining
+
+        // ===
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // 3c Qc
+
+        card.SetByIndex(6);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(42);
+        withCommunity.AddToHand(card);
+
+        std::cout << "Starting next round..." << endl;
+
+        CommunityPlus communityToTest; // Jc Ks Ah
+
+        card.SetByIndex(38);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(44);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(49);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        const int8 cardsInCommunity = 3;
+
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+
+        const float64 testBet = 2.0;
+
+        OpponentHandOpportunity test(1, myTable, statprob.core);
+
+
+
+        test.query(testBet);
+        const float64 actual_y = test.handsToBeat();
+        const float64 actual_Dy = test.d_HandsToBeat_dbetSize();
+
+        assert(actual_y >= 3.5);
+        assert(actual_Dy > 0); // betting more should increase N even more
+
+        CombinedStatResultsPessimistic testC(test, statprob.core);
+        //testC.query(testBet);
+
+        const float64 s1 = testC.ViewShape(testBet).splits;
+        const float64 w = testC.getWinProb(testBet);
+        const float64 l = testC.getLoseProb(testBet);
+        const float64 dw = testC.get_d_WinProb_dbetSize(testBet);
+        const float64 dl = testC.get_d_LoseProb_dbetSize(testBet);
+        
+        assert(testC.ViewShape(testBet).wins + testC.ViewShape(testBet).splits + testC.ViewShape(testBet).loss == 1.0);
+        
+        assert(w < 0.1);
+        assert(l+w > 0.86);
+        assert(s1 < 0.25);
+        assert(dw < 0);
+        assert(dl == -dw);
+    }
+
 }
 
 struct DeckLocationPair {
@@ -2462,6 +2661,7 @@ int main(int argc, const char * argv[])
 
     // Regression tests
 
+    RegressionTests::testRegression_017();
     RegressionTests::testRegression_011();
     RegressionTests::testRegression_013a();
     RegressionTests::testRegression_014a();
