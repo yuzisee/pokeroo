@@ -132,7 +132,7 @@ public:
     :
     fLastBetSize(std::numeric_limits<float64>::signaling_NaN())
     ,
-    fLoseProb(std::numeric_limits<float64>::signaling_NaN()),fWinProb(std::numeric_limits<float64>::signaling_NaN()),f_d_LoseProb_dbetSize(std::numeric_limits<float64>::signaling_NaN()),f_d_WinProb_dbetSize((std::numeric_limits<float64>::signaling_NaN())),fHandsToBeat(std::numeric_limits<float64>::signaling_NaN())
+    fLoseProb(std::numeric_limits<float64>::signaling_NaN()),fWinProb(std::numeric_limits<float64>::signaling_NaN()),f_d_LoseProb_dbetSize(std::numeric_limits<float64>::signaling_NaN()),f_d_WinProb_dbetSize(std::numeric_limits<float64>::signaling_NaN()),fHandsToBeat(std::numeric_limits<float64>::signaling_NaN())
     ,
     fOpposingHands(opponentHandOpportunity)
     ,

@@ -509,7 +509,7 @@ void StateModel::query( const float64 betSize )
         }
 
 #ifdef DEBUGASSERT
-        if (std::isnan(oppRaisedChance_A[i])) {
+        if (is_nan(oppRaisedChance_A[i])) {
             std::cerr << "oppRaisedChance_A[i] should not be NaN" << std::endl;
             exit(1);
         }
@@ -629,6 +629,12 @@ void StateModel::query( const float64 betSize )
     y -= fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank());
                                 /* called with ea.ed */
 #ifdef DEBUGASSERT
+    if(is_nan(y))
+    {
+        std::cout << "StateModel returning NaN is not okay" << std::endl;
+        exit(1);
+    }
+
                                 if (fMyFoldGain.getPlayerId() != estat->playerID) {
                                 //estat->ViewPlayer()
 

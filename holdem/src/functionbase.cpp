@@ -179,6 +179,16 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 
 	        float64 leftmax = round(FindMax(x1,x1b_outer)/quantum)*quantum;
 	        float64 rightmax = round(FindMax(x2b_outer,x2)/quantum)*quantum;
+
+            // Clean up rounding error before querying.
+            if (leftmax < x1) {
+                leftmax = x1;
+            }
+            if (x2 < rightmax) {
+                rightmax = x2;
+            }
+
+            // Now compare the recursive results to each other...
 	        if( f(leftmax) > f(rightmax) )
 	        {
 	            return leftmax;

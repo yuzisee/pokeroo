@@ -478,12 +478,14 @@ enum MeanOrRank {
 #define EPS_WIN_PCT (1.0 / 2118760.0 / 990.0)
 
 struct CoreProbabilities {
-    int8 playerID = -1;
+    int8 playerID;
 
     CallCumulationD handcumu; // CallStats (your odds of winning against each possible opponent)
     CallCumulationD foldcumu; // CallStats, REVERSED PERSPECTIVE (each opposing hand's chance to win)
     CallCumulationD callcumu; // CommunityCallStats (each hole cards' inherent probability of winning)
 	StatResult statmean; // (Your hole cards' current inherent probability of winning)
+
+    CoreProbabilities() : playerID(-1) {}
 
     // Against what fraction of opponents will you have the better hand?
     // This is high for good all-in hands.

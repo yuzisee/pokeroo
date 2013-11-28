@@ -58,7 +58,7 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
     // When we come back, you'll still have to beat everyone who got an opportunity to see a hand this time.
     const float64 playerCount = suggestPlayerCount(fTable).inclAllIn();
 
-    const float64 avgBlinds = fTable.GetAvgBlindPerHand();
+    const float64 avgBlind = fTable.GetBlindValues().OpportunityPerHand(fTable.NumberAtTable());
     FoldGainModel FG(fTable.GetChipDenom()/2);
 
     // CoreProbabilities & myOdds;
@@ -86,13 +86,13 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
 
 
     FG.waitLength.bankroll = p.GetMoney();
-    FG.waitLength.amountSacrificeForced = avgBlinds;
+    FG.waitLength.amountSacrificeForced = avgBlind;
     FG.waitLength.setAmountSacrificeVoluntary( p.GetBetSize()
 #ifdef SACRIFICE_COMMITTED
                  + p.GetVoluntaryContribution()
     #endif
                                     + extra
-        - avgBlinds
+        - avgBlind
     );
 	FG.waitLength.opponents = playerCount - 1;
     FG.waitLength.prevPot = fTable.GetPrevPotSize();

@@ -20,6 +20,7 @@
 
 
 #include "callPredictionFunctions.h"
+#include "math_support.h"
 
 #include <iostream>
 
@@ -296,7 +297,7 @@ float64 FoldWaitLengthModel::f( const float64 n )
         exit(1);
     }
 
-    if(std::isnan(betSize)) {
+    if(is_nan(betSize)) {
         std::cout << "NaN betSize uninitialized?" << std::endl;
         exit(1);
     }
@@ -324,7 +325,7 @@ float64 FoldWaitLengthModel::f( const float64 n )
 
 
 #ifdef DEBUGASSERT
-    if(std::isnan(lastF)) {
+    if(is_nan(lastF)) {
         std::cout << "NaN lastF result" << std::endl;
         exit(1);
     }
@@ -384,6 +385,16 @@ float64 FoldWaitLengthModel::FindBestLength()
     lastRawPCT = -1;
 
     quantum = (1.0/3.0); // Get to the number of hands played.
+
+
+#ifdef DEBUGASSERT
+    if(amountSacrificeForced <= 0.0 && amountSacrificeVoluntary <= 0.0)
+    {
+        std::cout << "amountSacrificeForced should always be positive or we'll have maxTurns == \\infty which breaks things. It can't really be zero anyway." << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
 
     const float64 numHandsPerSameSituationFold = 1.0 / rarity() / rarity();
 	const float64 amountSacrificePerHand = (amountSacrificeVoluntary / numHandsPerSameSituationFold + amountSacrificeForced);
@@ -556,7 +567,7 @@ void FoldGainModel::query( const float64 betSize )
     lastFB ;
 
 #ifdef DEBUGASSERT
-    if(std::isnan(lastf))
+    if(is_nan(lastf))
     {
         std::cout << " lastf (NaN) in FoldWaitLengthModel! Probably you forgot to initalize something..." << std::endl;
         exit(1);
@@ -565,7 +576,7 @@ void FoldGainModel::query( const float64 betSize )
 
 
 #ifdef DEBUGASSERT
-    if(std::isnan(lastfd))
+    if(is_nan(lastfd))
     {
         std::cout << " lastfd (NaN) in FoldWaitLengthModel! Probably you forgot to initalize something..." << std::endl;
         exit(1);
@@ -659,6 +670,17 @@ void FacedOddsAlgb::query( const float64 w )
     #endif
 
     const float64 dU_dw = U*FG.waitLength.opponents/w;
+
+
+
+
+#ifdef DEBUGASSERT
+    if(is_nan(lastF))
+    {
+        std::cout << " (NaN) returned by FacedOddsAlgb" << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
 
     lastFD = dU_dw;
     if( FG.n > 0 )

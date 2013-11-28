@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
-#include <math.h>
+#include "math_support.h"
 #include <float.h>
 #include <algorithm>
 
@@ -626,7 +626,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                             {
 
 #ifdef DEBUGASSERT
-                                if (std::isnan(prev_w_r_mean) || std::isnan(prev_w_r_rank)) {
+                                if (is_nan(prev_w_r_mean) || is_nan(prev_w_r_rank)) {
                                     std::cerr << "prev_w_r_mean and prev_w_r_rank only become NaN after thisRaise passes oppBankRoll." << std::endl;
                                     exit(1);
                                 }
@@ -1411,6 +1411,8 @@ void OpponentHandOpportunity::query(const float64 betSize) {
     float64 tableStrength = fTable.NumberAtFirstActionOfRound().inclAllIn();
     float64 tableStrengthToBeat = tableStrength - 1.0;
 
+    const float64 avgBlinds = fTable.GetBlindValues().OpportunityPerHand(fTable.NumberAtTable());
+
     playernumber_t pIndex = fIdx;
     fTable.incrIndex(pIndex);
     float64 totalOpposingHandOpportunityCount = 0.0;
@@ -1443,7 +1445,7 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 ;
                 // ( 1 / (x+1) )  ^ (1/x)
                 FG.waitLength.bankroll = fTable.ViewPlayer(pIndex)->GetMoney();
-                FG.waitLength.amountSacrificeForced = fTable.GetAvgBlindPerHand();
+                FG.waitLength.amountSacrificeForced = avgBlinds;
                 FG.waitLength.setAmountSacrificeVoluntary( fTable.ViewPlayer(pIndex)->GetBetSize()
     #ifdef SACRIFICE_COMMITTED
                 + fTable.ViewPlayer(pIndex)->GetVoluntaryContribution()
