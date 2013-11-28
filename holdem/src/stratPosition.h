@@ -135,23 +135,9 @@ class DeterredGainStrategy : public PositionalStrategy
  * -Nav
  
  * So:
- * + Use stat worse when raising (any amount)
+ * + Use CombinedStatResultsPessimistic when raising (any amount)
  * + Use geom to call, always. Since calling is the smallest bet, do we hard algb/worse for any raise? Sure. At least it's simple. Let's try it.
- */
-class SimpleGainStrategy : public PositionalStrategy
-{
-protected:
-    int8 bGamble;
-public:
-    SimpleGainStrategy(int8 riskymode =0) : PositionalStrategy(true,false,true,false), bGamble(riskymode) {}
-
-    virtual float64 MakeBet();
-}
-;
-
-
-/**
- * Same as SimpleGainStrategy, but instead of AutoScalingFunction for statworse, use CombinedStatResultsPessimistic
+ *
  */
 class PureGainStrategy : public PositionalStrategy
 {

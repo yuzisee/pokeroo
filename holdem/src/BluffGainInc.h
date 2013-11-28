@@ -32,6 +32,15 @@
 enum AutoScaleType { ALGEBRAIC_AUTOSCALE, LOGARITHMIC_AUTOSCALE };
 #endif
 
+enum SliderBehaviour {
+    SLIDERX // In this mode, Pr{raisedAgainst} and U{raisedAgainst} are evaluated at sliderx===betSize
+    // Use this for legacy PlayerStrategies that use smoothly varying AutoScalingFunctions to create deterrents, etc.
+    ,
+    RAW // In this mode, slider is always equal to showdownBetSize.
+    // Use this for pure PlayerStrategies that use discrete AutoScalingFunctions (e.g. as a switch between calling and raising).
+};
+
+
 class AutoScalingFunction : public virtual HoldemFunctionModel
 {//NO ASSIGNMENT OPERATOR
 private:
@@ -65,10 +74,15 @@ public:
     IFunctionDifferentiable & left;
     IFunctionDifferentiable & right;
 
+    const SliderBehaviour fSliderBehaviour;
+
     AutoScalingFunction(IFunctionDifferentiable & f_left, IFunctionDifferentiable & f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c
 #ifdef TRANSFORMED_AUTOSCALES
                         , AutoScaleType type = ALGEBRAIC_AUTOSCALE
 #endif
+
+                        ,
+                        SliderBehaviour sliderBehaviour
     )
 
     : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.getQuantum(),f_right.getQuantum()), c)
@@ -76,7 +90,10 @@ public:
 #ifdef TRANSFORMED_AUTOSCALES
     , AUTOSCALE_TYPE(type)
 #endif
-    , bNoRange( maxX <= minX ), left(f_left), right(f_right){
+    , bNoRange( maxX <= minX ), left(f_left), right(f_right)
+    ,
+    fSliderBehaviour(sliderBehaviour)
+    {
         last_x = -1;
         last_sliderx = -1;
         //query(0,0);
@@ -92,7 +109,10 @@ public:
 #ifdef TRANSFORMED_AUTOSCALES
     , AUTOSCALE_TYPE(type)
 #endif
-    , bNoRange( maxX <= minX ), left(f_left), right(f_right){
+    , bNoRange( maxX <= minX ), left(f_left), right(f_right)
+    ,
+    fSliderBehaviour(SLIDERX)
+    {
         last_x = -1;
         last_sliderx = -1;
         //query(0,0);
@@ -167,14 +187,6 @@ public:
     struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const override final;
 };
 
-enum SliderBehaviour {
-    SLIDERX // In this mode, Pr{raisedAgainst} and U{raisedAgainst} are evaluated at sliderx===betSize
-    // Use this for legacy PlayerStrategies that use smoothly varying AutoScalingFunctions to create deterrents, etc.
-    ,
-    RAW // In this mode, slider is always equal to showdownBetSize.
-    // Use this for pure PlayerStrategies that use discrete AutoScalingFunctions (e.g. as a switch between calling and raising).
-};
-
 
 // Evaluate gainWithFold*gainNormal*gainRaised
 // on an AutoScalingFunction
@@ -196,8 +208,7 @@ protected:
     FoldOrCall fMyFoldGain; // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
     const IStateCombiner & fStateCombiner;
     AutoScalingFunction *fp;
-    bool bSingle;
-
+    const bool bSingle;
 
 
 #ifdef DEBUG_TRACE_SEARCH
@@ -221,7 +232,9 @@ public:
 
     float64 g_raised(float64 raisefrom, float64);
 
-    StateModel(ExactCallBluffD & c, AutoScalingFunction *function, const IStateCombiner & stateCombiner)
+    StateModel(ExactCallBluffD & c, AutoScalingFunction *function, const IStateCombiner & stateCombiner
+
+               )
     : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
     ,last_x(-1)
     ,
@@ -231,11 +244,13 @@ public:
     ,
     fStateCombiner(stateCombiner)
     ,
-    fp(function),bSingle(false),firstFoldToRaise(-1)
+    fp(function),bSingle(false)
+    ,
+    firstFoldToRaise(-1)
     {
         query(0);
     }
-
+    
     /*
      StateModel(ExactCallBluffD &c, IFunctionDifferentiable &functionL, IFunctionDifferentiable &functionR) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
      ,last_x(-1)

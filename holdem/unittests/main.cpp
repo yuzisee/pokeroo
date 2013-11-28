@@ -731,6 +731,8 @@ namespace RegressionTests {
     // Because if you call you get the benefit of not pessimistic gainmodel since calling sets sliderx to call.
     // In PureGainStrategy, at least, do raises against count as pessimistic? Probably yes since it's the same as "number at first action".
     // This should explain why our bots like to check/call so much right now.
+
+    // In this test, AgainstRaise(call) is too high, presumably because it draws raises at the (call) winPCT. 
     void testRegression_018() {
 
 
@@ -822,6 +824,7 @@ namespace RegressionTests {
 
          */
         assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.IsInHand(4));
         /*
          TrapBotV folds
          Nav folds
@@ -2856,7 +2859,6 @@ int main(int argc, const char * argv[])
     UnitTests::testRegression_007();
     UnitTests::testRegression_007b();
     UnitTests::testRegression_007c();
-    RegressionTests::testRegression_008();
     
     // Regression tests
     
@@ -2878,6 +2880,10 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_009();
     
     RegressionTests::testRegression_006();
+
+    
+    // Regression/Unit hybrid
+    RegressionTests::testRegression_008();
     
     
     // Regenerate the DB?

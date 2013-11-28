@@ -509,18 +509,30 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
 #ifdef LOGPOSITION
 
 
-    int32 maxcallStep = -1;
     int32 raiseStep = 0;
 
     {
         FoldOrCall rlF(*(tablestate.table), rl.fCore);
 
-    float64 orAmount =  rl.RaiseAmount(betToCall,raiseStep);
+        int32 firstFoldToRaise = -1;
+        float64 orAmount;
+        for(raiseStep = 0, orAmount = 0.0; orAmount < maxShowdown; ++raiseStep )
+        {
+            orAmount =  rl.RaiseAmount(betToCall,raiseStep);
+
+            const float64 oppRaisedFoldGain = rlF.myFoldGainAgainstPredictedRaise(rlF.suggestMeanOrRank(), betToCall, tablestate.alreadyBet(), orAmount);
+            const float64 oppRaisedPlayGain = m.g_raised(betToCall,orAmount);
+            if( oppRaisedFoldGain > oppRaisedPlayGain ){ break; /* We'd fold at this point. Stop incrementing */ } else {  firstFoldToRaise = raiseStep+1; }
+        }
+
+    ;
+
+        if (separatorBet != betToCall) {
     logFile << endl << "Why didn't I call?" << endl;
-    while( orAmount < maxShowdown )
+        }
+        for(raiseStep = 0, orAmount = 0.0; orAmount < maxShowdown; ++raiseStep )
     {
         orAmount =  rl.RaiseAmount(betToCall,raiseStep);
-        const float64 oppRaisedFoldGain = rlF.myFoldGainAgainstPredictedRaise(rlF.suggestMeanOrRank(), betToCall, tablestate.alreadyBet(), orAmount);
         logFile << "OppRAISEChance";
         switch (rlF.suggestMeanOrRank()) {
             case MEAN:
@@ -530,38 +542,44 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
                 logFile << "R";
                 break;
         }
-        if( oppRaisedFoldGain > m.g_raised(betToCall,orAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
+        if( raiseStep >= firstFoldToRaise ) {  logFile << " [F] ";  } else { logFile << " [*] "; }
 
         // Here, raiseStep is just the iterator. rl.RaiseAmount(betToCall,raiseStep) is the amount, rl.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
-        logFile << rl.pRaise(betToCall,raiseStep,maxcallStep) << " @ $" << orAmount;
+        logFile << rl.pRaise(betToCall,raiseStep,firstFoldToRaise) << " @ $" << orAmount;
 
         logFile << "\tfold -- left" << rl.pWin(orAmount) << "  " << rr.pWin(orAmount) << " right"; // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
         printPessimisticWinPct(logFile, orAmount, csrp);
         logFile << endl;
 
-
-        if( orAmount >= maxShowdown ) break;
-
-        ++raiseStep;
     }
     }
 
     const float64 minNextRaiseTo = (separatorBet*2-betToCall);
     if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
 
+    if (separatorBet != betToCall) {
     logFile << "\t--" << endl;
     logFile << "What am I expecting now, given my actual bet?" << endl;
 
-    maxcallStep = -1;
-    raiseStep = 0;
-    {
+    
         FoldOrCall rrF(*(tablestate.table), rr.fCore);
 
-    float64 mrAmount =  rl.RaiseAmount(separatorBet,raiseStep);
-    while( mrAmount <= maxShowdown )
+        int32 firstFoldToRaise = -1;
+        float64 mrAmount;
+        for(raiseStep = 0, mrAmount = 0.0; mrAmount < maxShowdown; ++raiseStep )
+        {
+            mrAmount = rl.RaiseAmount(separatorBet,raiseStep);
+
+            const float64 oppRaisedFoldGain = rrF.myFoldGainAgainstPredictedRaise(rrF.suggestMeanOrRank(), separatorBet, tablestate.alreadyBet(), mrAmount);
+            const float64 oppRaisedPlayGain = m.g_raised(separatorBet,mrAmount);
+            if( oppRaisedFoldGain > oppRaisedPlayGain ){ break; /* We'd fold at this point. Stop incrementing */ } else {  firstFoldToRaise = raiseStep+1; }
+
+        }
+
+
+        for(raiseStep = 0, mrAmount = 0.0; mrAmount < maxShowdown; ++raiseStep )
     {
         mrAmount =  rl.RaiseAmount(separatorBet,raiseStep);
-        const float64 oppRaisedFoldGain = rrF.myFoldGainAgainstPredictedRaise(rrF.suggestMeanOrRank(), separatorBet, tablestate.alreadyBet(), mrAmount);
         logFile << "OppRAISEChance";
         switch (rrF.suggestMeanOrRank()) {
             case MEAN:
@@ -571,20 +589,15 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
                 logFile << "R";
                 break;
         }
-        if( oppRaisedFoldGain > m.g_raised(separatorBet,mrAmount) ){  logFile << " [F] ";  } else {  logFile << " [*] ";  maxcallStep = raiseStep+1; }
+        if( raiseStep >= firstFoldToRaise ) {  logFile << " [F] ";  } else { logFile << " [*] "; }
 
-        logFile << rl.pRaise(separatorBet,raiseStep,maxcallStep) << " @ $" << mrAmount;
+        logFile << rl.pRaise(separatorBet,raiseStep,firstFoldToRaise) << " @ $" << mrAmount;
 
         /*
         logFile << "\tfold -- left" << rl.pWin(mrAmount) << "  " << rr.pWin(mrAmount) << " right";
         printPessimisticWinPct(logFile, mrAmount, csrp);
         */
         logFile << endl;
-
-
-        if( mrAmount >= maxShowdown ) break;
-
-        ++raiseStep;
     }
     }
 #endif // LOGPOSITION
@@ -777,7 +790,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 
 ///From regular to fear A(x2)
-	AutoScalingFunction ap(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate);
+	AutoScalingFunction ap(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate, SLIDERX);
 
     GeomStateCombiner cg;
 	StateModel choicemodel( myDeterredCall_left, &ap, cg );
@@ -790,12 +803,12 @@ logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
     StateModel & rolemodel = choicemodel;
 #else
 	///From regular to fear B(x2)
-	AutoScalingFunction ap_right(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate);
+	AutoScalingFunction ap_right(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate, SLIDERX);
     StateModel choicemodel_right( myDeterredCall_right, &ap_right, cg );
 
 
 
-    AutoScalingFunction rolemodel(choicemodel,choicemodel_right,betToCall,riskprice,&tablestate);
+    AutoScalingFunction rolemodel(choicemodel,choicemodel_right,betToCall,riskprice,&tablestate, SLIDERX);
 
 
 
@@ -1117,7 +1130,7 @@ float64 DeterredGainStrategy::MakeBet()
 #endif
 
     ///Choose from geom to algb
-	AutoScalingFunction hybridgainDeterred(geomModel,algbModel,min_worst_scaler,geom_algb_scaler,&tablestate);
+	AutoScalingFunction hybridgainDeterred(geomModel,algbModel,min_worst_scaler,geom_algb_scaler,&tablestate, SLIDERX);
 
     GeomStateCombiner cg;
     StateModel ap_aggressive( myDeterredCall, &hybridgainDeterred, cg );
@@ -1230,128 +1243,6 @@ const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
 
 
-float64 SimpleGainStrategy::MakeBet()
-{
-	setupPosition();
-
-	if( maxShowdown <= 0 ) return 0;
-
-
-
-
-    ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
-    ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
-
-    StatResult statWorse = statprob.statworse(tablestate.handStrengthOfRound() + 1);
-    StatResult statAdversarial = statprob.statworse(tablestate.handsDealt());
-    StatResult statAbort = statprob.statworse((int)(RAREST_HAND_CHANCE/3.0));
-#ifdef LOGPOSITION
-    statprob.logfileAppendStatResultProbability_statworse(logFile, statWorse, tablestate.handStrengthOfRound() + 1);
-    statprob.logfileAppendStatResultProbability_statworse(logFile, statAdversarial, tablestate.handsDealt());
-    statprob.logfileAppendStatResultProbability_statworse(logFile, statAbort, (int)(RAREST_HAND_CHANCE/3.0));
-#endif // LOGPOSITION
-    // TODO(from yuzisee): Create a new GainModelNoRiskDynamic that replaces the static p_cl and p_cw with functions that depend on the bet size. Total each opponent's foldWaitLength plus handStrengthOfRound to get the number of hands!
-
-    const float64 riskprice = myDeterredCall.RiskPrice();
-    const float64 maxAllowedBet = (riskprice < maxShowdown) ? riskprice : maxShowdown;
-
-    OpponentFoldWait myFearControl(&tablestate);
-    //const float64 smallestAdversarialBet = myFearControl.FearStartingBet(myDeterredCall, maxAllowedBet); // Starting from this bet the opponent has the choice of whether to fold or not.
-    const float64 smallestAdversarialBet = 0.0; // However, if we've made an adversarial bet earlier this round,  then they've already controlled what they are playing with. Thus, we want a min scaler here that will carry through.
-
-    // TODO(from joseph_huang): Add more bGamble that use things like nonvolatilityFactor and/or nearEndOfBets
-
-    StatResult left = statprob.core.statmean;
-    CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
-    GainModelGeom callModel(leftCS, myDeterredCall);
-
-    CombinedStatResultsGeom valueCS(statWorse,statWorse,false, myDeterredCall);
-    GainModelNoRisk valueRaiseModel(valueCS, myDeterredCall);
-    CombinedStatResultsGeom pushCS(statAdversarial,statAdversarial,false, myDeterredCall);
-    GainModelNoRisk pushRaiseModel(pushCS, myDeterredCall);
-    CombinedStatResultsGeom abortCS(statAbort,statAbort,false, myDeterredCall);
-    GainModelNoRisk riskRaiseModel(abortCS, myDeterredCall);
-
-
-#ifdef LOGPOSITION
-
-    if (tablestate.handsToShowdownAgainst() != 1) {
-        statprob.logfileAppendStatResultProbability_statworse(logFile, valueCS.ViewShape(), - tablestate.handStrengthOfRound() - 1);
-        statprob.logfileAppendStatResultProbability_statworse(logFile, pushCS.ViewShape(), - tablestate.handsDealt());
-        statprob.logfileAppendStatResultProbability_statworse(logFile, abortCS.ViewShape(), - static_cast<playernumber_t>(RAREST_HAND_CHANCE / 3.0));
-    }
-    
-    logFile << " -  Simple  - " << endl;
-#endif
-
-    printCommon(tablestate);
-
-    // If we didn't have statWorse --> statAdversarial here, we'd have a static edge for all bets that are a raise.
-    // Of course, oppFoldPct still grows to offset total gain, but we need some way to describe the fact that any bet at riskprice or higher is a death sentence.
-    // TODO(from joseph_huang): We probably need statAdversarial by default on some of the other bots...
-    AutoScalingFunction controlledRaiseModel(valueRaiseModel,pushRaiseModel,smallestAdversarialBet,maxAllowedBet,&tablestate);
-
-    const float64 belowRiskPrice = riskprice - ViewTable().GetChipDenom() / 2.0;
-    const float64 aboveRiskPrice = riskprice + ViewTable().GetChipDenom() / 2.0;
-    AutoScalingFunction raiseModel(controlledRaiseModel, riskRaiseModel, belowRiskPrice, aboveRiskPrice, &tablestate);
-
-    ///Choose from geom to algb
-    const float64 aboveCallBelowRaise1 = betToCall + ViewTable().GetChipDenom() / 2.0;
-    const float64 aboveCallBelowRaise2 = betToCall + ViewTable().GetChipDenom();
-    AutoScalingFunction callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
-
-    GeomStateCombiner cg;
-    StateModel  ap_aggressive( myDeterredCall, &callOrRaise, cg );
-
-
-
-    HoldemFunctionModel& choicemodel = ap_aggressive;
-
-
-    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.core.callcumu));
-
-#ifdef LOGPOSITION
-
-
-
-
-#ifdef VERBOSE_STATEMODEL_INTERFACE
-    const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
-
-
-    printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
-
-#endif
-
-    //if( bestBet < betToCall + ViewTable().GetChipDenom() )
-    {
-        logFile << "\"riskprice\"... " << riskprice << "(so maxAllowedBet " << maxAllowedBet << ")" << endl;
-        
-        logFile << "Against("<< displaybet <<")Geom=" << 1.0+callModel.f(displaybet) << endl;
-        logFile << "Against("<< displaybet <<")Algb=" << 1.0+raiseModel.f(displaybet) << endl;
-
-        logFile << "Against("<< displaybet <<")valueAlgb=" << 1.0+valueRaiseModel.f(displaybet) << endl;
-        logFile << "Against("<< displaybet <<")pushAlgb=" << 1.0+pushRaiseModel.f(displaybet) << endl;
-    }
-
-
-    printBetGradient< StateModel>
-    (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, 0);
-
-
-    logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
-
-    logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(displaybet) << "   d\\" << myDeterredCall.pWinD(displaybet) << endl;
-    if( myDeterredCall.pWin(displaybet) > 0 )
-    {
-        logFile << "if playstyle is Danger/Conservative, overall utility is " << choicemodel.f(displaybet) << endl;
-    }
-    
-#endif
-
-            return bestBet;
-    
-}
 
 
 
@@ -1448,7 +1339,7 @@ float64 PureGainStrategy::MakeBet()
     ///Choose from geom to algb
     const float64 aboveCallBelowRaise1 = betToCall + ViewTable().GetChipDenom() / 2.0;
     const float64 aboveCallBelowRaise2 = betToCall + ViewTable().GetChipDenom();
-    AutoScalingFunction callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate);
+    AutoScalingFunction callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate, RAW);
 
     StateModel ap_aggressive( myDeterredCall, &callOrRaise, stateCombiner );
 

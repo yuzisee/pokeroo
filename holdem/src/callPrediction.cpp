@@ -607,7 +607,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                     float64 prev_w_r_rank = 0.0;
                     ///Check for each raise percentage
                     for( int32 i=0;i<noRaiseArraySize;++i)
-                    {
+                    {   const bool bMyWouldCall = i < callSteps;
                         const float64 thisRaise = RaiseAmount(betSize,i);
                         const float64 oppRaiseMake = thisRaise - oppBetAlready;
                         if( oppRaiseMake <= 0 ) {
@@ -633,7 +633,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 #endif // DEBUGASSERT
                                 const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
                                                                                                                                         //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
-								const bool bMyWouldCall = i < callSteps;
+
                                 // TODO(from yuzisee): Raises are now Algb instead of Geom?
                                 float64 w_r_pess = facedOdds_raise_Geom(oppCPS,prev_w_r_pess, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.foldcumu));
                                 float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.callcumu));
@@ -1257,9 +1257,10 @@ float64 ExactCallD::pRaise(const float64 betSize, const int32 step, const int32 
 {
     query(betSize,callSteps);
 
-	if( RaiseAmount( betSize, step ) >= tableinfo->maxBet() - tableinfo->chipDenom()/2 ) return 0; //You don't care about raises if you are all-in
-    else if( step < noRaiseArraySize ) return 1-noRaiseChance_A[step];
-    else return std::numeric_limits<float64>::signaling_NaN();
+	if( RaiseAmount( betSize, step ) >= tableinfo->maxBet() - tableinfo->chipDenom()/2 ) { return 0; } //You don't care about raises if you are all-in
+    else if( step >= noRaiseArraySize ) { return std::numeric_limits<float64>::signaling_NaN(); }
+
+    return 1.0-noRaiseChance_A[step];
 }
 
 float64 ExactCallD::pRaiseD(const float64 betSize, const int32 step, const int32 callSteps)

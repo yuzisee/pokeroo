@@ -148,6 +148,11 @@ float64 AutoScalingFunction::fd(const float64 x, const float64 y_dummy)
 
 float64 AutoScalingFunction::f_raised(float64 sliderx, const float64 x)
 {
+    if(fSliderBehaviour == RAW) {
+        sliderx = x;
+    }
+
+
     if( last_x != x || last_sliderx != sliderx)
     {
         query(sliderx,x);
@@ -157,6 +162,10 @@ float64 AutoScalingFunction::f_raised(float64 sliderx, const float64 x)
 
 float64 AutoScalingFunction::fd_raised(float64 sliderx, const float64 x, const float64 y_dummy)
 {
+    if(fSliderBehaviour == RAW) {
+        sliderx = x;
+    }
+    
     if( last_x != x || last_sliderx != sliderx)
     {
         query(sliderx,x);
@@ -453,9 +462,10 @@ void StateModel::query( const float64 betSize )
 #ifdef RAISED_PWIN
         raiseAmount_A[i] = ea.RaiseAmount(betSize,i);
 
-
-        potRaisedWin_A[i] = g_raised(betSize,raiseAmount_A[i]);
-        potRaisedWinD_A[i] = gd_raised(betSize,raiseAmount_A[i],potRaisedWin_A[i]);
+        const float64 sliderx = betSize;
+        const float64 evalX = raiseAmount_A[i];
+        potRaisedWin_A[i] = g_raised(sliderx,evalX);
+        potRaisedWinD_A[i] = gd_raised(sliderx,evalX,potRaisedWin_A[i]);
 
         const float64 oppRaisedMyFoldGain = fMyFoldGain.myFoldGainAgainstPredictedRaise(fMyFoldGain.suggestMeanOrRank(), //MEAN /* called with ea.ed */,
                                                                                         betSize, ea.tableinfo->alreadyBet(), raiseAmount_A[i]); //You would fold the additional (betSize - ea->alreadyBet() )
@@ -548,7 +558,7 @@ void StateModel::query( const float64 betSize )
     if( 0.0 < playChance && playChance <= invisiblePercent ) //roundoff, but {playChance == 0} is push-fold for the opponent
     {
         //Correct other odds
-        const float64 totalChance = 1 - playChance;
+        const float64 totalChance = 1.0 - playChance;
         for( int32 i=arraySize-1;i>=0; --i)
         {
             oppRaisedChance_A[i] /= totalChance;
