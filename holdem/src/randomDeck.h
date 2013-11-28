@@ -58,6 +58,7 @@ class RandomDeck : virtual public GameDeck
 
 		virtual float64 DealCard(Hand&);
 
+    // NOTE: We usually don't autoshuffle. Instead, we call LoggedShuffle before each hand.
 		RandomDeck(bool autoshuffle = false) : DealableOrderedDeck(), bDeckEmpty(false), bAutoShuffle(autoshuffle), lastDealtPos(-1)
 		{
 			firstDealtPos = DECKSIZE-1;

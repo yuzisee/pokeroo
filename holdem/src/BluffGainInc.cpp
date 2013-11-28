@@ -509,7 +509,7 @@ void StateModel::query( const float64 betSize )
         }
 
 #ifdef DEBUGASSERT
-        if (isnan(oppRaisedChance_A[i])) {
+        if (std::isnan(oppRaisedChance_A[i])) {
             std::cerr << "oppRaisedChance_A[i] should not be NaN" << std::endl;
             exit(1);
         }

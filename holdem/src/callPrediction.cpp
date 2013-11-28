@@ -626,7 +626,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                             {
 
 #ifdef DEBUGASSERT
-                                if (isnan(prev_w_r_mean) || isnan(prev_w_r_rank)) {
+                                if (std::isnan(prev_w_r_mean) || std::isnan(prev_w_r_rank)) {
                                     std::cerr << "prev_w_r_mean and prev_w_r_rank only become NaN after thisRaise passes oppBankRoll." << std::endl;
                                     exit(1);
                                 }
@@ -760,8 +760,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                                 }
 
                                 prevRaise = 0;
-                                prev_w_r_mean = std::nan("");
-                                prev_w_r_rank = std::nan("");
+                                prev_w_r_mean = std::numeric_limits<float64>::signaling_NaN();
+                                prev_w_r_rank = std::numeric_limits<float64>::signaling_NaN();
 
                             } // end of block: if (thisRaise <= oppBankRoll), else ...
 
@@ -1259,7 +1259,7 @@ float64 ExactCallD::pRaise(const float64 betSize, const int32 step, const int32 
 
 	if( RaiseAmount( betSize, step ) >= tableinfo->maxBet() - tableinfo->chipDenom()/2 ) return 0; //You don't care about raises if you are all-in
     else if( step < noRaiseArraySize ) return 1-noRaiseChance_A[step];
-    else return std::nan("");
+    else return std::numeric_limits<float64>::signaling_NaN();
 }
 
 float64 ExactCallD::pRaiseD(const float64 betSize, const int32 step, const int32 callSteps)

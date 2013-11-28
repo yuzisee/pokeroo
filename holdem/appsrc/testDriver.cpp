@@ -136,13 +136,8 @@ static void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindCont
 
 	uint32 shuffleSeed = RandomDeck::Float64ToUint32Seed(d->RandomSmallInteger(),randRem);
 
-#ifndef DEBUGSAVEGAME
-	if( d ) d->ShuffleDeck( shuffleSeed );
 
-
-	return;
-#endif
-
+#ifdef DEBUGSAVEGAME
 	std::ofstream newSaveState(DEBUGSAVEGAME);
 		//First save the round state
 		//Then shuffle the deck, and append it's state to the savegame file.
@@ -156,6 +151,12 @@ static void SaveStateShuffleNextHand(HoldemArena & my,BlindStructure & blindCont
 	}
 
 	newSaveState.close();
+#else
+	if( d ) d->ShuffleDeck( shuffleSeed );
+
+
+	return;
+#endif // DEBUGSAVEGAME, else
 
 #if defined(DEBUGSAVEGAME_ALL) && defined(GRAPHMONEY)
             char handnumtxt
@@ -253,7 +254,13 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 		my.BeginNewHands(thisRoundBlinds.b, thisRoundBlinds.bNew);
 
 
-        my.DealAllHands(tableDealer,holecardsData);
+        my.DealAllHands(tableDealer,
+                        #ifdef DEBUGHOLECARDS
+                        holecardsData
+#else
+                        std::cout
+#endif // DEBUGHOLECARDS
+                        );
 
 #ifdef DEBUGASSERT
 		if( my.GetDRseed() != 1 )
@@ -308,7 +315,13 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 				SaveStateShuffleNextHand(my, blindController, tableDealer, my.GetDRseed() );
 	            my.ResetDRseed();
 			}
-#endif
+#else
+                // TODO(from joseph_huang): DRSEED WHAT????
+                    SaveStateShuffleNextHand(my, blindController, tableDealer, my.GetDRseed() );
+        my.ResetDRseed();
+        			}
+
+#endif // DEBUGSAVEGAME, else
 
 	}
 
@@ -681,6 +694,7 @@ static void superGame(char headsUp = 0)
 
 
 // For standard debugging and regression testing, undef WINRELEASE set env['HOLDEMDB_PATH'] and then run with no arguments and we'll fall through to testPlay(1) below
+// Are you profiling? Remove WINRELEASE and run with -r
 int main(int argc, char* argv[])
 {
     

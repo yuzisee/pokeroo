@@ -97,7 +97,7 @@ namespace UnitTests {
 
 
         const float64 betFraction = 0.2;
-        const float64 betSize = std::nan("");
+        const float64 betSize = std::numeric_limits<float64>::signaling_NaN();
         const float64 exf = 0.5; // there's a lot of money in previous rounds and/or predicted money in this round
         const float64 f_pot = 0.1; // only a small amount is from previous rounds or from players who have folded this round
 
@@ -204,7 +204,7 @@ namespace UnitTests {
 
 
         const float64 betFraction = 0.2;
-        const float64 betSize = std::nan("");
+        const float64 betSize = std::numeric_limits<float64>::signaling_NaN();
         const float64 exf = 0.5; // there's a lot of money in previous rounds and/or predicted money in this round
         const float64 f_pot = 0.1; // only a small amount is from previous rounds or from players who have folded this round
 
@@ -991,7 +991,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> aA({55, 705, std::nan("")});
+        const std::vector<float64> aA({55, 705, std::numeric_limits<float64>::signaling_NaN()});
         FixedReplayPlayerStrategy gS(foldOnly);
         FixedReplayPlayerStrategy tS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
@@ -1097,7 +1097,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> mA({std::nan(""), std::nan(""), std::nan(""), std::nan(""), std::nan(""), std::nan("")});
+        const std::vector<float64> mA({std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()});
         FixedReplayPlayerStrategy gS(foldOnly);
         FixedReplayPlayerStrategy tS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
@@ -1279,7 +1279,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({std::nan(""), std::nan("")});
+        const std::vector<float64> pA({std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()});
         FixedReplayPlayerStrategy gS(foldOnly);
         FixedReplayPlayerStrategy tS(foldOnly);
         FixedReplayPlayerStrategy nS(foldOnly);
@@ -1747,7 +1747,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({std::nan(""), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0});
+        const std::vector<float64> pA({std::numeric_limits<float64>::signaling_NaN(), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0});
         FixedReplayPlayerStrategy sS(foldOnly);
         FixedReplayPlayerStrategy pS(pA);
         
@@ -2159,7 +2159,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly({0});
-        const std::vector<float64> pA({std::nan(""), 12.5, std::nan(""), 228.0, 459.0, 495.0});
+        const std::vector<float64> pA({std::numeric_limits<float64>::signaling_NaN(), 12.5, std::numeric_limits<float64>::signaling_NaN(), 228.0, 459.0, 495.0});
         FixedReplayPlayerStrategy cS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
         FixedReplayPlayerStrategy mS(foldOnly);
