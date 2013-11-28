@@ -37,14 +37,14 @@ void AutoScalingFunction::query(float64 sliderx, float64 x)
         // bNoRange indicates an extreme situation is being explored.
         // If these are all-in situations, we want to be on the pessimistic side (choose right rather than left). Being pessimistic here is crucial.
         // If these are no bet situations, it doesn't matter what we pick because we'll probably just check/fold regardless of the model. Being pessimistic here is harmless.
-            yr = right.f(x);
-            fd_yr = right.fd(x,yr);
+        yr = right.f(x);
+        fd_yr = right.fd(x,yr);
 
-            y = yr; dy = fd_yr;
+        y = yr; dy = fd_yr;
 
-        #ifdef DEBUG_TRACE_SEARCH
-            if(bTraceEnable) std::cout << "\t\t\tbNoRange" << std::flush;
-        #endif
+#ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable) std::cout << "\t\t\tbNoRange" << std::flush;
+#endif
 
     }else
     {
@@ -62,9 +62,9 @@ void AutoScalingFunction::query(float64 sliderx, float64 x)
             y = right.f(x);
             dy = right.fd(x, yr);
 
-			#ifdef DEBUG_TRACE_SEARCH
-				if(bTraceEnable) std::cout << "\t\t\tbMax" << std::flush;
-			#endif
+#ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t\tbMax" << std::flush;
+#endif
         }
         else if( slider <= 0 )
         {
@@ -73,9 +73,9 @@ void AutoScalingFunction::query(float64 sliderx, float64 x)
 
             y = yl; dy = fd_yl;
 
-			#ifdef DEBUG_TRACE_SEARCH
-				if(bTraceEnable) std::cout << "\t\t\tbMin" << std::flush;
-			#endif
+#ifdef DEBUG_TRACE_SEARCH
+            if(bTraceEnable) std::cout << "\t\t\tbMin" << std::flush;
+#endif
         }
         else
         {
@@ -86,7 +86,7 @@ void AutoScalingFunction::query(float64 sliderx, float64 x)
             fd_yr = right.fd(x,yr);
 
 
-          #ifdef TRANSFORMED_AUTOSCALES
+#ifdef TRANSFORMED_AUTOSCALES
             if( AUTOSCALE_TYPE == LOGARITHMIC_AUTOSCALE )
             {
 
@@ -100,27 +100,27 @@ void AutoScalingFunction::query(float64 sliderx, float64 x)
 
                 dy = fd_yl*leftWeight - yl*autoSlope*d_rightWeight_d_slider   +   fd_yr*rightWeight + yr*autoSlope*d_rightWeight_d_slider;
 		    }else
-            #ifdef DEBUGASSERT
-            if( AUTOSCALE_TYPE == ALGEBRAIC_AUTOSCALE )
-            #endif // DEBUGASSERT
-            {
-		  #endif
-                y = yl*(1-slider)+yr*slider;
-                dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
+#ifdef DEBUGASSERT
+                if( AUTOSCALE_TYPE == ALGEBRAIC_AUTOSCALE )
+#endif // DEBUGASSERT
+                {
+#endif
+                    y = yl*(1-slider)+yr*slider;
+                    dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
 
-            #ifdef DEBUG_TRACE_SEARCH
-				if(bTraceEnable) std::cout << "\t\t\t y(" << x << ") = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
-				if(bTraceEnable) std::cout << "\t\t\t dy = " << fd_yl << " * " << (1-slider) << " - " <<  yl << " * " << autoSlope << " + " <<  fd_yr << " * " << slider << " + " <<  yr << " * " << autoSlope << std::endl;
-			#endif // DEBUG_TRACE_SEARCH
-          #ifdef TRANSFORMED_AUTOSCALES
-			}
-            #ifdef DEBUGASSERT
-            else{
-                std::cerr << "AutoScale TYPE MUST BE SPECIFIED" << endl;
-				exit(1);
-            }
-            #endif // DEBUGASSERT
-          #endif // TRANSFORMED_AUTOSCALES
+#ifdef DEBUG_TRACE_SEARCH
+                    if(bTraceEnable) std::cout << "\t\t\t y(" << x << ") = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
+                    if(bTraceEnable) std::cout << "\t\t\t dy = " << fd_yl << " * " << (1-slider) << " - " <<  yl << " * " << autoSlope << " + " <<  fd_yr << " * " << slider << " + " <<  yr << " * " << autoSlope << std::endl;
+#endif // DEBUG_TRACE_SEARCH
+#ifdef TRANSFORMED_AUTOSCALES
+                }
+#ifdef DEBUGASSERT
+                else{
+                    std::cerr << "AutoScale TYPE MUST BE SPECIFIED" << endl;
+                    exit(1);
+                }
+#endif // DEBUGASSERT
+#endif // TRANSFORMED_AUTOSCALES
         }
 
 
@@ -290,7 +290,7 @@ struct AggregatedState AlgbStateCombiner::createBlendedOutcome(size_t arraySize,
             exit(1);
         }
 #endif // DEBUGASSERT
-        
+
         blendedProfit += profit * probabilities[i];
 
         result.dContribution += dValues[i] * probabilities[i] + profit * dProbabilities[i];
@@ -396,28 +396,28 @@ void StateModel::query( const float64 betSize )
     // betSize here is always "my" bet size. The perspective of opponents is already covered in <tt>ea</tt>
 
     last_x = betSize;
-    const float64 invisiblePercent = EPS_WIN_PCT;// quantum / ea.tableinfo->allChips(); 
+    const float64 invisiblePercent = EPS_WIN_PCT;// quantum / ea.tableinfo->allChips();
 
-///Establish [PushGain] values
+    ///Establish [PushGain] values
 
 	float64 potFoldWin = ea.tableinfo->PushGain();
 	const float64 potFoldWinD = 0;
-	#ifndef DUMP_CSV_PLOTS
+#ifndef DUMP_CSV_PLOTS
 	float64
-	#endif // if ! DUMP_CSV_PLOTS
+#endif // if ! DUMP_CSV_PLOTS
     oppFoldChance = ea.pWin(betSize);
 
     float64 oppFoldChanceD = ea.pWinD(betSize);
 
-//#ifdef DEBUGASSERT
+    //#ifdef DEBUGASSERT
 	if( potFoldWin < 0 || oppFoldChance < invisiblePercent ){
 		potFoldWin =  1;
 		oppFoldChance = 0;
 		oppFoldChanceD = 0;
 	}
-//#endif
+    //#endif
 
-///Establish [Raised] values
+    ///Establish [Raised] values
 
     //Count needed array size
     int32 arraySize = 0;
@@ -501,11 +501,11 @@ void StateModel::query( const float64 betSize )
 		else
 #endif
         {
-	    //raiseAmount_A[i] = 0;
-        oppRaisedChance_A[i] = 0;
-        oppRaisedChanceD_A[i] = 0;
-        potRaisedWin_A[i] = 1; // "no change"
-        potRaisedWinD_A[i] = 0;
+            //raiseAmount_A[i] = 0;
+            oppRaisedChance_A[i] = 0;
+            oppRaisedChanceD_A[i] = 0;
+            potRaisedWin_A[i] = 1; // "no change"
+            potRaisedWinD_A[i] = 0;
         }
 
 #ifdef DEBUGASSERT
@@ -515,31 +515,31 @@ void StateModel::query( const float64 betSize )
         }
 #endif // DEBUGASSERT
 
-            #ifdef DEBUG_TRACE_SEARCH
-                if(bTraceEnable)
-                {
-                    std::cout << "\t\t(oppRaiseChance[" << i << "] , cur, highest) = " << oppRaisedChance_A[i]  << " , "  << newRaisedChance << " , " << lastuptoRaisedChance << std::endl;
-                }
-            #endif
+#ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable)
+        {
+            std::cout << "\t\t(oppRaiseChance[" << i << "] , cur, highest) = " << oppRaisedChance_A[i]  << " , "  << newRaisedChance << " , " << lastuptoRaisedChance << std::endl;
+        }
+#endif
 
     }
 
 
 
-///Establish [Play] values
-    #ifndef DUMP_CSV_PLOTS
+    ///Establish [Play] values
+#ifndef DUMP_CSV_PLOTS
 	float64
-	#endif // if ! DUMP_CSV_PLOTS
+#endif // if ! DUMP_CSV_PLOTS
 	playChance = 1 - oppFoldChance - lastuptoRaisedChance;
 	float64 playChanceD = - oppFoldChanceD - lastuptoRaisedChanceD;
     /*
-	float64 playChance = 1 - oppFoldChance;
-	float64 playChanceD = - oppFoldChanceD;
-	for( int32 i=0;i<arraySize;++i )
-	{
-        playChance -= oppRaisedChance_A[i];
-        playChanceD -= oppRaisedChanceD_A[i];
-	}*/
+     float64 playChance = 1 - oppFoldChance;
+     float64 playChanceD = - oppFoldChanceD;
+     for( int32 i=0;i<arraySize;++i )
+     {
+     playChance -= oppRaisedChance_A[i];
+     playChanceD -= oppRaisedChanceD_A[i];
+     }*/
 
 
     float64 potNormalWin = g_raised(betSize,betSize);
@@ -568,7 +568,7 @@ void StateModel::query( const float64 betSize )
 
 
 
-///Calculate factors
+    ///Calculate factors
 
 
     outcomePush = fStateCombiner.createOutcome(potFoldWin, oppFoldChance, potFoldWinD, oppFoldChanceD);
@@ -576,58 +576,58 @@ void StateModel::query( const float64 betSize )
 
     blendedRaises = fStateCombiner.createBlendedOutcome(arraySize, potRaisedWin_A, oppRaisedChance_A, potRaisedWinD_A, oppRaisedChanceD_A);
 
-/*
-    STATEMODEL_ACCESS gainRaised = 1;
-    float64 gainRaisedlnD = 0;
+    /*
+     STATEMODEL_ACCESS gainRaised = 1;
+     float64 gainRaisedlnD = 0;
 
 
-    for( int32 i=0;i<arraySize;++i )
+     for( int32 i=0;i<arraySize;++i )
+     {
+     gainRaised *= (potRaisedWin_A[i] < DBL_EPSILON) ? 0 : pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
+
+     if( oppRaisedChance_A[i] >= invisiblePercent )
+     {
+     #ifdef DEBUG_TRACE_SEARCH
+     if(bTraceEnable)
+     {
+     std::cout << "\t\t\t(potRaisedWinD_A[" << i << "] , oppRaisedChanceD_A[" << i << "] , log...) = " << potRaisedWinD_A[i] << " , " << oppRaisedChanceD_A[i] << " , " <<  log( g_raised(betSize,raiseAmount_A[i]-quantum/2) ) << std::endl;
+     }
+     #endif
+
+     if( raiseAmount_A[i] >= ea.tableinfo->maxBet()-quantum/2 )
+     {
+     gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g_raised(betSize,raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g_raised(betSize,raiseAmount_A[i]-quantum/2) );
+     }else
+     {
+     gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
+     }
+     }
+     }
+
+
+     if( betSize >= ea.tableinfo->maxBet() )
+     {
+     gainNormallnD = playChance*potNormalWinD/g_raised(betSize,betSize-quantum/2) + playChanceD*log(g_raised(betSize,betSize-quantum/2));
+     }
+     */
+
+#ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable)
     {
-        gainRaised *= (potRaisedWin_A[i] < DBL_EPSILON) ? 0 : pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
-
-		if( oppRaisedChance_A[i] >= invisiblePercent )
-		{
-			#ifdef DEBUG_TRACE_SEARCH
-				if(bTraceEnable)
-				{
-				    std::cout << "\t\t\t(potRaisedWinD_A[" << i << "] , oppRaisedChanceD_A[" << i << "] , log...) = " << potRaisedWinD_A[i] << " , " << oppRaisedChanceD_A[i] << " , " <<  log( g_raised(betSize,raiseAmount_A[i]-quantum/2) ) << std::endl;
-				}
-			#endif
-
-			if( raiseAmount_A[i] >= ea.tableinfo->maxBet()-quantum/2 )
-			{
-				gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g_raised(betSize,raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g_raised(betSize,raiseAmount_A[i]-quantum/2) );
-			}else
-			{
-				gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
-			}
-		}
+        std::cout << "\t\t (gainWithFoldlnD+gainNormallnD+gainRaisedlnD) = " << gainWithFoldlnD << " + " << gainNormallnD << " + " <<  gainRaisedlnD << std::endl;
+        std::cout << "\t\t (gainWithFold   +gainNormal   +gainRaised   ) = " << gainWithFold << " + " << gainNormal << " + " <<  gainRaised << std::endl;
+        std::cout << "\t\t (potNormalWin , playChance) = " << potNormalWin << " , " << playChance << std::endl;
     }
+#endif
 
-
-	if( betSize >= ea.tableinfo->maxBet() )
-	{
-		gainNormallnD = playChance*potNormalWinD/g_raised(betSize,betSize-quantum/2) + playChanceD*log(g_raised(betSize,betSize-quantum/2));
-	}
-*/
-
-		#ifdef DEBUG_TRACE_SEARCH
-			if(bTraceEnable)
-			{
-			    std::cout << "\t\t (gainWithFoldlnD+gainNormallnD+gainRaisedlnD) = " << gainWithFoldlnD << " + " << gainNormallnD << " + " <<  gainRaisedlnD << std::endl;
-			    std::cout << "\t\t (gainWithFold   +gainNormal   +gainRaised   ) = " << gainWithFold << " + " << gainNormal << " + " <<  gainRaised << std::endl;
-			    std::cout << "\t\t (potNormalWin , playChance) = " << potNormalWin << " , " << playChance << std::endl;
-			}
-		#endif
-
-///Store results
+    ///Store results
     struct AggregatedState gainCombined = fStateCombiner.combinedContributionOf(outcomePush, outcomeCalled, blendedRaises);
     y = gainCombined.contribution; // e.g. gainWithFold*gainNormal*gainRaised;
 
     dy = gainCombined.dContribution; // e.g. (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
 
     y -= fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank());
-                                /* called with ea.ed */
+    /* called with ea.ed */
 #ifdef DEBUGASSERT
     if(is_nan(y))
     {
@@ -635,25 +635,25 @@ void StateModel::query( const float64 betSize )
         exit(1);
     }
 
-                                if (fMyFoldGain.getPlayerId() != estat->playerID) {
-                                //estat->ViewPlayer()
-
-                                    std::cerr << "myFoldGain initialized with a player other than that which we intended to call myFoldGain on!" << std::endl;
-                                    std::cerr << (int)(fMyFoldGain.getPlayerId()) << " != " << (int)(estat->playerID) << std::endl;
-                                    exit(1);
-                                }
-                                //);
+    if (fMyFoldGain.getPlayerId() != estat->playerID) {
+        //estat->ViewPlayer()
+        
+        std::cerr << "myFoldGain initialized with a player other than that which we intended to call myFoldGain on!" << std::endl;
+        std::cerr << (int)(fMyFoldGain.getPlayerId()) << " != " << (int)(estat->playerID) << std::endl;
+        exit(1);
+    }
+    //);
 #endif // DEBUGASSERT
-
-
+    
+    
     delete [] raiseAmount_A;
-
+    
     delete [] oppRaisedChance_A;
     delete [] oppRaisedChanceD_A;
-
-
+    
+    
     delete [] potRaisedWin_A;
     delete [] potRaisedWinD_A;
-
-
+    
+    
 }
