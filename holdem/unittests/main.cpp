@@ -12,38 +12,38 @@
 
 #include "aiCache.h"
 namespace NamedTriviaDeckTests {
-    
+
     void testNamePockets() {
-        
+
         CommunityPlus onlyCommunity(CommunityPlus::EMPTY_COMPLUS);
         CommunityPlus withCommunity(CommunityPlus::EMPTY_COMPLUS);
-        
+
         // [0] [1] [2] [3] [4] [5] ...
         //  2S  2H  2C  2D  3S  3H ...
         DeckLocation dealt;
-        
+
         // [18] == 6C
         dealt.Value	= 32;
         dealt.Suit = 2;
         dealt.Rank = 5;
         withCommunity.AddToHand(dealt);
-        
+
         // [11] == 4D
         dealt.Value	= 8;
         dealt.Suit = 3;
         dealt.Rank = 3;
         withCommunity.AddToHand(dealt);
-        
-        
+
+
         NamedTriviaDeck o;
         o.OmitCards(withCommunity);
         o.DiffHand(onlyCommunity);
         o.sortSuits();
-        
-        
+
+
         string actual = o.NamePockets();
         string expected = "64x";
-        
+
         assert(expected == actual);
     }
 }
@@ -133,7 +133,7 @@ namespace UnitTests {
             float64 actualD = GainModelGeom::hdx(xd, betSize, exf + dexf * dx/2, dexf, f_pot, dx, a, yd);
             float64 expectedD = (y2 - y1)/(x2-x1);
             assert(fabs(expectedD - actualD) < fabs(expectedD) * 1e-6);
-            
+
         }
 
 
@@ -190,7 +190,7 @@ namespace UnitTests {
 
             float64 expected = pow(0.8, 0.2775) * pow(1.5, 9.0/16.0) * pow((0.8 + 0.7 / 3), 0.1*0.1) * pow(0.8 + (0.1 + 0.2 + 0.2) / 2, 0.1 * 0.75 * 2);
             float64 actual = GainModelGeom::h(betFraction, betSize, exf, f_pot, a);
-            
+
             assert(fabs(expected - actual) < fabs(expected) * 1e-14);
         }
     }
@@ -214,20 +214,20 @@ namespace UnitTests {
 
         {
             FixedStatResult a;
-        // Simple case: One opponent
-        a.fOpponents = 1.0;
+            // Simple case: One opponent
+            a.fOpponents = 1.0;
 
-        a.fShape.wins = 0.75;
-        a.fShape.splits = 0.10;
-        a.fShape.loss = 0.15;
+            a.fShape.wins = 0.75;
+            a.fShape.splits = 0.10;
+            a.fShape.loss = 0.15;
 
 
-        // Drop to 0.8, 15% the time (because betFraction == 0.2)
-        // Increase to 1.5, 75% of the time (because exf == 0.5)
-        // Split two ways has probability 0.1 and payout 0.8 + (0.2 + 0.3) / 2
-        float64 expected = 0.8 * 0.15 + 1.5 * 0.75 + 0.1 * (0.8 + (0.2 + 0.3) / 2);
-        float64 actual = GainModelNoRisk::h(betFraction, betSize, exf, f_pot, a);
-        assert(fabs(expected - actual) < fabs(expected) * 1e-14);
+            // Drop to 0.8, 15% the time (because betFraction == 0.2)
+            // Increase to 1.5, 75% of the time (because exf == 0.5)
+            // Split two ways has probability 0.1 and payout 0.8 + (0.2 + 0.3) / 2
+            float64 expected = 0.8 * 0.15 + 1.5 * 0.75 + 0.1 * (0.8 + (0.2 + 0.3) / 2);
+            float64 actual = GainModelNoRisk::h(betFraction, betSize, exf, f_pot, a);
+            assert(fabs(expected - actual) < fabs(expected) * 1e-14);
 
             float64 dx = 0.001;
             float64 dexf = 0.3;
@@ -248,23 +248,23 @@ namespace UnitTests {
 
         // =====
         {
-FixedStatResult a;
-        // No funny business, just two opponents.
-        a.fOpponents = 2.0;
+            FixedStatResult a;
+            // No funny business, just two opponents.
+            a.fOpponents = 2.0;
 
-        a.fShape.wins = 0.75;
-        a.fShape.splits = 0.10;
-        a.fShape.loss = 0.15;
+            a.fShape.wins = 0.75;
+            a.fShape.splits = 0.10;
+            a.fShape.loss = 0.15;
 
 
-        // Drop to 0.8, 27.75% the time (because betFraction == 0.2)
-        // Increase to 1.5, 9.0/16.0 of the time (because exf == 0.5)
-        // Split three ways has probability 0.1*0.1, and payout 0.8 + (0.2 + 0.5) / 3
-        // Split two ways has probability 0.1 * 0.75 * 2 and payout 0.8 + (0.2 + 0.3) / 2
-        float64 expected = 0.8 * 0.2775 + 1.5 * 9.0/16.0 + 0.1*0.1 * (0.8 + 0.7 / 3) + 0.1 * 0.75 * 2 * (0.8 + (0.1 + 0.2 + 0.2) / 2);
-        float64 actual = GainModelNoRisk::h(betFraction, betSize, exf, f_pot, a);
-        
-        assert(fabs(expected - actual) < fabs(expected) * 1e-14);
+            // Drop to 0.8, 27.75% the time (because betFraction == 0.2)
+            // Increase to 1.5, 9.0/16.0 of the time (because exf == 0.5)
+            // Split three ways has probability 0.1*0.1, and payout 0.8 + (0.2 + 0.5) / 3
+            // Split two ways has probability 0.1 * 0.75 * 2 and payout 0.8 + (0.2 + 0.3) / 2
+            float64 expected = 0.8 * 0.2775 + 1.5 * 9.0/16.0 + 0.1*0.1 * (0.8 + 0.7 / 3) + 0.1 * 0.75 * 2 * (0.8 + (0.1 + 0.2 + 0.2) / 2);
+            float64 actual = GainModelNoRisk::h(betFraction, betSize, exf, f_pot, a);
+
+            assert(fabs(expected - actual) < fabs(expected) * 1e-14);
         }
     }
 
@@ -625,39 +625,39 @@ FixedStatResult a;
 
 
         CommunityPlus communityToTest; // 2d Qd Kc
-        
+
         card.SetByIndex(3);
         withCommunity.AddToHand(card);
         communityToTest.AddToHand(card);
-        
+
         card.SetByIndex(43);
         withCommunity.AddToHand(card);
         communityToTest.AddToHand(card);
-        
+
         card.SetByIndex(46);
         withCommunity.AddToHand(card);
         communityToTest.AddToHand(card);
-        
+
         const int8 cardsInCommunity = 3;
-        
-        
+
+
         StatResultProbabilities statprob;
-        
+
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
         statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
-        
-        
+
+
         // TEST:
         const float64 xa = 0.3;
         const float64 xb = 0.3001;
         std::pair<StatResult, float64> ya = statprob.core.handcumu.bestXHands(xa);
         std::pair<StatResult, float64> yb = statprob.core.handcumu.bestXHands(xb);
-        
+
         const float64 expected = (yb.first.pct - ya.first.pct) / (xb - xa);
         const float64 actual = (ya.second + yb.second) / 2.0;
-        
+
         assert(fabs(actual - expected) < fabs(expected) * 1.0e-7);
     }
 
@@ -689,7 +689,7 @@ namespace RegressionTests {
         size_t i; // the index of the next bet to make
     }
     ;
- 
+
 
     // Make a fixed, pre-determined series of bets.
     class FixedReplayPlayerStrategy : public PlayerStrategy
@@ -715,9 +715,9 @@ namespace RegressionTests {
         }
 
         virtual void SeeOppHand(const int8, const Hand&) {};
-        
+
         virtual void SeeAction(const HoldemAction&) {};
-        
+
         virtual void FinishHand() {};
 
     private:
@@ -725,6 +725,205 @@ namespace RegressionTests {
         size_t i; // the index of the next bet to make
     }
     ;
+
+
+    // Should StateModel have optional sliderx functionality?
+    // Because if you call you get the benefit of not pessimistic gainmodel since calling sets sliderx to call.
+    // In PureGainStrategy, at least, do raises against count as pessimistic? Probably yes since it's the same as "number at first action".
+    // This should explain why our bots like to check/call so much right now.
+    void testRegression_018() {
+
+
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(5.0);
+
+        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(5.0);
+
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const float64 aa[] = {
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN()};
+        const std::vector<float64> callOnly(aa, aa + sizeof(aa) / sizeof(aa[0]) );
+        FixedReplayPlayerStrategy gS(callOnly);
+        FixedReplayPlayerStrategy tS(foldOnly);
+        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy pS(foldOnly);
+        FixedReplayPlayerStrategy nS(callOnly);
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy cS(foldOnly);
+        FixedReplayPlayerStrategy sS(foldOnly);
+
+
+        PlayerStrategy * const botToTest = new PureGainStrategy(2);
+
+        myTable.ManuallyAddPlayer("MultiBotV", 1590.0, &mS);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 1582.97, &cS);
+        myTable.ManuallyAddPlayer("SpaceBotV", 1485.0, &sS);
+        myTable.ManuallyAddPlayer("GearBotV", 1545.0, &gS);
+        myTable.ManuallyAddPlayer("ActionBot18", 1505.0, botToTest);
+        myTable.ManuallyAddPlayer("NormalBotV", 1473.52, &nS);
+        myTable.ManuallyAddPlayer("TrapBotV", 1473.52, &tS);
+        myTable.ManuallyAddPlayer("Nav", 1450.0, &pS);
+        myTable.ManuallyAddPlayer("DangerBotV", 1495.0, &dS);
+
+        const playernumber_t dealer = 8;
+
+
+
+        /*
+
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [ActionBotV $1505]
+         [NormalBotV $1473.52]
+         [TrapBotV $1473.52]
+         [Nav $1450]
+         [DangerBotV $1495]
+         [MultiBotV $1590]
+         [ConservativeBotV $1582.97]
+         [SpaceBotV $1485]
+         [GearBotV $1445]
+
+         */
+
+
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // Ac Jd
+
+            card.SetByIndex(39);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(50);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+
+
+
+        myTable.BeginInitialState(18);
+        myTable.BeginNewHands(b, false, dealer);
+
+        /*
+
+
+         ActionBotV posts SB of $5 ($5)
+         NormalBotV posts BB of $10 ($15)
+
+         */
+        assert(myTable.PlayRound_BeginHand() != -1);
+        /*
+         TrapBotV folds
+         Nav folds
+         DangerBotV folds
+         MultiBotV folds
+         ConservativeBotV folds
+         SpaceBotV folds
+         GearBotV calls $10 ($25)
+         ActionBotV calls $5 ($30)
+         NormalBotV checks
+         */
+
+
+        CommunityPlus myFlop;
+
+        card.SetByIndex(9);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(23);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(34);
+        myFlop.AddToHand(card);
+        /*
+
+
+         Flop:	4h 7d Tc   (Pot: $30)
+
+         */
+
+
+
+        assert(myTable.PlayRound_Flop(myFlop) != -1);
+
+        /*
+
+         (3 players)
+         [ActionBotV $1495]
+         [NormalBotV $1463.52]
+         [GearBotV $1453]
+
+         ActionBotV checks
+         NormalBotV checks
+         GearBotV checks
+
+         */
+
+        DeckLocation myTurn;
+        myTurn.SetByIndex(51);
+        /*
+
+         Turn:	4h 7d Tc Ad   (Pot: $30)
+         */
+
+
+        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+
+        /*
+
+
+         (3 players)
+         [ActionBotV $1495]
+         [NormalBotV $1463.52]
+         [GearBotV $1453]
+
+         ActionBotV checks
+         NormalBotV checks
+         GearBotV checks
+         */
+
+        DeckLocation myRiver;
+        myRiver.SetByIndex(49);
+        /*
+
+
+         River:	4h 7d Tc Ad Ah  (Pot: $30)
+         */
+
+
+        const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver);
+        assert(highbettor == 4);
+        // No all-fold; assert that the pot was increased at least.
+        assert(myTable.GetPotSize() > 100);
+
+
+        /*
+
+         (3 players)
+         [ActionBotV $1495]
+         [NormalBotV $1463.52]
+         [GearBotV $1453]
+
+         ActionBotV checks
+         NormalBotV checks
+         GearBotV checks
+
+
+
+         */
+    }
+
+
 
     // _____ needs to be more adversarial.
     // If you have a good hand and raise, who is likely to call? Why doesn't pessimistic work there?
@@ -776,8 +975,8 @@ namespace RegressionTests {
         myTable.ManuallyAddPlayer("DangerBotV", 1495.0, &dS);
 
         const playernumber_t dealer = 8;
-        
-        
+
+
 
         /*
 
@@ -794,7 +993,7 @@ namespace RegressionTests {
          [TrapBotV $1500]
          [Nav $1500]
          [DangerBotV $1495]
-*/
+         */
 
 
 
@@ -811,17 +1010,17 @@ namespace RegressionTests {
 
             botToTest->StoreDealtHand(handToTest);
         }
-        
+
 
 
         myTable.BeginInitialState(17);
         myTable.BeginNewHands(b, false, dealer);
-        
-/*
 
- MultiBotV posts SB of $5 ($5)
- ConservativeBotV posts BB of $10 ($15)
- */
+        /*
+
+         MultiBotV posts SB of $5 ($5)
+         ConservativeBotV posts BB of $10 ($15)
+         */
         assert(myTable.PlayRound_BeginHand() != -1);
 
         /*
@@ -867,7 +1066,7 @@ namespace RegressionTests {
          ActionBotV checks
          NormalBotV checks
          Nav checks
-*/
+         */
 
         DeckLocation myTurn;
         myTurn.SetByIndex(37);
@@ -877,14 +1076,14 @@ namespace RegressionTests {
 
 
         assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
-        
+
         /*
          (4 players)
          [ConservativeBotV $1490]
          [ActionBotV $1490]
          [NormalBotV $1492.5]
          [Nav $1490]
-         
+
          ConservativeBotV checks
          ActionBotV checks
          NormalBotV checks
@@ -908,14 +1107,14 @@ namespace RegressionTests {
          [ActionBotV $1490]
          [NormalBotV $1492.5]
          [Nav $1490]
-         
+
          ConservativeBotV checks
          ActionBotV checks
          NormalBotV bets $750 ($795)
          Nav folds
          ConservativeBotV folds
          ActionBotV folds
-         
+
          All fold! NormalBotV wins $35
 
          */
@@ -968,7 +1167,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(2); 
+        PlayerStrategy * const botToTest = new PureGainStrategy(2);
 
         myTable.ManuallyAddPlayer("ActionBot14", 810.0, botToTest);
         myTable.ManuallyAddPlayer("NormalBotV", 1630.0, &nS);
@@ -1018,40 +1217,40 @@ namespace RegressionTests {
          ActionBotV raises to $705 ($1070)
          NormalBotV raises to $1045 ($1750)
          ActionBotV folds
-         
+
          All fold! NormalBotV wins $705
-         
-         
+
+
          */
         assert (myTable.PlayRound_BeginHand() != -1);
-        
+
     }
 
     // You're pushing this hard pre-flop with Jc Qd? Why
     void testRegression_013a() {
 
-/*
+        /*
 
- Next Dealer is GearBotV
- ================================================================
- ============================New Hand #15========================
- BEGIN
+         Next Dealer is GearBotV
+         ================================================================
+         ============================New Hand #15========================
+         BEGIN
 
 
- Preflop
- (Pot: $0)
- (9 players)
- [ActionBotV $810]
- [NormalBotV $1630]
- [TrapBotV $1485]
- [Ali $1945]
- [DangerBotV $1590]
- [MultiBotV $1485]
- [ConservativeBotV $1585]
- [SpaceBotV $1500]
- [GearBotV $1470]
- 
- */
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [ActionBotV $810]
+         [NormalBotV $1630]
+         [TrapBotV $1485]
+         [Ali $1945]
+         [DangerBotV $1590]
+         [MultiBotV $1485]
+         [ConservativeBotV $1585]
+         [SpaceBotV $1500]
+         [GearBotV $1470]
+
+         */
 
 
         struct BlindValues b;
@@ -1102,33 +1301,33 @@ namespace RegressionTests {
 
             botToTest->StoreDealtHand(handToTest);
         }
-        
-        
+
+
         myTable.BeginInitialState(13);
         myTable.BeginNewHands(b, false, dealer);
-        
+
 
         /*
 
- ActionBotV posts SB of $5 ($5)
- NormalBotV posts BB of $10 ($15)
- TrapBotV folds
- Ali folds
- DangerBotV folds
- MultiBotV folds
- ConservativeBotV folds
- SpaceBotV folds
- GearBotV folds
- ActionBotV raises to $55 ($65)
- NormalBotV raises to $365 ($420)
- ActionBotV raises to $705 ($1070)
- NormalBotV raises to $1045 ($1750)
- ActionBotV folds
+         ActionBotV posts SB of $5 ($5)
+         NormalBotV posts BB of $10 ($15)
+         TrapBotV folds
+         Ali folds
+         DangerBotV folds
+         MultiBotV folds
+         ConservativeBotV folds
+         SpaceBotV folds
+         GearBotV folds
+         ActionBotV raises to $55 ($65)
+         NormalBotV raises to $365 ($420)
+         ActionBotV raises to $705 ($1070)
+         NormalBotV raises to $1045 ($1750)
+         ActionBotV folds
 
- All fold! NormalBotV wins $705
+         All fold! NormalBotV wins $705
 
 
- */
+         */
         if (myTable.PlayRound_BeginHand() == -1) {
             assert(myTable.GetPotSize() < 100);
         } else {
@@ -1141,25 +1340,25 @@ namespace RegressionTests {
     void testRegression_012() {
 
         /*
-        Next Dealer is Ali
-        ================================================================
-        ============================New Hand #1========================
-        BEGIN
+         Next Dealer is Ali
+         ================================================================
+         ============================New Hand #1========================
+         BEGIN
 
 
-        Preflop
-        (Pot: $0)
-        (9 players)
-        [DangerBotV $1500]
-        [MultiBotV $1500]
-        [ConservativeBotV $1500]
-        [SpaceBotV $1500]
-        [GearBotV $1500]
-        [ActionBotV $1500]
-        [NormalBotV $1500]
-        [TrapBotV $1500]
-        [Ali $1500]
-*/
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [DangerBotV $1500]
+         [MultiBotV $1500]
+         [ConservativeBotV $1500]
+         [SpaceBotV $1500]
+         [GearBotV $1500]
+         [ActionBotV $1500]
+         [NormalBotV $1500]
+         [TrapBotV $1500]
+         [Ali $1500]
+         */
 
         struct BlindValues b;
         b.SetSmallBigBlind(5.0);
@@ -1214,35 +1413,35 @@ namespace RegressionTests {
             botToTest->StoreDealtHand(handToTest);
         }
 
-        
+
         myTable.BeginInitialState(11);
         myTable.BeginNewHands(b, false, dealer);
 
 
-        
 
-         /*
 
-        DangerBotV posts SB of $5 ($5)
-        MultiBotV posts BB of $10 ($15)
-        ConservativeBotV folds
-        SpaceBotV folds
-        GearBotV folds
-        ActionBotV folds
-        NormalBotV calls $10 ($25)
-        TrapBotV folds
-        Ali folds
-        DangerBotV folds
-        MultiBotV checks
-          */
+        /*
+
+         DangerBotV posts SB of $5 ($5)
+         MultiBotV posts BB of $10 ($15)
+         ConservativeBotV folds
+         SpaceBotV folds
+         GearBotV folds
+         ActionBotV folds
+         NormalBotV calls $10 ($25)
+         TrapBotV folds
+         Ali folds
+         DangerBotV folds
+         MultiBotV checks
+         */
 
         assert(myTable.PlayRound_BeginHand() != -1);
 
         /*
-    Flop:	4d 7h 9d    (Pot: $25)
-        (2 players)
-        [MultiBotV $1490]
-        [NormalBotV $1490]
+         Flop:	4d 7h 9d    (Pot: $25)
+         (2 players)
+         [MultiBotV $1490]
+         [NormalBotV $1490]
          */
 
 
@@ -1256,19 +1455,19 @@ namespace RegressionTests {
 
         card.SetByIndex(31);
         myFlop.AddToHand(card);
-        
+
 
         /*
 
-        MultiBotV checks
-        NormalBotV checks
-*/
+         MultiBotV checks
+         NormalBotV checks
+         */
         assert(myTable.PlayRound_Flop(myFlop) != -1);
         /*
-    Turn:	4d 7h 9d Ad   (Pot: $25)
-        (2 players)
-        [MultiBotV $1490]
-        [NormalBotV $1490]
+         Turn:	4d 7h 9d Ad   (Pot: $25)
+         (2 players)
+         [MultiBotV $1490]
+         [NormalBotV $1490]
          */
 
         DeckLocation myTurn; // Ad
@@ -1276,80 +1475,80 @@ namespace RegressionTests {
 
         /*
 
-        MultiBotV checks
-        NormalBotV checks
+         MultiBotV checks
+         NormalBotV checks
          */
         assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
 
-/*
-    River:	4d 7h 9d Ad 8h  (Pot: $25)
-        (2 players)
-        [MultiBotV $1490]
-        [NormalBotV $1490]
-*/
+        /*
+         River:	4d 7h 9d Ad 8h  (Pot: $25)
+         (2 players)
+         [MultiBotV $1490]
+         [NormalBotV $1490]
+         */
 
-            DeckLocation myRiver; // 8h
-            myRiver.SetByIndex(25);
+        DeckLocation myRiver; // 8h
+        myRiver.SetByIndex(25);
 
- /*
+        /*
 
-        MultiBotV checks
-        NormalBotV checks
-*/
-            assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) != -1);
+         MultiBotV checks
+         NormalBotV checks
+         */
+        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) != -1);
         //assert(30 < myTable.GetPotSize());
 
         /*
-        ----------
-        |Showdown|
-        ----------
-        Final Community Cards:
-        4d 7h 8h 9d Ad 
-        
-        
-        
-        MultiBotV reveals: 3c 7s 
-        Making,
-        007		Pair of Sevens
-        7 7 8 3 4 9 A 	AKQJT98765432
-        s h h c d d d 	1----11------
-        
-        NormalBotV reveals: Ts Ah 
-        Making,
-        014		Pair of Aces
-        T 7 8 A 4 9 A 	AKQJT98765432
-        s h h h d d d 	----111------
-        
-        NormalBotV can win 15 or less	(controls 25 of 25)
-        * * *Comparing hands* * *
-        NormalBotV takes 25 from the pot, earning 15 this round
-        
-*/
+         ----------
+         |Showdown|
+         ----------
+         Final Community Cards:
+         4d 7h 8h 9d Ad
+
+
+
+         MultiBotV reveals: 3c 7s
+         Making,
+         007		Pair of Sevens
+         7 7 8 3 4 9 A 	AKQJT98765432
+         s h h c d d d 	1----11------
+
+         NormalBotV reveals: Ts Ah
+         Making,
+         014		Pair of Aces
+         T 7 8 A 4 9 A 	AKQJT98765432
+         s h h h d d d 	----111------
+
+         NormalBotV can win 15 or less	(controls 25 of 25)
+         * * *Comparing hands* * *
+         NormalBotV takes 25 from the pot, earning 15 this round
+
+         */
     }
 
     // DangerBot bets a lot 3-handed
     // Why doesn't Pessimistic trigger at such bet sizes?
     //  --> Why doesn't OpponentHandOpportunity return extra hands at this bet size?
     //  HYPOTHESIS: It's because if your win percentage is tied to mean and there are multiple players, your profit can't make it worthwhile to wait.
-    //              In practice, we can either switch this to RANK when {1 < opponents} or we can make it like Pessimistic where they only need to want to beat you. 
+    //              In practice, we can either switch this to RANK when {1 < opponents} or we can make it like Pessimistic where they only need to want to beat you.
     void testRegression_011() {
-/*
-        Preflop
-        (Pot: $0)
-        (9 players)
-        [DangerBotV $1500]
-        [MultiBotV $1500]
-        [ConservativeBotV $1500]
-        [SpaceBotV $1500]
-        [GearBotV $1500]
-        [ActionBotV $1500]
-        [NormalBotV $1500]
-        [TrapBotV $1500]
-        [Ali $1500]
+        /*
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [DangerBotV $1500]
+         [MultiBotV $1500]
+         [ConservativeBotV $1500]
+         [SpaceBotV $1500]
+         [GearBotV $1500]
+         [ActionBotV $1500]
+         [NormalBotV $1500]
+         [TrapBotV $1500]
+         [Ali $1500]
 
-        DangerBotV posts SB of $5 ($5)
-        MultiBotV posts BB of $10 ($15)
- */
+         DangerBotV posts SB of $5 ($5)
+         MultiBotV posts BB of $10 ($15)
+         */
 
         struct BlindValues b;
         b.SetSmallBigBlind(5.0);
@@ -1400,28 +1599,28 @@ namespace RegressionTests {
 
             botToTest->StoreDealtHand(handToTest);
         }
-        
-        
+
+
         myTable.BeginInitialState(11);
         myTable.BeginNewHands(b, false, dealer);
-        
+
 
         /*
-        ConservativeBotV folds
-        SpaceBotV folds
-        GearBotV folds
-        ActionBotV folds
-        NormalBotV folds
-        TrapBotV folds
-        Ali calls $10 ($25)
-        DangerBotV raises to $385 ($405)
-        MultiBotV folds
-        Ali folds
-        
-        All fold! DangerBotV wins $20
-        
-        
-*/
+         ConservativeBotV folds
+         SpaceBotV folds
+         GearBotV folds
+         ActionBotV folds
+         NormalBotV folds
+         TrapBotV folds
+         Ali calls $10 ($25)
+         DangerBotV raises to $385 ($405)
+         MultiBotV folds
+         Ali folds
+
+         All fold! DangerBotV wins $20
+
+
+         */
         myTable.PlayRound_BeginHand();
         assert(myTable.GetPotSize() < 120);
 
@@ -1445,11 +1644,11 @@ namespace RegressionTests {
          [MultiBotV $760]
          [ConservativeBotV $1484.38]
          [SpaceBotV $1500]
-         
+
 
          GearBotV posts SB of $5.625 ($5.625)
          ActionBotV posts BB of $11.25 ($16.875)
-*/
+         */
 
         struct BlindValues b;
         b.SetSmallBigBlind(5.625);
@@ -1461,7 +1660,7 @@ namespace RegressionTests {
         static const float64 arr[] = {11.25, 80.0, 30.0, 125.0};
         const std::vector<float64> nA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
-        
+
         FixedReplayPlayerStrategy nS(nA);
         FixedReplayPlayerStrategy pS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
@@ -1512,14 +1711,14 @@ namespace RegressionTests {
          SpaceBotV folds
          GearBotV folds
          ActionBotV checks
-*/
+         */
         assert(myTable.PlayRound_BeginHand() != -1);
 
 
 
         /*
          Flop:	Jc Ks Ah    (Pot: $28.125)
-*/
+         */
 
         CommunityPlus myFlop;
 
@@ -1536,7 +1735,7 @@ namespace RegressionTests {
          (2 players)
          [ActionBotV $3020.62]
          [NormalBotV $2228.75]
-         
+
          ActionBotV bets $11.25 ($39.375)
          NormalBotV raises to $80 ($119.375)
          ActionBotV calls $68.75 ($188.125)
@@ -1548,12 +1747,12 @@ namespace RegressionTests {
             assert(botToTest->ViewPlayer().GetBetSize() < nS.ViewPlayer().GetBetSize());
             return;
         }
-/*
+        /*
          Turn:	Jc Ks Ah 9d   (Pot: $188.125)
- */
+         */
         DeckLocation myTurn; // 9d
         myTurn.SetByIndex(31);
-        
+
         /*
          (2 players)
          [ActionBotV $2940.62]
@@ -1562,9 +1761,9 @@ namespace RegressionTests {
          ActionBotV checks
          NormalBotV bets $30 ($218.125)
          ActionBotV calls $30 ($248.125)
-*/
+         */
         assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
-        
+
         /*
          River:	Jc Ks Ah 9d Ad  (Pot: $248.125)
          */
@@ -1595,19 +1794,19 @@ namespace RegressionTests {
 
 
 
-         NormalBotV reveals: Qd Ac 
+         NormalBotV reveals: Qd Ac
          Making,
          105		Trip Aces
          K A J A 9 Q A 	AKQJT98765432
          s h c c d d d 	-11----------
-         
-         ActionBotV mucks 
-         
+
+         ActionBotV mucks
+
          NormalBotV can win 251.875 or less	(controls 498.125 of 498.125)
          * * *Comparing hands* * *
          NormalBotV takes 498.125 from the pot, earning 251.875 this round
-         
-         
+
+
          ==========
          CHIP COUNT
          ActionBotV now has $2785.62
@@ -1673,7 +1872,7 @@ namespace RegressionTests {
         myTable.ManuallyAddPlayer("DangerBotV", 1500.0, &dS);
         myTable.ManuallyAddPlayer("Ali", 1500.0, &pS);
         myTable.ManuallyAddPlayer("NormalBotV", 1495.5, &nS);
-        
+
         const playernumber_t dealer = 7;
         myTable.setSmallestChip(4.5);
 
@@ -1690,13 +1889,13 @@ namespace RegressionTests {
 
             botToTest->StoreDealtHand(handToTest);
         }
-        
-        
+
+
         myTable.BeginInitialState(5);
         myTable.BeginNewHands(b, false, dealer);
-        
 
-         /*
+
+        /*
 
 
          GearBotV posts SB of $5.0625 ($5.0625)
@@ -1709,7 +1908,7 @@ namespace RegressionTests {
          NormalBotV folds
          GearBotV folds
          ConservativeBotV checks
-*/
+         */
 
         assert(myTable.PlayRound_BeginHand() != -1);
 
@@ -1732,7 +1931,7 @@ namespace RegressionTests {
 
         card.SetByIndex(47);
         myFlop.AddToHand(card);
-        
+
         /*
 
          ConservativeBotV checks
@@ -1748,10 +1947,10 @@ namespace RegressionTests {
         //assert(myTable.PlayRound_Flop(myFlop) != 1);
         if (flopCalledIdx != -1) {
 
-        /*
-         Turn:	4s 5h Kd Ah   (Pot: $3005.06)
-         (2 players)
-*/
+            /*
+             Turn:	4s 5h Kd Ah   (Pot: $3005.06)
+             (2 players)
+             */
 
             DeckLocation myTurn; // Ah
             myTurn.SetByIndex(49);
@@ -1778,18 +1977,18 @@ namespace RegressionTests {
          005		Pair of Fives
          4 5 A 5 7 Q K 	AKQJT98765432
          s h h c d d d 	111----------
-         
-         ActionBotV is ahead with: Ks As 
-         Trying to stay alive, makes 
+
+         ActionBotV is ahead with: Ks As
+         Trying to stay alive, makes
          092		Aces and Kings
          4 K A 5 A Q K 	AKQJT98765432
          s s s h h d d 	--1----------
-         
+
          ActionBotV can win 1505.06 or less	(controls 3005.06 of 3005.06)
          * * *Comparing hands* * *
          ActionBotV takes 3005.06 from the pot, earning 1505.06 this round
-         
-         
+
+
          ==========
          CHIP COUNT
          ActionBotV now has $3005.06
@@ -1804,24 +2003,24 @@ namespace RegressionTests {
 
     void testRegression_004() {
         /*
-        Next Dealer is TrapBotV
-        ================================================================
-        ============================New Hand #8========================
-        BEGIN
+         Next Dealer is TrapBotV
+         ================================================================
+         ============================New Hand #8========================
+         BEGIN
 
 
-        Preflop
-        (Pot: $0)
-        (9 players)
-        [SpaceBotV $1498]
-        [Nav $2960]
-        [GearBotV $1507] <-- playing as --NORMAL--
-        [ConservativeBotV $346]
-        [DangerBotV $1496]
-        [MultiBotV $2657]
-        [NormalBotV $1064]
-        [ActionBotV $475]
-        [TrapBotV $1497]
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [SpaceBotV $1498]
+         [Nav $2960]
+         [GearBotV $1507] <-- playing as --NORMAL--
+         [ConservativeBotV $346]
+         [DangerBotV $1496]
+         [MultiBotV $2657]
+         [NormalBotV $1064]
+         [ActionBotV $475]
+         [TrapBotV $1497]
          */
 
         struct BlindValues b;
@@ -1835,7 +2034,7 @@ namespace RegressionTests {
 
         FixedReplayPlayerStrategy sS(foldOnly);
         FixedReplayPlayerStrategy pS(pA);
-        
+
         FixedReplayPlayerStrategy cS(foldOnly);
         FixedReplayPlayerStrategy dS(foldOnly);
         FixedReplayPlayerStrategy mS(foldOnly);
@@ -1872,34 +2071,34 @@ namespace RegressionTests {
 
             botToTest->StoreDealtHand(handToTest);
         }
-        
+
         myTable.BeginInitialState(4);
         myTable.BeginNewHands(b, false, dealer);
 
         /*
 
-        SpaceBotV posts SB of $1 ($1)
-        Nav posts BB of $2 ($3)
-        GearBotV raises to $5 ($8)
-        ConservativeBotV folds
-        DangerBotV folds
-        MultiBotV folds
-        NormalBotV folds
-        ActionBotV folds
-        TrapBotV folds
-        SpaceBotV folds
-        Nav calls $3 ($11)
+         SpaceBotV posts SB of $1 ($1)
+         Nav posts BB of $2 ($3)
+         GearBotV raises to $5 ($8)
+         ConservativeBotV folds
+         DangerBotV folds
+         MultiBotV folds
+         NormalBotV folds
+         ActionBotV folds
+         TrapBotV folds
+         SpaceBotV folds
+         Nav calls $3 ($11)
          */
         assert(myTable.PlayRound_BeginHand() != -1);
 
 
         /*
 
-    Flop:	6d Jd Qc    (Pot: $11)
-        (2 players)
-        [Nav $2955]
-        [GearBotV $1502]
-*/
+         Flop:	6d Jd Qc    (Pot: $11)
+         (2 players)
+         [Nav $2955]
+         [GearBotV $1502]
+         */
         CommunityPlus myFlop;
 
         card.SetByIndex(19);
@@ -1910,83 +2109,83 @@ namespace RegressionTests {
 
         card.SetByIndex(42);
         myFlop.AddToHand(card);
-        
-        
 
-        
+
+
+
         /*
-        Nav checks
-        GearBotV checks
-*/
+         Nav checks
+         GearBotV checks
+         */
         assert(myTable.PlayRound_Flop(myFlop) != -1);
 
         /*
-    Turn:	6d Jd Qc 9d   (Pot: $11)
-        (2 players)
-        [Nav $2955]
-        [GearBotV $1502]
-*/
+         Turn:	6d Jd Qc 9d   (Pot: $11)
+         (2 players)
+         [Nav $2955]
+         [GearBotV $1502]
+         */
         DeckLocation myTurn; // 9d
         myTurn.SetByIndex(32);
 
         /*
-        Nav bets $10 ($21)
-        GearBotV raises to $31 ($52)
-        Nav calls $21 ($73)
+         Nav bets $10 ($21)
+         GearBotV raises to $31 ($52)
+         Nav calls $21 ($73)
          */
         assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
         /*
 
-    River:	6d Jd Qc 9d 5h  (Pot: $73)
-        (2 players)
-        [Nav $2924]
-        [GearBotV $1471]
-*/
+         River:	6d Jd Qc 9d 5h  (Pot: $73)
+         (2 players)
+         [Nav $2924]
+         [GearBotV $1471]
+         */
         DeckLocation myRiver; // 5h
         myRiver.SetByIndex(13);
         /*
-        Nav bets $50 ($123)
-        GearBotV raises to $347 ($470)
-        Nav calls $297 ($767)
-*/
+         Nav bets $50 ($123)
+         GearBotV raises to $347 ($470)
+         Nav calls $297 ($767)
+         */
         playernumber_t highBet = myTable.PlayRound_River(myFlop, myTurn, myRiver);
         //assert (myTable.ViewPlayer(highBet) == &botToTest->ViewPlayer());
         assert(highBet != -1); // do not get pushed out, you have a winning hand
         /*
-        ----------
-        |Showdown|
-        ----------
-        Final Community Cards:
-        5h 6d 9d Jd Qc
+         ----------
+         |Showdown|
+         ----------
+         Final Community Cards:
+         5h 6d 9d Jd Qc
 
 
 
-        GearBotV reveals: Qs As
-        Making,
-        012		Pair of Queens
-        Q A 5 Q 6 9 J 	AKQJT98765432
-        s s h c d d d 	1--1-1-------
-        
-        Nav mucks 
-        
-        GearBotV can win 384 or less	(controls 767 of 767)
-        * * *Comparing hands* * *
-        GearBotV takes 767 from the pot, earning 384 this round
-        
-        
-        ==========
-        CHIP COUNT
-        MultiBotV now has $2657
-        Nav now has $2577
-        GearBotV now has $1891
-        SpaceBotV now has $1497
-        TrapBotV now has $1497
-        DangerBotV now has $1496
-        NormalBotV now has $1064
-        ActionBotV now has $475
-        ConservativeBotV now has $346
-        
-*/
+         GearBotV reveals: Qs As
+         Making,
+         012		Pair of Queens
+         Q A 5 Q 6 9 J 	AKQJT98765432
+         s s h c d d d 	1--1-1-------
+
+         Nav mucks
+
+         GearBotV can win 384 or less	(controls 767 of 767)
+         * * *Comparing hands* * *
+         GearBotV takes 767 from the pot, earning 384 this round
+
+
+         ==========
+         CHIP COUNT
+         MultiBotV now has $2657
+         Nav now has $2577
+         GearBotV now has $1891
+         SpaceBotV now has $1497
+         TrapBotV now has $1497
+         DangerBotV now has $1496
+         NormalBotV now has $1064
+         ActionBotV now has $475
+         ConservativeBotV now has $346
+
+         */
     }
 
 
@@ -2023,9 +2222,9 @@ namespace RegressionTests {
 
 
 
-        
+
         CommunityPlus communityToTest; // 2d Qd Kc 2s 7c
-        
+
         card.SetByIndex(3);
         withCommunity.AddToHand(card);
         communityToTest.AddToHand(card);
@@ -2069,14 +2268,14 @@ namespace RegressionTests {
 
         ///Compute WinStats
         StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
-        
+
         statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 
 
         ///====================================
         ///   Compute Relevant Probabilities
         ///====================================
-        
+
         statprob.Process_FoldCallMean();
 
         StatResult statWorse = statprob.statworse(2);
@@ -2085,8 +2284,8 @@ namespace RegressionTests {
 
     void testRegression_002b() {
         ChipPositionState oppCPS(2474,7.875,0,0, 0.0);
-// tableinfo->RiskLoss(0, 2474, 4, 6.75, 0, 0) = 0.0
-// tableinfo->RiskLoss(0, 2474, 4, 11.25, 0, 0) == 0.0
+        // tableinfo->RiskLoss(0, 2474, 4, 6.75, 0, 0) = 0.0
+        // tableinfo->RiskLoss(0, 2474, 4, 11.25, 0, 0) == 0.0
         float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest(0.0, 1.0 /* denom */, 6.75 + oppCPS.alreadyBet, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
                                                                      ,oppCPS,4.5, 4,false,true,0);
         float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest(w_r_rank0, 1.0, 11.25 + oppCPS.alreadyBet, 0.0 ,  0.31640625
@@ -2096,7 +2295,7 @@ namespace RegressionTests {
         assert(w_r_rank0 <= w_r_rank1);
     }
 
-    
+
 
     // 2013.08.30-19.58.15
     // Hand #11
@@ -2174,7 +2373,7 @@ namespace RegressionTests {
 
             botToTest->StoreDealtHand(handToTest);
         }
-        
+
         /*
          ConservativeBotV posts SB of $1.125 ($1.125)
          DangerBotV posts BB of $2.25 ($3.375)
@@ -2190,7 +2389,7 @@ namespace RegressionTests {
 
         myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
         HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 );
-        
+
         r.MakeBet(0.0);
         r.MakeBet(0.0);
         r.MakeBet(0.0);
@@ -2198,49 +2397,49 @@ namespace RegressionTests {
 
 
         /*
-        Why didn't I bet lower?
-        OppRAISEChance [*] 0.284004 @ $4.5	fold -- left0.0491339  0.0491339 right
-        OppRAISEChance [*] 0.284004 @ $6.75	fold -- left0.143  0.143 right
-        --
-        What am I expecting now?
-        OppRAISEChance [*] 0.262638 @ $7.25	fold -- left0.156728  0.156728 right
-        OppRAISEChance [*] 0.274272 @ $12.25	fold -- left0.494979  0.494979 right
-        OppRAISEChance [*] 0.276047 @ $22.25	fold -- left0.800282  0.800282 right
-        OppRAISEChance [*] 0.273322 @ $42.25	fold -- left0.855941  0.855941 right
-        OppRAISEChance [*] 0.268886 @ $82.25	fold -- left0.886188  0.886188 right
-        OppRAISEChance [*] 0.254511 @ $162.25	fold -- left0.902322  0.902322 right
-        OppRAISEChance [*] 0.222713 @ $322.25	fold -- left0.909337  0.909337 right
-        OppRAISEChance [F] 0.0312251 @ $642.25	fold -- left0.912856  0.912856 right
-        OppRAISEChance [F] 0 @ $717	fold -- left0.912856  0.912856 right
-        Guaranteed > $0 is in the pot for sure
-            OppFoldChance% ...    0.0640157   d\0.0109861
-            if playstyle is Danger/Conservative, overall utility is 0.0295592
+         Why didn't I bet lower?
+         OppRAISEChance [*] 0.284004 @ $4.5	fold -- left0.0491339  0.0491339 right
+         OppRAISEChance [*] 0.284004 @ $6.75	fold -- left0.143  0.143 right
+         --
+         What am I expecting now?
+         OppRAISEChance [*] 0.262638 @ $7.25	fold -- left0.156728  0.156728 right
+         OppRAISEChance [*] 0.274272 @ $12.25	fold -- left0.494979  0.494979 right
+         OppRAISEChance [*] 0.276047 @ $22.25	fold -- left0.800282  0.800282 right
+         OppRAISEChance [*] 0.273322 @ $42.25	fold -- left0.855941  0.855941 right
+         OppRAISEChance [*] 0.268886 @ $82.25	fold -- left0.886188  0.886188 right
+         OppRAISEChance [*] 0.254511 @ $162.25	fold -- left0.902322  0.902322 right
+         OppRAISEChance [*] 0.222713 @ $322.25	fold -- left0.909337  0.909337 right
+         OppRAISEChance [F] 0.0312251 @ $642.25	fold -- left0.912856  0.912856 right
+         OppRAISEChance [F] 0 @ $717	fold -- left0.912856  0.912856 right
+         Guaranteed > $0 is in the pot for sure
+         OppFoldChance% ...    0.0640157   d\0.0109861
+         if playstyle is Danger/Conservative, overall utility is 0.0295592
          */
     }
 
-    
+
 
     // 2013.08.30-19.58.15
     // Hand #11
     // Perspective, SpaceBot
     void testRegression_009() {
 
-    /*
-     BEGIN
+        /*
+         BEGIN
 
 
-     Preflop
-     (Pot: $0)
-     (8 players)
-     [ConservativeBotV $344]
-     [DangerBotV $1496]
-     [MultiBotV $2657]
-     [NormalBotV $1064]
-     [ActionBotV $475]
-     [SpaceBotV $717]
-     [Nav $2474]
-     [GearBotV $4273]
-*/
+         Preflop
+         (Pot: $0)
+         (8 players)
+         [ConservativeBotV $344]
+         [DangerBotV $1496]
+         [MultiBotV $2657]
+         [NormalBotV $1064]
+         [ActionBotV $475]
+         [SpaceBotV $717]
+         [Nav $2474]
+         [GearBotV $4273]
+         */
         struct BlindValues b;
         b.SetSmallBigBlind(1.125);
 
@@ -2272,7 +2471,7 @@ namespace RegressionTests {
         const playernumber_t dealer = 7;
         myTable.setSmallestChip(1.0);
 
-        
+
 
         myTable.BeginInitialState(9);
         myTable.BeginNewHands(b, false, dealer);
@@ -2299,18 +2498,18 @@ namespace RegressionTests {
         }
 
 
-    /*
-     ConservativeBotV posts SB of $1.125 ($1.125)
-     DangerBotV posts BB of $2.25 ($3.375)
-     MultiBotV folds
-     NormalBotV folds
-     ActionBotV folds
-     SpaceBotV raises to $5 ($8.375)
-     Nav calls $5 ($13.375)
-     GearBotV folds
-     ConservativeBotV folds
-     DangerBotV folds
-     */
+        /*
+         ConservativeBotV posts SB of $1.125 ($1.125)
+         DangerBotV posts BB of $2.25 ($3.375)
+         MultiBotV folds
+         NormalBotV folds
+         ActionBotV folds
+         SpaceBotV raises to $5 ($8.375)
+         Nav calls $5 ($13.375)
+         GearBotV folds
+         ConservativeBotV folds
+         DangerBotV folds
+         */
         assert(myTable.PlayRound_BeginHand() != -1);
 
 
@@ -2325,80 +2524,80 @@ namespace RegressionTests {
         card.SetByIndex(46);
         myFlop.AddToHand(card);
 
-        
-        
-    /*
 
-     Flop:	2d Qd Kc    (Pot: $13.375)
-     (2 players)
-     [SpaceBotV $712]
-     [Nav $2469]
-*/
+
+        /*
+
+         Flop:	2d Qd Kc    (Pot: $13.375)
+         (2 players)
+         [SpaceBotV $712]
+         [Nav $2469]
+         */
 
         assert(myTable.PlayRound_Flop(myFlop) != -1);
         /*
-     SpaceBotV bets $2.25 ($15.625)
-     Nav raises to $12.25 ($27.875)
-     SpaceBotV raises to $49 ($74.625)
-     Nav calls $36.75 ($111.375)
-*/
+         SpaceBotV bets $2.25 ($15.625)
+         Nav raises to $12.25 ($27.875)
+         SpaceBotV raises to $49 ($74.625)
+         Nav calls $36.75 ($111.375)
+         */
         DeckLocation myTurn; // 2s
         myTurn.SetByIndex(0);
-/*
-     Turn:	2d Qd Kc 2s   (Pot: $111.375)
-     (2 players)
-     [SpaceBotV $663]
-     [Nav $2420]
- */
+        /*
+         Turn:	2d Qd Kc 2s   (Pot: $111.375)
+         (2 players)
+         [SpaceBotV $663]
+         [Nav $2420]
+         */
         assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
         /*
 
-     SpaceBotV bets $83 ($194.375)
-     Nav raises to $168 ($362.375)
-     SpaceBotV calls $85 ($447.375)
-*/
+         SpaceBotV bets $83 ($194.375)
+         Nav raises to $168 ($362.375)
+         SpaceBotV calls $85 ($447.375)
+         */
         DeckLocation myRiver; // 7c
         myRiver.SetByIndex(22);
         /*
-     River:	2d Qd Kc 2s 7c  (Pot: $447.375)
-     (2 players)
-     [SpaceBotV $495]
-     [Nav $2252]
+         River:	2d Qd Kc 2s 7c  (Pot: $447.375)
+         (2 players)
+         [SpaceBotV $495]
+         [Nav $2252]
          */
         assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) == -1);
-/*
-     SpaceBotV bets $4 ($451.375)
-     Nav raises to $459 ($910.375)
-     SpaceBotV raises all-in to $495 ($1401.38)
-     Nav calls $36 ($1437.38)
-*/
-        
         /*
-     ----------
-     |Showdown|
-     ----------
-     Final Community Cards:
-     2s 2d 7c Qd Kc
+         SpaceBotV bets $4 ($451.375)
+         Nav raises to $459 ($910.375)
+         SpaceBotV raises all-in to $495 ($1401.38)
+         Nav calls $36 ($1437.38)
+         */
+
+        /*
+         ----------
+         |Showdown|
+         ----------
+         Final Community Cards:
+         2s 2d 7c Qd Kc
 
 
 
-     Nav reveals: 2h Ah
-     Making,
-     093	 Trip Deuces
-     2 2 A 7 K 2 Q AKQJT98765432
-     s h h c c d d 11-----------
+         Nav reveals: 2h Ah
+         Making,
+         093	 Trip Deuces
+         2 2 A 7 K 2 Q AKQJT98765432
+         s h h c c d d 11-----------
 
-     SpaceBotV turns over Td Ad
-     Is eliminated after making only
-     002	 Pair of Deuces
-     2 7 K 2 T Q A AKQJT98765432
-     s c c d d d d 111----------
-     
-     Nav can win 720.375 or less	(controls 1437.38 of 1437.38)
-     * * *Comparing hands* * *
-     Nav takes 1437.38 from the pot, earning 720.375 this round
-     
-     */
+         SpaceBotV turns over Td Ad
+         Is eliminated after making only
+         002	 Pair of Deuces
+         2 7 K 2 T Q A AKQJT98765432
+         s c c d d d d 111----------
+
+         Nav can win 720.375 or less	(controls 1437.38 of 1437.38)
+         * * *Comparing hands* * *
+         Nav takes 1437.38 from the pot, earning 720.375 this round
+
+         */
     }
 
 
@@ -2458,59 +2657,59 @@ namespace RegressionTests {
         DeckLocation card;
 
         CommunityPlus withCommunity; // 3c Qc
-
+        
         card.SetByIndex(6);
         withCommunity.AddToHand(card);
-
+        
         card.SetByIndex(42);
         withCommunity.AddToHand(card);
-
+        
         std::cout << "Starting next round..." << endl;
-
+        
         CommunityPlus communityToTest; // Jc Ks Ah
-
+        
         card.SetByIndex(38);
         withCommunity.AddToHand(card);
         communityToTest.AddToHand(card);
-
+        
         card.SetByIndex(44);
         withCommunity.AddToHand(card);
         communityToTest.AddToHand(card);
-
+        
         card.SetByIndex(49);
         withCommunity.AddToHand(card);
         communityToTest.AddToHand(card);
-
+        
         const int8 cardsInCommunity = 3;
-
-
+        
+        
         StatResultProbabilities statprob;
-
+        
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
         statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
-
+        
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
-
-
+        
+        
         const float64 testBet = 2.0;
-
+        
         OpponentHandOpportunity test(1, myTable, statprob.core);
-
-
-
+        
+        
+        
         test.query(testBet);
         const float64 actual_y = test.handsToBeat();
         const float64 actual_Dy = test.d_HandsToBeat_dbetSize();
-
+        
         assert(actual_y >= 3.5);
         assert(actual_Dy > 0); // betting more should increase N even more
-
+        
         CombinedStatResultsPessimistic testC(test, statprob.core);
         //testC.query(testBet);
-
+        
         const float64 s1 = testC.ViewShape(testBet).splits;
         const float64 w = testC.getWinProb(testBet);
         const float64 l = testC.getLoseProb(testBet);
@@ -2525,13 +2724,13 @@ namespace RegressionTests {
         assert(dw < 0);
         assert(dl == -dw);
     }
-
+    
 }
 
 struct DeckLocationPair {
     DeckLocation first;
     DeckLocation second;
-
+    
     DeckLocationPair(DeckLocation a, DeckLocation b)
     :
     first(a)
@@ -2541,25 +2740,25 @@ struct DeckLocationPair {
 };
 
 static void regenerateDb() {
-
+    
     const int8 cardsInCommunity = 0;
-
-
-
+    
+    
+    
     std::vector<struct DeckLocationPair> handList;
-
+    
     // Pocket-pairs
     for (int8 pocketRank = 0; pocketRank < 13; ++ pocketRank) {
         DeckLocation card1;
         card1.SetByIndex(pocketRank * 4);
-
+        
         DeckLocation card2;
         card2.SetByIndex(pocketRank * 4 + 1);
-
+        
         handList.push_back(DeckLocationPair(card1, card2));
-
+        
     }
-
+    
     // All non-pairs
     for (int8 firstCardRank = 0; firstCardRank < 13; ++firstCardRank) {
         for(int8 secondCardRank = firstCardRank + 1; secondCardRank < 13; ++secondCardRank) {
@@ -2567,88 +2766,88 @@ static void regenerateDb() {
             {
                 DeckLocation card1;
                 card1.SetByIndex(firstCardRank * 4);
-
+                
                 DeckLocation card2;
                 card2.SetByIndex(secondCardRank * 4 + 1);
-
+                
                 handList.push_back(DeckLocationPair(card1, card2));
             }
-
-
+            
+            
             // Not suited
             {
                 DeckLocation card1;
                 card1.SetByIndex(firstCardRank * 4);
-
+                
                 DeckLocation card2;
                 card2.SetByIndex(secondCardRank * 4);
-
+                
                 handList.push_back(DeckLocationPair(card1, card2));
-
+                
             }
         }
-
+        
     }
-
-
+    
+    
     assert(handList.size() == 169);
-
+    
     std::cout << "Begin.\n";
     size_t counter = 0;
     for (const DeckLocationPair & holeCards : handList) {
         CommunityPlus withCommunity;
-
+        
         withCommunity.AddToHand(holeCards.first);
-
+        
         withCommunity.AddToHand(holeCards.second);
-
+        
         NamedTriviaDeck o;
         o.OmitCards(withCommunity);
         o.DiffHand(CommunityPlus::EMPTY_COMPLUS);
         o.sortSuits();
         string handName = o.NamePockets();
-
-
-
+        
+        
+        
         StatResultProbabilities statprob;
-
+        
         {
             const time_t now = time(0);
             std::cout << asctime(std::localtime(&now));
             std::cout << "Computing   " << handName << "   CallStats (.holdemC)\n";
             std::cout.flush(); // Flush for timestamping
         }
-
+        
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
-
+        
         {
             const time_t now = time(0);
             std::cout << asctime(std::localtime(&now));
             std::cout << "Computing CommunityCallStats (depends on *.holdemW)\n";
             std::cout.flush(); // Flush for timestamping
         }
-
+        
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity,0);
         ++counter;
-
+        
         std::cout << "=== Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size()) << "   ===\n\n";
         std::cout.flush(); // Flush for timestamping
     }
-
+    
     const time_t now = time(0);
     std::cout << asctime(std::localtime(&now));
-
-
+    
+    
 }
 
 int main(int argc, const char * argv[])
 {
-
- // Run all unit tests.
+    
+    // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
-
+    
     UnitTests::testRegression_016();
     UnitTests::testRegression_015();
     UnitTests::testRegression_010c();
@@ -2658,29 +2857,30 @@ int main(int argc, const char * argv[])
     UnitTests::testRegression_007b();
     UnitTests::testRegression_007c();
     RegressionTests::testRegression_008();
-
+    
     // Regression tests
-
+    
+    RegressionTests::testRegression_018();
     RegressionTests::testRegression_017();
     RegressionTests::testRegression_011();
     RegressionTests::testRegression_013a();
     RegressionTests::testRegression_014a();
     RegressionTests::testRegression_012();
-
-
+    
+    
     RegressionTests::testRegression_005();
     RegressionTests::testRegression_004();
     RegressionTests::testRegression_002b();
     RegressionTests::testRegression_002();
-
-
+    
+    
     RegressionTests::testRegression_003();
     RegressionTests::testRegression_009();
-
+    
     RegressionTests::testRegression_006();
-
-
+    
+    
     // Regenerate the DB?
     //regenerateDb();
- }
+}
 

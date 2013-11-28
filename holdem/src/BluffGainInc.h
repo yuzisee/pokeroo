@@ -34,77 +34,77 @@ enum AutoScaleType { ALGEBRAIC_AUTOSCALE, LOGARITHMIC_AUTOSCALE };
 
 class AutoScalingFunction : public virtual HoldemFunctionModel
 {//NO ASSIGNMENT OPERATOR
-    private:
-        float64 inline finequantum(float64 a, float64 b)
-        {
-            if( a < b ) return a;
-            return b;
-        }
+private:
+    float64 inline finequantum(float64 a, float64 b)
+    {
+        if( a < b ) return a;
+        return b;
+    }
 
 
-    protected:
-        virtual void query(float64 sliderx, float64 x);
-        const float64 saturate_min, saturate_max, saturate_upto; // saturate_upto is usually a number between 0.0 and 1.0 that causes a reduced max
-        float64 last_x;
-        float64 last_sliderx;
-        float64 y;
-        float64 dy;
+protected:
+    virtual void query(float64 sliderx, float64 x);
+    const float64 saturate_min, saturate_max, saturate_upto; // saturate_upto is usually a number between 0.0 and 1.0 that causes a reduced max
+    float64 last_x;
+    float64 last_sliderx;
+    float64 y;
+    float64 dy;
 
-        float64 yl;
-        float64 yr;
-        float64 fd_yl;
-        float64 fd_yr;
+    float64 yl;
+    float64 yr;
+    float64 fd_yl;
+    float64 fd_yr;
 
-    public:
+public:
 
 #ifdef TRANSFORMED_AUTOSCALES
-        const AutoScaleType AUTOSCALE_TYPE;
+    const AutoScaleType AUTOSCALE_TYPE;
 #endif
 
-        const bool bNoRange;
-        IFunctionDifferentiable & left;
-        IFunctionDifferentiable & right;
+    const bool bNoRange;
+    IFunctionDifferentiable & left;
+    IFunctionDifferentiable & right;
 
-        AutoScalingFunction(IFunctionDifferentiable & f_left, IFunctionDifferentiable & f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c
-				#ifdef TRANSFORMED_AUTOSCALES
-							, AutoScaleType type = ALGEBRAIC_AUTOSCALE
-				#endif
-			)
+    AutoScalingFunction(IFunctionDifferentiable & f_left, IFunctionDifferentiable & f_right, const float64 minX, const float64 maxX ,ExpectedCallD *c
+#ifdef TRANSFORMED_AUTOSCALES
+                        , AutoScaleType type = ALGEBRAIC_AUTOSCALE
+#endif
+    )
 
-            : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.getQuantum(),f_right.getQuantum()), c)
-            , saturate_min(minX), saturate_max(maxX), saturate_upto(1)
-			#ifdef TRANSFORMED_AUTOSCALES
-            , AUTOSCALE_TYPE(type)
-			#endif
-			, bNoRange( maxX <= minX ), left(f_left), right(f_right){
-                last_x = -1;
-                last_sliderx = -1;
-                //query(0,0);
-            }
-        AutoScalingFunction(IFunctionDifferentiable & f_left, IFunctionDifferentiable & f_right, const float64 minX, const float64 maxX, const float64 upto ,ExpectedCallD *c
-				#ifdef TRANSFORMED_AUTOSCALES
-							, AutoScaleType type = ALGEBRAIC_AUTOSCALE
-				#endif
-			)
+    : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.getQuantum(),f_right.getQuantum()), c)
+    , saturate_min(minX), saturate_max(maxX), saturate_upto(1)
+#ifdef TRANSFORMED_AUTOSCALES
+    , AUTOSCALE_TYPE(type)
+#endif
+    , bNoRange( maxX <= minX ), left(f_left), right(f_right){
+        last_x = -1;
+        last_sliderx = -1;
+        //query(0,0);
+    }
+    AutoScalingFunction(IFunctionDifferentiable & f_left, IFunctionDifferentiable & f_right, const float64 minX, const float64 maxX, const float64 upto ,ExpectedCallD *c
+#ifdef TRANSFORMED_AUTOSCALES
+                        , AutoScaleType type = ALGEBRAIC_AUTOSCALE
+#endif
+    )
 
-            : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.getQuantum(),f_right.getQuantum()), c)
-            , saturate_min(minX), saturate_max(maxX), saturate_upto(upto)
-            #ifdef TRANSFORMED_AUTOSCALES
-            , AUTOSCALE_TYPE(type)
-			#endif
-			, bNoRange( maxX <= minX ), left(f_left), right(f_right){
-                last_x = -1;
-                last_sliderx = -1;
-                //query(0,0);
-            }
-        virtual ~AutoScalingFunction(){}
+    : ScalarFunctionModel(c->chipDenom()),HoldemFunctionModel( finequantum(f_left.getQuantum(),f_right.getQuantum()), c)
+    , saturate_min(minX), saturate_max(maxX), saturate_upto(upto)
+#ifdef TRANSFORMED_AUTOSCALES
+    , AUTOSCALE_TYPE(type)
+#endif
+    , bNoRange( maxX <= minX ), left(f_left), right(f_right){
+        last_x = -1;
+        last_sliderx = -1;
+        //query(0,0);
+    }
+    virtual ~AutoScalingFunction(){}
 
-        virtual float64 f(const float64) override final;
-        virtual float64 fd(const float64, const float64) override final;
+    virtual float64 f(const float64) override final;
+    virtual float64 fd(const float64, const float64) override final;
 
 
-        float64 f_raised(float64 raisefrom, const float64);
-        float64 fd_raised(float64 raisefrom, const float64, const float64);
+    float64 f_raised(float64 raisefrom, const float64);
+    float64 fd_raised(float64 raisefrom, const float64, const float64);
 }
 ;
 
@@ -167,12 +167,21 @@ public:
     struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const override final;
 };
 
+enum SliderBehaviour {
+    SLIDERX // In this mode, Pr{raisedAgainst} and U{raisedAgainst} are evaluated at sliderx===betSize
+    // Use this for legacy PlayerStrategies that use smoothly varying AutoScalingFunctions to create deterrents, etc.
+    ,
+    RAW // In this mode, slider is always equal to showdownBetSize.
+    // Use this for pure PlayerStrategies that use discrete AutoScalingFunctions (e.g. as a switch between calling and raising).
+};
+
+
 // Evaluate gainWithFold*gainNormal*gainRaised
 // on an AutoScalingFunction
 // and relative to foldGain and everything.
 class StateModel : public virtual HoldemFunctionModel
 {
-    private:
+private:
     float64 last_x;
     float64 y;
     float64 dy;
@@ -182,20 +191,20 @@ class StateModel : public virtual HoldemFunctionModel
     // I call g_raised in two places to determine gainNormal as well as (in a loop,) gainRaised
     void query( const float64 );
 
-    protected:
-        ExactCallBluffD & ea;
-        FoldOrCall fMyFoldGain; // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
+protected:
+    ExactCallBluffD & ea;
+    FoldOrCall fMyFoldGain; // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
     const IStateCombiner & fStateCombiner;
-        AutoScalingFunction *fp;
-        bool bSingle;
+    AutoScalingFunction *fp;
+    bool bSingle;
 
 
 
-    #ifdef DEBUG_TRACE_SEARCH
-    public:
-    #endif
+#ifdef DEBUG_TRACE_SEARCH
+public:
+#endif
     float64 gd_raised(float64 raisefrom, float64, const float64);
-    public:
+public:
 
     int32 firstFoldToRaise;
 
@@ -227,24 +236,24 @@ class StateModel : public virtual HoldemFunctionModel
         query(0);
     }
 
-/*
-    StateModel(ExactCallBluffD &c, IFunctionDifferentiable &functionL, IFunctionDifferentiable &functionR) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
-    ,last_x(-1)
-    ,
-    ea(c)
-    ,
-    fMyFoldGain(*(c.tableinfo->table), c.fCore)
-    ,
-    bSingle(true),firstFoldToRaise(-1)
-    {
-        if( ((HoldemFunctionModel *)(&functionL)) != (HoldemFunctionModel *)(&functionR) ) //ASSERT: LL == RR !!
-        {
-            std::cerr << "Static Type Error. Use this constructor only when <class LL>==<class RR>." << endl;
-            exit(1);
-        }
-        fp = new AutoScalingFunction(functionL,functionR,0,0,c.tableinfo);
-        query(0);
-    }*/
+    /*
+     StateModel(ExactCallBluffD &c, IFunctionDifferentiable &functionL, IFunctionDifferentiable &functionR) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
+     ,last_x(-1)
+     ,
+     ea(c)
+     ,
+     fMyFoldGain(*(c.tableinfo->table), c.fCore)
+     ,
+     bSingle(true),firstFoldToRaise(-1)
+     {
+     if( ((HoldemFunctionModel *)(&functionL)) != (HoldemFunctionModel *)(&functionR) ) //ASSERT: LL == RR !!
+     {
+     std::cerr << "Static Type Error. Use this constructor only when <class LL>==<class RR>." << endl;
+     exit(1);
+     }
+     fp = new AutoScalingFunction(functionL,functionR,0,0,c.tableinfo);
+     query(0);
+     }*/
 
 
     virtual ~StateModel();
@@ -254,19 +263,19 @@ class StateModel : public virtual HoldemFunctionModel
 
 
 
-	#ifdef DUMP_CSV_PLOTS
+#ifdef DUMP_CSV_PLOTS
 	float64 oppFoldChance;
 	float64 playChance;
-        void dump_csv_plots(std::ostream &targetoutput, float64 betSize)
-        {
+    void dump_csv_plots(std::ostream &targetoutput, float64 betSize)
+    {
 
 
-            targetoutput.precision(4);
-            targetoutput << oppFoldChance << "," << playChance << "," << std::flush;
+        targetoutput.precision(4);
+        targetoutput << oppFoldChance << "," << playChance << "," << std::flush;
 
 
-        }
-    #endif
+    }
+#endif
 
 }
 ;
