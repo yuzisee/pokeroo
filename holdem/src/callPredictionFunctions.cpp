@@ -174,7 +174,7 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
     return cached_d_dbetSize;
 }
 
-// The derivative with f() to w is here.
+
 float64 FoldWaitLengthModel::d_dw( const float64 n )
 {
 
@@ -313,11 +313,12 @@ float64 FoldWaitLengthModel::f( const float64 n )
         winShowdown = 0.0;
     } else if (remainingbet < betSize) {
         // This call would be reduced slightly
-        winShowdown = remainingbet + prevPot;
+        winShowdown = remainingbet * opponents + prevPot;
     } else {
     // This should include the pot money from previous rounds if SACRIFICE_COMMITTED is defined?
     // See also: unit tests
-        winShowdown = betSize + prevPot;
+        winShowdown = betSize * opponents + prevPot;
+        //TODO: This-round dead-pot size is not considered!!!!!
     }
 
 
@@ -334,6 +335,29 @@ float64 FoldWaitLengthModel::f( const float64 n )
     return lastF;
 }
 
+
+// The derivative with f() to w is here.
+// f = winShowdown * PW - grossSacrifice
+// f = C0 * (2 * pow(getRawPCT, opponents) - 1) - n * (amountSacrificeVoluntary * chanceOfFoldEachHand * chanceOfFoldEachHand + amountSacrificeForced)
+// f = C1 * pow(getRawPCT, opponents) - C2 - n * (C3 * rarity^2 + C4)
+// f = C1 * (1.0 - 1.0 / n / rarity)^opponents - C2 - n * C3 * rarity^2 - n * C4
+// If opponents == 1.0
+// f = C0 * 2 - C0 * 2 / n / rarity - C2 - n * C3 * rarity^2 - n * C4
+
+// For each value of rarity, there is some value where fd = 0;
+// 0 = fd = +C0 * 2 / n^2 / rarity - C3 * rarity^2 - C4
+// C0 * 2 / n^2 / rarity = C3 * rarity^2 - C4
+// C0 * 2 / n^2 = C3 * rarity^3 - C4 * rarity
+// 1.0 / n^2 = (C3 * rarity^3 - C4 * rarity) / C0 / 2
+// ... = (1 / n)
+// n = ...
+//  Integrate with respect to rarity
+// I_n =...
+// I_n(1.0) - I_n(rarity_c)
+// Rarity of n is (1.0 / n)
+// When is it better to fold? When:
+// rarity > 1.0 / n
+// rarity > ...
 float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
 {
     const float64 remainingbet = ( bankroll - grossSacrifice(n)  );
@@ -349,7 +373,7 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
 
     if(remainingbet < betSize )
     {
-        const float64 winShowdown = remainingbet + prevPot;
+        const float64 winShowdown = remainingbet * opponents + prevPot;
         const float64 PW = (y + grossSacrifice(n))/winShowdown; //Faster than computing: d_dbetSize(n)
 
         //Since lastF = winShowdown*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
@@ -371,7 +395,7 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
         //Since lastF = winShowdown*PW - grossSacrifice(n)/AVG_FOLDWAITPCT;
         //          === (betSize + prevPot) * PW - grossSacrifice(n) / AVG_FOLDWAITPCT
 
-        const float64 winShowdown = betSize + prevPot;
+        const float64 winShowdown = betSize * opponents + prevPot;
         return (winShowdown * dPW_dn  +  dRemainingbet);
     }
 
