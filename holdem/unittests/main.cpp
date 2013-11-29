@@ -767,14 +767,14 @@ namespace RegressionTests {
         myTable.ManuallyAddPlayer("MultiBotV", 1590.0, &mS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1582.97, &cS);
         myTable.ManuallyAddPlayer("SpaceBotV", 1485.0, &sS);
-        myTable.ManuallyAddPlayer("GearBotV", 1545.0, &gS);
+        myTable.ManuallyAddPlayer("GearBotV", 1545.0, &gS); // dealer
         myTable.ManuallyAddPlayer("ActionBot18", 1505.0, botToTest);
         myTable.ManuallyAddPlayer("NormalBotV", 1473.52, &nS);
         myTable.ManuallyAddPlayer("TrapBotV", 1473.52, &tS);
         myTable.ManuallyAddPlayer("Nav", 1450.0, &pS);
         myTable.ManuallyAddPlayer("DangerBotV", 1495.0, &dS);
 
-        const playernumber_t dealer = 8;
+        const playernumber_t dealer = 3;
 
 
 
@@ -2604,6 +2604,355 @@ namespace RegressionTests {
     }
 
 
+
+    // Test OpposingHandOpportunity derivatives
+    void testRegression_008c() {
+
+
+
+        struct BlindValues bl;
+        bl.SetSmallBigBlind(5.0);
+
+        HoldemArena myTable(bl.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(5.0);
+
+        const std::vector<float64> foldOnly(1, 0.0);
+        static const float64 aa[] = {
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN()};
+        const std::vector<float64> callOnly(aa, aa + sizeof(aa) / sizeof(aa[0]) );
+        FixedReplayPlayerStrategy gS(callOnly);
+        FixedReplayPlayerStrategy tS(foldOnly);
+        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy pS(foldOnly);
+        FixedReplayPlayerStrategy nS(callOnly);
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy cS(foldOnly);
+        FixedReplayPlayerStrategy sS(foldOnly);
+        FixedReplayPlayerStrategy aS(foldOnly);
+
+
+        myTable.ManuallyAddPlayer("MultiBotV", 1590.0, &mS);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 1582.97, &cS);
+        myTable.ManuallyAddPlayer("SpaceBotV", 1485.0, &sS);
+        myTable.ManuallyAddPlayer("GearBotV", 1545.0, &gS);
+        myTable.ManuallyAddPlayer("ActionBot18", 1505.0, &aS);
+        myTable.ManuallyAddPlayer("NormalBotV", 1473.52, &nS);
+        myTable.ManuallyAddPlayer("TrapBotV", 1473.52, &tS);
+        myTable.ManuallyAddPlayer("Nav", 1450.0, &pS);
+        myTable.ManuallyAddPlayer("DangerBotV", 1495.0, &dS);
+
+
+        /*
+
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [ActionBotV $1505]
+         [NormalBotV $1473.52]
+         [TrapBotV $1473.52]
+         [Nav $1450]
+         [DangerBotV $1495]
+         [MultiBotV $1590]
+         [ConservativeBotV $1582.97]
+         [SpaceBotV $1485]
+         [GearBotV $1445]
+
+         */
+
+
+        const playernumber_t dealer = 3;
+        
+
+        /*
+
+
+         ActionBotV posts SB of $5 ($5)
+         NormalBotV posts BB of $10 ($15)
+         
+         */
+
+        myTable.BeginInitialState(18);
+        myTable.BeginNewHands(bl, false, dealer);
+
+        /*
+         TrapBotV folds
+         Nav folds
+         DangerBotV folds
+         MultiBotV folds
+         ConservativeBotV folds
+         SpaceBotV folds
+         GearBotV calls $10 ($25)
+         ActionBotV calls $5 ($30)
+         NormalBotV checks
+         */
+
+
+        myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
+
+        {
+        HoldemArenaBetting be( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 );
+
+
+
+        be.MakeBet(0);
+
+        be.MakeBet(0);
+
+        be.MakeBet(0);
+
+        be.MakeBet(0);
+
+        be.MakeBet(0);
+
+        be.MakeBet(0);
+
+        be.MakeBet(10);
+        be.MakeBet(10);
+        be.MakeBet(10);
+        }
+
+
+
+
+        /*
+
+
+         Flop:	4h 7d Tc   (Pot: $30)
+         
+         */
+
+        myTable.PrepBettingRound(false,2); //turn, river remaining
+
+
+        DeckLocation card;
+
+
+        CommunityPlus withCommunity;
+        CommunityPlus community;
+
+        card.SetByIndex(9);
+        community.AddToHand(card);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(23);
+        community.AddToHand(card);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(34);
+        community.AddToHand(card);
+        withCommunity.AddToHand(card);
+
+        {
+            HoldemArenaBetting be( &myTable, community, 3 );
+
+
+            be.MakeBet(0);
+
+            be.MakeBet(0);
+
+            be.MakeBet(0);
+        }
+
+
+
+        /*
+
+         (3 players)
+         [ActionBotV $1495]
+         [NormalBotV $1463.52]
+         [GearBotV $1453]
+
+         ActionBotV checks
+         NormalBotV checks
+         GearBotV checks
+
+         */
+
+        DeckLocation myTurn;
+        myTurn.SetByIndex(51);
+        community.AddToHand(myTurn);
+
+        /*
+
+         Turn:	4h 7d Tc Ad   (Pot: $30)
+         */
+
+
+        myTable.PrepBettingRound(false,1); //river remaining
+
+
+        {
+            HoldemArenaBetting be( &myTable, community, 4 );
+
+
+            be.MakeBet(0);
+
+            be.MakeBet(0);
+            
+            be.MakeBet(0);
+        }
+        
+
+
+        /*
+
+
+         (3 players)
+         [ActionBotV $1495]
+         [NormalBotV $1463.52]
+         [GearBotV $1453]
+
+         ActionBotV checks
+         NormalBotV checks
+         GearBotV checks
+         */
+
+        DeckLocation myRiver;
+        myRiver.SetByIndex(49);
+        community.AddToHand(myRiver);
+        /*
+
+
+         River:	4h 7d Tc Ad Ah  (Pot: $30)
+         */
+
+
+        myTable.PrepBettingRound(false,0); //last betting round
+
+
+
+        /*
+         
+         (3 players)
+         [ActionBotV $1495]
+         [NormalBotV $1463.52]
+         [GearBotV $1453]
+         
+         ActionBotV checks
+         NormalBotV checks
+         GearBotV checks
+         
+         
+         
+         */
+
+
+
+        // Ac Jd
+        card.SetByIndex(39);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(50);
+        withCommunity.AddToHand(card);
+
+        // turn, river
+        withCommunity.Hand::AddToHand(myTurn);
+        withCommunity.Hand::AddToHand(myRiver);
+
+        std::cout << "Starting next round..." << endl;
+
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,community,5);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,community,5,0);
+
+        assert(statprob.core.handcumu.cumulation.size() > 2);
+
+        const float64 testBet = 20.0;
+
+        const float64 avgBlinds = myTable.GetBlindValues().OpportunityPerHand(myTable.NumberAtTable());
+
+
+        const float64 opponentsFacingThem = 1.0;
+
+        FoldWaitLengthModel waitLength;
+        waitLength.meanConv =
+        //(opponentsFacingThem > 1.0) ?
+        0
+        //: &(fCore.callcumu)
+        ;
+        // ( 1 / (x+1) )  ^ (1/x)
+        const Player * const normalBot = myTable.ViewPlayer(5);
+        waitLength.bankroll = normalBot->GetMoney();
+        waitLength.amountSacrificeForced = avgBlinds;
+        waitLength.setAmountSacrificeVoluntary( normalBot->GetBetSize()
+#ifdef SACRIFICE_COMMITTED
+                                                  + normalBot->GetVoluntaryContribution()
+#endif
+                                                  - waitLength.amountSacrificeForced // exclude forced portion since it wasn't voluntary.
+                                                  );
+        waitLength.opponents = opponentsFacingThem;
+        waitLength.prevPot = myTable.GetPrevPotSize();
+        waitLength.betSize = testBet;
+
+        vector<float64> wEffective;
+        for (float64 w = 0.005; w < 1.0; w += 0.01) {
+            waitLength.setW( w ); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
+            const float64 n = waitLength.FindBestLength();
+            const float64 rarity = 1.0 - w;
+            const float64 playW = 1.0 - 1.0 / n / rarity;
+            if (w < playW) {
+                wEffective.push_back(playW);
+            } else {
+                wEffective.push_back(w);
+            }
+        }
+
+        float64 meanR = 0.0;
+        for(float64 playR : wEffective) {
+            meanR += playR;
+        }
+        meanR /= wEffective.size();
+        const float64 nEffective = 1.0 / (1.0 - meanR);
+
+
+        OpponentHandOpportunity test(4, myTable, statprob.core);
+
+
+
+        test.query(testBet);
+        const float64 actual_y = test.handsToBeat();
+        const float64 actual_Dy = test.d_HandsToBeat_dbetSize();
+
+        assert(nEffective < actual_y);
+        assert(actual_y < nEffective * 2);
+        assert(actual_Dy > 0); // betting more should increase N even more
+
+/*
+        CombinedStatResultsPessimistic testC(test, statprob.core);
+        //testC.query(testBet);
+
+        const float64 unreasonableBet = 200.0;
+
+        const float64 s1 = testC.ViewShape(unreasonableBet).splits;
+        const float64 w = testC.getWinProb(unreasonableBet);
+        const float64 l = testC.getLoseProb(unreasonableBet);
+        const float64 dw = testC.get_d_WinProb_dbetSize(unreasonableBet);
+        const float64 dl = testC.get_d_LoseProb_dbetSize(unreasonableBet);
+
+        assert(testC.ViewShape(unreasonableBet).wins + testC.ViewShape(unreasonableBet).splits + testC.ViewShape(unreasonableBet).loss == 1.0);
+
+        assert(w == 1.0);
+        assert(l+w == 1.0);
+        assert(s1 < 0.25);
+        assert(dw < 0);
+        assert(dl == -dw);
+ */
+
+    }
+
+
     // Test OpposingHandOpportunity derivatives
     void testRegression_008() {
 
@@ -2850,7 +3199,12 @@ int main(int argc, const char * argv[])
     
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
-    
+
+
+    RegressionTests::testRegression_008c();
+
+    RegressionTests::testRegression_018();
+
     UnitTests::testRegression_016();
     UnitTests::testRegression_015();
     UnitTests::testRegression_010c();
@@ -2862,7 +3216,6 @@ int main(int argc, const char * argv[])
     
     // Regression tests
     
-    RegressionTests::testRegression_018();
     RegressionTests::testRegression_017();
     RegressionTests::testRegression_011();
     RegressionTests::testRegression_013a();
@@ -2884,7 +3237,6 @@ int main(int argc, const char * argv[])
     
     // Regression/Unit hybrid
     RegressionTests::testRegression_008();
-    
     
     // Regenerate the DB?
     //regenerateDb();
