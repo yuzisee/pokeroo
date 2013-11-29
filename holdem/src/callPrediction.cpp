@@ -1409,8 +1409,8 @@ void OpponentHandOpportunity::query(const float64 betSize) {
     }
     fLastBetSize = betSize;
 
-    float64 tableStrength = fTable.NumberAtFirstActionOfRound().inclAllIn();
-    float64 tableStrengthToBeat = tableStrength - 1.0;
+    const float64 tableStrength = fTable.NumberAtFirstActionOfRound().inclAllIn();
+    const float64 tableStrengthToBeat = tableStrength - 1.0;
 
     const float64 avgBlinds = fTable.GetBlindValues().OpportunityPerHand(fTable.NumberAtTable());
 
@@ -1433,6 +1433,10 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 // If (betSize < theirMoney) they would not have been considered for allOpponents, so the existing value of allOpponents is fine.
                 const float64 opponentsFacingThem = handsCommitted(fIdx, fTable, betSize, pIndex);
 
+                // Now, take 1.0 - E[min{1.0 / oppN, 1.0 - oppW}] === 1.0 - \sum_oppW Pr{oppW} min{1.0 / waitLength.n(w:oppW), 1.0 - oppW}
+                
+
+                // We only need FoldWaitLengthModel, technically, but FoldGain helps us guess a derivative.
                 FoldGainModel FG(fTable.GetChipDenom()/2);
 
                 // TODO(from joseph_huang): Should we assume that the opponents also choose mean when {1 == handsShowdown()} and rank otherwise??
@@ -1461,8 +1465,8 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 if (foldGain > 0.0) {
                     // This opponent can profit from folding.
 
-                    const float64 foldN = FG.n;
-                    const float64 d_foldN_dbetSize_almost = FG.fd(betSizeFacingThem, foldGain) / foldGain * FG.n; // Do something weird here to approximate FG.d_n_dbetSize. Take the rate of change of foldgain and multiply that as a fraction into n. That means, if increasing betSize by 1.0 would increase foldGain by 2%, assume it increases n by 2% too. At least they are in the same direction. TODO(from joseph_huang): A proper derivative here?
+                    const float64 foldN = FG.n * FG.waitLength.rarity();
+                    const float64 d_foldN_dbetSize_almost = FG.fd(betSizeFacingThem, foldGain) / foldGain * foldN; // Do something weird here to approximate FG.d_n_dbetSize. Take the rate of change of foldgain and multiply that as a fraction into n. That means, if increasing betSize by 1.0 would increase foldGain by 2%, assume it increases n by 2% too. At least they are in the same direction. TODO(from joseph_huang): A proper derivative here?
                     totalOpposingHandOpportunityCount += 1.0 + foldN; // Add one for the hand they have, and one more for every fold they are (on average) afforded
                     totalOpposingHandOpportunityCount_dbetSize += d_foldN_dbetSize_almost;
 
