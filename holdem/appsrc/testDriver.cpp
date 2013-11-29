@@ -581,33 +581,34 @@ if( bLoadGame )
                 opponentorder = Permute(NUM_OPPONENTS,randSeed);
                 for(i=0;i<NUM_OPPONENTS;++i)
                 {
-
-                    //cout << i << endl;
+                    // The code here only runs if !bLoadGame, as you can see above.
+                    //In this mode, we randomly assign order and randomly assign names.
+                    //In all cases, when loading a game the bot types are unserialized (see HoldemArena::AddStrategyBot and HoldemArena::pTypes)
                     switch(opponentorder[i])
                     {
                         case 0:
-                            myTable.AddStrategyBot("TrapBotV", startingMoney, 'T');
+                            myTable.AddStrategyBot("TrapBotV", startingMoney, 'R');
                             break;
                         case 1:
-                            myTable.AddStrategyBot("ConservativeBotV", startingMoney, 'C');
+                            myTable.AddStrategyBot("ConservativeBotV", startingMoney, 'R');
                             break;
                         case 2:
-                            myTable.AddStrategyBot("NormalBotV",startingMoney, 'N');
+                            myTable.AddStrategyBot("NormalBotV",startingMoney, 'R');
                             break;
                         case 3:
-                            myTable.AddStrategyBot("SpaceBotV", startingMoney, 'S');//&MeanGeomBluff);
+                            myTable.AddStrategyBot("SpaceBotV", startingMoney, 'R');
                             break;
                         case 4:
-                            myTable.AddStrategyBot("ActionBotV",startingMoney, 'A');
+                            myTable.AddStrategyBot("ActionBotV",startingMoney, 'R');
                             break;
                         case 5:
-                            myTable.AddStrategyBot("DangerBotV",startingMoney, 'D');
+                            myTable.AddStrategyBot("DangerBotV",startingMoney, 'R');
                             break;
                         case 6:
-                            myTable.AddStrategyBot("MultiBotV", startingMoney, 'M');
+                            myTable.AddStrategyBot("MultiBotV", startingMoney, 'R');
                             break;
                         case 7:
-                            myTable.AddStrategyBot("GearBotV", startingMoney, 'G');
+                            myTable.AddStrategyBot("GearBotV", startingMoney, 'R');
                             break;
                     }
 

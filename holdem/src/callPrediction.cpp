@@ -1400,7 +1400,8 @@ static float64 handsCommitted(playernumber_t fBettor, const HoldemArena & fTable
 }
 
 // Inputs:
-//   betSize
+//   //betSize1: the bet size the opponent has just made (this is usually just fTable.ViewPlayer(pIndex)->GetBetSize(), but in the case of StateModel::g_raised often we want to simulate whether they have already raised themselves)
+//   betSize: the bet size the opponent has to call
 // Outputs:
 //   fHandsToBeat
 void OpponentHandOpportunity::query(const float64 betSize) {

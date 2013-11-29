@@ -2430,8 +2430,8 @@ namespace RegressionTests {
     // Hand #11
     // Perspective, SpaceBot
     //
-    // We had a situation with SpaceBot folding pre-flop here due to too much CombinedStatResultPessimistic handsToBeat.
-    // Including the big blind which can't fold right now, but we're still counting that opponent as foldable.
+    // We have a situation with SpaceBot folding pre-flop here due to...?
+    //  Hypothesis #1: Re-raise Pessimistic is too strict since it's assuming we're betting directly that much but really it would be a re-raise so we'd be facing that bet.
     void testRegression_009() {
 
         /*
@@ -2457,7 +2457,7 @@ namespace RegressionTests {
 
         std::vector<float64> bbOnly; bbOnly.push_back(b.GetBigBlind()); bbOnly.push_back(0.0); bbOnly.push_back(0.0); bbOnly.push_back(0.0); bbOnly.push_back(0.0);
         const std::vector<float64> foldOnly(1, 0.0);
-        static const float64 arr[] = {std::numeric_limits<float64>::signaling_NaN(), 12.5, std::numeric_limits<float64>::signaling_NaN(), 228.0, 459.0, 495.0};
+        static const float64 arr[] = {5.0, 12.5, 49.0, 100.0, 228.0, 459.0, 495.0};
         const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
 
         FixedReplayPlayerStrategy cS(foldOnly);
@@ -2470,14 +2470,14 @@ namespace RegressionTests {
 
         PlayerStrategy * const botToTest = new PureGainStrategy(0);
 
-        myTable.ManuallyAddPlayer("Nav", 2474.0, &pS);
-        myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS); // small blind
+        myTable.ManuallyAddPlayer("SpaceBot9", 717.0, botToTest);
+        myTable.ManuallyAddPlayer("Nav", 2474.0, &pS); // small blind
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
         myTable.ManuallyAddPlayer("MultiBotV", 2657.0, &mS);
         myTable.ManuallyAddPlayer("NormalBotV", 1064.0, &nS);
         myTable.ManuallyAddPlayer("ActionBotV", 475.0, &aS);
         myTable.ManuallyAddPlayer("GearBotV", 4273.0, &gS);
-        myTable.ManuallyAddPlayer("SpaceBot9", 717.0, botToTest);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS);
 
         const playernumber_t dealer = 0;
         myTable.setSmallestChip(1.0);
@@ -2522,7 +2522,7 @@ namespace RegressionTests {
          DangerBotV folds
          */
         assert(myTable.PlayRound_BeginHand() != -1);
-        assert(myTable.ViewPlayer(7)->GetBetSize() >= 0);
+        assert(myTable.ViewPlayer(0)->GetBetSize() >= 0);
 
 
         CommunityPlus myFlop; // 2d Qd Kc
@@ -2561,7 +2561,12 @@ namespace RegressionTests {
          [SpaceBotV $663]
          [Nav $2420]
          */
-        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+        playernumber_t highbet = myTable.PlayRound_Turn(myFlop, myTurn);
+        if (highbet == -1) {
+            // all-fold?
+            assert(myTable.ViewPlayer(0)->GetBetSize() < 0); // SpaceBot should be the one that folded.
+        } else
+        {
         /*
 
          SpaceBotV bets $83 ($194.375)
@@ -2576,13 +2581,18 @@ namespace RegressionTests {
          [SpaceBotV $495]
          [Nav $2252]
          */
-        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) == -1);
+        highbet = (myTable.PlayRound_River(myFlop, myTurn, myRiver) );
+            if (highbet == -1) {
+                // all-fold?
+                assert(myTable.ViewPlayer(0)->GetBetSize() < 0); // SpaceBot should be the one that folded.
+            }
         /*
          SpaceBotV bets $4 ($451.375)
          Nav raises to $459 ($910.375)
          SpaceBotV raises all-in to $495 ($1401.38)
          Nav calls $36 ($1437.38)
          */
+        }
 
         /*
          ----------
