@@ -120,6 +120,13 @@ public:
 }
 ;
 
+struct NetStatResult {
+    StatResult fShape;
+    float64 fLoseProb;
+	float64 fOutrightWinProb;
+}
+;
+
 /**
  * // TODO: Do we ever use rank here in the non heads-up case?
  * Determine your chance to win by counting how many times your opponent can wait before calling you, assuming they know what you have.
@@ -128,27 +135,17 @@ public:
  */
 class CombinedStatResultsPessimistic : public virtual ICombinedStatResults {
 public:
-    CombinedStatResultsPessimistic(OpponentHandOpportunity & opponentHandOpportunity, CoreProbabilities & core)
-    :
-    fLastBetSize(std::numeric_limits<float64>::signaling_NaN())
-    ,
-    fLoseProb(std::numeric_limits<float64>::signaling_NaN()),fWinProb(std::numeric_limits<float64>::signaling_NaN()),f_d_LoseProb_dbetSize(std::numeric_limits<float64>::signaling_NaN()),f_d_WinProb_dbetSize(std::numeric_limits<float64>::signaling_NaN()),fHandsToBeat(std::numeric_limits<float64>::signaling_NaN())
-    ,
-    fOpposingHands(opponentHandOpportunity)
-    ,
-    fFoldCumu(&(core.foldcumu))
-    ,
-    fSplitOpponents(opponentHandOpportunity.fTable.NumberInHand().inclAllIn() - 1)
-    {}
+    CombinedStatResultsPessimistic(OpponentHandOpportunity & opponentHandOpportunity, CoreProbabilities & core);
+
     virtual ~CombinedStatResultsPessimistic() {}
 
     virtual playernumber_t splitOpponents() const { return fSplitOpponents; }
 
     // per-player outcome: wins and splits are used to calculate split possibilities across NumPlayersInHand()
-    const virtual StatResult & ViewShape(float64 betSize) { query(betSize); return fSplitShape; }
+    const virtual StatResult & ViewShape(float64 betSize) { query(betSize); return fNet.fShape; }
 
-    virtual float64 getLoseProb(float64 betSize) { query(betSize); return fLoseProb; }
-	virtual float64 getWinProb(float64 betSize) { query(betSize); return fWinProb; }
+    virtual float64 getLoseProb(float64 betSize) { query(betSize); return fNet.fLoseProb; }
+	virtual float64 getWinProb(float64 betSize) { query(betSize); return fNet.fOutrightWinProb; }
 
     virtual float64 get_d_LoseProb_dbetSize(float64 betSize) { query(betSize); return f_d_LoseProb_dbetSize; }
     virtual float64 get_d_WinProb_dbetSize(float64 betSize) { query(betSize); return f_d_WinProb_dbetSize; }
@@ -162,9 +159,7 @@ private:
     float64 fLastBetSize;
 
     // query outputs
-    StatResult fSplitShape;
-    float64 fLoseProb;
-    float64 fWinProb;
+    struct NetStatResult fNet;
     float64 f_d_LoseProb_dbetSize;
     float64 f_d_WinProb_dbetSize;
 
@@ -179,12 +174,6 @@ private:
 }
 ;
 
-struct NetStatResult {
-    StatResult fShape;
-    float64 fLoseProb;
-	float64 fOutrightWinProb;
-}
-;
 
 // Use rank for multi-handed, mean for heads-up
 class PureStatResultGeom : public virtual ICombinedStatResults {
@@ -195,8 +184,7 @@ private:
     const struct NetStatResult fNet;
 
 public:
-    PureStatResultGeom(const StatResult mean, const StatResult rank, const ExpectedCallD &tableinfo);
-
+    PureStatResultGeom(const StatResult mean, const StatResult rank, CallCumulationD &foldcumu, const ExpectedCallD &tableinfo);
     virtual ~PureStatResultGeom() {}
 
     playernumber_t splitOpponents() const override final { return fShowdownOpponents; }

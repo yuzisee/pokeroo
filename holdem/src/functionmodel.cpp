@@ -45,32 +45,37 @@ GainModelGeom::~GainModelGeom()
 {
 }
 
-void CombinedStatResultsPessimistic::query(float64 betSize) {
-    if (fLastBetSize == betSize) {
-        return;
-    }
-    fLastBetSize = betSize;
+static NetStatResult allNaN() {
+    struct NetStatResult result;
+    result.fLoseProb = std::numeric_limits<float64>::signaling_NaN();
+    result.fOutrightWinProb = std::numeric_limits<float64>::signaling_NaN();
+    result.fShape.wins = std::numeric_limits<float64>::signaling_NaN();
+    result.fShape.splits = std::numeric_limits<float64>::signaling_NaN();
+    result.fShape.loss = std::numeric_limits<float64>::signaling_NaN();
+    result.fShape.pct = std::numeric_limits<float64>::signaling_NaN();
+    result.fShape.repeated = std::numeric_limits<float64>::signaling_NaN();
+    return result;
+}
+CombinedStatResultsPessimistic::CombinedStatResultsPessimistic(OpponentHandOpportunity & opponentHandOpportunity, CoreProbabilities & core)
+:
+fLastBetSize(std::numeric_limits<float64>::signaling_NaN())
+,
+fNet(allNaN())
+,
+f_d_LoseProb_dbetSize(std::numeric_limits<float64>::signaling_NaN()),f_d_WinProb_dbetSize(std::numeric_limits<float64>::signaling_NaN()),fHandsToBeat(std::numeric_limits<float64>::signaling_NaN())
+,
+fOpposingHands(opponentHandOpportunity)
+,
+fFoldCumu(&(core.foldcumu))
+,
+fSplitOpponents(opponentHandOpportunity.fTable.NumberInHand().inclAllIn() - 1)
+{}
 
-    fOpposingHands.query(betSize);
-    fHandsToBeat = fOpposingHands.handsToBeat();
-    const float64 fractionOfHandsToBeat_dbetSize = fOpposingHands.d_HandsToBeat_dbetSize();
 
-#ifdef DEBUGASSERT
-    if (is_nan(fHandsToBeat)) {
-        std::cerr << "NaN encountered in fHandsToBeat" << endl;
-        exit(1);
-    }
-#endif // DEBUGASSERT
+static std::pair<struct NetStatResult, float64> againstBestXOpponents(CallCumulationD & fOppCumu, float64 fractionOfHandsToBeat, float64 fractionOfHandsToBeat_dbetSize, playernumber_t fSplitOpponents) {
+    std::pair<struct NetStatResult, float64> result;
 
-#ifdef DEBUGASSERT
-    if (fractionOfHandsToBeat_dbetSize != fractionOfHandsToBeat_dbetSize) {
-        std::cerr << "NaN encountered in fractionOfHandsToBeat_dbetSize" << endl;
-        exit(1);
-    }
-#endif // DEBUGASSERT
-
-    const float64 fractionOfHandsToBeat = 1.0 / fHandsToBeat; // If you have to beat N hands, expect the worst to be one of the worst 1/Nth
-    const std::pair<StatResult, float64> bestXOpponents = fFoldCumu->bestXHands(fractionOfHandsToBeat);
+    const std::pair<StatResult, float64> bestXOpponents = fOppCumu.bestXHands(fractionOfHandsToBeat);
     const StatResult showdownResults = bestXOpponents.first.ReversedPerspective(); // oddsAgainstbestXHands.first;
     const float64 d_showdownPct_dX = -bestXOpponents.second; // oddsAgainstbestXHands.second;
 
@@ -83,11 +88,15 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
     //                      = fFoldCumu->oddsAgainstBestXHands ' (fractionOfHandsToBeat) * (-1.0 / fOpposingHands.handsToBeat()^2) * d_dbetSize(fOpposingHands.handsToBeat())
     //                      = d_showdownPct_dX * (-fractionOfHandsToBeat * fractionOfHandsToBeat) * fractionOfHandsToBeat_dbetSize
 
+    float64 & fWinProb = result.first.fOutrightWinProb;
+    float64 & fLoseProb = result.first.fLoseProb;
+    StatResult & fSplitShape = result.first.fShape;
+    float64 & f_d_WinProb_dbetSize = result.second;
+
     // Simplification: Probability of winning the showdown is the probability of beating the single opponent with the best chance to beat you.
     fWinProb = showdownResults.wins;
     fLoseProb = showdownResults.loss;
     f_d_WinProb_dbetSize = d_showdownPct_dX * (-fractionOfHandsToBeat * fractionOfHandsToBeat) * fractionOfHandsToBeat_dbetSize;
-    f_d_LoseProb_dbetSize = -f_d_WinProb_dbetSize;
 
     // To evaluate splits we need a per-player (win, split, loss).
     fSplitShape.loss = 1.0 - cleanpow(1.0 - fLoseProb, 1.0 / fSplitOpponents); //The w+s outcome for all players should be a power of w+s for shape
@@ -143,7 +152,6 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
         fLoseProb = 0.0;
         fWinProb = 0.0;
         f_d_WinProb_dbetSize = 0.0;
-        f_d_LoseProb_dbetSize = 0.0;
         fSplitShape.wins = 1.0; //You need wins to split, and shape is only used to split so this okay
     }
 
@@ -155,11 +163,46 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
     }
 #endif // DEBUGASSERT
 
+    return result;
+}
+
+
+void CombinedStatResultsPessimistic::query(float64 betSize) {
+    if (fLastBetSize == betSize) {
+        return;
+    }
+    fLastBetSize = betSize;
+
+    fOpposingHands.query(betSize);
+    fHandsToBeat = fOpposingHands.handsToBeat();
+    const float64 fractionOfHandsToBeat_dbetSize = fOpposingHands.d_HandsToBeat_dbetSize();
+
+#ifdef DEBUGASSERT
+    if (is_nan(fHandsToBeat)) {
+        std::cerr << "NaN encountered in fHandsToBeat" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+#ifdef DEBUGASSERT
+    if (fractionOfHandsToBeat_dbetSize != fractionOfHandsToBeat_dbetSize) {
+        std::cerr << "NaN encountered in fractionOfHandsToBeat_dbetSize" << endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+    const float64 fractionOfHandsToBeat = 1.0 / fHandsToBeat; // If you have to beat N hands, expect the worst to be one of the worst 1/Nth
+
+
+    std::pair<struct NetStatResult, float64> result = againstBestXOpponents(*fFoldCumu, fractionOfHandsToBeat, fractionOfHandsToBeat_dbetSize, fSplitOpponents);
+    fNet = result.first;
+    f_d_WinProb_dbetSize = result.second;
+    f_d_LoseProb_dbetSize = -f_d_WinProb_dbetSize;
 
 }
 
 
-static NetStatResult init(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, StatResult baseShape) {
+static NetStatResult initByRank(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, StatResult baseShape) {
 
 
 #ifdef DEBUGASSERT
@@ -214,23 +257,27 @@ static NetStatResult init(playernumber_t difficultyOpponents, playernumber_t sho
     return result;
 }
 
-static StatResult initStatResult(const StatResult mean, const StatResult rank, const ExpectedCallD &tableinfo) {
-    if (tableinfo.handsToShowdownAgainst() > 1) {
-        // The odds of beating multiple people isn't based on the odds of beating one person.
-        // Since it's more complicated than that, just go with rank for now.
-        return rank;
-    } else {
-        return mean;
-    }
+static NetStatResult initByMean(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, CallCumulationD &foldcumu) {
+    const float64 fractionOfHandsToBeat = 1.0 / difficultyOpponents;
+    return againstBestXOpponents(foldcumu, fractionOfHandsToBeat, 0.0, showdownOpponents).first;
 }
 
-PureStatResultGeom::PureStatResultGeom(const StatResult mean, const StatResult rank, const ExpectedCallD &tableinfo)
+PureStatResultGeom::PureStatResultGeom(const StatResult mean, const StatResult rank, CallCumulationD &foldcumu, const ExpectedCallD &tableinfo)
 :
 fDifficultyOpponents(tableinfo.handStrengthOfRound())
 ,
 fShowdownOpponents(tableinfo.handsToShowdownAgainst())
 ,
-fNet( init(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), initStatResult(mean, rank, tableinfo)) )
+fNet(
+     (tableinfo.handsToShowdownAgainst() > 1) ?
+
+     // The odds of beating multiple people isn't based on the odds of beating one person.
+     // Since it's more complicated than that, just go with rank for now.
+     initByRank(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), rank)  :
+
+     // We're only facing one actual person (even though handStrengthOfRound can be higher)
+     // This allows us to calculate our odds more precisely than with just rank
+     initByMean(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), foldcumu)   )
 {}
 
 

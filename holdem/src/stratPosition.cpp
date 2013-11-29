@@ -110,6 +110,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     else
     {
         logFile << "==========#" << ViewTable().handnum << "==========" << endl;
+        logFile << "Playing as " << ViewTable().GetPlayerBotType(myPositionIndex) << endl;
     }
 #endif
 
@@ -1287,7 +1288,7 @@ float64 PureGainStrategy::MakeBet()
         exit(1);
     }
 
-    PureStatResultGeom leftCS(statprob.core.statmean, left, tablestate);
+    PureStatResultGeom leftCS(statprob.core.statmean, left, statprob.core.foldcumu, tablestate);
     ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
 
     // TODO(from joseph_huang): Switch this back to GainModelGeom for better bankroll management?
@@ -1309,7 +1310,7 @@ float64 PureGainStrategy::MakeBet()
 
 
 #ifdef LOGPOSITION
-    logFile << "CallStrength W(*)=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
+    logFile << "CallStrength W(" << static_cast<int>(tablestate.handStrengthOfRound()) << "c)=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
     const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
     logFile << "(MinRaise to $" << minRaiseTo << ") ";
     printPessimisticWinPct(logFile, minRaiseTo, &csrp);
