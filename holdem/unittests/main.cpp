@@ -662,6 +662,114 @@ namespace UnitTests {
     }
 
 
+
+    /**
+     * Discussion about Geom vs. Algb
+     * Bet-fraction is weird mid-game because what is it a fraction of? Your remaining money? Your uncommitted money?
+     *
+     * It certainly would be simpler with Algb only.
+     *
+     *
+     * Other discussion:
+     *  Why don't you bet all-in? Is it because of the Kelly criterion, or is it because of optimism?
+     *  Why don't you _call_ all-in? Is it because of the Kelley criterion, or is it because of optimism?
+     *
+     * "If someone bets all-in, and you have the option to call it, you pick your spots. You can wait for a better opportunity. Obviously you don't take this one because you are putting too much of your money at risk at once" (thus, use Kelly criterion, a.k.a. GainModel, when calling or less, and use AlgbModel, a.k.a. GainModelNoRisk for raising)
+     * "If you are the one raising all-in, the deterrent for not always doing this is that you will only be called by good hands." (Thus, we should use AlgbModel as the default for raises but scale from X to statworse as your raise gets higher.)
+     * -Nav
+     *
+     * (A) Worst could be based on handsDealt so that it is sufficiently pessimistic, if you think it's not pessimistic enough.
+     * (B) Also you can cut a couple rank bots to make room for this
+     */
+    void testRegression_003() {
+
+        DeckLocation card;
+
+        CommunityPlus withCommunity; // Td Ad
+
+        card.SetByIndex(35);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(51);
+        withCommunity.AddToHand(card);
+
+
+
+
+        CommunityPlus communityToTest; // 2d Qd Kc 2s 7c
+
+        card.SetByIndex(3);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(43);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(46);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+
+        card.SetByIndex(0);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+
+        card.SetByIndex(22);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+
+        const int8 cardsInCommunity = 5;
+        /*
+
+         River:	2d Qd Kc 2s 7c  (Pot: $447.375)
+         */
+
+        DistrShape detailPCT(0);
+        DistrShape w_wl(0);
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+        ///Compute WinStats
+        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+
+        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+
+        ///====================================
+        ///   Compute Relevant Probabilities
+        ///====================================
+
+        statprob.Process_FoldCallMean();
+
+        StatResult statWorse = statprob.statworse(2);
+        assert(0.95 <= statWorse.loss);
+    }
+
+    void testRegression_002b() {
+        ChipPositionState oppCPS(2474,7.875,0,0, 0.0);
+        // tableinfo->RiskLoss(0, 2474, 4, 6.75, 0, 0) = 0.0
+        // tableinfo->RiskLoss(0, 2474, 4, 11.25, 0, 0) == 0.0
+        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest(0.0, 1.0 /* denom */, 6.75 + oppCPS.alreadyBet, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
+                                                                     ,oppCPS,4.5, 4,false,true,0);
+        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest(w_r_rank0, 1.0, 11.25 + oppCPS.alreadyBet, 0.0 ,  0.31640625
+                                                                     ,oppCPS, 4.5, 4,false,true,0);
+        
+        // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
+        assert(w_r_rank0 <= w_r_rank1);
+    }
+
+
+
 }
 
 #include "arena.h"
@@ -907,7 +1015,7 @@ namespace RegressionTests {
         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver);
         assert(highbettor == 4);
         // No all-fold; assert that the pot was increased at least.
-        assert(myTable.GetPotSize() > 100);
+        assert(myTable.GetPotSize() > 55);
 
 
         /*
@@ -965,17 +1073,17 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(2);
+        PlayerStrategy * const botToTest = new PureGainStrategy(4);
 
         myTable.ManuallyAddPlayer("MultiBotV", 1502.5, &mS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, &cS);
         myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
         myTable.ManuallyAddPlayer("GearBotV", 1500.0, &gS);
+        myTable.ManuallyAddPlayer("DangerBotV", 1495.0, &dS);
+        myTable.ManuallyAddPlayer("TrapBotV", 1500.0, &tS);
         myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
         myTable.ManuallyAddPlayer("NormalBot17", 1502.5, botToTest);
-        myTable.ManuallyAddPlayer("TrapBotV", 1500.0, &tS);
         myTable.ManuallyAddPlayer("Nav", 1500.0, &pS);
-        myTable.ManuallyAddPlayer("DangerBotV", 1495.0, &dS);
 
         const playernumber_t dealer = 8;
 
@@ -1025,15 +1133,16 @@ namespace RegressionTests {
          ConservativeBotV posts BB of $10 ($15)
          */
         assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.ViewPlayer(7)->GetBetSize() >= 0);
 
         /*
          SpaceBotV folds
          GearBotV folds
+         DangerBotV folds
+         TrapBotV folds
          ActionBotV calls $10 ($25)
          NormalBotV calls $10 ($35)
-         TrapBotV folds
          Nav calls $10 ($45)
-         DangerBotV folds
          MultiBotV folds
          ConservativeBotV checks
          */
@@ -1103,6 +1212,7 @@ namespace RegressionTests {
 
 
         assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) != -1);
+        assert(myTable.GetPotSize() > 125.0);
 
         /*
          (4 players)
@@ -1339,7 +1449,7 @@ namespace RegressionTests {
 
     }
 
-    // When you have top pair on the river and there are no flush threats and not a significant straight threat, shouldn't you bet?
+    // You have top pair on the river but there are flush threats and straight threats, do you call a small value bet?
     void testRegression_012() {
 
         /*
@@ -1373,9 +1483,7 @@ namespace RegressionTests {
         static const float64 arr[] = {std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN(),
-            std::numeric_limits<float64>::signaling_NaN(),
-            std::numeric_limits<float64>::signaling_NaN(),
-            std::numeric_limits<float64>::signaling_NaN()};
+            10.0};
         const std::vector<float64> mA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
         FixedReplayPlayerStrategy tS(foldOnly);
@@ -1389,17 +1497,18 @@ namespace RegressionTests {
 
         PlayerStrategy * const botToTest = new PureGainStrategy(4);
 
-        myTable.ManuallyAddPlayer("GearBotV", 1500.0, &gS);
-        myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
         myTable.ManuallyAddPlayer("NormalBot12", 1500.0, botToTest);
-        myTable.ManuallyAddPlayer("TrapBotV", 1500.0, &tS);
-        myTable.ManuallyAddPlayer("Ali", 1500.0, &pS); // Ali is the dealer, since DangerBot is the small blind
-        myTable.ManuallyAddPlayer("DangerBotV", 1500.0, &dS);
+        myTable.ManuallyAddPlayer("DangerBotV", 1500.0, &dS); // is the small blind
         myTable.ManuallyAddPlayer("MultiBotV", 1500.0, &mS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1500, &cS);
         myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
+        myTable.ManuallyAddPlayer("GearBotV", 1500.0, &gS);
+        myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
+        myTable.ManuallyAddPlayer("TrapBotV", 1500.0, &tS);
+        myTable.ManuallyAddPlayer("Ali", 1500.0, &pS); // Ali is the dealer, since DangerBot is the small blind
 
-        const playernumber_t dealer = 4;
+
+        const playernumber_t dealer = 0;
 
 
         DeckLocation card;
@@ -1431,9 +1540,9 @@ namespace RegressionTests {
          SpaceBotV folds
          GearBotV folds
          ActionBotV folds
-         NormalBotV calls $10 ($25)
          TrapBotV folds
          Ali folds
+         NormalBotV calls $10 ($25)
          DangerBotV folds
          MultiBotV checks
          */
@@ -1495,8 +1604,8 @@ namespace RegressionTests {
 
         /*
 
-         MultiBotV checks
-         NormalBotV checks
+         MultiBotV bets SMALL
+         NormalBotV call?
          */
         assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) != -1);
         //assert(30 < myTable.GetPotSize());
@@ -2032,7 +2141,7 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const float64 arr[] = {std::numeric_limits<float64>::signaling_NaN(), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0};
+        static const float64 arr[] = {5.0, std::numeric_limits<float64>::signaling_NaN(), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0};
         const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
 
         FixedReplayPlayerStrategy sS(foldOnly);
@@ -2046,19 +2155,19 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy tS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally ImproveGainStrategy(0);
+        PlayerStrategy * const botToTest = new PureGainStrategy(0);
 
-        myTable.ManuallyAddPlayer("SpaceBotV", 1498.0, &sS);
+        myTable.ManuallyAddPlayer("TrapBotV", 1497.0, &tS);
+        myTable.ManuallyAddPlayer("SpaceBotV", 1498.0, &sS); // small blind
         myTable.ManuallyAddPlayer("Nav", 2960.0, &pS);
-        myTable.ManuallyAddPlayer("GearBot4", 1507.0, botToTest); // TrapBot is the dealer, since SpaceBot is the small blind
         myTable.ManuallyAddPlayer("ConservativeBotV", 346.0, &cS);
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
         myTable.ManuallyAddPlayer("MultiBotV", 2657.0, &mS);
+        myTable.ManuallyAddPlayer("GearBot4", 1507.0, botToTest);
         myTable.ManuallyAddPlayer("NormalBotV", 1064.0, &nS);
         myTable.ManuallyAddPlayer("ActionBotV", 475.0, &aS);
-        myTable.ManuallyAddPlayer("TrapBotV", 1497.0, &tS);
 
-        const playernumber_t dealer = 8;
+        const playernumber_t dealer = 0;
         myTable.setSmallestChip(1.0);
 
         DeckLocation card;
@@ -2079,18 +2188,18 @@ namespace RegressionTests {
         myTable.BeginNewHands(b, false, dealer);
 
         /*
-
          SpaceBotV posts SB of $1 ($1)
          Nav posts BB of $2 ($3)
-         GearBotV raises to $5 ($8)
          ConservativeBotV folds
          DangerBotV folds
          MultiBotV folds
+         GearBotV calls $2 ($5)
          NormalBotV folds
          ActionBotV folds
          TrapBotV folds
          SpaceBotV folds
-         Nav calls $3 ($11)
+         Nav raises to $5 ($8)
+         GearBotV calls ($11)
          */
         assert(myTable.PlayRound_BeginHand() != -1);
 
@@ -2153,7 +2262,8 @@ namespace RegressionTests {
          */
         playernumber_t highBet = myTable.PlayRound_River(myFlop, myTurn, myRiver);
         //assert (myTable.ViewPlayer(highBet) == &botToTest->ViewPlayer());
-        assert(highBet != -1); // do not get pushed out, you have a winning hand
+        assert(highBet == -1); // do not get pushed out, you have a winning hand
+        assert(myTable.ViewPlayer(6)->GetBetSize() >= 0);
         /*
          ----------
          |Showdown|
@@ -2190,114 +2300,6 @@ namespace RegressionTests {
 
          */
     }
-
-
-
-    /**
-     * Discussion about Geom vs. Algb
-     * Bet-fraction is weird mid-game because what is it a fraction of? Your remaining money? Your uncommitted money?
-     *
-     * It certainly would be simpler with Algb only.
-     *
-     *
-     * Other discussion:
-     *  Why don't you bet all-in? Is it because of the Kelly criterion, or is it because of optimism?
-     *  Why don't you _call_ all-in? Is it because of the Kelley criterion, or is it because of optimism?
-     *
-     * "If someone bets all-in, and you have the option to call it, you pick your spots. You can wait for a better opportunity. Obviously you don't take this one because you are putting too much of your money at risk at once" (thus, use Kelly criterion, a.k.a. GainModel, when calling or less, and use AlgbModel, a.k.a. GainModelNoRisk for raising)
-     * "If you are the one raising all-in, the deterrent for not always doing this is that you will only be called by good hands." (Thus, we should use AlgbModel as the default for raises but scale from X to statworse as your raise gets higher.)
-     * -Nav
-     *
-     * (A) Worst could be based on handsDealt so that it is sufficiently pessimistic, if you think it's not pessimistic enough.
-     * (B) Also you can cut a couple rank bots to make room for this
-     */
-    void testRegression_003() {
-
-        DeckLocation card;
-
-        CommunityPlus withCommunity; // Td Ad
-
-        card.SetByIndex(35);
-        withCommunity.AddToHand(card);
-
-        card.SetByIndex(51);
-        withCommunity.AddToHand(card);
-
-
-
-
-        CommunityPlus communityToTest; // 2d Qd Kc 2s 7c
-
-        card.SetByIndex(3);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(43);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-        card.SetByIndex(46);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-
-        card.SetByIndex(0);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-
-        card.SetByIndex(22);
-        withCommunity.AddToHand(card);
-        communityToTest.AddToHand(card);
-
-
-        const int8 cardsInCommunity = 5;
-        /*
-
-         River:	2d Qd Kc 2s 7c  (Pot: $447.375)
-         */
-
-        DistrShape detailPCT(0);
-        DistrShape w_wl(0);
-        StatResultProbabilities statprob;
-
-        ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
-
-        ///Compute CommunityCallStats
-        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
-
-        ///Compute WinStats
-        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
-
-        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
-
-
-        ///====================================
-        ///   Compute Relevant Probabilities
-        ///====================================
-
-        statprob.Process_FoldCallMean();
-
-        StatResult statWorse = statprob.statworse(2);
-        assert(0.95 <= statWorse.loss);
-    }
-
-    void testRegression_002b() {
-        ChipPositionState oppCPS(2474,7.875,0,0, 0.0);
-        // tableinfo->RiskLoss(0, 2474, 4, 6.75, 0, 0) = 0.0
-        // tableinfo->RiskLoss(0, 2474, 4, 11.25, 0, 0) == 0.0
-        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest(0.0, 1.0 /* denom */, 6.75 + oppCPS.alreadyBet, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
-                                                                     ,oppCPS,4.5, 4,false,true,0);
-        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest(w_r_rank0, 1.0, 11.25 + oppCPS.alreadyBet, 0.0 ,  0.31640625
-                                                                     ,oppCPS, 4.5, 4,false,true,0);
-
-        // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
-        assert(w_r_rank0 <= w_r_rank1);
-    }
-
 
 
     // 2013.08.30-19.58.15
@@ -2346,7 +2348,7 @@ namespace RegressionTests {
         myTable.ManuallyAddPlayer("MultiBotV", 2657.0, &mS);
         myTable.ManuallyAddPlayer("NormalBotV", 1064.0, &nS);
         myTable.ManuallyAddPlayer("ActionBotV", 475.0, &aS);
-        myTable.ManuallyAddPlayer("SpaceBotV", 717.0, botToTest);
+        myTable.ManuallyAddPlayer("SpaceBot2", 717.0, botToTest);
         myTable.ManuallyAddPlayer("Nav", 2474.0, &pS);
         myTable.ManuallyAddPlayer("GearBotV", 4273.0, &gS); // gearbot is the dealer, since ConservativeBot is the small blind
 
@@ -2419,12 +2421,17 @@ namespace RegressionTests {
          if playstyle is Danger/Conservative, overall utility is 0.0295592
          */
     }
-
+    
+    
+    
 
 
     // 2013.08.30-19.58.15
     // Hand #11
     // Perspective, SpaceBot
+    //
+    // We had a situation with SpaceBot folding pre-flop here due to too much CombinedStatResultPessimistic handsToBeat.
+    // Including the big blind which can't fold right now, but we're still counting that opponent as foldable.
     void testRegression_009() {
 
         /*
@@ -2448,30 +2455,31 @@ namespace RegressionTests {
 
         HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
 
+        std::vector<float64> bbOnly; bbOnly.push_back(b.GetBigBlind()); bbOnly.push_back(0.0); bbOnly.push_back(0.0); bbOnly.push_back(0.0); bbOnly.push_back(0.0);
         const std::vector<float64> foldOnly(1, 0.0);
         static const float64 arr[] = {std::numeric_limits<float64>::signaling_NaN(), 12.5, std::numeric_limits<float64>::signaling_NaN(), 228.0, 459.0, 495.0};
         const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
 
         FixedReplayPlayerStrategy cS(foldOnly);
-        FixedReplayPlayerStrategy dS(foldOnly);
+        FixedReplayPlayerStrategy dS(bbOnly);
         FixedReplayPlayerStrategy mS(foldOnly);
         FixedReplayPlayerStrategy nS(foldOnly);
         FixedReplayPlayerStrategy aS(foldOnly);
         FixedReplayPlayerStrategy pS(pA);
         FixedReplayPlayerStrategy gS(foldOnly);
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally DeterredGainStrategy(2);
+        PlayerStrategy * const botToTest = new PureGainStrategy(0);
 
-        myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS);
+        myTable.ManuallyAddPlayer("Nav", 2474.0, &pS);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS); // small blind
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
         myTable.ManuallyAddPlayer("MultiBotV", 2657.0, &mS);
         myTable.ManuallyAddPlayer("NormalBotV", 1064.0, &nS);
         myTable.ManuallyAddPlayer("ActionBotV", 475.0, &aS);
-        myTable.ManuallyAddPlayer("SpaceBotV", 717.0, botToTest);
-        myTable.ManuallyAddPlayer("Nav", 2474.0, &pS);
-        myTable.ManuallyAddPlayer("GearBotV", 4273.0, &gS); // gearbot is the dealer, since ConservativeBot is the small blind
+        myTable.ManuallyAddPlayer("GearBotV", 4273.0, &gS);
+        myTable.ManuallyAddPlayer("SpaceBot9", 717.0, botToTest);
 
-        const playernumber_t dealer = 7;
+        const playernumber_t dealer = 0;
         myTable.setSmallestChip(1.0);
 
 
@@ -2507,13 +2515,14 @@ namespace RegressionTests {
          MultiBotV folds
          NormalBotV folds
          ActionBotV folds
+         GearBotV folds
          SpaceBotV raises to $5 ($8.375)
          Nav calls $5 ($13.375)
-         GearBotV folds
          ConservativeBotV folds
          DangerBotV folds
          */
         assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.ViewPlayer(7)->GetBetSize() >= 0);
 
 
         CommunityPlus myFlop; // 2d Qd Kc
@@ -2602,8 +2611,6 @@ namespace RegressionTests {
 
          */
     }
-
-
 
     // Test OpposingHandOpportunity derivatives
     void testRegression_008c() {
@@ -3201,9 +3208,9 @@ int main(int argc, const char * argv[])
     NamedTriviaDeckTests::testNamePockets();
 
 
-    RegressionTests::testRegression_008c();
 
-    RegressionTests::testRegression_018();
+
+
 
     UnitTests::testRegression_016();
     UnitTests::testRegression_015();
@@ -3213,9 +3220,14 @@ int main(int argc, const char * argv[])
     UnitTests::testRegression_007();
     UnitTests::testRegression_007b();
     UnitTests::testRegression_007c();
+    UnitTests::testRegression_002b();
+    UnitTests::testRegression_003();
     
     // Regression tests
-    
+
+    RegressionTests::testRegression_009();
+    RegressionTests::testRegression_004();
+    RegressionTests::testRegression_018();
     RegressionTests::testRegression_017();
     RegressionTests::testRegression_011();
     RegressionTests::testRegression_013a();
@@ -3224,19 +3236,16 @@ int main(int argc, const char * argv[])
     
     
     RegressionTests::testRegression_005();
-    RegressionTests::testRegression_004();
-    RegressionTests::testRegression_002b();
-    RegressionTests::testRegression_002();
     
-    
-    RegressionTests::testRegression_003();
-    RegressionTests::testRegression_009();
+
     
     RegressionTests::testRegression_006();
 
     
     // Regression/Unit hybrid
+    RegressionTests::testRegression_008c();
     RegressionTests::testRegression_008();
+    RegressionTests::testRegression_002();
     
     // Regenerate the DB?
     //regenerateDb();
