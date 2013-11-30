@@ -870,8 +870,8 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(2);
-
+        PureGainStrategy bot(2);
+        PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("MultiBotV", 1590.0, &mS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1582.97, &cS);
         myTable.ManuallyAddPlayer("SpaceBotV", 1485.0, &sS);
@@ -1073,8 +1073,8 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(4);
-
+        PureGainStrategy bot(4);
+        PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("MultiBotV", 1502.5, &mS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, &cS);
         myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
@@ -1279,9 +1279,8 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy cS(foldOnly);
         FixedReplayPlayerStrategy sS(foldOnly);
 
-
-        PlayerStrategy * const botToTest = new PureGainStrategy(2);
-
+        PureGainStrategy bot(2);
+        PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("ActionBot14", 810.0, botToTest);
         myTable.ManuallyAddPlayer("NormalBotV", 1630.0, &nS);
         myTable.ManuallyAddPlayer("TrapBotV", 1485.0, &tS);
@@ -1385,9 +1384,8 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        //PlayerStrategy * const botToTest = new DeterredGainStrategy(0);
-        PlayerStrategy * const botToTest = new PureGainStrategy(3); // originally ImproveGainStrategy(2);
-
+        PureGainStrategy bot(3);
+        PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("ActionBotV", 810.0, &aS);
         myTable.ManuallyAddPlayer("NormalBot13", 1630.0, botToTest);
         myTable.ManuallyAddPlayer("TrapBotV", 1485.0, &tS);
@@ -1495,8 +1493,9 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(4);
 
+        PureGainStrategy bot(4);
+        PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("NormalBot12", 1500.0, botToTest);
         myTable.ManuallyAddPlayer("DangerBotV", 1500.0, &dS); // is the small blind
         myTable.ManuallyAddPlayer("MultiBotV", 1500.0, &mS);
@@ -1682,9 +1681,9 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        //PlayerStrategy * const botToTest = new DeterredGainStrategy(0);
-        PlayerStrategy * const botToTest = new PureGainStrategy(2); // originally ImproveGainStrategy(2);
 
+        PureGainStrategy bot(2);
+        PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("GearBotV", 1500.0, &gS);
         myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
         myTable.ManuallyAddPlayer("NormalBotV", 1500.0, &nS);
@@ -1781,7 +1780,8 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(4);
+        PureGainStrategy bot(4);
+        PlayerStrategy * const botToTest = &bot;
 
         myTable.ManuallyAddPlayer("GearBotV", 1488.75, &gS);
         myTable.ManuallyAddPlayer("ActionBot6", 3031.88, botToTest);
@@ -1974,7 +1974,8 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy nS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(2); // Originally DeterredGainStrategy(0);
+        PureGainStrategy bot(2);
+        PlayerStrategy * const botToTest = &bot;
 
         myTable.ManuallyAddPlayer("GearBotV", 3004.5, &gS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, botToTest);
@@ -2155,8 +2156,8 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy tS(foldOnly);
 
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(0);
-
+        PureGainStrategy bot(0);
+        PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("TrapBotV", 1497.0, &tS);
         myTable.ManuallyAddPlayer("SpaceBotV", 1498.0, &sS); // small blind
         myTable.ManuallyAddPlayer("Nav", 2960.0, &pS);
@@ -2341,8 +2342,9 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy pS(pA);
         FixedReplayPlayerStrategy gS(foldOnly);
 
-        PureGainStrategy * const botToTest = new PureGainStrategy(2);
 
+        PureGainStrategy bot(2);
+        PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS);
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
         myTable.ManuallyAddPlayer("MultiBotV", 2657.0, &mS);
@@ -2426,6 +2428,234 @@ namespace RegressionTests {
     
 
 
+    // The chance of raising can sometimes outweight the probability of the hand strength you consider facing in that environment.
+    // e.g. OppRAISEChanceR [F] 0.706773 @ $30	fold -- left0.148716  0.148716 right	W(5.66667x)=0.310007 L=0.649279 1o.w_s=(0.310007,0.040714)
+    // where we expect to be raised 70% of the time (by our singular opponent) but the chance to win is way more than againstBest 70%
+
+    // Hypothesis #1: sliderx needs to be passed through to OpponentHandOpportunity in order for the winPCT to make it less profitable for opponents to fold
+    // Hypothesis #2: OpponentHandOpportunity needs to also compute the probability of raise code and use that to determine the opponent's setW to find N.
+    //
+    void testRegression_019() {
+
+        /*
+
+         Next Dealer is ConservativeBotV
+
+
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [SpaceBotV $1490]
+         [GearBotV $1500]
+         [ActionBotV $1507.5]
+         [NormalBotV $1500]
+         [TrapBotV $1500]
+         [Nav $1507.5]
+         [DangerBotV $1495]
+         [MultiBotV $1500]
+         [ConservativeBotV $1500]
+         */
+
+        const playernumber_t dealer = 0;
+
+        struct BlindValues bl;
+        bl.SetSmallBigBlind(5.0);
+
+        HoldemArena myTable(bl.GetSmallBlind(), std::cout, true, true);
+        myTable.setSmallestChip(5.0);
+
+
+        PureGainStrategy bot(0);
+        PlayerStrategy * const botToTest = &bot;
+
+        const std::vector<float64> foldOnly(1, 0.0);
+
+        FixedReplayPlayerStrategy gS(foldOnly);
+        FixedReplayPlayerStrategy cS(foldOnly);
+        FixedReplayPlayerStrategy dS(foldOnly);
+
+
+        myTable.ManuallyAddPlayer("DangerBot", 1495.0, &dS);
+        myTable.ManuallyAddPlayer("MultiBot19", 1505.0, botToTest);
+        myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, &cS); // big blind
+        myTable.ManuallyAddPlayer("Space", 1500.0, &gS);
+        myTable.ManuallyAddPlayer("GearBotV", 1500.0, &gS);
+        myTable.ManuallyAddPlayer("Action", 1500.0, &gS);
+        myTable.ManuallyAddPlayer("Normal", 1500.0, &gS);
+        myTable.ManuallyAddPlayer("Trap", 1500.0, &gS);
+        myTable.ManuallyAddPlayer("Nav", 1500.0, &gS);
+
+
+
+        myTable.BeginInitialState(19);
+        myTable.BeginNewHands(bl, false, dealer);
+
+
+
+        DeckLocation card;
+        CommunityPlus withCommunity; // 4d Kd
+
+        card.SetByIndex(24);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(47);
+        withCommunity.AddToHand(card);
+
+        bot.StoreDealtHand(withCommunity);
+
+        /*
+
+
+
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [MultiBotV $1505]
+         [ConservativeBotV $1500]
+         [SpaceBotV $1500]
+         [GearBotV $1500]
+         [ActionBotV $1500]
+         [NormalBotV $1500]
+         [TrapBotV $1500]
+         [Nav $1500]
+         [DangerBotV $1495]
+
+         MultiBotV posts SB of $5 ($5)
+         ConservativeBotV posts BB of $10 ($15)
+         SpaceBotV folds
+         GearBotV folds
+         ActionBotV folds
+         NormalBotV folds
+         TrapBotV folds
+         Nav folds
+         DangerBotV folds
+         MultiBotV folds
+
+         
+         All fold! ConservativeBotV wins $5
+
+
+
+         */
+        myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
+        HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 );
+
+        r.MakeBet(0.0); // SpaceBot folds
+        r.MakeBet(0.0);
+        r.MakeBet(0.0);
+        r.MakeBet(0.0);
+        r.MakeBet(0.0);
+        r.MakeBet(0.0);
+        r.MakeBet(0.0);
+
+        const float64 actual = bot.MakeBet();
+
+        /*
+
+         ==========#5==========
+         Playing as D
+         *
+         (M) 54.8846%
+         (M.w) 52.8888%
+         (M.s) 3.99159%
+         (M.l) 43.1196%
+         (Better All-in) 71.1429%
+         (Re.s) 0.244898%
+         (Better Mean Rank) 67.7143%
+         (Ra.s) 0.244898%
+         
+         4d Kd Bet to call 10 (from 5) at 15 pot,
+         */
+
+        CommunityPlus communityToTest; // EMPTY_COMPLUS
+
+
+
+        const int8 cardsInCommunity = 0;
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+        ///Compute WinStats
+        DistrShape w_wl(0);
+        DistrShape detailPCT(0);
+        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.playerID = 0;
+        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+
+        /*
+         *
+         Playing as N
+         *
+         (M) 56.0202%
+         (M.w) 54.4316%
+         (M.s) 3.17708%
+         (M.l) 42.3913%
+         (Better All-in) 74.7347%
+         (Re.s) 0.244898%
+         (Better Mean Rank) 73.9184%
+         (Ra.s) 0.571429%
+
+         *
+         8s Kd Bet to call 10 (from 5) at 15 pot,
+         CallStrength W(1c)=0.544316 L=0.423913 o.w_s=(0.544316,0.0317708)
+         (MinRaise to $20) 	W(1x)=0.544316 L=0.423913 1o.w_s=(0.544316,0.0317708)
+         -  statranking ca (algb) -
+         9 dealt, 8 opp. (round), 1 opp. assumed str., 1 opp. still in
+         Choice Optimal 10
+         Choice Fold 10
+         f(10)=0.996481
+         CHECK/FOLD
+         FoldGain()R=0.999077 x 0(=0 folds)	vs play:0.995558   ->assumes $5 forced
+         AgainstCall(10)=1.00024 from +$1.20403 @ 0.295854
+         AgainstRaise(10)=0.995321 from -$10 @ 0.704146
+         Push(10)=1 from $0 @ 0
+         AgainstCall(20)=1.0004 from +$2.40807 @ 0.249265
+         AgainstRaise(20)=0.990977 from -$20 @ 0.678975
+         Push(20)=1.00057 from +$11.8679 @ 0.0717593
+         OppRAISEChanceR [*] 0.468719 @ $20	fold -- left0.0717593  0.0717593 right	W(1x)=0.544316 L=0.423913 1o.w_s=(0.544316,0.0317708)
+         OppRAISEChanceR [F] 0.704146 @ $30	fold -- left0.145775  0.145775 right	W(5.66667x)=0.294695 L=0.678838 1o.w_s=(0.294695,0.0264674)
+         OppRAISEChanceR [F] 0.487599 @ $50	fold -- left0.398119  0.398119 right	W(7x)=0.273692 L=0.694668 1o.w_s=(0.273692,0.0316399)
+         OppRAISEChanceR [F] 0.319759 @ $90	fold -- left0.565918  0.565918 right	W(9x)=0.250999 L=0.709496 1o.w_s=(0.250999,0.0395046)
+         OppRAISEChanceR [F] 0.184107 @ $170	fold -- left0.665218  0.665218 right	W(12x)=0.227665 L=0.72714 1o.w_s=(0.227665,0.0451946)
+         OppRAISEChanceR [F] 0.0974442 @ $330	fold -- left0.726338  0.726338 right	W(16.3333x)=0.217968 L=0.742605 1o.w_s=(0.217968,0.0394277)
+         OppRAISEChanceR [F] 0.0448035 @ $650	fold -- left0.768967  0.768967 right	W(22.6667x)=0.206164 L=0.758251 1o.w_s=(0.206164,0.0355852)
+         OppRAISEChanceR [F] 0.0133163 @ $1290	fold -- left0.810305  0.810305 right	W(31.5x)=0.198258 L=0.779667 1o.w_s=(0.198258,0.0220749)
+         OppRAISEChanceR [F] 0.00901911 @ $1500	fold -- left0.779127  0.779127 right	W(24.1667x)=0.204801 L=0.762366 1o.w_s=(0.204801,0.0328328)
+         Guaranteed > $0 is in the pot for sure
+         OppFoldChance% ...    0   d\0
+         
+         */
+        const playernumber_t myPositionIndex = 1;
+        ExpectedCallD   tablestate(myPositionIndex, &myTable, statprob.statranking.pct, statprob.core.statmean.pct);
+
+        ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
+
+        OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, myTable, statprob.core);
+
+        const int32 firstFold = 1;
+        const int32 i = 1;
+        const float64 raiseCount = myDeterredCall.pRaise(myTable.GetBetToCall(), i, firstFold);
+
+        opponentHandOpportunity.query(myDeterredCall.RaiseAmount(myTable.GetBetToCall(), i));
+        const float64 pessimisticHandCount = 1.0 / opponentHandOpportunity.handsToBeat();
+
+        // pessimisticHandCount should not be MORE RARE than raiseCount.
+        assert(raiseCount <= pessimisticHandCount);
+
+
+        assert(0 < actual);
+    }
+
+
     // 2013.08.30-19.58.15
     // Hand #11
     // Perspective, SpaceBot
@@ -2468,8 +2698,9 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy pS(pA);
         FixedReplayPlayerStrategy gS(foldOnly);
 
-        PlayerStrategy * const botToTest = new PureGainStrategy(0);
 
+        PureGainStrategy bot(0);
+        PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("SpaceBot9", 717.0, botToTest);
         myTable.ManuallyAddPlayer("Nav", 2474.0, &pS); // small blind
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
@@ -3220,7 +3451,7 @@ int main(int argc, const char * argv[])
 
 
 
-
+    RegressionTests::testRegression_019();
 
     UnitTests::testRegression_016();
     UnitTests::testRegression_015();
@@ -3253,6 +3484,7 @@ int main(int argc, const char * argv[])
 
     
     // Regression/Unit hybrid
+
     RegressionTests::testRegression_008c();
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_002();

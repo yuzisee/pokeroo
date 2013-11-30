@@ -45,11 +45,11 @@ public:
     virtual float64 f(const float64) = 0;
     virtual float64 fd(const float64 x, const float64 y) = 0;
 
-    virtual float64 getQuantum() = 0;
+    virtual float64 getQuantum() const = 0;
 }
 ;
 
-
+// TODO(from yuzisee): This doesn't require inheritance. Use composition instead.
 class ScalarFunctionModel : public IFunctionDifferentiable
 {
     private:
@@ -72,7 +72,7 @@ class ScalarFunctionModel : public IFunctionDifferentiable
 		virtual float64 FindTurningPoint(float64 x1,float64 y1,float64 xb,float64 yb,float64 x2,float64 y2,float64 signDir);
     public:
     float64 quantum;
-    float64 getQuantum() override final { return quantum; }
+    float64 getQuantum() const override final { return quantum; }
 
     #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
     bool bTraceEnable;
