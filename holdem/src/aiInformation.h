@@ -87,7 +87,7 @@ protected:
 
     virtual void fillMyWins(StatResult ** table);
 
-    const virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
+    virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
     virtual void showProgressUpdate() const;
     virtual void setCurrentGroupOcc(const float64 occ);
     virtual void mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex);
@@ -137,7 +137,7 @@ public:
 class TriviaDeck : public OrderedDeck
 {
     private:
-        const static uint32 largestCard(uint32 suitcards);
+        static uint32 largestCard(uint32 suitcards);
     public:
     void DiffHand(const Hand&);
 

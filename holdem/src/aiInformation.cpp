@@ -370,7 +370,7 @@ void CommunityCallStats::showProgressUpdate() const
 
 }
 
-const int8 CommunityCallStats::realCardsAvailable(const int8 cardsInCommunity) const
+int8 CommunityCallStats::realCardsAvailable(const int8 cardsInCommunity) const
 {
     return 52 - cardsInCommunity;
 }

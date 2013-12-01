@@ -600,7 +600,7 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 //                        |ChancesEach---
 //community|His Hole Cards|To 5 community
 
-const int8 CallStats::realCardsAvailable(const int8 cardsInCommunity) const
+int8 CallStats::realCardsAvailable(const int8 cardsInCommunity) const
 {
     return 52 - cardsInCommunity - 2;
 }

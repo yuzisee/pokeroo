@@ -228,10 +228,10 @@ struct playercounts
 	void ResetNewHands(playernumber_t numLive) { total = numLive; allInsOnly = 0; }
 
     //Number of players (e.g. NumberInShowdown)
-	const playernumber_t inclAllIn() const { return total; }
+    playernumber_t inclAllIn() const { return total; }
 
 	//Number of players that could bet (e.g. NumberWithBetting)
-	const playernumber_t exclAllIn() const { return total - allInsOnly; }
+	playernumber_t exclAllIn() const { return total - allInsOnly; }
 }
 playercounts_t
 ;

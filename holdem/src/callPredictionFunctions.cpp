@@ -46,7 +46,7 @@ const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengt
 }
  */
 
-const bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) const
+bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) const
 {
     return (
         (o.amountSacrificeVoluntary == amountSacrificeVoluntary)
@@ -226,7 +226,7 @@ float64 FoldWaitLengthModel::d_dC( const float64 n )
 
 // See {const float64 remainingbet = ( bankroll - grossSacrifice(n)  );} in f()
 // This is the derivative of that expression with respect to n
-const float64 FoldWaitLengthModel::dRemainingBet_dn( )
+float64 FoldWaitLengthModel::dRemainingBet_dn( )
 {
     const float64 chanceOfFoldEachHand = rarity();
     const float64 chanceOfSameSituationFoldEachHand = chanceOfFoldEachHand * chanceOfFoldEachHand;
@@ -234,7 +234,7 @@ const float64 FoldWaitLengthModel::dRemainingBet_dn( )
 }
 
 
-const float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
+float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
 {
 
     const float64 numHandsPerFold = 1.0 / rarity();
@@ -251,7 +251,7 @@ const float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
 // NOTE: this->meanConv if specified must be the view of the player who is choosing whether to fold.
 // When predicting opponent folds, it must be core.foldcumu
 // When evaluating your own folds, it must be core.handcumu
-const float64 FoldWaitLengthModel::rarity( )
+float64 FoldWaitLengthModel::rarity( )
 {
 
 #ifdef DEBUGASSERT
@@ -275,13 +275,13 @@ const float64 FoldWaitLengthModel::rarity( )
     return cacheRarity;
 }
 
-const float64 FoldWaitLengthModel::lookup( const float64 rank ) const
+float64 FoldWaitLengthModel::lookup( const float64 rank ) const
 {
     if( meanConv == 0 ) return rank;
     return meanConv->nearest_winPCT_given_rank(rank);
 }
 
-const float64 FoldWaitLengthModel::dlookup( const float64 rank, const float64 lookupped ) const
+float64 FoldWaitLengthModel::dlookup( const float64 rank, const float64 lookupped ) const
 {
     if( meanConv == 0 ) return 1;
     return meanConv->inverseD(rank, lookupped);

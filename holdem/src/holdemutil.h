@@ -49,15 +49,15 @@ public:
     ///COMMON PROBLEMS:
     ///THIS ORDERS THE CARDS LIKE: 2S 2H 2C 2D 3S 3H ...
     ///it's not 23456789tJQKA.
-    const static uint8 CardSuit(const uint8 d)
+    static uint8 CardSuit(const uint8 d)
     {
 		return (d & 3); //That's a 0b11 mask
     }
-    const static uint8 CardRank(const uint8 d) //returns 0 for two
+    static uint8 CardRank(const uint8 d) //returns 0 for two
     {
 		return (d >> 2);
     }
-    const static void PrintCard(std::ostream& target, const int8 s, uint32 v)
+    static void PrintCard(std::ostream& target, const int8 s, uint32 v)
 	{
 		int8 vn=0;
 		for(int8 val=2;val<=14;++val)
@@ -71,12 +71,12 @@ public:
 		}
 		target << VALKEY[vn]<< SUITKEY[s] << flush;
 	}
-    const static void PrintCard(std::ostream& target, const int8 n)
+    static void PrintCard(std::ostream& target, const int8 n)
 	{
         target << (HoldemUtil::VALKEY[CardRank(n)+2])  << (HoldemUtil::SUITKEY[CardSuit(n)]) << flush;
     }
 
-    const static int8 ReadCard(std::istream& charSource)
+    static int8 ReadCard(std::istream& charSource)
     {
         unsigned char nextChar[2];
         charSource >> nextChar[0];
@@ -92,7 +92,7 @@ public:
 
 
     }
-    const static int8 ParseCard(char valchar, char suitchar)
+    static int8 ParseCard(char valchar, char suitchar)
     {
         int8 valNum = -1;
         int8 suitNum = -1;
@@ -132,7 +132,7 @@ public:
     static float64 ReadFloat64( std::istream& loadFile );
     static void WriteFloat64( std::ostream& saveFile, const float64 v );
 
-	const static uint8 cleanz(const uint32);
+	static uint8 cleanz(const uint32);
 
 		template<typename T>
         static T nchoosep(const int32 n, int32 p) //inline
@@ -157,7 +157,7 @@ public:
 	int8 Suit;              //When you undeal the last card of any hand,
 	uint8 Rank;
 
-	const uint8 GetIndex() const
+	uint8 GetIndex() const
 	{
 		return static_cast<uint8>(Suit) + (Rank-1)*4;
 	}
@@ -194,7 +194,7 @@ public:
 //    const int Occurrences() const;
     virtual void ResetCardset(const uint32 * const);
     virtual void SetEmpty();
-    const virtual bool IsEmpty() const;
+    virtual bool IsEmpty() const;
 
     virtual void AddToHand(const DeckLocation& deck)
     {
@@ -252,7 +252,7 @@ class HandPlus : public virtual Hand
 	uint32 valueset; //use most significant 6 (5? 3?) bits to store info?
 	virtual void DisplayHand(std::ostream&) const;
     virtual void DisplayHandBig(std::ostream&) const;
-	const uint32 getValueset() const;
+	uint32 getValueset() const;
 
 
 	HandPlus() : Hand(), valueset(0)
@@ -273,7 +273,7 @@ class HandPlus : public virtual Hand
 	virtual void RemoveFromHand(const int8,const uint8,const uint32);
 
 	virtual void SetEmpty();
-	const virtual bool IsEmpty() const;
+	virtual bool IsEmpty() const;
 
 }
 ;

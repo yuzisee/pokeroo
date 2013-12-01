@@ -121,7 +121,7 @@ void CommunityPlus::PrintInterpretHand(std::ostream& targetFile) const
     targetFile << "Nothing" << flush;
 }
 
-const int8 CommunityPlus::CardsInSuit(const int8 a) const
+int8 CommunityPlus::CardsInSuit(const int8 a) const
 {
 	return (flushCount[a] + 5);
 }

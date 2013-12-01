@@ -395,7 +395,7 @@ void HoldemArena::FreePlayer(Player* playerToDelete, char botType)
                     delete mStratChildren[n];
                 }
             }
-		#ifdef DEBUGASSERT
+		#ifdef RTTIASSERT
 	    else if( typeid( pStrat ) == typeid( MultiStrategy ) )
         {
        		std::cerr << "Multistrategy bots need to have their children freed!" << endl;

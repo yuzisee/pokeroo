@@ -105,7 +105,7 @@ class ExactCallD : public IExf
     // CallCumulationD &raisecumu = statprob.core.foldcumu;
     //    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
     struct CoreProbabilities &fCore;
-    CallCumulationD * const ed() const {
+    CallCumulationD * ed() const {
         return &(fCore.callcumu);
     }
         ExpectedCallD * const tableinfo;
@@ -174,7 +174,7 @@ class ExactCallBluffD : public virtual ExactCallD
 
         void query(const float64 betSize);
 
-    CallCumulationD * const ef() const {
+    CallCumulationD * ef() const {
         return &(fCore.foldcumu);
     }
     public:
@@ -232,11 +232,10 @@ public:
     ,
     fHandsToBeat(std::numeric_limits<float64>::signaling_NaN()),f_d_HandsToBeat_dbetSize(std::numeric_limits<float64>::signaling_NaN())
     ,
+    //fCore(core)
+    //,
     fIdx(myIdx)
-    ,
-    fCore(core)
-    {
-    }
+    {}
 
     ~OpponentHandOpportunity() {}
 
@@ -255,7 +254,7 @@ private:
 
 
     // Used strictly with FoldGain: What would your opponent be willing to lay down, knowing what you have.
-    CoreProbabilities &fCore;
+    //CoreProbabilities &fCore;
     const playernumber_t fIdx;
 
 }

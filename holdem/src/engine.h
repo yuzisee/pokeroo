@@ -103,15 +103,15 @@ class DealableOrderedDeck : public OrderedDeck
         virtual float64 DealCard(Hand&)=0;
         virtual void UndealCard(const DeckLocation & deck); //Can be undealt only if not locked into addendSum
 
-		const uint32 BaseDealtValue() const
+		uint32 BaseDealtValue() const
 		{
 			return HoldemConstants::CARD_ACELOW;
 		}
-		const int8 BaseDealtSuit() const
+		int8 BaseDealtSuit() const
 		{
 			return firstSuit;
 		}
-		const uint8 BaseDealtRank() const
+		uint8 BaseDealtRank() const
 		{
 			return 0;
 		}

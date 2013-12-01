@@ -122,7 +122,7 @@ void HoldemUtil::WriteFloat64( std::ostream& saveFile, const float64 v )
 
 
 ///Convert single digit to character, where '-' is for 0
-const uint8 HoldemUtil::cleanz(const uint32 j)
+uint8 HoldemUtil::cleanz(const uint32 j)
 {
 	if( j == 0 )
 	{
@@ -208,7 +208,7 @@ void HandPlus::DisplayHandBig(std::ostream& logFile) const
 }
 
 
-const uint32 HandPlus::getValueset() const
+uint32 HandPlus::getValueset() const
 {
 	return valueset;
 }
@@ -222,7 +222,7 @@ void Hand::SetEmpty()
     cardset[3] = 0;
 }
 
-const bool Hand::IsEmpty() const
+bool Hand::IsEmpty() const
 {
     return (cardset[0] == 0)
     && (cardset[1] == 0)
@@ -240,7 +240,7 @@ void HandPlus::SetEmpty()
 	cardset[3] = 0;
 }
 
-const bool HandPlus::IsEmpty() const
+bool HandPlus::IsEmpty() const
 {
     return (valueset == 0);
 }

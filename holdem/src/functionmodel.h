@@ -232,8 +232,10 @@ public:
 
     
     CombinedStatResultsGeom(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, ExactCallD & c)
-    : f_battle(c.tableinfo->handStrengthOfRound())
-    , e_battle(c.tableinfo->handsIn()-1)
+    :
+    e_battle(c.tableinfo->handsIn()-1)
+    ,
+    f_battle(c.tableinfo->handStrengthOfRound())
     {
         combineStatResults(s_acted,s_nonacted, bConvertToNet);
     }

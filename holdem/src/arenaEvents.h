@@ -89,7 +89,7 @@ class HoldemArenaEventBase
 
     public:
 
-		const playernumber_t WhoIsNext(){ return curIndex; }
+        playernumber_t WhoIsNext() const { return curIndex; }
 
     HoldemArenaEventBase(HoldemArena * table) : myTable(table)
     , gamelog(myTable->gamelog)

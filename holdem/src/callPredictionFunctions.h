@@ -83,8 +83,8 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     float64 d_rawPCT_d_w(const float64 n, float64 rawPCT);
 
 
-    const float64 dRemainingBet_dn();
-    const float64 grossSacrifice(const float64 n);
+    float64 dRemainingBet_dn();
+    float64 grossSacrifice(const float64 n);
 
     /**
      *  Parameters:
@@ -93,8 +93,8 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
      *  Returns:
      *    Either mean or rank (depending on mode) of the hand with the given rank
      */
-    const float64 lookup(const float64 rank) const;
-    const float64 dlookup(const float64 rank, const float64 mean) const;
+    float64 lookup(const float64 rank) const;
+    float64 dlookup(const float64 rank, const float64 mean) const;
 
     float64 cached_d_dbetSize;
     bool bSearching;
@@ -133,7 +133,7 @@ public:
 
     //const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o );
 
-    const bool operator== ( const FoldWaitLengthModel & o ) const;
+    bool operator== ( const FoldWaitLengthModel & o ) const;
 
     virtual ~FoldWaitLengthModel();
 
@@ -145,7 +145,7 @@ public:
     virtual float64 d_dC( const float64 n );
 
     virtual float64 FindBestLength();
-    const float64 rarity();
+    float64 rarity();
 
 
     void load(const ChipPositionState &cps, float64 avgBlind);

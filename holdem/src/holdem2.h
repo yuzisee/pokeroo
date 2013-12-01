@@ -77,7 +77,7 @@ public:
 
     CommunityPlus();
 
-	const int8 CardsInSuit(const int8) const;
+    int8 CardsInSuit(const int8) const;
 	virtual void DisplayHand(std::ostream&) const;
 	virtual void DisplayHandText(std::ostream&) const;
     virtual void DisplayHandBig(std::ostream&) const;

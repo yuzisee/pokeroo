@@ -113,7 +113,7 @@ protected:
 
 	CallCumulation* calc;
 
-    const virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
+    virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
     virtual void showProgressUpdate() const;
     virtual void setCurrentGroupOcc(const float64 occ);
     virtual void mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex){}
