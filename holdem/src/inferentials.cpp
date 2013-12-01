@@ -418,10 +418,10 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
     }
 //These boundaries form a region with start and end.
     // Okay we lie somewhere between firstBetterThan and firstBetterThan-1
-    float64 prevKeypointPct = std::numeric_limits<float64>::quiet_NaN();
-    float64 prevKeypointRepeated = std::numeric_limits<float64>::quiet_NaN();
-    float64 nextKeypointPct = std::numeric_limits<float64>::quiet_NaN();
-    float64 nextKeypointRepeated = std::numeric_limits<float64>::quiet_NaN();
+    float64 prevKeypointPct;// = std::numeric_limits<float64>::quiet_NaN();
+    float64 prevKeypointRepeated;// = std::numeric_limits<float64>::quiet_NaN();
+    float64 nextKeypointPct;// = std::numeric_limits<float64>::quiet_NaN();
+    float64 nextKeypointRepeated;// = std::numeric_limits<float64>::quiet_NaN();
     // Which side of the horizontal midpoint are we on?
     float64 horizontalMidpointPCT = (cumulation[firstBetterThan-1].pct + cumulation[firstBetterThan].pct)/2.0;
     float64 horizontalMidpointRepeated = cumulation[firstBetterThan-1].repeated;
