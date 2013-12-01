@@ -196,7 +196,7 @@ void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners, std::ost
 	//Perfect, we start at the back, and that's the best hand
 
 
-	int8 potDistrSize = 0;
+	playernumber_t potDistrSize = 0;
 	vector<ShowdownRep> potDistr;
 	///-------------------------------------------------------
 	///  Figure out all these side-pots and split pots...
@@ -205,7 +205,7 @@ void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners, std::ost
 	if(bVerbose)
 	{
         // TODO(from yuzisee): isn't potDistrSize === potDistr.size() always?
-        for (size_t k=0; k<potDistrSize; ++k) {
+        for (playernumber_t k=0; k<potDistrSize; ++k) {
             // TODO(from yuzisee): isn't moneyWon[i].fIdx === potDistr[i].playerIndex always?
             gamelog << endl << moneyWon[k].fIdent << " can win " <<
             moneyWon[k].fProfit <<

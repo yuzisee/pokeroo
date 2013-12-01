@@ -110,10 +110,20 @@ class HoldemArenaEventBase
 
 // This struct is populated if a bet is made that doesn't obey the minRaise rules.
 struct MinRaiseError {
-    float64 minRaiseBy = std::numeric_limits<float64>::signaling_NaN();
-    float64 minRaiseTo = std::numeric_limits<float64>::signaling_NaN();
-    float64 error = std::numeric_limits<float64>::signaling_NaN();
-    float64 result = std::numeric_limits<float64>::signaling_NaN(); // your new raiseTo or callTo because we had to choose one.
+    float64 minRaiseBy;
+    float64 minRaiseTo;
+    float64 error;
+    float64 result; // your new raiseTo or callTo because we had to choose one.
+
+    MinRaiseError() :
+    minRaiseBy(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    minRaiseTo(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    error(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    result(std::numeric_limits<float64>::signaling_NaN())
+    {}
 };
 
 class HoldemArenaBetting : public HoldemArenaEventBase

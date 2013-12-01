@@ -280,11 +280,23 @@ playercounts_t
 ;
 
 struct OrganizedWinnings {
-    playernumber_t fIdx = -1;
-    std::string fIdent = "";
-    float64 fTotalShowdownPot = std::numeric_limits<float64>::signaling_NaN(); // The full pot size of the showdown
-    float64 fRemainingPot = std::numeric_limits<float64>::signaling_NaN(); // The pot that you have won
-    float64 fProfit = std::numeric_limits<float64>::signaling_NaN(); // Your profit this hand after claiming fRemainingPot
+    playernumber_t fIdx;
+    std::string fIdent;
+    float64 fTotalShowdownPot; // The full pot size of the showdown
+    float64 fRemainingPot; // The pot that you have won
+    float64 fProfit; // Your profit this hand after claiming fRemainingPot
+
+    OrganizedWinnings() :
+    fIdx(-1)
+    ,
+    fIdent("")
+    ,
+    fTotalShowdownPot(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    fRemainingPot(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    fProfit(std::numeric_limits<float64>::signaling_NaN())
+    {}
 };
 
 class HoldemArena
@@ -368,7 +380,8 @@ class HoldemArena
 		void defineSidePotsFor(Player&, const playernumber_t);
 		void resolveActions(Player&);
 
-		void compareAllHands(const CommunityPlus & , const int8, vector<ShowdownRep>&, std::ostream &gamelog);
+
+        void compareAllHands(const CommunityPlus & , const int8, vector<ShowdownRep>&, std::ostream &gamelog);
 		struct OrganizedWinnings *organizeWinnings(int8&, vector<ShowdownRep>&, vector<ShowdownRep>&);
 
         static DeckLocation ExternalQueryCard(std::istream& s);
