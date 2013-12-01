@@ -876,7 +876,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(5.0);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
@@ -950,7 +950,7 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState(18);
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
         /*
 
@@ -959,7 +959,7 @@ namespace RegressionTests {
          NormalBotV posts BB of $10 ($15)
 
          */
-        assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.PlayRound_BeginHand(std::cout) != -1);
         assert(myTable.IsInHand(4));
         /*
          TrapBotV folds
@@ -993,7 +993,7 @@ namespace RegressionTests {
 
 
 
-        assert(myTable.PlayRound_Flop(myFlop) != -1);
+        assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
 
         /*
 
@@ -1016,7 +1016,7 @@ namespace RegressionTests {
          */
 
 
-        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+        assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
 
         /*
 
@@ -1040,7 +1040,7 @@ namespace RegressionTests {
          */
 
 
-        const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver);
+        const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
         assert(highbettor == 4);
         // No all-fold; assert that the pot was increased at least.
         assert(myTable.GetPotSize() > 55);
@@ -1074,7 +1074,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(5.0);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
@@ -1153,14 +1153,14 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState(17);
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
         /*
 
          MultiBotV posts SB of $5 ($5)
          ConservativeBotV posts BB of $10 ($15)
          */
-        assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.PlayRound_BeginHand(std::cout) != -1);
         assert(myTable.ViewPlayer(7)->GetBetSize() >= 0);
 
         /*
@@ -1193,7 +1193,7 @@ namespace RegressionTests {
 
 
 
-        assert(myTable.PlayRound_Flop(myFlop) != -1);
+        assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
 
         /*
          (4 players)
@@ -1215,7 +1215,7 @@ namespace RegressionTests {
          */
 
 
-        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+        assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
 
         /*
          (4 players)
@@ -1239,7 +1239,7 @@ namespace RegressionTests {
 
 
 
-        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) != -1);
+        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout) != -1);
         assert(myTable.GetPotSize() > 125.0);
 
         /*
@@ -1293,7 +1293,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(5.0);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
@@ -1338,7 +1338,7 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState(14);
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
 
         /*
@@ -1362,7 +1362,7 @@ namespace RegressionTests {
 
 
          */
-        assert (myTable.PlayRound_BeginHand() != -1);
+        assert (myTable.PlayRound_BeginHand(std::cout) != -1);
 
     }
 
@@ -1396,7 +1396,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(5.0);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
@@ -1443,7 +1443,7 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState(13);
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
 
         /*
@@ -1467,7 +1467,7 @@ namespace RegressionTests {
 
 
          */
-        if (myTable.PlayRound_BeginHand() == -1) {
+        if (myTable.PlayRound_BeginHand(std::cout) == -1) {
             assert(myTable.GetPotSize() < 100);
         } else {
             assert(myTable.GetPotSize() < 200);
@@ -1502,7 +1502,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(5.0);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
@@ -1554,7 +1554,7 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState(11);
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
 
 
@@ -1574,7 +1574,7 @@ namespace RegressionTests {
          MultiBotV checks
          */
 
-        assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.PlayRound_BeginHand(std::cout) != -1);
 
         /*
          Flop:	4d 7h 9d    (Pot: $25)
@@ -1601,7 +1601,7 @@ namespace RegressionTests {
          MultiBotV checks
          NormalBotV checks
          */
-        assert(myTable.PlayRound_Flop(myFlop) != -1);
+        assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
         /*
          Turn:	4d 7h 9d Ad   (Pot: $25)
          (2 players)
@@ -1617,7 +1617,7 @@ namespace RegressionTests {
          MultiBotV checks
          NormalBotV checks
          */
-        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+        assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
 
         /*
          River:	4d 7h 9d Ad 8h  (Pot: $25)
@@ -1634,7 +1634,7 @@ namespace RegressionTests {
          MultiBotV bets SMALL
          NormalBotV call?
          */
-        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) != -1);
+        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout) != -1);
         //assert(30 < myTable.GetPotSize());
 
         /*
@@ -1692,7 +1692,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(5.0);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
@@ -1741,7 +1741,7 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState(11);
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
 
         /*
@@ -1760,7 +1760,7 @@ namespace RegressionTests {
 
 
          */
-        myTable.PlayRound_BeginHand();
+        myTable.PlayRound_BeginHand(std::cout);
         assert(myTable.GetPotSize() < 120);
 
     }
@@ -1792,7 +1792,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(5.625);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
@@ -1839,7 +1839,7 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState(6);
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
 
         /*
@@ -1852,7 +1852,7 @@ namespace RegressionTests {
          GearBotV folds
          ActionBotV checks
          */
-        assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.PlayRound_BeginHand(std::cout) != -1);
 
 
 
@@ -1881,7 +1881,7 @@ namespace RegressionTests {
          ActionBotV calls $68.75 ($188.125)
          */
 
-        playernumber_t highBet = myTable.PlayRound_Flop(myFlop);
+        playernumber_t highBet = myTable.PlayRound_Flop(myFlop, std::cout);
         if (highBet == -1) {
             // All fold. In this case, make sure ActionBot folded.
             assert(botToTest->ViewPlayer().GetBetSize() < nS.ViewPlayer().GetBetSize());
@@ -1902,7 +1902,7 @@ namespace RegressionTests {
          NormalBotV bets $30 ($218.125)
          ActionBotV calls $30 ($248.125)
          */
-        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+        assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
 
         /*
          River:	Jc Ks Ah 9d Ad  (Pot: $248.125)
@@ -1919,7 +1919,7 @@ namespace RegressionTests {
          NormalBotV bets $125 ($373.125)
          ActionBotV calls $125 ($498.125)
          */
-        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver) == -1);
+        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout) == -1);
         // NOTE: Other than the bet of 80.0 after the flop, all of these bets are relatively low compared to the pot, and we call and don't raise.
         // If you assume that we don't have any information about the opposing hand due to these small bets, then we are getting decently good odds on these small bets.
         // Therefore, go investigate the 80.0
@@ -1987,7 +1987,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(5.0625);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
 
         const std::vector<float64> foldOnly(1, 0.0);
         static const float64 arr[] = {10.125, 18.0, 805.5, 1489.88};
@@ -2033,7 +2033,7 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState(5);
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
 
         /*
@@ -2051,7 +2051,7 @@ namespace RegressionTests {
          ConservativeBotV checks
          */
 
-        assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.PlayRound_BeginHand(std::cout) != -1);
 
 
         /*
@@ -2084,8 +2084,8 @@ namespace RegressionTests {
 
          */
 
-        const playernumber_t flopCalledIdx = myTable.PlayRound_Flop(myFlop);
-        //assert(myTable.PlayRound_Flop(myFlop) != 1);
+        const playernumber_t flopCalledIdx = myTable.PlayRound_Flop(myFlop, std::cout);
+        //assert(myTable.PlayRound_Flop(myFlop, std::cout) != 1);
         if (flopCalledIdx != -1) {
 
             /*
@@ -2096,7 +2096,7 @@ namespace RegressionTests {
             DeckLocation myTurn; // Ah
             myTurn.SetByIndex(49);
 
-            assert(myTable.PlayRound_Turn(myFlop, myTurn) != 1);
+            assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != 1);
         }
 
         /*
@@ -2167,7 +2167,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(1.0);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
 
         const std::vector<float64> foldOnly(1, 0.0);
         static const float64 arr[] = {5.0, std::numeric_limits<float64>::signaling_NaN(), 0, 10.0, 28.0, 50.0, 347.0, 736.0, 927.0};
@@ -2214,7 +2214,7 @@ namespace RegressionTests {
         }
 
         myTable.BeginInitialState(4);
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
         /*
          SpaceBotV posts SB of $1 ($1)
@@ -2230,7 +2230,7 @@ namespace RegressionTests {
          Nav raises to $5 ($8)
          GearBotV calls ($11)
          */
-        assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.PlayRound_BeginHand(std::cout) != -1);
 
 
         /*
@@ -2258,7 +2258,7 @@ namespace RegressionTests {
          Nav checks
          GearBotV checks
          */
-        assert(myTable.PlayRound_Flop(myFlop) != -1);
+        assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
 
         /*
          Turn:	6d Jd Qc 9d   (Pot: $11)
@@ -2274,7 +2274,7 @@ namespace RegressionTests {
          GearBotV raises to $31 ($52)
          Nav calls $21 ($73)
          */
-        assert(myTable.PlayRound_Turn(myFlop, myTurn) != -1);
+        assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
         /*
 
          River:	6d Jd Qc 9d 5h  (Pot: $73)
@@ -2289,7 +2289,7 @@ namespace RegressionTests {
          GearBotV raises to $347 ($470)
          Nav calls $297 ($767)
          */
-        playernumber_t highBet = myTable.PlayRound_River(myFlop, myTurn, myRiver);
+        playernumber_t highBet = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
         //assert (myTable.ViewPlayer(highBet) == &botToTest->ViewPlayer());
 
         // do not get pushed out, you have a winning hand
@@ -2360,7 +2360,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(1.125);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
 
 
         const std::vector<float64> foldOnly(1, 0.0);
@@ -2391,7 +2391,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(1.0);
 
         myTable.BeginInitialState();
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
 
         // 2S 2H 2C 2D 3S 3H 3C 3D 4S 4H
@@ -2428,11 +2428,12 @@ namespace RegressionTests {
          */
 
         myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
-        HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 );
+        HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 , &(std::cout));
+        struct MinRaiseError msg;
 
-        r.MakeBet(0.0);
-        r.MakeBet(0.0);
-        r.MakeBet(0.0);
+        r.MakeBet(0.0, &msg);
+        r.MakeBet(0.0, &msg);
+        r.MakeBet(0.0, &msg);
         botToTest->MakeBet(); // ASSERT THAT OppRAISEChance isn't messed up.
 
 
@@ -2494,7 +2495,7 @@ namespace RegressionTests {
         struct BlindValues bl;
         bl.SetSmallBigBlind(5.0);
 
-        HoldemArena myTable(bl.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(bl.GetSmallBlind(), true, true);
         myTable.setSmallestChip(5.0);
 
 
@@ -2521,7 +2522,7 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState(19);
-        myTable.BeginNewHands(bl, false, dealer);
+        myTable.BeginNewHands(std::cout, bl, false, dealer);
 
 
 
@@ -2571,15 +2572,17 @@ namespace RegressionTests {
 
          */
         myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
-        HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 );
+        HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 , &(std::cout));
 
-        r.MakeBet(0.0); // SpaceBot folds
-        r.MakeBet(0.0);
-        r.MakeBet(0.0);
-        r.MakeBet(0.0);
-        r.MakeBet(0.0);
-        r.MakeBet(0.0);
-        r.MakeBet(0.0);
+        struct MinRaiseError msg;
+
+        r.MakeBet(0.0, &msg); // SpaceBot folds
+        r.MakeBet(0.0, &msg);
+        r.MakeBet(0.0, &msg);
+        r.MakeBet(0.0, &msg);
+        r.MakeBet(0.0, &msg);
+        r.MakeBet(0.0, &msg);
+        r.MakeBet(0.0, &msg);
 
         const float64 actual = bot.MakeBet();
 
@@ -2719,7 +2722,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(1.125);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
 
         std::vector<float64> bbOnly; bbOnly.push_back(b.GetBigBlind()); bbOnly.push_back(0.0); bbOnly.push_back(0.0); bbOnly.push_back(0.0); bbOnly.push_back(0.0);
         const std::vector<float64> foldOnly(1, 0.0);
@@ -2752,7 +2755,7 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState(9);
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
         //  [0][1][2][3][4][5][6][7][8][9]
         //0. 2S 2H 2C 2D 3S 3H 3C 3D 4S 4H
@@ -2788,7 +2791,7 @@ namespace RegressionTests {
          ConservativeBotV folds
          DangerBotV folds
          */
-        assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.PlayRound_BeginHand(std::cout) != -1);
         assert(myTable.ViewPlayer(0)->GetBetSize() >= 0);
 
 
@@ -2813,7 +2816,7 @@ namespace RegressionTests {
          [Nav $2469]
          */
 
-        assert(myTable.PlayRound_Flop(myFlop) != -1);
+        assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
         /*
          SpaceBotV bets $2.25 ($15.625)
          Nav raises to $12.25 ($27.875)
@@ -2828,7 +2831,7 @@ namespace RegressionTests {
          [SpaceBotV $663]
          [Nav $2420]
          */
-        playernumber_t highbet = myTable.PlayRound_Turn(myFlop, myTurn);
+        playernumber_t highbet = myTable.PlayRound_Turn(myFlop, myTurn, std::cout);
         if (highbet == -1) {
             // all-fold?
             assert(myTable.ViewPlayer(0)->GetBetSize() < 0); // SpaceBot should be the one that folded.
@@ -2848,7 +2851,7 @@ namespace RegressionTests {
          [SpaceBotV $495]
          [Nav $2252]
          */
-        highbet = (myTable.PlayRound_River(myFlop, myTurn, myRiver) );
+        highbet = (myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout) );
             if (highbet == -1) {
                 // all-fold?
                 assert(myTable.ViewPlayer(0)->GetBetSize() < 0); // SpaceBot should be the one that folded.
@@ -2897,7 +2900,7 @@ namespace RegressionTests {
         struct BlindValues bl;
         bl.SetSmallBigBlind(5.0);
 
-        HoldemArena myTable(bl.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(bl.GetSmallBlind(), true, true);
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
@@ -2961,7 +2964,7 @@ namespace RegressionTests {
          */
 
         myTable.BeginInitialState(18);
-        myTable.BeginNewHands(bl, false, dealer);
+        myTable.BeginNewHands(std::cout, bl, false, dealer);
 
         /*
          TrapBotV folds
@@ -2979,25 +2982,26 @@ namespace RegressionTests {
         myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
 
         {
-        HoldemArenaBetting be( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 );
+        HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 , &(std::cout));
+
+            struct MinRaiseError msg;
 
 
+        r.MakeBet(0.0, &msg);
 
-        be.MakeBet(0);
+        r.MakeBet(0.0, &msg);
 
-        be.MakeBet(0);
+        r.MakeBet(0.0, &msg);
 
-        be.MakeBet(0);
+        r.MakeBet(0.0, &msg);
 
-        be.MakeBet(0);
+        r.MakeBet(0.0, &msg);
 
-        be.MakeBet(0);
+        r.MakeBet(0.0, &msg);
 
-        be.MakeBet(0);
-
-        be.MakeBet(10);
-        be.MakeBet(10);
-        be.MakeBet(10);
+        r.MakeBet(10.0, &msg);
+        r.MakeBet(10.0, &msg);
+        r.MakeBet(10.0, &msg);
         }
 
 
@@ -3032,14 +3036,15 @@ namespace RegressionTests {
         withCommunity.AddToHand(card);
 
         {
-            HoldemArenaBetting be( &myTable, community, 3 );
+            HoldemArenaBetting r( &myTable, community, 3, &(std::cout) );
 
+            struct MinRaiseError msg;
 
-            be.MakeBet(0);
+            r.MakeBet(0.0, &msg);
 
-            be.MakeBet(0);
+            r.MakeBet(0.0, &msg);
 
-            be.MakeBet(0);
+            r.MakeBet(0.0, &msg);
         }
 
 
@@ -3071,14 +3076,15 @@ namespace RegressionTests {
 
 
         {
-            HoldemArenaBetting be( &myTable, community, 4 );
+            HoldemArenaBetting r( &myTable, community, 4 , &(std::cout));
 
-
-            be.MakeBet(0);
-
-            be.MakeBet(0);
+            struct MinRaiseError msg;
             
-            be.MakeBet(0);
+            r.MakeBet(0.0, &msg);
+
+            r.MakeBet(0.0, &msg);
+            
+            r.MakeBet(0.0, &msg);
         }
         
 
@@ -3257,7 +3263,7 @@ namespace RegressionTests {
         struct BlindValues b;
         b.SetSmallBigBlind(0.125);
 
-        HoldemArena myTable(b.GetSmallBlind(), std::cout, true, true);
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
         myTable.setSmallestChip(0.125);
 
         std::vector<float64> aC; aC.push_back(0.25);
@@ -3275,7 +3281,7 @@ namespace RegressionTests {
 
 
         myTable.BeginInitialState();
-        myTable.BeginNewHands(b, false, dealer);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
 
 
         /*
@@ -3284,7 +3290,7 @@ namespace RegressionTests {
          A calls $0.25 ($1.0)
          B checks
          */
-        assert(myTable.PlayRound_BeginHand() != -1);
+        assert(myTable.PlayRound_BeginHand(std::cout) != -1);
 
         //myTable.PrepBettingRound(false,2); //turn, river remaining
 
@@ -3364,8 +3370,8 @@ namespace RegressionTests {
 }
 
 struct DeckLocationPair {
-    DeckLocation first;
-    DeckLocation second;
+    const DeckLocation first;
+    const DeckLocation second;
     
     DeckLocationPair(DeckLocation a, DeckLocation b)
     :
