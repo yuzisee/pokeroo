@@ -510,6 +510,8 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
 #ifdef LOGPOSITION
 
 
+
+
     int32 raiseStep = 0;
 
     {
@@ -521,9 +523,9 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
         {
             orAmount =  rl.RaiseAmount(betToCall,raiseStep);
 
-            const float64 oppRaisedFoldGain = rlF.myFoldGainAgainstPredictedRaise(rlF.suggestMeanOrRank(), betToCall, tablestate.alreadyBet(), orAmount);
             const float64 oppRaisedPlayGain = m.g_raised(betToCall,orAmount);
-            if( oppRaisedFoldGain > oppRaisedPlayGain ){ break; /* We'd fold at this point. Stop incrementing */ } else {  firstFoldToRaise = raiseStep+1; }
+            if(StateModel::willFoldToReraise(orAmount, oppRaisedPlayGain, rlF, tablestate, betToCall))
+            { break; /* We'd fold at this point. Stop incrementing */ } else {  firstFoldToRaise = raiseStep+1; }
         }
 
         ;
@@ -546,15 +548,22 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
             if( raiseStep >= firstFoldToRaise ) {  logFile << " [F] ";  } else { logFile << " [*] "; }
 
             // Here, raiseStep is just the iterator. rl.RaiseAmount(betToCall,raiseStep) is the amount, rl.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
-            logFile << rl.pRaise(betToCall,raiseStep,firstFoldToRaise) << " @ $" << orAmount;
+            logFile << rl.pRaise(betToCall,raiseStep,firstFoldToRaise) << " @ $" << orAmount << " ($" << rlF.predictedRaiseToThisRound(betToCall, betToCall, orAmount) << " now)";
 
-            logFile << "\tfold -- left" << rl.pWin(orAmount) << "  " << rr.pWin(orAmount) << " right"; // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
+            // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
+            logFile << "\tfold -- " // << "left"
+            << rl.pWin(orAmount); //<< "  " << rr.pWin(orAmount) << " right";
             printPessimisticWinPct(logFile, orAmount, csrp);
             logFile << endl;
 
         }
     }
 
+    logFile << endl;
+    logFile << "(Fixed at $" << separatorBet << ")";
+    printPessimisticWinPct(logFile, separatorBet, csrp);
+    logFile << endl;
+    
     const float64 minNextRaiseTo = (separatorBet*2-betToCall);
     if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
 
@@ -571,9 +580,9 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
         {
             mrAmount = rl.RaiseAmount(separatorBet,raiseStep);
 
-            const float64 oppRaisedFoldGain = rrF.myFoldGainAgainstPredictedRaise(rrF.suggestMeanOrRank(), separatorBet, tablestate.alreadyBet(), mrAmount);
             const float64 oppRaisedPlayGain = m.g_raised(separatorBet,mrAmount);
-            if( oppRaisedFoldGain > oppRaisedPlayGain ){ break; /* We'd fold at this point. Stop incrementing */ } else {  firstFoldToRaise = raiseStep+1; }
+            if(StateModel::willFoldToReraise(mrAmount, oppRaisedPlayGain, rrF, tablestate, separatorBet))
+            { break; /* We'd fold at this point. Stop incrementing */ } else {  firstFoldToRaise = raiseStep+1; }
 
         }
 
@@ -592,7 +601,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
             }
             if( raiseStep >= firstFoldToRaise ) {  logFile << " [F] ";  } else { logFile << " [*] "; }
 
-            logFile << rl.pRaise(separatorBet,raiseStep,firstFoldToRaise) << " @ $" << mrAmount;
+            logFile << rl.pRaise(separatorBet,raiseStep,firstFoldToRaise) << " @ $" << mrAmount << " ($" << rrF.predictedRaiseToThisRound(betToCall, separatorBet, mrAmount) << " now)";
 
             /*
              logFile << "\tfold -- left" << rl.pWin(mrAmount) << "  " << rr.pWin(mrAmount) << " right";
@@ -980,9 +989,6 @@ float64 ImproveGainStrategy::MakeBet()
     logFile << "   Call Fear("<< viewBet <<")=" << 1.0+hybridgain_fear.f(bestBet) << endl;
 
 
-    printBetGradient< StateModel >
-    (myDeterredCall_left, myDeterredCall_right, choicemodel, tablestate, viewBet, 0);
-
 
     logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
     logFile << "OppFoldChance% ... left " << myDeterredCall_left.pWin(viewBet) << " --" << myDeterredCall_right.pWin(viewBet) << " right" << endl;
@@ -1270,10 +1276,10 @@ float64 PureGainStrategy::MakeBet()
         left_higher = statprob.statranking;
     }
 
-    if (bGamble == 2) {
-        left = statprob.statrelation; // Action
-    } else if (bGamble == 0) {
+    if (bGamble == 0) {
         left = statprob.statranking; // Normal
+    } else if (bGamble == 2) {
+        left = statprob.statrelation; // Action
     } else if (bGamble == 1) {
         const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHandInclAllIn() - 1);
         StatResult statversus = (statprob.statrelation * (awayFromDrawingHands)) + (statprob.statranking * (1.0-awayFromDrawingHands));
@@ -1303,10 +1309,6 @@ float64 PureGainStrategy::MakeBet()
     // TODO(from yuzisee): Are the other invocations of foldgain (e.g. Pr{push}) also dependent on reversed perspective?
     OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, ViewTable(), statprob.core);
     CombinedStatResultsPessimistic csrp(opponentHandOpportunity, statprob.core);
-    GainModelNoRisk raiseModelAlgb(csrp, myDeterredCall);
-    GainModelGeom raiseModelGeom(csrp, myDeterredCall);
-
-    GainModel &raiseModel = (bGamble < 3) ? dynamic_cast<GainModel &>(raiseModelAlgb) : dynamic_cast<GainModel &>(raiseModelGeom);
 
 
 #ifdef LOGPOSITION
@@ -1318,21 +1320,32 @@ float64 PureGainStrategy::MakeBet()
 
 
 	if( bGamble == 0 )
-	{ logFile << " -  statranking ca (algb) - " << endl;}
+	{ logFile << " -  statranking algb RAW - " << endl;}
 	else if( bGamble == 1 )
 	{ logFile << " -  detailPCT  - " << endl;}
 	else if( bGamble == 2 )
-	{ logFile << " -  statrelation cg (algb) - " << endl;}
+	{ logFile << " -  statrelation geom RAW - " << endl;}
 	else if( bGamble == 3 )
-	{ logFile << " -  stat_low cg (geom)  - " << endl;}
+	{ logFile << " -  stat_low geom SLIDERX - " << endl;}
 	else if( bGamble == 4 )
-	{ logFile << " -  stat_high ca (geom) - " << endl;}
+	{ logFile << " -  stat_high algb SLIDERX - " << endl;}
+
 #endif
 
     // Choose from ca or cg
     AlgbStateCombiner ca;
     GeomStateCombiner cg;
-    IStateCombiner &stateCombiner = (bGamble / 2 == 1) ? dynamic_cast<IStateCombiner &>(cg) : dynamic_cast<IStateCombiner &>(ca);
+    IStateCombiner &stateCombiner = (bGamble % 4 == 0) ? dynamic_cast<IStateCombiner &>(ca) : dynamic_cast<IStateCombiner &>(cg);
+
+
+    GainModelNoRisk raiseModelAlgb(csrp, myDeterredCall);
+    GainModelGeom raiseModelGeom(csrp, myDeterredCall);
+    GainModel &raiseModel = (bGamble % 4 == 0) ? dynamic_cast<GainModel &>(raiseModelAlgb) : dynamic_cast<GainModel &>(raiseModelGeom);
+
+    // Choose between "defensive" (a.k.a. RAW) vs. "offensive" (a.k.a. SLIDERX) modes.
+    // RAW means we expect that the opponent will raise more only with good hands, thus if the pot gets high we will have a harder time winning it with weaker hands.
+    // SLIDERX means we can peg the opponent's "typical" hand strength at a value determined by our action, and expect to win future pots at this rate for the purpose of this bet
+    SliderBehaviour reraiseGainStyle =  (bGamble < 3) ? RAW : SLIDERX;
 
 
     printCommon(tablestate);
@@ -1340,7 +1353,7 @@ float64 PureGainStrategy::MakeBet()
     ///Choose from geom to algb
     const float64 aboveCallBelowRaise1 = betToCall + ViewTable().GetChipDenom() / 2.0;
     const float64 aboveCallBelowRaise2 = betToCall + ViewTable().GetChipDenom();
-    AutoScalingFunction callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate, RAW);
+    AutoScalingFunction callOrRaise(callModel,raiseModel,aboveCallBelowRaise1,aboveCallBelowRaise2,&tablestate, reraiseGainStyle);
 
     StateModel ap_aggressive( myDeterredCall, &callOrRaise, stateCombiner );
 
