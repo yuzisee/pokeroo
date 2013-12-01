@@ -92,6 +92,8 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 	///At this point all "THIS ROUND ONLY" values are useless EXCEPT allIn
 
 	delete [] allInsNow;
+    allInsNow = 0;
+    
 
 	myBetSum = 0;
 	highBet = 0;
@@ -574,7 +576,9 @@ bool HoldemArenaBetting::readyToFinish() const
 
 HoldemArenaBetting::~HoldemArenaBetting()
 {
-
+    if (allInsNow != 0) {
+        delete [] allInsNow;
+    }
 }
 
 

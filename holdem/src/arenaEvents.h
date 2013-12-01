@@ -137,6 +137,8 @@ class HoldemArenaBetting : public HoldemArenaEventBase
     public:
     HoldemArenaBetting(HoldemArena * table, const CommunityPlus & community, int8 communitySize)
      : HoldemArenaEventBase(table), comSize(communitySize)
+    ,
+    allInsNow(0)
 
 	,  playerCalled(-1), bBetState('b')
     {
