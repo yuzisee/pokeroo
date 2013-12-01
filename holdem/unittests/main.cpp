@@ -3079,7 +3079,7 @@ namespace RegressionTests {
             HoldemArenaBetting r( &myTable, community, 4 , &(std::cout));
 
             struct MinRaiseError msg;
-            
+
             r.MakeBet(0.0, &msg);
 
             r.MakeBet(0.0, &msg);
@@ -3368,18 +3368,6 @@ namespace RegressionTests {
     }
     
 }
-
-struct DeckLocationPair {
-    const DeckLocation first;
-    const DeckLocation second;
-    
-    DeckLocationPair(DeckLocation a, DeckLocation b)
-    :
-    first(a)
-    ,
-    second(b)
-    {}
-};
 
 static void regenerateDb() {
     

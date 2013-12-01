@@ -27,6 +27,7 @@
 #error "Please define only one of DELAYED_NONFOLD_UPDATE or IMMEDIATE_NONFOLD_UPDATE"
 #endif
 
+#include <sstream>
 #include <algorithm>
 using std::sort;
 
@@ -736,11 +737,12 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const Commun
 
 }
 
-void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const CommunityPlus & playerHand, std::ostream &gamelog)
+Reveal HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const CommunityPlus & playerHand, std::ostream &gamelog)
 {
 
 ///At this point curIndex is STILL IN THE HAND (not all in)
-
+    std::ostringstream revealAction;
+    const playernumber_t revealPlayer = curIndex;
 
 		    Player& withP = *p[curIndex];
 
@@ -751,6 +753,7 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Communit
 				PlayerAllIn(withP) = myPot;
 
 				broadcastHand(playerHand,curIndex);
+                comp.DisplayHandText(revealAction);
 				if( bVerbose )
 				{
 
@@ -777,6 +780,7 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Communit
 			{
 
 				broadcastHand(playerHand,curIndex);
+                comp.DisplayHandText(revealAction);
 				if( bVerbose )
 				{
 					HandPlus viewHand;
@@ -803,10 +807,12 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Communit
 			}
 			else
 			{
+                revealAction << "mucks";
 				gamelog << endl << withP.GetIdent() << " mucks " << endl;
 			}
 
 
+    struct Reveal result(revealPlayer, revealAction.str());
 
     do{
         incrIndex();
@@ -814,15 +820,16 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Communit
         if(curIndex == called)
         {
             startAllIns();
-            return;
+            return result;
         }
     }while ( !IsInHand(curIndex) );
 
+    return result;
 }
 
-void HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community, std::ostream &gamelog)
+Reveal HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community, std::ostream &gamelog)
 {
-    if( bRoundState == '!' ) return;
+    if( bRoundState == '!' ) return Reveal(-1, ""); // error
 
     ShowdownRep comp(curIndex);
 
@@ -841,11 +848,22 @@ void HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const Com
     switch( bRoundState )
     {
         case 'w':
-            RevealHandMain(comp, playerHand, gamelog);
-            break;
+        {
+            return RevealHandMain(comp, playerHand, gamelog);
+        }
         case 'a':
+        {
+            std::ostringstream revealAction;
+            comp.DisplayHandText(revealAction);
+            struct Reveal result(curIndex, revealAction.str());
+
             RevealHandAllIns(comp, playerHand, gamelog);
-            break;
+            return result;
+        }
+        default:
+        {
+            return Reveal(-1, ""); // error
+        }
     }
 }
 

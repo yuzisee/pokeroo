@@ -176,6 +176,12 @@ class HoldemArenaBetting : public HoldemArenaEventBase
 }
 ;
 
+struct Reveal {
+    const playernumber_t playerIdx;
+    const std::string outcome;
+
+    Reveal(playernumber_t idx, const std::string & text) : playerIdx(idx), outcome(text) {}
+};
 
 class HoldemArenaShowdown : public HoldemArenaEventBase
 {//NO ASSIGNMENT OPERATOR
@@ -191,7 +197,7 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
         void finishShowdown();
         void ShowdownHand(const ShowdownRep& comp);
 
-        void RevealHandMain(const ShowdownRep& comp, const CommunityPlus & playerHand, std::ostream &gamelog);
+        struct Reveal RevealHandMain(const ShowdownRep& comp, const CommunityPlus & playerHand, std::ostream &gamelog);
         void RevealHandAllIns(const ShowdownRep& comp, const CommunityPlus & playerHand, std::ostream &gamelog);
     public:
 
@@ -214,7 +220,7 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
     ///'w' if there are still people left to reveal/muck their hands "IN TURN"
     ///'a' if only all-in hands are to be revealed now
     ///'!' if winners have been determined and the showdown is complete
-    void RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community, std::ostream &gamelog);
+    struct Reveal RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community, std::ostream &gamelog);
     ///ShowHand reveals the hand of myTable->p[curIndex]
     void MuckHand(std::ostream &gamelog);
     ///MuckHand mucks the hand of myTable->p[curIndex]

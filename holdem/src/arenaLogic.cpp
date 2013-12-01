@@ -518,7 +518,13 @@ int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize,
     while(b.bBetState == 'b')
     {
         struct MinRaiseError msg;
+
+
+        // ============== Make the bet here ==============
         HoldemAction action(b.MakeBet(p[curIndex]->myStrat->MakeBet(), &msg));
+        // ============== Make the bet here ==============
+
+
 
         if (bSpectate) {
             HoldemArena::ToString(action, gamelog);

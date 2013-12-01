@@ -150,6 +150,7 @@ public:
 }
 ;
 
+
 class DeckLocation
 {
 public:
@@ -176,6 +177,18 @@ public:
 }
 ;
 
+
+struct DeckLocationPair {
+    DeckLocation first;
+    DeckLocation second;
+
+    DeckLocationPair(DeckLocation a, DeckLocation b)
+    :
+    first(a)
+    ,
+    second(b)
+    {}
+};
 
 
 
