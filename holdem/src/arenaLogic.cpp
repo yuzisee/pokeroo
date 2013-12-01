@@ -33,7 +33,7 @@
 using std::endl;
 
 
-double* HoldemArena::organizeWinnings(int8& potDistrSize, vector<ShowdownRep>&
+struct OrganizedWinnings *HoldemArena::organizeWinnings(int8& potDistrSize, vector<ShowdownRep>&
 	potDistr, vector<ShowdownRep>& winners )
 {
 
@@ -83,7 +83,7 @@ double* HoldemArena::organizeWinnings(int8& potDistrSize, vector<ShowdownRep>&
 	}
 
 	/// Now the best hand is STARTING AT THE FRONT!
-	double * moneyWon = new double[potDistrSize];
+	struct OrganizedWinnings * moneyWon = new struct OrganizedWinnings[potDistrSize];
 
 /*
 
@@ -115,25 +115,22 @@ Legend:
 	///Populate moneyWon
 	int8 i=1;int8 j=0;
 
+    moneyWon[0].fIdx = potDistr[0].playerIndex;
+    moneyWon[0].fIdent = p[potDistr[0].playerIndex]->GetIdent();
+    moneyWon[0].fTotalShowdownPot = myPot;
+	moneyWon[0].fRemainingPot = potDistr[0].revtiebreak;
+    moneyWon[0].fProfit = (potDistr[0].revtiebreak - p[potDistr[0].playerIndex]->handBetTotal);
 
-	moneyWon[0] = potDistr[0].revtiebreak;
-	if( bVerbose )
-	{
-		gamelog << endl << p[potDistr[0].playerIndex]->GetIdent() << " can win " <<
-		(potDistr[0].revtiebreak - p[potDistr[0].playerIndex]->handBetTotal) <<
-		" or less\t(controls " << moneyWon[0] << " of " << myPot << ")" << endl;
-	}
 
 	while(i<potDistrSize)
 	{
 
-		moneyWon[i] = potDistr[i].revtiebreak - potDistr[j].revtiebreak;
-		if( bVerbose )
-		{
-			gamelog << p[potDistr[i].playerIndex]->GetIdent() << " can win " <<
-			(potDistr[i].revtiebreak - p[potDistr[i].playerIndex]->handBetTotal) <<
-			" or less\t(controls " << moneyWon[i] << " of " << myPot << ")" << endl;
-		}
+        moneyWon[i].fIdx = potDistr[i].playerIndex;
+        moneyWon[i].fIdent = p[potDistr[i].playerIndex]->GetIdent();
+        moneyWon[i].fTotalShowdownPot = myPot;
+		moneyWon[i].fRemainingPot = potDistr[i].revtiebreak - potDistr[j].revtiebreak;
+        moneyWon[i].fProfit = (potDistr[i].revtiebreak - p[potDistr[i].playerIndex]->handBetTotal);
+
 
 		++i;++j;
 	}
@@ -142,20 +139,20 @@ Legend:
 	return moneyWon;
 }
 
-void HoldemArena::compareAllHands(const CommunityPlus & community, const int8 called, vector<ShowdownRep>& winners)
+void HoldemArena::compareAllHands(const CommunityPlus & community, const int8 called, vector<ShowdownRep>& winners, std::ostream &gamelog)
 {
     HoldemArenaShowdown w(this,called);
 
     while(w.bRoundState != '!')
     {
         //Player& withP = *(p[curIndex]);
-		w.RevealHand(p[curIndex]->myStrat->ViewDealtHand(), community);
+		w.RevealHand(p[curIndex]->myStrat->ViewDealtHand(), community, gamelog);
     }
 
 	winners.assign(w.winners.begin(),w.winners.end());
 }
 
-void HoldemArena::PrepShowdownRound(const CommunityPlus & community)
+void HoldemArena::PrepShowdownRound(const CommunityPlus & community, std::ostream &gamelog)
 {
 	initRoundPlayers();
 
@@ -175,7 +172,7 @@ void HoldemArena::PrepShowdownRound(const CommunityPlus & community)
 	}
 }
 
-void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners)
+void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners, std::ostream &gamelog)
 {
 
 	size_t vectorSize=winners.size();
@@ -203,10 +200,20 @@ void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners)
 	vector<ShowdownRep> potDistr;
 	///-------------------------------------------------------
 	///  Figure out all these side-pots and split pots...
-	double* moneyWon = organizeWinnings(potDistrSize, potDistr, winners);
+	struct OrganizedWinnings *moneyWon = organizeWinnings(potDistrSize, potDistr, winners);
 	///-------------------------------------------------------
 	if(bVerbose)
-	{gamelog << "* * *Comparing hands* * *" << endl;}
+	{
+        // TODO(from yuzisee): isn't potDistrSize === potDistr.size() always?
+        for (size_t k=0; k<potDistrSize; ++k) {
+            // TODO(from yuzisee): isn't moneyWon[i].fIdx === potDistr[i].playerIndex always?
+            gamelog << endl << moneyWon[k].fIdent << " can win " <<
+            moneyWon[k].fProfit <<
+            " or less\t(controls " << moneyWon[k].fRemainingPot << " of " << moneyWon[k].fTotalShowdownPot << ")" << endl;
+        }
+
+        gamelog << "* * *Comparing hands* * *" << endl;
+    }
 
 	int8 j = potDistrSize - 1;
 	int8 i = j-1;
@@ -228,7 +235,7 @@ void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners)
 			++splitCount;
 			float64 splitFactor = static_cast<float64>(splitCount);
 			randRem *= splitFactor+1.5;
-			moneyWon[i] /= splitFactor;
+			moneyWon[i].fRemainingPot /= splitFactor;
 
 			if( bVerbose )
 			{
@@ -241,7 +248,7 @@ void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners)
 			///  and bet more than [i]
 			for(int8 n=i+1;n<i+splitCount;++n)
 			{
-				moneyWon[n] += moneyWon[i];
+				moneyWon[n].fRemainingPot += moneyWon[i].fRemainingPot;
 			}
 
 		}
@@ -258,16 +265,16 @@ void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners)
 	for(int8 k=0;k<potDistrSize;++k)
 	{
 		int8 curWinner = potDistr[k].playerIndex;
-		p[curWinner]->myMoney += moneyWon[k];
+		p[curWinner]->myMoney += moneyWon[k].fRemainingPot;
 		if( bVerbose )
 		{
-			float64 earnings = moneyWon[k];
+			float64 earnings = moneyWon[k].fRemainingPot;
 			if ( earnings > 0 )
 			{  //If the player takes any money at all
 				gamelog << p[curWinner]->GetIdent() << " takes "
-				<< moneyWon[k] << " from the pot, " << flush;
+				<< moneyWon[k].fRemainingPot << " from the pot, " << flush;
 
-				earnings = (moneyWon[k] - p[curWinner]->handBetTotal);
+				earnings = (moneyWon[k].fRemainingPot - p[curWinner]->handBetTotal);
 				if ( earnings >= 0 )
 				{
 					gamelog << "earning " << earnings << " this round" << endl;
@@ -285,17 +292,17 @@ void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners)
 }
 
 
-void HoldemArena::PlayShowdown(const CommunityPlus & community, const int8 called)
+void HoldemArena::PlayShowdown(const CommunityPlus & community, const int8 called, std::ostream &gamelog)
 {
-    PrepShowdownRound(community);
+    PrepShowdownRound(community, gamelog);
 
 	vector<ShowdownRep> winners;
 	///------------------------------------
 	///  GENERATE A LIST OF WINNERS
-	compareAllHands(community, called, winners);
+	compareAllHands(community, called, winners, gamelog);
 	///------------------------------------
 
-	ProcessShowdownResults(winners);
+	ProcessShowdownResults(winners, gamelog);
 }
 
 void HoldemArena::foldActionOccurred()
@@ -328,27 +335,6 @@ void HoldemArena::nonfoldActionOccurred()
 void HoldemArena::prepareRound(const CommunityPlus& community, const int8 comSize)
 {
     cardsInCommunity = comSize;
-
-	if( bVerbose )
-	{
-
-	    #ifdef OLD_DISPLAY_STYLE
-		gamelog <<endl<<endl<<endl;
-		#else
-		if( comSize == 0 )
-		{
-		    gamelog << endl << endl << "Preflop" << endl;
-		}
-		#endif
-
-		#ifdef OLD_DISPLAY_STYLE
-		gamelog <<endl<<endl;
-		#else
-		gamelog << "(Pot: $" << myPot << ")" << endl;
-		PrintPositions(gamelog);
-		gamelog <<endl;
-		#endif
-	}
 
 	curIndex = curDealer;
 
@@ -499,15 +485,66 @@ void HoldemArena::resolveActions(Player& withP)
 ///			Finally, the round pot and round bets are moved into hand bets/pot
 
 
-int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize)
+int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize, std::ostream &gamelog)
 {
-    HoldemArenaBetting b( this, community, comSize );
+
+	if( bVerbose )
+	{
+
+#ifdef OLD_DISPLAY_STYLE
+		gamelog <<endl<<endl<<endl;
+#else
+		if( comSize == 0 )
+		{
+		    gamelog << endl << endl << "Preflop" << endl;
+		}
+#endif
+
+#ifdef OLD_DISPLAY_STYLE
+		gamelog <<endl<<endl;
+#else
+		gamelog << "(Pot: $" << myPot << ")" << endl;
+		PrintPositions(gamelog);
+		gamelog <<endl;
+#endif
+	}
+    
+
+
+    HoldemArenaBetting b( this, community, comSize, &gamelog );
 
 
 
     while(b.bBetState == 'b')
     {
-        b.MakeBet(p[curIndex]->myStrat->MakeBet());
+        struct MinRaiseError msg;
+        HoldemAction action(b.MakeBet(p[curIndex]->myStrat->MakeBet(), &msg));
+
+        if (bSpectate) {
+            HoldemArena::ToString(action, gamelog);
+        }
+
+        if( bVerbose )
+        {
+            // msg.result is NaN if there is no message.
+            // So when msg.result is populated ...
+            if (msg.result == msg.result) {
+                gamelog << "The minimum raise bet is by " << msg.minRaiseBy << " to " << msg.minRaiseTo << ": " << -msg.error << " more" << endl;
+            }
+        }
+
+    }
+
+
+
+    if( bVerbose )
+    {
+        if (b.bBetState == 'F') {
+            const float64 highContribution = p[b.getHighestBetter()]->handBetTotal;
+            gamelog << endl;
+            gamelog << "All fold! " << p[b.getHighestBetter()]->GetIdent() <<
+            " wins $" << (   myPot - highContribution   ) << endl;
+        }
     }
 
     return b.playerCalled;
@@ -517,13 +554,13 @@ int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize)
 
 
 
-void HoldemArena::RefreshPlayers()
+void HoldemArena::RefreshPlayers(std::ostream *spectateLog)
 {
 
     PerformanceHistory * leaderboard;
     int8 leaderboardSize = 0;
 
-    if( bSpectate )
+    if( spectateLog )
     {
         leaderboard = new PerformanceHistory[livePlayers];
         for( int8 i=0;i<livePlayers;++i)
@@ -531,7 +568,7 @@ void HoldemArena::RefreshPlayers()
             leaderboard[i].sortMode = SORT_TOTAL_DELTA;
         }
 
-        gamelog << "\n\n==========\nCHIP COUNT" << endl;
+        (*spectateLog) << "\n\n==========\nCHIP COUNT" << endl;
     }else
     {
         leaderboard = 0 ;
@@ -563,7 +600,7 @@ void HoldemArena::RefreshPlayers()
         }
         else
         {
-            if( bSpectate )
+            if( spectateLog )
             {
                 if( withP.myMoney > 0 )
                 {
@@ -591,13 +628,13 @@ void HoldemArena::RefreshPlayers()
 
 
 
-    if( bSpectate )
+    if( spectateLog )
     {
         std::sort(leaderboard,leaderboard+leaderboardSize);
         for(int8 i=leaderboardSize-1;i>=0;--i)
         {
             Player& withP = *(p[leaderboard[i].id]);
-            gamelog << withP.GetIdent() << " now has $" << withP.GetMoney() << endl;
+            (*spectateLog) << withP.GetIdent() << " now has $" << withP.GetMoney() << endl;
         }
         delete [] leaderboard;
     }

@@ -37,7 +37,7 @@ class HoldemArenaEventBase
 {//NO ASSIGNMENT OPERATOR
     protected:
     HoldemArena * myTable;
-    std::ostream& gamelog;
+    //std::ostream& gamelog;
 
     playernumber_t & curHighBlind;
     float64 & highBet;
@@ -73,10 +73,9 @@ class HoldemArenaEventBase
     void defineSidePotsFor(Player& allInP, const int8 id){myTable->defineSidePotsFor(allInP,id);}
     void resolveActions(Player& withP){myTable->resolveActions(withP);}
     void broadcastHand(const Hand& h,const int8 broadcaster){ myTable->broadcastHand(h,broadcaster); }
-    void broadcastCurrentMove(const int8& playerID, const float64& theBet, const float64 theIncrBet
-                                , const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn)
+    void broadcastCurrentMove(const HoldemAction &action)
                                 {
-                                    myTable->broadcastCurrentMove(playerID,theBet,theIncrBet,toCall,bBlind,isBlindCheck,isAllIn);
+                                    myTable->broadcastCurrentMove(action);
                                 }
     void prepareRound(const CommunityPlus & community, const int8 comSize){ myTable->prepareRound(community, comSize); };
     void foldActionOccurred() { myTable->foldActionOccurred(); }
@@ -92,19 +91,30 @@ class HoldemArenaEventBase
         playernumber_t WhoIsNext() const { return curIndex; }
 
     HoldemArenaEventBase(HoldemArena * table) : myTable(table)
-    , gamelog(myTable->gamelog)
+    //, gamelog(myTable->gamelog)
     , curHighBlind(table->curHighBlind)
     , highBet(table->highBet), lastRaise(table->lastRaise), forcedBetSum(myTable->forcedBetSum), blindOnlySum(myTable->blindOnlySum)
 	, playersInHand(table->playersInHand.total),playersAllIn(table->playersInHand.allInsOnly)
 	, curDealer(table->curDealer) , curIndex(table->curIndex)
     , myPot(table->myPot), myFoldedPot(table->myFoldedPot), prevRoundFoldedPot(table->prevRoundFoldedPot), myBetSum(table->myBetSum), p(table->p)
-    , bVerbose(table->bVerbose), randRem(table->randRem)
+    ,
+    bVerbose(table->bVerbose)
+    ,
+    randRem(table->randRem)
     {
 
     }
 
 }
 ;
+
+// This struct is populated if a bet is made that doesn't obey the minRaise rules.
+struct MinRaiseError {
+    float64 minRaiseBy = std::numeric_limits<float64>::signaling_NaN();
+    float64 minRaiseTo = std::numeric_limits<float64>::signaling_NaN();
+    float64 error = std::numeric_limits<float64>::signaling_NaN();
+    float64 result = std::numeric_limits<float64>::signaling_NaN(); // your new raiseTo or callTo because we had to choose one.
+};
 
 class HoldemArenaBetting : public HoldemArenaEventBase
 {//NO ASSIGNMENT OPERATOR
@@ -127,7 +137,7 @@ class HoldemArenaBetting : public HoldemArenaEventBase
 
 
 
-    void startBettingRound();
+    void startBettingRound(std::ostream * const spectateLog);
     void finishBettingRound();
     void incrPlayerNumber(Player& currentPlayer);
 
@@ -135,7 +145,7 @@ class HoldemArenaBetting : public HoldemArenaEventBase
 
 
     public:
-    HoldemArenaBetting(HoldemArena * table, const CommunityPlus & community, int8 communitySize)
+    HoldemArenaBetting(HoldemArena * table, const CommunityPlus & community, int8 communitySize, std::ostream * const spectateLog)
      : HoldemArenaEventBase(table), comSize(communitySize)
     ,
     allInsNow(0)
@@ -143,7 +153,7 @@ class HoldemArenaBetting : public HoldemArenaEventBase
 	,  playerCalled(-1), bBetState('b')
     {
     	prepareRound(community, comSize);
-        startBettingRound();
+        startBettingRound(spectateLog);
     }
 
     ~HoldemArenaBetting();
@@ -159,8 +169,10 @@ class HoldemArenaBetting : public HoldemArenaEventBase
     ///'F' if everybody folded except for one player
     ///'C' if everybody remaining has called
 
-    void MakeBet(float64 betSize);
+    HoldemAction MakeBet(float64 betSize, struct MinRaiseError *out);
     ///MakeBet makes a bet for myTable->p[curIndex]
+
+    playernumber_t getHighestBetter() const { return highestBetter; }
 }
 ;
 
@@ -179,8 +191,8 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
         void finishShowdown();
         void ShowdownHand(const ShowdownRep& comp);
 
-        void RevealHandMain(const ShowdownRep& comp, const CommunityPlus & playerHand);
-        void RevealHandAllIns(const ShowdownRep& comp, const CommunityPlus & playerHand);
+        void RevealHandMain(const ShowdownRep& comp, const CommunityPlus & playerHand, std::ostream &gamelog);
+        void RevealHandAllIns(const ShowdownRep& comp, const CommunityPlus & playerHand, std::ostream &gamelog);
     public:
 
     vector<ShowdownRep> winners;
@@ -202,9 +214,9 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
     ///'w' if there are still people left to reveal/muck their hands "IN TURN"
     ///'a' if only all-in hands are to be revealed now
     ///'!' if winners have been determined and the showdown is complete
-    void RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community);
+    void RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community, std::ostream &gamelog);
     ///ShowHand reveals the hand of myTable->p[curIndex]
-    void MuckHand();
+    void MuckHand(std::ostream &gamelog);
     ///MuckHand mucks the hand of myTable->p[curIndex]
 
 }

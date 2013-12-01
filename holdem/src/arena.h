@@ -174,25 +174,68 @@ class PlayerStrategy
 
 
 class HoldemAction
-{//NO ASSIGNMENT OPERATOR
-	private:
-		int8 myPlayerIndex;
-		float64 bet;
-		float64 callAmount;
-		bool bCheckBlind;
-		bool bAllIn;
+{//NO ASSIGNMENT OPERATOR, but POD type
 	public:
+        const std::string myPlayerName;
+		const int8 myPlayerIndex;
+		const float64 bet;
+		const float64 callAmount;
+		const bool bCheckBlind;
+		const bool bAllIn;
+
 		//See also blinds.h: BlindValues::playersInBlind
         static const int8 SMALLBLIND = 1;
         static const int8 BIGBLIND = 2;
 
+        const float64 oldPotSize;
         const float64 newPotSize;
+        const float64 chipsBefore;
         const float64 chipsLeft;
         const float64 incrBet;
         const int8 bBlind;
 
-		HoldemAction(const float64 newpot, const float64 incr, const float64 newchips, const int8 i, const float64 b, const float64 c, const int8 blind=0, const bool checked = false, const bool allin = false)
-	: myPlayerIndex(i), bet(b), callAmount(c), bCheckBlind(checked), bAllIn(allin), newPotSize(newpot), chipsLeft(newchips), incrBet(incr), bBlind(blind) {} ;
+    HoldemAction(bool error)
+    :
+    myPlayerName("")
+    ,
+    myPlayerIndex(-1)
+    ,
+    bet(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    callAmount(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    bCheckBlind(false)
+    ,
+    bAllIn(false)
+    ,
+    oldPotSize(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    newPotSize(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    chipsBefore(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    chipsLeft(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    incrBet(std::numeric_limits<float64>::signaling_NaN())
+    ,
+    bBlind(-1)
+    {}
+
+    HoldemAction(const std::string &ident, const float64 oldpot, const float64 oldchips, const int8 i, const float64 b, const float64 incr, const float64 c, const int8 blind=0, const bool checked = false, const bool allin = false)
+	:
+    myPlayerName(ident)
+    ,
+    myPlayerIndex(i), bet(b), callAmount(c), bCheckBlind(checked), bAllIn(allin)
+    ,
+    oldPotSize(oldpot)
+    ,
+    newPotSize(oldpot + incr)
+    ,
+    chipsBefore(oldchips)
+    ,
+    chipsLeft(oldchips - b)
+    , incrBet(incr), bBlind(blind)
+    {}
 
 		int8 GetPlayerID() const {return myPlayerIndex;}
 		float64 GetAmount() const {return bet;}
@@ -236,6 +279,14 @@ struct playercounts
 playercounts_t
 ;
 
+struct OrganizedWinnings {
+    playernumber_t fIdx = -1;
+    std::string fIdent = "";
+    float64 fTotalShowdownPot = std::numeric_limits<float64>::signaling_NaN(); // The full pot size of the showdown
+    float64 fRemainingPot = std::numeric_limits<float64>::signaling_NaN(); // The pot that you have won
+    float64 fProfit = std::numeric_limits<float64>::signaling_NaN(); // Your profit this hand after claiming fRemainingPot
+};
+
 class HoldemArena
 {
     ///These friend classes are used to handle game loops in a trigger/event based model
@@ -270,8 +321,6 @@ class HoldemArena
         }
 
     protected:
-
-        std::ostream& gamelog;
 
 		float64 randRem;
 
@@ -315,15 +364,14 @@ class HoldemArena
 
         void PrintPositions(std::ostream& o);
 		void broadcastHand(const Hand&,const int8 broadcaster);
-		void broadcastCurrentMove(const playernumber_t& playerID, const float64& theBet, const float64 theIncrBet
-                                , const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn);
+		void broadcastCurrentMove(const HoldemAction &action);
 		void defineSidePotsFor(Player&, const playernumber_t);
 		void resolveActions(Player&);
 
-		void compareAllHands(const CommunityPlus & , const int8, vector<ShowdownRep>& );
-		double* organizeWinnings(int8&, vector<ShowdownRep>&, vector<ShowdownRep>&);
+		void compareAllHands(const CommunityPlus & , const int8, vector<ShowdownRep>&, std::ostream &gamelog);
+		struct OrganizedWinnings *organizeWinnings(int8&, vector<ShowdownRep>&, vector<ShowdownRep>&);
 
-        DeckLocation ExternalQueryCard(std::istream& s);
+        static DeckLocation ExternalQueryCard(std::istream& s);
 
         void foldActionOccurred();
         void nonfoldActionOccurred();
@@ -371,9 +419,9 @@ class HoldemArena
 //============================
 
 
-		HoldemArena(float64 smallestChipAmount, std::ostream& targetout, bool illustrate, bool spectate)
+		HoldemArena(float64 smallestChipAmount, bool illustrate, bool spectate)
 		: curIndex(-1),  nextNewPlayer(0)
-        ,gamelog(targetout)
+
         ,bVerbose(illustrate),bSpectate(spectate)
         ,livePlayers(0),curHighBlind(-1),smallestChip(smallestChipAmount),allChips(0)
 		,lastRaise(0),highBet(0), myPot(0), myFoldedPot(0), myBetSum(0), prevRoundFoldedPot(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)
@@ -394,7 +442,7 @@ class HoldemArena
 //===============
 //   Main Loop
 //===============
-    static void PlayGameInner(HoldemArena & my, GameDeck * tableDealer);
+    static void PlayGameInner(HoldemArena & my, GameDeck * tableDealer, std::ostream &gamelog);
 
 //============================
 //   Flow Control Functions
@@ -411,27 +459,27 @@ class HoldemArena
         /**
          * Called just before hands are dealt.
          */
-		void BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer = -1);
+		void BeginNewHands(std::ostream &gamelog, const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer = -1);
     
         void DealAllHands(GameDeck * tableDealer, std::ostream & holecardsData);
 
 		void PrepBettingRound(bool bFirstBettingRound, uint8 otherBettingRounds);
         //returns the first person to reveal cards (-1 if all fold)
-        playernumber_t PlayRound(const CommunityPlus &, const int8);
-		playernumber_t PlayRound_BeginHand();
-		playernumber_t PlayRound_Flop(const CommunityPlus & flop);
-		playernumber_t PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn);
-		playernumber_t PlayRound_River(const CommunityPlus & flop, const DeckLocation & turn, const DeckLocation & river);
+        playernumber_t PlayRound(const CommunityPlus &, const int8, std::ostream &gamelog);
+		playernumber_t PlayRound_BeginHand(std::ostream &gamelog);
+		playernumber_t PlayRound_Flop(const CommunityPlus & flop, std::ostream &gamelog);
+		playernumber_t PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn, std::ostream &gamelog);
+		playernumber_t PlayRound_River(const CommunityPlus & flop, const DeckLocation & turn, const DeckLocation & river, std::ostream &gamelog);
 
-		void PlayShowdown(const CommunityPlus &,const playernumber_t );
+		void PlayShowdown(const CommunityPlus &,const playernumber_t, std::ostream &gamelog);
 
 		void RequestCards(GameDeck *, uint8, CommunityPlus &, const char * request_str);//, std::ofstream * saveCards);
-		DeckLocation RequestCard(GameDeck *);//, std::ofstream *);
-        void RefreshPlayers();
+		static DeckLocation RequestCard(GameDeck *);//, std::ofstream *);
+    void RefreshPlayers(std::ostream *spectateLog);
 
 
-		void PrepShowdownRound(const CommunityPlus & community);
-		void ProcessShowdownResults(vector<ShowdownRep> & winners);
+		void PrepShowdownRound(const CommunityPlus & community, std::ostream &gamelog);
+		void ProcessShowdownResults(vector<ShowdownRep> & winners, std::ostream &gamelog);
 
 //==============================
 //   Initialization Functions

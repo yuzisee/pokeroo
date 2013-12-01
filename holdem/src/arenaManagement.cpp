@@ -300,8 +300,13 @@ playernumber_t HoldemArena::AddPlayer(const char* const id, const float64 money,
 	    std::cerr << "Cannot add more players" << endl;
 	    exit(1);
 	}
-#endif
 
+	if( *id == '\0' )
+	{
+	    std::cerr << "Player ID cannot be blank" << endl;
+	    exit(1);
+	}
+#endif // DEBUGASSERT
 
     Player* newP = new Player(money, id,newStrat, INVALID);
 

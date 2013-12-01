@@ -43,21 +43,21 @@
  */
 
 
-void HoldemArena::PlayGameInner(HoldemArena & my, GameDeck * tableDealer)
+void HoldemArena::PlayGameInner(HoldemArena & my, GameDeck * tableDealer, std::ostream &gamelog)
 {
 
-	if( my.PlayRound_BeginHand() == -1 ) return;
+	if( my.PlayRound_BeginHand(gamelog) == -1 ) return;
 
 	CommunityPlus myFlop;
 	my.RequestCards(tableDealer,3,myFlop, "Please enter the flop (no whitespace): ");
-    if( my.PlayRound_Flop(myFlop) == -1 ) return;
+    if( my.PlayRound_Flop(myFlop, gamelog) == -1 ) return;
 
 
 	DeckLocation myTurn = my.RequestCard(tableDealer);
-    if( my.PlayRound_Turn(myFlop,myTurn) == -1 ) return;
+    if( my.PlayRound_Turn(myFlop,myTurn, gamelog) == -1 ) return;
 
 	DeckLocation myRiver = my.RequestCard(tableDealer);
-    int8 playerToReveal = my.PlayRound_River(myFlop,myTurn,myRiver);
+    int8 playerToReveal = my.PlayRound_River(myFlop,myTurn,myRiver, gamelog);
     if( playerToReveal == -1 ) return;
 
 
@@ -67,7 +67,7 @@ void HoldemArena::PlayGameInner(HoldemArena & my, GameDeck * tableDealer)
 	finalCommunity.AddToHand(myRiver);
 
 
-	my.PlayShowdown(finalCommunity,playerToReveal);
+	my.PlayShowdown(finalCommunity,playerToReveal, gamelog);
 }
 
 
@@ -241,7 +241,7 @@ void HoldemArena::DealAllHands(GameDeck * tableDealer, std::ostream & holecardsD
 
 
 //If tableDealer is null, you may specify dealt cards using the console.
-void HoldemArena::BeginNewHands(const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer)
+void HoldemArena::BeginNewHands(std::ostream &gamelog, const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer)
 {
 	if( IsAlive(newDealer) ) curDealer = newDealer;
 
@@ -381,7 +381,7 @@ void HoldemArena::PrepBettingRound(bool bFirstBettingRound, uint8 otherBettingRo
 }
 
 
-int8 HoldemArena::PlayRound_BeginHand()
+int8 HoldemArena::PlayRound_BeginHand(std::ostream &gamelog)
 {
     gamelog << "BEGIN" << endl;
 
@@ -390,12 +390,12 @@ int8 HoldemArena::PlayRound_BeginHand()
 	PrepBettingRound(true,3);  //flop, turn, river remaining
 
 
-    return PlayRound(CommunityPlus::EMPTY_COMPLUS,0);
+    return PlayRound(CommunityPlus::EMPTY_COMPLUS,0, gamelog);
 
 }
 
 
-int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop)
+int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop, std::ostream &gamelog)
 {
 
 
@@ -410,10 +410,10 @@ int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop)
 
 	PrepBettingRound(false,2); //turn, river remaining
 
-    return PlayRound(flop,3);
+    return PlayRound(flop,3, gamelog);
 }
 
-int8 HoldemArena::PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn)
+int8 HoldemArena::PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn, std::ostream &gamelog)
 {
     CommunityPlus community;
     community.SetUnique(flop);
@@ -432,11 +432,11 @@ int8 HoldemArena::PlayRound_Turn(const CommunityPlus & flop, const DeckLocation 
     PrepBettingRound(false,1); //river remaining
 
 
-    return PlayRound(community,4);
+    return PlayRound(community,4, gamelog);
 
 }
 
-int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation & turn, const DeckLocation & river)
+int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation & turn, const DeckLocation & river, std::ostream &gamelog)
 {
     CommunityPlus community;
     community.SetUnique(flop);
@@ -459,7 +459,7 @@ int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation
 
     PrepBettingRound(false,0); //no other betting rounds
 
-    return PlayRound(community,5);
+    return PlayRound(community,5, gamelog);
 }
 
 

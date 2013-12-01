@@ -42,6 +42,8 @@
 
 void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
 {
+    o << e.myPlayerName << " " << flush;
+    
     if ( e.IsFold() )
     {
         o << "folds" << endl;
@@ -135,12 +137,8 @@ void HoldemArena::incrIndex()
 	curIndex %= nextNewPlayer;
 }
 
-void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theBet, const float64 theIncrBet
-	, const float64& toCall, const int8 bBlind, const bool& isBlindCheck, const bool& isAllIn)
+void HoldemArena::broadcastCurrentMove(const HoldemAction &currentMove)
 {
-    const float64 moneyRemain = p[playerID]->GetMoney() - theBet;
-	const HoldemAction currentMove(myPot + theIncrBet,theIncrBet, moneyRemain ,  playerID, theBet, toCall, bBlind , isBlindCheck, isAllIn);
-
 	//ASSERT ( playerID == curIndex )
 	int8 cycleIndex = curIndex;
 	incrIndex();
@@ -157,11 +155,7 @@ void HoldemArena::broadcastCurrentMove(const int8& playerID, const float64& theB
 	    }
     	incrIndex();
 	}
-	if( bSpectate )
-	{
-	    gamelog << p[currentMove.GetPlayerID()]->GetIdent() << " " << flush;
-	    ToString(currentMove, gamelog);
-	}
+
 
 }
 

@@ -144,12 +144,7 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 
         const float64 highContribution = PlayerHandBetTotal(*(p[highestBetter]));
         //What if you fold to an all-in? I think it will work just fine.
-        if( bVerbose )
-        {
-            gamelog << endl;
-            gamelog << "All fold! " << p[highestBetter]->GetIdent() <<
-            " wins $" << (   myPot - highContribution   ) << endl;
-        }
+
         float64 rh = static_cast<float64>(highestBetter)+2;
         randRem /= myPot*highContribution+rh;
         randRem *= rh;
@@ -158,7 +153,6 @@ If everyone checks (or is all-in) on the final betting round, the player who act
     }else
     {
         std::cerr << "Too many people folded! (Even the winner!?)" << endl;
-        gamelog << "Too many people folded! (Even the winner!?)" << endl;
         exit(1);
 #endif
     }
@@ -190,7 +184,7 @@ bool HoldemArenaBetting::IsHeadsUp() const
 }
 
 
-void HoldemArenaBetting::startBettingRound()
+void HoldemArenaBetting::startBettingRound(std::ostream * const spectateLog)
 {
 
 
@@ -262,9 +256,15 @@ void HoldemArenaBetting::startBettingRound()
 
         PlayerForcedBetTotal(withP1) = PlayerBet(withP1);
 
-            if( bVerbose ) //Blinds are not broadcasted without bVerbose
+            //if( bVerbose ) //Blinds are broadcasted always regardless of bVerbose, because bots may need to see it.
             {
-                broadcastCurrentMove(curIndex, PlayerBet(withP1), PlayerBet(withP1), 0.0, 1, false, PlayerAllIn(withP1) > 0);
+                const HoldemAction currentMove(withP1.GetIdent(), myPot, withP1.GetMoney()
+                                               ,
+                                               curIndex, PlayerBet(withP1), PlayerBet(withP1), 0.0, 1, false, PlayerAllIn(withP1) > 0);
+                broadcastCurrentMove(currentMove);
+                if (spectateLog) {
+                    HoldemArena::ToString(currentMove, *spectateLog);
+                }
             }
 
 		do
@@ -287,10 +287,17 @@ void HoldemArenaBetting::startBettingRound()
 
         PlayerForcedBetTotal(withP2) = PlayerBet(withP2);
 
-            if( bVerbose ) //Blinds are not broadcasted without bVerbose
+            //if( bVerbose ) //Blinds are broadcasted always regardless of bVerbose, because bots may need to see it.
             {
-                broadcastCurrentMove(curIndex, PlayerBet(withP2),PlayerBet(withP2), 0.0, 2, false, PlayerAllIn(withP2) > 0);
+                const HoldemAction currentMove(withP2.GetIdent(), myPot, withP2.GetMoney()
+                                               ,
+                                               curIndex, PlayerBet(withP2),PlayerBet(withP2), 0.0, 2, false, PlayerAllIn(withP2) > 0);
+                broadcastCurrentMove(currentMove);
+                if (spectateLog) {
+                    HoldemArena::ToString(currentMove, *spectateLog);
+                }
             }
+
 
 		bBlinds = curIndex;
 
@@ -401,10 +408,11 @@ void HoldemArenaBetting::incrPlayerNumber(Player& currentPlayer)
 
 
 
-void HoldemArenaBetting::MakeBet(float64 betSize)
+HoldemAction HoldemArenaBetting::MakeBet(float64 betSize, struct MinRaiseError *out)
 {
+    struct MinRaiseError &message = *out;
 
-    if( bBetState != 'b' ) return;
+    if( bBetState != 'b' ) return HoldemAction(false);
 
 
 	///---------------------------------
@@ -485,10 +493,9 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
                     if( PlayerBet(withP) > highBet && PlayerBet(withP) < highBet + myTable->GetMinRaise() )
                     {///You raised less than the MinRaise
 
-                            if( bVerbose )
-                            {
-                                gamelog << "The minimum raise bet is by " << myTable->GetMinRaise() << " to " << highBet + myTable->GetMinRaise() << ": " << highBet + myTable->GetMinRaise() - PlayerBet(withP) << " more" << endl;
-                            }
+                        message.minRaiseBy = myTable->GetMinRaise();
+                        message.minRaiseTo = highBet + myTable->GetMinRaise();
+                        message.error = PlayerBet(withP) - message.minRaiseTo;
 
                         const float64 distFromCall = PlayerBet(withP) - highBet;
                         const float64 distFromMinRaise = myTable->GetMinRaise() - distFromCall;
@@ -500,6 +507,9 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
                         {
                             PlayerBet(withP) = highBet;
                         }
+
+                        message.result = PlayerBet(withP);
+
                     } //end if: raised less than MinRaise
                     
                     nonfoldActionOccurred();
@@ -512,8 +522,12 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
     
     
     
-			broadcastCurrentMove(curIndex, PlayerBet(withP), PlayerBet(withP) - PlayerLastBet(withP), highBet, 0
+			const HoldemAction currentMove(withP.GetIdent(), myPot, withP.GetMoney()
+                                           ,
+                                 curIndex, PlayerBet(withP), PlayerBet(withP) - PlayerLastBet(withP), highBet, 0
 					, curIndex == bBlinds && comSize == 0 && curIndex == highestBetter,PlayerAllIn(withP) > 0);
+            broadcastCurrentMove(currentMove);
+
 
 			if( PlayerBet(withP) >= highBet )
 			{
@@ -556,11 +570,12 @@ void HoldemArenaBetting::MakeBet(float64 betSize)
             if(readyToFinish())
             {
                  finishBettingRound();
-                 return ;
+                 return currentMove;
             }
 		}while (!( myTable->CanStillBet(curIndex) ));
 
         //bRoundState = 'b';
+    return currentMove;
 
 }
 
@@ -654,13 +669,13 @@ void HoldemArenaShowdown::finishShowdown()
     curIndex = called;
 }
 
-void HoldemArenaShowdown::MuckHand()
+void HoldemArenaShowdown::MuckHand(std::ostream &gamelog)
 {
     ShowdownRep worstHand(curIndex); ///worstHand defaults to the worst hand. You only need to initialize playerIndex
-    RevealHand(CommunityPlus::EMPTY_COMPLUS, CommunityPlus::EMPTY_COMPLUS);
+    RevealHand(CommunityPlus::EMPTY_COMPLUS, CommunityPlus::EMPTY_COMPLUS, gamelog);
 }
 
-void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const CommunityPlus & playerHand)
+void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const CommunityPlus & playerHand, std::ostream &gamelog)
 {
     Player& withP = *p[curIndex];
 
@@ -721,7 +736,7 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const Commun
 
 }
 
-void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const CommunityPlus & playerHand)
+void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const CommunityPlus & playerHand, std::ostream &gamelog)
 {
 
 ///At this point curIndex is STILL IN THE HAND (not all in)
@@ -805,7 +820,7 @@ void HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Communit
 
 }
 
-void HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community)
+void HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const CommunityPlus & community, std::ostream &gamelog)
 {
     if( bRoundState == '!' ) return;
 
@@ -826,10 +841,10 @@ void HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const Com
     switch( bRoundState )
     {
         case 'w':
-            RevealHandMain(comp, playerHand);
+            RevealHandMain(comp, playerHand, gamelog);
             break;
         case 'a':
-            RevealHandAllIns(comp, playerHand);
+            RevealHandAllIns(comp, playerHand, gamelog);
             break;
     }
 }

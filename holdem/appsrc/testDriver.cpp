@@ -210,7 +210,7 @@ static struct BlindUpdate myBlindState(HoldemArena & my)
     return b;
 }
 
-static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, BlindValues firstBlind, SerializeRandomDeck * tableDealer, bool bLoadedGame, ifstream & closeFile)
+static Player* PlayGameLoop(std::ostream& gamelog, HoldemArena & my,BlindStructure & blindController, BlindValues firstBlind, SerializeRandomDeck * tableDealer, bool bLoadedGame, ifstream & closeFile)
 {
 
 
@@ -251,7 +251,7 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 
     #endif
 
-		my.BeginNewHands(thisRoundBlinds.b, thisRoundBlinds.bNew);
+		my.BeginNewHands(gamelog, thisRoundBlinds.b, thisRoundBlinds.bNew);
 
 
         my.DealAllHands(tableDealer,
@@ -272,7 +272,7 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 #endif
 		my.ResetDRseed();
 
-        HoldemArena::PlayGameInner(my, tableDealer);
+        HoldemArena::PlayGameInner(my, tableDealer, gamelog);
 #ifdef DEBUG_SINGLE_HAND
 		exit(0);
 #endif
@@ -303,7 +303,7 @@ static Player* PlayGameLoop(HoldemArena & my,BlindStructure & blindController, B
 #endif // GRAPHMONEY
 
 
-		my.RefreshPlayers(); ///New Hand (handnum is also incremented now)
+		my.RefreshPlayers(&gamelog); ///New Hand (handnum is also incremented now)
 
 
 		if( closeFile.is_open() ) { closeFile.close(); }
@@ -458,15 +458,8 @@ static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
 
 	StackPlayerBlinds bg(AUTO_CHIP_COUNT*9, smallBlindChoice / AUTO_CHIP_COUNT);
     SitAndGoBlinds sg(b.GetSmallBlind(),b.GetBigBlind(),blindIncrFreq);
-		#ifdef REGULARINTOLOG
-            std::ios::openmode gamelogMode = std::ios::trunc;
-            if( bLoadGame ) gamelogMode = std::ios::app;
-			std::ofstream gameOutput("gamelog.txt",gamelogMode);
-			HoldemArena myTable(smallBlindChoice, gameOutput,true, true);
-		#else
-            HoldemArena myTable(smallBlindChoice, gameLog,true, true);
-		#endif
 
+HoldemArena myTable(smallBlindChoice,true, true);
 
 	SerializeRandomDeck * tableDealer = 0;
 	SerializeRandomDeck internalDealer;
@@ -685,8 +678,14 @@ if( bLoadGame )
 
 
 
-
-    Player* iWin = PlayGameLoop(myTable,SELECTED_BLIND_MODEL, b,tableDealer, bLoadGame, loadFile);
+#ifdef REGULARINTOLOG
+    std::ios::openmode gamelogMode = std::ios::trunc;
+    if( bLoadGame ) gamelogMode = std::ios::app;
+    std::ofstream gameOutput("gamelog.txt",gamelogMode);
+    Player* iWin = PlayGameLoop(gameOutput, myTable,SELECTED_BLIND_MODEL, b,tableDealer, bLoadGame, loadFile);
+#else
+    Player* iWin = PlayGameLoop(gameLog, myTable,SELECTED_BLIND_MODEL, b,tableDealer, bLoadGame, loadFile);
+#endif
 
 #ifdef REGULARINTOLOG
 gameOutput.close();
