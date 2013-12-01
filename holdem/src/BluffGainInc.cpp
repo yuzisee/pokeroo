@@ -400,6 +400,7 @@ float64 StateModel::fd(const float64 betSize, const float64 yval)
 }
 
 
+
 void StateModel::query( const float64 betSize )
 {
     // betSize here is always "my" bet size. The perspective of opponents is already covered in <tt>ea</tt>
@@ -463,21 +464,23 @@ void StateModel::query( const float64 betSize )
         raiseAmount_A[i] = ea.RaiseAmount(betSize,i);
 
         const float64 sliderx = betSize;
+
+        // TODO(from yuzisee): Explore using
+        /* fMyFoldGain.predictedRaiseToThisRound(<#float64 currentBetToCall#>, <#float64 currentAlreadyBet#>, <#float64 predictedRaiseTo#>) */
+        // as sliderx?
+
         const float64 evalX = raiseAmount_A[i];
-        potRaisedWin_A[i] = g_raised(sliderx,evalX);
+        potRaisedWin_A[i] = g_raised(sliderx,evalX); // as you can see below, this value is only blended in if we are below firstFoldToRaise
         potRaisedWinD_A[i] = gd_raised(sliderx,evalX,potRaisedWin_A[i]);
 
-        const float64 oppRaisedMyFoldGain = fMyFoldGain.myFoldGainAgainstPredictedRaise(fMyFoldGain.suggestMeanOrRank(), //MEAN /* called with ea.ed */,
-                                                                                        betSize, ea.tableinfo->alreadyBet(), raiseAmount_A[i]); //You would fold the additional (betSize - ea->alreadyBet() )
-
-        if( potRaisedWin_A[i] < oppRaisedMyFoldGain )
+        if (willFoldToReraise(raiseAmount_A[i], potRaisedWin_A[i], fMyFoldGain, *(ea.tableinfo), betSize))
         {
 			if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
 
             //Since g_raised isn't pessimistic based on raiseAmount (especially when we're just calling), don't add additional gain opportunity -- we should instead assume that if we would fold against such a raise that the opponent has us as beat as we are.
             // Deduct the bet you make and fold
             potRaisedWin_A[i] = 1.0 - ea.tableinfo->betFraction(betSize);
-            potRaisedWinD_A[i] = 0;
+            potRaisedWinD_A[i] = -1.0;
         }
 
     }
@@ -666,4 +669,47 @@ void StateModel::query( const float64 betSize )
     delete [] potRaisedWinD_A;
     
     
+}
+
+bool StateModel::willFoldToReraise
+(
+ const float64 raiseAmount // their hypothetical re-raise amount
+ ,
+ const float64 playGain
+ ,
+ FoldOrCall & fMyFoldGain
+ ,
+ ExpectedCallD & myInfo
+ ,
+ const float64 hypotheticalMyRaiseTo
+) {
+    const float64 betSize = hypotheticalMyRaiseTo;
+
+    // An eventually raised showdown can happen gradually if there are more betting rounds!
+    const struct FoldResponse oppRaisedMyFoldGain = fMyFoldGain.myFoldGainAgainstPredictedReraise(fMyFoldGain.suggestMeanOrRank(), //MEAN /* called with ea.ed */,
+                                                                                                  myInfo.alreadyBet(), myInfo.callBet(), betSize, raiseAmount); //You would fold the additional (betSize - ea->alreadyBet() )
+
+    const bool bIsOverbetAgainstThisRound = 0 < oppRaisedMyFoldGain.n; // this is an overbet even this round, so I'd just fold to it now and win more later
+
+
+    if (bIsOverbetAgainstThisRound) {
+        // We can profit from folding. This is a way overbet and we wouldn't call here then.
+        return true;
+    }
+
+    // When we can't profit from folding, foldGain will return the concede gain, conveniently.
+    const float64 concedeGain = oppRaisedMyFoldGain.gain;
+
+    const bool bIsProfitableCall = concedeGain < playGain; // At least by calling I can win back a little more than losing concedeGain upfront
+
+    if (!bIsProfitableCall) {
+        // Not a profitable call either? Then I guess we'll fold to reraise. Return true.
+        return true;
+    }
+
+    // ...
+
+
+
+    return false;
 }

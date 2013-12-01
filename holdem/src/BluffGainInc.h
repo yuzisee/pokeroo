@@ -236,7 +236,7 @@ public:
 
                )
     : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
-    ,last_x(-1)
+    ,last_x(std::numeric_limits<float64>::signaling_NaN())
     ,
     ea(c)
     ,
@@ -248,7 +248,6 @@ public:
     ,
     firstFoldToRaise(-1)
     {
-        query(0);
     }
     
     /*
@@ -275,6 +274,19 @@ public:
 
 	virtual float64 f(const float64);
     virtual float64 fd(const float64, const float64);
+
+    static bool willFoldToReraise
+    (
+     const float64 raiseAmount
+     ,
+     const float64 playGain
+     ,
+     FoldOrCall & fMyFoldGain
+     ,
+     ExpectedCallD & myInfo
+     ,
+     const float64 hypotheticalMyRaiseTo
+     );
 
 
 

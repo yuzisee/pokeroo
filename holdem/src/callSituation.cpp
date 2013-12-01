@@ -100,7 +100,7 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
 	const float64 totalFG = 1 + ExpectedCallD::betFraction(p,  FG.f((facedBet > FG.waitLength.bankroll) ? (FG.waitLength.bankroll) : facedBet)  );
 
     if( totalFG < 0 )
-    {
+    { // You can't lose more than ALL your money
         if( foldWaitLength_out != 0 ) *foldWaitLength_out = 0;
          return 0;
     }else
@@ -300,8 +300,104 @@ MeanOrRank FoldOrCall::suggestMeanOrRank() const {
     }
 }
 
-float64 FoldOrCall::myFoldGainAgainstPredictedRaise(MeanOrRank meanOrRank, float64 currentBetToCall, float64 currentAlreadyBet, float64 predictedRaiseTo) {
-    return foldGain(meanOrRank, currentBetToCall - currentAlreadyBet, predictedRaiseTo, (float64*) 0);
+    RaiseRatio::RaiseRatio(float64 quantum, float64 firstBetBy, float64 totalBetBy, int8 rounds)
+    : ScalarFunctionModel(quantum),
+
+    fA(firstBetBy)
+    ,
+    fS(totalBetBy)
+    ,
+    fK(rounds)
+    {}
+
+
+    float64 RaiseRatio::f(const float64 r)  {
+        float64 expected = fS;
+        float64 actual = 0.0;
+        float64 next = fA;
+        for (int i=1;i<=fK;++i) {
+            next *= r;
+            actual += next;
+
+        }
+        return actual - expected;
+    }
+    float64 RaiseRatio::fd(const float64 r, const float64 dummy)  {
+        float64 dActual = 0.0;
+        float64 next = fA;
+        for (int i=1;i<=fK;++i) {
+            // actual += fA*r^i
+            // dActual += fA * i * r^(i-1)
+            dActual += i * next;
+            next *= r;
+        }
+        return dActual;
+    }
+
+float64 RaiseRatio::FindRatio() {
+
+    const float64 reraisedByFinalRatio = fS / fA; // If fK == 1 this would be the solution. If fK < 1 the required ratio only gets lower.
+
+    return FindZero(1.0, reraisedByFinalRatio, false);
+}
+
+float64 FoldOrCall::predictedRaiseToThisRound(float64 actualBetToCall, float64 hypotheticalMyRaiseTo, float64 predictedRaiseToFinal) const {
+    const uint8 spreadRaisesOverThisManyBettingRounds = 1 + fTable.FutureRounds();
+    const float64 reraisedByFinal = predictedRaiseToFinal - hypotheticalMyRaiseTo;
+    const float64 myRaiseBy = (hypotheticalMyRaiseTo - actualBetToCall);
+    const float64 minRaiseBy = fTable.GetMinRaise();
+
+    const float64 start = (minRaiseBy < myRaiseBy) ? myRaiseBy : minRaiseBy; // choose the larger of the two
+
+    // The quantum we want is enough to get the first bet size accurate to one chipdenom.
+    const float64 quantum = fTable.GetChipDenom() / start;
+
+    RaiseRatio raiseRatio(quantum, start, reraisedByFinal, spreadRaisesOverThisManyBettingRounds);
+
+    const float64 r = raiseRatio.FindRatio();
+
+
+    // Or, perhaps the total raise can be approximated with an integral:
+    //  reraisedByFinal = {\int_a}^b  (hypotheticalMyRaise - actualBetToCall) * exp(x/k)  dx
+    // To keep the units correct, let's start with the mean value and multibly by our own interval
+    //  reraisedByFinal = spreadRaisesOverThisManyBettingRounds * (1.0/( b- a)) (hypotheticalMyRaise - actualBetToCall) * {\int_a }^b  exp(x/k) dx
+    //  reraisedByFinal = spreadRaisesOverThisManyBettingRounds * (1.0/(xB-xA)) (hypotheticalMyRaise - actualBetToCall) * {\int_xA}^xB exp(x/k) dx
+    //    f = exp(x/k)
+    //    F = k * exp(x/k)
+    //  reraisedByFinal = spreadRaisesOverThisManyBettingRounds * (1.0/(xB-xA)) (hypotheticalMyRaise - actualBetToCall) * (k * exp(xB/k) - k * exp(xA/k))
+    //  reraisedByFinal = spreadRaisesOverThisManyBettingRounds * (1.0/(xB-xA)) (hypotheticalMyRaise - actualBetToCall) * k * (exp(xB/k) - exp(xA/k))
+    //  reraisedByFinal =                                     K * (1.0/(xB-xA)) (hypotheticalMyRaise - actualBetToCall) * k * (exp((K+0.5)/k) - exp(0.5/k))
+    //  reraisedByFinal =                                     K * (1.0/(K))     (hypotheticalMyRaise - actualBetToCall) * k * (exp((K+0.5)/k) - exp(0.5/k))
+    //  reraisedByFinal = (hypotheticalMyRaise - actualBetToCall) * k * (exp((K+0.5)/k) - exp(0.5/k))
+    //  reraisedByFinal = (hypotheticalMyRaise - actualBetToCall) * k * exp(0.5/k) * (exp((K)/k) - 1.0)
+    //  reraisedByFinal = (hypotheticalMyRaise - actualBetToCall) * k * exp(0.5/k) * (exp(K/k) - 1.0)
+
+#ifdef DEBUGASSERT
+    if(is_nan(r)) {
+        std::cout << "raiseRatio(" << quantum << "," << myRaiseBy << "," << reraisedByFinal << "," << static_cast<int>(spreadRaisesOverThisManyBettingRounds) << ") NaN'ed" << std::endl;
+        exit(1);
+    }
+#endif // DEBUGASSERT
+
+    const float64 reraisedByThisRound = start * r;
+    if (predictedRaiseToFinal < reraisedByThisRound) {
+        // They're re-raising all-in then?
+        return predictedRaiseToFinal;
+    } else {
+        return reraisedByThisRound;
+    }
+}
+
+FoldResponse FoldOrCall::myFoldGainAgainstPredictedReraise(MeanOrRank meanOrRank, float64 currentAlreadyBet, float64 actualBetToCall, float64 hypotheticalMyRaiseTo, float64 predictedReraiseToFinal) {
+    struct FoldResponse result;
+    result.gain = foldGain(meanOrRank, hypotheticalMyRaiseTo - currentAlreadyBet
+                    ,
+                    // predictedReraiseToFinal
+                    predictedRaiseToThisRound(actualBetToCall, hypotheticalMyRaiseTo, predictedReraiseToFinal)
+                    ,
+                    &(result.n)
+                    );
+    return result;
 }
 
 float64 FoldOrCall::myFoldGain(MeanOrRank meanOrRank) {

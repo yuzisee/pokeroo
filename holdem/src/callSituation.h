@@ -131,6 +131,33 @@ public:
 }
 ;
 
+
+// Assume the bet sequence is:
+// x[0]: (hypotheticalMyRaise - actualBetToCall) * exp(0.0)   <-- not included in reraisedByFinal because it's already included in hypotheticalMyRaise
+// x[1]: (hypotheticalMyRaise - actualBetToCall) * exp(1.0/k) <-- this happens this round, and then assume we call.
+// x[2]: (hypotheticalMyRaise - actualBetToCall) * exp(2.0/k) <-- this raise happens in the next round and again assume we call.
+// x[spreadRaisesOverThisManyBettingRounds]: ...
+class RaiseRatio : public ScalarFunctionModel {
+    const float64 fA;
+    const float64 fS;
+    const int8 fK;
+public:
+
+    RaiseRatio(float64 quantum, float64 firstBetBy, float64 totalBetBy, int8 rounds);
+
+    float64 f(const float64 r) override final ;
+
+    float64 fd(const float64 r, const float64 dummy) override final;
+
+    float64 FindRatio();
+}
+;
+
+struct FoldResponse {
+    float64 gain; // 1.0 is "no change", 0.0 is "lose all money"
+    float64 n; // number of hands we can fold if it's profitable to fold
+};
+
 /**
  * For comparing whether we should fold or call, provide an offset that would set callGain to zero if it were just as valuable as folding.
  */
@@ -190,8 +217,9 @@ public:
     }
 
     MeanOrRank suggestMeanOrRank() const;
+    float64 predictedRaiseToThisRound(float64 actualBetToCall, float64 hypotheticalMyRaiseTo, float64 predictedRaiseTo) const;
 
-    float64 myFoldGainAgainstPredictedRaise(MeanOrRank meanOrRank,float64 currentBetToCall, float64 currentAlreadyBet, float64 predictedRaiseTo);
+    struct FoldResponse myFoldGainAgainstPredictedReraise(MeanOrRank meanOrRank, float64 currentAlreadyBet, float64 actualBetToCall, float64 hypotheticalMyRaise, float64 predictedReraiseToFinal);
     float64 myFoldGain(MeanOrRank meanOrRank);
     std::pair<float64,float64> myFoldGainAndWaitlength(MeanOrRank meanOrRank);
 
