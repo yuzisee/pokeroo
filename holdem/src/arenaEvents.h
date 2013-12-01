@@ -187,8 +187,8 @@ class HoldemArenaBetting : public HoldemArenaEventBase
 ;
 
 struct Reveal {
-    const playernumber_t playerIdx;
-    const std::string outcome;
+    playernumber_t playerIdx;
+    std::string outcome;
 
     Reveal(playernumber_t idx, const std::string & text) : playerIdx(idx), outcome(text) {}
 };
