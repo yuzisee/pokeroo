@@ -807,7 +807,6 @@ Reveal HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Commun
 			}
 			else
 			{
-                revealAction << "mucks";
 				gamelog << endl << withP.GetIdent() << " mucks " << endl;
 			}
 
