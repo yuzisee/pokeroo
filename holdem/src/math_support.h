@@ -22,7 +22,7 @@ inline float64 log1p(float64 x)
 
 inline bool is_nan(float64 x)
 {
-    return x != x;
+    return (!(x == x));
 }
 
 #include <limits>

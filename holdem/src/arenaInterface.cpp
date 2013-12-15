@@ -273,7 +273,7 @@ float64 HoldemArena::GetBetDecision(playernumber_t n)
 			return p[n]->myStrat->MakeBet();
 		}
 	}
-	return 0;
+	return std::numeric_limits<float64>::signaling_NaN();
 }
 
 char HoldemArena::GetPlayerBotType(playernumber_t n) const
