@@ -128,7 +128,7 @@ class DeterredGainStrategy : public PositionalStrategy
     protected:
     int8 bGamble;
     public:
-    DeterredGainStrategy(const std::string &logfilename, int8 riskymode =0) : PositionalStrategy(logfilename, riskymode ? false : true,true,false,false), bGamble(riskymode) {}
+    DeterredGainStrategy(const std::string &logfilename, int8 riskymode) : PositionalStrategy(logfilename, riskymode ? false : true,true,false,false), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }
@@ -153,7 +153,7 @@ class PureGainStrategy : public PositionalStrategy
 protected:
     int8 bGamble;
 public:
-    PureGainStrategy(const std::string &logfilename, int8 riskymode =0) : PositionalStrategy(logfilename, true,true,false,false), bGamble(riskymode) {}
+    PureGainStrategy(const std::string &logfilename, int8 riskymode) : PositionalStrategy(logfilename, true,true,false,false), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }

@@ -179,7 +179,7 @@ playernumber_t HoldemArena::AddStrategyBot(const std::string gameId, const std::
             //new ImproveGainStrategy(2);
         break;
     case 'C':
-        botStrat = new DeterredGainStrategy(logfilename);
+        botStrat = new DeterredGainStrategy(logfilename, 0);
         break;
     case 'D':
         botStrat = new PureGainStrategy(logfilename, 2);
@@ -204,7 +204,7 @@ playernumber_t HoldemArena::AddStrategyBot(const std::string gameId, const std::
         children[1] = new PureGainStrategy(logfilename, 2); //Danger
         children[2] = new PureGainStrategy(logfilename, 3); //Trap
         children[3] = new PureGainStrategy(logfilename, 4); //Action
-        children[4] = new DeterredGainStrategy(logfilename); //Com
+        children[4] = new DeterredGainStrategy(logfilename, 0); //Com
         children[5] = new DeterredGainStrategy(logfilename, 2);//Space
 
         combined = new MultiStrategy(statefilename,children,NUMBER_OF_BOTS_COMBINED);

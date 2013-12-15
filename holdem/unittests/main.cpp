@@ -899,7 +899,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy mS(VectorOf(callFold));
 
 
-        PureGainStrategy bot(0);
+        PureGainStrategy bot(".", 0);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("h22", 500, botToTest);
         myTable.ManuallyAddPlayer("Nav", 500.0, &nS);
@@ -2539,7 +2539,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy tS(foldOnly);
 
 
-        PureGainStrategy bot(0);
+        PureGainStrategy bot(".", 0);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("TrapBotV", 1497.0, &tS);
         myTable.ManuallyAddPlayer("SpaceBotV", 1498.0, &sS); // small blind
@@ -3093,7 +3093,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy gS(foldOnly);
 
 
-        PureGainStrategy bot(0);
+        PureGainStrategy bot(".", 0);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("SpaceBot9", 717.0, botToTest);
         myTable.ManuallyAddPlayer("Nav", 2474.0, &pS); // small blind
@@ -3850,7 +3850,7 @@ int main(int argc, const char * argv[])
     
     // Regression tests
 
-    RegressionTests::testRegression_022();
+//    RegressionTests::testRegression_022();
 //    RegressionTests::testRegression_021(); // TODO(from yuzisee): We need to track distribution of flops to identify drawing hands.
 
     RegressionTests::testRegression_006();
