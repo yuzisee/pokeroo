@@ -402,8 +402,8 @@ class HoldemArena
         char pTypes[SEATS_AT_TABLE];
 
 #ifdef DEBUGSAVEGAME
-        void SerializeRoundStart(std::ostream & fileSaveState);
-        void UnserializeRoundStart(std::istream & fileSaveState);
+    void SerializeRoundStart(std::ostream & fileSaveState);
+    void UnserializeRoundStart(std::istream & fileSaveState, std::string botStorageDir);
 #endif
 
 
@@ -499,7 +499,26 @@ class HoldemArena
 //==============================
 
         playernumber_t AddHumanOpponent(const char* const id, float64 money);
-        playernumber_t AddStrategyBot(const char* const id, float64 money, char botType);
+
+    /**
+     * AddStrategyBot
+     *  
+     *  Discussion:
+     *    Create a bot and sit them at the next available seat.
+     *
+     *  Parameters:
+     *    storageDir:
+     *      This is the path to a direction that this bot can use for storage.
+     *      Bots use this directory for logging (so you can debug its reasoning), as well as
+     *      to store any persistent state (e.g. MultiBot and GearBot)
+     *    id:
+     *      This is a username or identifier for this player.
+     *    money:
+     *      This is the starting chip count of this player.
+     *    botType:
+     *      A single character describing the bot type to instantiate.
+     */
+    playernumber_t AddStrategyBot(const std::string storageDir, const char* const id, float64 money, char botType);
 
         ///Be very careful with AddPlayerManual
         ///All manual adds must take place prior to AddHumanOpponent or AddStrategyBot calls.

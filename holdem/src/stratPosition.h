@@ -79,7 +79,12 @@ class PositionalStrategy : virtual public PlayerStrategy
         void SoftOpenLogFile();
         void ReleaseLogFile();
 
-        PositionalStrategy( bool bMean=false,bool bRanking=false,bool bWorse=true,bool bHybrid=false ) : PlayerStrategy(), detailPCT(0)
+    PositionalStrategy(const std::string &logfilename, bool bMean=false,bool bRanking=false,bool bWorse=true,bool bHybrid=false )
+    : PlayerStrategy()
+    ,
+    fLogFilename(logfilename)
+    ,
+    detailPCT(0)
         {
             logOptions.bLogMean = bMean;
             logOptions.bLogRanking = bRanking;
@@ -98,6 +103,10 @@ class PositionalStrategy : virtual public PlayerStrategy
     #ifdef DUMP_CSV_PLOTS
     string csvpre;
     #endif
+
+private:
+    // The destination where this bot will write its log.
+    const std::string fLogFilename;
 }
 ;
 
@@ -107,7 +116,7 @@ class ImproveGainStrategy : public PositionalStrategy
 protected:
     int8 bGamble;
 public:
-    ImproveGainStrategy(int8 riskymode =0) : PositionalStrategy(riskymode ? false : true,true,riskymode ? true : false,false), bGamble(riskymode) {}
+    ImproveGainStrategy(const std::string &logfilename, int8 riskymode =0) : PositionalStrategy(logfilename, riskymode ? false : true,true,riskymode ? true : false,false), bGamble(riskymode) {}
 
     float64 MakeBet() override final;
 }
@@ -119,7 +128,7 @@ class DeterredGainStrategy : public PositionalStrategy
     protected:
     int8 bGamble;
     public:
-    DeterredGainStrategy(int8 riskymode =0) : PositionalStrategy(riskymode ? false : true,true,false,false), bGamble(riskymode) {}
+    DeterredGainStrategy(const std::string &logfilename, int8 riskymode =0) : PositionalStrategy(logfilename, riskymode ? false : true,true,false,false), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }
@@ -144,7 +153,7 @@ class PureGainStrategy : public PositionalStrategy
 protected:
     int8 bGamble;
 public:
-    PureGainStrategy(int8 riskymode =0) : PositionalStrategy(true,true,false,false), bGamble(riskymode) {}
+    PureGainStrategy(const std::string &logfilename, int8 riskymode =0) : PositionalStrategy(logfilename, true,true,false,false), bGamble(riskymode) {}
 
     virtual float64 MakeBet();
 }

@@ -52,7 +52,7 @@ void PositionalStrategy::HardOpenLogFile()
 #ifdef LOGPOSITION
     if( !(logFile.is_open()) )
     {
-        logFile.open((ViewPlayer().GetIdent() + ".Thoughts.txt").c_str()
+        logFile.open(fLogFilename.c_str()
 #ifdef WINRELEASE
                      , std::ios::app
 #endif
@@ -68,7 +68,7 @@ void PositionalStrategy::SoftOpenLogFile()
 #ifdef LOGPOSITION
     if( !(logFile.is_open()) )
     {
-        logFile.open((ViewPlayer().GetIdent() + ".Thoughts.txt").c_str()
+        logFile.open(fLogFilename.c_str()
                      , std::ios::app
                      );
     }

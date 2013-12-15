@@ -38,7 +38,7 @@
 #endif
 
 #ifdef DEBUGSAVEGAME
-void HoldemArena::UnserializeRoundStart(std::istream & fileLoadState)
+void HoldemArena::UnserializeRoundStart(std::istream & fileLoadState, std::string botStorageDir)
 {
 
 int16 numericValue;
@@ -88,7 +88,7 @@ int16 numericValue;
                 }
                 else
                 {
-                    AddStrategyBot(playerName.c_str(),pMoney,botType);
+                    AddStrategyBot(botStorageDir, playerName.c_str(),pMoney,botType);
                 }
             }
 
@@ -152,51 +152,58 @@ playernumber_t HoldemArena::AddHumanOpponent(const char* const id, float64 money
     return addedIndex;
 }
 
-playernumber_t HoldemArena::AddStrategyBot(const char* const id, float64 money, char botType)
+playernumber_t HoldemArena::AddStrategyBot(const std::string storageDir, const char* const id, float64 money, char botType)
 {
     PlayerStrategy * botStrat = 0;
     MultiStrategy * combined = 0;
 
 	//EARLY RETURN!!
-	if( botType == 'R' ) return AddStrategyBot(	 id
-												,money
-												,randomBotType(id)
-											   );
+	if( botType == 'R' ) return AddStrategyBot(
+                                               storageDir
+                                               ,
+                                               id
+                                               ,
+                                               money
+                                               ,
+                                               randomBotType(id)
+                                               );
+
+    const std::string logfilename = storageDir + "/" + id + ".Thoughts.txt";
 
     switch( botType )
     {
     case 'A':
-        botStrat = new PureGainStrategy(4);
+        botStrat = new PureGainStrategy(logfilename, 4);
             //new ImproveGainStrategy(2);
         break;
     case 'C':
-        botStrat = new DeterredGainStrategy();
+        botStrat = new DeterredGainStrategy(logfilename);
         break;
     case 'D':
-        botStrat = new PureGainStrategy(2);
+        botStrat = new PureGainStrategy(logfilename, 2);
             // new DeterredGainStrategy(1)
         break;
     case 'N':
-        botStrat = new PureGainStrategy(0);
+        botStrat = new PureGainStrategy(logfilename, 0);
             //new ImproveGainStrategy(0);
         break;
     case 'S':
-        botStrat = new DeterredGainStrategy(2);
+        botStrat = new DeterredGainStrategy(logfilename, 2);
         break;
     case 'T':
-        botStrat = new PureGainStrategy(3);
+        botStrat = new PureGainStrategy(logfilename, 3);
             //new ImproveGainStrategy(1);
         break;
     case 'G':
     case 'M':
     	PositionalStrategy *(children[NUMBER_OF_BOTS_COMBINED]);
 
-        children[0] = new PureGainStrategy(0); //Norm
-        children[1] = new PureGainStrategy(2); //Danger
-        children[2] = new PureGainStrategy(3); //Trap
-        children[3] = new PureGainStrategy(4); //Action
-        children[4] = new DeterredGainStrategy(); //Com
-        children[5] = new DeterredGainStrategy(2);//Space
+        children[0] = new PureGainStrategy(logfilename, 0); //Norm
+        children[1] = new PureGainStrategy(logfilename, 2); //Danger
+        children[2] = new PureGainStrategy(logfilename, 3); //Trap
+        children[3] = new PureGainStrategy(logfilename, 4); //Action
+        children[4] = new DeterredGainStrategy(logfilename); //Com
+        children[5] = new DeterredGainStrategy(logfilename, 2);//Space
 
         combined = new MultiStrategy(children,NUMBER_OF_BOTS_COMBINED);
         if( botType == 'M' ) combined->bGamble = 0;

@@ -526,7 +526,7 @@ if( bLoadGame )
     //
     if( loadFile.is_open() )
     {
-		myTable.UnserializeRoundStart(loadFile);
+		myTable.UnserializeRoundStart(loadFile, ".");
         SELECTED_BLIND_MODEL.UnSerialize( loadFile );
         if( tableDealer )  tableDealer->Unserialize( loadFile ); //Restore state of deck as well
 
@@ -580,28 +580,28 @@ if( bLoadGame )
                     switch(opponentorder[i])
                     {
                         case 0:
-                            myTable.AddStrategyBot("TrapBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(".", "TrapBotV", startingMoney, 'R');
                             break;
                         case 1:
-                            myTable.AddStrategyBot("ConservativeBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(".", "ConservativeBotV", startingMoney, 'R');
                             break;
                         case 2:
-                            myTable.AddStrategyBot("NormalBotV",startingMoney, 'R');
+                            myTable.AddStrategyBot(".", "NormalBotV",startingMoney, 'R');
                             break;
                         case 3:
-                            myTable.AddStrategyBot("SpaceBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(".", "SpaceBotV", startingMoney, 'R');
                             break;
                         case 4:
-                            myTable.AddStrategyBot("ActionBotV",startingMoney, 'R');
+                            myTable.AddStrategyBot(".", "ActionBotV",startingMoney, 'R');
                             break;
                         case 5:
-                            myTable.AddStrategyBot("DangerBotV",startingMoney, 'R');
+                            myTable.AddStrategyBot(".", "DangerBotV",startingMoney, 'R');
                             break;
                         case 6:
-                            myTable.AddStrategyBot("MultiBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(".", "MultiBotV", startingMoney, 'R');
                             break;
                         case 7:
-                            myTable.AddStrategyBot("GearBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(".", "GearBotV", startingMoney, 'R');
                             break;
                     }
 
@@ -620,28 +620,28 @@ if( bLoadGame )
                     switch(opponentorder[i])
                     {
                         case 0:
-                            myTable.AddStrategyBot("D0", AUTO_CHIP_COUNT, 'C');
+                            myTable.AddStrategyBot(".", "D0", AUTO_CHIP_COUNT, 'C');
                             break;
                         case 1:
-                            myTable.AddStrategyBot("D2", AUTO_CHIP_COUNT, 'S');
+                            myTable.AddStrategyBot(".", "D2", AUTO_CHIP_COUNT, 'S');
                             break;
                         case 2:
-                            myTable.AddStrategyBot("P0", AUTO_CHIP_COUNT, 'N');
+                            myTable.AddStrategyBot(".", "P0", AUTO_CHIP_COUNT, 'N');
                             break;
                         case 3:
-                            myTable.AddStrategyBot("P2", AUTO_CHIP_COUNT, 'D');
+                            myTable.AddStrategyBot(".", "P2", AUTO_CHIP_COUNT, 'D');
                             break;
                         case 4:
-                            myTable.AddStrategyBot("P3", AUTO_CHIP_COUNT, 'T');
+                            myTable.AddStrategyBot(".", "P3", AUTO_CHIP_COUNT, 'T');
                             break;
                         case 5:
-                            myTable.AddStrategyBot("P4", AUTO_CHIP_COUNT, 'A');
+                            myTable.AddStrategyBot(".", "P4", AUTO_CHIP_COUNT, 'A');
                             break;
                         case 6:
-                            myTable.AddStrategyBot("Gear", AUTO_CHIP_COUNT, 'G');
+                            myTable.AddStrategyBot(".", "Gear", AUTO_CHIP_COUNT, 'G');
                             break;
                         case 7:
-                            myTable.AddStrategyBot("Multi", AUTO_CHIP_COUNT, 'M');
+                            myTable.AddStrategyBot(".", "Multi", AUTO_CHIP_COUNT, 'M');
                             break;
                     }
 
@@ -655,17 +655,17 @@ if( bLoadGame )
 
             default:
 
-            myTable.AddStrategyBot("GearBotR", AUTO_CHIP_COUNT, 'R');
-            myTable.AddStrategyBot("MultiBotR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(".", "GearBotR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(".", "MultiBotR", AUTO_CHIP_COUNT, 'R');
 
-            myTable.AddStrategyBot("DangerR", AUTO_CHIP_COUNT, 'R');
-            myTable.AddStrategyBot("ComR", AUTO_CHIP_COUNT, 'R');
-            myTable.AddStrategyBot("NormR", AUTO_CHIP_COUNT, 'R');
-            myTable.AddStrategyBot("TrapR", AUTO_CHIP_COUNT, 'R');
-            myTable.AddStrategyBot("AceR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(".", "DangerR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(".", "ComR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(".", "NormR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(".", "TrapR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(".", "AceR", AUTO_CHIP_COUNT, 'R');
 
 
-            myTable.AddStrategyBot("SpaceR", AUTO_CHIP_COUNT, 'R');//&MeanGeomBluff);
+            myTable.AddStrategyBot(".", "SpaceR", AUTO_CHIP_COUNT, 'R');//&MeanGeomBluff);
 
 
                 break;
