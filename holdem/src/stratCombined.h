@@ -63,7 +63,9 @@ class MultiStrategy : public virtual HistoryStrategy
 
     int8 bGamble;
 
-    MultiStrategy(PositionalStrategy** ps, uint8 n) : HistoryStrategy(ps,n), bHandShown(false), prevMoney(-1), bGamble(0)
+    MultiStrategy(std::string stateFilename, PositionalStrategy** ps, uint8 n)
+    : HistoryStrategy(stateFilename, ps,n)
+    , bHandShown(false), prevMoney(-1), bGamble(0)
     {
     }
 
@@ -71,8 +73,8 @@ class MultiStrategy : public virtual HistoryStrategy
     virtual void SeeCommunity(const Hand&, const int8);
     virtual float64 MakeBet();
 
-    virtual void Serialize( std::ostream& saveFile );
-    virtual void Unserialize( std::istream& loadFile );
+    void Serialize( std::ostream& saveFile ) override final;
+    void Unserialize( std::istream& loadFile ) override final;
 }
 ;
 

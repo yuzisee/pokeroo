@@ -403,7 +403,7 @@ class HoldemArena
 
 #ifdef DEBUGSAVEGAME
     void SerializeRoundStart(std::ostream & fileSaveState);
-    void UnserializeRoundStart(std::istream & fileSaveState, std::string botStorageDir);
+    void UnserializeRoundStart(std::istream & fileSaveState, std::string botStorageDir, std::string gameId);
 #endif
 
 
@@ -507,6 +507,9 @@ class HoldemArena
      *    Create a bot and sit them at the next available seat.
      *
      *  Parameters:
+     *    gameId:
+     *      A unique identifier for this game.
+     *      We use this to make sure that saved-state/logs/etc. that are relevant for a particular game are not shared/overwritten across multiple games, especially if the same storageDir is used.
      *    storageDir:
      *      This is the path to a direction that this bot can use for storage.
      *      Bots use this directory for logging (so you can debug its reasoning), as well as
@@ -518,7 +521,7 @@ class HoldemArena
      *    botType:
      *      A single character describing the bot type to instantiate.
      */
-    playernumber_t AddStrategyBot(const std::string storageDir, const char* const id, float64 money, char botType);
+    playernumber_t AddStrategyBot(const std::string gameId, const std::string storageDir, const char* const id, float64 money, char botType);
 
         ///Be very careful with AddPlayerManual
         ///All manual adds must take place prior to AddHumanOpponent or AddStrategyBot calls.

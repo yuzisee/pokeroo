@@ -249,7 +249,7 @@ PerformanceHistory HistoryStrategy::UnserializeOne( std::istream& loadFile )
 
 bool HistoryStrategy::LoadState( )
 {
-    ifstream loadFile( (ViewPlayer().GetIdent() + ".state" ).c_str() );
+    ifstream loadFile( fStateFilename.c_str() );
     if( loadFile.is_open() )
     {
         Unserialize( loadFile );
@@ -265,7 +265,7 @@ bool HistoryStrategy::LoadState( )
 void HistoryStrategy::SaveState( )
 {
 
-        ofstream saveFile( (ViewPlayer().GetIdent() + ".state" ).c_str() );
+        ofstream saveFile( fStateFilename.c_str() );
         Serialize( saveFile );
         saveFile.close();
 

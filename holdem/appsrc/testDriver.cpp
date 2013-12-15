@@ -31,7 +31,8 @@
 #include <ctime>
 #include <algorithm>
 #include <string.h>
-
+#include <iomanip>
+#include <sstream>
 
 #define AUTOEXTRATOKEN "restore.txt"
 
@@ -374,7 +375,7 @@ int8 * Permute(uint8 count, uint32 seed)
 
 
 
-static std::string testPlay(char headsUp = 'G', std::ostream& gameLog = cout)
+static std::string testPlay(std::string gameId, char headsUp = 'G', std::ostream& gameLog = cout)
 {
 
     //mkdir("saves");
@@ -526,7 +527,7 @@ if( bLoadGame )
     //
     if( loadFile.is_open() )
     {
-		myTable.UnserializeRoundStart(loadFile, ".");
+		myTable.UnserializeRoundStart(loadFile, ".", gameId);
         SELECTED_BLIND_MODEL.UnSerialize( loadFile );
         if( tableDealer )  tableDealer->Unserialize( loadFile ); //Restore state of deck as well
 
@@ -580,28 +581,28 @@ if( bLoadGame )
                     switch(opponentorder[i])
                     {
                         case 0:
-                            myTable.AddStrategyBot(".", "TrapBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "TrapBotV", startingMoney, 'R');
                             break;
                         case 1:
-                            myTable.AddStrategyBot(".", "ConservativeBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "ConservativeBotV", startingMoney, 'R');
                             break;
                         case 2:
-                            myTable.AddStrategyBot(".", "NormalBotV",startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "NormalBotV",startingMoney, 'R');
                             break;
                         case 3:
-                            myTable.AddStrategyBot(".", "SpaceBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "SpaceBotV", startingMoney, 'R');
                             break;
                         case 4:
-                            myTable.AddStrategyBot(".", "ActionBotV",startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "ActionBotV",startingMoney, 'R');
                             break;
                         case 5:
-                            myTable.AddStrategyBot(".", "DangerBotV",startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "DangerBotV",startingMoney, 'R');
                             break;
                         case 6:
-                            myTable.AddStrategyBot(".", "MultiBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "MultiBotV", startingMoney, 'R');
                             break;
                         case 7:
-                            myTable.AddStrategyBot(".", "GearBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "GearBotV", startingMoney, 'R');
                             break;
                     }
 
@@ -620,28 +621,28 @@ if( bLoadGame )
                     switch(opponentorder[i])
                     {
                         case 0:
-                            myTable.AddStrategyBot(".", "D0", AUTO_CHIP_COUNT, 'C');
+                            myTable.AddStrategyBot(gameId, ".", "D0", AUTO_CHIP_COUNT, 'C');
                             break;
                         case 1:
-                            myTable.AddStrategyBot(".", "D2", AUTO_CHIP_COUNT, 'S');
+                            myTable.AddStrategyBot(gameId, ".", "D2", AUTO_CHIP_COUNT, 'S');
                             break;
                         case 2:
-                            myTable.AddStrategyBot(".", "P0", AUTO_CHIP_COUNT, 'N');
+                            myTable.AddStrategyBot(gameId, ".", "P0", AUTO_CHIP_COUNT, 'N');
                             break;
                         case 3:
-                            myTable.AddStrategyBot(".", "P2", AUTO_CHIP_COUNT, 'D');
+                            myTable.AddStrategyBot(gameId, ".", "P2", AUTO_CHIP_COUNT, 'D');
                             break;
                         case 4:
-                            myTable.AddStrategyBot(".", "P3", AUTO_CHIP_COUNT, 'T');
+                            myTable.AddStrategyBot(gameId, ".", "P3", AUTO_CHIP_COUNT, 'T');
                             break;
                         case 5:
-                            myTable.AddStrategyBot(".", "P4", AUTO_CHIP_COUNT, 'A');
+                            myTable.AddStrategyBot(gameId, ".", "P4", AUTO_CHIP_COUNT, 'A');
                             break;
                         case 6:
-                            myTable.AddStrategyBot(".", "Gear", AUTO_CHIP_COUNT, 'G');
+                            myTable.AddStrategyBot(gameId, ".", "Gear", AUTO_CHIP_COUNT, 'G');
                             break;
                         case 7:
-                            myTable.AddStrategyBot(".", "Multi", AUTO_CHIP_COUNT, 'M');
+                            myTable.AddStrategyBot(gameId, ".", "Multi", AUTO_CHIP_COUNT, 'M');
                             break;
                     }
 
@@ -655,17 +656,17 @@ if( bLoadGame )
 
             default:
 
-            myTable.AddStrategyBot(".", "GearBotR", AUTO_CHIP_COUNT, 'R');
-            myTable.AddStrategyBot(".", "MultiBotR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(gameId, ".", "GearBotR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(gameId, ".", "MultiBotR", AUTO_CHIP_COUNT, 'R');
 
-            myTable.AddStrategyBot(".", "DangerR", AUTO_CHIP_COUNT, 'R');
-            myTable.AddStrategyBot(".", "ComR", AUTO_CHIP_COUNT, 'R');
-            myTable.AddStrategyBot(".", "NormR", AUTO_CHIP_COUNT, 'R');
-            myTable.AddStrategyBot(".", "TrapR", AUTO_CHIP_COUNT, 'R');
-            myTable.AddStrategyBot(".", "AceR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(gameId, ".", "DangerR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(gameId, ".", "ComR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(gameId, ".", "NormR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(gameId, ".", "TrapR", AUTO_CHIP_COUNT, 'R');
+            myTable.AddStrategyBot(gameId, ".", "AceR", AUTO_CHIP_COUNT, 'R');
 
 
-            myTable.AddStrategyBot(".", "SpaceR", AUTO_CHIP_COUNT, 'R');//&MeanGeomBluff);
+            myTable.AddStrategyBot(gameId, ".", "SpaceR", AUTO_CHIP_COUNT, 'R');//&MeanGeomBluff);
 
 
                 break;
@@ -706,24 +707,31 @@ static void superGame(char headsUp = 0)
 
     #ifdef SUPERINTOLOG
         std::ofstream gameOutput("gamelog.txt");
-        std::string iWin = testPlay(headsUp, gameOutput);
+        std::string iWin = testPlay("0000000", headsUp, gameOutput);
         gameOutput.close();
     #else
-        std::string iWin = testPlay(headsUp);
+        std::string iWin = testPlay("0000000", headsUp);
     #endif
 
+    
 
     std::ofstream tourny("batchResults.txt", std::ios::trunc);
     tourny << iWin.c_str() << endl;
     tourny.close();
+
+    size_t gameNum = 0;
     for(;;)
     {
+
+        std::ostringstream gameIdStr; //output string stream
+        gameIdStr << std::setfill('0') << std::setw(8) << gameNum;
+
         #ifdef SUPERINTOLOG
         gameOutput.open("gamelog.txt");
-        iWin = testPlay(headsUp, gameOutput);
+        iWin = testPlay(gameIdStr, headsUp, gameOutput);
         gameOutput.close();
         #else
-        iWin = testPlay(headsUp);
+        iWin = testPlay(gameIdStr.str(), headsUp);
         #endif
         //system("pause");
         tourny.open("batchResults.txt", std::ios::app);
@@ -762,19 +770,13 @@ int main(int argc, char* argv[])
         storePlayerName.close();
         #endif
 
-        testPlay('P');
+        testPlay("game", 'P');
     }else if( argc == 1 ) //no options, only command by itself
     {
 
 
-	    testPlay('L');
-/*
-#ifdef NO_LOG_FILES
-	    superGame(0);
-#else
-   	    testPlay(0);
-#endif
-*/
+	    testPlay("game", 'L');
+
 
     }else
 #endif
@@ -794,7 +796,7 @@ int main(int argc, char* argv[])
                     #else
                     cout << "testplay()" << flush;
 					++n;
-                    testPlay(atoi(argv[n]));
+                    testPlay("game", atoi(argv[n]));
                     #endif
                     exit(0);
                     break;
@@ -818,7 +820,7 @@ int main(int argc, char* argv[])
 
 
 #ifndef WINRELEASE
-testPlay(1); //Will autodetect bLoadGame
+testPlay("game", 1); //Will autodetect bLoadGame
 exit(0);
 
 

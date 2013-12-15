@@ -138,6 +138,8 @@ class HistoryStrategy : public virtual PlayerStrategy
 {
     protected:
 
+    const std::string fStateFilename; // State will be loaded/saved from/to this file.
+
         PerformanceHistory * picks; //Must be loaded/saved
         int16 currentStrategy; //May need to be loaded/saved
 
@@ -150,7 +152,11 @@ class HistoryStrategy : public virtual PlayerStrategy
 
     public:
     //Exposed for memory management only
-        PositionalStrategy ** strats; //Generated at construction (constant during a game load)
+
+
+    /*! @brief A pointer to an array of PositionalStrategy objects */
+    PositionalStrategy ** strats; //Generated at construction (constant during a game load)
+
         uint8 stratcount; //Generated at construction...
 
 
@@ -159,7 +165,11 @@ class HistoryStrategy : public virtual PlayerStrategy
         static PerformanceHistory UnserializeOne( std::istream& loadFile );
         static void SerializeOne( std::ostream& saveFile, const PerformanceHistory & ph );
 
-        HistoryStrategy(PositionalStrategy** ps, uint8 n) :   picks(0), currentStrategy(-1) , strats(0), stratcount(n)//, bookHandNumber(0)
+    HistoryStrategy(std::string stateFilename, PositionalStrategy** ps, uint8 n)
+    :
+    fStateFilename(stateFilename)
+    ,
+    picks(0), currentStrategy(-1) , strats(0), stratcount(n)//, bookHandNumber(0)
         {
             init(ps,n);
         }
@@ -171,10 +181,12 @@ class HistoryStrategy : public virtual PlayerStrategy
     virtual void SeeAction(const HoldemAction&) {};
     virtual void FinishHand();
 
-    virtual void SaveState();
-    virtual bool LoadState();
+    void SaveState();
+    bool LoadState();
     virtual void Serialize( std::ostream& saveFile ) = 0;
     virtual void Unserialize( std::istream& loadFile ) = 0;
+
+
 }
 ;
 

@@ -38,7 +38,7 @@
 #endif
 
 #ifdef DEBUGSAVEGAME
-void HoldemArena::UnserializeRoundStart(std::istream & fileLoadState, std::string botStorageDir)
+void HoldemArena::UnserializeRoundStart(std::istream & fileLoadState, std::string botStorageDir, std::string gameId)
 {
 
 int16 numericValue;
@@ -88,7 +88,7 @@ int16 numericValue;
                 }
                 else
                 {
-                    AddStrategyBot(botStorageDir, playerName.c_str(),pMoney,botType);
+                    AddStrategyBot(gameId, botStorageDir, playerName.c_str(),pMoney,botType);
                 }
             }
 
@@ -152,13 +152,15 @@ playernumber_t HoldemArena::AddHumanOpponent(const char* const id, float64 money
     return addedIndex;
 }
 
-playernumber_t HoldemArena::AddStrategyBot(const std::string storageDir, const char* const id, float64 money, char botType)
+playernumber_t HoldemArena::AddStrategyBot(const std::string gameId, const std::string storageDir, const char* const id, float64 money, char botType)
 {
     PlayerStrategy * botStrat = 0;
     MultiStrategy * combined = 0;
 
 	//EARLY RETURN!!
 	if( botType == 'R' ) return AddStrategyBot(
+                                               gameId
+                                               ,
                                                storageDir
                                                ,
                                                id
@@ -168,8 +170,8 @@ playernumber_t HoldemArena::AddStrategyBot(const std::string storageDir, const c
                                                randomBotType(id)
                                                );
 
-    const std::string logfilename = storageDir + "/" + id + ".Thoughts.txt";
-
+    const std::string logfilename = storageDir + "/" + gameId + "." + id + ".Thoughts.txt";
+    const std::string statefilename = storageDir + "/" + gameId + "." + id + ".state";
     switch( botType )
     {
     case 'A':
@@ -205,7 +207,7 @@ playernumber_t HoldemArena::AddStrategyBot(const std::string storageDir, const c
         children[4] = new DeterredGainStrategy(logfilename); //Com
         children[5] = new DeterredGainStrategy(logfilename, 2);//Space
 
-        combined = new MultiStrategy(children,NUMBER_OF_BOTS_COMBINED);
+        combined = new MultiStrategy(statefilename,children,NUMBER_OF_BOTS_COMBINED);
         if( botType == 'M' ) combined->bGamble = 0;
         if( botType == 'G' ) combined->bGamble = 1;
 
