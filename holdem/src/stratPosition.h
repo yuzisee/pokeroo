@@ -82,9 +82,9 @@ class PositionalStrategy : virtual public PlayerStrategy
     PositionalStrategy(const std::string &logfilename, bool bMean=false,bool bRanking=false,bool bWorse=true,bool bHybrid=false )
     : PlayerStrategy()
     ,
-    fLogFilename(logfilename)
-    ,
     detailPCT(0)
+    ,
+    fLogFilename(logfilename)
         {
             logOptions.bLogMean = bMean;
             logOptions.bLogRanking = bRanking;
