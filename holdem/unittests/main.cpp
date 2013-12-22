@@ -899,7 +899,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy mS(VectorOf(callFold));
 
 
-        PureGainStrategy bot(".", 0);
+        PureGainStrategy bot("22.txt", 0);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("h22", 500, botToTest);
         myTable.ManuallyAddPlayer("Nav", 500.0, &nS);
@@ -1038,7 +1038,7 @@ namespace RegressionTests {
 
 
     // Hand played live
-    void testRegression_021() {
+    void testRegression_021b() {
 
 
 
@@ -1065,7 +1065,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy mS(callCheckFold);
 
 
-        PureGainStrategy bot(".", 3);
+        PureGainStrategy bot("21b.txt", 3);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("h21", 2600.0, botToTest);
         myTable.ManuallyAddPlayer("Nav", 300.0, &nS);
@@ -1106,6 +1106,220 @@ namespace RegressionTests {
          All-limp except one.
 
          */
+
+
+
+        myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
+
+        {
+            HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 , &(std::cout));
+
+            struct MinRaiseError msg;
+
+
+            r.MakeBet(aS.MakeBet(), &msg);
+
+            r.MakeBet(bS.MakeBet(), &msg);
+
+            r.MakeBet(mS.MakeBet(), &msg);
+
+            r.MakeBet(myTable.GetBetToCall(), &msg);
+
+            r.MakeBet(nS.MakeBet(), &msg);
+            
+            r.MakeBet(sS.MakeBet(), &msg);
+            
+            r.MakeBet(lS.MakeBet(), &msg);
+            r.MakeBet(jS.MakeBet(), &msg);
+
+        }
+        
+
+
+        assert(myTable.IsInHand(0)); // play value hands you have a large stack.
+        // If you win you will win a lot since winning hands only have a high win percentage
+        // and losing hands have a low win percentage
+        // This is based on:
+        // NOT the distribution of community hands
+        // NOT the distribution of opposing hands
+        // YES the distribution of flops
+
+        // Pot is now $14.
+
+        CommunityPlus myFlop;
+
+        card.SetByIndex(30);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(41);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(45);
+        myFlop.AddToHand(card);
+        /*
+
+         Flop:	9c Qh Kh   (Pot: $14)
+
+         */
+
+
+
+        assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
+
+
+        /*
+
+
+         (7 players)
+         [Laily]
+         [Joyce]
+         [Andrew]
+         [Mona]
+         [Joseph]
+         [Nav]
+         [Sam]
+
+         Laily checks
+         Joyce checks
+         Andrew checks
+         Mona checks
+         Joseph checks
+         Nav bets $50
+         Sam calls $50
+         Laily folds
+         Andrew folds
+         Mona folds
+         Joseph calls $50
+         */
+
+
+
+        DeckLocation myTurn;
+        myTurn.SetByIndex(32);
+        /*
+
+         Turn:	9c Qh Kh 10s   (Pot: $164)
+         */
+
+
+        assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
+        /*
+
+         (3 players)
+         [Joseph]
+         [Nav]
+         [Sam]
+
+         Joseph checks
+         Nav checks
+         Sam checks
+
+         */
+
+        DeckLocation myRiver;
+        myRiver.SetByIndex(49);
+
+        /*
+         River:	9c Qh Kh 10s 4c  (Pot: $164)
+         */
+
+        const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
+        //assert(highbettor == 4);
+        // No all-fold; assert that the pot was increased at least.
+        //assert(myTable.GetPotSize() > 55);
+        
+        
+        /*
+         
+         (3 players)
+         [ActionBotV $1495]
+         [NormalBotV $1463.52]
+         [GearBotV $1453]
+         
+         ActionBotV checks
+         NormalBotV checks
+         GearBotV checks
+         
+         
+         
+         */
+    }
+    
+    
+
+    // Hand played live
+    void testRegression_021() {
+
+
+
+        struct BlindValues b;
+        b.SetSmallBigBlind(1.0);
+
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
+        myTable.setSmallestChip(1.0);
+
+        const std::vector<float64> foldOnly(1, 0.0);
+
+        static const float64 aa[] = {std::numeric_limits<float64>::signaling_NaN(), 0.0, 0.0};
+        const std::vector<float64> callCheckFold(aa, aa + sizeof(aa) / sizeof(aa[0]) );
+
+        static const float64 na[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, 0.0, 0.0};
+        static const float64 sa[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, 0.0, std::numeric_limits<float64>::signaling_NaN()};
+
+        FixedReplayPlayerStrategy nS(VectorOf(na));
+        FixedReplayPlayerStrategy sS(VectorOf(sa));
+        FixedReplayPlayerStrategy lS(callCheckFold);
+        FixedReplayPlayerStrategy jS(callCheckFold);
+        FixedReplayPlayerStrategy aS(callCheckFold);
+        FixedReplayPlayerStrategy bS(foldOnly);
+        FixedReplayPlayerStrategy mS(callCheckFold);
+
+
+        PureGainStrategy bot("21.txt", 3);
+        PlayerStrategy * const botToTest = &bot;
+        myTable.ManuallyAddPlayer("h21", 2600.0, botToTest);
+        myTable.ManuallyAddPlayer("Nav", 300.0, &nS);
+        myTable.ManuallyAddPlayer("Sam", 800.0, &sS); // dealer
+        myTable.ManuallyAddPlayer("Laily", 140.0, &lS);
+        myTable.ManuallyAddPlayer("Joyce", 630, &jS);
+        myTable.ManuallyAddPlayer("Andrew", 630, &aS);
+        myTable.ManuallyAddPlayer("Badr", 630, &bS);
+        myTable.ManuallyAddPlayer("Mona", 630, &mS);
+
+        const playernumber_t dealer = 2;
+
+
+
+
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // 7h 2h
+
+            card.SetByIndex(21);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(1);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+
+
+
+        myTable.BeginInitialState(21);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
+
+        /*
+
+         All-limp except one.
+
+         */
+
+
+
+
         assert(myTable.PlayRound_BeginHand(std::cout) != -1);
         assert(myTable.IsInHand(0)); // play value hands you have a large stack.
         // If you win you will win a lot since winning hands only have a high win percentage
@@ -1253,7 +1467,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PureGainStrategy bot(".", 2);
+        PureGainStrategy bot("18.txt", 2);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("MultiBotV", 1590.0, &mS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1582.97, &cS);
@@ -1456,7 +1670,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PureGainStrategy bot(".", 4);
+        PureGainStrategy bot("17.txt", 4);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("MultiBotV", 1502.5, &mS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, &cS);
@@ -1662,7 +1876,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy cS(foldOnly);
         FixedReplayPlayerStrategy sS(foldOnly);
 
-        PureGainStrategy bot(".", 2);
+        PureGainStrategy bot("14a.txt", 2);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("ActionBot14", 810.0, botToTest);
         myTable.ManuallyAddPlayer("NormalBotV", 1630.0, &nS);
@@ -1767,7 +1981,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PureGainStrategy bot(".", 3);
+        PureGainStrategy bot("13a.txt", 3);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("ActionBotV", 810.0, &aS);
         myTable.ManuallyAddPlayer("NormalBot13", 1630.0, botToTest);
@@ -1877,7 +2091,7 @@ namespace RegressionTests {
 
 
 
-        PureGainStrategy bot(".", 4);
+        PureGainStrategy bot("12.txt", 4);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("NormalBot12", 1500.0, botToTest);
         myTable.ManuallyAddPlayer("DangerBotV", 1500.0, &dS); // is the small blind
@@ -2065,7 +2279,7 @@ namespace RegressionTests {
 
 
 
-        PureGainStrategy bot(".", 2);
+        PureGainStrategy bot("11.txt", 2);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("GearBotV", 1500.0, &gS);
         myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
@@ -2163,7 +2377,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy sS(foldOnly);
 
 
-        PureGainStrategy bot(".", 2);
+        PureGainStrategy bot("6.txt", 2);
         PlayerStrategy * const botToTest = &bot;
 
         myTable.ManuallyAddPlayer("GearBotV", 1488.75, &gS);
@@ -2357,7 +2571,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy nS(foldOnly);
 
 
-        PureGainStrategy bot(".", 2);
+        PureGainStrategy bot("5.txt", 2);
         PlayerStrategy * const botToTest = &bot;
 
         myTable.ManuallyAddPlayer("GearBotV", 3004.5, &gS);
@@ -2539,7 +2753,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy tS(foldOnly);
 
 
-        PureGainStrategy bot(".", 0);
+        PureGainStrategy bot("4.txt", 0);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("TrapBotV", 1497.0, &tS);
         myTable.ManuallyAddPlayer("SpaceBotV", 1498.0, &sS); // small blind
@@ -2731,7 +2945,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy gS(foldOnly);
 
 
-        PureGainStrategy bot(".", 2);
+        PureGainStrategy bot("2.txt", 2);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS);
         myTable.ManuallyAddPlayer("DangerBotV", 1496.0, &dS);
@@ -2854,7 +3068,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(5.0);
 
 
-        PureGainStrategy bot(".", 3);
+        PureGainStrategy bot("19.txt", 3);
         PlayerStrategy * const botToTest = &bot;
 
         const std::vector<float64> foldOnly(1, 0.0);
@@ -3093,7 +3307,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy gS(foldOnly);
 
 
-        PureGainStrategy bot(".", 0);
+        PureGainStrategy bot("9.txt", 0);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("SpaceBot9", 717.0, botToTest);
         myTable.ManuallyAddPlayer("Nav", 2474.0, &pS); // small blind
@@ -3850,6 +4064,7 @@ int main(int argc, const char * argv[])
     
     // Regression tests
 
+    RegressionTests::testRegression_021b();
 //    RegressionTests::testRegression_022();
 //    RegressionTests::testRegression_021(); // TODO(from yuzisee): We need to track distribution of flops to identify drawing hands.
 
