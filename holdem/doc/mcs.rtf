@@ -1,0 +1,37 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1265
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+{\field{\*\fldinst{HYPERLINK "http://www.mat.univie.ac.at/~neum/ms/mcs.pdf"}}{\fldrslt 
+\f0\fs24 \cf0 http://www.mat.univie.ac.at/~neum/ms/mcs.pdf}}
+\f0\fs24 \
+\
+# 1-D example: const i = 1, n = 1\
+\
+initial_x = [\'85] # An arbitrary selection of initial evaluation points\
+L = len(initial_x) # There are L initial points. They all lie between u and v.\
+u = min(initial_x)\
+v = max(initial_x)\
+\
+x0 = init_x0(initial_x)\
+best_x = x0\
+search_x = [best_x] * (L - 1)\
+# For each dimension, shoot off in that dimension replacing it with u_i \'85 v_i.\
+# You\'92ll get a \'93star topology\'94\
+# In 1-D however, this just means sample across the bounds of the box L times.\
+\
+universe_box = Box(bounds=\'93\\vec u <\'97> \\vec v\'94, base_point=best_x)\
+furthest_universe_corner = universe_box.corner_furthest_from(best_x)\
+root_box = Box(best_x, furthest_universe_corner)\
+\
+#for i in range(n):\
+first_split = universe_box.split_at(initial_x)  # Which is equivalent to root_box.split_at(intial_x)\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf0 second_split = first_split.split_between_last_splits() # Each split region is split once more at a golden ratio\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf0 # the part with the smaller function value gets the larger fraction of the interval\
+#i.e. the \'93split once more\'94 point for each sub-box is closest to the larger of the boundary function values for that sub-box\
+\
+# Now, each post \'93split once more\'94 sub-box has exactly one evaluation point\
+}
