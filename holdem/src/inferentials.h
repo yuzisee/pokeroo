@@ -425,7 +425,7 @@ public:
 	float64 worst;
 
 	float64 avgDev;
-	float64 stdDev;
+	float64 stdDev;   // raw moment (i.e. divided by n not n-1) 
 	float64 improve;  //above or below 1.0
 	float64 skew;     //positive or negative ("Distributions with positive skew have larger means than medians.")
 	float64 kurtosis; //risk-reward magnifier (high k is high risk high reward, long tail)

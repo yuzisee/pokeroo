@@ -145,7 +145,61 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     ///Compute WinStats
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
 
+    // INVARIANT: this->detailPCT now describes the distribution of a random variable X.
+    // There is one outcome of X for each possible next community deal.
+    // The value of each outcome X is the mean winPct given that community-so-far.
 
+    // For example, post-flop pre-turn X has 47 possible outcomes.
+    // Pre-flop X has 19600 possible outcomes (a.k.a. 50*49*48/3!)
+    // Post-river, n = 1, skew is NaN, kurtosis is NaN, stdDev = 0.0, avgDev = 0.0, worst"_community" == mean == winPct
+
+    // Imagine a quantized version of X, that we express below as a histogram
+    //
+    //        a     b     c     d      e     f     g
+    // worst --- | --- | --- | mean | --- | --- | --- 1.0
+    //
+    // Outcome a is where the community is bad for you.
+    // Outcome f is where the community is good for you.
+    //
+    // Pr{a} is the number of communities that could show up that would be this bad.
+    // Pr{b} is the number of communities that could show up that would be better than a but worse than c
+    // ...
+    //
+    // We can count all the possible communities, giving us the constraint:
+    //  Pr{a} + Pr{b} + Pr{c} + Pr{d} + Pr{e} + Pr{f} + Pr{g} = 1.0
+    //
+    // By definition, we have dx2_worst = (mean - worst) / 7.0, dx2_best = (1.0 - mean) / 7.0
+    // And:
+    //   mid[a] = worst +      dx2_worst
+    //   mid[b] = worst +  3 * dx2_worst
+    //   mid[c] = worst +  5 * dx2_worst
+    //   mid[d] = mean
+    //   mid[e] = 1.0 -  5 * dx2_best
+    //   mid[f] = 1.0 -  3 * dx2_best
+    //   mid[g] = 1.0 -      dx2_best
+    //
+    // Then, we have the following constraints:
+    //   detailPct.mean = mid[a] * Pr{a} + mid[b] * Pr{b} + ... + mid[g] * Pr{g}
+    //   detailPct.stdDev ^2 = Pr{a} * (mid[a] - detailPct.mean)^2 + ... + Pr{g} * (mid[g] - detailPct.mean)^2
+    //   detailPct.skew * detailPct.stdDev^3 = Pr{a} * (mid[a] - detailPct.mean)^3 + ... + Pr{g} * (mid[g] - detailPct.mean)^3
+    //   detailPct.improve = (Pr{e} + Pr{f} + Pr{g}) - (Pr{a} + Pr{b} + Pr{c})
+    //   (detailPct.kurtosis + 3) * detailPct.stdDev^4 = Pr{a} * (mid[a] - detailPct.mean)^4 + ... + Pr{g} * (mid[g] - detailPct.mean)^4
+    //   detailPct.avgDev = Pr{a} * fabs(mid[a] - detailPct.mean) + ... + Pr{g} * fabs(mid[g] - detailPct.mean)
+
+    // Example with only three bins:
+    //   | a | mean | c |
+    //
+    // Ax = b
+    //
+    // [   1      1      1    ] = [    1    ]
+    // [  m[a]   m[b]   m[c]  ] = [  mean   ]
+    // [ m^2[a] m^2[b] m^2[c] ] = [ stdev^2 ]
+    //
+
+    // Full solution
+    //
+
+    // TODO(from yuzisee): omg we should keep best and worst. Refactor and regenerate?
 
     ///====================================
     ///   Compute Relevant Probabilities

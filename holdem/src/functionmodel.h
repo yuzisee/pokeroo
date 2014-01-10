@@ -249,6 +249,59 @@ public:
      *
      *  Discussion:
      *    Helper function for constructing a StatResult object.
+     *      pct = (wins + 0.5 splits) / (wins + splits + loss)
+     *      wl = wins / (wins + loss)
+     *      wins + splits + loss = 1.0
+     *
+     *    [A] Eliminate splits:
+     *      splits = 1.0 - wins - loss
+     *    ==>
+     *      pct = (wins + 0.5 - 0.5 wins - 0.5 loss) / (wins + 1.0 - wins - loss + loss)
+     *      wl = wins / (wins + loss)
+     *
+     *      pct = (wins + 0.5 - 0.5 wins - 0.5 loss)
+     *      wl * (wins + loss) = wins
+     *
+     *      pct = (0.5 * wins + 0.5 - 0.5 * loss)
+     *      wl * wins + wl * loss = wins
+     *
+     *      2.0 * pct = wins + 1.0 - loss
+     *      wl * loss = wins - wl * wins
+     *
+     *      loss = wins + 1.0 - 2.0 * pct
+     *      loss = wins / wl - wins
+     *
+     *    Eliminate loss:
+     *    ==>
+     *     wins + 1.0 - 2.0 * pct = wins / wl - wins
+     *
+     *     1.0 - 2.0 * pct = wins / wl - 2.0 * wins
+     *
+     *     1.0 - 2.0 * pct = (1.0 / wl - 2.0) * wins
+     *
+     *    [B]
+     *    Eliminate loss:
+     *      loss = 1.0 - wins - splits
+     *    ==>
+     *      pct = (wins + 0.5 splits)
+     *      wl = wins / (wins + 1.0 - wins - splits)
+     *
+     *      pct = (wins + 0.5 splits)
+     *      wl = wins / (1.0 - splits)
+     *
+     *      pct - wins = 0.5 splits
+     *      (1.0 - splits) = wins / wl
+     *
+     *      2.0 * pct - 2.0 * wins = splits
+     *      1.0 - wins / wl = splits
+     *
+     *    Eliminate splits:
+     *    ==>
+     *      1.0 - wins / wl = 2.0 * pct - 2.0 * wins
+     *
+     *      1.0 - 2.0 * pct = wins / wl - 2.0 * wins
+     *
+     *      1.0 - 2.0 * pct = (1.0 / wl - 2.0) * wins
      *
      *  Return Value:
      *    A StatResult with .wins .splits .loss & .pct populated based on a wl ratio and a raw expectation (percentage)
