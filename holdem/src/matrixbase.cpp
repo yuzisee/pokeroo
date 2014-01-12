@@ -20,6 +20,7 @@
 
 #include "matrixbase.h"
 
+#include <sstream>
 #include <iostream>
 #include <math.h>
 
@@ -78,15 +79,14 @@ Matrix & Matrix::operator=(const Matrix &matrix)
     return *this;
 }
 
-float64& Matrix::at(size_t row, size_t column) {
-    failIf(fRows <= row || fColumns <= column, "index out of bounds\n");
 
-    switch (fArrangement) {
-        case ROW_MAJOR:
-            return fData[row*fColumns + column];
-        case COLUMN_MAJOR:
-            return fData[column*fRows + row];
-    }
+
+float64& Matrix::at(size_t row, size_t column) {
+    return fData[getIdx(row, column)];
+}
+
+float64 Matrix::get(size_t row, size_t column) const {
+    return fData[getIdx(row, column)];
 }
 
 
@@ -128,6 +128,29 @@ Matrix Matrix::newIdentityMatrix(size_t size, Arrangement arrangement) {
     return result;
 }
 
+std::string Matrix::toString() const {
+    std::stringstream result;
+    for (size_t r=0; r<fRows; ++r) {
+        for (size_t c=0; c<fColumns; ++c) {
+            result <<  get(r, c);
+            result << " ";
+        }
+        result << "\n";
+    }
+    return result.str();
+}
+
+size_t Matrix::getIdx(size_t row, size_t column) const {
+        failIf(fRows <= row || fColumns <= column, "index out of bounds\n");
+
+        switch (fArrangement) {
+            case ROW_MAJOR:
+                return (row*fColumns + column);
+            case COLUMN_MAJOR:
+                return (column*fRows + row);
+        }
+}
+
 NormalizedSystemOfEquations::NormalizedSystemOfEquations(size_t variables)
 :
 fVariables(variables)
@@ -138,6 +161,8 @@ At(variables, fEquations, Matrix::Arrangement::COLUMN_MAJOR)
 ,
 I(Matrix::newIdentityMatrix(variables, Matrix::Arrangement::COLUMN_MAJOR))
 ,
+fEquationsAdded(0)
+,
 fSolved(false)
 {
     failIf(variables <= 1, "Must be at least 2 variables.");
@@ -147,7 +172,8 @@ NormalizedSystemOfEquations::~NormalizedSystemOfEquations() {
 
 }
 
-void NormalizedSystemOfEquations::setEquation(size_t eqnNum, struct SizedArray coefficients, float64 value) {
+void NormalizedSystemOfEquations::addEquation(struct SizedArray coefficients, float64 value) {
+    const size_t eqnNum = fEquationsAdded;
     failIf(fSolved, "You already solved. It's too late to set equations");
     failIf(fEquations <= eqnNum, "eqn index out of bounds");
     failIf(coefficients.size != fVariables, "dimension mismatch in equation variable count");
@@ -164,6 +190,8 @@ void NormalizedSystemOfEquations::setEquation(size_t eqnNum, struct SizedArray c
     for (size_t k=0; k<fVariables; ++k) {
         dataToSet.data[k] = -value + coefficients.data[k];
     }
+
+    ++fEquationsAdded;
 }
 
 /**
@@ -198,6 +226,8 @@ static void applyHouseholderReflectionImpl(Matrix &dest, const struct Householde
 }
 
 void NormalizedSystemOfEquations::solve() {
+    failIf(fEquationsAdded != fEquations, "Add all equations before solving");
+
     if (!fSolved) {
 
 

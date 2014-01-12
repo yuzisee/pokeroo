@@ -24,6 +24,7 @@
 #include "functionmodel.h"
 #include "math_support.h"
 #include "ai.h"
+#include "matrixbase.h"
 
 
 static inline float64 cleanpow(float64 b, float64 x)
@@ -201,6 +202,118 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
 
 }
 
+CoarseCommunityHistogram::CoarseCommunityHistogram(const DistrShape &detailPCT)
+:
+fMyBestPct(detailPCT.best)
+,
+fMyWorstPct(detailPCT.worst)
+,
+fNumBins(COARSE_COMMUNITY_NUM_BINS)
+,
+fBinWidth((detailPCT.best - detailPCT.worst) / fNumBins)
+{
+    const float64 &dx = fBinWidth;
+    for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
+        fBins[k].pct = detailPCT.worst + dx * (k + 0.5);
+    }
+
+    const float64 s = detailPCT.stdDev;
+    NormalizedSystemOfEquations solver(fNumBins);
+    float64 coefficients[COARSE_COMMUNITY_NUM_BINS] = {std::numeric_limits<float64>::signaling_NaN()};
+    float64 constraint = std::numeric_limits<float64>::signaling_NaN();
+
+    // mid[a] Pr{a} + ... + mid[g] Pr{g}
+    for (size_t k=0; k<fNumBins; ++k) {
+        coefficients[k] = fBins[k].pct;
+    }
+    constraint = detailPCT.mean;
+    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
+
+    // detailPct.stdDev ^2 = Pr{a} * (mid[a] - detailPct.mean)^2 + ... + Pr{g} * (mid[g] - detailPct.mean)^2
+    for (size_t k=0; k<fNumBins; ++k) {
+        const float64 d = fBins[k].pct - detailPCT.mean;
+        coefficients[k] = d*d;
+    }
+    constraint = s*s;
+    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
+
+    /*
+    // detailPct.skew * detailPct.stdDev^3 = Pr{a} * (mid[a] - detailPct.mean)^3 + ... + Pr{g} * (mid[g] - detailPct.mean)^3
+    for (size_t k=0; k<fNumBins; ++k) {
+        const float64 d = fBins[k].pct - detailPCT.mean;
+        coefficients[k] = d*d*d;
+    }
+    constraint = detailPCT.skew * s*s*s;
+    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
+
+    // (detailPct.kurtosis + 3) * detailPct.stdDev^4 = Pr{a} * (mid[a] - detailPct.mean)^4 + ... + Pr{g} * (mid[g] - detailPct.mean)^4
+    for (size_t k=0; k<fNumBins; ++k) {
+        const float64 d = fBins[k].pct - detailPCT.mean;
+        coefficients[k] = d*d*d*d;
+    }
+    constraint = (detailPCT.kurtosis + 3.0) * s*s*s*s;
+    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
+     */
+
+    /*
+    // detailPct.avgDev = Pr{a} * fabs(mid[a] - detailPct.mean) + ... + Pr{g} * fabs(mid[g] - detailPct.mean)
+    for (size_t k=0; k<fNumBins; ++k) {
+        const float64 d = fBins[k].pct - detailPCT.mean;
+        coefficients[k] = fabs(d);
+    }
+    constraint = detailPCT.avgDev;
+    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
+
+
+    // detailPct.improve = Pr{better} - Pr{worse}
+    for (size_t k=0; k<fNumBins; ++k) {
+        if (fBins[k].pct + dx / 2.0 < detailPCT.mean) {
+            // entire bin is below the mean
+            coefficients[k] = -1.0; // or, -dx / dx
+        } else if (detailPCT.mean < fBins[k].pct - dx / 2.0) {
+            // entire bin is above the mean
+            coefficients[k] = +1.0; // or, +dx / dx
+        } else {
+            //coefficients[k] =   (((fBins[k].pct + dx/2.0) - detailPCT.mean) - (detailPCT.mean - (fBins[k].pct - dx/2.0))) / dx ;
+            //coefficients[k] =    ((fBins[k].pct + dx/2.0) - detailPCT.mean  -  detailPCT.mean + (fBins[k].pct - dx/2.0))  / dx ;
+            //coefficients[k] =     (fBins[k].pct + dx/2.0                 - 2.0 detailPCT.mean +  fBins[k].pct - dx/2.0)   / dx ;
+            //coefficients[k] = (2.0 fBins[k].pct +                        - 2.0 detailPCT.mean )                           / dx ;
+            coefficients[k] = 2.0 * (fBins[k].pct - detailPCT.mean) / dx;
+        }
+    }
+    constraint = detailPCT.avgDev;
+    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
+     */
+
+    solver.solve();
+
+    float64 result[COARSE_COMMUNITY_NUM_BINS] = {std::numeric_limits<float64>::signaling_NaN()};
+    struct SizedArray solution;
+    solution.data = result;
+    solution.size = fNumBins;
+    solver.getSolution(&solution);
+
+    // Process and validate results
+    float64 sum = 0.0;
+    for (size_t k=0; k<fNumBins; ++k) {
+        if (result[k] < 0.0) {
+            std::cerr << "Numerical error reconstructing histogram\n";
+            exit(1);
+        }
+        sum += result[k];
+    }
+
+    for (size_t k=0; k<fNumBins; ++k) {
+        fBins[k].freq = result[k] / sum;
+    }
+
+}
+CoarseCommunityHistogram::~CoarseCommunityHistogram()
+{
+
+}
+
+
 
 static NetStatResult initByRank(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, StatResult baseShape) {
 
@@ -257,12 +370,69 @@ static NetStatResult initByRank(playernumber_t difficultyOpponents, playernumber
     return result;
 }
 
-static NetStatResult initByMean(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, CallCumulationD &foldcumu) {
+/**
+ * The goal of this function is to break out which aspects of your win percentage scale with the number of players and which don't.
+ * The affect of community cards doesn't change with the number of players.
+ * Your chance of beating N players assuming a particular set of community cards must get harder as the number of players decreases.
+ * TODO(from joseph_huang): is MEAN too harsh here? We don't have access to RANK anymore.
+ *                          Well, after the river we call initByRank directly since we don't have multiply community outcomes (plus MEAN === RANK anyway, it's just a count of outcomes)
+ *                          Well, after the turn, all the community outcomes yield post-river situations which mean binMEAN === binRANK so it's okay too
+ *                          Now, after the flop the community outcomes will yield post-turn situations. MEAN and RANK differ slightly.
+ *                              At the post-flop moment we have a guess of the post-flop MEAN<-->RANK inflation. How does it relate to the post-turn MEAN<-->RANK inflation?
+ *                              It varies by 46 outcomes. The mean is an average of 46 discrete outcomes.
+ *                          Pre-flop, the community outcomes will yield post-flop situations. MEAN and RANK differ somewhat.
+ *                              At the pre-flop moment we have a guess of the pre-flop MEAN<-->RANK inflation.
+ */
+static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, const CoarseCommunityHistogram &outcomes, StatResult baseShape) {
+    NetStatResult expectation; // expectation sum
+    expectation.fShape.wins = 0.0;
+    expectation.fShape.splits = 0.0;
+    expectation.fShape.loss = 0.0;
+    expectation.fShape.pct = 0.0;
+    expectation.fShape.repeated = 0.0;
+    expectation.fLoseProb = 0.0;
+    expectation.fOutrightWinProb = 0.0;
+
+    // For each community outcome bin, generate a NetStatResult and add it to the expectation sum above.
+    for(size_t communityOutcomeBin=0; communityOutcomeBin<outcomes.fNumBins; ++communityOutcomeBin) {
+        const float64 targetPct = outcomes.getBin(communityOutcomeBin).pct;
+
+        // Set .pct to targetPct while preserving .splits if possible.
+        StatResult thisCommunityBaseShape = baseShape;
+        thisCommunityBaseShape.pct = targetPct;
+
+        if (thisCommunityBaseShape.splits > 2.0 * targetPct) {
+            // Not possible to preserve .splits, so just max it out as best we can.
+            thisCommunityBaseShape.splits = 2.0 * targetPct;
+            thisCommunityBaseShape.wins = 0.0;
+            thisCommunityBaseShape.loss = 0.0;
+        } else {
+            // It's possible to preserve splits! Go ahead and fill out the rest to match targetPct
+            thisCommunityBaseShape.wins = targetPct - thisCommunityBaseShape.splits / 2.0;
+            thisCommunityBaseShape.loss = 1.0 - thisCommunityBaseShape.splits - thisCommunityBaseShape.wins;
+        }
+
+        // Compute the multi-player result assuming this community bin...
+        NetStatResult thisCommunityResult = initByRank(difficultyOpponents, showdownOpponents, thisCommunityBaseShape);
+
+        // Contribute weighted average into the overall result.
+        const float64 w = outcomes.getBin(communityOutcomeBin).freq; // weight
+        thisCommunityResult.fShape.repeated = w;
+
+        expectation.fShape.addByWeight(thisCommunityResult.fShape);
+        expectation.fLoseProb += thisCommunityResult.fLoseProb * w;
+        expectation.fOutrightWinProb += thisCommunityResult.fOutrightWinProb * w;
+    }
+
+    return expectation;
+}
+
+static NetStatResult initSingleOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, CallCumulationD &foldcumu) {
     const float64 fractionOfHandsToBeat = 1.0 / difficultyOpponents;
     return againstBestXOpponents(foldcumu, fractionOfHandsToBeat, 0.0, showdownOpponents).first;
 }
 
-PureStatResultGeom::PureStatResultGeom(const StatResult mean, const StatResult rank, CallCumulationD &foldcumu, const ExpectedCallD &tableinfo)
+PureStatResultGeom::PureStatResultGeom(const StatResult mean, const StatResult rank, const CoarseCommunityHistogram &outcomes, CallCumulationD &foldcumu, const ExpectedCallD &tableinfo)
 :
 fDifficultyOpponents(tableinfo.handStrengthOfRound())
 ,
@@ -271,13 +441,20 @@ fShowdownOpponents(tableinfo.handsToShowdownAgainst())
 fNet(
      (tableinfo.handsToShowdownAgainst() > 1) ?
 
+     (
      // The odds of beating multiple people isn't based on the odds of beating one person.
-     // Since it's more complicated than that, just go with rank for now.
-     initByRank(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), rank)  :
+     (outcomes.fMyBestPct == outcomes.fMyWorstPct) ?
+      // Since it's more complicated than that, just go with rank for now.
+      initByRank(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), rank)
+      :
+      // We're able to break out conditional probability by community outcomes vs. opponent outcomes.
+      initMultiOpponent(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), outcomes, rank)
+     )
+     :
 
      // We're only facing one actual person (even though handStrengthOfRound can be higher)
      // This allows us to calculate our odds more precisely than with just rank
-     initByMean(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), foldcumu)   )
+     initSingleOpponent(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), foldcumu)   )
 {}
 
 

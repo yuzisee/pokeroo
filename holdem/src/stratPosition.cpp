@@ -145,61 +145,10 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     ///Compute WinStats
     StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
 
+
+
     // INVARIANT: this->detailPCT now describes the distribution of a random variable X.
-    // There is one outcome of X for each possible next community deal.
-    // The value of each outcome X is the mean winPct given that community-so-far.
-
-    // For example, post-flop pre-turn X has 47 possible outcomes.
-    // Pre-flop X has 19600 possible outcomes (a.k.a. 50*49*48/3!)
-    // Post-river, n = 1, skew is NaN, kurtosis is NaN, stdDev = 0.0, avgDev = 0.0, worst"_community" == mean == winPct
-
-    // Imagine a quantized version of X, that we express below as a histogram
-    //
-    //        a     b     c     d      e     f     g
-    // worst --- | --- | --- | mean | --- | --- | --- 1.0
-    //
-    // Outcome a is where the community is bad for you.
-    // Outcome f is where the community is good for you.
-    //
-    // Pr{a} is the number of communities that could show up that would be this bad.
-    // Pr{b} is the number of communities that could show up that would be better than a but worse than c
-    // ...
-    //
-    // We can count all the possible communities, giving us the constraint:
-    //  Pr{a} + Pr{b} + Pr{c} + Pr{d} + Pr{e} + Pr{f} + Pr{g} = 1.0
-    //
-    // By definition, we have dx2_worst = (mean - worst) / 7.0, dx2_best = (1.0 - mean) / 7.0
-    // And:
-    //   mid[a] = worst +      dx2_worst
-    //   mid[b] = worst +  3 * dx2_worst
-    //   mid[c] = worst +  5 * dx2_worst
-    //   mid[d] = mean
-    //   mid[e] = 1.0 -  5 * dx2_best
-    //   mid[f] = 1.0 -  3 * dx2_best
-    //   mid[g] = 1.0 -      dx2_best
-    //
-    // Then, we have the following constraints:
-    //   detailPct.mean = mid[a] * Pr{a} + mid[b] * Pr{b} + ... + mid[g] * Pr{g}
-    //   detailPct.stdDev ^2 = Pr{a} * (mid[a] - detailPct.mean)^2 + ... + Pr{g} * (mid[g] - detailPct.mean)^2
-    //   detailPct.skew * detailPct.stdDev^3 = Pr{a} * (mid[a] - detailPct.mean)^3 + ... + Pr{g} * (mid[g] - detailPct.mean)^3
-    //   detailPct.improve = (Pr{e} + Pr{f} + Pr{g}) - (Pr{a} + Pr{b} + Pr{c})
-    //   (detailPct.kurtosis + 3) * detailPct.stdDev^4 = Pr{a} * (mid[a] - detailPct.mean)^4 + ... + Pr{g} * (mid[g] - detailPct.mean)^4
-    //   detailPct.avgDev = Pr{a} * fabs(mid[a] - detailPct.mean) + ... + Pr{g} * fabs(mid[g] - detailPct.mean)
-
-    // Example with only three bins:
-    //   | a | mean | c |
-    //
-    // Ax = b
-    //
-    // [   1      1      1    ] = [    1    ]
-    // [  m[a]   m[b]   m[c]  ] = [  mean   ]
-    // [ m^2[a] m^2[b] m^2[c] ] = [ stdev^2 ]
-    //
-
-    // Full solution
-    //
-
-    // TODO(from yuzisee): omg we should keep best and worst. Refactor and regenerate?
+   
 
     ///====================================
     ///   Compute Relevant Probabilities
@@ -1304,7 +1253,43 @@ float64 DeterredGainStrategy::MakeBet()
 
 
 
+void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const CoarseCommunityHistogram &h, const DistrShape &distrPct) {
+    if (distrPct.n == 1) {
+        return;
+    }
 
+
+    // excess kurtosis of uniform is -1.2
+    // excess kurtosis of Gaussian (~binomial) is 0.0
+    // a histogram can be leptokurtic as well: http://en.wikipedia.org/wiki/File:KurtosisChanges.png
+    
+    logF << "Community outcomes (stdev = " << distrPct.stdDev << " pcts , avgdev = " << distrPct.avgDev << " pcts ), kurtosis = " << distrPct.kurtosis << "\n";
+    logF << distrPct.worst << " pct: least helpful community\n";
+
+    size_t k=0;
+    while(1) {
+        const bool bMeanAbovePrev = (k==0          || h.getBin(k-1).pct <= distrPct.mean);
+        const bool bMeanBelowNext = (k==h.fNumBins || distrPct.mean <= h.getBin(k).pct);
+        if (bMeanAbovePrev  &&  bMeanBelowNext) {
+            logF << distrPct.mean << " pct (mean): ";
+            if (distrPct.skew < 0) {
+                logF << "(skew " << distrPct.skew << " tail left) ";
+            }
+            logF << "mean- " << (0.5 - 0.5*distrPct.improve) << "   mean+ " << (0.5 + 0.5*distrPct.improve);
+            if (distrPct.skew > 0) {
+                logF << "(skew " << distrPct.skew << " tail right) ";
+            }
+            logF << "\n";
+        }
+        if (k==h.fNumBins) {
+            break;
+        }
+        logF << h.getBin(k).pct << " pct: " << (h.getBin(k).freq * distrPct.n) << " / " << static_cast<int>(distrPct.n) << " (" << (h.getBin(k).freq * 100) << "%)\n";
+        ++k;
+    }
+    logF << distrPct.best << " pct: most helpful community\n";
+
+}
 
 
 float64 PureGainStrategy::MakeBet()
@@ -1348,7 +1333,8 @@ float64 PureGainStrategy::MakeBet()
         exit(1);
     }
 
-    PureStatResultGeom leftCS(statprob.core.statmean, left, statprob.core.foldcumu, tablestate);
+    CoarseCommunityHistogram outcomes(detailPCT);
+    PureStatResultGeom leftCS(statprob.core.statmean, left, outcomes, statprob.core.foldcumu, tablestate);
     ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
 
     // TODO(from joseph_huang): Switch this back to GainModelGeom for better bankroll management?

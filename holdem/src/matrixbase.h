@@ -22,6 +22,7 @@
 #define HOLDEM_MatrixBase
 
 #include <stddef.h>
+#include <string>
 
 #include "portability.h"
 #include "debug_flags.h"
@@ -44,6 +45,7 @@ public:
     Matrix & operator=(const Matrix &matrix);
 
     float64& at(size_t row, size_t column);
+    float64 get(size_t row, size_t column) const;
 
     struct SizedArray getRow(size_t rownum);
     struct SizedArray getColumn(size_t colnum);
@@ -55,11 +57,17 @@ public:
 
     static Matrix newIdentityMatrix(size_t size, Arrangement arrangement);
 
+    std::string toString() const;
+
     const size_t fRows;
     const size_t fColumns;
 private:
+
+
     float64* fData;
     Arrangement fArrangement;
+
+    size_t getIdx(size_t row, size_t column) const;
 };
 
 
@@ -68,11 +76,11 @@ private:
 // _me must be the name of a NormalizedSystemOfEquations object
 // _coefficients must be the name of an array on the stack
 // _val must be a scalar
-#define NormalizedSystemOfEquations_setEquation(_me, _rownum, _coefficients, _val) do { \
+#define NormalizedSystemOfEquations_addEquation(_me, _coefficients, _val) do { \
 struct SizedArray _ilistarray; \
 _ilistarray.data = _coefficients; \
 _ilistarray.size = sizeof(_coefficients) / sizeof((_coefficients)[0]); \
-(_me).setEquation(_rownum, _ilistarray, _val); \
+(_me).addEquation(_ilistarray, _val); \
 } while (0)
 
 
@@ -148,7 +156,7 @@ class NormalizedSystemOfEquations
     NormalizedSystemOfEquations(size_t variables);
     virtual ~NormalizedSystemOfEquations();
 
-    void setEquation(size_t eqnNum, struct SizedArray coefficients, float64 value);
+    void addEquation(struct SizedArray coefficients, float64 value);
 
     void solve();
 
@@ -158,9 +166,11 @@ private:
 
     const size_t fVariables;
     const size_t fEquations;
-    
+
     Matrix At; // Before solving, this holds A^T ;  After solving, this holds R
     Matrix I; // Before solving, this holds I ;  After solving, this holds Q^T
+
+    size_t fEquationsAdded;
 
     // Starts out false. It's set to true once we have solved.
     bool fSolved;

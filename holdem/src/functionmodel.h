@@ -174,6 +174,96 @@ private:
 }
 ;
 
+/**
+ * A coarse histogram describing possible community outcomes.
+
+ // INVARIANT: this->detailPCT now describes the distribution of a random variable X.
+ // There is one outcome of X for each possible next community deal.
+ // The value of each outcome X is the mean winPct given that community-so-far.
+
+ // For example, post-flop pre-turn X has 47 possible outcomes.
+ // Pre-flop X has 19600 possible outcomes (a.k.a. 50*49*48/3!)
+ // Post-river, n = 1, skew is NaN, kurtosis is NaN, stdDev = 0.0, avgDev = 0.0, worst"_community" == mean == winPct
+
+ // Imagine a quantized version of X, that we express below as a histogram
+ //
+ //        a     b     c     d      e     f     g
+ // worst --- | --- | --- | mean | --- | --- | --- 1.0
+ //
+ // Outcome a is where the community is bad for you.
+ // Outcome f is where the community is good for you.
+ //
+ // Pr{a} is the number of communities that could show up that would be this bad.
+ // Pr{b} is the number of communities that could show up that would be better than a but worse than c
+ // ...
+ //
+ // We can count all the possible communities, giving us the constraint:
+ //  Pr{a} + Pr{b} + Pr{c} + Pr{d} + Pr{e} + Pr{f} + Pr{g} = 1.0
+ //
+ // By definition, we have dx2_worst = (mean - worst) / 7.0, dx2_best = (1.0 - mean) / 7.0
+ // And:
+ //   mid[a] = worst +      dx2_worst
+ //   mid[b] = worst +  3 * dx2_worst
+ //   mid[c] = worst +  5 * dx2_worst
+ //   mid[d] = mean
+ //   mid[e] = best -  5 * dx2_best
+ //   mid[f] = best -  3 * dx2_best
+ //   mid[g] = best -      dx2_best
+ //
+ // Then, we have the following constraints:
+ //   detailPct.mean = mid[a] * Pr{a} + mid[b] * Pr{b} + ... + mid[g] * Pr{g}
+ //   detailPct.stdDev ^2 = Pr{a} * (mid[a] - detailPct.mean)^2 + ... + Pr{g} * (mid[g] - detailPct.mean)^2
+ //   detailPct.skew * detailPct.stdDev^3 = Pr{a} * (mid[a] - detailPct.mean)^3 + ... + Pr{g} * (mid[g] - detailPct.mean)^3
+ //   detailPct.improve = (Pr{e} + Pr{f} + Pr{g}) - (Pr{a} + Pr{b} + Pr{c})
+ //   (detailPct.kurtosis + 3) * detailPct.stdDev^4 = Pr{a} * (mid[a] - detailPct.mean)^4 + ... + Pr{g} * (mid[g] - detailPct.mean)^4
+ //   detailPct.avgDev = Pr{a} * fabs(mid[a] - detailPct.mean) + ... + Pr{g} * fabs(mid[g] - detailPct.mean)
+
+ // Example with only three bins:
+ //   | a | mean | c |
+ //
+ // Ax = b
+ //
+ // [   1      1      1    ] = [    1    ]
+ // [  m[a]   m[b]   m[c]  ] = [  mean   ]
+ // [ m^2[a] m^2[b] m^2[c] ] = [ stdev^2 ]
+ //
+
+ // Full solution
+ // Okay, let's just use equal width. It will make probability integrating easier on the backend as well.
+ // If we really want dynamic width we can try that later.
+
+ */
+
+/**
+ * Represents a collection of possible community outcomes, grouped so that all the outcomes in the same bin have a similar level of "helpfulness" to you.
+ */
+struct CoarseCommunityBin {
+    float64 pct = std::numeric_limits<float64>::signaling_NaN(); // midpoint, a representative win pct (of your hand).
+    float64 freq = std::numeric_limits<float64>::signaling_NaN(); // what fraction of the community outcomes fall into this bin
+};
+
+#define COARSE_COMMUNITY_NUM_BINS 3
+
+class CoarseCommunityHistogram {
+public:
+    CoarseCommunityHistogram(const DistrShape &detailPCT);
+    virtual ~CoarseCommunityHistogram();
+
+
+    const float64 fMyBestPct; // My probability of winning (against a single random opponent) when the community is as helpful to me as possible
+    const float64 fMyWorstPct; // My probability of winning (against a single random opponent) when the community is as unhelpful as possible
+
+    const size_t fNumBins;
+    const float64 fBinWidth; // in units of PCT, the width that a bin represents.
+
+    const CoarseCommunityBin &getBin(size_t idx) const {
+        return fBins[idx];
+    }
+    
+private:
+    CoarseCommunityBin fBins[COARSE_COMMUNITY_NUM_BINS];
+}
+;
 
 // Use rank for multi-handed, mean for heads-up
 class PureStatResultGeom : public virtual ICombinedStatResults {
@@ -184,7 +274,7 @@ private:
     const struct NetStatResult fNet;
 
 public:
-    PureStatResultGeom(const StatResult mean, const StatResult rank, CallCumulationD &foldcumu, const ExpectedCallD &tableinfo);
+    PureStatResultGeom(const StatResult mean, const StatResult rank, const CoarseCommunityHistogram &outcomes, CallCumulationD &foldcumu, const ExpectedCallD &tableinfo);
     virtual ~PureStatResultGeom() {}
 
     playernumber_t splitOpponents() const override final { return fShowdownOpponents; }

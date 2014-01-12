@@ -37,6 +37,8 @@
 
 class PositionalStrategy : virtual public PlayerStrategy
 {
+public:
+    static void printCommunityOutcomes(std::ostream &logF, const CoarseCommunityHistogram &h, const DistrShape &distrPct);
 
 
     protected:

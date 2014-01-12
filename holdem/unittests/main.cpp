@@ -51,6 +51,7 @@ namespace NamedTriviaDeckTests {
 #include "callRarity.h"
 #include "functionmodel.h"
 #include "matrixbase.h"
+#include "stratPosition.h"
 namespace UnitTests {
 
 
@@ -90,6 +91,72 @@ namespace UnitTests {
         assert(fabs(expected - actual) < fabs(expected) * eps_rel);
     }
 
+
+    // Test CoarseHistogramBin
+    void testRegression_024() {
+
+        DeckLocation card;
+
+        
+        CommunityPlus withCommunity; // 7h 2h
+
+        card.SetByIndex(21);
+        withCommunity.AddToHand(card);
+
+        card.SetByIndex(1);
+        withCommunity.AddToHand(card);
+
+
+        CommunityPlus communityToTest; // 9c Qh Kh
+
+        card.SetByIndex(30);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(41);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        card.SetByIndex(45);
+        withCommunity.AddToHand(card);
+        communityToTest.AddToHand(card);
+
+        const int8 cardsInCommunity = 3;
+
+
+        // =================================
+
+        StatResultProbabilities statprob;
+
+        ///Compute CallStats
+        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.foldcumu = statprob.core.handcumu;
+        statprob.core.foldcumu.ReversePerspective();
+
+        ///Compute CommunityCallStats
+        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
+
+        ///Compute WinStats
+        DistrShape w_wl(0);
+        DistrShape detailPCT(0);
+        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        statprob.core.playerID = 0;
+        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+
+        // ==================================
+
+        CoarseCommunityHistogram a(detailPCT);
+
+        // >>> A = numpy.array([[0.004420167362780927, 0.02132858973531938, 0.1285728447521483], [0.4166831357048748, 0.6292105841018885, 0.8417380324989019], [1, 1, 1]])
+        // >>> numpy.linalg.solve(   A, numpy.array([0.05816449589744065, 0.4831674749343575, 1.0])   )
+        // array([ 1.22355938, -0.75994582,  0.53638645])
+
+        PositionalStrategy::printCommunityOutcomes(std::cout, a, detailPCT);
+        
+        
+    }
+
+
     // Verify Householder QR
     void testRegression_023() {
         // Test matrix from http://www.cs.nthu.edu.tw/~cherung/teaching/2008cs3331/chap4%20example.pdf
@@ -99,9 +166,9 @@ namespace UnitTests {
         float64 coefs2[] = {-1, 4, 4, -1};
         float64 coefs3[] = {4, -2, 2, 0};
 
-        NormalizedSystemOfEquations_setEquation(a, 0, coefs1, 0.0);
-        NormalizedSystemOfEquations_setEquation(a, 1, coefs2, 0.0);
-        NormalizedSystemOfEquations_setEquation(a, 2, coefs3, 0.0);
+        NormalizedSystemOfEquations_addEquation(a, coefs1, 0.0);
+        NormalizedSystemOfEquations_addEquation(a, coefs2, 0.0);
+        NormalizedSystemOfEquations_addEquation(a, coefs3, 0.0);
 
         a.solve();
 
@@ -4020,9 +4087,10 @@ static void regenerateDb() {
     
     
     assert(handList.size() == 169);
-    
-    std::cout << "Begin.\n";
-    size_t counter = 0;
+
+    size_t counter;
+    std::cout << "Begin CallStats.\n";
+    counter = 0;
     for (const DeckLocationPair & holeCards : handList) {
         CommunityPlus withCommunity;
         
@@ -4050,13 +4118,41 @@ static void regenerateDb() {
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
         
+
+
+        ++counter;
+
+        std::cout << "=== Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size()) << "   ===\n\n";
+        std::cout.flush(); // Flush for timestamping
+    }
+
+    std::cout << "Begin CallStats.\n";
+    counter = 0;
+    for (const DeckLocationPair & holeCards : handList) {
+
+        CommunityPlus withCommunity;
+
+        withCommunity.AddToHand(holeCards.first);
+
+        withCommunity.AddToHand(holeCards.second);
+
+        NamedTriviaDeck o;
+        o.OmitCards(withCommunity);
+        o.DiffHand(CommunityPlus::EMPTY_COMPLUS);
+        o.sortSuits();
+        string handName = o.NamePockets();
+
+
+
+        StatResultProbabilities statprob;
+
         {
             const time_t now = time(0);
             std::cout << asctime(std::localtime(&now));
             std::cout << "Computing CommunityCallStats (depends on *.holdemW)\n";
             std::cout.flush(); // Flush for timestamping
         }
-        
+
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity,0);
         ++counter;
@@ -4073,11 +4169,13 @@ static void regenerateDb() {
 
 int main(int argc, const char * argv[])
 {
+
     
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
 
+    UnitTests::testRegression_024();
     UnitTests::testRegression_023();
     UnitTests::testRegression_020();
 
@@ -4120,7 +4218,7 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_008c();
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_002();
-    
+
     // Regenerate the DB?
     //regenerateDb();
 }
