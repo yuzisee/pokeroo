@@ -143,7 +143,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     ViewTable().CachedQueryOffense(statprob.core.callcumu,onlyCommunity, withCommunity);
 
     ///Compute WinStats
-    StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
+    StatsManager::Query(&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
 
 
 

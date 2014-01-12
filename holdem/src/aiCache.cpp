@@ -163,10 +163,10 @@ void StatsManager::SerializeW( ofstream& dataf, const StatResult& myAvg, const D
     serializeDistrShape( dataf, dWL );
 }
 
-bool StatsManager::UnserializeW( ifstream& dataf, StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL )
+bool StatsManager::UnserializeW( ifstream& dataf, DistrShape* dPCT, DistrShape* dWL )
 {
 
-    if(! (unserializeStatResult( dataf, myAvg )) ) return false;
+    if(! (unserializeStatResult( dataf, 0 )) ) return false;
     if(! (unserializeDistrShape( dataf, dPCT )) ) return false;
     if(! (unserializeDistrShape( dataf, dWL )) ) return false;
 
@@ -229,7 +229,7 @@ bool StatsManager::UnserializeC( ifstream& dataf,  CallCumulation& q )
     return dataf.eof();
 }
 
-void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
+void StatsManager::Query(DistrShape* dPCT, DistrShape* dWL,
     const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
 {
     string datafilename = "";
@@ -239,7 +239,7 @@ void StatsManager::Query(StatResult* myAvg, DistrShape* dPCT, DistrShape* dWL,
         ifstream dataserial(datafilename.c_str(),std::ios::in | std::ios::binary);
         if( dataserial.is_open() )
         {
-            if( UnserializeW( dataserial, myAvg, dPCT, dWL ) )
+            if( UnserializeW( dataserial, dPCT, dWL ) )
             {
 //                cout << "Reading from file" << endl;
                 dataserial.close();
@@ -284,7 +284,7 @@ std::cout.precision(old_precision);
             SerializeW( newdata, ds.avgStat(), ds.pctDistr(), ds.wlDistr() );
         }
     }
-    if( 0 != myAvg ) *myAvg = ds.avgStat();
+     
     if( 0 != dPCT ) *dPCT = ds.pctDistr();
     if( 0 != dWL ) *dWL = ds.wlDistr();
 
@@ -559,7 +559,7 @@ int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
     StatResult * entryTarget = myWins+statGroup;
     DistrShape pctShape(0);
     DistrShape wlShape(0);
-    StatsManager::Query( 0, &pctShape, &wlShape, oppTempStrength, emptyHand, 0);
+    StatsManager::Query(&pctShape, &wlShape, oppTempStrength, emptyHand, 0);
     *entryTarget = CombinedStatResultsGeom::ComposeBreakdown(pctShape.mean,wlShape.mean);
     entryTarget->repeated = dOcc;
     

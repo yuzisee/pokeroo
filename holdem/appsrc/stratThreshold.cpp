@@ -59,7 +59,7 @@ void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
 
 
-    StatsManager::Query(0,w,0,withCommunity,onlyCommunity,cardsInCommunity);
+    StatsManager::Query(w,0,withCommunity,onlyCommunity,cardsInCommunity);
 
         #ifdef LOGTHRESHOLD
             if( !(logFile.is_open()) )

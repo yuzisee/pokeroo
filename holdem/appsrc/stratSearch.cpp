@@ -41,7 +41,7 @@ void SearchStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
     CommunityPlus withCommunity;
     withCommunity.SetUnique(ViewDealtHand());
     withCommunity.AppendUnique(onlyCommunity);
-    StatsManager::Query(0,w,0,withCommunity,onlyCommunity,cardsInCommunity);
+    StatsManager::Query(w,0,withCommunity,onlyCommunity,cardsInCommunity);
 }
 
 

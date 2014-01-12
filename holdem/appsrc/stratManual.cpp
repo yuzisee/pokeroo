@@ -74,7 +74,7 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
         withCommunity.AppendUnique(onlyCommunity);
 
         DistrShape w_wl(0);
-	    StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
+	    StatsManager::Query(&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
         winMean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
 
 
