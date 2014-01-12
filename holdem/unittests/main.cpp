@@ -50,6 +50,7 @@ namespace NamedTriviaDeckTests {
 
 #include "callRarity.h"
 #include "functionmodel.h"
+#include "matrixbase.h"
 namespace UnitTests {
 
 
@@ -88,6 +89,35 @@ namespace UnitTests {
         const float64 expected = (yb - ya) / (xb - xa);
         assert(fabs(expected - actual) < fabs(expected) * eps_rel);
     }
+
+    // Verify Householder QR
+    void testRegression_023() {
+        // Test matrix from http://www.cs.nthu.edu.tw/~cherung/teaching/2008cs3331/chap4%20example.pdf
+
+        NormalizedSystemOfEquations a(4);
+        float64 coefs1[] = {1, 1, 1, 1};
+        float64 coefs2[] = {-1, 4, 4, -1};
+        float64 coefs3[] = {4, -2, 2, 0};
+
+        NormalizedSystemOfEquations_setEquation(a, 0, coefs1, 0.0);
+        NormalizedSystemOfEquations_setEquation(a, 1, coefs2, 0.0);
+        NormalizedSystemOfEquations_setEquation(a, 2, coefs3, 0.0);
+
+        a.solve();
+
+        float64 result[4];
+        struct SizedArray actual;
+        actual.data = result;
+        actual.size = 4;
+
+        a.getSolution(&actual);
+
+        assert(actual.data[0] == -0.5);
+        assert(actual.data[1] == -0.5);
+        assert(actual.data[2] ==  0.5);
+        assert(actual.data[3] ==  0.5);
+    }
+
     // Verify RaiseRatio behaviour
     void testRegression_020() {
         // Assume the following raise pattern:
@@ -4048,7 +4078,7 @@ int main(int argc, const char * argv[])
     NamedTriviaDeckTests::testNamePockets();
 
 
-
+    UnitTests::testRegression_023();
     UnitTests::testRegression_020();
 
     UnitTests::testRegression_016();
