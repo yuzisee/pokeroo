@@ -4035,8 +4035,58 @@ namespace RegressionTests {
     
 }
 
-static void regenerateDb() {
-    
+/**
+ * mode 0 & mode 1 are normal
+ *
+ * Use with two CPUs:
+ * mode 2 means do only if i % 2 == 0
+ * mode 3 means do only if i % 2 == 1
+ *
+ * Use with three CPUs:
+ * mode 4 means do only if i % 3 == 0
+ * mode 5 means do only if i % 3 == 1
+ * mode 6 means do only if i % 3 == 2
+ *
+ * Use with four CPUs:
+ * mode 7 means do only if i % 4 == 0
+ * mode 8 means do only if i % 4 == 1
+ * mode 9 means do only if i % 4 == 2
+ * mode 10 means do only if i % 4 == 3
+ *
+ * Use with five CPUs:
+ * mode 11 means do only if i % 5 == 0
+ * ...
+ *
+ * mode === (1 + 2 + ... + (CPUs-1)) + order
+ * mode - order === (1 + CPUs - 1)/2 * (CPUs-1)
+ * mode - order === CPUs * (CPUs - 1)/2
+ * mode - order === (CPUs^2 - CPUs)/2
+ * CPUs^2 - CPUs - 2 mode + 2 order == 0
+ * (CPUs - 0.5)^2 - 0.25 - 2 mode + 2 order = 0
+ * CPUs = 0.5 +/- sqrt(0.25 + 2 (mode - order))
+ * 2 CPUs = 1 +/- sqrt(1 + 8(mode-order))
+ *
+ * order is at least 1, so subtract it as a baseline
+ *
+ * CPUs = floor((sqrt(​8*​x-​7)+​1)/​2);
+ */
+static void regenerateDb(int mode) {
+
+    // This is for easier parallelization
+    std::cout << "Mode: " << mode << "\n";
+
+    size_t CPUs = 0;
+    size_t offset = 0;
+    if (mode <= 1) {
+        CPUs = 1;
+    } else {
+        CPUs = std::floor((sqrt(8*mode - 7) + 1)/2);
+        offset = mode - CPUs * (CPUs - 1) / 2 - 1;
+    }
+
+    std::cout << "CPUs: " << CPUs << " offset: " << offset << "\n";
+
+
     const int8 cardsInCommunity = 0;
     
     
@@ -4092,6 +4142,12 @@ static void regenerateDb() {
     std::cout << "Begin CallStats.\n";
     counter = 0;
     for (const DeckLocationPair & holeCards : handList) {
+        if (counter % CPUs != offset) {
+            std::cout << "skip\n";
+            std::cout.flush();
+            continue;
+        }
+
         CommunityPlus withCommunity;
         
         withCommunity.AddToHand(holeCards.first);
@@ -4126,9 +4182,14 @@ static void regenerateDb() {
         std::cout.flush(); // Flush for timestamping
     }
 
-    std::cout << "Begin CallStats.\n";
+    std::cout << "Begin CommunityCallStats.\n";
     counter = 0;
     for (const DeckLocationPair & holeCards : handList) {
+        if (counter % CPUs != offset) {
+            std::cout << "skip\n";
+            std::cout.flush();
+            continue;
+        }
 
         CommunityPlus withCommunity;
 
@@ -4144,7 +4205,10 @@ static void regenerateDb() {
 
 
 
-        StatResultProbabilities statprob;
+        StatResult myAvg;
+        DistrShape dPCT(0.5);
+        DistrShape dWL(0.5);
+
 
         {
             const time_t now = time(0);
@@ -4154,7 +4218,7 @@ static void regenerateDb() {
         }
 
         ///Compute CommunityCallStats
-        StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity,0);
+        StatsManager::Query(&myAvg, &dPCT, &dWL, withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
         ++counter;
         
         std::cout << "=== Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size()) << "   ===\n\n";
@@ -4220,6 +4284,6 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_002();
 
     // Regenerate the DB?
-    //regenerateDb();
+    //regenerateDb(argc);
 }
 
