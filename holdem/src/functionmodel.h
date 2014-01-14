@@ -238,20 +238,19 @@ private:
  * Represents a collection of possible community outcomes, grouped so that all the outcomes in the same bin have a similar level of "helpfulness" to you.
  */
 struct CoarseCommunityBin {
-    float64 pct = std::numeric_limits<float64>::signaling_NaN(); // midpoint, a representative win pct (of your hand).
+    StatResult myChances; // midpoint, a representative win pct (of your hand).
     float64 freq = std::numeric_limits<float64>::signaling_NaN(); // what fraction of the community outcomes fall into this bin
 };
 
-#define COARSE_COMMUNITY_NUM_BINS 3
 
 class CoarseCommunityHistogram {
 public:
-    CoarseCommunityHistogram(const DistrShape &detailPCT);
+    CoarseCommunityHistogram(const DistrShape &detailPCT, const StatResult &rank);
     virtual ~CoarseCommunityHistogram();
 
 
-    const float64 fMyBestPct; // My probability of winning (against a single random opponent) when the community is as helpful to me as possible
-    const float64 fMyWorstPct; // My probability of winning (against a single random opponent) when the community is as unhelpful as possible
+    const StatResult fMyBest; // My probability of winning (against a single random opponent) when the community is as helpful to me as possible
+    const StatResult fMyWorst; // My probability of winning (against a single random opponent) when the community is as unhelpful as possible
 
     const size_t fNumBins;
     const float64 fBinWidth; // in units of PCT, the width that a bin represents.
@@ -333,81 +332,6 @@ public:
     virtual playernumber_t splitOpponents() const { return e_battle; }
     const virtual StatResult & ViewShape(float64 betSize) { return shape; }
     const StatResult & ViewShape() { return shape; }
-
-    /**
-     * ComposeBreakdown()
-     *
-     *  Discussion:
-     *    Helper function for constructing a StatResult object.
-     *      pct = (wins + 0.5 splits) / (wins + splits + loss)
-     *      wl = wins / (wins + loss)
-     *      wins + splits + loss = 1.0
-     *
-     *    [A] Eliminate splits:
-     *      splits = 1.0 - wins - loss
-     *    ==>
-     *      pct = (wins + 0.5 - 0.5 wins - 0.5 loss) / (wins + 1.0 - wins - loss + loss)
-     *      wl = wins / (wins + loss)
-     *
-     *      pct = (wins + 0.5 - 0.5 wins - 0.5 loss)
-     *      wl * (wins + loss) = wins
-     *
-     *      pct = (0.5 * wins + 0.5 - 0.5 * loss)
-     *      wl * wins + wl * loss = wins
-     *
-     *      2.0 * pct = wins + 1.0 - loss
-     *      wl * loss = wins - wl * wins
-     *
-     *      loss = wins + 1.0 - 2.0 * pct
-     *      loss = wins / wl - wins
-     *
-     *    Eliminate loss:
-     *    ==>
-     *     wins + 1.0 - 2.0 * pct = wins / wl - wins
-     *
-     *     1.0 - 2.0 * pct = wins / wl - 2.0 * wins
-     *
-     *     1.0 - 2.0 * pct = (1.0 / wl - 2.0) * wins
-     *
-     *    [B]
-     *    Eliminate loss:
-     *      loss = 1.0 - wins - splits
-     *    ==>
-     *      pct = (wins + 0.5 splits)
-     *      wl = wins / (wins + 1.0 - wins - splits)
-     *
-     *      pct = (wins + 0.5 splits)
-     *      wl = wins / (1.0 - splits)
-     *
-     *      pct - wins = 0.5 splits
-     *      (1.0 - splits) = wins / wl
-     *
-     *      2.0 * pct - 2.0 * wins = splits
-     *      1.0 - wins / wl = splits
-     *
-     *    Eliminate splits:
-     *    ==>
-     *      1.0 - wins / wl = 2.0 * pct - 2.0 * wins
-     *
-     *      1.0 - 2.0 * pct = wins / wl - 2.0 * wins
-     *
-     *      1.0 - 2.0 * pct = (1.0 / wl - 2.0) * wins
-     *
-     *  Return Value:
-     *    A StatResult with .wins .splits .loss & .pct populated based on a wl ratio and a raw expectation (percentage)
-     *
-     *  Parameters:
-     *    pct:
-     *      Raw expected value (outcome) as a percentage.
-     *      Examples:
-     *        If you have .wins=50%, .splits=0%, and .loss=50%, you would have pct=0.5
-     *        If you have .wins=10%, .splits=40%, and .loss=10%, you would have pct=0.5 as well.
-     *      Thus, we also need the wl parameter to disambiguate.
-     *    wl:
-     *      Ratio "wins / (wins + loss)", or 0.0 if all-split
-     */
-	static StatResult ComposeBreakdown(const float64 pct, const float64 wl);
-
 
     /*
      * Raise s to s^f_battle, where s is the weighted geomean of b1 (weight x1) and b2 (weight x2)

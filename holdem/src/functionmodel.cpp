@@ -202,109 +202,55 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
 
 }
 
-CoarseCommunityHistogram::CoarseCommunityHistogram(const DistrShape &detailPCT)
+CoarseCommunityHistogram::CoarseCommunityHistogram(const DistrShape &detailPCT, const StatResult & rankShape)
 :
-fMyBestPct(detailPCT.best)
+fMyBest(detailPCT.best)
 ,
-fMyWorstPct(detailPCT.worst)
+fMyWorst(detailPCT.worst)
 ,
 fNumBins(COARSE_COMMUNITY_NUM_BINS)
 ,
-fBinWidth((detailPCT.best - detailPCT.worst) / fNumBins)
+fBinWidth((detailPCT.best.pct - detailPCT.worst.pct) / fNumBins)
 {
-    const float64 &dx = fBinWidth;
+    float64 count = 0.0;
+    //const float64 &dx = fBinWidth;
     for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
-        fBins[k].pct = detailPCT.worst + dx * (k + 0.5);
-    }
 
-    const float64 s = detailPCT.stdDev;
-    NormalizedSystemOfEquations solver(fNumBins);
-    float64 coefficients[COARSE_COMMUNITY_NUM_BINS] = {std::numeric_limits<float64>::signaling_NaN()};
-    float64 constraint = std::numeric_limits<float64>::signaling_NaN();
+        // TODO(from yuzisee): Use a CallCumulation for this?
+        fBins[k].freq = detailPCT.coarseHistogram[k].repeated;
 
-    // mid[a] Pr{a} + ... + mid[g] Pr{g}
-    for (size_t k=0; k<fNumBins; ++k) {
-        coefficients[k] = fBins[k].pct;
-    }
-    constraint = detailPCT.mean;
-    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
+        fBins[k].myChances = detailPCT.coarseHistogram[k];
+        fBins[k].myChances.repeated /= detailPCT.n;
 
-    // detailPct.stdDev ^2 = Pr{a} * (mid[a] - detailPct.mean)^2 + ... + Pr{g} * (mid[g] - detailPct.mean)^2
-    for (size_t k=0; k<fNumBins; ++k) {
-        const float64 d = fBins[k].pct - detailPCT.mean;
-        coefficients[k] = d*d;
-    }
-    constraint = s*s;
-    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
-
-    /*
-    // detailPct.skew * detailPct.stdDev^3 = Pr{a} * (mid[a] - detailPct.mean)^3 + ... + Pr{g} * (mid[g] - detailPct.mean)^3
-    for (size_t k=0; k<fNumBins; ++k) {
-        const float64 d = fBins[k].pct - detailPCT.mean;
-        coefficients[k] = d*d*d;
-    }
-    constraint = detailPCT.skew * s*s*s;
-    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
-
-    // (detailPct.kurtosis + 3) * detailPct.stdDev^4 = Pr{a} * (mid[a] - detailPct.mean)^4 + ... + Pr{g} * (mid[g] - detailPct.mean)^4
-    for (size_t k=0; k<fNumBins; ++k) {
-        const float64 d = fBins[k].pct - detailPCT.mean;
-        coefficients[k] = d*d*d*d;
-    }
-    constraint = (detailPCT.kurtosis + 3.0) * s*s*s*s;
-    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
-     */
-
-    /*
-    // detailPct.avgDev = Pr{a} * fabs(mid[a] - detailPct.mean) + ... + Pr{g} * fabs(mid[g] - detailPct.mean)
-    for (size_t k=0; k<fNumBins; ++k) {
-        const float64 d = fBins[k].pct - detailPCT.mean;
-        coefficients[k] = fabs(d);
-    }
-    constraint = detailPCT.avgDev;
-    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
-
-
-    // detailPct.improve = Pr{better} - Pr{worse}
-    for (size_t k=0; k<fNumBins; ++k) {
-        if (fBins[k].pct + dx / 2.0 < detailPCT.mean) {
-            // entire bin is below the mean
-            coefficients[k] = -1.0; // or, -dx / dx
-        } else if (detailPCT.mean < fBins[k].pct - dx / 2.0) {
-            // entire bin is above the mean
-            coefficients[k] = +1.0; // or, +dx / dx
-        } else {
-            //coefficients[k] =   (((fBins[k].pct + dx/2.0) - detailPCT.mean) - (detailPCT.mean - (fBins[k].pct - dx/2.0))) / dx ;
-            //coefficients[k] =    ((fBins[k].pct + dx/2.0) - detailPCT.mean  -  detailPCT.mean + (fBins[k].pct - dx/2.0))  / dx ;
-            //coefficients[k] =     (fBins[k].pct + dx/2.0                 - 2.0 detailPCT.mean +  fBins[k].pct - dx/2.0)   / dx ;
-            //coefficients[k] = (2.0 fBins[k].pct +                        - 2.0 detailPCT.mean )                           / dx ;
-            coefficients[k] = 2.0 * (fBins[k].pct - detailPCT.mean) / dx;
-        }
-    }
-    constraint = detailPCT.avgDev;
-    NormalizedSystemOfEquations_addEquation(solver, coefficients, constraint);
-     */
-
-    solver.solve();
-
-    float64 result[COARSE_COMMUNITY_NUM_BINS] = {std::numeric_limits<float64>::signaling_NaN()};
-    struct SizedArray solution;
-    solution.data = result;
-    solution.size = fNumBins;
-    solver.getSolution(&solution);
-
-    // Process and validate results
-    float64 sum = 0.0;
-    for (size_t k=0; k<fNumBins; ++k) {
-        if (result[k] < 0.0) {
-            std::cerr << "Numerical error reconstructing histogram\n";
+        if (fBins[k].myChances.repeated < 0.0) {
+            std::cerr << "detailPCT.coarseHistogram[" << static_cast<int>(k) << "] can't be negative!\n";
             exit(1);
         }
-        sum += result[k];
+
+        if (fBins[k].myChances.repeated == 0.0) {
+            // Put in dummy values because this bin is empty.
+            // Here, we set PCT according to the midpoint of the bin, and set splits based on rankShape.splits
+            const float64 midPct = fMyWorst.pct + fBinWidth * (0.5 + k);
+            fBins[k].myChances.pct = midPct;
+
+            if (midPct * 2 < rankShape.splits) {
+                // Cap at splits.
+                fBins[k].myChances.splits = midPct * 2;
+                fBins[k].myChances.wins = 0.0;
+                fBins[k].myChances.loss = 0.0;
+            } else {
+                fBins[k].myChances.splits = rankShape.splits;
+                fBins[k].myChances.wins = midPct - rankShape.splits / 2.0;
+                fBins[k].myChances.loss = 1.0 - fBins[k].myChances.wins - fBins[k].myChances.splits;
+            }
+        }
+
+        count += fBins[k].freq;
     }
 
-    for (size_t k=0; k<fNumBins; ++k) {
-        fBins[k].freq = result[k] / sum;
+    if (count != detailPCT.n) {
+        std::cerr << "Expecting " << static_cast<int>(detailPCT.n) << " histogram entries but only found " << static_cast<int>(count) << "\n";
+        exit(1);
     }
 
 }
@@ -383,7 +329,7 @@ static NetStatResult initByRank(playernumber_t difficultyOpponents, playernumber
  *                          Pre-flop, the community outcomes will yield post-flop situations. MEAN and RANK differ somewhat.
  *                              At the pre-flop moment we have a guess of the pre-flop MEAN<-->RANK inflation.
  */
-static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, const CoarseCommunityHistogram &outcomes, StatResult baseShape) {
+static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, const CoarseCommunityHistogram &outcomes) {
     NetStatResult expectation; // expectation sum
     expectation.fShape.wins = 0.0;
     expectation.fShape.splits = 0.0;
@@ -395,22 +341,7 @@ static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playe
 
     // For each community outcome bin, generate a NetStatResult and add it to the expectation sum above.
     for(size_t communityOutcomeBin=0; communityOutcomeBin<outcomes.fNumBins; ++communityOutcomeBin) {
-        const float64 targetPct = outcomes.getBin(communityOutcomeBin).pct;
-
-        // Set .pct to targetPct while preserving .splits if possible.
-        StatResult thisCommunityBaseShape = baseShape;
-        thisCommunityBaseShape.pct = targetPct;
-
-        if (thisCommunityBaseShape.splits > 2.0 * targetPct) {
-            // Not possible to preserve .splits, so just max it out as best we can.
-            thisCommunityBaseShape.splits = 2.0 * targetPct;
-            thisCommunityBaseShape.wins = 0.0;
-            thisCommunityBaseShape.loss = 0.0;
-        } else {
-            // It's possible to preserve splits! Go ahead and fill out the rest to match targetPct
-            thisCommunityBaseShape.wins = targetPct - thisCommunityBaseShape.splits / 2.0;
-            thisCommunityBaseShape.loss = 1.0 - thisCommunityBaseShape.splits - thisCommunityBaseShape.wins;
-        }
+        const StatResult thisCommunityBaseShape = outcomes.getBin(communityOutcomeBin).myChances;
 
         // Compute the multi-player result assuming this community bin...
         NetStatResult thisCommunityResult = initByRank(difficultyOpponents, showdownOpponents, thisCommunityBaseShape);
@@ -443,12 +374,12 @@ fNet(
 
      (
      // The odds of beating multiple people isn't based on the odds of beating one person.
-     (outcomes.fMyBestPct == outcomes.fMyWorstPct) ?
+     (outcomes.fBinWidth <= 0.0) ?
       // Since it's more complicated than that, just go with rank for now.
       initByRank(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), rank)
       :
       // We're able to break out conditional probability by community outcomes vs. opponent outcomes.
-      initMultiOpponent(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), outcomes, rank)
+      initMultiOpponent(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), outcomes)
      )
      :
 
@@ -946,26 +877,6 @@ float64 GainModelGeom::fd(const float64 betSize, const float64 y)
     return betVal;
 }
 
-
-StatResult CombinedStatResultsGeom::ComposeBreakdown(const float64 pct, const float64 wl)
-{
-    StatResult a;
-
-    if( wl == 1.0/2.0)
-    {///PCT is 0.5 here also
-        a.wins = 0.5;
-        a.loss = 0.5;
-        a.splits = 0;
-    }
-    else
-    {
-        a.wins = (2*pct - 1)*wl/(2*wl-1);
-        a.splits = (pct - a.wins)*2;
-        a.loss = 1 - a.wins - a.splits;
-        a.genPCT();
-    }
-    return a;
-}
 
 
 // Returns a value as a fraction of your bankroll. Returning 0.0 means "lose everything"

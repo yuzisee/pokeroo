@@ -132,8 +132,6 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     ///   Compute chances
     ///======================
 
-    DistrShape w_wl(0);
-
     ///Compute CallStats
     StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,onlyCommunity,cardsInCommunity);
     statprob.core.foldcumu = statprob.core.handcumu;
@@ -143,7 +141,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     ViewTable().CachedQueryOffense(statprob.core.callcumu,onlyCommunity, withCommunity);
 
     ///Compute WinStats
-    StatsManager::Query(&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
+    StatsManager::Query(&detailPCT,withCommunity,onlyCommunity,cardsInCommunity);
 
 
 
@@ -155,7 +153,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     ///====================================
 
     statprob.core.playerID = myPositionIndex;
-    statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+    statprob.core.statmean = detailPCT.mean;
 
 	statprob.Process_FoldCallMean();
 
@@ -1264,30 +1262,30 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
     // a histogram can be leptokurtic as well: http://en.wikipedia.org/wiki/File:KurtosisChanges.png
     
     logF << "Community outcomes (stdev = " << distrPct.stdDev << " pcts , avgdev = " << distrPct.avgDev << " pcts ), kurtosis = " << distrPct.kurtosis << "\n";
-    logF << distrPct.worst << " pct: least helpful community\n";
+    logF << distrPct.worst.pct << " pct: least helpful community\n";
 
     size_t k=0;
     while(1) {
-        const bool bMeanAbovePrev = (k==0          || h.getBin(k-1).pct <= distrPct.mean);
-        const bool bMeanBelowNext = (k==h.fNumBins || distrPct.mean <= h.getBin(k).pct);
+        const bool bMeanAbovePrev = (k==0          || h.getBin(k-1).myChances.pct <= distrPct.mean.pct);
+        const bool bMeanBelowNext = (k==h.fNumBins || distrPct.mean.pct <= h.getBin(k).myChances.pct);
         if (bMeanAbovePrev  &&  bMeanBelowNext) {
-            logF << distrPct.mean << " pct (mean): ";
+            logF << distrPct.mean.pct << " pct (mean): ";
             if (distrPct.skew < 0) {
                 logF << "(skew " << distrPct.skew << " tail left) ";
             }
             logF << "mean- " << (0.5 - 0.5*distrPct.improve) << "   mean+ " << (0.5 + 0.5*distrPct.improve);
             if (distrPct.skew > 0) {
-                logF << "(skew " << distrPct.skew << " tail right) ";
+                logF << " (skew " << distrPct.skew << " tail right) ";
             }
             logF << "\n";
         }
         if (k==h.fNumBins) {
             break;
         }
-        logF << h.getBin(k).pct << " pct: " << (h.getBin(k).freq * distrPct.n) << " / " << static_cast<int>(distrPct.n) << " (" << (h.getBin(k).freq * 100) << "%)\n";
+        logF << h.getBin(k).myChances.pct << " pct: " << (h.getBin(k).freq) << " / " << static_cast<int>(distrPct.n) << " (" << (h.getBin(k).freq * 100.0 / distrPct.n) << "%)\n";
         ++k;
     }
-    logF << distrPct.best << " pct: most helpful community\n";
+    logF << distrPct.best.pct << " pct: most helpful community\n";
 
 }
 
@@ -1333,7 +1331,7 @@ float64 PureGainStrategy::MakeBet()
         exit(1);
     }
 
-    CoarseCommunityHistogram outcomes(detailPCT);
+    CoarseCommunityHistogram outcomes(detailPCT, left);
     PureStatResultGeom leftCS(statprob.core.statmean, left, outcomes, statprob.core.foldcumu, tablestate);
     ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
 

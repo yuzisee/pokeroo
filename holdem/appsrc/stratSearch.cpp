@@ -33,7 +33,7 @@ SearchStrategy::~SearchStrategy()
 
 void SearchStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 {
-    if( 0 == w ) w = new DistrShape(0);
+    if( 0 == w ) w = new DistrShape(DistrShape::newEmptyDistrShape());
 
     CommunityPlus onlyCommunity;
     onlyCommunity.SetUnique(h);
@@ -41,7 +41,7 @@ void SearchStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
     CommunityPlus withCommunity;
     withCommunity.SetUnique(ViewDealtHand());
     withCommunity.AppendUnique(onlyCommunity);
-    StatsManager::Query(w,0,withCommunity,onlyCommunity,cardsInCommunity);
+    StatsManager::Query(w,withCommunity,onlyCommunity,cardsInCommunity);
 }
 
 

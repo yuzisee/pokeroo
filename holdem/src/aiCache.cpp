@@ -156,19 +156,14 @@ void StatsManager::serializeStatResult(ofstream& dataf, const StatResult& d)
     dataf.write(cachebuf,cachebufSize);
 }
 
-void StatsManager::SerializeW( ofstream& dataf, const StatResult& myAvg, const DistrShape& dPCT, const DistrShape& dWL )
+void StatsManager::SerializeW( ofstream& dataf, const DistrShape& dPCT )
 {
-    serializeStatResult( dataf, myAvg );
     serializeDistrShape( dataf, dPCT );
-    serializeDistrShape( dataf, dWL );
 }
 
-bool StatsManager::UnserializeW( ifstream& dataf, DistrShape* dPCT, DistrShape* dWL )
+bool StatsManager::UnserializeW( ifstream& dataf, DistrShape* dPCT )
 {
-
-    if(! (unserializeStatResult( dataf, 0 )) ) return false;
     if(! (unserializeDistrShape( dataf, dPCT )) ) return false;
-    if(! (unserializeDistrShape( dataf, dWL )) ) return false;
 
     ///It better be the end of the file now....
     char temp[1];
@@ -229,7 +224,7 @@ bool StatsManager::UnserializeC( ifstream& dataf,  CallCumulation& q )
     return dataf.eof();
 }
 
-void StatsManager::Query(DistrShape* dPCT, DistrShape* dWL,
+void StatsManager::Query(DistrShape* dPCT,
     const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
 {
     string datafilename = "";
@@ -239,7 +234,7 @@ void StatsManager::Query(DistrShape* dPCT, DistrShape* dWL,
         ifstream dataserial(datafilename.c_str(),std::ios::in | std::ios::binary);
         if( dataserial.is_open() )
         {
-            if( UnserializeW( dataserial, dPCT, dWL ) )
+            if( UnserializeW( dataserial, dPCT ) )
             {
 //                cout << "Reading from file" << endl;
                 dataserial.close();
@@ -281,12 +276,11 @@ std::cout.precision(old_precision);
         ofstream newdata(datafilename.c_str(),std::ios::out | std::ios::binary | std::ios::trunc );
         if( newdata.is_open() )
         {
-            SerializeW( newdata, ds.avgStat(), ds.pctDistr(), ds.wlDistr() );
+            SerializeW( newdata, ds.getDistr() );
         }
     }
      
-    if( 0 != dPCT ) *dPCT = ds.pctDistr();
-    if( 0 != dWL ) *dWL = ds.wlDistr();
+    if( 0 != dPCT ) *dPCT = ds.getDistr();
 
 
 
@@ -557,10 +551,9 @@ int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
     
     // === Write the result into myWins[statGroup] ... ===
     StatResult * entryTarget = myWins+statGroup;
-    DistrShape pctShape(0);
-    DistrShape wlShape(0);
-    StatsManager::Query(&pctShape, &wlShape, oppTempStrength, emptyHand, 0);
-    *entryTarget = CombinedStatResultsGeom::ComposeBreakdown(pctShape.mean,wlShape.mean);
+    DistrShape distrShape(DistrShape::newEmptyDistrShape());
+    StatsManager::Query(&distrShape, oppTempStrength, emptyHand, 0);
+    *entryTarget = distrShape.mean;
     entryTarget->repeated = dOcc;
     
     // === ... and then increment statGroup ===

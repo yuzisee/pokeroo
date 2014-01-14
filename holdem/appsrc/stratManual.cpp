@@ -73,9 +73,8 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
         withCommunity.SetUnique(ViewDealtHand());
         withCommunity.AppendUnique(onlyCommunity);
 
-        DistrShape w_wl(0);
-	    StatsManager::Query(&detailPCT,&w_wl,withCommunity,onlyCommunity,cardsInCommunity);
-        winMean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+	    StatsManager::Query(&detailPCT,withCommunity,onlyCommunity,cardsInCommunity);
+        winMean = detailPCT.mean;
 
 
         ViewTable().CachedQueryOffense(possibleHands,onlyCommunity,withCommunity);

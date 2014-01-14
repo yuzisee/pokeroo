@@ -88,16 +88,16 @@ private:
 
 protected:
     static void SerializeC(ofstream& dataf, const CallCumulation& q);
-    static void SerializeW(ofstream& dataf, const StatResult& myAvg, const DistrShape& dPCT, const DistrShape& dWL);
+    static void SerializeW(ofstream& dataf, const DistrShape& dPCT);
     static bool UnserializeC(ifstream& dataf, CallCumulation& q);
-    static bool UnserializeW(ifstream& dataf, DistrShape* dPCT, DistrShape* dWL);
+    static bool UnserializeW(ifstream& dataf, DistrShape* dPCT);
     static string baseDataPath;
 
 public:
 
     static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity, const string label);
 
-    static void Query(DistrShape* dPCT, DistrShape* dWL, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
+    static void Query(DistrShape* dPCT, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     static void QueryDefense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     #ifdef GLOBAL_AICACHE_SPEEDUP
     static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n, CommunityCallStats  ** lastds=0);

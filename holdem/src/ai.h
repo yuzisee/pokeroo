@@ -165,20 +165,22 @@ protected:
 
 	float64 oppReps;
 
-    DistrShape *myDistrPCT;
-	DistrShape *myDistrWL;
+    DistrShape *myDistr;
 	StatResult myAvg;
 public:
-    const DistrShape& pctDistr();
-    const DistrShape& wlDistr();
+    const DistrShape& getDistr();
     const StatResult& avgStat();
 
 	virtual void Analyze();
 	virtual StatRequest NewCard(const DeckLocation, const float64 occ);
 	virtual void DropCard(const DeckLocation);
 
-	WinStats(const CommunityPlus& myP, const CommunityPlus& cP,
-		const int8 cardsInCommunity) : PlayStats(myP, cP), oppReps(1.0), myDistrPCT(0), myDistrWL(0)
+	WinStats(const CommunityPlus& myP, const CommunityPlus& cP, const int8 cardsInCommunity)
+    : PlayStats(myP, cP)
+    ,
+    oppReps(1.0)
+    ,
+    myDistr(0)
 	{
 		initW(cardsInCommunity);
 	}

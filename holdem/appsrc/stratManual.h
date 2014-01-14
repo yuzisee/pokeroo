@@ -92,7 +92,7 @@ class ConsoleStrategy : public PlayerStrategy
 
 		ConsoleStrategy() : PlayerStrategy()
 		#ifdef INFOASSIST_STRONG
-            , detailPCT(0)
+            , detailPCT(DistrShape::newEmptyDistrShape())
 		#endif
             , bNoPrint(false)
 

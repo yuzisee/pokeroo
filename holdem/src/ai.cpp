@@ -109,35 +109,36 @@ void WinStats::Analyze()
 	myAvg.splits /= myTotalChances;
 	myAvg.genPCT();
 
-	myDistrPCT = new DistrShape(myTotalChances, myAvg.pct);
-	myDistrWL = new DistrShape(myTotalChances, myAvg.genPeripheral());
-
-	for(int32 i=0;i<statCount;i++)
+    myWins[0].genPCT();
+    StatResult best = myWins[0];
+    StatResult worst = myWins[0];
+    for(int32 i=0;i<statCount;i++)
 	{
 		StatResult& wr = myWins[i];
 		wr.genPCT();
-		myDistrPCT->AddVal( wr.pct, wr.repeated );
-		myDistrWL->AddVal( wr.genPeripheral(), wr.repeated );
+
+        if (best < wr) { best = wr; }
+        if (wr < worst) { worst = wr; }
 
 	}
 
-    myDistrPCT->Complete(myChancesEach);
-    myDistrWL->Complete(myChancesEach);
+	myDistr = new DistrShape(myTotalChances, worst, myAvg, best);
 
+	for(int32 i=0;i<statCount;i++)
+	{
+		const StatResult& wr = myWins[i];
+		myDistr->AddVal( wr );
+
+	}
+
+    myDistr->Complete(myChancesEach);
 }
 
-const DistrShape& WinStats::pctDistr()
+const DistrShape& WinStats::getDistr()
 {
-    if( myDistrPCT == NULL ) myDistrPCT = new DistrShape(0);
-    return *myDistrPCT;
+    if( myDistr == NULL ) myDistr = new DistrShape(DistrShape::newEmptyDistrShape());
+    return *myDistr;
 }
-
-const DistrShape& WinStats::wlDistr()
-{
-    if( myDistrWL == NULL ) myDistrWL = new DistrShape(0);
-    return *myDistrWL;
-}
-
 const StatResult& WinStats::avgStat()
 {
     return myAvg;
@@ -633,8 +634,7 @@ void CallStats::initC(const int8 cardsInCommunity)
 
 void WinStats::clearDistr()
 {
-	if( myDistrPCT != NULL ) delete myDistrPCT;
-	if( myDistrWL != NULL ) delete myDistrWL;
+	if( myDistr != NULL ) delete myDistr;
 }
 
 WinStats::~WinStats()

@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <stdlib.h>
 #include <math.h>
 #include <algorithm>
 #include "inferentials.h"
@@ -29,13 +30,82 @@
 //const float64 CallCumulation::tiefactor = DEFAULT_TIE_SCALE_FACTOR;
 
 
-void DistrShape::AddVal(float64 x, float64 occ)
+DistrShape DistrShape::newEmptyDistrShape() {
+    StatResult dummy;
+    dummy.wins = std::numeric_limits<float64>::signaling_NaN();
+    dummy.loss = std::numeric_limits<float64>::signaling_NaN();
+    dummy.splits = std::numeric_limits<float64>::signaling_NaN();
+    dummy.repeated = std::numeric_limits<float64>::signaling_NaN();
+    dummy.pct = std::numeric_limits<float64>::signaling_NaN();
+
+    DistrShape result(0.0, dummy, dummy, dummy);
+    return result;
+}
+
+DistrShape::DistrShape(float64 count, StatResult worstPCT, StatResult meanOverall, StatResult bestPCT)
+: n(count)
+,
+mean(meanOverall), best(bestPCT), worst(worstPCT)
+,
+avgDev(0), stdDev(0), improve(0), skew(0), kurtosis(0)
 {
-	float64 d = (x - mean);
-	float64 d1 = d * occ;
-	float64 d2 = d1*d;
-	float64 d3 = d2*d;
-	float64 d4 = d3*d;
+    for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
+        coarseHistogram[k].wins = 0.0;
+        coarseHistogram[k].splits = 0.0;
+        coarseHistogram[k].loss = 0.0;
+        coarseHistogram[k].repeated = 0.0;
+        coarseHistogram[k].pct = 0.5;
+    }
+}
+
+const DistrShape & DistrShape::operator=(const DistrShape& o)
+{
+    avgDev = o.avgDev;
+    improve = o.improve;
+    kurtosis = o.kurtosis;
+    mean = o.mean;
+    n = o.n;
+    skew = o.skew;
+    stdDev= o.stdDev;
+    worst = o.worst;
+    best = o.best;
+    for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
+        coarseHistogram[k] = o.coarseHistogram[k];
+    }
+    return *this;
+}
+
+
+void DistrShape::AddVal(const StatResult &x)
+{
+    const float64 occ = x.repeated;
+    
+    // Which of the COARSE_COMMUNITY_NUM_BINS do we fall into?
+    const float64 dx = (best.pct - worst.pct) / COARSE_COMMUNITY_NUM_BINS;
+    const float64 bin0 = worst.pct + dx/2;
+    const float64 bin = round((x.pct - bin0)/dx);
+
+    size_t binIdx;
+    if (bin == -1.0) {
+        binIdx = 0;
+    } else if (bin == COARSE_COMMUNITY_NUM_BINS) {
+        binIdx = COARSE_COMMUNITY_NUM_BINS - 1;
+    } else if (0.0 <= bin && bin < COARSE_COMMUNITY_NUM_BINS) {
+        binIdx = static_cast<size_t>(bin);
+    } else {
+        binIdx = -1;
+        abort(); // CRASH this value is invalid.
+    }
+
+    coarseHistogram[binIdx].addByWeight(x);
+
+
+    // Apply "PCT only" summary statistics
+	const float64 d = (x.pct - mean.pct);
+	const float64 d1 = d * occ;
+	const float64 d2 = d1*d;
+	const float64 d3 = d2*d;
+	const float64 d4 = d3*d;
 
 	avgDev += fabs(d1);
 	stdDev += d2;
@@ -48,7 +118,6 @@ void DistrShape::AddVal(float64 x, float64 occ)
 	else if( d == 0 ){
 		improve += occ/2;
 	}
-	if( x < worst ) worst = x;
 }
 
 void DistrShape::Complete(float64 mag)
@@ -71,6 +140,10 @@ void DistrShape::Complete()
 	kurtosis -= 3;
 }
 
+/**
+ * During raw computation, .pct, .loss, etc. aren't percentages between 0.0 and 1.0, they are in fact integer counts.
+ * We divide by the total number of occurrences here to bring all of these values back down to pure percentages.
+ */
 void DistrShape::normalize(float64 mag)
 {
 	avgDev /= mag;
@@ -78,9 +151,13 @@ void DistrShape::normalize(float64 mag)
 	skew /= mag*mag*mag;
 	kurtosis /= mag*mag*mag*mag;
 
+    best.scaleOrdinateOnly(1.0 / mag);
+    worst.scaleOrdinateOnly(1.0 / mag);
+    mean.scaleOrdinateOnly(1.0 / mag);
 
-	worst /= mag;
-	mean /= mag;
+    for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
+        coarseHistogram[k].scaleOrdinateOnly(1.0 / mag);
+    }
 }
 CallCumulation::~CallCumulation()
 {
@@ -769,19 +846,6 @@ size_t CallCumulation::searchWinPCT_strictlyBetterThan(const float64 winPCT) con
 const CallCumulation & CallCumulation::operator=(const CallCumulation& o)
 {
     cumulation = o.cumulation;
-    return *this;
-}
-
-const DistrShape & DistrShape::operator=(const DistrShape& o)
-{
-    avgDev = o.avgDev;
-    improve = o.improve;
-    kurtosis = o.kurtosis;
-    mean = o.mean;
-    n = o.n;
-    skew = o.skew;
-    stdDev= o.stdDev;
-    worst = o.worst;
     return *this;
 }
 

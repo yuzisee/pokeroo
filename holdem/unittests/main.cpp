@@ -137,15 +137,14 @@ namespace UnitTests {
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
 
         ///Compute WinStats
-        DistrShape w_wl(0);
-        DistrShape detailPCT(0);
-        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        DistrShape detailPCT(DistrShape::newEmptyDistrShape());
+        StatsManager::Query(&detailPCT,withCommunity,communityToTest,cardsInCommunity);
         statprob.core.playerID = 0;
-        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+        statprob.core.statmean = detailPCT.mean;
 
         // ==================================
 
-        CoarseCommunityHistogram a(detailPCT);
+        CoarseCommunityHistogram a(detailPCT, statprob.core.statRanking());
 
         // >>> A = numpy.array([[0.004420167362780927, 0.02132858973531938, 0.1285728447521483], [0.4166831357048748, 0.6292105841018885, 0.8417380324989019], [1, 1, 1]])
         // >>> numpy.linalg.solve(   A, numpy.array([0.05816449589744065, 0.4831674749343575, 1.0])   )
@@ -451,11 +450,10 @@ namespace UnitTests {
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
 
         ///Compute WinStats
-        DistrShape w_wl(0);
-        DistrShape detailPCT(0);
-        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        DistrShape detailPCT(DistrShape::newEmptyDistrShape());
+        StatsManager::Query(&detailPCT,withCommunity,communityToTest,cardsInCommunity);
         statprob.core.playerID = 0;
-        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+        statprob.core.statmean = detailPCT.mean;
 
         FoldWaitLengthModel fw;
         // From the opponent's point of view if he knows he's against a flush
@@ -651,11 +649,10 @@ namespace UnitTests {
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
 
         ///Compute WinStats
-        DistrShape w_wl(0);
-        DistrShape detailPCT(0);
-        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        DistrShape detailPCT(DistrShape::newEmptyDistrShape());
+        StatsManager::Query(&detailPCT,withCommunity,communityToTest,cardsInCommunity);
         statprob.core.playerID = 0;
-        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+        statprob.core.statmean = detailPCT.mean;
 
         // TEST (from CACHE!!):
         assert(statprob.core.statRelation().pct > 0.94); // This hand is very good. StatRelation should do very well.
@@ -716,11 +713,10 @@ namespace UnitTests {
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
 
         ///Compute WinStats
-        DistrShape w_wl(0);
-        DistrShape detailPCT(0);
-        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        DistrShape detailPCT(DistrShape::newEmptyDistrShape());
+        StatsManager::Query(&detailPCT,withCommunity,communityToTest,cardsInCommunity);
         statprob.core.playerID = 0;
-        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+        statprob.core.statmean = detailPCT.mean;
 
         // TEST:
         assert(statprob.core.statRelation().pct > 0.95); // This hand is very good. StatRelation should do very well.
@@ -852,8 +848,7 @@ namespace UnitTests {
          River:	2d Qd Kc 2s 7c  (Pot: $447.375)
          */
 
-        DistrShape detailPCT(0);
-        DistrShape w_wl(0);
+        DistrShape detailPCT(DistrShape::newEmptyDistrShape());
         StatResultProbabilities statprob;
 
         ///Compute CallStats
@@ -865,9 +860,9 @@ namespace UnitTests {
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
 
         ///Compute WinStats
-        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        StatsManager::Query(&detailPCT,withCommunity,communityToTest,cardsInCommunity);
 
-        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+        statprob.core.statmean = detailPCT.mean;
 
 
         ///====================================
@@ -3286,11 +3281,10 @@ namespace RegressionTests {
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
 
         ///Compute WinStats
-        DistrShape w_wl(0);
-        DistrShape detailPCT(0);
-        StatsManager::Query(0,&detailPCT,&w_wl,withCommunity,communityToTest,cardsInCommunity);
+        DistrShape detailPCT(DistrShape::newEmptyDistrShape());
+        StatsManager::Query(&detailPCT,withCommunity,communityToTest,cardsInCommunity);
         statprob.core.playerID = 0;
-        statprob.core.statmean = CombinedStatResultsGeom::ComposeBreakdown(detailPCT.mean,w_wl.mean);
+        statprob.core.statmean = detailPCT.mean;
 
 
         /*
@@ -4145,6 +4139,7 @@ static void regenerateDb(int mode) {
         if (counter % CPUs != offset) {
             std::cout << "skip\n";
             std::cout.flush();
+            ++counter;
             continue;
         }
 
@@ -4188,6 +4183,7 @@ static void regenerateDb(int mode) {
         if (counter % CPUs != offset) {
             std::cout << "skip\n";
             std::cout.flush();
+            ++counter;
             continue;
         }
 
@@ -4205,20 +4201,18 @@ static void regenerateDb(int mode) {
 
 
 
-        StatResult myAvg;
-        DistrShape dPCT(0.5);
-        DistrShape dWL(0.5);
+        DistrShape dPCT(DistrShape::newEmptyDistrShape());
 
 
         {
             const time_t now = time(0);
             std::cout << asctime(std::localtime(&now));
-            std::cout << "Computing CommunityCallStats (depends on *.holdemW)\n";
+            std::cout << "Computing " << handName << " DistrShape (depends on *.holdemW)\n";
             std::cout.flush(); // Flush for timestamping
         }
 
         ///Compute CommunityCallStats
-        StatsManager::Query(&myAvg, &dPCT, &dWL, withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
+        StatsManager::Query(&dPCT, withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
         ++counter;
         
         std::cout << "=== Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size()) << "   ===\n\n";
@@ -4234,6 +4228,7 @@ static void regenerateDb(int mode) {
 int main(int argc, const char * argv[])
 {
 
+    /*
     
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
@@ -4283,7 +4278,9 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_002();
 
+     */
+
     // Regenerate the DB?
-    //regenerateDb(argc);
+    regenerateDb(argc);
 }
 

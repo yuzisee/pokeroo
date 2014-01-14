@@ -48,7 +48,7 @@ void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
 
 
-    if( 0 == w ) w = new DistrShape(0);
+    if( 0 == w ) w = new DistrShape(DistrShape::newEmptyDistrShape());
 
     CommunityPlus onlyCommunity;
     onlyCommunity.SetUnique(h);
@@ -59,7 +59,7 @@ void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 
 
 
-    StatsManager::Query(w,0,withCommunity,onlyCommunity,cardsInCommunity);
+    StatsManager::Query(w,withCommunity,onlyCommunity,cardsInCommunity);
 
         #ifdef LOGTHRESHOLD
             if( !(logFile.is_open()) )
@@ -92,9 +92,9 @@ float64 ThresholdStrategy::MakeBet()
                 logFile.open((ViewPlayer().GetIdent() + ".Thresh.txt").c_str());
             }
 
-            logFile << w->mean << " > " << aiThreshold << "?" << endl;
+            logFile << w->mean.pct << " > " << aiThreshold << "?" << endl;
         #endif
-	if (w->mean > aiThreshold)
+	if (w->mean.pct > aiThreshold)
 	{
 		return ViewTable().GetBetToCall();
 	}
@@ -116,7 +116,7 @@ float64 MultiThresholdStrategy::MakeBet()
         const float64 defaultBetUp = ((ViewTable().GetDeadPotSize() + bb) / 2.0 + bb*3); // /w->mean;
 
         const bool bRiver = (ViewTable().FutureRounds() == 0);
-        const bool bHandSucks = (w->mean < 0.5);
+        const bool bHandSucks = (w->mean.pct < 0.5);
 
         if( bRiver && bHandSucks )  return 0;
         else                        return defaultBetUp;
@@ -126,7 +126,7 @@ float64 MultiThresholdStrategy::MakeBet()
 	const playernumber_t toBeat = ViewTable().NumberStartedRoundInclAllIn()-1; // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
     
 
-    float64 multiThreshhold = pow(w->mean,toBeat+redundancy); //subtract yourself
+    float64 multiThreshhold = pow(w->mean.pct,toBeat+redundancy); //subtract yourself
         #ifdef LOGTHRESHOLD
 
             if( !(logFile.is_open()) )
@@ -141,7 +141,7 @@ float64 MultiThresholdStrategy::MakeBet()
             logFile << "ThresholdAI" << endl;
 
 			
-            logFile << multiThreshhold << " = " << w->mean << "^" << (int)(toBeat+redundancy) << endl;
+            logFile << multiThreshhold << " = " << w->mean.pct << "^" << (int)(toBeat+redundancy) << endl;
         #endif
 
 	if (multiThreshhold > aiThreshold)

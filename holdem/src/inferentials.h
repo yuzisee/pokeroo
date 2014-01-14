@@ -61,6 +61,13 @@ class StatResult
 				&&
 				pct == x.pct;
 	}
+    void scaleOrdinateOnly(float64 scale) {
+        wins *= scale;
+        splits *= scale;
+        loss *= scale;
+        // Doesn't scale .repeated (the Abscissa)
+        pct *= scale;
+    }
 
 	const StatResult & operator=(const StatResult& a)
 	{
@@ -414,18 +421,25 @@ class SlidingPairCallCumulationD : public virtual CallCumulationD
 ;
 */
 
+
+#define COARSE_COMMUNITY_NUM_BINS 7
+
 class DistrShape
 {
 protected:
 	void normalize(float64);
 public:
 	float64 n;
-	float64 mean;
+	StatResult mean;
 
-	float64 worst;
+    StatResult best;
+	StatResult worst;
 
+    StatResult coarseHistogram[COARSE_COMMUNITY_NUM_BINS];
+
+    // Stats about PCT
 	float64 avgDev;
-	float64 stdDev;   // raw moment (i.e. divided by n not n-1) 
+	float64 stdDev;   //raw moment (i.e. divided by n not n-1)
 	float64 improve;  //above or below 1.0
 	float64 skew;     //positive or negative ("Distributions with positive skew have larger means than medians.")
 	float64 kurtosis; //risk-reward magnifier (high k is high risk high reward, long tail)
@@ -435,15 +449,17 @@ public:
             *this = o;
         }
 
-	DistrShape(float64 u) { DistrShape(0,u); }
-	DistrShape(float64 count, float64 u) : n(count), mean(u), worst(u), avgDev(0), stdDev(0), improve(0), skew(0), kurtosis(0) {}
+	static DistrShape newEmptyDistrShape();
 
-	void AddVal(float64, float64);
-	void AddCount(float64 x, float64 occ){ n += occ; AddVal(x, occ); }
+	DistrShape(float64 count, StatResult worstPCT, StatResult meanOverall, StatResult bestPCT);
+
+    const DistrShape & operator=(const DistrShape& o);
+    
+	void AddVal(const StatResult &);
+
 	void Complete();
 	void Complete(float64);
 
-    const DistrShape & operator=(const DistrShape& o);
 
     #ifdef DUMP_CSV_PLOTS
         static void dump_csv_plots(std::ostream& targetoutput, const DistrShape& myDistrPCT)

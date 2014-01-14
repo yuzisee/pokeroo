@@ -36,10 +36,10 @@ uint32 TrendStrategy::RandomSeed()
 
     ViewTable().CachedQueryOffense(possibleHands,withCommunity);
 
-    DistrShape tempP(0), tempW(0);
+    DistrShape tempD(DistrShape::newEmptyDistrShape());
 
     StatsManager::Query(0,&tempP,&tempW,withCommunity,CommunityPlus::EMPTY_COMPLUS,0);
-    StatResult myRank = GainModel::ComposeBreakdown(tempP.mean,tempW.mean);
+    StatResult myRank = tempD.mean;
 
 
     const float64 ranking3 = possibleHands.pctWillCall_tiefactor(1 - myRank.pct, 1); //wins+splits
