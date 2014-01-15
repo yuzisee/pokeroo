@@ -1255,6 +1255,9 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
     if (distrPct.n == 1) {
         return;
     }
+    if (h.fBinWidth == 0.0) {
+        return;
+    }
 
 
     // excess kurtosis of uniform is -1.2
@@ -1270,11 +1273,11 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
         const bool bMeanBelowNext = (k==h.fNumBins || distrPct.mean.pct <= h.getBin(k).myChances.pct);
         if (bMeanAbovePrev  &&  bMeanBelowNext) {
             logF << distrPct.mean.pct << " pct (mean): ";
-            if (distrPct.skew > 0) {
+            if (distrPct.skew < 0) {
                 logF << "(skew " << distrPct.skew << " tail left) ";
             }
             logF << "mean- " << (0.5 - 0.5*distrPct.improve) << "   mean+ " << (0.5 + 0.5*distrPct.improve);
-            if (distrPct.skew < 0) {
+            if (distrPct.skew > 0) {
                 logF << " (skew " << distrPct.skew << " tail right) ";
             }
             logF << "\n";
@@ -1351,7 +1354,23 @@ float64 PureGainStrategy::MakeBet()
 
 #ifdef LOGPOSITION
     printCommunityOutcomes(logFile, outcomes, detailPCT);
-    logFile << "CallStrength W(" << static_cast<int>(tablestate.handStrengthOfRound()) << "c)=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
+    char statResultMode;
+    if (tablestate.handsToShowdownAgainst() > 1) {
+        CoarseCommunityHistogram rankComparison(DistrShape::newEmptyDistrShape(), left);
+        PureStatResultGeom rankOnly(statprob.core.statmean, left, rankComparison, statprob.core.foldcumu, tablestate);
+
+        if (rankOnly.ViewShape(betToCall).pct < leftCS.ViewShape(betToCall).pct) {
+            // Drawing hand (since it's higher than rank alone)
+            statResultMode = 'c';
+        } else {
+            // Playing hand, so we use rank directly
+            statResultMode = 'r';
+        }
+    } else {
+        // Mean / Pessemistic mode (heads-up)
+        statResultMode = 'm';
+    }
+    logFile << "CallStrength W(" << static_cast<int>(tablestate.handStrengthOfRound()) << statResultMode << ")=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
     const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
     logFile << "(MinRaise to $" << minRaiseTo << ") ";
     printPessimisticWinPct(logFile, minRaiseTo, &csrp);
