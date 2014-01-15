@@ -331,7 +331,7 @@ static NetStatResult initByRank(playernumber_t difficultyOpponents, playernumber
  *                          Pre-flop, the community outcomes will yield post-flop situations. MEAN and RANK differ somewhat.
  *                              At the pre-flop moment we have a guess of the pre-flop MEAN<-->RANK inflation.
  */
-static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, const CoarseCommunityHistogram &outcomes, const NetStatResult &rankComparison) {
+static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, const CoarseCommunityHistogram &outcomes, const NetStatResult rankComparison) {
     if (outcomes.fBinWidth <= 0.0) {
         // MEAN == RANK at this point anyway.
         // The community doesn't affect your outcome so only the opposing hands do which would be ranked and counted to compute mean.
