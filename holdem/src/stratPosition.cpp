@@ -1270,11 +1270,11 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
         const bool bMeanBelowNext = (k==h.fNumBins || distrPct.mean.pct <= h.getBin(k).myChances.pct);
         if (bMeanAbovePrev  &&  bMeanBelowNext) {
             logF << distrPct.mean.pct << " pct (mean): ";
-            if (distrPct.skew < 0) {
+            if (distrPct.skew > 0) {
                 logF << "(skew " << distrPct.skew << " tail left) ";
             }
             logF << "mean- " << (0.5 - 0.5*distrPct.improve) << "   mean+ " << (0.5 + 0.5*distrPct.improve);
-            if (distrPct.skew > 0) {
+            if (distrPct.skew < 0) {
                 logF << " (skew " << distrPct.skew << " tail right) ";
             }
             logF << "\n";
@@ -1282,7 +1282,7 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
         if (k==h.fNumBins) {
             break;
         }
-        logF << h.getBin(k).myChances.pct << " pct: " << (h.getBin(k).freq) << " / " << static_cast<int>(distrPct.n) << " (" << (h.getBin(k).freq * 100.0 / distrPct.n) << "%)\n";
+        logF << h.getBin(k).myChances.pct << " pct: " << (h.getBin(k).freq) << " / " << static_cast<int>(distrPct.n) << " (" << (h.getBin(k).myChances.repeated * 100.0) << "%)\n";
         ++k;
     }
     logF << distrPct.best.pct << " pct: most helpful community\n";
@@ -1350,6 +1350,7 @@ float64 PureGainStrategy::MakeBet()
 
 
 #ifdef LOGPOSITION
+    printCommunityOutcomes(logFile, outcomes, detailPCT);
     logFile << "CallStrength W(" << static_cast<int>(tablestate.handStrengthOfRound()) << "c)=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
     const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
     logFile << "(MinRaise to $" << minRaiseTo << ") ";

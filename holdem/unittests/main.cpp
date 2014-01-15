@@ -1145,8 +1145,10 @@ namespace RegressionTests {
         static const float64 aa[] = {std::numeric_limits<float64>::signaling_NaN(), 0.0, 0.0};
         const std::vector<float64> callCheckFold(aa, aa + sizeof(aa) / sizeof(aa[0]) );
 
-        static const float64 na[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, 0.0, 0.0};
-        static const float64 sa[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, 0.0, std::numeric_limits<float64>::signaling_NaN()};
+        static const float64 na[] = {std::numeric_limits<float64>::signaling_NaN(), 20.0, 0.0, 0.0};
+        static const float64 sa[] = {std::numeric_limits<float64>::signaling_NaN(), 20.0, 0.0, std::numeric_limits<float64>::signaling_NaN()};
+        //static const float64 na[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, 0.0, 0.0};
+        //static const float64 sa[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, 0.0, std::numeric_limits<float64>::signaling_NaN()};
 
         FixedReplayPlayerStrategy nS(VectorOf(na));
         FixedReplayPlayerStrategy sS(VectorOf(sa));
@@ -1177,12 +1179,13 @@ namespace RegressionTests {
         DeckLocation card;
 
         {
-            CommunityPlus handToTest; // 7h 2h
+            CommunityPlus handToTest;
 
-            card.SetByIndex(21);
+            card.SetByIndex(49); // Ah
+            //card.SetByIndex(21); 7h
             handToTest.AddToHand(card);
 
-            card.SetByIndex(1);
+            card.SetByIndex(1); // 2h
             handToTest.AddToHand(card);
 
             botToTest->StoreDealtHand(handToTest);
@@ -4228,7 +4231,6 @@ static void regenerateDb(int mode) {
 int main(int argc, const char * argv[])
 {
 
-    /*
     
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
@@ -4278,9 +4280,7 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_002();
 
-     */
-
     // Regenerate the DB?
-    regenerateDb(argc);
+    //regenerateDb(argc);
 }
 

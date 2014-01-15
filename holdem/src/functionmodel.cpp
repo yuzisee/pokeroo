@@ -212,45 +212,47 @@ fNumBins(COARSE_COMMUNITY_NUM_BINS)
 ,
 fBinWidth((detailPCT.best.pct - detailPCT.worst.pct) / fNumBins)
 {
-    float64 count = 0.0;
-    //const float64 &dx = fBinWidth;
-    for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
+    if (fBinWidth > 0.0) {
+        float64 count = 0.0;
+        //const float64 &dx = fBinWidth;
+        for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
 
-        // TODO(from yuzisee): Use a CallCumulation for this?
-        fBins[k].freq = detailPCT.coarseHistogram[k].repeated;
+            // TODO(from yuzisee): Use a CallCumulation for this?
+            fBins[k].freq = detailPCT.coarseHistogram[k].repeated;
 
-        fBins[k].myChances = detailPCT.coarseHistogram[k];
-        fBins[k].myChances.repeated /= detailPCT.n;
+            fBins[k].myChances = detailPCT.coarseHistogram[k];
+            fBins[k].myChances.repeated /= detailPCT.n;
 
-        if (fBins[k].myChances.repeated < 0.0) {
-            std::cerr << "detailPCT.coarseHistogram[" << static_cast<int>(k) << "] can't be negative!\n";
+            if (fBins[k].myChances.repeated < 0.0) {
+                std::cerr << "detailPCT.coarseHistogram[" << static_cast<int>(k) << "] can't be negative!\n";
+                exit(1);
+            }
+
+            if (fBins[k].myChances.repeated == 0.0) {
+                // Put in dummy values because this bin is empty.
+                // Here, we set PCT according to the midpoint of the bin, and set splits based on rankShape.splits
+                const float64 midPct = fMyWorst.pct + fBinWidth * (0.5 + k);
+                fBins[k].myChances.pct = midPct;
+
+                if (midPct * 2 < rankShape.splits) {
+                    // Cap at splits.
+                    fBins[k].myChances.splits = midPct * 2;
+                    fBins[k].myChances.wins = 0.0;
+                    fBins[k].myChances.loss = 0.0;
+                } else {
+                    fBins[k].myChances.splits = rankShape.splits;
+                    fBins[k].myChances.wins = midPct - rankShape.splits / 2.0;
+                    fBins[k].myChances.loss = 1.0 - fBins[k].myChances.wins - fBins[k].myChances.splits;
+                }
+            }
+
+            count += fBins[k].freq;
+        }
+
+        if (count != detailPCT.n) {
+            std::cerr << "Expecting " << static_cast<int>(detailPCT.n) << " histogram entries but only found " << static_cast<int>(count) << "\n";
             exit(1);
         }
-
-        if (fBins[k].myChances.repeated == 0.0) {
-            // Put in dummy values because this bin is empty.
-            // Here, we set PCT according to the midpoint of the bin, and set splits based on rankShape.splits
-            const float64 midPct = fMyWorst.pct + fBinWidth * (0.5 + k);
-            fBins[k].myChances.pct = midPct;
-
-            if (midPct * 2 < rankShape.splits) {
-                // Cap at splits.
-                fBins[k].myChances.splits = midPct * 2;
-                fBins[k].myChances.wins = 0.0;
-                fBins[k].myChances.loss = 0.0;
-            } else {
-                fBins[k].myChances.splits = rankShape.splits;
-                fBins[k].myChances.wins = midPct - rankShape.splits / 2.0;
-                fBins[k].myChances.loss = 1.0 - fBins[k].myChances.wins - fBins[k].myChances.splits;
-            }
-        }
-
-        count += fBins[k].freq;
-    }
-
-    if (count != detailPCT.n) {
-        std::cerr << "Expecting " << static_cast<int>(detailPCT.n) << " histogram entries but only found " << static_cast<int>(count) << "\n";
-        exit(1);
     }
 
 }
@@ -329,7 +331,13 @@ static NetStatResult initByRank(playernumber_t difficultyOpponents, playernumber
  *                          Pre-flop, the community outcomes will yield post-flop situations. MEAN and RANK differ somewhat.
  *                              At the pre-flop moment we have a guess of the pre-flop MEAN<-->RANK inflation.
  */
-static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, const CoarseCommunityHistogram &outcomes) {
+static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, const CoarseCommunityHistogram &outcomes, const NetStatResult &rankComparison) {
+    if (outcomes.fBinWidth <= 0.0) {
+        // MEAN == RANK at this point anyway.
+        // The community doesn't affect your outcome so only the opposing hands do which would be ranked and counted to compute mean.
+        return rankComparison;
+    }
+
     NetStatResult expectation; // expectation sum
     expectation.fShape.wins = 0.0;
     expectation.fShape.splits = 0.0;
@@ -342,20 +350,28 @@ static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playe
     // For each community outcome bin, generate a NetStatResult and add it to the expectation sum above.
     for(size_t communityOutcomeBin=0; communityOutcomeBin<outcomes.fNumBins; ++communityOutcomeBin) {
         const StatResult thisCommunityBaseShape = outcomes.getBin(communityOutcomeBin).myChances;
+        const float64 w = thisCommunityBaseShape.repeated; // weight
 
-        // Compute the multi-player result assuming this community bin...
-        NetStatResult thisCommunityResult = initByRank(difficultyOpponents, showdownOpponents, thisCommunityBaseShape);
+        if (w > 0.0) {
+            // Compute the multi-player result assuming this community bin...
+            NetStatResult thisCommunityResult = initByRank(difficultyOpponents, showdownOpponents, thisCommunityBaseShape);
 
-        // Contribute weighted average into the overall result.
-        const float64 w = outcomes.getBin(communityOutcomeBin).freq; // weight
-        thisCommunityResult.fShape.repeated = w;
+            // Contribute weighted average into the overall result.
+            thisCommunityResult.fShape.repeated = w;
 
-        expectation.fShape.addByWeight(thisCommunityResult.fShape);
-        expectation.fLoseProb += thisCommunityResult.fLoseProb * w;
-        expectation.fOutrightWinProb += thisCommunityResult.fOutrightWinProb * w;
+            expectation.fShape.addByWeight(thisCommunityResult.fShape);
+            expectation.fLoseProb += thisCommunityResult.fLoseProb * w;
+            expectation.fOutrightWinProb += thisCommunityResult.fOutrightWinProb * w;
+        }
     }
 
-    return expectation;
+    if (rankComparison.fShape.pct < expectation.fShape.pct) {
+        // Drawing hand
+        return expectation;
+    } else {
+        // Playing hand
+        return rankComparison;
+    }
 }
 
 static NetStatResult initSingleOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, CallCumulationD &foldcumu) {
@@ -374,12 +390,12 @@ fNet(
 
      (
      // The odds of beating multiple people isn't based on the odds of beating one person.
-     (outcomes.fBinWidth <= 0.0) ?
-      // Since it's more complicated than that, just go with rank for now.
-      initByRank(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), rank)
-      :
-      // We're able to break out conditional probability by community outcomes vs. opponent outcomes.
-      initMultiOpponent(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), outcomes)
+
+      // For drawing hands we're able to break out conditional probability by community outcomes vs. opponent outcomes.
+      initMultiOpponent(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), outcomes,
+                        // Otherwise, since it's more complicated than that, just go with rank for now.
+                        initByRank(tableinfo.handStrengthOfRound(), tableinfo.handsToShowdownAgainst(), rank)
+      )
      )
      :
 

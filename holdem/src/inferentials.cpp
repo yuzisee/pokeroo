@@ -79,26 +79,29 @@ const DistrShape & DistrShape::operator=(const DistrShape& o)
 void DistrShape::AddVal(const StatResult &x)
 {
     const float64 occ = x.repeated;
-    
-    // Which of the COARSE_COMMUNITY_NUM_BINS do we fall into?
+
     const float64 dx = (best.pct - worst.pct) / COARSE_COMMUNITY_NUM_BINS;
-    const float64 bin0 = worst.pct + dx/2;
-    const float64 bin = round((x.pct - bin0)/dx);
 
-    size_t binIdx;
-    if (bin == -1.0) {
-        binIdx = 0;
-    } else if (bin == COARSE_COMMUNITY_NUM_BINS) {
-        binIdx = COARSE_COMMUNITY_NUM_BINS - 1;
-    } else if (0.0 <= bin && bin < COARSE_COMMUNITY_NUM_BINS) {
-        binIdx = static_cast<size_t>(bin);
-    } else {
-        binIdx = -1;
-        abort(); // CRASH this value is invalid.
+    // Store into a histogram
+    if (dx > 0.0) {
+        // Which of the COARSE_COMMUNITY_NUM_BINS do we fall into?
+        const float64 bin0 = worst.pct + dx/2;
+        const float64 bin = round((x.pct - bin0)/dx);
+
+        size_t binIdx;
+        if (bin == -1.0) {
+            binIdx = 0;
+        } else if (bin == COARSE_COMMUNITY_NUM_BINS) {
+            binIdx = COARSE_COMMUNITY_NUM_BINS - 1;
+        } else if (0.0 <= bin && bin < COARSE_COMMUNITY_NUM_BINS) {
+            binIdx = static_cast<size_t>(bin);
+        } else {
+            binIdx = -1;
+            abort(); // CRASH this value is invalid.
+        }
+
+        coarseHistogram[binIdx].addByWeight(x);
     }
-
-    coarseHistogram[binIdx].addByWeight(x);
-
 
     // Apply "PCT only" summary statistics
 	const float64 d = (x.pct - mean.pct);
