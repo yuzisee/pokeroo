@@ -723,6 +723,8 @@ static void superGame(char headsUp = 0)
     for(;;)
     {
 
+        ++gameNum;
+        
         std::ostringstream gameIdStr; //output string stream
         gameIdStr << std::setfill('0') << std::setw(8) << gameNum;
 

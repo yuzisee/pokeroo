@@ -957,6 +957,110 @@ namespace RegressionTests {
     ;
 
 
+    // We hit the "You can't lose more than all your money: GainModelNoRisk" assertion
+    void testRegression_025() {
+        /*
+        Next Dealer is NormR
+        ================================================================
+        ============================New Hand #21========================
+        BEGIN
+
+
+        Preflop
+        (Pot: $0)
+        (7 players)
+        [TrapR $8.57143]
+        [i4 $88.5714]
+        [GearBotR $65.7143]
+        [MultiBotR $288.571]
+        [DangerR $237.143]
+        [ComR $137.143]
+        [NormR $74.2857]
+*/
+        struct BlindValues b;
+        b.SetSmallBigBlind(2.85714);
+
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
+        myTable.setSmallestChip(2.85714);
+
+        const std::vector<float64> foldOnly(1, 0.0);
+
+        static const float64 mA[] = {
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN()
+        };
+        const std::vector<float64> callOnly(VectorOf(mA));
+
+        static const float64 da[] = {
+            157.143,
+            std::numeric_limits<float64>::signaling_NaN()
+        };
+        const std::vector<float64> dA(VectorOf(da));
+
+
+        FixedReplayPlayerStrategy gS(foldOnly);
+        FixedReplayPlayerStrategy tS(foldOnly);
+        FixedReplayPlayerStrategy dS(dA);
+        FixedReplayPlayerStrategy pS(foldOnly);
+        FixedReplayPlayerStrategy nS(foldOnly);
+        FixedReplayPlayerStrategy mS(callOnly);
+        FixedReplayPlayerStrategy cS(foldOnly);
+
+
+        PureGainStrategy bot("25.txt", 4);
+        PlayerStrategy * const botToTest = &bot;
+        myTable.ManuallyAddPlayer("NormR", 74.2857, botToTest);
+        myTable.ManuallyAddPlayer("TrapR", 8.57143, &tS);
+        myTable.ManuallyAddPlayer("i4", 88.5714, &pS);
+        myTable.ManuallyAddPlayer("GearBotR", 65.7143, &gS);
+        myTable.ManuallyAddPlayer("MultiBotR", 288.571, &mS);
+        myTable.ManuallyAddPlayer("DangerR", 237.143, &dS);
+        myTable.ManuallyAddPlayer("ComR", 137.143, &cS);
+
+        
+        const playernumber_t dealer = 0;
+        
+        
+        
+
+        /*
+        TrapR posts SB of $2.85714 ($2.85714)
+        i4 posts BB of $5.71429 ($8.57143)
+        GearBotR folds
+        MultiBotR calls $5.71429 ($14.2857)
+        DangerR raises to $157.143 ($171.429)
+        ComR folds
+        */
+
+
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // 7s 8c
+
+            card.SetByIndex(20);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(26);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+
+
+
+        myTable.BeginInitialState(25);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
+
+
+        // Norm R must not crash
+
+        myTable.PlayRound_BeginHand(std::cout);
+
+    }
+
+
     // Hand played live
     void testRegression_022() {
 
@@ -4253,6 +4357,7 @@ int main(int argc, const char * argv[])
     
     // Regression tests
 
+    RegressionTests::testRegression_025();
     RegressionTests::testRegression_021b();
 //    RegressionTests::testRegression_022();
 //    RegressionTests::testRegression_021(); // TODO(from yuzisee): We need to track distribution of flops to identify drawing hands.
