@@ -34,7 +34,6 @@
 
 #define DEBUGSAVEGAME "savegame"
 #define DEBUGSAVEGAME_ALL "saves"
-#define DEBUGHOLECARDS "holecards.txt"
 #endif
 
 #include "engine.h"

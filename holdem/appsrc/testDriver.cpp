@@ -71,11 +71,56 @@ char * myPlayerName = 0;
     std::ofstream scoreboard;
 #endif
 
-#ifdef DEBUGHOLECARDS
-    std::ofstream holecardsData;
-#endif
+// Optional Hole Cards logging
+enum DebugHoleCards {
+    APPEND_TO_FILE,
+    PRINT_TO_STDOUT
+};
 
+class HoleCardsLogger {
+public:
+    HoleCardsLogger()
+    :
+    bIsFile(false)
+    ,
+    fHoleCardsData(0) // nullptr
+    {}
 
+    void open(enum DebugHoleCards mode) {
+        switch(mode) {
+            case APPEND_TO_FILE:
+            {
+                std::ofstream *holeCardsFile = new std::ofstream();
+                holeCardsFile->open( "holecards.txt", std::ios::app);
+                fHoleCardsData = holeCardsFile;
+                bIsFile = true;
+            }
+            break;
+            case PRINT_TO_STDOUT:
+                fHoleCardsData = &(std::cout);
+            break;
+        }
+    }
+
+    std::ostream & outstream() {
+        return *fHoleCardsData;
+    }
+
+    bool isFile() const {
+        return bIsFile;
+    }
+
+    virtual ~HoleCardsLogger() {
+        if (fHoleCardsData) {
+            delete fHoleCardsData;
+        }
+    }
+private:
+    bool bIsFile;
+    std::ostream *fHoleCardsData;
+};
+
+HoleCardsLogger holecardsData;
 
 static void InitGameLoop(HoldemArena & my, bool bLoadGame)
 {
@@ -121,10 +166,7 @@ static void InitGameLoop(HoldemArena & my, bool bLoadGame)
 
 		my.ResetDRseed();
 
-        #ifdef DEBUGHOLECARDS
-        holecardsData.open( DEBUGHOLECARDS, std::ios::app);
-        #endif
-
+    holecardsData.open(APPEND_TO_FILE);
 }
 
 
@@ -245,22 +287,18 @@ static Player* PlayGameLoop(std::ostream& gamelog, HoldemArena & my,BlindStructu
 	    struct BlindUpdate lastRoundBlinds = thisRoundBlinds;
         thisRoundBlinds = blindController.UpdateSituation( lastRoundBlinds , myBlindState(my) );
 
-    #ifdef DEBUGHOLECARDS
-        holecardsData <<
+        if (holecardsData.isFile()) {
+        holecardsData.outstream() <<
         "############ Hand " << my.handnum << " " <<
         "############" << endl;
+        }
 
-    #endif
 
 		my.BeginNewHands(gamelog, thisRoundBlinds.b, thisRoundBlinds.bNew);
 
 
         my.DealAllHands(tableDealer,
-#ifdef DEBUGHOLECARDS
-                        holecardsData
-#else
-                        std::cout
-#endif // DEBUGHOLECARDS
+                        holecardsData.outstream()
                         );
 
 #ifdef DEBUGASSERT
