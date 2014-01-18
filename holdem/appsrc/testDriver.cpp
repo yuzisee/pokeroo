@@ -831,13 +831,7 @@ int main(int argc, char* argv[])
             switch( argv[n][1] )
             {
                 case 'r':
-                    #ifdef NO_LOG_FILES
                     superGame(0);
-                    #else
-                    cout << "testplay()" << flush;
-					++n;
-                    testPlay("game", atoi(argv[n]));
-                    #endif
                     exit(0);
                     break;
                     
