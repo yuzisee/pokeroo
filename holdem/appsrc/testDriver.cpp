@@ -490,7 +490,8 @@ static std::string testPlay(std::string gameId, char headsUp = 'G', std::ostream
     }else
     {
 //        smallBlindChoice=AUTO_CHIP_COUNT/200;
-        smallBlindChoice=AUTO_CHIP_COUNT/35;
+        smallBlindChoice=AUTO_CHIP_COUNT/50;
+//        smallBlindChoice=AUTO_CHIP_COUNT/35;
     }
     BlindValues b;
     b.SetSmallBigBlind(smallBlindChoice);
@@ -753,7 +754,8 @@ static void superGame(char headsUp = 0)
 
     
 
-    std::ofstream tourny("batchResults.txt", std::ios::trunc);
+    std::ofstream tourny("batchResults.txt", std::ios::app);
+    tourny << " - - - - - \n";
     tourny << iWin.c_str() << endl;
     tourny.close();
 

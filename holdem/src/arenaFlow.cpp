@@ -383,7 +383,7 @@ void HoldemArena::PrepBettingRound(bool bFirstBettingRound, uint8 otherBettingRo
 
 int8 HoldemArena::PlayRound_BeginHand(std::ostream &gamelog)
 {
-    gamelog << "BEGIN" << endl;
+    gamelog << "BEGIN " << GetChipDenom() << endl;
 
 
     //Preflop
