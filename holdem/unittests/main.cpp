@@ -956,6 +956,140 @@ namespace RegressionTests {
     }
     ;
 
+    // We hit the "You can't lose more than all your money: GainModelNoRisk" assertion
+    void testRegression_026() {
+        /*
+         Next Dealer is D2
+
+
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [Gear $94.2857]
+         [P0 $100]
+         [P3 $100]
+         [P2 $100]
+         [Multi $100]
+         [i4 $52.8571]
+         [P4 $170]
+         [D0 $91.4286]
+         [D2 $91.4286]
+         */
+        struct BlindValues b;
+        b.SetSmallBigBlind(2.85714);
+
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
+        myTable.setSmallestChip(2.85714);
+
+        const std::vector<float64> foldOnly(1, 0.0);
+
+        static const float64 mA[] = {
+            20,
+            32.8571,
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN()
+        };
+        const std::vector<float64> callOnly(VectorOf(mA));
+
+
+        FixedReplayPlayerStrategy p0(callOnly);
+        FixedReplayPlayerStrategy p3(foldOnly);
+        FixedReplayPlayerStrategy p2(foldOnly);
+        FixedReplayPlayerStrategy mS(foldOnly);
+        FixedReplayPlayerStrategy i4(callOnly);
+        FixedReplayPlayerStrategy p4(foldOnly);
+        FixedReplayPlayerStrategy d0(foldOnly);
+        FixedReplayPlayerStrategy d2(foldOnly);
+
+
+        PureGainStrategy bot("26.txt", 4);
+        PlayerStrategy * const botToTest = &bot;
+        myTable.ManuallyAddPlayer("D2", 91.4286, &d2);
+        myTable.ManuallyAddPlayer("Gear", 94.2857, botToTest);
+        myTable.ManuallyAddPlayer("P0", 100.0, &p0);
+        myTable.ManuallyAddPlayer("P3", 100.0, &p3);
+        myTable.ManuallyAddPlayer("P2", 100.0, &p2);
+        myTable.ManuallyAddPlayer("Multi", 100.0, &mS);
+        myTable.ManuallyAddPlayer("i4", 52.8571, &i4);
+        myTable.ManuallyAddPlayer("P4", 170.0, &p4);
+        myTable.ManuallyAddPlayer("D0", 91.4286, &d0);
+
+        const playernumber_t dealer = 0;
+
+
+
+
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // 5d As
+
+            card.SetByIndex(15);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(48);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+        
+        
+        
+        myTable.BeginInitialState(26);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
+        
+        
+
+        assert(myTable.PlayRound_BeginHand(std::cout) != -1);
+
+        /// ... (Pot: 60)
+        // Flop: 6h 9s Tc
+        CommunityPlus myFlop;
+
+        card.SetByIndex(17);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(28);
+        myFlop.AddToHand(card);
+
+        card.SetByIndex(34);
+        myFlop.AddToHand(card);
+
+
+
+        // Gear checks
+        // P0 checks
+        // i4 pushes all-in
+        // Gear calls
+        // P0 calls
+        assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
+
+
+        // Turn Ts
+
+
+
+        DeckLocation myTurn;
+        myTurn.SetByIndex(32);
+
+
+        // Check, check
+        assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
+
+        // River 8d
+
+
+        DeckLocation myRiver;
+        myRiver.SetByIndex(27);
+
+// Gear must not crash.
+
+        assert(myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout) != -1);
+
+    }
+
 
     // We hit the "You can't lose more than all your money: GainModelNoRisk" assertion
     void testRegression_025() {
@@ -4357,6 +4491,7 @@ int main(int argc, const char * argv[])
     
     // Regression tests
 
+    RegressionTests::testRegression_026();
     RegressionTests::testRegression_025();
     RegressionTests::testRegression_021b();
 //    RegressionTests::testRegression_022();

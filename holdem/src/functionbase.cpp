@@ -629,6 +629,8 @@ float64 ScalarFunctionModel::regularfalsiStep(float64 x1, float64 y1, float64 x2
 
 float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuantum)
 {
+    const float64 minResult = x1;
+    const float64 maxResult = x2;
 
     float64 y1 = f(x1);
     float64 y2 = f(x2);
@@ -759,7 +761,10 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuant
 
     if (bRoundToQuantum) {
         // e.g. when it's about chip counts, (or bet denominations) we want to round to a valid chip quantity.
-        return round(xb/quantum)*quantum;
+        const float64 roundedResult = round(xb/quantum)*quantum;
+        if (roundedResult < minResult) return minResult;
+        if (maxResult < roundedResult) return maxResult;
+        return roundedResult;
     } else {
         // e.g. sometimes we're searching for raw probabilities, etc. In this case, just take the value.
         return xb;
