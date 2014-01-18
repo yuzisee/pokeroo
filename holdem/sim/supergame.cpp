@@ -18,10 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#define WINRELEASE
+#undef WINRELEASE
 
-// We will have one human ConsoleStrategy seat so that you can play against the bots.
-// This typically ships with a script for launching, saving, and restoring state of the game as well as configuring the name of the player
+// Have the bots play against themselves, while tossing in a few MultiThresholdStrategies
 
 
 #include "../src/stratCombined.h"
@@ -30,7 +29,7 @@
 #include "../src/aiCache.h"
 #include "../src/functionmodel.h"
 #include "../src/aiInformation.h"
-#include "stratManual.h"
+#include "stratThreshold.h"
 
 #include <ctime>
 #include <algorithm>
@@ -41,6 +40,12 @@
 #define AUTOEXTRATOKEN "restore.txt"
 
 #define REQUEST_USER_BLINDSIZE
+
+
+	#ifndef NO_LOG_FILES
+        ///Toggle the define below depending on debugging
+		#define REGULARINTOLOG
+	#endif
 
 #define DEBUGSITUATION
 //#define SUPERINTOLOG
@@ -414,76 +419,30 @@ int8 * Permute(uint8 count, uint32 seed)
 static std::string testPlay(std::string gameId, char headsUp = 'G', std::ostream& gameLog = cout)
 {
 
-    //mkdir("saves");
 
-    #ifdef AUTOEXTRATOKEN
-    char ExtraTokenNameBuffer[32] = "P1";
-    #endif
-
-    bool bLoadGame = false;
 
     if( headsUp == 1 )
     {
-        bLoadGame = true;
+        std::cerr << "For loading games, use the unit test framework. See unittest/audit.py and unittest/main.cpp\n";
+        exit(1);
     }
 
 	const float64 AUTO_CHIP_COUNT = 100.0;
 
     uint32 blindIncrFreq = 40;
-    uint32 tokenRandomizer;
+
     const float64 startingMoney= 1500;
     if( headsUp == 'L' )
     {
-        #ifdef AUTOEXTRATOKEN
-        std::ifstream fRestoreName(AUTOEXTRATOKEN);
-        fRestoreName.getline(ExtraTokenNameBuffer, 32, '\n');
-        fRestoreName >> blindIncrFreq;
-        fRestoreName >> tokenRandomizer;
-        //By default, leading whitespace (carriage returns, tabs, spaces) is ignored by cin.
-        //http://www.augustcouncil.com/~tgibson/tutorial/iotips.html
-        fRestoreName.close();
-        #endif
-
-        bLoadGame = true;
-        headsUp = 'P';
-#if defined(AUTOEXTRATOKEN)
-        myPlayerName = ExtraTokenNameBuffer;
-#endif
+        std::cerr << "For loading games, use the unit test framework. See unittest/audit.py and unittest/main.cpp\n";
+        exit(1);
     }
 
     float64 smallBlindChoice;
     if( headsUp == 'P' )
     {
-        #ifdef REQUEST_USER_BLINDSIZE
-
-            if( !bLoadGame )
-            {
-                std::cerr << "You will start with "<< startingMoney <<" chips.\nPlease enter the initial big blind:" << std::endl;
-                std::cin >> smallBlindChoice;
-                std::cin.clear();
-                std::cin.sync();
-                smallBlindChoice /= 2;
-
-                std::cerr << endl << "Blinds will start at " << smallBlindChoice << "/" << smallBlindChoice*2 << ".\nPlease enter how many hands before blinds increase:" << std::endl;
-                std::cin >> blindIncrFreq;
-		std::cin.ignore(2,'\n'); //Don't leave lingering whitespace, sometimes you can't trust sync()
-                std::cin.clear();
-                std::cin.sync();
-
-                std::ofstream storePlayerName(AUTOEXTRATOKEN,std::ios::app);
-                storePlayerName << blindIncrFreq << endl;
-                tokenRandomizer = ((uint32)(startingMoney/smallBlindChoice));
-                storePlayerName << tokenRandomizer << endl;
-                storePlayerName.close();
-            }else
-            {
-                //If you try to load a game without the savegame file, this is the default?
-                smallBlindChoice=startingMoney/tokenRandomizer;
-            }
-        #else
-            smallBlindChoice=2;
-        #endif
-
+        std::cerr << "For interactdive play, use appsrc (a.k.a. WINRELEASE) instead. See appsrc/testDriver.cpp\n";
+        exit(1);
 
     }else
     {
@@ -511,29 +470,26 @@ HoldemArena myTable(smallBlindChoice,true, true);
 ///==========================
 ///   Begin adding players...
 ///==========================
-    //ThresholdStrategy stagStrat(0.5);
-    UserConsoleStrategy consolePlay;
-    //ConsoleStrategy manPlay[3];
+
+
+        MultiThresholdStrategy drainFold(3,3);
+        MultiThresholdStrategy pushAll(4,4);
+        MultiThresholdStrategy pushFold(0,2);
+        MultiThresholdStrategy tightPushFold(1,0);
 
 
 
 
         if( headsUp == 'P' )
         {
-
-
-
-            if( myPlayerName == 0 )
-            {
-                myTable.ManuallyAddPlayer("P1", startingMoney, &consolePlay);
-            }else
-            {
-                myTable.ManuallyAddPlayer(myPlayerName, startingMoney, &consolePlay);
-            }
+            std::cerr << "Assertion Failed. headsUp == 'P' is only for WINRELEASE.\n";
+            exit(1);
         }else
         {
-            std::cout << "Assert headsUp == 'P' or headsUp == 'L' which becomes 'P' after loading\n";
-            exit(1);
+            //myTable.AddPlayer("q4", &pushAll);
+            myTable.ManuallyAddPlayer("i4", AUTO_CHIP_COUNT, &drainFold);
+            //myTable.AddPlayer("X3", &pushFold);
+            //myTable.AddPlayer("A3", &tightPushFold);
 
         }
 
@@ -541,94 +497,66 @@ HoldemArena myTable(smallBlindChoice,true, true);
 ///   ...and load them
 ///======================
 
-    #define SELECTED_BLIND_MODEL bg
+    #define SELECTED_BLIND_MODEL sg
 
 std::ifstream loadFile;
-#ifdef DEBUGSAVEGAME
 
-if( bLoadGame )
-{
-    //We want to load the game, so open the file and load state
-    loadFile.open(DEBUGSAVEGAME);
-    //
-    if( loadFile.is_open() )
+
     {
-		myTable.UnserializeRoundStart(loadFile, ".", gameId);
-        SELECTED_BLIND_MODEL.UnSerialize( loadFile );
-        if( tableDealer )  tableDealer->Unserialize( loadFile ); //Restore state of deck as well
-
-
-        std::istream *saveLoc = &loadFile;
-        if( saveLoc != 0 )
-        {
-            consolePlay.myFifos.SetFileStream(saveLoc);
-        }
-
-	}
-	else if( headsUp == 1 ) {
-	    bLoadGame = false; //Autodetect bLoadGame
-	}
-	else
-	{
-        std::cerr << "Load state requested, couldn't open file" << endl;
-		exit(1);
-    }
 
 
 
-
-}
+#ifdef FORCESEED
+        srand(75);
+#else
+        srand(static_cast<unsigned int>(time(0)));
 #endif
-
-    if( !bLoadGame )
-    {
-
-
-
         const uint32 NUM_OPPONENTS = 8;
-        const uint32 rand765 = 1 + ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer));
-        const uint64_t rand8432 = 1 + (labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer));
-        const uint32 rand8 = rand8432%8;
-        const uint32 rand432 = static_cast<uint32>(rand8432/8);
-        const uint32 randSeed = rand8 + (rand765%(7*6*5))*8 + (rand432%(4*3*2))*(8*7*6*5);
+        const uint32 randSeed = rand();
         uint8 i;
         int8 * opponentorder;
 
         switch(headsUp)
         {
             case 'P':
-                //cout << randNum << "+" << randStep << "i" << endl;
+                std::cerr << "This is WINRELEASE mode. ASSERT FAILED\n";
+                // We should invoke appSrc/testDriver.cpp instead. Why are we in this file?
+                exit(1);
+
+
+                break;
+
+            case 0:
+                // This is supergame mode.
+
                 opponentorder = Permute(NUM_OPPONENTS,randSeed);
                 for(i=0;i<NUM_OPPONENTS;++i)
                 {
-                    // The code here only runs if !bLoadGame, as you can see above.
-                    //In this mode, we randomly assign order and randomly assign names.
-                    //In all cases, when loading a game the bot types are unserialized (see HoldemArena::AddStrategyBot and HoldemArena::pTypes)
                     switch(opponentorder[i])
                     {
                         case 0:
-                            myTable.AddStrategyBot(gameId, ".", "TrapBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "D0", AUTO_CHIP_COUNT, 'C');
                             break;
                         case 1:
-                            myTable.AddStrategyBot(gameId, ".", "ConservativeBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "D2", AUTO_CHIP_COUNT, 'S');
                             break;
                         case 2:
-                            myTable.AddStrategyBot(gameId, ".", "NormalBotV",startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "P0", AUTO_CHIP_COUNT, 'N');
                             break;
                         case 3:
-                            myTable.AddStrategyBot(gameId, ".", "SpaceBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "P2", AUTO_CHIP_COUNT, 'D');
                             break;
                         case 4:
-                            myTable.AddStrategyBot(gameId, ".", "ActionBotV",startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "P3", AUTO_CHIP_COUNT, 'T');
                             break;
                         case 5:
-                            myTable.AddStrategyBot(gameId, ".", "DangerBotV",startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "P4", AUTO_CHIP_COUNT, 'A');
                             break;
                         case 6:
-                            myTable.AddStrategyBot(gameId, ".", "MultiBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "Gear", AUTO_CHIP_COUNT, 'G');
                             break;
                         case 7:
-                            myTable.AddStrategyBot(gameId, ".", "GearBotV", startingMoney, 'R');
+                            myTable.AddStrategyBot(gameId, ".", "Multi", AUTO_CHIP_COUNT, 'M');
                             break;
                     }
 
@@ -636,20 +564,13 @@ if( bLoadGame )
 
                 delete [] opponentorder;
 
-                break;
-
-            case 0:
-                std::cerr << "This is supergame mode. ASSERT FAILED\n";
-                // We should invoke sim/supergame.cpp instead. Why are we in this file?
-                exit(1);
-
 
                 break;
 
 
             default:
+                std::cerr << "Legacy run mode not supported anymore.\n";
 
-            std::cerr << "Legacy run mode not supported anymore.\n";
 
                 break;
 
@@ -663,11 +584,10 @@ if( bLoadGame )
 
 #ifdef REGULARINTOLOG
     std::ios::openmode gamelogMode = std::ios::trunc;
-    if( bLoadGame ) gamelogMode = std::ios::app;
     std::ofstream gameOutput("gamelog.txt",gamelogMode);
-    Player* iWin = PlayGameLoop(gameOutput, myTable,SELECTED_BLIND_MODEL, b,tableDealer, bLoadGame, loadFile);
+    Player* iWin = PlayGameLoop(gameOutput, myTable,SELECTED_BLIND_MODEL, b,tableDealer, false, loadFile);
 #else
-    Player* iWin = PlayGameLoop(gameLog, myTable,SELECTED_BLIND_MODEL, b,tableDealer, bLoadGame, loadFile);
+    Player* iWin = PlayGameLoop(gameLog, myTable,SELECTED_BLIND_MODEL, b,tableDealer, false, loadFile);
 #endif
 
 #ifdef REGULARINTOLOG
@@ -684,8 +604,50 @@ gameOutput.close();
 }
 
 
-// For standard debugging and regression testing, run supergame.cpp
-// Are you profiling? Use supergame.cpp
+static void superGame(char headsUp = 0)
+{
+
+    #ifdef SUPERINTOLOG
+        std::ofstream gameOutput("gamelog.txt");
+        std::string iWin = testPlay("0000000", headsUp, gameOutput);
+        gameOutput.close();
+    #else
+        std::string iWin = testPlay("0000000", headsUp);
+    #endif
+
+    
+
+    std::ofstream tourny("batchResults.txt", std::ios::app);
+    tourny << " - - - - - \n";
+    tourny << iWin.c_str() << endl;
+    tourny.close();
+
+    size_t gameNum = 0;
+    for(;;)
+    {
+
+        ++gameNum;
+        
+        std::ostringstream gameIdStr; //output string stream
+        gameIdStr << std::setfill('0') << std::setw(8) << gameNum;
+
+        #ifdef SUPERINTOLOG
+        gameOutput.open("gamelog.txt");
+        iWin = testPlay(gameIdStr, headsUp, gameOutput);
+        gameOutput.close();
+        #else
+        iWin = testPlay(gameIdStr.str(), headsUp);
+        #endif
+        //system("pause");
+        tourny.open("batchResults.txt", std::ios::app);
+        tourny << iWin.c_str() << endl;
+        tourny.close();
+    }
+}
+
+
+// For standard debugging and regression testing, set env['HOLDEMDB_PATH'] and use unittest/main.cpp
+// Are you profiling? Run this with no arguments.
 int main(int argc, char* argv[])
 {
     
@@ -696,34 +658,20 @@ int main(int argc, char* argv[])
     GetCwd(cCurrentPath, sizeof(cCurrentPath));
 
     std::cerr << "Current working directory is " << cCurrentPath << std::endl;
-    
 
-	cout << "Final Table: 9 Players" << endl;
-
-		//
-	//testHands();
-
-
-	if( argc == 2 ) //one option
-	{
-        myPlayerName = argv[1];
-        #ifdef AUTOEXTRATOKEN
-        std::ofstream storePlayerName(AUTOEXTRATOKEN);
-        storePlayerName << argv[1] << endl;
-        storePlayerName.close();
-        #endif
-
-        testPlay("game", 'P');
-    }else if( argc == 1 ) //no options, only command by itself
     {
 
-
-	    testPlay("game", 'L');
-
-
+                  superGame(0);
     }
-
     cout << "Done!" << endl;
+
+
+
+    //    std::cerr << "testPlay(\"game\", 1);\n" << "is no longer supported. Use unittest/audit.py instead.\n"; //Will autodetect bLoadGame
+    exit(0);
+
+
+
 
 
 }

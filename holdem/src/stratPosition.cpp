@@ -53,9 +53,7 @@ void PositionalStrategy::HardOpenLogFile()
     if( !(logFile.is_open()) )
     {
         logFile.open(fLogFilename.c_str()
-#ifdef WINRELEASE
                      , std::ios::app
-#endif
                      );
     }
 #endif
