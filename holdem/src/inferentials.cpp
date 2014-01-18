@@ -96,7 +96,6 @@ void DistrShape::AddVal(const StatResult &x)
         } else if (0.0 <= bin && bin < COARSE_COMMUNITY_NUM_BINS) {
             binIdx = static_cast<size_t>(bin);
         } else {
-            binIdx = -1;
             abort(); // CRASH this value is invalid.
         }
 

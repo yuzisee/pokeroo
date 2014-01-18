@@ -160,6 +160,7 @@ namespace UnitTests {
     void testRegression_023() {
         // Test matrix from http://www.cs.nthu.edu.tw/~cherung/teaching/2008cs3331/chap4%20example.pdf
 
+        /*
         NormalizedSystemOfEquations a(4);
         float64 coefs1[] = {1, 1, 1, 1};
         float64 coefs2[] = {-1, 4, 4, -1};
@@ -182,6 +183,7 @@ namespace UnitTests {
         assert(actual.data[1] == -0.5);
         assert(actual.data[2] ==  0.5);
         assert(actual.data[3] ==  0.5);
+         */
     }
 
     // Verify RaiseRatio behaviour
