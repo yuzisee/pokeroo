@@ -956,6 +956,91 @@ namespace RegressionTests {
     }
     ;
 
+
+
+    // We hit the "You can't lose more than all your money: GainModelNoRisk" assertion
+    void testRegression_027() {
+        /*
+         Next Dealer is D2
+
+
+         Preflop
+         (Pot: $0)
+         (9 players)
+         [P0 $78]
+         [P3 $344]
+         [P2 $28]
+         [Multi $108]
+         [D0 $108]
+         [D2 $106]
+         [Gear $128]
+
+         */
+        struct BlindValues b;
+        b.SetSmallBigBlind(2);
+
+        HoldemArena myTable(b.GetSmallBlind(), true, true);
+        myTable.setSmallestChip(2);
+
+        const std::vector<float64> foldOnly(1, 0.0);
+
+        static const float64 da[] = {
+            108.0
+        };
+        const std::vector<float64> dA(VectorOf(da));
+
+
+        FixedReplayPlayerStrategy p0(foldOnly);
+        FixedReplayPlayerStrategy p3(foldOnly);
+        FixedReplayPlayerStrategy mS(dA);
+        FixedReplayPlayerStrategy p2(foldOnly);
+        FixedReplayPlayerStrategy d2(foldOnly);
+        FixedReplayPlayerStrategy d0(foldOnly);
+
+
+        PureGainStrategy bot("27.txt", 0);
+        PlayerStrategy * const botToTest = &bot;
+        myTable.ManuallyAddPlayer("Gear", 128, botToTest);
+        myTable.ManuallyAddPlayer("P0", 78, &p0);
+        myTable.ManuallyAddPlayer("P3", 344, &p3);
+        myTable.ManuallyAddPlayer("P2", 28, &p2);
+        myTable.ManuallyAddPlayer("Multi", 108, &mS);
+        myTable.ManuallyAddPlayer("D0", 108, &d0);
+        myTable.ManuallyAddPlayer("D2", 106, &d2);
+
+        const playernumber_t dealer = 0;
+
+
+
+
+
+        DeckLocation card;
+
+        {
+            CommunityPlus handToTest; // 7c Td
+
+            card.SetByIndex(22);
+            handToTest.AddToHand(card);
+
+            card.SetByIndex(35);
+            handToTest.AddToHand(card);
+
+            botToTest->StoreDealtHand(handToTest);
+        }
+
+
+
+        myTable.BeginInitialState(27);
+        myTable.BeginNewHands(std::cout, b, false, dealer);
+
+
+
+        // Gear must not crash
+        assert(myTable.PlayRound_BeginHand(std::cout) == -1);
+
+        
+    }
+
     // We hit the "You can't lose more than all your money: GainModelNoRisk" assertion
     void testRegression_026() {
         /*
@@ -4491,6 +4576,7 @@ int main(int argc, const char * argv[])
     
     // Regression tests
 
+    RegressionTests::testRegression_027();
     RegressionTests::testRegression_026();
     RegressionTests::testRegression_025();
     RegressionTests::testRegression_021b();

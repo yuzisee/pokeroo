@@ -1443,8 +1443,8 @@ float64 PureGainStrategy::MakeBet()
     
     if (betToCall == displaybet) {
         // If you called, also show MINRAISE
-        if (displaybet < displayMinRaise) {
-            printStateModel(logFile, minRaiseTo, ap_aggressive, ViewPlayer());
+        if (betToCall < displayMinRaise) {
+            printStateModel(logFile, displayMinRaise, ap_aggressive, ViewPlayer());
         }
     }
     
