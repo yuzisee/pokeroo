@@ -82,14 +82,14 @@ struct return_money GetMoney(void * table_ptr, playernumber_t playerNumber)
 				playerMoney = 0.0;
 				retval.error_code = INPUT_CLEANED;
 			}
-			
+
 			retval.money = playerMoney;
 		}
 	}
 
 	return retval;
 }
-// According to resolveActions, if the player is all in once a round has 
+// According to resolveActions, if the player is all in once a round has
 // completed, myMoney becomes -1 at the same time that myBetSize becomes 0.
 // But we're fine because if( playerMoney < 0 ) return 0;
 
@@ -119,7 +119,7 @@ enum return_status SetMoney(void * table_ptr, playernumber_t playerNumber, float
 
 			float64 accountedFor = withP.GetBetSize();
 			float64 newMoney = money - accountedFor;
-	
+
 			if( newMoney < 0 )
 			{
 				newMoney = 0.0;
@@ -167,7 +167,7 @@ struct return_money GetCurrentRoundBet(void * table_ptr, playernumber_t playerNu
 				playerBet = 0.0;
 				retval.error_code = INPUT_CLEANED;
 			}
-			
+
 			retval.money = playerBet;
 		}
 	}
@@ -200,14 +200,14 @@ struct return_money GetPrevRoundsBet(void * table_ptr, playernumber_t playerNumb
 		{
 			const Player & withP = *ptrP;
 
-			float64 playerHandBetTotal = withP.GetContribution();
+			float64 playerHandBetTotal = withP.GetOfficialContribution();
 
 			if( playerHandBetTotal < 0 )
 			{
 				playerHandBetTotal = 0.0;
 				retval.error_code = INPUT_CLEANED;
 			}
-			
+
 			retval.money = playerHandBetTotal;
 		}
 	}
@@ -308,7 +308,7 @@ struct return_money GetMinRaise(void * table_ptr)
 
 
 /*****************************************************************************
-	BEGIN	
+	BEGIN
 	Flow control functions
 *****************************************************************************/
 
@@ -416,7 +416,7 @@ C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr)
 C_DLL_FUNCTION
 struct return_string SaveTableState(void * table_ptr)
 {
-	
+
 	struct return_string retval;
 	retval.error_code = SUCCESS;
 	retval.str = 0;
@@ -454,7 +454,7 @@ struct return_string SaveTableState(void * table_ptr)
 C_DLL_FUNCTION
 enum return_status RestoreTableState(const char * state_str, void * table_ptr)
 {
-	
+
 	enum return_status error_code = SUCCESS;
 
 	if( !table_ptr )
@@ -748,7 +748,7 @@ struct return_seat WhoIsNext_Betting(void * event_ptr)
 
 		if( bettingEvent->bBetState != 'b' ) //if the round has already finished,
 		{
-			retval.seat_number = -1; 
+			retval.seat_number = -1;
 		}else
 		{
 			retval.seat_number = bettingEvent->WhoIsNext();
@@ -786,7 +786,7 @@ enum return_status PlayerMakesBetTo(void * event_ptr, playernumber_t playerNumbe
 	}
 
 	return error_code;
-	
+
 }
 
 
@@ -873,7 +873,7 @@ struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPla
 		{
 			retval.error_code = OUT_OF_MEMORY;
 		}
-		
+
 	}
 
 	return retval;
@@ -932,7 +932,7 @@ struct return_seat WhoIsNext_Showdown(void * event_ptr)
 
 		if( showdownEvent->bRoundState == '!' ) //if the round has already finished,
 		{
-			retval.seat_number = -1; 
+			retval.seat_number = -1;
 		}else
 		{
 			retval.seat_number = showdownEvent->WhoIsNext();
@@ -1036,7 +1036,7 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 		bool spectate = true;
 
 		HoldemArena * newTable = new HoldemArena(chipDenomination, std::cout ,illustrate,spectate);
-		
+
 		if( newTable )
 		{
 			retval.table.table_ptr = reinterpret_cast<void *>(newTable);
@@ -1049,7 +1049,7 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 	}
 
 	return retval;
-	
+
 }
 
 
@@ -1067,7 +1067,7 @@ struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, cons
 		retval.error_code = PARAMETER_DATA_ERROR;
 	}else
 	{
-		
+
 		//====================
 		//  Create a Player
 		//====================
@@ -1083,7 +1083,7 @@ struct return_seat CreateNewHumanOpponent(struct holdem_table add_to_table, cons
 		{
 			retval.seat_number = pIndex;
 		}
-		
+
 	}
 
 	return retval;
@@ -1125,7 +1125,7 @@ struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, const 
 }
 
 
-C_DLL_FUNCTION 
+C_DLL_FUNCTION
 enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete)
 {
 	enum return_status error_code = SUCCESS;
@@ -1157,10 +1157,9 @@ enum return_status DeleteTableAndPlayers(struct holdem_table table_to_delete)
 
 		float64 GetPrevFoldedRetroactive() const;
    		float64 GetRoundBetsTotal() const; //Bets made this round by players still in hand, excludes blind bets
-   		
-		//float64 GetMaxShowdown(const float64 myMoney = -1) const;
-		
-		float64 GetUnbetBlindsTotal() const; //blindOnlySum
-		
-*/
 
+		//float64 GetMaxShowdown(const float64 myMoney = -1) const;
+
+		float64 GetUnbetBlindsTotal() const; //blindOnlySum
+
+*/

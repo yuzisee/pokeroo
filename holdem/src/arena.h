@@ -18,13 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-
-
-
-
 #ifndef HOLDEM_Arena
 #define HOLDEM_Arena
-
 
 
 #include "debug_flags.h"
@@ -98,6 +93,8 @@ class Player
 		float64 GetVoluntaryContribution() const
 		{	return (handBetTotal - forcedBetTotal);	}
 
+		// If you're the big blind or small blind, etc. you didn't _choose_ to make that bet, so
+		// it's not reflective of how strong you think your hand is.
 		float64 GetInvoluntaryContribution() const
 		{	return forcedBetTotal;	}
 
@@ -346,7 +343,7 @@ class HoldemArena
 		playercounts_t playersInHand;
 		playercounts_t startRoundPlayers;
 		playercounts_t playersActiveDuringFirstBetOfRound;
-    
+
         playernumber_t curFirstNonfold; // if -1, all actions (other than posting blinds) so far have been fold. Otherwise, points to the index of the first player not to fold.
 
         playernumber_t curHighBlind; // if not -1, this is the player who has bet the same amount as the current highest bet, but hasn't actually bet yet (i.e. this is the person in the big blind, who has only been called but hasn't taken their own action yet this round)
@@ -472,7 +469,7 @@ class HoldemArena
          * Called just before hands are dealt.
          */
 		void BeginNewHands(std::ostream &gamelog, const BlindValues & roundBlindValues, const bool & bNewBlindValues, playernumber_t newDealer = -1);
-    
+
         void DealAllHands(GameDeck * tableDealer, std::ostream & holecardsData);
 
 		void PrepBettingRound(bool bFirstBettingRound, uint8 otherBettingRounds);
@@ -501,7 +498,7 @@ class HoldemArena
 
     /**
      * AddStrategyBot
-     *  
+     *
      *  Discussion:
      *    Create a bot and sit them at the next available seat.
      *
@@ -587,7 +584,7 @@ class HoldemArena
 		float64 GetChipDenom() const;
 		const BlindValues & GetBlindValues() const{ return myBlinds; }
 
-        
+
 
 //======================
 //   In-Game Mutators
@@ -602,4 +599,3 @@ class HoldemArena
 
 
 #endif // HOLDEM_Arena
-
