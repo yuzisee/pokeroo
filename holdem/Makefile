@@ -8,14 +8,14 @@ SRC_DIRS = src $(EXT_SRC_DIRS)
 
 HEADERS_SRC := $(wildcard $(patsubst %,%/*.h,$(SRC_DIRS)))
 BUILD_SRC := $(wildcard $(patsubst %,%/*.cpp,$(SRC_DIRS)))
- 
+
 
 BUILD_DIR = objs
 BIN_DIR = bin
 LIB_DIR = lib
 
 
-CORE_OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(wildcard src/*.cpp))
+CORE_OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(wildcard src/*.cpp)) appsrc/stratManual.o
 
 BUILD_OBJS = $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(notdir $(BUILD_SRC)))
 BUILT_OBJS := $(wildcard $(BUILD_DIR)/*.o)
@@ -70,7 +70,7 @@ $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo
 	@echo "Rebuilding $@ [$?]:"
-	$(CXX) $(CXXFLAGS) -c -o $@ $< 
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(STATIC_OBJ_CPP): $(CORE_OBJS)
 	@mkdir -p $(dir $@)
@@ -78,7 +78,7 @@ $(STATIC_OBJ_CPP): $(CORE_OBJS)
 
 #
 #  FINAL TARGET RULES
-#  
+#
 
 $(APP): $(BUILD_DIR)/testDriver.o $(STATIC_OBJ_CPP)
 	@mkdir -p $(dir $@)

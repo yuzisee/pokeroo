@@ -688,15 +688,15 @@ gameOutput.close();
 // Are you profiling? Use supergame.cpp
 int main(int argc, char* argv[])
 {
-    
+
     char cCurrentPath[FILENAME_MAX];
     cCurrentPath[0] = ':';
     cCurrentPath[1] = '\0';
-    
+
     GetCwd(cCurrentPath, sizeof(cCurrentPath));
 
     std::cerr << "Current working directory is " << cCurrentPath << std::endl;
-    
+
 
 	cout << "Final Table: 9 Players" << endl;
 
