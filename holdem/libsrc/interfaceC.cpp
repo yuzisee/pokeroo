@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "../src/arena.h"
+#include "../src/arenaEvents.h"
 #include "../src/stratCombined.h"
 #include "../src/stratPosition.h"
 
