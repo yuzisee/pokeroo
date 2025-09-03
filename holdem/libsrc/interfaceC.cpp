@@ -378,13 +378,13 @@ enum return_status BeginNewHands(void * table_ptr, float64 smallBlind, playernum
 				if( searchDealer == overrideDealer ) return PARAMETER_INVALID;
 			}
 
-			myTable->BeginNewHands(b,bNewBlindValues,searchDealer);
+			myTable->BeginNewHands(std::cout, b,bNewBlindValues,searchDealer);
 
 			return SUCCESS;
 		}
 		else
 		{
-			myTable->BeginNewHands(b,bNewBlindValues);
+			myTable->BeginNewHands(std::cout, b,bNewBlindValues);
 
 			if( overrideDealer != -1 )	return INPUT_CLEANED;
 			else						return SUCCESS;
@@ -405,7 +405,7 @@ C_DLL_FUNCTION enum return_status FinishHandRefreshPlayers(void * table_ptr)
 	{
 		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
 
-		myTable->RefreshPlayers();
+		myTable->RefreshPlayers(&std::cout);
 	}
 
 	return error_code;
@@ -673,7 +673,7 @@ struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardse
 
 		myTable->PrepBettingRound(bFirstBettingRound == FIRST_BETTING_ROUND, numFutureBettingRounds);
 
-		HoldemArenaBetting * bettingEvent = new HoldemArenaBetting( myTable, *myHand, community.card_count );
+		HoldemArenaBetting * bettingEvent = new HoldemArenaBetting( myTable, *myHand, community.card_count, &std::cout );
 
 		if( bettingEvent )
 		{
@@ -782,7 +782,8 @@ enum return_status PlayerMakesBetTo(void * event_ptr, playernumber_t playerNumbe
 			error_code = PARAMETER_INVALID;
 		}else
 		{
-			bettingEvent->MakeBet(money);
+		  struct MinRaiseError err_details;
+			bettingEvent->MakeBet(money, &err_details);
 		}
 	}
 
@@ -862,7 +863,7 @@ struct return_event CreateNewShowdown(void * table_ptr, playernumber_t calledPla
 
 		CommunityPlus * myCommunity = reinterpret_cast<CommunityPlus *>(final_community.cards_ptr);
 
-		myTable->PrepShowdownRound(*myCommunity);
+		myTable->PrepShowdownRound(*myCommunity, std::cout);
 
 		HoldemArenaShowdown * bettingEvent = new HoldemArenaShowdown( myTable, calledPlayer );
 
@@ -905,7 +906,7 @@ enum return_status DeleteFinishShowdown(void * table_ptr, void * event_ptr)
 		// to delete things in the middle of a betting round.
 		if( showdownEvent->bRoundState != '!' ) error_code = UNRELIABLE_RESULT;
 
-		myTable->ProcessShowdownResults(showdownEvent->winners);
+		myTable->ProcessShowdownResults(showdownEvent->winners, std::cout);
 
 		delete showdownEvent;
 	}
@@ -972,7 +973,7 @@ enum return_status PlayerShowsHand(void * event_ptr, playernumber_t playerNumber
 			CommunityPlus * dealtHand = reinterpret_cast<CommunityPlus *>(playerHand.cards_ptr);
 			CommunityPlus * dealtCommunity = reinterpret_cast<CommunityPlus *>(community.cards_ptr);
 
-			showdownEvent->RevealHand(*dealtHand,*dealtCommunity);
+			showdownEvent->RevealHand(*dealtHand,*dealtCommunity, std::cout);
 		}
 	}
 
@@ -1000,7 +1001,7 @@ enum return_status PlayerMucksHand(void * event_ptr, playernumber_t playerNumber
 			error_code = PARAMETER_INVALID;
 		}else
 		{
-			showdownEvent->MuckHand();
+			showdownEvent->MuckHand(std::cout);
 		}
 	}
 
@@ -1036,7 +1037,7 @@ struct return_table CreateNewTable(playernumber_t seatsAtTable, float64 chipDeno
 		bool illustrate = true;
 		bool spectate = true;
 
-		HoldemArena * newTable = new HoldemArena(chipDenomination, std::cout ,illustrate,spectate);
+		HoldemArena * newTable = new HoldemArena(chipDenomination, illustrate,spectate);
 
 		if( newTable )
 		{

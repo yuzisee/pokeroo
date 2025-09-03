@@ -18,13 +18,10 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-
-
-
+ // This file manages GAME FLOW. If you want the classes that captures INSTANTANEOUS GAME FLOW, look at arena.h instead; thanks!
 
 #ifndef HOLDEM_ArenaEvents
 #define HOLDEM_ArenaEvents
-
 
 #include "debug_flags.h"
 #include "arena.h"
@@ -136,7 +133,7 @@ class HoldemArenaBetting : public HoldemArenaEventBase
 	void allInsReset();
 	void allInsAppend(const playernumber_t&);
 
-			
+
 	bool IsHeadsUp() const;
 
 
@@ -240,5 +237,3 @@ class HoldemArenaShowdown : public HoldemArenaEventBase
 
 
 #endif // HOLDEM_ArenaEvents
-
-

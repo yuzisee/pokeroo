@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+// This file captures INSTANTANEOUS GAME STATE. If you want the classes that manage GAME FLOW, look at arenaEvents.h instead; thanks!
+
 #ifndef HOLDEM_Arena
 #define HOLDEM_Arena
 
