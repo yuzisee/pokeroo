@@ -294,7 +294,7 @@ class ConsoleSeparateWindow(tkinter.Tk):
 
         self.stdout_history_frame.setup_geometry_manager()
         self.stdout_history_frame.grid(row=0, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL)
-        stdout_latest.grid(row=1, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL) 
+        stdout_latest.grid(row=1, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL)
 
         self.stderr_history_frame.setup_geometry_manager()
         self.stderr_history_frame.grid(row=0, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL)
@@ -338,8 +338,8 @@ class ConsoleSeparateWindow(tkinter.Tk):
 
     def append_stdout(self,append_text):
         self._stdout_queue.put(append_text.replace('\r',''), True)
-  
-        
+
+
     def append_stderr(self,append_text):
         self._stderr_queue.put(append_text.replace('\r',''), True)
         if len(append_text.strip()) > 0:
@@ -353,14 +353,14 @@ class ConsoleSeparateWindow(tkinter.Tk):
             self._synchronous_append_all(self.stdout_history_frame,self._stdout_queue)
         elif not self._stderr_queue.empty():
             self._synchronous_append_all(self.stderr_history_frame,self._stderr_queue)
-       
+
 
     def _synchronous_append_all(self,history_frame,append_queue):
         new_text = []
         while not append_queue.empty():
             new_text.append(append_queue.get())
         self._synchronous_append(history_frame, ''.join(new_text))
-           
+
 
     def _synchronous_append(self,history_frame,append_text):
         with self.gui_lock:
@@ -390,7 +390,7 @@ class RenderLoop(object):
         while self.renderloop_go:
             self._subroutine()
             time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
-        
+
 
 
 
@@ -404,7 +404,6 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
     #   Execute our child process
     #================================
     #From http://mail.python.org/pipermail/python-list/2007-June/618721.html
-    # In Python3, bufsize=0 means "unbuffered" which is what we want
     console_app = subprocess.Popen(cmd_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=0, cwd=cmd_cwd, env=cmd_env)
 
 
@@ -436,4 +435,3 @@ if __name__=='__main__':
     print(os.path.abspath(os.curdir))
 
     run_cmd(sys.argv[1:], os.getcwd())
-
