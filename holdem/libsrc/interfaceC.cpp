@@ -34,6 +34,7 @@ struct return_seat DEFAULT_RETURN_SEAT = { -1, SUCCESS };
 struct return_event DEFAULT_RETURN_EVENT = { 0 , SUCCESS };
 struct return_table DEFAULT_RETURN_TABLE = { {0,-1} , SUCCESS };
 
+#define DLL_GAMENUM_PLACEHOLDER "0000000"
 
 
 /*****************************************************************************
@@ -471,7 +472,7 @@ enum return_status RestoreTableState(const char * state_str, void * table_ptr)
 		std::string strState(state_str);
 		std::istringstream strBufState(strState);
 
-		myTable->UnserializeRoundStart(strBufState, ".", "0000000");
+		myTable->UnserializeRoundStart(strBufState, ".", DLL_GAMENUM_PLACEHOLDER);
 
 		//InitGameLoop calls:
 		//empty function, after all... myTable->LoadBeginInitialState(); //opens some logfile handles
@@ -1111,7 +1112,7 @@ struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, const 
 
 		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(add_to_table.table_ptr);
 
-		playernumber_t pIndex = myTable->AddStrategyBot("0000000", ".", playerName, money, botType);
+		playernumber_t pIndex = myTable->AddStrategyBot(DLL_GAMENUM_PLACEHOLDER, ".", playerName, money, botType);
 
 		if( pIndex == -1 )
 		{

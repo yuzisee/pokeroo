@@ -279,7 +279,7 @@ std::cout.precision(old_precision);
             SerializeW( newdata, ds.getDistr() );
         }
     }
-     
+
     if( 0 != dPCT ) *dPCT = ds.getDistr();
 
 
@@ -330,7 +330,7 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
 #endif
 {
     string datafilename = "";
-    if( CACHEABLESTAGE >= n )
+    if( n <= CACHEABLESTAGE )
     {
         QueryOffense(q, withCommunity);
         return;
@@ -498,6 +498,7 @@ int8 PreflopCallStats::oppSuitedOcc(int8 * discount, char mySuited )
     }
 }
 
+// Set up a specific preflop hand (exctly two cards), and then call `StatsManager::Query` to trigger both QueryOffense and QueryDefense
 int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
 {
     CommunityPlus oppTempStrength;
@@ -548,14 +549,14 @@ int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
     //cout << "%" << oppPocketName << "\t" << (int)(dOcc) << "\t\t(" << myPocketName << ")" <<  endl;
 
     CommunityPlus emptyHand;
-    
+
     // === Write the result into myWins[statGroup] ... ===
     StatResult * entryTarget = myWins+statGroup;
     DistrShape distrShape(DistrShape::newEmptyDistrShape());
     StatsManager::Query(&distrShape, oppTempStrength, emptyHand, 0);
     *entryTarget = distrShape.mean;
     entryTarget->repeated = dOcc;
-    
+
     // === ... and then increment statGroup ===
     ++statGroup;
 
@@ -573,7 +574,7 @@ void PreflopCallStats::AutoPopulate()
         #ifdef SUPERPROGRESSUPDATE
             std::cout << "Analyzing...                    \r" << flush;
         #endif
-    
+
     // for (carda : all 13 cards of one suit)
     for(int8 carda=0;carda<52;carda+=4)
     {
@@ -665,5 +666,3 @@ string NamedTriviaDeck::NamePockets() const
     ss << "?";
     return ss.str();
 }
-
-

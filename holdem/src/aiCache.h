@@ -66,6 +66,10 @@ The two *distrShape
 
 class PreflopCallStats;
 
+// [!TIP]
+// SerializeC and UnserializeC and `*.holdemC` files are for QueryDefense and give a `CallCumulation` (a vector of StatResult corresponding to each possible hand your opponent could have)
+// SerializeW and UnserializeW and `*.holdemW` files are for QueryOffense and give a `DistrShape` (the general statistics about how good your hand is)
+// See `holdem/src/inferentials.h` for more
 class StatsManager
 {
 private:
@@ -80,7 +84,7 @@ private:
     static void initPath();
     static bool readPathFromIni();
     static bool readPathFromEnv();
-    
+
     static void serializeDistrShape(ofstream& dataf, const DistrShape& d);
     static void serializeStatResult(ofstream& dataf, const StatResult& d);
     static bool unserializeDistrShape(ifstream& dataf, DistrShape* d);
@@ -135,7 +139,7 @@ class PreflopCallStats : public virtual CallStats
                 initPC();
             }
 
-    /** Call popset() once for each of the 169 proflop hole card combinations */
+    /** Call popSet() once for each of the 169 proflop hole card combinations */
     virtual void AutoPopulate();
 }
 ;

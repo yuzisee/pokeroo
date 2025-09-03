@@ -411,6 +411,11 @@ int8 * Permute(uint8 count, uint32 seed)
 
 
 
+// Usage
+//  * headsUp = 'P' means play new game
+//  * headsUp = 'L' means load game, i.e. continue from the most recent 'AUTOEXTRATOKEN'
+//  * headsUp = 1 is for "Legacy run mode"? TODO(from joseph): Seems it's not supported anymore, remove.
+//                ^^^ https://github.com/yuzisee/pokeroo/blob/5e86947b70fc8741e55ee26a9aecc66ec8cbc560/holdem/appsrc/testDriver.cpp#L683
 static std::string testPlay(std::string gameId, char headsUp = 'G', std::ostream& gameLog = cout)
 {
 
@@ -546,8 +551,8 @@ HoldemArena myTable(smallBlindChoice,true, true);
 std::ifstream loadFile;
 #ifdef DEBUGSAVEGAME
 
-if( bLoadGame )
-{
+	if( bLoadGame )
+	{
     //We want to load the game, so open the file and load state
     loadFile.open(DEBUGSAVEGAME);
     //
@@ -564,12 +569,9 @@ if( bLoadGame )
             consolePlay.myFifos.SetFileStream(saveLoc);
         }
 
-	}
-	else if( headsUp == 1 ) {
+	} else if( headsUp == 1 ) {
 	    bLoadGame = false; //Autodetect bLoadGame
-	}
-	else
-	{
+	} else {
         std::cerr << "Load state requested, couldn't open file" << endl;
 		exit(1);
     }

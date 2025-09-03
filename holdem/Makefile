@@ -86,7 +86,11 @@ $(APP): $(BUILD_DIR)/testDriver.o $(STATIC_OBJ_CPP)
 
 $(DYNAMIC_SO_LIB_C): $(BUILD_DIR)/interfaceC.o $(STATIC_OBJ_CPP)
 	@mkdir -p $(dir $@)
+ifeq ($(shell uname -s),Darwin)
+	$(CXX) $(CXXFLAGS) -shared -o $@ -Wl,-install_name,libholdem.so $^
+else
 	$(CXX) $(CXXFLAGS) -shared -o $@ -Wl,-soname,libholdem.so $^
+endif
 
 $(DYNAMIC_LINK_LIB_C): $(DYNAMIC_SO_LIB_C)
 	cp -v $< $@

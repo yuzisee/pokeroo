@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 
 # We will be using things from the qt and sys modules
@@ -54,8 +54,8 @@ class EllipseLayout(QLayout):
 	
 	def addItem(self, item):
 		if not isinstance(item,QLayoutItem):
-			raise TypeError, 'This exception is not object oriented, but Ruby is, so use addWidget'
-		print 'hoo' + str(len(self._item_list))
+			raise TypeError('This exception is not object oriented, but Ruby is, so use addWidget')
+		print('hoo' + str(len(self._item_list)))
 		self._item_list.append(item)
 	
 	def sizeHint(self):
