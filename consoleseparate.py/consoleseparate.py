@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import collections.abc
+
 # needed by queue.Queue
 import queue
 
@@ -11,6 +13,8 @@ import threading
 
 # needed to draw windows
 import tkinter
+# needed by tkinter.font.Font
+import tkinter.font
 
 #for Popen
 import subprocess
@@ -26,7 +30,7 @@ import re
 class SubProcessThread(threading.Thread):
     MAXIMUM_BYTE_READ = 2048
 
-    def __init__(self,bytestream,returncode_test,text_append_callbacks):
+    def __init__(self,bytestream,returncode_test,text_append_callbacks: list[collections.abc.Callable[[str], None]]):
         threading.Thread.__init__(self)
         self._fd = bytestream.fileno()
         self._stopreading_test = returncode_test
@@ -93,7 +97,7 @@ class ScrollableText(tkinter.Frame):
         self._my_xscrollbar = tkinter.Scrollbar(self,orient=tkinter.HORIZONTAL)
 
 
-        self._my_text = tkinter.Text(self,height=0,yscrollcommand=self._my_yscrollbar.set,xscrollcommand=self._my_xscrollbar.set)
+        self._my_text = tkinter.Text(self,height=1,yscrollcommand=self._my_yscrollbar.set,xscrollcommand=self._my_xscrollbar.set)
         self._my_yscrollbar.config(command=self._my_text.yview)
         self._my_xscrollbar.config(command=self._my_text.xview)
 
@@ -156,7 +160,7 @@ class UserEntry(tkinter.Entry):
 
     """
     def __init__(self, parent, **options):
-        tkinter.Entry.__init__(self,parent,options)
+        tkinter.Entry.__init__(self,parent, **options)
         self.insert(0, "Press [Enter] to begin")
 
     def setup_geometry_manager(self):
@@ -198,7 +202,8 @@ class UserEntry(tkinter.Entry):
 
             #Send input text
             user_input_string = event.widget.get()
-            self._app_stdin.write(user_input_string.strip() + os.linesep)
+            user_input_send_chars = user_input_string.strip() + os.linesep
+            self._app_stdin.write(user_input_send_chars.encode('ascii'))
             self._app_stdin.flush()
 
             event.widget.delete(0, tkinter.END)
@@ -215,24 +220,34 @@ class UserEntry(tkinter.Entry):
             event.widget.config(state=tkinter.DISABLED)
 
 
+#Portable font choices: http://wiki.tcl.tk/451
+def default_gamelog_font():
+    return tkinter.font.Font(family="Helvetica", size=11)
+
+def default_console_font():
+    #    DEFAULT_CONSOLE_FONT = font=("Lucida Console", 9)
+    #DEFAULT_CONSOLE_FONT = font=("Courier", 9)
+    return tkinter.font.Font(family="Monaco", size=9)
+
+def default_input_font():
+    return tkinter.font.Font(family="Helvetica", size=9, weight="bold")
+    #    DEFAULT_INPUT_FONT = font=("Courier New", 9,"bold")
+    #DEFAULT_INPUT_FONT = font=("Courier", 9,"bold")
+
 class ConsoleSeparateWindow(tkinter.Tk):
     """This is the window itself. The left side contains stdout, the right side contains stderr and echos stdin.
 
     One line of stdin input is available at a time in a tkinter.Entry at the bottom of the right side.
 
     """
+    stdout_history_frame: HistoryText
+    stderr_history_frame: HistoryText
+    stderr_input: UserEntry
+    _gamelog_font: tkinter.font.Font
+    _console_font: tkinter.font.Font
+    _input_font: tkinter.font.Font
 
     EXPAND_ALL = tkinter.W+tkinter.E+tkinter.N+tkinter.S
-
-#    DEFAULT_CONSOLE_FONT = font=("Lucida Console", 9)
-#    DEFAULT_INPUT_FONT = font=("Courier New", 9,"bold")
-#Portable font choices: http://wiki.tcl.tk/451
-    #DEFAULT_CONSOLE_FONT = font=("Courier", 9)
-    #DEFAULT_INPUT_FONT = font=("Courier", 9,"bold")
-    DEFAULT_GAMELOG_FONT = font=("Halvetica", 11)
-    DEFAULT_CONSOLE_FONT = font=("Monaco", 9)
-    DEFAULT_INPUT_FONT = font=("Helvetica", 9,"bold")
-
 
     def __init__(self, my_console_app):
         """Constructor
@@ -264,6 +279,9 @@ class ConsoleSeparateWindow(tkinter.Tk):
         #Left is stdout, Right is stderr
         #Top is history, Bottom is input
         #
+        self._gamelog_font = default_gamelog_font()
+        self._console_font = default_console_font()
+        self._input_font = default_input_font()
 
         left_column = tkinter.Frame(self, background='magenta') # Create a frame and attach it to the parent
         left_column.grid(row=0, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL)
@@ -273,18 +291,18 @@ class ConsoleSeparateWindow(tkinter.Tk):
         self.stdout_history_frame = HistoryText(left_column)
         self.stderr_history_frame = HistoryText(right_column)
 
-        self.stdout_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_GAMELOG_FONT)
-        self.stderr_history_frame.set_font(ConsoleSeparateWindow.DEFAULT_GAMELOG_FONT)
+        self.stdout_history_frame.set_font(self._gamelog_font)
+        self.stderr_history_frame.set_font(self._gamelog_font)
 
         stdout_latest = AppendableLabel(left_column, POKER_REPLACE=True)
-        stdout_latest.set_font(ConsoleSeparateWindow.DEFAULT_GAMELOG_FONT)
+        stdout_latest.set_font(self._gamelog_font)
 
         #The input frame contains the stderr latest with an entry field at the bottom
         stderr_input_frame = tkinter.Frame(right_column, borderwidth=2, relief=tkinter.GROOVE, background='green')
-        self.stderr_input = UserEntry(stderr_input_frame,relief=tkinter.SUNKEN,width=0,font=ConsoleSeparateWindow.DEFAULT_INPUT_FONT)
+        self.stderr_input = UserEntry(stderr_input_frame,relief=tkinter.SUNKEN,width=0,font=self._input_font)
 
         stderr_latest  = AppendableLabel(stderr_input_frame)
-        stderr_latest.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
+        stderr_latest.set_font(self._console_font)
 
         #Grid layout is resizable
         self.stderr_input.setup_geometry_manager()
@@ -320,6 +338,12 @@ class ConsoleSeparateWindow(tkinter.Tk):
         self.history_frames_list = [self.stderr_history_frame,self.stdout_history_frame]
         self.stderr_input.bind_input_output(self.gui_lock,self._my_subprocess.stdin,self.history_frames_list)
         self.protocol("WM_DELETE_WINDOW", self._destroy_handler)
+
+    def show_nominal_text(self):
+      self.stdout_history_frame.add_text("@¤")
+      self.stderr_history_frame.add_text("—")
+      # self.stdout_history_frame.add_text("👤👥⛁")
+      # self.stderr_history_frame.add_text("🂠")
 
     def _destroy_handler(self):
 
@@ -374,28 +398,29 @@ class ConsoleSeparateWindow(tkinter.Tk):
 
 class RenderLoop(object):
     """Call subroutine in a loop. Use this to repeatedly call UI functions such as 'draw' or 'render'"""
-    def __init__(self, subroutine):
+    def __init__(self, root_window: ConsoleSeparateWindow):
         self.renderloop_go = True
-        self._subroutine = subroutine
+        self._root_window = root_window
+        self._after_id = None
 
     def start(self):
-        assert not hasattr(self, '_render_queue_thread')
-        self._render_queue_thread = threading.Thread(target=self._run)
-        self._render_queue_thread.start()
+        assert not hasattr(self, '_after_id')
+        self._run()
 
     def stop(self):
         self.renderloop_go = False
+        if self._after_id is not None:
+            self._root_window.after_cancel(self._after_id)
+            self._after_id = None
 
     def _run(self):
-        while self.renderloop_go:
-            self._subroutine()
-            time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
+        if self.renderloop_go:
+            self._root_window.render()
+            self._after_id = self._root_window.after(int(ScrollableText.TKINTER_SPAM_RELIEF_TIME * 1000), self._run)
 
 
-
-
-def fake_out(stringme):
-    print("STD " + str(stringme))
+def fake_out(stringme: str):
+    print("STD " + stringme)
 
 
 def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.stdout.write(s)):
@@ -412,6 +437,7 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
     #===============================================
 
     root_window = ConsoleSeparateWindow(console_app) # Create the window
+    root_window.show_nominal_text()
     render_loop = RenderLoop(root_window.render)
     root_window.on_first_input(render_loop.start)
 
@@ -420,16 +446,19 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
     #===========================================
     stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, [root_window.append_stdout, stdout_callback])
     stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, [root_window.append_stderr])
-    #stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, fake_out)
-    #stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, fake_out)
+    # stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, [fake_out])
+    # stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, [fake_out])
 
     #==========
     #   Run!
     #==========
     stdout_capturer.start()
     stderr_capturer.start()
+    print('Starting…')
     root_window.mainloop()
+    print('STOPPED')
     render_loop.stop()
+    print('EXIT')
 
 if __name__=='__main__':
     print(os.path.abspath(os.curdir))
