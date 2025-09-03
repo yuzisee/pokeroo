@@ -376,7 +376,7 @@ enum return_status BeginNewHands(void * table_ptr, float64 smallBlind, playernum
 
 				if( searchDealer == overrideDealer ) return PARAMETER_INVALID;
 			}
-			
+
 			myTable->BeginNewHands(b,bNewBlindValues,searchDealer);
 
 			return SUCCESS;
@@ -387,8 +387,8 @@ enum return_status BeginNewHands(void * table_ptr, float64 smallBlind, playernum
 
 			if( overrideDealer != -1 )	return INPUT_CLEANED;
 			else						return SUCCESS;
-		}		
-		 
+		}
+
 	}
 
 }
@@ -470,7 +470,7 @@ enum return_status RestoreTableState(const char * state_str, void * table_ptr)
 		std::string strState(state_str);
 		std::istringstream strBufState(strState);
 
-		myTable->UnserializeRoundStart(strBufState);
+		myTable->UnserializeRoundStart(strBufState, ".", "0000000");
 
 		//InitGameLoop calls:
 		//empty function, after all... myTable->LoadBeginInitialState(); //opens some logfile handles
@@ -542,7 +542,7 @@ C_DLL_FUNCTION uint32 GetDeterministicSeed(void * table_ptr, uint8 small_int)
 		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(table_ptr);
 
 		//retval.money = myTable->GetDRseed();
-		
+
 		return RandomDeck::Float64ToUint32Seed(small_int,myTable->GetDRseed());
 	}
 
@@ -602,7 +602,7 @@ struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char ca
 	}else
 	{
 		CommunityPlus * myHand = reinterpret_cast<CommunityPlus *>(c.cards_ptr);
-		
+
 		int8 newCardIndex = HoldemUtil::ParseCard(cardValue,cardSuit);
 		if( newCardIndex < 0 )
 		{
@@ -611,7 +611,7 @@ struct return_cardset AppendCard(struct holdem_cardset c, char cardValue,char ca
 		{
 			DeckLocation newCard;
 			newCard.SetByIndex(newCardIndex);
-			
+
 			myHand->AddToHand( newCard );
 			retval.cardset.card_count = c.card_count + 1;
 		}
@@ -682,8 +682,8 @@ struct return_event CreateNewBettingRound(void * table_ptr, struct holdem_cardse
 		{
 			retval.error_code = OUT_OF_MEMORY;
 		}
-		
-		
+
+
 	}
 
 	return retval;
@@ -1109,7 +1109,7 @@ struct return_seat CreateNewStrategyBot(struct holdem_table add_to_table, const 
 
 		HoldemArena * myTable = reinterpret_cast<HoldemArena *>(add_to_table.table_ptr);
 
-		playernumber_t pIndex = myTable->AddStrategyBot(playerName, money, botType);
+		playernumber_t pIndex = myTable->AddStrategyBot("0000000", ".", playerName, money, botType);
 
 		if( pIndex == -1 )
 		{
