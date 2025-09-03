@@ -10,15 +10,20 @@ make
 ## Pre-calulate the database
 ```sh
 cd "$(git rev-parse --show-toplevel)"
-mkdir -p ~/pokeroo-run
-unzip holdem/holdemdb.zip -d ~/pokeroo-run/holdemdb/ # or, regenerate them (see below)
 
+mkdir -p ~/pokeroo-run/lib
+unzip holdem/holdemdb.zip -d ~/pokeroo-run/lib/holdemdb/ # or, regenerate them (see below)
+
+cp -v consoleseparate.py/* ~/pokeroo-run/lib/
+cp -v -p deploy/NewGame.Python.py ~/pokeroo-run/
 ```
-Either extract `holdemdb.zip`
 
 ### Play a game
 
-Follow the instructions in `deploy`
+```sh
+cd ~/pokeroo-run
+python3 NewGame.Python.py
+```
 
 
 # Troubleshooting

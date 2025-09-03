@@ -1,16 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-# for Queue.Queue
-import Queue
+# needed by queue.Queue
+import queue
 
-#for argv
+# needed for argv
 import sys
 
-#for threading.Thread
+# needed by threading.Thread
 import threading
 
-#for windows
-import Tkinter
+# needed to draw windows
+import tkinter
 
 #for Popen
 import subprocess
@@ -41,22 +41,25 @@ class SubProcessThread(threading.Thread):
                 #time.sleep(1.0/24.0) # read at most x times / sec
             next_char = os.read(self._fd, SubProcessThread.MAXIMUM_BYTE_READ)
             #print str(self._fd) + "received [" + repr(next_char) + "]"
-            if not next_char is None:
+            if next_char:
                 for cb in self._txt_callbacks:
-                    cb(next_char)
+                    # [!TIP]
+                    # 'utf-8' is a superset of ASCII so it's safe to do this.
+                    # Furthermore, when we set `self.POKER_REPLACE` we need to append unicode characters into this string so having it as Unicode here is best.
+                    cb(next_char.decode('utf-8', 'strict'))
             #except Exception:
             #    print "CONSOLESEPARATE: abort "
 
-        print str(self._fd) + "CONSOLESEPARATE: read terminate"
+        print(str(self._fd) + "CONSOLESEPARATE: read terminate")
 
         #txt =
 #
 
-class AppendableLabel(Tkinter.Label):
+class AppendableLabel(tkinter.Label):
     def __init__(self,parent, POKER_REPLACE=False):
-        Tkinter.Label.__init__(self,parent)
+        tkinter.Label.__init__(self,parent)
 
-        self.configure(anchor=Tkinter.SW,justify=Tkinter.LEFT)
+        self.configure(anchor=tkinter.SW,justify=tkinter.LEFT)
 
         self._my_str = ""
         self.POKER_REPLACE = POKER_REPLACE
@@ -78,24 +81,24 @@ class AppendableLabel(Tkinter.Label):
 
 #http://www.pythonware.com/library/
 #http://effbot.org/tkinterbook/
-class ScrollableText(Tkinter.Frame):
+class ScrollableText(tkinter.Frame):
 
     #It looks like Tkinter can't take too many commands at once.
     #It overflows or something...
     TKINTER_SPAM_RELIEF_TIME = 0.04
 
     def __init__(self,parent):
-        Tkinter.Frame.__init__(self,parent)
-        self._my_yscrollbar = Tkinter.Scrollbar(self)
-        self._my_xscrollbar = Tkinter.Scrollbar(self,orient=Tkinter.HORIZONTAL)
+        tkinter.Frame.__init__(self,parent)
+        self._my_yscrollbar = tkinter.Scrollbar(self)
+        self._my_xscrollbar = tkinter.Scrollbar(self,orient=tkinter.HORIZONTAL)
 
 
-        self._my_text = Tkinter.Text(self,height=0,yscrollcommand=self._my_yscrollbar.set,xscrollcommand=self._my_xscrollbar.set)
+        self._my_text = tkinter.Text(self,height=0,yscrollcommand=self._my_yscrollbar.set,xscrollcommand=self._my_xscrollbar.set)
         self._my_yscrollbar.config(command=self._my_text.yview)
         self._my_xscrollbar.config(command=self._my_text.xview)
 
         self.config(relief=self._my_text.cget("relief"))
-        self._my_text.config(relief=Tkinter.FLAT)
+        self._my_text.config(relief=tkinter.FLAT)
 
 
     def set_font(self,new_font):
@@ -104,32 +107,32 @@ class ScrollableText(Tkinter.Frame):
     def add_text(self,new_text):
         #print repr(self._my_text)
 
-        self._my_text.configure(state=Tkinter.NORMAL)
-        self._my_text.insert(Tkinter.END,new_text)
-        self._my_text.configure(state=Tkinter.DISABLED)
+        self._my_text.configure(state=tkinter.NORMAL)
+        self._my_text.insert(tkinter.END,new_text)
+        self._my_text.configure(state=tkinter.DISABLED)
         time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
 
     def push_text(self,destination):
-        raise AssertionError, "stderr_latest and stdout_latest are labels now"
+        raise AssertionError("stderr_latest and stdout_latest are labels now")
         #print repr(self._my_text)
 
-        self._my_text.configure(state=Tkinter.NORMAL)
-        destination.add_text(self._my_text.get("1.0",Tkinter.END))
-        self._my_text.delete("1.0",Tkinter.END)
-        self._my_text.configure(state=Tkinter.DISABLED)
+        self._my_text.configure(state=tkinter.NORMAL)
+        destination.add_text(self._my_text.get("1.0",tkinter.END))
+        self._my_text.delete("1.0",tkinter.END)
+        self._my_text.configure(state=tkinter.DISABLED)
         time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
 
     def setup_geometry_manager(self):
-        self._my_yscrollbar.pack(side=Tkinter.RIGHT, fill=Tkinter.Y)
-        self._my_xscrollbar.pack(side=Tkinter.BOTTOM, fill=Tkinter.X)
-        self._my_text.pack(fill=Tkinter.BOTH,expand=1)
+        self._my_yscrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+        self._my_xscrollbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+        self._my_text.pack(fill=tkinter.BOTH,expand=1)
 
     def scroll_down(self):
         #Let it settle down so that we know how far we actually need to scroll
         time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
-        self._my_text.configure(state=Tkinter.NORMAL)
-        self._my_text.see(Tkinter.END)
-        self._my_text.configure(state=Tkinter.DISABLED)
+        self._my_text.configure(state=tkinter.NORMAL)
+        self._my_text.see(tkinter.END)
+        self._my_text.configure(state=tkinter.DISABLED)
         time.sleep(ScrollableText.TKINTER_SPAM_RELIEF_TIME)
 
 
@@ -143,7 +146,7 @@ class HistoryText(ScrollableText):
     def rotate_label(self):
         self.my_latest.push_text(self)
 
-class UserEntry(Tkinter.Entry):
+class UserEntry(tkinter.Entry):
     """A textbox that responds specially to [Return] button presses
 
     When [Return] is pressed: (This is configured once in self.bind_input_output)
@@ -153,12 +156,12 @@ class UserEntry(Tkinter.Entry):
 
     """
     def __init__(self, parent, **options):
-        Tkinter.Entry.__init__(self,parent,options)
+        tkinter.Entry.__init__(self,parent,options)
         self.insert(0, "Press [Enter] to begin")
 
     def setup_geometry_manager(self):
         """When called, we will attach ourselves to the bottom of our parent widget, and expand horizontally to fill"""
-        self.pack(side=Tkinter.BOTTOM,fill=Tkinter.X,expand=0)
+        self.pack(side=tkinter.BOTTOM,fill=tkinter.X,expand=0)
 
     def on_first_input(self, callback):
         self._on_initialize = callback
@@ -177,14 +180,14 @@ class UserEntry(Tkinter.Entry):
 
     def enable(self):
         with self.gui_lock:
-            self.config(state=Tkinter.NORMAL)
+            self.config(state=tkinter.NORMAL)
 
     def capture_return_event(self,event):
 
         # Capture the first enter key.
         if self.uninitialized:
             with self.gui_lock: # TODO(from yuzisee): This should be just fine. Why did we carry the lock across bind_input_output --> capture_return_event before?
-                event.widget.delete(0, Tkinter.END)
+                event.widget.delete(0, tkinter.END)
             self._on_initialize()
             self.uninitialized = False
             #self.gui_lock.release()
@@ -198,7 +201,7 @@ class UserEntry(Tkinter.Entry):
             self._app_stdin.write(user_input_string.strip() + os.linesep)
             self._app_stdin.flush()
 
-            event.widget.delete(0, Tkinter.END)
+            event.widget.delete(0, tkinter.END)
 
             #Rotate label text into history
             for history_frame in self._label_histories:
@@ -209,17 +212,17 @@ class UserEntry(Tkinter.Entry):
             for history_frame in self._label_histories:
                 history_frame.scroll_down()
 
-            event.widget.config(state=Tkinter.DISABLED)
+            event.widget.config(state=tkinter.DISABLED)
 
 
-class ConsoleSeparateWindow(Tkinter.Tk):
+class ConsoleSeparateWindow(tkinter.Tk):
     """This is the window itself. The left side contains stdout, the right side contains stderr and echos stdin.
 
-    One line of stdin input is available at a time in a Tkinter.Entry at the bottom of the right side.
+    One line of stdin input is available at a time in a tkinter.Entry at the bottom of the right side.
 
     """
 
-    EXPAND_ALL = Tkinter.W+Tkinter.E+Tkinter.N+Tkinter.S
+    EXPAND_ALL = tkinter.W+tkinter.E+tkinter.N+tkinter.S
 
 #    DEFAULT_CONSOLE_FONT = font=("Lucida Console", 9)
 #    DEFAULT_INPUT_FONT = font=("Courier New", 9,"bold")
@@ -240,12 +243,12 @@ class ConsoleSeparateWindow(Tkinter.Tk):
 
         """
 
-        Tkinter.Tk.__init__(self)
+        tkinter.Tk.__init__(self)
 
         self._my_subprocess = my_console_app
 
-        self._stdout_queue = Queue.Queue()
-        self._stderr_queue = Queue.Queue()
+        self._stdout_queue = queue.Queue()
+        self._stderr_queue = queue.Queue()
 
         #If Tkinter can't even handle a flood of commands from a single thread,
         #I wouldn't trust its ability to be threadsafe at all.
@@ -262,9 +265,9 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         #Top is history, Bottom is input
         #
 
-        left_column = Tkinter.Frame(self, background='magenta') # Create a frame and attach it to the parent
+        left_column = tkinter.Frame(self, background='magenta') # Create a frame and attach it to the parent
         left_column.grid(row=0, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL)
-        right_column = Tkinter.Frame(self, background='blue') # Create a frame and attach it to the parent
+        right_column = tkinter.Frame(self, background='blue') # Create a frame and attach it to the parent
         right_column.grid(row=0, column=1, sticky=ConsoleSeparateWindow.EXPAND_ALL)
 
         self.stdout_history_frame = HistoryText(left_column)
@@ -277,8 +280,8 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         stdout_latest.set_font(ConsoleSeparateWindow.DEFAULT_GAMELOG_FONT)
 
         #The input frame contains the stderr latest with an entry field at the bottom
-        stderr_input_frame = Tkinter.Frame(right_column, borderwidth=2, relief=Tkinter.GROOVE, background='green')
-        self.stderr_input = UserEntry(stderr_input_frame,relief=Tkinter.SUNKEN,width=0,font=ConsoleSeparateWindow.DEFAULT_INPUT_FONT)
+        stderr_input_frame = tkinter.Frame(right_column, borderwidth=2, relief=tkinter.GROOVE, background='green')
+        self.stderr_input = UserEntry(stderr_input_frame,relief=tkinter.SUNKEN,width=0,font=ConsoleSeparateWindow.DEFAULT_INPUT_FONT)
 
         stderr_latest  = AppendableLabel(stderr_input_frame)
         stderr_latest.set_font(ConsoleSeparateWindow.DEFAULT_CONSOLE_FONT)
@@ -286,7 +289,7 @@ class ConsoleSeparateWindow(Tkinter.Tk):
         #Grid layout is resizable
         self.stderr_input.setup_geometry_manager()
 
-        stderr_latest.pack(side=Tkinter.TOP,fill=Tkinter.BOTH,expand=1)
+        stderr_latest.pack(side=tkinter.TOP,fill=tkinter.BOTH,expand=1)
 
 
         self.stdout_history_frame.setup_geometry_manager()
@@ -392,7 +395,7 @@ class RenderLoop(object):
 
 
 def fake_out(stringme):
-    print "STD " + str(stringme)
+    print("STD " + str(stringme))
 
 
 def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.stdout.write(s)):
@@ -401,7 +404,8 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
     #   Execute our child process
     #================================
     #From http://mail.python.org/pipermail/python-list/2007-June/618721.html
-    console_app = subprocess.Popen(cmd_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=1, cwd=cmd_cwd, env=cmd_env)
+    # In Python3, bufsize=0 means "unbuffered" which is what we want
+    console_app = subprocess.Popen(cmd_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=0, cwd=cmd_cwd, env=cmd_env)
 
 
     #===============================================
@@ -429,7 +433,7 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
     render_loop.stop()
 
 if __name__=='__main__':
-    print os.path.abspath(os.curdir)
+    print(os.path.abspath(os.curdir))
 
     run_cmd(sys.argv[1:], os.getcwd())
 
