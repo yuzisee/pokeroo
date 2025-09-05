@@ -156,6 +156,16 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
           document.getElementById('appendable-label-stdout').textContent += message_payload.stderr_append_txt;
           document.getElementById('stdin-user-entry').scrollIntoView();
         }
+
+        if (message_payload.end_stream) {
+           // https://developer.mozilla.org/en-US/docs/Web/API/EventSource/close
+           message_event.target.close();
+           document.getElementById('main').style.opacity = '0.5';
+           document.getElementById('stdin-user-entry').style.cursor = 'not-allowed';
+           // [!TIP]
+           // The next `heartBeat_workermessage` which triggers `myWorker.onmessage` will get `false` when calling `navigator.sendBeacon(…)`
+           // and that will show an `alert` to the user.
+        }
       }
       // https://developer.mozilla.org/en-US/docs/Web/API/EventSource
 
@@ -169,13 +179,10 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
       });
     </script>
   </head>
-  <body>
+  <body id="main">
     <div class="two-columns history-text">
-        <div id="stdout-history" class="stdout-theme raw-text-align-bottom"> <p>Sample text in left column, aligned to bottom.</p>
-        </div>
-        <div id="stderr-history" class="raw-text-align-bottom">
-            <p>Sample text in right column, aligned to bottom.</p>
-        </div>
+        <div id="stdout-history" class="stdout-theme raw-text-align-bottom"></div>
+        <div id="stderr-history" class="raw-text-align-bottom"></div>
     </div>
     <div class="two-columns live-text">
         <div id="appendable-label-stdout" class="stdout-theme raw-text-align-bottom"></div>
@@ -188,7 +195,13 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
 
       userEntryEl.addEventListener('keydown', function(keyboard_event) {
           if (keyboard_event.keyCode === 13) {
-              alert('TODO 1');
+              document.getElementById('stderr-history').textContent += document.getElementById('appendable-label-stderr').textContent;
+              document.getElementById('appendable-label-stderr').textContent = '';
+
+              document.getElementById('stdout-history').textContent += document.getElementById('appendable-label-stdout').textContent;
+              document.getElementById('appendable-label-stdout').textContent = '';
+
+              keyboard_event.target.value = '';
           }
       });
     </script>
@@ -256,7 +269,10 @@ if (typeof Worker !== "undefined") {
 
   // heartbeat-worker.js will post a message every HEARTBEAT_MILLIS_JS
   myWorker.onmessage = function(message_event) {
-    navigator.sendBeacon('/heartbeat', message_event.data);
+    if (!navigator.sendBeacon('/heartbeat', message_event.data)) {
+      myWorker.terminate();
+      alert('Disconnected. Please re-open this page;');
+    }
   };
 
   // TODO(from joseph): Use `document.addEventListener('visibilitychange', () => {` to extend the timeout when we know we're backgrounded
@@ -322,7 +338,9 @@ setInterval(heartBeat_workermessage, heartbeat_millis);
                     self.wfile.write(f"data: {message_json}\n\n".encode('utf-8'))
                     self.wfile.flush()
 
-            print('End stream')
+            end_stream = json.dumps({'end_stream': True})
+            self.wfile.write(f"data: {end_stream}\n\n".encode('utf-8'))
+            self.wfile.flush()
         else:
             self.send_response(404) # "Not Found"
             self.end_headers()
@@ -369,7 +387,7 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
         self.server_sent_events_stream = False
         # https://docs.python.org/3/library/socketserver.html#socketserver.BaseServer.shutdown
         super().shutdown()
-        print('socketserver.BaseServer.shutdown DONE')
+        print('socketserver.BaseServer.shutdown (idempotent)')
 
     def kill_server_and_console_app(self):
         if self._console_app is not None:
@@ -437,9 +455,7 @@ def run_server(httpd: socketserver.ThreadingTCPServer) -> threading.Thread:
 
 def stop_server(httpd: socketserver.ThreadingTCPServer, server_thr: threading.Thread):
     httpd.shutdown_and_stop_stream()
-    print('Shutting down')
-    httpd.shutdown()
-    print('Waiting for server thread to complete')
+    print('Waiting for server thread to complete') # Make sure `message_event.target.close();` was triggered in JS, so there are no connections left
     server_thr.join()
 
 def open_browser(port: int):
