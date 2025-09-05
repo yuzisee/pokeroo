@@ -93,7 +93,7 @@ CONSOLESEPARATE_HTML_PROLOGUE = """
 ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED = 21000 / 3000
 HEARTBEAT_MILLIS_JS = "var heartbeat_millis = 3000;"
 HEARTBEAT_INTERVAL_MILLIS = 3000
-CONSOLESEPARATE_HTML_EPILOGUE = """
+CONSOLESEPARATE_HTML_EPILOGUE = r"""
     <style>
         body {
             background-color: DarkSlateGray;
@@ -130,9 +130,14 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
         .raw-text-align-bottom {
             justify-content: flex-end;
         }
+        #appendable-label-stdout {
+            padding-bottom: calc(1.382 * 0.382em);
+            text-align: right;
+        }
         #appendable-label-stderr {
             margin-top: auto;
             margin-bottom: 0px;
+            font-family: monospace;
         }
         #stdin-user-entry {
             background-color: Yellow;
@@ -198,10 +203,20 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
               document.getElementById('stderr-history').textContent += document.getElementById('appendable-label-stderr').textContent;
               document.getElementById('appendable-label-stderr').textContent = '';
 
-              document.getElementById('stdout-history').textContent += document.getElementById('appendable-label-stdout').textContent;
+              document.getElementById('stdout-history').textContent += document.getElementById('appendable-label-stdout').textContent + ' ⌨' + keyboard_event.target.value;
               document.getElementById('appendable-label-stdout').textContent = '';
 
-              keyboard_event.target.value = '';
+              keyboard_event.target.disabled = true;
+              document.getElementById('main').style.cursor = 'wait';
+              const req = new XMLHttpRequest();
+              req.addEventListener("load", function(progress_event) {
+                  keyboard_event.target.value = '';
+                  keyboard_event.target.disabled = false;
+                  document.getElementById('main').style.removeProperty('cursor');
+              });
+              // `holdem/appsrc/stratManual.cpp → DualInputStream::AbsorbNewline` expects "\n"
+              req.open("PUT", "/user_entry?stdin_txt=" + encodeURIComponent(keyboard_event.target.value) + '%0D');
+              req.send();
           }
       });
     </script>
@@ -232,18 +247,28 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
         current_url = urllib.parse.urlparse(self.path)
         if current_url.path == '/user_entry':
             query_string = urllib.parse.parse_qs(current_url.query)
-            stdin_payload = query_string.get('stdin_txt', '').strip()
+            stdin_payload = query_string.get('stdin_txt', None)
 
-            if stdin_payload:
+            if not isinstance(stdin_payload, list):
+                self.send_response(422) # "Unprocessable Content"
+                return
+
+            if len(stdin_payload) != 1:
+                self.send_response(400) # "Bad Request"
+                return
+
+            user_entry_stdin = stdin_payload[0]
+
+            if user_entry_stdin.strip():
                # Send the command to `self.server._console_app` and simulate a long-poll that waits for a response
-               self.server.receive_stdin(stdin_payload)
+               self.server.receive_stdin(user_entry_stdin)
 
                while not self.server.no_more_data_on_the_way():
                    time.sleep(1.0 / STREAMING_FPS)
 
             self.send_response(200)
         else:
-            self.send_response(400) # "Bad Request"
+            self.send_response(401) # "Unauthorized"
 
         self.end_headers()
 
@@ -269,7 +294,14 @@ if (typeof Worker !== "undefined") {
 
   // heartbeat-worker.js will post a message every HEARTBEAT_MILLIS_JS
   myWorker.onmessage = function(message_event) {
-    if (!navigator.sendBeacon('/heartbeat', message_event.data)) {
+    var heartbeat_ok = null;
+    try {
+      heartbeat_ok = navigator.sendBeacon('/heartbeat', message_event.data);
+    } catch (error) {
+      heartbeat_ok = false;
+    }
+
+    if (heartbeat_ok !== true) {
       myWorker.terminate();
       alert('Disconnected. Please re-open this page;');
     }
@@ -415,15 +447,15 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
 
     def receive_stdin(self, user_input_send_chars: str):
         self._b_stderr_input_enable = False
-        self._console_app.write(user_input_send_chars.encode('ascii'))
-        self._console_app.flush()
+        self._console_app.stdin.write(user_input_send_chars.encode('ascii'))
+        self._console_app.stdin.flush()
 
     def append_stdout(self, append_text: str):
-        # print('GOT MESSAGE: ' + append_text)
         self._stdout_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
-        # print('Enqueued.')
 
     def append_stderr(self, append_text: str):
+        if append_text.strip():
+            print('STDERR: ' + append_text)
         self._stderr_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
         if len(append_text.strip()) > 0:
             self._b_stderr_input_enable = True
@@ -474,6 +506,7 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
     #================================
     #   Execute our child process
     #================================
+    print(f"{cmd_env}")
     console_app = subprocess.Popen(cmd_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=0, cwd=cmd_cwd, env=cmd_env)
 
     #=====================================================
