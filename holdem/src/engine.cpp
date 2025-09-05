@@ -22,8 +22,6 @@
 #include "holdem2.h"
 #include "ai.h"
 
-
-
 float64 DealRemainder::DealCard(Hand& h)
 {
     const int8 & qprevSuit = prevSuit[dealt.Suit];
@@ -60,7 +58,7 @@ float64 DealRemainder::DealCard(Hand& h)
         ///                  Imagine 73 of Spades, and just a 7 of Hearts. You could possibly deal 3 of Hearts into h, then bMatchesOld!
         ///                  So, when you deal the next card, and it doesn't violate the "greater first" rule, but because hBack!=hHere it also doesn't skip the suit,
 
-        /// 3. (matchesnew)  Imagine having 2 Spades, and then dealing a 2 of Hearts. That has ×3, but then what if the next card is 2 of Clubs, without LockNewAddend?
+        /// 3. (matchesnew)  Imagine having 2 Spades, and then dealing a 2 of Hearts. That has Ã—3, but then what if the next card is 2 of Clubs, without LockNewAddend?
 
 
 		const uint32 hHere=h.SeeCards(dealt.Suit);
@@ -89,7 +87,6 @@ float64 DealRemainder::DealCard(Hand& h)
 			return DealCard(h);
 		}
 	}
-
 
 	//successful!
 	float64 occBase = 0;
@@ -362,4 +359,3 @@ float64 DealRemainder::executeRecursive(const DealRemainder & refDeck, PlayStats
     return executeDealing(deckState, lastStats, moreCards, 1);
 
 }
-
