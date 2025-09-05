@@ -283,9 +283,9 @@ class ConsoleSeparateWindow(tkinter.Tk):
         self._console_font = default_console_font()
         self._input_font = default_input_font()
 
-        left_column = tkinter.Frame(self, background='magenta') # Create a frame and attach it to the parent
+        left_column = tkinter.Frame(self, background='orange') # Create a frame and attach it to the parent
         left_column.grid(row=0, column=0, sticky=ConsoleSeparateWindow.EXPAND_ALL)
-        right_column = tkinter.Frame(self, background='blue') # Create a frame and attach it to the parent
+        right_column = tkinter.Frame(self, background='green') # Create a frame and attach it to the parent
         right_column.grid(row=0, column=1, sticky=ConsoleSeparateWindow.EXPAND_ALL)
 
         self.stdout_history_frame = HistoryText(left_column)
@@ -298,7 +298,7 @@ class ConsoleSeparateWindow(tkinter.Tk):
         stdout_latest.set_font(self._gamelog_font)
 
         #The input frame contains the stderr latest with an entry field at the bottom
-        stderr_input_frame = tkinter.Frame(right_column, borderwidth=2, relief=tkinter.GROOVE, background='green')
+        stderr_input_frame = tkinter.Frame(right_column, borderwidth=2, relief=tkinter.GROOVE, background='yellow')
         self.stderr_input = UserEntry(stderr_input_frame,relief=tkinter.SUNKEN,width=0,font=self._input_font)
 
         stderr_latest  = AppendableLabel(stderr_input_frame)

@@ -95,6 +95,12 @@ HEARTBEAT_MILLIS_JS = "var heartbeat_millis = 3000;"
 HEARTBEAT_INTERVAL_MILLIS = 3000
 CONSOLESEPARATE_HTML_EPILOGUE = """
     <style>
+        body {
+            background-color: DarkSlateGray;
+            margin-left: 0px;
+            margin-top: 0px;
+            line-height: 1.382;
+        }
         .two-columns {
             display: flex;
             flex-direction: row;
@@ -108,13 +114,16 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
             flex-direction: column;
         }
         .history-text > div {
+            font-size: 88.66%;
+        }
+        .live-text > div {
             border: 2px solid gray;
         }
         .stdout-theme {
-            background-color: magenta;
+            background-color: DarkOrange;
         }
         .stderr-theme {
-            background-color: blue;
+            background-color: DarkGreen;
             color: silver;
             font-family: sans-serif;
         }
@@ -126,7 +135,7 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
             margin-bottom: 0px;
         }
         #stdin-user-entry {
-            background-color: lime;
+            background-color: Yellow;
             width: 100%;
             font-size: 161.8%;
         }
@@ -168,7 +177,7 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
             <p>Sample text in right column, aligned to bottom.</p>
         </div>
     </div>
-    <div class="two-columns">
+    <div class="two-columns live-text">
         <div id="appendable-label-stdout" class="stdout-theme raw-text-align-bottom"></div>
         <div class="stderr-theme"><p id="appendable-label-stderr"></p>
 <input id="stdin-user-entry" type="text" placeholder="⌨"></div>
@@ -428,6 +437,8 @@ def run_server(httpd: socketserver.ThreadingTCPServer) -> threading.Thread:
 
 def stop_server(httpd: socketserver.ThreadingTCPServer, server_thr: threading.Thread):
     httpd.shutdown_and_stop_stream()
+    print('Shutting down')
+    httpd.shutdown()
     print('Waiting for server thread to complete')
     server_thr.join()
 
