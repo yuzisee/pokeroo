@@ -1,5 +1,7 @@
 
 #include "aiCache.h"
+#include "callRarity.h"
+#include <cassert>
 #include <iostream>
 
 #include "randomDeck.h"
@@ -269,28 +271,35 @@ https://github.com/yuzisee/pokeroo/commit/3041337be97ca5e4d43cde9f37650b1acfff2b
 
 int main(int argc, const char * argv[]) {
 
-  // Regenerate the DB?
-  //regenerateDb(argc);
+  if (argc == 1) {
+    // No arguments other than the executable name itself.
 
-  CommunityPlus withCommunity;
-  #ifdef PROGRESSUPDATE
-  std::cout << "Ready" << std::endl;
-  #endif
-  RandomDeck r;
-  r.ShuffleDeck();
-  #ifdef SUPERPROGRESSUPDATE
-    std::cout << "TODO(from joseph): We shouldn't need this stwp" << std::endl;
-    r.DealCard(withCommunity);
-    std::cout << "1" << std::endl;
-    r.DealCard(withCommunity);
-    std::cout << "2" << std::endl;
-  #else
-    r.DealCard(withCommunity);
-    r.DealCard(withCommunity);
-  #endif
+    CommunityPlus withCommunity;
+    #ifdef PROGRESSUPDATE
+    std::cout << "Ready" << std::endl;
+    #endif
+    RandomDeck r;
+    r.ShuffleDeck();
+    #ifdef SUPERPROGRESSUPDATE
+      std::cout << "TODO(from joseph): We shouldn't need this stwp" << std::endl;
+      r.DealCard(withCommunity);
+      std::cout << "1" << std::endl;
+      r.DealCard(withCommunity);
+      std::cout << "2" << std::endl;
+    #else
+      r.DealCard(withCommunity);
+      r.DealCard(withCommunity);
+    #endif
 
-  PreflopCallStats pfcs(withCommunity, CommunityPlus::EMPTY_COMPLUS);
-  std::cout << "3! Regenerating holdemdb… " << std::endl;
-  pfcs.AutoPopulate();
+    PreflopCallStats pfcs(withCommunity, CommunityPlus::EMPTY_COMPLUS);
+    std::cout << "3! Regenerating holdemdb… " << std::endl;
+    pfcs.AutoPopulate();
+  } else {
+
+    // Regenerate the DB (striped, in case you want to run multiple times on separate threads)
+    int mode = std::stoi(argv[1]); // atoi(argv[1])
+    // see also `std::strtol`
+    regenerateDb(mode);
+  }
 
 }

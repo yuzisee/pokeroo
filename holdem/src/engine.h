@@ -19,8 +19,6 @@
  ***************************************************************************/
 
 
-
-
 #ifndef HOLDEM_BaseStrategy
 #define HOLDEM_BaseStrategy
 

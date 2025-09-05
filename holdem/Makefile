@@ -56,7 +56,7 @@ test:
 
 db:
 	mkdir -p /tmp/opening_book
-	clang++ $(CXXFLAGS) -O3 -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
+	clang++ $(CXXFLAGS) -O3 -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
 	date
 	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book
 	date
