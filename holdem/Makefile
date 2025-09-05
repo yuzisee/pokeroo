@@ -1,9 +1,9 @@
 
 CXX = g++
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
-CXXFLAGS_EXECUTABLE_OPT = -O
-CXXFLAGS += -g -Wall -fpic
+CXXFLAGS_EXECUTABLE_CHAIN = -O -fpic
 #The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
+CXXFLAGS += -g -Wall
 
 EXT_SRC_DIRS = appsrc libsrc
 SRC_DIRS = src $(EXT_SRC_DIRS)
@@ -54,11 +54,12 @@ test:
 	HOLDEMDB_PATH=~/pokeroo-run/lib/holdemdb/ bin/unittests_clang
 	HOLDEMDB_PATH=~/pokeroo-run/lib/holdemdb/ bin/unittests_gcc_O3
 
+# -fno-exceptions -fno-rtti
 db:
 	mkdir -p /tmp/opening_book
-	clang++ $(CXXFLAGS) -O3 -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
+	clang++ $(CXXFLAGS) -O3 -funroll-loops -flto -march=native -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
 	date
-	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book
+	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 1
 	date
 
 clean:
@@ -85,7 +86,7 @@ $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo
 	@echo "Rebuilding $@ [$?]:"
-	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_OPT) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_CHAIN) -c -o $@ $<
 
 $(STATIC_OBJ_CPP): $(CORE_OBJS)
 	@mkdir -p $(dir $@)
@@ -97,14 +98,14 @@ $(STATIC_OBJ_CPP): $(CORE_OBJS)
 
 $(APP): $(BUILD_DIR)/testDriver.o $(STATIC_OBJ_CPP)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_OPT) -o $@ $^
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_CHAIN) -o $@ $^
 
 $(DYNAMIC_SO_LIB_C): $(BUILD_DIR)/interfaceC.o $(STATIC_OBJ_CPP)
 	@mkdir -p $(dir $@)
 ifeq ($(shell uname -s),Darwin)
-	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_OPT) -shared -o $@ -Wl,-install_name,libholdem.so $^
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_CHAIN) -shared -o $@ -Wl,-install_name,libholdem.so $^
 else
-	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_OPT) -shared -o $@ -Wl,-soname,libholdem.so $^
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_CHAIN) -shared -o $@ -Wl,-soname,libholdem.so $^
 endif
 
 $(DYNAMIC_LINK_LIB_C): $(DYNAMIC_SO_LIB_C)

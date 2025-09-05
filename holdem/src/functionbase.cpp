@@ -27,11 +27,17 @@ using std::endl;
 
 #ifndef round
 #include <cmath>
+#if __cplusplus < 201103L
+
 inline float64 round(float64 a)
 {
     return floor(a+0.5);
 }
 
+#else
+  // We have C++11 available, so use that
+  inline float64 round(float64 a) { return std::round(a); }
+#endif
 #endif
 
 
@@ -150,7 +156,7 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 			}
         #endif
 
-	
+
 	if( yb <= y1 && yb <= y2)
 	{
 		//Likely too flat. Only search the more promising edge regions
@@ -165,7 +171,7 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 			float64 x2b = xb;
 			float64 x1b_outer, x2b_outer;
 			float64 y1b, y2b;
-			
+
 			do{
 				x1b_outer = x1b;
 				x2b_outer = x2b;
@@ -231,7 +237,7 @@ float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
 			float64 x2b = xb;
 			float64 x1b_outer, x2b_outer;
 			float64 y1b, y2b;
-			
+
 			do{
 				x1b_outer = x1b;
 				x2b_outer = x2b;
@@ -420,7 +426,7 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
     }
     dyb = fd(xb,yb);
 */
-    
+
     while(x2 - x1 > quantum/2)
     {
         #ifdef DEBUG_TRACE_SEARCH
@@ -773,7 +779,3 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuant
         return xb;
     }
 }
-
-
-
-
