@@ -11,7 +11,7 @@ import sys
 # needed by threading.Thread
 import threading
 
-# needed to draw windows
+# needed to draw windows on the screen
 import tkinter
 # needed by tkinter.font.Font
 import tkinter.font

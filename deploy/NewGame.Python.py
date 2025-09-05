@@ -5,17 +5,15 @@
 #   lib/ (directory)
 #   lib/holdemdb/ (directory containing 22x.holdemC, ... , TTx.holdemW, etc.)
 #   lib/__init__.py (empty file)
-#   lib/consoleseparate.py (python file implementing ConsoleSeparate)
+#   lib/consoleseparate_http.py (python file implementing ConsoleSeparate)
 #
 
 import datetime
 import os
 import os.path
-import logging
 import time
-import sys
 
-import lib.consoleseparate
+import lib.consoleseparate_http
 
 def main(PLAYERNAME):
     script_dir = os.path.realpath(os.path.dirname(__file__))
@@ -35,13 +33,13 @@ def main(PLAYERNAME):
 
     continue_str = """#!/usr/bin/env python3
 
-import lib.consoleseparate
+import lib.consoleseparate_http
 
 holdem_env = dict([])
 holdem_env['HOLDEMDB_PATH'] = "{holdemdb_path}"
 
 with open("{gamelog_file}", 'a') as f:
-    lib.consoleseparate.run_cmd("{holdem_cmd}", "{target_dir}", holdem_env, f.write)
+    lib.consoleseparate_http.run_cmd("{holdem_cmd}", "{target_dir}", holdem_env, f.write)
 
 """.format(holdemdb_path=holdem_env['HOLDEMDB_PATH'],
            gamelog_file=gamelog_file,
@@ -53,7 +51,7 @@ with open("{gamelog_file}", 'a') as f:
         f.write(continue_str)
 
     with open(gamelog_file, 'a') as f:
-        lib.consoleseparate.run_cmd([holdem_cmd, PLAYERNAME], target_dir, holdem_env, f.write)
+        lib.consoleseparate_http.run_cmd([holdem_cmd, PLAYERNAME], target_dir, holdem_env, f.write)
 
 
 if __name__ == '__main__':

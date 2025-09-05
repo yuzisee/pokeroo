@@ -14,7 +14,8 @@ cd "$(git rev-parse --show-toplevel)"
 mkdir -p ~/pokeroo-run/lib
 unzip holdem/holdemdb.zip -d ~/pokeroo-run/lib/holdemdb/ # or, regenerate them (see below)
 
-cp -v consoleseparate.py/* ~/pokeroo-run/lib/
+touch ~/pokeroo-run/lib/__init__.py
+cp -v consoleseparate.web/* ~/pokeroo-run/lib/
 cp -v -p deploy/NewGame.Python.py ~/pokeroo-run/
 ```
 
