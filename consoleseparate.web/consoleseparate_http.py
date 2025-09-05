@@ -5,6 +5,7 @@ import http.server
 import json
 import os
 import queue
+import re
 import socketserver
 import subprocess
 import sys
@@ -22,6 +23,7 @@ class HeartbeatThread(threading.Thread):
     server_heartbeat_seconds: float
 
     def __init__(self, kill_server):
+        threading.Thread.__init__(self)
         self._kill_server = kill_server
 
     def run(self) -> None:
@@ -31,7 +33,9 @@ class HeartbeatThread(threading.Thread):
             last_client = self.client_heartbeat_seconds
             last_server = self.server_heartbeat_seconds
 
+            # print('Heartbeat check wait...')
             time.sleep(HEARTBEAT_INTERVAL_MILLIS / 1000.0)
+            # print('Heartbeat check go!')
 
             if (last_client != self.client_heartbeat_seconds) or (last_server != self.server_heartbeat_seconds):
                 # New heartbeat! Restart the count.
@@ -41,7 +45,7 @@ class HeartbeatThread(threading.Thread):
                 missed_heartbeats += 1
 
                 if missed_heartbeats > 2:
-                    print('Warning: lost connection to webpage ' + json.dump({'missed_heartbeats': missed_heartbeats}))
+                    print('Warning: lost connection to webpage ' + json.dumps({'missed_heartbeats': missed_heartbeats}))
 
         # INVARIANT: If you get here, we exceeded ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED.
 
@@ -89,6 +93,17 @@ CONSOLESEPARATE_HTML_PROLOGUE = """
 ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED = 24000 / 3000
 HEARTBEAT_INTERVAL_MILLIS = 3000
 CONSOLESEPARATE_HTML_EPILOGUE = """
+    <style>
+        .history-text {
+            display: flex;
+        }
+        .history-text > div {
+            flex: 1;
+            flex-direction: column;
+
+            justify-content: flex-end;
+        }
+    </style>
     <script>
       var heartbeat_millis = 3000;
 
@@ -100,9 +115,20 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
     </script>
   </head>
   <body>
+    <div class="history-text">
+        <div id="stdout-history">
+            <p>Sample text in left column, aligned to bottom.</p>
+        </div>
+        <div class="stderr-history">
+            <p>Sample text in right column, aligned to bottom.</p>
+            <input type="text" placeholder="Enter text here">
+        </div>
+    </div>
   </body>
 </html>
 """
+
+POKER_REPLACE = True
 
 STREAMING_FPS = 24.0 # That's the Hollywood movie frames per second; should be fine for now
 
@@ -110,6 +136,7 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
     server: ConsoleSeparateWebview
 
     def do_POST(self):
+        # print('POST? ' + self.path)
         if self.path == '/heartbeat':
             data_len = int(self.headers.get('Content-Length'))
             self.server.observe_most_recent_heartbeat(self.rfile.read(data_len))
@@ -143,6 +170,7 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
             # =================
             # OK! MAIN CODEPATH
             # =================
+            self.server.receive_stdin(stdin_payload)
 
             # https://developer.mozilla.org/en-US/docs/Web/API/EventSource/message_event
             self.send_response(200)
@@ -158,7 +186,7 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
                     # Nothing to send yet (but until `no_more_data_on_the_way()` we gotta keep waiting)
                     time.sleep(1.0 / STREAMING_FPS)
                 else:
-                    message_json = json.dump(message_payload)
+                    message_json = json.dumps(message_payload)
                     self.wfile.write(f"data: {message_json}\n\n".encode('utf-8'))
                     self.wfile.flush()
         else:
@@ -172,7 +200,7 @@ class ConsoleSeparateMessageEvent(typing.TypedDict):
 class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
     append_stdout_queue: queue.SimpleQueue
     append_stderr_queue: queue.SimpleQueue
-    b_stderr_input_enable: bool
+    _b_stderr_input_enable: bool
     _console_app: subprocess.Popen
     _html_title: str
 
@@ -180,7 +208,7 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
         super().__init__(*args, **kw)
         self.append_stdout_queue = queue.SimpleQueue()
         self.append_stderr_queue = queue.SimpleQueue()
-        self.b_stderr_input_enable = True
+        self._b_stderr_input_enable = True
         self._html_title = '<title>👤👥🂠⛁</title>'
         self._heartbeat = HeartbeatThread(self)
         self._console_app = None
@@ -188,12 +216,17 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
     def observe_most_recent_heartbeat(self, client_timestamp_str):
         self._heartbeat.client_heartbeat_seconds = int(client_timestamp_str) / 1000.0
         self._heartbeat.server_heartbeat_seconds = time.time()
-        try:
-            self._heartbeat.start()
-        except RuntimeError:
-            # If there's a race condition where we try to start it twice, this can happen. No worries.
-            pass
-            # https://docs.python.org/3/library/threading.html#threading.Thread.start
+
+        # print(f'OBSERVE? {client_timestamp_str} {self._heartbeat.client_heartbeat_seconds} {self._heartbeat.server_heartbeat_seconds}')
+
+        if not self._heartbeat.is_alive():
+          try:
+              self._heartbeat.start()
+              print('Connected to webpage!')
+          except RuntimeError as e:
+              # If there's a race condition where we try to start it twice, this can happen. No worries.
+              print(f'Race condition? {e.args}')
+              # https://docs.python.org/3/library/threading.html#threading.Thread.start
 
     def kill_server_and_console_app(self):
         if self._console_app is not None:
@@ -212,16 +245,29 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
     def render_html_title(self) -> str:
         return self._html_title
 
+    @staticmethod
+    def render_text(new_text: str) -> str:
+        txt = new_text.replace('\r','')
+        if POKER_REPLACE:
+            return re.sub(r'\b[2-9TJQKA][cdhs]\b', lambda m: m.group(0).replace('s', u'\u2664').replace('h', u'\u2661').replace('c', u'\u2663').replace('d', u'\u2662'), txt)
+        else:
+            return txt
+
+    def receive_stdin(self, user_input_send_chars: str):
+        self._b_stderr_input_enable = False
+        self._console_app.write(user_input_send_chars.encode('ascii'))
+        self._console_app.flush()
+
     def append_stdout(self, append_text: str):
-        self._stdout_queue.put(append_text.replace('\r',''), True)
+        self._stdout_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
 
     def append_stderr(self, append_text: str):
-        self._stderr_queue.put(append_text.replace('\r',''), True)
+        self._stderr_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
         if len(append_text.strip()) > 0:
-            self.b_stderr_input_enable = True
+            self._b_stderr_input_enable = True
 
     def no_more_data_on_the_way(self) -> bool:
-        return self.append_stdout_queue.empty() and self.append_stderr_queue.empty() and self.b_stderr_input_enable
+        return self.append_stdout_queue.empty() and self.append_stderr_queue.empty() and self._b_stderr_input_enable
 
     def latest_data(self) -> ConsoleSeparateMessageEvent:
         latest_stdout = None
