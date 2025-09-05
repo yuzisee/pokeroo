@@ -90,40 +90,73 @@ CONSOLESEPARATE_HTML_PROLOGUE = """
   <head>
     <meta charset="utf-8">
 """
-ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED = 24000 / 3000
+ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED = 21000 / 3000
+HEARTBEAT_MILLIS_JS = "var heartbeat_millis = 3000;"
 HEARTBEAT_INTERVAL_MILLIS = 3000
 CONSOLESEPARATE_HTML_EPILOGUE = """
     <style>
-        .history-text {
+        .two-columns {
             display: flex;
         }
-        .history-text > div {
+        .two-columns > div {
             flex: 1;
             flex-direction: column;
 
+            border: 2px solid gray;
+        }
+        .history-text > div {
             justify-content: flex-end;
+            white-space: pre-wrap;
+        }
+        .stdout-theme {
+            background-color: magenta;
+        }
+        .stderr-theme {
+            background-color: blue;
+        }
+        #stdin-user-entry {
+            background-color: lime;
+            width: 100%;
         }
     </style>
-    <script>
-      var heartbeat_millis = 3000;
-
-      function heartBeat() {
-        navigator.sendBeacon('/heartbeat', (new Date()).valueOf());
-      }
-
-      setInterval(heartBeat, heartbeat_millis);
-    </script>
+    <script src="heartbeat-init.js"></script>
   </head>
   <body>
-    <div class="history-text">
-        <div id="stdout-history">
+    <div class="two-columns history-text">
+        <div id="stdout-history" class="stdout-theme">
             <p>Sample text in left column, aligned to bottom.</p>
         </div>
-        <div class="stderr-history">
+        <div id="stderr-history">
             <p>Sample text in right column, aligned to bottom.</p>
-            <input type="text" placeholder="Enter text here">
         </div>
     </div>
+    <div class="two-columns">
+        <div id="appendable-label-stdout" class="stdout-theme">
+            <p>Latest text in left column, aligned to bottom.</p>
+        </div>
+        <div class="appendable-label-stderr" class="stderr-theme">
+            <p>Sample text in right column, aligned to bottom.</p>
+            <input id="stdin-user-entry" type="text" placeholder="Enter text here">
+        </div>
+    </div>
+    <script>
+      var userEntryEl = document.getElementById('stdin-user-entry');
+      userEntryEl.focus();
+
+      function stream_text_from_server(message_event) {
+        if (message_event.hasOwnProperty('stdout_append_txt')) {
+          document.getElementById('appendable-label-stdout').textContent += message_event.stdout_append_txt;
+        }
+        if (message_event.hasOwnProperty('stderr_append_txt')) {
+          document.getElementById('appendable-label-stdout').textContent += message_event.stderr_append_txt;
+        }
+      }
+      // https://developer.mozilla.org/en-US/docs/Web/API/EventSource
+
+      const initial_text_stream = new EventSource("/stream");
+      initial_text_stream.addEventListener("message", stream_text_from_server);
+
+    </script>
   </body>
 </html>
 """
@@ -140,13 +173,36 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
         if self.path == '/heartbeat':
             data_len = int(self.headers.get('Content-Length'))
             self.server.observe_most_recent_heartbeat(self.rfile.read(data_len))
+
+            self.send_response(200)
         else:
             self.send_response(405) # "Method Not Allowed"
 
-    def do_GET(self):
-        current_url = urllib.parse.urlparse(self.path)
+        self.end_headers()
 
-        if current_url.path == '/':
+    def do_PUT(self):
+        current_url = urllib.parse.urlparse(self.path)
+        if current_url.path == '/user_entry':
+            query_string = urllib.parse.parse_qs(current_url.query)
+            stdin_payload = query_string.get('stdin_txt', '').strip()
+
+            if stdin_payload:
+               # Send the command to `self.server._console_app` and simulate a long-poll that waits for a response
+               self.server.receive_stdin(stdin_payload)
+
+               while not self.server.no_more_data_on_the_way():
+                   time.sleep(1.0 / STREAMING_FPS)
+
+            self.send_response(200)
+        else:
+            self.send_response(400) # "Bad Request"
+
+        self.end_headers()
+
+    def do_GET(self):
+
+        if self.path == '/':
+            # Loaded by the original `open_browser` below
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             consoleseparate_html = CONSOLESEPARATE_HTML_PROLOGUE + self.server.render_html_title() + CONSOLESEPARATE_HTML_EPILOGUE
@@ -155,22 +211,59 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
             self.end_headers()
 
             self.wfile.write(consoleseparate_bytes)
-        elif current_url.path == '/stream':
-            query_string = urllib.parse.parse_qs(current_url.query)
-            stdin_payload = query_string.get('stdin_txt', '').strip()
+        elif self.path == '/favicon.ico':
+            self.send_response(206) # "No Content"
+            self.end_headers()
+        elif self.path == '/heartbeat-init.js':
+            worker_js = """
+if (typeof Worker !== "undefined") {
+  const myWorker = new Worker("heartbeat-worker.js");
 
-            if not stdin_payload:
-                self.send_response(204) # "No Content"
-                return
+  // heartbeat-worker.js will post a message every HEARTBEAT_MILLIS_JS
+  myWorker.onmessage = function(message_event) {
+    navigator.sendBeacon('/heartbeat', message_event.data);
+  };
+} else {
+""" + HEARTBEAT_MILLIS_JS + """
+
+  function heartBeat() {
+    navigator.sendBeacon('/heartbeat', (new Date()).valueOf());
+  }
+
+  // This is less reliable than "heartbeat-worker.js" because not all browsers will allow it to run in the background
+  setInterval(heartBeat, heartbeat_millis);
+}
+"""
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/javascript')
+            self.send_header('Content-Length', len(worker_js))
+            self.end_headers()
+            self.wfile.write(worker_js.encode('utf-8'))
+        elif self.path == '/heartbeat-worker.js':
+            worker_js = HEARTBEAT_MILLIS_JS + """
+
+function heartBeat_workermessage() {
+  self.postMessage((new Date()).valueOf());
+}
+
+setInterval(heartBeat_workermessage, heartbeat_millis);
+"""
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/javascript')
+            self.send_header('Content-Length', len(worker_js))
+            self.end_headers()
+            self.wfile.write(worker_js.encode('utf-8'))
+        elif self.path == '/stream':
 
             if self.headers['Accept'] != 'text/event-stream':
                 self.send_response(406) # "Not Acceptable"
+                self.end_headers()
                 return
 
             # =================
             # OK! MAIN CODEPATH
             # =================
-            self.server.receive_stdin(stdin_payload)
+            print('Trying to stream')
 
             # https://developer.mozilla.org/en-US/docs/Web/API/EventSource/message_event
             self.send_response(200)
@@ -181,7 +274,7 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
             # Simulate streaming text with delays
             while not self.server.no_more_data_on_the_way():
                 # https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
-                message_payload = self.server.latest_data
+                message_payload = self.server.latest_data()
                 if all(v is None for v in message_payload.values):
                     # Nothing to send yet (but until `no_more_data_on_the_way()` we gotta keep waiting)
                     time.sleep(1.0 / STREAMING_FPS)
@@ -189,25 +282,29 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
                     message_json = json.dumps(message_payload)
                     self.wfile.write(f"data: {message_json}\n\n".encode('utf-8'))
                     self.wfile.flush()
+
+                    print('Streamed ' + message_json)
+
+            print('end stream')
         else:
             self.send_response(404) # "Not Found"
-            return
+            self.end_headers()
 
 class ConsoleSeparateMessageEvent(typing.TypedDict):
     stdout_append_txt: str
     stderr_append_txt: str
 
 class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
-    append_stdout_queue: queue.SimpleQueue
-    append_stderr_queue: queue.SimpleQueue
+    _stdout_queue: queue.SimpleQueue
+    _stderr_queue: queue.SimpleQueue
     _b_stderr_input_enable: bool
     _console_app: subprocess.Popen
     _html_title: str
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
-        self.append_stdout_queue = queue.SimpleQueue()
-        self.append_stderr_queue = queue.SimpleQueue()
+        self._stdout_queue = queue.SimpleQueue()
+        self._stderr_queue = queue.SimpleQueue()
         self._b_stderr_input_enable = True
         self._html_title = '<title>👤👥🂠⛁</title>'
         self._heartbeat = HeartbeatThread(self)
@@ -259,6 +356,7 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
         self._console_app.flush()
 
     def append_stdout(self, append_text: str):
+        print('GOT MESSAGE: ' + append_text)
         self._stdout_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
 
     def append_stderr(self, append_text: str):
@@ -267,18 +365,18 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
             self._b_stderr_input_enable = True
 
     def no_more_data_on_the_way(self) -> bool:
-        return self.append_stdout_queue.empty() and self.append_stderr_queue.empty() and self._b_stderr_input_enable
+        return self._stdout_queue.empty() and self._stderr_queue.empty() and self._b_stderr_input_enable
 
     def latest_data(self) -> ConsoleSeparateMessageEvent:
         latest_stdout = None
         latest_stderr = None
         try:
-            latest_stdout = self.append_stdout_queue.get_nowait()
+            latest_stdout = self._stdout_queue.get_nowait()
         except queue.Empty:
             pass
 
         try:
-            latest_stderr = self.append_stderr_queue.get_nowait()
+            latest_stderr = self._stderr_queue.get_nowait()
         except queue.Empty:
             pass
 
@@ -287,6 +385,7 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
 
 def run_server(httpd: socketserver.ThreadingTCPServer) -> threading.Thread:
     new_thr = threading.Thread(target=httpd.serve_forever)
+    # new_thr.daemon = True # Is this needed?
     new_thr.start()
     return new_thr
 
@@ -317,21 +416,25 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
     #=====================================================
 
     server_thread = None
-    with ConsoleSeparateWebview(("", 0), ConsoleSeparateController) as httpd:
-        server_thread = run_server(httpd)
-        httpd.connect_to_console_app(console_app)
-        httpd.set_html_title('→'.join(cmd_args))
-        _, port = httpd.server_address
-        print(f"Open your browser to → http://localhost:{port}")
-        open_browser(port)
+    with ConsoleSeparateWebview(("", 0), ConsoleSeparateController) as root_window:
+        root_window.set_html_title('→'.join(cmd_args))
 
-        stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, [fake_out])
-        stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, [fake_out])
+        # stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, [fake_out])
+        # stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, [fake_out])
         #============================================
         #   Bind stdout and stderr to the web view
         #============================================
-        # stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, [root_window.append_stdout, stdout_callback])
-        # stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, [root_window.append_stderr])
+        stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, [root_window.append_stdout, stdout_callback])
+        stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, [root_window.append_stderr])
+
+        #============
+        #   Begin!
+        #============
+        root_window.connect_to_console_app(console_app)
+        server_thread = run_server(root_window)
+        _, port = root_window.server_address
+        print(f"Open your browser to → http://localhost:{port}")
+        open_browser(port)
 
         stdout_capturer.start()
         stderr_capturer.start()
@@ -341,9 +444,9 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
 
         # INVARIANT: If you get here, the original subprocess.Popen is done
 
-        stop_server(httpd, server_thread)
+        stop_server(root_window, server_thread)
 
-    # We get `httpd.server_close()` automatically because of the `with … as … httpd:` above
+    # We get `root_window.server_close()` automatically because of the `with … as … root_window:` above
 
 if __name__=='__main__':
     print(os.path.abspath(os.curdir))
