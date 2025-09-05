@@ -558,28 +558,24 @@ std::ifstream loadFile;
     //
     if( loadFile.is_open() )
     {
-		myTable.UnserializeRoundStart(loadFile, ".", gameId);
-        SELECTED_BLIND_MODEL.UnSerialize( loadFile );
-        if( tableDealer )  tableDealer->Unserialize( loadFile ); //Restore state of deck as well
+		  myTable.UnserializeRoundStart(loadFile, ".", gameId);
+      SELECTED_BLIND_MODEL.UnSerialize( loadFile );
+      if( tableDealer )  tableDealer->Unserialize( loadFile ); //Restore state of deck as well
 
+      std::istream *saveLoc = &loadFile;
+      if( saveLoc != 0 )
+      {
+        consolePlay.myFifos.SetFileStream(saveLoc);
+      }
 
-        std::istream *saveLoc = &loadFile;
-        if( saveLoc != 0 )
-        {
-            consolePlay.myFifos.SetFileStream(saveLoc);
-        }
-
-	} else if( headsUp == 1 ) {
-	    bLoadGame = false; //Autodetect bLoadGame
-	} else {
-        std::cerr << "Load state requested, couldn't open file" << endl;
-		exit(1);
+    } else if( headsUp == 1 ) {
+      bLoadGame = false; //Autodetect bLoadGame
+    } else {
+      std::cerr << "Load state requested, couldn't open file " << DEBUGSAVEGAME << endl;
+      std::cerr << "(If you never took any fold/check/call/raise action, this file won't exist yet)" << endl;
+      exit(1);
     }
-
-
-
-
-}
+  }
 #endif
 
     if( !bLoadGame )

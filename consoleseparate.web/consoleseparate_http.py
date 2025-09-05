@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import collections
+import collections.abc
 import http.server
 import json
 import os
@@ -27,7 +27,7 @@ class HeartbeatThread(threading.Thread):
         self._kill_server = kill_server
 
     def run(self) -> None:
-        """Run until ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED heartbeats are all missing, and then `kill_server_and_console_app`"""
+        """Run until ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED heartbeats are all missing, and then kill_server_and_console_app"""
         missed_heartbeats = 0
         while missed_heartbeats < ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED:
             last_client = self.client_heartbeat_seconds
@@ -97,9 +97,12 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
     <style>
         body {
             background-color: DarkSlateGray;
+            color: white;
+
+            line-height: 1.382;
+
             margin-left: 0px;
             margin-top: 0px;
-            line-height: 1.382;
         }
         .two-columns {
             display: flex;
@@ -120,11 +123,12 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
             border: 2px solid gray;
         }
         .stdout-theme {
+            color: black;
             background-color: DarkOrange;
         }
         .stderr-theme {
             background-color: DarkGreen;
-            color: silver;
+            color: white;
             font-family: sans-serif;
         }
         .raw-text-align-bottom {
@@ -133,11 +137,11 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
         #appendable-label-stdout {
             padding-bottom: calc(1.382 * 0.382em);
             text-align: right;
+            font-family: monospace;
         }
         #appendable-label-stderr {
             margin-top: auto;
             margin-bottom: 0px;
-            font-family: monospace;
         }
         #stdin-user-entry {
             background-color: Yellow;
@@ -158,7 +162,7 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
           document.getElementById('stdin-user-entry').scrollIntoView();
         }
         if (has_string_content(message_payload, 'stderr_append_txt')) {
-          document.getElementById('appendable-label-stdout').textContent += message_payload.stderr_append_txt;
+          document.getElementById('appendable-label-stderr').textContent += message_payload.stderr_append_txt;
           document.getElementById('stdin-user-entry').scrollIntoView();
         }
 
@@ -179,8 +183,8 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
       // https://developer.mozilla.org/en-US/docs/Web/API/EventSource/readyState
 
       initial_text_stream.addEventListener("error", function(event) {
-          alert("Stream error occurred " + JSON.stringify(event.data));
-          // You could implement custom reconnection logic here if needed
+          // https://developer.mozilla.org/en-US/docs/Web/API/EventSource/error_event
+          alert("Stream error occurred " + JSON.stringify(event) + event);
       });
     </script>
   </head>
@@ -200,10 +204,10 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
 
       userEntryEl.addEventListener('keydown', function(keyboard_event) {
           if (keyboard_event.keyCode === 13) {
-              document.getElementById('stderr-history').textContent += document.getElementById('appendable-label-stderr').textContent;
+              document.getElementById('stderr-history').textContent += document.getElementById('appendable-label-stderr').textContent + ' ⌨' + keyboard_event.target.value;
               document.getElementById('appendable-label-stderr').textContent = '';
 
-              document.getElementById('stdout-history').textContent += document.getElementById('appendable-label-stdout').textContent + ' ⌨' + keyboard_event.target.value;
+              document.getElementById('stdout-history').textContent += document.getElementById('appendable-label-stdout').textContent;
               document.getElementById('appendable-label-stdout').textContent = '';
 
               keyboard_event.target.disabled = true;
@@ -214,8 +218,8 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
                   keyboard_event.target.disabled = false;
                   document.getElementById('main').style.removeProperty('cursor');
               });
-              // `holdem/appsrc/stratManual.cpp → DualInputStream::AbsorbNewline` expects "\n"
-              req.open("PUT", "/user_entry?stdin_txt=" + encodeURIComponent(keyboard_event.target.value) + '%0D');
+              // `holdem/appsrc/stratManual.cpp → DualInputStream::AbsorbNewline` expects "\n" which is %0A
+              req.open("PUT", "/user_entry?stdin_txt=" + encodeURIComponent(keyboard_event.target.value) + '%0A');
               req.send();
           }
       });
@@ -280,7 +284,7 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             consoleseparate_html = CONSOLESEPARATE_HTML_PROLOGUE + self.server.render_html_title() + CONSOLESEPARATE_HTML_EPILOGUE
             consoleseparate_bytes = consoleseparate_html.encode('utf-8')
-            self.send_header('Content-Length', len(consoleseparate_bytes))
+            self.send_header('Content-Length', str(len(consoleseparate_bytes)))
             self.end_headers()
 
             self.wfile.write(consoleseparate_bytes)
@@ -288,7 +292,7 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
             self.send_response(206) # "No Content"
             self.end_headers()
         elif self.path == '/heartbeat-init.js':
-            worker_js = """
+            worker_js = r"""
 if (typeof Worker !== "undefined") {
   const myWorker = new Worker("heartbeat-worker.js");
 
@@ -300,6 +304,8 @@ if (typeof Worker !== "undefined") {
     } catch (error) {
       heartbeat_ok = false;
     }
+
+    // TODO(from joseph): This isn't quite right because `navigator.sendBeacon` can return true even if "Beacon API cannot load http://localhost:49787/heartbeat. Could not connect to the server."
 
     if (heartbeat_ok !== true) {
       myWorker.terminate();
@@ -321,7 +327,7 @@ if (typeof Worker !== "undefined") {
 """
             self.send_response(200)
             self.send_header('Content-Type', 'text/javascript')
-            self.send_header('Content-Length', len(worker_js))
+            self.send_header('Content-Length', str(len(worker_js)))
             self.end_headers()
             self.wfile.write(worker_js.encode('utf-8'))
         elif self.path == '/heartbeat-worker.js':
@@ -335,7 +341,7 @@ setInterval(heartBeat_workermessage, heartbeat_millis);
 """
             self.send_response(200)
             self.send_header('Content-Type', 'text/javascript')
-            self.send_header('Content-Length', len(worker_js))
+            self.send_header('Content-Length', str(len(worker_js)))
             self.end_headers()
             self.wfile.write(worker_js.encode('utf-8'))
         elif self.path == '/stream':
@@ -385,7 +391,7 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
     _stdout_queue: queue.SimpleQueue
     _stderr_queue: queue.SimpleQueue
     server_sent_events_stream: bool
-    _b_stderr_input_enable: bool
+    _b_waiting_for_calculations: bool
     _html_title: str
     _heartbeat: HeartbeatThread
     _console_app: subprocess.Popen
@@ -395,7 +401,7 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
         self._stdout_queue = queue.SimpleQueue()
         self._stderr_queue = queue.SimpleQueue()
         self.server_sent_events_stream = True
-        self._b_stderr_input_enable = True
+        self._b_waiting_for_calculations = True
         self._html_title = '<title>👤👥🂠⛁</title>'
         self._heartbeat = HeartbeatThread(self)
         self._console_app = None
@@ -446,22 +452,27 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
             return new_text
 
     def receive_stdin(self, user_input_send_chars: str):
-        self._b_stderr_input_enable = False
+        self._b_waiting_for_calculations = True
+        print('SENDING STDIN → ' + repr(user_input_send_chars))
+        print(repr(user_input_send_chars.encode('ascii')))
         self._console_app.stdin.write(user_input_send_chars.encode('ascii'))
         self._console_app.stdin.flush()
+        print('sent!')
 
     def append_stdout(self, append_text: str):
         self._stdout_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
+        if len(append_text.strip()) > 0:
+            self._b_waiting_for_calculations = False
 
     def append_stderr(self, append_text: str):
         if append_text.strip():
             print('STDERR: ' + append_text)
         self._stderr_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
         if len(append_text.strip()) > 0:
-            self._b_stderr_input_enable = True
+            self._b_waiting_for_calculations = False
 
     def no_more_data_on_the_way(self) -> bool:
-        return self._stdout_queue.empty() and self._stderr_queue.empty() and self._b_stderr_input_enable
+        return self._stdout_queue.empty() and self._stderr_queue.empty() and not self._b_waiting_for_calculations
 
     def latest_data(self) -> ConsoleSeparateMessageEvent:
         latest_stdout = None
@@ -500,13 +511,22 @@ def open_browser(port: int):
         subprocess.call(['start', 'http://localhost:' + str(port)])
 
 def fake_out(stringme: str):
+    """For debugging only
+
+    But if you use this, make sure you still have a way to trigger:
+      self._b_waiting_for_calculations = False
+
+    or else it will hang on input.
+    """
     print("STD " + stringme)
 
-def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.stdout.write(s)):
+def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.stdout.write('STDOUT: ' + s)):
+    """Runs cmd_args with cmd_env from cmd_cwd"""
     #================================
     #   Execute our child process
     #================================
-    print(f"{cmd_env}")
+    if cmd_env is not None:
+      print("cd " + cmd_cwd + "; " + " ".join(f"{env_k}={env_v}" for (env_k, env_v) in cmd_env.items()) + ' ' + ' '.join(cmd_args) + " >> … # see stdout_callback")
     console_app = subprocess.Popen(cmd_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,bufsize=0, cwd=cmd_cwd, env=cmd_env)
 
     #=====================================================
@@ -522,8 +542,8 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
         #============================================
         #   Bind stdout and stderr to the web view
         #============================================
-        stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, [root_window.append_stdout, stdout_callback])
         stderr_capturer = SubProcessThread(console_app.stderr, console_app.poll, [root_window.append_stderr])
+        stdout_capturer = SubProcessThread(console_app.stdout, console_app.poll, [root_window.append_stdout, stdout_callback])
 
         #============
         #   Begin!
@@ -551,5 +571,3 @@ if __name__=='__main__':
     print(os.path.abspath(os.curdir))
 
     run_cmd(sys.argv[1:], os.getcwd())
-
-

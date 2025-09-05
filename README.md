@@ -1,3 +1,6 @@
+TODO(from joseph): Clean warnings
+TODO(from joseph): Run unit tests once
+
 # Getting started
 ```sh
 cd holdem
