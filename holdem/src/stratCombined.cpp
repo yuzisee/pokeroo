@@ -38,7 +38,9 @@ uint32 TrendStrategy::RandomSeed()
 
     DistrShape tempD(DistrShape::newEmptyDistrShape());
 
-    StatsManager::Query(0,&tempP,&tempW,withCommunity,CommunityPlus::EMPTY_COMPLUS,0);
+    // https://github.com/yuzisee/pokeroo/commit/fc5f175e0252cd1a5047a336a47a520a7701293f
+    // https://github.com/yuzisee/pokeroo/blob/2c5a7ab7054d93774e34fe86c019e6d0e318b268/holdem/src/aiCache.h#L98
+    StatsManager::Query(&tempP,&tempW,withCommunity,CommunityPlus::EMPTY_COMPLUS,0);
     StatResult myRank = tempD.mean;
 
 

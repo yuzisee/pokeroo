@@ -112,9 +112,11 @@ public:
     #else
     static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     #endif
-    static void Query(CallCumulation* offense, CallCumulation* defense, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity);
 
+    // Already not used as of https://github.com/yuzisee/pokeroo/commit/3041337be97ca5e4d43cde9f37650b1acfff2b60
+    // Introduced during https://github.com/yuzisee/pokeroo/commit/7b00dbaa20e4b2af6b03931fefaefe0497ee7fc1 but never called?
+    static void Query(CallCumulation* offense, CallCumulation* defense, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
 }
 ;
 

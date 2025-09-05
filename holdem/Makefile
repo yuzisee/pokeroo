@@ -74,6 +74,7 @@ depends:
 tags: $(BUILD_SRC) $(HEADERS_SRC)
 	ctags $^
 
+# TODO(from joseph): Perhaps we should also have a `tournament` target that builds `sim/supergame.cpp`
 
 $(BUILD_DIR)/%.d: %.cpp
 	@mkdir -p $(dir $@)
