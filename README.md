@@ -1,5 +1,4 @@
-TODO(from joseph): Clean warnings
-TODO(from joseph): Run unit tests once
+TODO(from joseph): Run unit tests once, then clean warnings
 
 # Getting started
 ```sh
@@ -34,5 +33,8 @@ python3 NewGame.Python.py
 
 ### Regenerate the opening book
 
-Edit `src/debug_flags.h` to set SUPERPROGRESSUPDATE
-Trigger any codepath that will invoke `PreflopCallStats::AutoPopulate()`
+Edit `src/debug_flags.h` to set SUPERPROGRESSUPDATE if needed
+```sh
+make db
+```
+TODO(from joseph): Use the `int mode` mult-threading tools provided by `regenerateDb`

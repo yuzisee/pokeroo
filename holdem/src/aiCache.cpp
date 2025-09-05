@@ -462,13 +462,6 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
     q = newC;
 }
 
-// Does anyone call this? to trigger both QueryOffense and QueryDefense
-void StatsManager::Query(CallCumulation* offense, CallCumulation* defense, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
-{
-    if( offense != 0 ) QueryOffense(*offense,withCommunity,onlyCommunity,n);
-    if( defense != 0 ) QueryDefense(*defense,withCommunity,onlyCommunity,n);
-}
-
 int8 PreflopCallStats::largestDiscount(int8 * discount)
 {
     return (  (discount[0]<discount[1]) ? discount[0] : discount[1]);
