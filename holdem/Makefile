@@ -1,6 +1,8 @@
 
 CXX = g++
-CXXFLAGS += -O -g -Wall -fpic
+CXXFLAGS_RELATED_HEADERS_OPT = -Os
+CXXFLAGS_EXECUTABLE_OPT = -O
+CXXFLAGS += -g -Wall -fpic
 #The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
 
 EXT_SRC_DIRS = appsrc libsrc
@@ -47,12 +49,14 @@ test:
 	echo $(HEADERS_SRC)
 	echo $(BUILD_SRC)
 	echo $(CORE_OBJS)
-	$(CXX) $(CXXFLAGS) -o bin/unittests -Isrc $(wildcard src/*.cpp) unittests/main.cpp
-	HOLDEMDB_PATH=~/pokeroo-run/lib/holdemdb/ bin/unittests
+	clang++ $(CXXFLAGS) -o bin/unittests_clang -Isrc $(wildcard src/*.cpp) unittests/main.cpp
+	g++ $(CXXFLAGS) -O3 -o bin/unittests_gcc_O3 -Isrc $(wildcard src/*.cpp) unittests/main.cpp
+	HOLDEMDB_PATH=~/pokeroo-run/lib/holdemdb/ bin/unittests_clang
+	HOLDEMDB_PATH=~/pokeroo-run/lib/holdemdb/ bin/unittests_gcc_O3
 
 db:
 	mkdir -p /tmp/opening_book
-	clang++ $(CXXFLAGS) -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
+	clang++ $(CXXFLAGS) -O3 -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
 	date
 	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book
 	date
@@ -63,7 +67,8 @@ clean:
 depends:
 	make $(BUILD_DEPS)
 
-
+# Each of our `.d` files also lists the header files it depended on.
+# This `include` ensures that if any `*.h` file changes, any relevant `*.cpp` files will also be rebuilt.
 -include $(BUILD_DEPS)
 
 tags: $(BUILD_SRC) $(HEADERS_SRC)
@@ -72,14 +77,14 @@ tags: $(BUILD_SRC) $(HEADERS_SRC)
 
 $(BUILD_DIR)/%.d: %.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -MM -MF $@ -MT $(BUILD_DIR)/$*.o $<
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_RELATED_HEADERS_OPT) -MM -MF $@ -MT $(BUILD_DIR)/$*.o $<
 
 
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo
 	@echo "Rebuilding $@ [$?]:"
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_OPT) -c -o $@ $<
 
 $(STATIC_OBJ_CPP): $(CORE_OBJS)
 	@mkdir -p $(dir $@)
@@ -91,14 +96,14 @@ $(STATIC_OBJ_CPP): $(CORE_OBJS)
 
 $(APP): $(BUILD_DIR)/testDriver.o $(STATIC_OBJ_CPP)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_OPT) -o $@ $^
 
 $(DYNAMIC_SO_LIB_C): $(BUILD_DIR)/interfaceC.o $(STATIC_OBJ_CPP)
 	@mkdir -p $(dir $@)
 ifeq ($(shell uname -s),Darwin)
-	$(CXX) $(CXXFLAGS) -shared -o $@ -Wl,-install_name,libholdem.so $^
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_OPT) -shared -o $@ -Wl,-install_name,libholdem.so $^
 else
-	$(CXX) $(CXXFLAGS) -shared -o $@ -Wl,-soname,libholdem.so $^
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_OPT) -shared -o $@ -Wl,-soname,libholdem.so $^
 endif
 
 $(DYNAMIC_LINK_LIB_C): $(DYNAMIC_SO_LIB_C)

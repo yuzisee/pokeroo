@@ -97,7 +97,7 @@ namespace UnitTests {
 
         DeckLocation card;
 
-        
+
         CommunityPlus withCommunity; // 7h 2h
 
         card.SetByIndex(21);
@@ -151,8 +151,8 @@ namespace UnitTests {
         // array([ 1.22355938, -0.75994582,  0.53638645])
 
         PositionalStrategy::printCommunityOutcomes(std::cout, a, detailPCT);
-        
-        
+
+
     }
 
 
@@ -885,7 +885,7 @@ namespace UnitTests {
                                                                      ,oppCPS,4.5, 4,false,true,0);
         float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest(w_r_rank0, 1.0, 11.25 + oppCPS.alreadyBet, 0.0 ,  0.31640625
                                                                      ,oppCPS, 4.5, 4,false,true,0);
-        
+
         // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
         assert(w_r_rank0 <= w_r_rank1);
     }
@@ -981,7 +981,7 @@ namespace RegressionTests {
         const playernumber_t dealer = 6;
 
         const std::vector<float64> foldOnly(1, 0.0);
-        
+
         PureGainStrategy bot("28.txt", 4);
         PlayerStrategy * const botToTest = &bot;
 
@@ -1013,7 +1013,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy d5(foldOnly);
         myTable.ManuallyAddPlayer("P0", 84.0, &d5);
 
-        
+
         static const float64 a6[] = {
             std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN(),
@@ -1021,7 +1021,7 @@ namespace RegressionTests {
         };
         FixedReplayPlayerStrategy d6(VectorOf(a6));
         myTable.ManuallyAddPlayer("P3", 204.0, &d6);
-        
+
 
 
 
@@ -1064,13 +1064,13 @@ namespace RegressionTests {
 
                DeckLocation myTurn;
                myTurn.SetByIndex(35);
-               
+
                assert(  myTable.PlayRound_Turn(myFlop, myTurn, std::cout)  !=  -1);
                // River: 6s
-               
+
                DeckLocation myRiver;
                myRiver.SetByIndex(16);
-               
+
         myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
 
 
@@ -1156,7 +1156,7 @@ namespace RegressionTests {
         // Gear must not crash
         assert(myTable.PlayRound_BeginHand(std::cout) == -1);
 
-        
+
     }
 
     // We hit the "You can't lose more than all your money: GainModelNoRisk" assertion
@@ -1237,13 +1237,13 @@ namespace RegressionTests {
 
             botToTest->StoreDealtHand(handToTest);
         }
-        
-        
-        
+
+
+
         myTable.BeginInitialState(26);
         myTable.BeginNewHands(std::cout, b, false, dealer);
-        
-        
+
+
 
         assert(myTable.PlayRound_BeginHand(std::cout) != -1);
 
@@ -1354,11 +1354,11 @@ namespace RegressionTests {
         myTable.ManuallyAddPlayer("DangerR", 237.143, &dS);
         myTable.ManuallyAddPlayer("ComR", 137.143, &cS);
 
-        
+
         const playernumber_t dealer = 0;
-        
-        
-        
+
+
+
 
         /*
         TrapR posts SB of $2.85714 ($2.85714)
@@ -1521,7 +1521,7 @@ namespace RegressionTests {
          Badr folds
          Mona folds
          */
-        
+
 
 
         DeckLocation myTurn;
@@ -1544,7 +1544,7 @@ namespace RegressionTests {
          Nav folds
          Andrew raise to $100
          Joseph call
-         
+
          */
 
         DeckLocation myRiver;
@@ -1558,14 +1558,14 @@ namespace RegressionTests {
         //assert(highbettor == 4);
         // No all-fold; assert that the pot was increased at least.
         //assert(myTable.GetPotSize() > 55);
-        
-        
+
+
         /*
-         
+
          Joseph bet $140
          Andrew call
-         
-         
+
+
          */
     }
 
@@ -1662,14 +1662,14 @@ namespace RegressionTests {
             r.MakeBet(myTable.GetBetToCall(), &msg);
 
             r.MakeBet(nS.MakeBet(), &msg);
-            
+
             r.MakeBet(sS.MakeBet(), &msg);
-            
+
             r.MakeBet(lS.MakeBet(), &msg);
             r.MakeBet(jS.MakeBet(), &msg);
 
         }
-        
+
 
 
         assert(myTable.IsInHand(0)); // play value hands you have a large stack.
@@ -1763,25 +1763,25 @@ namespace RegressionTests {
         //assert(highbettor == 4);
         // No all-fold; assert that the pot was increased at least.
         //assert(myTable.GetPotSize() > 55);
-        
-        
+
+
         /*
-         
+
          (3 players)
          [ActionBotV $1495]
          [NormalBotV $1463.52]
          [GearBotV $1453]
-         
+
          ActionBotV checks
          NormalBotV checks
          GearBotV checks
-         
-         
-         
+
+
+
          */
     }
-    
-    
+
+
 
     // Hand played live
     void testRegression_021() {
@@ -1948,21 +1948,21 @@ namespace RegressionTests {
         //assert(highbettor == 4);
         // No all-fold; assert that the pot was increased at least.
         //assert(myTable.GetPotSize() > 55);
-        
-        
+
+
         /*
-         
+
          (3 players)
          [ActionBotV $1495]
          [NormalBotV $1463.52]
          [GearBotV $1453]
-         
+
          ActionBotV checks
          NormalBotV checks
          GearBotV checks
-         
-         
-         
+
+
+
          */
     }
 
@@ -1973,7 +1973,7 @@ namespace RegressionTests {
     // In PureGainStrategy, at least, do raises against count as pessimistic? Probably yes since it's the same as "number at first action".
     // This should explain why our bots like to check/call so much right now.
 
-    // In this test, AgainstRaise(call) is too high, presumably because it draws raises at the (call) winPCT. 
+    // In this test, AgainstRaise(call) is too high, presumably because it draws raises at the (call) winPCT.
     void testRegression_018() {
 
 
@@ -3562,9 +3562,9 @@ namespace RegressionTests {
          if playstyle is Danger/Conservative, overall utility is 0.0295592
          */
     }
-    
-    
-    
+
+
+
 
 
     // The chance of raising can sometimes outweight the probability of the hand strength you consider facing in that environment.
@@ -3670,7 +3670,7 @@ namespace RegressionTests {
          DangerBotV folds
          MultiBotV folds
 
-         
+
          All fold! ConservativeBotV wins $5
 
 
@@ -3704,7 +3704,7 @@ namespace RegressionTests {
          (Re.s) 0.244898%
          (Better Mean Rank) 67.7143%
          (Ra.s) 0.244898%
-         
+
          4d Kd Bet to call 10 (from 5) at 15 pot,
          */
 
@@ -3772,7 +3772,7 @@ namespace RegressionTests {
          OppRAISEChanceR [F] 0.00901911 @ $1500	fold -- left0.779127  0.779127 right	W(24.1667x)=0.204801 L=0.762366 1o.w_s=(0.204801,0.0328328)
          Guaranteed > $0 is in the pot for sure
          OppFoldChance% ...    0   d\0
-         
+
          */
         const playernumber_t myPositionIndex = 1;
         ExpectedCallD   tablestate(myPositionIndex, &myTable, statprob.statranking.pct, statprob.core.statmean.pct);
@@ -4057,14 +4057,14 @@ namespace RegressionTests {
 
 
         const playernumber_t dealer = 3;
-        
+
 
         /*
 
 
          ActionBotV posts SB of $5 ($5)
          NormalBotV posts BB of $10 ($15)
-         
+
          */
 
         myTable.BeginInitialState(18);
@@ -4115,7 +4115,7 @@ namespace RegressionTests {
 
 
          Flop:	4h 7d Tc   (Pot: $30)
-         
+
          */
 
         myTable.PrepBettingRound(false,2); //turn, river remaining
@@ -4187,10 +4187,10 @@ namespace RegressionTests {
             r.MakeBet(0.0, &msg);
 
             r.MakeBet(0.0, &msg);
-            
+
             r.MakeBet(0.0, &msg);
         }
-        
+
 
 
         /*
@@ -4221,18 +4221,18 @@ namespace RegressionTests {
 
 
         /*
-         
+
          (3 players)
          [ActionBotV $1495]
          [NormalBotV $1463.52]
          [GearBotV $1453]
-         
+
          ActionBotV checks
          NormalBotV checks
          GearBotV checks
-         
-         
-         
+
+
+
          */
 
 
@@ -4403,276 +4403,80 @@ namespace RegressionTests {
         DeckLocation card;
 
         CommunityPlus withCommunity; // 3c Qc
-        
+
         card.SetByIndex(6);
         withCommunity.AddToHand(card);
-        
+
         card.SetByIndex(42);
         withCommunity.AddToHand(card);
-        
+
         std::cout << "Starting next round..." << endl;
-        
+
         CommunityPlus communityToTest; // Jc Ks Ah
-        
+
         card.SetByIndex(38);
         withCommunity.AddToHand(card);
         communityToTest.AddToHand(card);
-        
+
         card.SetByIndex(44);
         withCommunity.AddToHand(card);
         communityToTest.AddToHand(card);
-        
+
         card.SetByIndex(49);
         withCommunity.AddToHand(card);
         communityToTest.AddToHand(card);
-        
+
         const int8 cardsInCommunity = 3;
-        
-        
+
+
         StatResultProbabilities statprob;
-        
+
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
         statprob.core.foldcumu = statprob.core.handcumu;
         statprob.core.foldcumu.ReversePerspective();
-        
+
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
-        
-        
+
+
         const float64 testBet = 2.0;
-        
+
         OpponentHandOpportunity test(1, myTable, statprob.core);
-        
-        
-        
+
+
+
         test.query(testBet);
         const float64 actual_y = test.handsToBeat();
         const float64 actual_Dy = test.d_HandsToBeat_dbetSize();
-        
+
         assert(actual_y >= 3.5);
         assert(actual_Dy > 0); // betting more should increase N even more
-        
+
         CombinedStatResultsPessimistic testC(test, statprob.core);
         //testC.query(testBet);
-        
+
         const float64 s1 = testC.ViewShape(testBet).splits;
         const float64 w = testC.getWinProb(testBet);
         const float64 l = testC.getLoseProb(testBet);
         const float64 dw = testC.get_d_WinProb_dbetSize(testBet);
         const float64 dl = testC.get_d_LoseProb_dbetSize(testBet);
-        
+
         assert(testC.ViewShape(testBet).wins + testC.ViewShape(testBet).splits + testC.ViewShape(testBet).loss == 1.0);
-        
+
         assert(w < 0.1);
         assert(l+w > 0.86);
         assert(s1 < 0.25);
         assert(dw < 0);
         assert(dl == -dw);
     }
-    
-}
 
-/**
- * mode 0 & mode 1 are normal
- *
- * Use with two CPUs:
- * mode 2 means do only if i % 2 == 0
- * mode 3 means do only if i % 2 == 1
- *
- * Use with three CPUs:
- * mode 4 means do only if i % 3 == 0
- * mode 5 means do only if i % 3 == 1
- * mode 6 means do only if i % 3 == 2
- *
- * Use with four CPUs:
- * mode 7 means do only if i % 4 == 0
- * mode 8 means do only if i % 4 == 1
- * mode 9 means do only if i % 4 == 2
- * mode 10 means do only if i % 4 == 3
- *
- * Use with five CPUs:
- * mode 11 means do only if i % 5 == 0
- * ...
- *
- * mode === (1 + 2 + ... + (CPUs-1)) + order
- * mode - order === (1 + CPUs - 1)/2 * (CPUs-1)
- * mode - order === CPUs * (CPUs - 1)/2
- * mode - order === (CPUs^2 - CPUs)/2
- * CPUs^2 - CPUs - 2 mode + 2 order == 0
- * (CPUs - 0.5)^2 - 0.25 - 2 mode + 2 order = 0
- * CPUs = 0.5 +/- sqrt(0.25 + 2 (mode - order))
- * 2 CPUs = 1 +/- sqrt(1 + 8(mode-order))
- *
- * order is at least 1, so subtract it as a baseline
- *
- * CPUs = floor((sqrt(​8*​x-​7)+​1)/​2);
- */
-static void regenerateDb(int mode) {
-
-    // This is for easier parallelization
-    std::cout << "Mode: " << mode << "\n";
-
-    size_t CPUs = 0;
-    size_t offset = 0;
-    if (mode <= 1) {
-        CPUs = 1;
-    } else {
-        CPUs = std::floor((sqrt(8*mode - 7) + 1)/2);
-        offset = mode - CPUs * (CPUs - 1) / 2 - 1;
-    }
-
-    std::cout << "CPUs: " << CPUs << " offset: " << offset << "\n";
-
-
-    const int8 cardsInCommunity = 0;
-    
-    
-    
-    std::vector<struct DeckLocationPair> handList;
-    
-    // Pocket-pairs
-    for (int8 pocketRank = 0; pocketRank < 13; ++ pocketRank) {
-        DeckLocation card1;
-        card1.SetByIndex(pocketRank * 4);
-        
-        DeckLocation card2;
-        card2.SetByIndex(pocketRank * 4 + 1);
-        
-        handList.push_back(DeckLocationPair(card1, card2));
-        
-    }
-    
-    // All non-pairs
-    for (int8 firstCardRank = 0; firstCardRank < 13; ++firstCardRank) {
-        for(int8 secondCardRank = firstCardRank + 1; secondCardRank < 13; ++secondCardRank) {
-            // Suited
-            {
-                DeckLocation card1;
-                card1.SetByIndex(firstCardRank * 4);
-                
-                DeckLocation card2;
-                card2.SetByIndex(secondCardRank * 4 + 1);
-                
-                handList.push_back(DeckLocationPair(card1, card2));
-            }
-            
-            
-            // Not suited
-            {
-                DeckLocation card1;
-                card1.SetByIndex(firstCardRank * 4);
-                
-                DeckLocation card2;
-                card2.SetByIndex(secondCardRank * 4);
-                
-                handList.push_back(DeckLocationPair(card1, card2));
-                
-            }
-        }
-        
-    }
-    
-    
-    assert(handList.size() == 169);
-
-    size_t counter;
-    std::cout << "Begin CallStats.\n";
-    counter = 0;
-    for (const DeckLocationPair & holeCards : handList) {
-        if (counter % CPUs != offset) {
-            std::cout << "skip\n";
-            std::cout.flush();
-            ++counter;
-            continue;
-        }
-
-        CommunityPlus withCommunity;
-        
-        withCommunity.AddToHand(holeCards.first);
-        
-        withCommunity.AddToHand(holeCards.second);
-        
-        NamedTriviaDeck o;
-        o.OmitCards(withCommunity);
-        o.DiffHand(CommunityPlus::EMPTY_COMPLUS);
-        o.sortSuits();
-        string handName = o.NamePockets();
-        
-        
-        
-        StatResultProbabilities statprob;
-        
-        {
-            const time_t now = time(0);
-            std::cout << asctime(std::localtime(&now));
-            std::cout << "Computing   " << handName << "   CallStats (.holdemC)\n";
-            std::cout.flush(); // Flush for timestamping
-        }
-        
-        ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
-        
-
-
-        ++counter;
-
-        std::cout << "=== Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size()) << "   ===\n\n";
-        std::cout.flush(); // Flush for timestamping
-    }
-
-    std::cout << "Begin CommunityCallStats.\n";
-    counter = 0;
-    for (const DeckLocationPair & holeCards : handList) {
-        if (counter % CPUs != offset) {
-            std::cout << "skip\n";
-            std::cout.flush();
-            ++counter;
-            continue;
-        }
-
-        CommunityPlus withCommunity;
-
-        withCommunity.AddToHand(holeCards.first);
-
-        withCommunity.AddToHand(holeCards.second);
-
-        NamedTriviaDeck o;
-        o.OmitCards(withCommunity);
-        o.DiffHand(CommunityPlus::EMPTY_COMPLUS);
-        o.sortSuits();
-        string handName = o.NamePockets();
-
-
-
-        DistrShape dPCT(DistrShape::newEmptyDistrShape());
-
-
-        {
-            const time_t now = time(0);
-            std::cout << asctime(std::localtime(&now));
-            std::cout << "Computing " << handName << " DistrShape (depends on *.holdemW)\n";
-            std::cout.flush(); // Flush for timestamping
-        }
-
-        ///Compute CommunityCallStats
-        StatsManager::Query(&dPCT, withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
-        ++counter;
-        
-        std::cout << "=== Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size()) << "   ===\n\n";
-        std::cout.flush(); // Flush for timestamping
-    }
-    
-    const time_t now = time(0);
-    std::cout << asctime(std::localtime(&now));
-    
-    
 }
 
 int main(int argc, const char * argv[])
 {
 
-    
+
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
@@ -4691,7 +4495,7 @@ int main(int argc, const char * argv[])
     UnitTests::testRegression_007c();
     UnitTests::testRegression_002b();
     UnitTests::testRegression_003();
-    
+
     // Regression tests
 
     RegressionTests::testRegression_028();
@@ -4711,21 +4515,17 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_013a();
     RegressionTests::testRegression_014a();
     RegressionTests::testRegression_012();
-    
-    
+
+
     RegressionTests::testRegression_005();
     RegressionTests::testRegression_019();
 
 
 
-    
+
     // Regression/Unit hybrid
 
     RegressionTests::testRegression_008c();
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_002();
-
-    // Regenerate the DB?
-    //regenerateDb(argc);
 }
-

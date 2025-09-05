@@ -101,8 +101,12 @@ public:
 
     static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity, const string label);
 
+    // relies on `*.holdemW`
     static void Query(DistrShape* dPCT, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
+
+    // relies on `*.holdemC`
     static void QueryDefense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
+
     #ifdef GLOBAL_AICACHE_SPEEDUP
     static void QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n, CommunityCallStats  ** lastds=0);
     #else

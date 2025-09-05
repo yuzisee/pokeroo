@@ -313,6 +313,7 @@ std::cout.precision(old_precision);
 
 }
 
+// Pre-flop version of `StatsManager::QueryOffense` below.
 void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity)
 {
     PreflopCallStats pfcs(withCommunity, CommunityPlus::EMPTY_COMPLUS);
@@ -329,7 +330,6 @@ void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withComm
 void StatsManager::QueryOffense(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
 #endif
 {
-    string datafilename = "";
     if( n <= CACHEABLESTAGE )
     {
         QueryOffense(q, withCommunity);
@@ -462,6 +462,7 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
     q = newC;
 }
 
+// Does anyone call this? to trigger both QueryOffense and QueryDefense
 void StatsManager::Query(CallCumulation* offense, CallCumulation* defense, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
 {
     if( offense != 0 ) QueryOffense(*offense,withCommunity,onlyCommunity,n);
@@ -498,7 +499,7 @@ int8 PreflopCallStats::oppSuitedOcc(int8 * discount, char mySuited )
     }
 }
 
-// Set up a specific preflop hand (exctly two cards), and then call `StatsManager::Query` to trigger both QueryOffense and QueryDefense
+// Set up a specific preflop hand (exctly two cards), and then call `StatsManager::Query` which also happens to generate `*.holdemW` if you haven't already
 int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
 {
     CommunityPlus oppTempStrength;
@@ -506,6 +507,7 @@ int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
     NamedTriviaDeck handOpp;DeckLocation tempOpp;
     tempOpp.SetByIndex(carda);oppTempStrength.AddToHand(tempOpp);
     tempOpp.SetByIndex(cardb);oppTempStrength.AddToHand(tempOpp);
+
     handOpp.OmitCards(oppTempStrength);
     handOpp.sortSuits();
 
