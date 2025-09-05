@@ -97,13 +97,15 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
     <style>
         .two-columns {
             display: flex;
+            flex-direction: row;
         }
         .two-columns > div {
             flex: 1;
-            flex-direction: column;
 
             white-space: pre-wrap;
-            justify-content: flex-end;
+
+            display: flex;
+            flex-direction: column;
         }
         .history-text > div {
             border: 2px solid gray;
@@ -114,21 +116,36 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
         .stderr-theme {
             background-color: blue;
             color: silver;
+            font-family: sans-serif;
+        }
+        .raw-text-align-bottom {
+            justify-content: flex-end;
+        }
+        #appendable-label-stderr {
+            margin-top: auto;
+            margin-bottom: 0px;
         }
         #stdin-user-entry {
             background-color: lime;
             width: 100%;
+            font-size: 161.8%;
         }
     </style>
     <script src="heartbeat-init.js"></script>
     <script>
+      function has_string_content(obj, keyname) {
+        return obj.hasOwnProperty(keyname) && (obj[keyname] != null) && (obj[keyname] != "");
+      }
+
       function stream_text_from_server(message_event) {
         message_payload = JSON.parse(message_event.data);
-        if (message_payload.hasOwnProperty('stdout_append_txt')) {
+        if (has_string_content(message_payload, 'stdout_append_txt')) {
           document.getElementById('appendable-label-stdout').textContent += message_payload.stdout_append_txt;
+          document.getElementById('stdin-user-entry').scrollIntoView();
         }
-        if (message_payload.hasOwnProperty('stderr_append_txt')) {
+        if (has_string_content(message_payload, 'stderr_append_txt')) {
           document.getElementById('appendable-label-stdout').textContent += message_payload.stderr_append_txt;
+          document.getElementById('stdin-user-entry').scrollIntoView();
         }
       }
       // https://developer.mozilla.org/en-US/docs/Web/API/EventSource
@@ -136,10 +153,6 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
       const initial_text_stream = new EventSource("/stream");
       initial_text_stream.addEventListener("message", stream_text_from_server);
       // https://developer.mozilla.org/en-US/docs/Web/API/EventSource/readyState
-
-      initial_text_stream.addEventListener("close", function(event) {
-          alert("Server requested close:" + JSON.stringify(event.data));
-      });
 
       initial_text_stream.addEventListener("error", function(event) {
           alert("Stream error occurred " + JSON.stringify(event.data));
@@ -149,16 +162,16 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
   </head>
   <body>
     <div class="two-columns history-text">
-        <div id="stdout-history" class="stdout-theme"> <p>Sample text in left column, aligned to bottom.</p>
+        <div id="stdout-history" class="stdout-theme raw-text-align-bottom"> <p>Sample text in left column, aligned to bottom.</p>
         </div>
-        <div id="stderr-history">
+        <div id="stderr-history" class="raw-text-align-bottom">
             <p>Sample text in right column, aligned to bottom.</p>
         </div>
     </div>
     <div class="two-columns">
-        <div id="appendable-label-stdout" class="stdout-theme"></div>
-        <div class="stderr-theme"><p id="appendable-label-stderr" style="margin: 0px;"></p>
-<input id="stdin-user-entry" type="text" placeholder="Enter text here"></div>
+        <div id="appendable-label-stdout" class="stdout-theme raw-text-align-bottom"></div>
+        <div class="stderr-theme"><p id="appendable-label-stderr"></p>
+<input id="stdin-user-entry" type="text" placeholder="⌨"></div>
     </div>
     <script>
       var userEntryEl = document.getElementById('stdin-user-entry');
@@ -346,7 +359,8 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
     def shutdown_and_stop_stream(self):
         self.server_sent_events_stream = False
         # https://docs.python.org/3/library/socketserver.html#socketserver.BaseServer.shutdown
-        self.shutdown()
+        super().shutdown()
+        print('socketserver.BaseServer.shutdown DONE')
 
     def kill_server_and_console_app(self):
         if self._console_app is not None:
@@ -414,6 +428,7 @@ def run_server(httpd: socketserver.ThreadingTCPServer) -> threading.Thread:
 
 def stop_server(httpd: socketserver.ThreadingTCPServer, server_thr: threading.Thread):
     httpd.shutdown_and_stop_stream()
+    print('Waiting for server thread to complete')
     server_thr.join()
 
 def open_browser(port: int):
@@ -463,6 +478,7 @@ def run_cmd(cmd_args, cmd_cwd, cmd_env=None, stdout_callback = lambda s: sys.std
         stderr_capturer.start()
         # Run to completion! (We might abort early if `ConsoleSeparateWebview.kill_server_and_console_app` gets triggered by `HeartbeatThread`
         stdout_capturer.join()
+        print('Waiting to flush stderr', file=sys.stderr)
         stderr_capturer.join()
 
         # INVARIANT: If you get here, the original subprocess.Popen is done
