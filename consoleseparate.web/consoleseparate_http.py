@@ -45,7 +45,7 @@ class HeartbeatThread(threading.Thread):
                 missed_heartbeats += 1
 
                 if missed_heartbeats > 2:
-                    print('Warning: lost connection to webpage ' + json.dumps({'missed_heartbeats': missed_heartbeats}))
+                    print('Warning: lost connection to webpage ' + json.dumps({'missed_heartbeats': missed_heartbeats}) + ' out of ' + str(ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED))
 
         # INVARIANT: If you get here, we exceeded ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED.
 
@@ -90,9 +90,9 @@ CONSOLESEPARATE_HTML_PROLOGUE = """
   <head>
     <meta charset="utf-8">
 """
-ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED = 21000 / 3000
-HEARTBEAT_MILLIS_JS = "var heartbeat_millis = 3000;"
-HEARTBEAT_INTERVAL_MILLIS = 3000
+ABORT_IF_N_CONSECUTIVE_HEARTBEATS_MISSED = 90 # 90 × 8s = 12 minutes
+HEARTBEAT_MILLIS_JS = "var heartbeat_millis = 8000;"
+HEARTBEAT_INTERVAL_MILLIS = 8000
 CONSOLESEPARATE_HTML_EPILOGUE = r"""
     <style>
         body {
@@ -125,6 +125,7 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
         .stdout-theme {
             color: black;
             background-color: DarkOrange;
+            font-family: sans-serif;
         }
         .stderr-theme {
             background-color: DarkGreen;
@@ -136,12 +137,12 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
         }
         #appendable-label-stdout {
             padding-bottom: calc(1.382 * 0.382em);
-            text-align: right;
             font-family: monospace;
         }
         #appendable-label-stderr {
             margin-top: auto;
             margin-bottom: 0px;
+            font-family: serif;
         }
         #stdin-user-entry {
             background-color: Yellow;
@@ -223,6 +224,10 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
               req.send();
           }
       });
+
+      userEntryEl.addEventListener('mouseover', function(mouse_event) {
+        userEntryEl.focus();
+      });
     </script>
   </body>
 </html>
@@ -263,7 +268,7 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
 
             user_entry_stdin = stdin_payload[0]
 
-            if user_entry_stdin.strip():
+            if user_entry_stdin:
                # Send the command to `self.server._console_app` and simulate a long-poll that waits for a response
                self.server.receive_stdin(user_entry_stdin)
 
@@ -453,11 +458,11 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
 
     def receive_stdin(self, user_input_send_chars: str):
         self._b_waiting_for_calculations = True
-        print('SENDING STDIN → ' + repr(user_input_send_chars))
-        print(repr(user_input_send_chars.encode('ascii')))
+        # print('SENDING STDIN → ' + repr(user_input_send_chars))
+        # print(repr(user_input_send_chars.encode('ascii')))
         self._console_app.stdin.write(user_input_send_chars.encode('ascii'))
         self._console_app.stdin.flush()
-        print('sent!')
+        # print('sent!')
 
     def append_stdout(self, append_text: str):
         self._stdout_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
@@ -465,8 +470,8 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
             self._b_waiting_for_calculations = False
 
     def append_stderr(self, append_text: str):
-        if append_text.strip():
-            print('STDERR: ' + append_text)
+        # if append_text.strip():
+        #     print('STDERR: ' + append_text)
         self._stderr_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
         if len(append_text.strip()) > 0:
             self._b_waiting_for_calculations = False

@@ -55,4 +55,4 @@ with open("{gamelog_file}", 'a') as f:
 
 
 if __name__ == '__main__':
-    main('You')
+    main('Player')

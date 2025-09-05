@@ -250,7 +250,7 @@ void HoldemArena::BeginNewHands(std::ostream &gamelog, const BlindValues & round
         startRoundPlayers.ResetNewHands(livePlayers);
         playersActiveDuringFirstBetOfRound = startRoundPlayers; // Note: post-flop onward this should track startRoundPlayers; post-flop you can't really fold first (you would instead check)
     }
-        
+
     myPot        = 0;
     prevRoundPot = 0;
     prevRoundFoldedPot = 0;
@@ -266,7 +266,8 @@ void HoldemArena::BeginNewHands(std::ostream &gamelog, const BlindValues & round
 
     if( bVerbose )
     {
-        gamelog << "================================================================" << endl;
+
+        gamelog << "────────────────────────────────────────────────────────────────" << endl;
         gamelog << "============================New Hand" <<
         " #"<< handnum <<
         "========================" << endl;
@@ -461,7 +462,3 @@ int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation
 
     return PlayRound(community,5, gamelog);
 }
-
-
-
-

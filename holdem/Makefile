@@ -47,6 +47,15 @@ test:
 	echo $(HEADERS_SRC)
 	echo $(BUILD_SRC)
 	echo $(CORE_OBJS)
+	$(CXX) $(CXXFLAGS) -o bin/unittests -Isrc $(wildcard src/*.cpp) unittests/main.cpp
+	HOLDEMDB_PATH=~/pokeroo-run/lib/holdemdb/ bin/unittests
+
+db:
+	mkdir -p /tmp/opening_book
+	clang++ $(CXXFLAGS) -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
+	date
+	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book
+	date
 
 clean:
 	rm -R $(BUILD_DIR)

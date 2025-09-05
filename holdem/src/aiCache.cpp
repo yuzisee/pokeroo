@@ -612,6 +612,7 @@ void PreflopCallStats::initPC()
 }
 
 
+// @return e.g. 'AKs' or '72x'
 string NamedTriviaDeck::NamePockets() const
 {
     stringstream ss;
@@ -660,7 +661,11 @@ string NamedTriviaDeck::NamePockets() const
         }
     }
 #ifdef DEBUGASSERT
-	std::cerr << "Invalid NamePockets()";
+	std::cerr << "Invalid NamePockets() " << endl;
+	std::cerr << "♠ " << OrderedDeck::dealtHand[0] << endl;
+	std::cerr << "♡ " << OrderedDeck::dealtHand[1] << endl;
+	std::cerr << "♣ " << OrderedDeck::dealtHand[2] << endl;
+	std::cerr << "♢ " << OrderedDeck::dealtHand[3] << endl;
 	exit(1);
 #endif
     ss << "?";

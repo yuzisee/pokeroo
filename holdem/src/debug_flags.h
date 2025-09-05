@@ -49,8 +49,10 @@
 
 /* AI Processing Interface */
 
-#undef PROGRESSUPDATE
-#undef SUPERPROGRESSUPDATE
+// #define PROGRESSUPDATE
+// #define SUPERPROGRESSUPDATE
+// [!TIP]
+// You can explicitly `#undef`  if you don't want to allow for Makefile control of these variables
 #undef DEBUG_TESTDEALINTERFACE
 
 /***********************/
@@ -67,5 +69,3 @@
 /* functionbase.h Debugging */
 #undef DEBUG_TRACE_ZERO
 #undef DEBUG_TRACE_SEARCH
-
-
