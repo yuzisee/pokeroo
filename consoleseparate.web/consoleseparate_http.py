@@ -102,17 +102,18 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
             flex: 1;
             flex-direction: column;
 
-            border: 2px solid gray;
+            white-space: pre-wrap;
+            justify-content: flex-end;
         }
         .history-text > div {
-            justify-content: flex-end;
-            white-space: pre-wrap;
+            border: 2px solid gray;
         }
         .stdout-theme {
             background-color: magenta;
         }
         .stderr-theme {
             background-color: blue;
+            color: silver;
         }
         #stdin-user-entry {
             background-color: lime;
@@ -120,42 +121,54 @@ CONSOLESEPARATE_HTML_EPILOGUE = """
         }
     </style>
     <script src="heartbeat-init.js"></script>
-  </head>
-  <body>
-    <div class="two-columns history-text">
-        <div id="stdout-history" class="stdout-theme">
-            <p>Sample text in left column, aligned to bottom.</p>
-        </div>
-        <div id="stderr-history">
-            <p>Sample text in right column, aligned to bottom.</p>
-        </div>
-    </div>
-    <div class="two-columns">
-        <div id="appendable-label-stdout" class="stdout-theme">
-            <p>Latest text in left column, aligned to bottom.</p>
-        </div>
-        <div class="appendable-label-stderr" class="stderr-theme">
-            <p>Sample text in right column, aligned to bottom.</p>
-            <input id="stdin-user-entry" type="text" placeholder="Enter text here">
-        </div>
-    </div>
     <script>
-      var userEntryEl = document.getElementById('stdin-user-entry');
-      userEntryEl.focus();
-
       function stream_text_from_server(message_event) {
-        if (message_event.hasOwnProperty('stdout_append_txt')) {
-          document.getElementById('appendable-label-stdout').textContent += message_event.stdout_append_txt;
+        message_payload = JSON.parse(message_event.data);
+        if (message_payload.hasOwnProperty('stdout_append_txt')) {
+          document.getElementById('appendable-label-stdout').textContent += message_payload.stdout_append_txt;
         }
-        if (message_event.hasOwnProperty('stderr_append_txt')) {
-          document.getElementById('appendable-label-stdout').textContent += message_event.stderr_append_txt;
+        if (message_payload.hasOwnProperty('stderr_append_txt')) {
+          document.getElementById('appendable-label-stdout').textContent += message_payload.stderr_append_txt;
         }
       }
       // https://developer.mozilla.org/en-US/docs/Web/API/EventSource
 
       const initial_text_stream = new EventSource("/stream");
       initial_text_stream.addEventListener("message", stream_text_from_server);
+      // https://developer.mozilla.org/en-US/docs/Web/API/EventSource/readyState
 
+      initial_text_stream.addEventListener("close", function(event) {
+          alert("Server requested close:" + JSON.stringify(event.data));
+      });
+
+      initial_text_stream.addEventListener("error", function(event) {
+          alert("Stream error occurred " + JSON.stringify(event.data));
+          // You could implement custom reconnection logic here if needed
+      });
+    </script>
+  </head>
+  <body>
+    <div class="two-columns history-text">
+        <div id="stdout-history" class="stdout-theme"> <p>Sample text in left column, aligned to bottom.</p>
+        </div>
+        <div id="stderr-history">
+            <p>Sample text in right column, aligned to bottom.</p>
+        </div>
+    </div>
+    <div class="two-columns">
+        <div id="appendable-label-stdout" class="stdout-theme"></div>
+        <div class="stderr-theme"><p id="appendable-label-stderr" style="margin: 0px;"></p>
+<input id="stdin-user-entry" type="text" placeholder="Enter text here"></div>
+    </div>
+    <script>
+      var userEntryEl = document.getElementById('stdin-user-entry');
+      userEntryEl.focus();
+
+      userEntryEl.addEventListener('keydown', function(keyboard_event) {
+          if (keyboard_event.keyCode === 13) {
+              alert('TODO 1');
+          }
+      });
     </script>
   </body>
 </html>
@@ -223,6 +236,8 @@ if (typeof Worker !== "undefined") {
   myWorker.onmessage = function(message_event) {
     navigator.sendBeacon('/heartbeat', message_event.data);
   };
+
+  // TODO(from joseph): Use `document.addEventListener('visibilitychange', () => {` to extend the timeout when we know we're backgrounded
 } else {
 """ + HEARTBEAT_MILLIS_JS + """
 
@@ -263,7 +278,6 @@ setInterval(heartBeat_workermessage, heartbeat_millis);
             # =================
             # OK! MAIN CODEPATH
             # =================
-            print('Trying to stream')
 
             # https://developer.mozilla.org/en-US/docs/Web/API/EventSource/message_event
             self.send_response(200)
@@ -271,11 +285,14 @@ setInterval(heartBeat_workermessage, heartbeat_millis);
             self.send_header('Cache-Control', 'no-cache')
             self.send_header('Connection', 'keep-alive')
             self.end_headers()
+
+            # sse_retry_millis = math.ceil(1000.0 / STREAMING_FPS)
+            # self.wfile.write(f"retry: {sse_retry_millis}\n\n".encode('utf-8'))
             # Simulate streaming text with delays
-            while not self.server.no_more_data_on_the_way():
+            while self.server.server_sent_events_stream:
                 # https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
                 message_payload = self.server.latest_data()
-                if all(v is None for v in message_payload.values):
+                if all(v is None for v in message_payload.values()):
                     # Nothing to send yet (but until `no_more_data_on_the_way()` we gotta keep waiting)
                     time.sleep(1.0 / STREAMING_FPS)
                 else:
@@ -283,9 +300,7 @@ setInterval(heartBeat_workermessage, heartbeat_millis);
                     self.wfile.write(f"data: {message_json}\n\n".encode('utf-8'))
                     self.wfile.flush()
 
-                    print('Streamed ' + message_json)
-
-            print('end stream')
+            print('End stream')
         else:
             self.send_response(404) # "Not Found"
             self.end_headers()
@@ -297,14 +312,17 @@ class ConsoleSeparateMessageEvent(typing.TypedDict):
 class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
     _stdout_queue: queue.SimpleQueue
     _stderr_queue: queue.SimpleQueue
+    server_sent_events_stream: bool
     _b_stderr_input_enable: bool
-    _console_app: subprocess.Popen
     _html_title: str
+    _heartbeat: HeartbeatThread
+    _console_app: subprocess.Popen
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self._stdout_queue = queue.SimpleQueue()
         self._stderr_queue = queue.SimpleQueue()
+        self.server_sent_events_stream = True
         self._b_stderr_input_enable = True
         self._html_title = '<title>👤👥🂠⛁</title>'
         self._heartbeat = HeartbeatThread(self)
@@ -325,13 +343,17 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
               print(f'Race condition? {e.args}')
               # https://docs.python.org/3/library/threading.html#threading.Thread.start
 
+    def shutdown_and_stop_stream(self):
+        self.server_sent_events_stream = False
+        # https://docs.python.org/3/library/socketserver.html#socketserver.BaseServer.shutdown
+        self.shutdown()
+
     def kill_server_and_console_app(self):
         if self._console_app is not None:
             self._console_app.terminate()
             # Do we also need `self._console_app.kill()` in the rare case that `.terminate()` fails?
 
-        # https://docs.python.org/3/library/socketserver.html#socketserver.BaseServer.shutdown
-        self.shutdown()
+        self.shutdown_and_stop_stream()
 
     def connect_to_console_app(self, subprocess_popen: subprocess.Popen):
         self._console_app = subprocess_popen
@@ -344,11 +366,11 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
 
     @staticmethod
     def render_text(new_text: str) -> str:
-        txt = new_text.replace('\r','')
+        # txt = new_text.replace('\r','')
         if POKER_REPLACE:
-            return re.sub(r'\b[2-9TJQKA][cdhs]\b', lambda m: m.group(0).replace('s', u'\u2664').replace('h', u'\u2661').replace('c', u'\u2663').replace('d', u'\u2662'), txt)
+            return re.sub(r'\b[2-9TJQKA][cdhs]\b', lambda m: m.group(0).replace('s', u'\u2664').replace('h', u'\u2661').replace('c', u'\u2663').replace('d', u'\u2662'), new_text)
         else:
-            return txt
+            return new_text
 
     def receive_stdin(self, user_input_send_chars: str):
         self._b_stderr_input_enable = False
@@ -356,8 +378,9 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
         self._console_app.flush()
 
     def append_stdout(self, append_text: str):
-        print('GOT MESSAGE: ' + append_text)
+        # print('GOT MESSAGE: ' + append_text)
         self._stdout_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
+        # print('Enqueued.')
 
     def append_stderr(self, append_text: str):
         self._stderr_queue.put(ConsoleSeparateWebview.render_text(append_text), True)
@@ -390,7 +413,7 @@ def run_server(httpd: socketserver.ThreadingTCPServer) -> threading.Thread:
     return new_thr
 
 def stop_server(httpd: socketserver.ThreadingTCPServer, server_thr: threading.Thread):
-    httpd.shutdown()
+    httpd.shutdown_and_stop_stream()
     server_thr.join()
 
 def open_browser(port: int):
