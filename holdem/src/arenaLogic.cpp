@@ -176,8 +176,8 @@ void HoldemArena::ProcessShowdownResults(vector<ShowdownRep> & winners, std::ost
 {
 
 	size_t vectorSize=winners.size();
-	double winnable;
-
+	double winnable; // TODO(from joseph): Shouldn't this be `float32 or float64` to be consistent?
+  // ^^^ See also src/holdem2.h#ShowdownRep::revtiebreak
 
 	///Prepare for sorting
 	for(size_t i=0;i<vectorSize;++i)
@@ -309,7 +309,7 @@ void HoldemArena::foldActionOccurred()
 {
     //NumberInHand always decrements with a fold.
     --(playersInHand.total);
-    
+
     //By comparison, NumberAtFirstAction decrements until a non-fold action is taken.
     if (curFirstNonfold == -1) {
         // since all actions so far have been folds, continue to track playersInHand
@@ -322,10 +322,10 @@ void HoldemArena::nonfoldActionOccurred()
     // We received a non-fold! Is this the first one of the round?
     if (curFirstNonfold == -1) {
         // Yes!
-        
+
         // Save the current value of playersInHand ...
         playersActiveDuringFirstBetOfRound = playersInHand;
-        
+
         // ... for the remainder of the round
         curFirstNonfold = curIndex;
     }
@@ -508,7 +508,7 @@ int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize,
 		gamelog <<endl;
 #endif
 	}
-    
+
 
 
     HoldemArenaBetting b( this, community, comSize, &gamelog );
@@ -670,6 +670,3 @@ void HoldemArena::RefreshPlayers(std::ostream *spectateLog)
 
 
 }
-
-
-

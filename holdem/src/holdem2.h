@@ -82,7 +82,7 @@ public:
 	virtual void DisplayHandText(std::ostream&) const;
     virtual void DisplayHandBig(std::ostream&) const;
     void PrintInterpretHand(std::ostream&) const;
-}
+} // end CommunityPlus
 ;
 
 
@@ -221,7 +221,7 @@ class ShowdownRep
 		in JUST the right order, such that our organizeWinnings() can process
 		them in O(n) time. Have a look at organizeWinnings() for more!
 	*/
-}
+} // end ShowdownRep
 ;
 
 
