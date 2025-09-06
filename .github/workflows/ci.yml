@@ -6,6 +6,7 @@ on:
     branches:
       - master
     paths:
+      - '.github/workflows/ci.yml'
       - 'holdem/appsrc/**'
       - 'holdem/libsrc/**'
       - 'Makefile'
@@ -15,6 +16,7 @@ on:
   pull_request:
     types: [synchronize, opened]
     paths:
+      - '.github/workflows/ci.yml'
       - 'holdem/appsrc/**'
       - 'holdem/libsrc/**'
       - 'Makefile'
@@ -29,6 +31,10 @@ jobs:
     runs-on: 'ubuntu-24.04'
     timeout-minutes: 3
     steps:
+    - name: Install ctags (needed by Makefile `tags` target)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y universal-ctags
     - uses: actions/checkout@v5
     - name: Must compile successfully
       run: cd holdem && make
