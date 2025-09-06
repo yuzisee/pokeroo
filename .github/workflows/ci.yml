@@ -46,7 +46,7 @@ jobs:
     - name: Extract opening book (speedup unit test runtime)
       run: |
         mkdir -v -p ~/pokeroo-run/lib/holdemdb
-        unzip -v holdem/holdemdb_arm64.zip -d ~/pokeroo-run/lib/holdemdb/
+        unzip holdem/holdemdb_arm64.zip -d ~/pokeroo-run/lib/holdemdb/
         # ~/pokeroo-run/lib/holdemdb ← is because of the runtime path used in the `test` target of the Makefile
     - name: Must pass unit tests
       run: cd holdem && make test
