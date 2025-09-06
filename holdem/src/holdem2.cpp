@@ -158,6 +158,8 @@ void CommunityPlus::DisplayHandBig(std::ostream& targetFile) const
 	HandPlus::DisplayHandBig(targetFile);
 }
 
+// TODO(from joseph): Investigate https://github.com/llvm/llvm-project/issues/74101 and we might be able to accomplish it in a single instruction
+//                    In any case we can make this _much_ faster in all likelihood
 void CommunityPlus::cleanLastTwo()
 {
 	const int8 VALUESETSHIFT = 2;
@@ -178,7 +180,8 @@ void CommunityPlus::cleanLastTwo()
     valueset <<= shiftCount + VALUESETSHIFT;
 }
 
-
+// TODO(from joseph): Improve cache locality by loading critical member variables into local variables.
+//                    Especially, `cardset[0..4]`, bFlushSuit, cardset[bFlushSuit]
 void CommunityPlus::evaluateStrength()
 {
 
@@ -672,5 +675,3 @@ CommunityPlus::CommunityPlus()
 {
 	SetEmpty();
 }
-
-

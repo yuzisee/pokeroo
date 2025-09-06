@@ -22,6 +22,8 @@
 #include "holdem2.h"
 #include "ai.h"
 
+// TODO(from joseph): I've heard that runtime performance is dominated by optimal caching & data layout.
+// When you get a chance, see if we can improve the caching & data layout for the sole purpose of significant runtime speedups (with a focus on changes that modern compilers probably aren't doing for us already under the hood)
 float64 DealRemainder::DealCard(Hand& h)
 {
     const int8 & qprevSuit = prevSuit[dealt.Suit];
@@ -83,6 +85,8 @@ float64 DealRemainder::DealCard(Hand& h)
 		{
             //Essentially, we need to avoid adding to this suit, since it is the same as the last suit, which would already
             //have been counted for double!
+
+            // TODO(from joseph): LLMs say this codepath is impossible? Add an assert and see...
 			SetNextSuit();
 			return DealCard(h);
 		}
@@ -125,7 +129,7 @@ float64 DealRemainder::DealCard(Hand& h)
 
 
 	return occBase/matchesNew;
-}
+} // end DealCard
 
 
 DealRemainder::~DealRemainder()

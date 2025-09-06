@@ -641,6 +641,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuant
     float64 y1 = f(x1);
     float64 y2 = f(x2);
 
+    // See unittests/main.cpp#testRegression_028
     if (y1 == 0) return y1;
     if (y2 == 0) return y2;
 
