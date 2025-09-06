@@ -37,6 +37,7 @@
 #include "arenaSave.h"
 #include "blinds.h"
 #include <fstream>
+#include <limits>
 #include <string>
 
 #ifdef GLOBAL_AICACHE_SPEEDUP

@@ -26,18 +26,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  automated_tests:
-    name: 'Build and test'
+  automated_build:
+    name: 'Build (see Makefile)'
     runs-on: 'ubuntu-24.04'
     timeout-minutes: 3
-    steps:
+    - uses: actions/checkout@v5
     - name: Install ctags (needed by Makefile `tags` target)
       run: |
         sudo apt-get update
         sudo apt-get install -y universal-ctags
-    - uses: actions/checkout@v5
     - name: Must compile successfully
       run: cd holdem && make
+
+  automated_tests:
+    name: 'Test (see holdem/unittests/main.cpp)'
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 3
+    steps:
+    - uses: actions/checkout@v5
+    - name: Extract opening book (speedup unit test runtime)
+      run: unzip holdem/holdemdb_arm64.zip -d ~/pokeroo-run/lib/holdemdb
+      # ~/pokeroo-run/lib/holdemdb ← matches the runtime path used by the `test` target of the Makefile
     - name: Must pass unit tests
       run: cd holdem && make test
 
