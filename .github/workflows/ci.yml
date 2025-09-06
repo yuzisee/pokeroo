@@ -30,6 +30,7 @@ jobs:
     name: 'Build (see Makefile)'
     runs-on: 'ubuntu-24.04'
     timeout-minutes: 3
+    steps:
     - uses: actions/checkout@v5
     - name: Install ctags (needed by Makefile `tags` target)
       run: |
