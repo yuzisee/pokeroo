@@ -1017,12 +1017,18 @@ namespace RegressionTests {
         static const float64 a6[] = {
             std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN(),
+            std::numeric_limits<float64>::signaling_NaN(),
+            // [!NOTE]
+            // We need a fourth "check" here, otherwise you'll hit
+            //   * Assertion failed: (i < bets.size()), function MakeBet, file main.cpp, line 938.
+            //   * via HoldemArena::PlayRound (loops until `curIndex` gets to 6)
+            //   * during `HoldemArena::PlayRound_River` below
             std::numeric_limits<float64>::signaling_NaN()
+            // This fourth "check" action never happened in reality because the original bug wouled have crashed during P4's action on the river (and therefore P3 would never have had a chance to act)
         };
         FixedReplayPlayerStrategy d6(VectorOf(a6));
         myTable.ManuallyAddPlayer("P3", 204.0, &d6);
-
-
+        // P3 will call pre-flop and then check 3 times
 
 
 
@@ -1071,11 +1077,14 @@ namespace RegressionTests {
                DeckLocation myRiver;
                myRiver.SetByIndex(16);
 
-        // Failing?
-        // Assertion failed: (i < bets.size()), function MakeBet, file main.cpp, line 938.
-        // HoldemArena::PlayRound (loops until `curIndex` gets to 6)
-        // HoldemArena::PlayRound_River
         myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
+        // Original failure:
+        // HoldemArena::PlayRound_River → HoldemArena::PlayRound (loops until `curIndex` gets to 2)
+        //   → PureGainStrategy::MakeBet → PositionalStrategy::solveGainModel → HoldemFunctionModel::FindFoldBet
+        //   which calls `ScalarFunctionModel::FindZero`
+        //   but it had a bug causing the subsequent...
+        //    → StateModel::f → StateModel::query → StateModel::g_raised → AutoScalingFunction::f_raised → AutoScalingFunction::query → GainModelNoRisk::g → GainModelNoRisk::h
+        //    to crash at the "You can't lose more than all your money: GainModelNoRisk" assertion
 
 
     }
@@ -4477,6 +4486,8 @@ namespace RegressionTests {
 
 }
 
+// HOLDEMDB_PATH=/Users/joseph/pokeroo-run/lib/holdemdb /Users/joseph/Documents/pokeroo/holdem
+// /Users/joseph/Documents/pokeroo/holdem/unittests
 int main(int argc, const char * argv[])
 {
 

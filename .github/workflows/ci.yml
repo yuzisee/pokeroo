@@ -1,0 +1,36 @@
+name: CI
+
+# https://github.com/orgs/community/discussions/26276
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'holdem/appsrc/**'
+      - 'holdem/libsrc/**'
+      - 'Makefile'
+      - 'holdem/sim/**'
+      - 'holdem/src/**'
+      - 'holdem/unittests/**'
+  pull_request:
+    types: [synchronize, opened]
+      - 'holdem/appsrc/**'
+      - 'holdem/libsrc/**'
+      - 'Makefile'
+      - 'holdem/sim/**'
+      - 'holdem/src/**'
+      - 'holdem/unittests/**'
+  workflow_dispatch:
+
+jobs:
+  automated_tests:
+    name: 'Build and test'
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 3
+    steps:
+    - uses: actions/checkout@v5
+    - name: Must compile successfully
+      run: cd holdem && make
+    - name: Must pass unit tests
+      run: cd holdem && make test
+

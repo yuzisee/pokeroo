@@ -4,7 +4,7 @@ CXXFLAGS_RELATED_HEADERS_OPT = -Os
 # `-ffast-math` also? If you're not worried about floating point...
 CXXFLAGS_EXECUTABLE_CHAIN = -O -fpic
 #The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
-CXXFLAGS += -g -Wall
+CXXFLAGS += -g -Wall -Wextra
 
 EXT_SRC_DIRS = appsrc libsrc
 SRC_DIRS = src $(EXT_SRC_DIRS)
@@ -52,8 +52,8 @@ test:
 	echo $(CORE_OBJS)
 	clang++ $(CXXFLAGS) -o bin/unittests_clang -Isrc $(wildcard src/*.cpp) unittests/main.cpp
 	g++ $(CXXFLAGS) -O3 -o bin/unittests_gcc_O3 -Isrc $(wildcard src/*.cpp) unittests/main.cpp
-	HOLDEMDB_PATH=~/pokeroo-run/lib/holdemdb/ bin/unittests_clang
-	HOLDEMDB_PATH=~/pokeroo-run/lib/holdemdb/ bin/unittests_gcc_O3
+	echo ~/pokeroo-run/lib/holdemdb/ > unittests/holdemdb.ini
+	cd unittests && ../bin/unittests_clang && ../bin/unittests_gcc_O3
 
 # `-fno-exceptions -fno-rtti` maybe?
 db:
@@ -72,6 +72,8 @@ depends:
 # Each of our `.d` files also lists the header files it depended on.
 # This `include` ensures that if any `*.h` file changes, any relevant `*.cpp` files will also be rebuilt.
 -include $(BUILD_DEPS)
+# [!TIP]
+# Remember that these builds will be triggered even if you `make test` or `make db` etc.
 
 tags: $(BUILD_SRC) $(HEADERS_SRC)
 	ctags $^
