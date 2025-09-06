@@ -1,4 +1,4 @@
-TODO(from joseph): Run unit tests once, then clean warnings
+TODO(from joseph): Pass unit tests, then clean warnings
 
 # Getting started
 ```sh
@@ -14,7 +14,7 @@ make
 cd "$(git rev-parse --show-toplevel)"
 
 mkdir -p ~/pokeroo-run/lib
-unzip holdem/holdemdb.zip -d ~/pokeroo-run/lib/holdemdb/ # or, regenerate them (see below)
+unzip holdem/holdemdb_arm64.zip -d ~/pokeroo-run/lib/holdemdb/ # or, regenerate them (see below)
 
 touch ~/pokeroo-run/lib/__init__.py
 cp -v consoleseparate.web/* ~/pokeroo-run/lib/
@@ -31,10 +31,32 @@ python3 NewGame.Python.py
 
 # Troubleshooting
 
+### Run unit tests
+```sh
+make test
+```
+
 ### Regenerate the opening book
 
 Edit `src/debug_flags.h` to set SUPERPROGRESSUPDATE if needed
 ```sh
 make db
 ```
-TODO(from joseph): Use the `int mode` mult-threading tools provided by `regenerateDb`
+Or, even better use the `int mode` mult-threading tools provided by `regenerateDb`
+- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 2`
+- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 3`
+
+vs.
+
+- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 4`
+- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 5`
+- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 6`
+
+vs.
+
+- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 7`
+- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 8`
+- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 9`
+- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 10`
+
+etc.
