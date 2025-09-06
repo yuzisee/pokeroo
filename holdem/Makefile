@@ -2,9 +2,9 @@
 CXX = g++
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
 CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -flto -march=native
-CXXFLAGS_EXECUTABLE_CHAIN = -O -fpic
+CXXFLAGS_EXECUTABLE_CHAIN = -O -fpic -Wextra
 #The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
-CXXFLAGS += -g -Wall -Wextra
+CXXFLAGS += -g -Wall
 
 EXT_SRC_DIRS = appsrc libsrc
 SRC_DIRS = src $(EXT_SRC_DIRS)
@@ -101,7 +101,7 @@ $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo
 	@echo "Rebuilding $@ [$?]:"
-	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_CHAIN) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_CHAIN) -Wno-unused-parameter -c -o $@ $<
 
 $(STATIC_OBJ_CPP): $(CORE_OBJS)
 	@mkdir -p $(dir $@)

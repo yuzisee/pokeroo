@@ -69,9 +69,9 @@ class MultiStrategy : public virtual HistoryStrategy
     {
     }
 
-    virtual void SeeOppHand(const int8, const Hand&);
-    virtual void SeeCommunity(const Hand&, const int8);
-    virtual float64 MakeBet();
+    void SeeOppHand(const int8, const Hand&) override;
+    void SeeCommunity(const Hand&, const int8) override;
+    float64 MakeBet() override;
 
     void Serialize( std::ostream& saveFile ) override final;
     void Unserialize( std::istream& loadFile ) override final;
