@@ -52,10 +52,16 @@ test:
 	echo $(CORE_OBJS)
 	mkdir -v -p bin
 	date
+	echo '::group::Compile bin/unittests_clang'
 	clang++ $(CXXFLAGS) -D RTTIASSERT -o bin/unittests_clang -Isrc $(wildcard src/*.cpp) unittests/main.cpp
+	echo '::endgroup::'
 	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
 	date
+	echo '::group::Compile bin/unittests_gcc_O3'
 	g++ $(CXXFLAGS) -D RTTIASSERT -O3 -o bin/unittests_gcc_O3 -Isrc $(wildcard src/*.cpp) unittests/main.cpp
+	echo '::endgroup::'
+	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
+	date
 	echo ~/pokeroo-run/lib/holdemdb/ > unittests/holdemdb.ini
 	cd unittests && ../bin/unittests_clang && ../bin/unittests_gcc_O3
 
