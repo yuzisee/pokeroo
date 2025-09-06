@@ -577,7 +577,7 @@ std::ifstream loadFile;
 
         const uint32 NUM_OPPONENTS = 8;
         const uint32 rand765 = 1 + ((blindIncrFreq + tokenRandomizer)^(blindIncrFreq*tokenRandomizer));
-        const uint64_t rand8432 = 1 + (labs(blindIncrFreq - tokenRandomizer)^(blindIncrFreq*tokenRandomizer));
+        const uint64_t rand8432 = 1 + (labs(static_cast<int32_t>(blindIncrFreq) - static_cast<int32_t>(tokenRandomizer))^(blindIncrFreq*tokenRandomizer));
         const uint32 rand8 = rand8432%8;
         const uint32 rand432 = static_cast<uint32>(rand8432/8);
         const uint32 randSeed = rand8 + (rand765%(7*6*5))*8 + (rand432%(4*3*2))*(8*7*6*5);

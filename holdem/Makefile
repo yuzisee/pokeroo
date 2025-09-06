@@ -2,9 +2,11 @@
 CXX = g++
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
 CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -flto -march=native
-CXXFLAGS_EXECUTABLE_CHAIN = -O -fpic -Wextra
+CXXFLAGS_EXECUTABLE_CHAIN = -O -fpic -Wextra -Wno-parentheses
 #The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
 CXXFLAGS += -g -Wall
+# [!NOTE]
+# We manually override with `-Wno-unused-parameter` below in some spots
 
 EXT_SRC_DIRS = appsrc libsrc
 SRC_DIRS = src $(EXT_SRC_DIRS)
