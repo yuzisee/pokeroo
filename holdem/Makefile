@@ -50,6 +50,7 @@ test:
 	echo $(HEADERS_SRC)
 	echo $(BUILD_SRC)
 	echo $(CORE_OBJS)
+	mkdir -v -p bin
 	clang++ $(CXXFLAGS) -o bin/unittests_clang -Isrc $(wildcard src/*.cpp) unittests/main.cpp
 	g++ $(CXXFLAGS) -O3 -o bin/unittests_gcc_O3 -Isrc $(wildcard src/*.cpp) unittests/main.cpp
 	echo ~/pokeroo-run/lib/holdemdb/ > unittests/holdemdb.ini
