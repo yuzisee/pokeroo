@@ -67,8 +67,8 @@ The two *distrShape
 class PreflopCallStats;
 
 // [!TIP]
-// SerializeC and UnserializeC and `*.holdemC` files are for QueryDefense and give a `CallCumulation` (a vector of StatResult corresponding to each possible hand your opponent could have)
-// SerializeW and UnserializeW and `*.holdemW` files are for QueryOffense and give a `DistrShape` (the general statistics about how good your hand is)
+// SerializeC and UnserializeC and `*.holdemC` files are CallStats containing the `CallCumulation` used by QueryDefense (a vector of StatResult corresponding to each possible hand your opponent could have)
+// SerializeW and UnserializeW and `*.holdemW` files are for Query and give a `DistrShape` (the general statistics about how good your hand is)
 // See `holdem/src/inferentials.h` for more
 class StatsManager
 {

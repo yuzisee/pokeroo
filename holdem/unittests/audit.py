@@ -51,7 +51,7 @@ class Player(object):
             (float) Starting chip count
 
         """
-       
+
         self.bets = [];
         self.ident = ident
         self.chipcount = chipcount
@@ -160,6 +160,7 @@ if __name__ == "__main__":
             assert len(b) == 2
             players[b[0]].add_bet(float('nan'))
         else:
+            # TODO(from joseph): Does this work? It missed the `158.0` by P3 in unittests/main.cpp#testRegression_028
             b = PLAYER_CALLS.match(line)
             if b:
                 players[b.group(1)].add_bet(float(b.group(2)))
@@ -167,7 +168,7 @@ if __name__ == "__main__":
             if b:
                 players[b.group(1)].add_bet(float(b.group(2)))
 
-            
+
 
   print('')
   print('')
@@ -176,11 +177,11 @@ if __name__ == "__main__":
   print('')
   write_table(small_blind, dealer)
 
-   
+
 
   for n,p in enumerate(player_order):
       p.print_as_code(n)
-   
+
   print("""
 
         DeckLocation card;
@@ -205,7 +206,7 @@ if __name__ == "__main__":
 
 
         myTable.BeginNewHands(std::cout, b, false, dealer);
-    
+
 """)
 
 
@@ -224,7 +225,7 @@ if __name__ == "__main__":
         myFlop.AddToHand(card);
 
         card.SetByIndex({2});
-        myFlop.AddToHand(card); 
+        myFlop.AddToHand(card);
 """.format(cardnum(flop[0]), cardnum(flop[1]), cardnum(flop[2])))
       if turn is None:
         print('myTable.PlayRound_Flop(myFlop, std::cout);')
@@ -235,7 +236,7 @@ if __name__ == "__main__":
         DeckLocation myTurn;
         myTurn.SetByIndex({0});
         """.format(cardnum(turn)))
-        
+
         if river is None:
           print('myTable.PlayRound_Turn(myFlop, myTurn, std::cout);')
         else:
@@ -246,10 +247,3 @@ if __name__ == "__main__":
         myRiver.SetByIndex({0});
           """.format(cardnum(river)))
           print('myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);')
-          
-    
-           
-
-    
-        
-        

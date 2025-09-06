@@ -935,7 +935,7 @@ namespace RegressionTests {
 
 
         virtual float64 MakeBet() {
-            assert(i < bets.size());
+            assert(i < bets.size()); // the point of a FixedReplayPlayerStrategy is to replay a fixed sequence of actions
             const float64 myBet = bets[i];
             ++i;
             if (myBet == myBet) {
@@ -1071,6 +1071,10 @@ namespace RegressionTests {
                DeckLocation myRiver;
                myRiver.SetByIndex(16);
 
+        // Failing?
+        // Assertion failed: (i < bets.size()), function MakeBet, file main.cpp, line 938.
+        // HoldemArena::PlayRound (loops until `curIndex` gets to 6)
+        // HoldemArena::PlayRound_River
         myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
 
 

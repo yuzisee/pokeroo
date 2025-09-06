@@ -1,6 +1,7 @@
 
 CXX = g++
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
+# `-ffast-math` also? If you're not worried about floating point...
 CXXFLAGS_EXECUTABLE_CHAIN = -O -fpic
 #The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
 CXXFLAGS += -g -Wall
@@ -54,7 +55,7 @@ test:
 	HOLDEMDB_PATH=~/pokeroo-run/lib/holdemdb/ bin/unittests_clang
 	HOLDEMDB_PATH=~/pokeroo-run/lib/holdemdb/ bin/unittests_gcc_O3
 
-# -fno-exceptions -fno-rtti
+# `-fno-exceptions -fno-rtti` maybe?
 db:
 	mkdir -p /tmp/opening_book
 	clang++ $(CXXFLAGS) -O3 -funroll-loops -flto -march=native -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
