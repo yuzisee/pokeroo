@@ -301,17 +301,14 @@ void CommunityPlus::evaluateStrength()
             //straights, the other hand that
             //uses valueset = tempcardset
             valueset >>= shiftCount;
+
             while (flushCount[bFlushSuit] > 0) //While there is a SURPLUS of cards in the flush suit
             {
-                while ((valueset & HoldemConstants::CARD_ACELOW) == 0)
-                {
-                    ++shiftCount;
-                    valueset >>= 1;
-                }
-                flushCount[bFlushSuit]--;
-                valueset &= ~1;
+              // Remove the lowest-ranked card from the hand using a bitwise operation that clears the least significant set bit
+              valueset &= (valueset - 1);
+
+              flushCount[bFlushSuit]--;
             }
-            valueset <<= shiftCount;
 
             return;
     }
