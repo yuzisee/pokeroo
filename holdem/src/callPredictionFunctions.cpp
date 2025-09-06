@@ -145,7 +145,7 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
         if( rawPCT != lastRawPCT || !bSearching )
         {
 #ifdef INLINE_INTEGER_POWERS
-            float64 intOpponents = round(opponents);
+            float64 intOpponents = std::round(opponents);
             if( intOpponents == opponents )
             {
                 cached_d_dbetSize = pow(rawPCT,static_cast<uint8>(intOpponents));
@@ -155,7 +155,7 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 
                 // Your showdown chance of winning, given the opponent count.
                 cached_d_dbetSize = pow(rawPCT,opponents);
-                
+
 #ifdef INLINE_INTEGER_POWERS
             }//end if intOpponents == opponents , else
 #endif
@@ -533,7 +533,7 @@ void FoldGainModel::query( const float64 betSize )
 		const float64 gain_ref = waitLength.f(n);
 		const float64 FB_ref = waitLength.get_cached_d_dbetSize();
 /*
-		const float64 m_restored = round(n*waitLength.rarity());
+		const float64 m_restored = std::round(n*waitLength.rarity());
 		const float64 n_restored = m_restored/waitLength.rarity();
 
         const float64 n_below = floor(n_restored);
@@ -769,6 +769,3 @@ void FacedOddsRaiseGeom::query( const float64 w )
 
 float64 FacedOddsRaiseGeom::f( const float64 w ) { query(w);  return lastF; }
 float64 FacedOddsRaiseGeom::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
-
-
-

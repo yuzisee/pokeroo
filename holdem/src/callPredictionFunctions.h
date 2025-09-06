@@ -39,16 +39,7 @@
 #endif
 */
 
-
-#ifndef round
 #include <cmath>
-inline float64 round(float64 a)
-{
-    return floor(a+0.5);
-}
-
-#endif
-
 
 // The probability of being dealt, e.g. two aces: 1 in 221
 // HOWEVER, when used as a proxy for callcumulation, it might be too low because there is "same suit as you" as well as "different suits as you" optionality.
@@ -98,7 +89,7 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 
     float64 cached_d_dbetSize;
     bool bSearching;
-    
+
 
 
 
@@ -276,4 +267,3 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 ;
 
 #endif
-

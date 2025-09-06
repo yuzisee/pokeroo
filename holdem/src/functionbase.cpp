@@ -25,22 +25,6 @@
 
 using std::endl;
 
-#ifndef round
-#include <cmath>
-#if __cplusplus < 201103L
-
-inline float64 round(float64 a)
-{
-    return floor(a+0.5);
-}
-
-#else
-  // We have C++11 available, so use that
-  inline float64 round(float64 a) { return std::round(a); }
-#endif
-#endif
-
-
 ScalarFunctionModel::~ScalarFunctionModel()
 {
 }
@@ -183,8 +167,8 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 
 			}while( y1b <= y1 && y2b <= y2  &&  x1b - x1 > quantum/2 && x2 - x2b > quantum/2 );
 
-	        float64 leftmax = round(FindMax(x1,x1b_outer)/quantum)*quantum;
-	        float64 rightmax = round(FindMax(x2b_outer,x2)/quantum)*quantum;
+	        float64 leftmax = std::round(FindMax(x1,x1b_outer)/quantum)*quantum;
+	        float64 rightmax = std::round(FindMax(x2b_outer,x2)/quantum)*quantum;
 
             // Clean up rounding error before querying.
             if (leftmax < x1) {
@@ -208,7 +192,7 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
             if(bTraceEnable) std::cout << "\t\t  Reduced to (xb,yb)=" << xb <<","<< yb << endl;
         #endif
 
-        return round(xb/quantum)*quantum;
+        return std::round(xb/quantum)*quantum;
     }
         #ifdef DEBUG_TRACE_SEARCH
             if(bTraceEnable) std::cout << "\t\t  FindTurningPoint" << endl;
@@ -249,8 +233,8 @@ float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
 
 			}while( y1b >= y1 && y2b >= y2  &&  x1b - x1 > quantum/2 && x2 - x2b > quantum/2 );
 
-			float64 leftmin = round(FindMin(x1,x1b_outer)/quantum)*quantum;
-			float64 rightmin = round(FindMin(x2b_outer,x2)/quantum)*quantum;
+			float64 leftmin = std::round(FindMin(x1,x1b_outer)/quantum)*quantum;
+			float64 rightmin = std::round(FindMin(x2b_outer,x2)/quantum)*quantum;
 			if( f(leftmin) < f(rightmin) )
 			{
 				return leftmin;
@@ -259,7 +243,7 @@ float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
 			#endif
 		}
 
-		return round(xb/quantum)*quantum;
+		return std::round(xb/quantum)*quantum;
     }
 
 
@@ -274,7 +258,7 @@ float64 ScalarFunctionModel::SplitTurningPoint(float64 x1, float64 xa, float64 x
 
     if( x2 - x1 < quantum/2 )
     {
-        return round(bisectionStep(x1,x2)/quantum)*quantum;
+        return std::round(bisectionStep(x1,x2)/quantum)*quantum;
     }
 
     float64 leftCP, midCP, rightCP;
@@ -609,7 +593,7 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 
         //xn = searchStep(x1,y1,xb,yb,x2,y2);
     }
-    return round(bisectionStep(x1,x2)/quantum)*quantum;
+    return std::round(bisectionStep(x1,x2)/quantum)*quantum;
 }
 
 
@@ -766,12 +750,12 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuant
     }
 
     #ifdef DEBUG_TRACE_ZERO
-        if(bTraceEnable) std::cout << "Done. f(" << round(xb/quantum)*quantum << ") is zero" << endl;
+        if(bTraceEnable) std::cout << "Done. f(" << std::round(xb/quantum)*quantum << ") is zero" << endl;
     #endif
 
     if (bRoundToQuantum) {
         // e.g. when it's about chip counts, (or bet denominations) we want to round to a valid chip quantity.
-        const float64 roundedResult = round(xb/quantum)*quantum;
+        const float64 roundedResult = std::round(xb/quantum)*quantum;
         if (roundedResult < minResult) return minResult;
         if (maxResult < roundedResult) return maxResult;
         return roundedResult;

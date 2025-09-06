@@ -665,7 +665,7 @@ float64 GainModelGeom::h(float64 betFraction, float64 betSize, float64 exf, floa
     const float64 base = ExpectedCallD::handBetBase();
     const float64 x = betFraction;
 
-    const int8 e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(round(exf/x));
+    const int8 e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(std::round(exf/x));
     const StatResult & splitShape = fOutcome.ViewShape(betSize);
 
     //const float64 exf_live = exf - f_pot;
@@ -772,7 +772,7 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
     const float64 f_pot = estat->betFraction(estat->stagnantPot());
 
     //const float64 qdfe_minus_called = e_tocall*x*dexf + e_tocall*exf;n
-    //const int8 e_call = static_cast<int8>(round(e_called + e_tocall - 0.5));
+    //const int8 e_call = static_cast<int8>(std::round(e_called + e_tocall - 0.5));
 
 #ifdef DEBUGVIEWINTERMEDIARIES
     const StatResult & t_s = shape;
@@ -797,7 +797,7 @@ float64 GainModelGeom::hdx(float64 betFraction, float64 betSize, float64 exf, fl
     const float64 x = betFraction;
     //const float64 exf_live = exf - f_pot;
 
-    //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
+    //const int8 e_call = static_cast<int8>(std::round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
     //const int8 e_call = fOutcome.splitOpponents(); //Probably manditory if dragCalls is used
     //const StatResult & splitShape = fOutcome.ViewShape(betSize);
 
@@ -941,7 +941,7 @@ float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, fl
     //const float64 exf_live = exf - f_pot;
 
 
-    const int8& e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(round(exf/x));
+    const int8& e_call = fOutcome.splitOpponents();//const int8 e_call = static_cast<int8>(std::round(exf/x));
     const StatResult & splitShape = fOutcome.ViewShape(betSize);
 
     // Sometimes exf is lower than the number of people we'd consider for split.
@@ -1095,7 +1095,7 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 float64 GainModelNoRisk::hdx(float64 betFraction, float64 betSize, float64 exf, float64 dexf, ICombinedStatResults & fOutcome, float64 y) {
     const float64 x = betFraction;
 
-    //const int8 e_call = static_cast<int8>(round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
+    //const int8 e_call = static_cast<int8>(std::round(exf/x)); //This choice of e_call might break down in extreme stack size difference situations
     //const int8 e_call = fOutcome.splitOpponents(); //Probably manditory if dragCalls is used
     //const StatResult & splitShape = fOutcome.ViewShape(betSize);
 
@@ -1179,4 +1179,3 @@ float64 SlidingPairFunction::fd(const float64 x, const float64 y_dummy)
     }
     return dy;
 }
-

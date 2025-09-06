@@ -86,7 +86,7 @@ void DistrShape::AddVal(const StatResult &x)
     if (dx > 0.0) {
         // Which of the COARSE_COMMUNITY_NUM_BINS do we fall into?
         const float64 bin0 = worst.pct + dx/2;
-        const float64 bin = round((x.pct - bin0)/dx);
+        const float64 bin = std::round((x.pct - bin0)/dx);
 
         size_t binIdx;
         if (bin == -1.0) {
@@ -404,7 +404,7 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
 
 /*
  Imagine a set of ordered outcomes
- 
+
  a
  a
  B
@@ -426,7 +426,7 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
 
  each outcome has a fixed ".repeated" contribution but they are grouped.
  Now, for visualization I'll space them out by pct
- 
+
  +a
   a
     B
@@ -442,9 +442,9 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
             D
                e
                e
- 
+
  Making cumulative, we have Pr{PCT < pct} =
-  
+
 
                |
                |
@@ -462,11 +462,11 @@ std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const fl
   |-
   |
  +
- 
+
  Here, x-axis is pct and y-axis is Pr{PCT < pct}
- 
+
  Say we applied some kernel smoothing...
- 
+
  Okay, so the interpolation intersects at a horizontal midpoint and a vertical midpoint always.
 
  */
@@ -850,4 +850,3 @@ const CallCumulation & CallCumulation::operator=(const CallCumulation& o)
     cumulation = o.cumulation;
     return *this;
 }
-
