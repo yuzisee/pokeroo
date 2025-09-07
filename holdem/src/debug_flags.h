@@ -21,7 +21,8 @@
 /* Dev Testing Flags */
 #undef NO_LOG_FILES
 #define DEBUGASSERT
-#undef RTTIASSERT
+// #define RTTIASSERT
+// ^^^ You can explicitly `#undef RTTIASSERT` if you don't want to allow for Makefile control of these variables
 
 /***********************/
 
@@ -50,9 +51,9 @@
 /* AI Processing Interface */
 
 // #define PROGRESSUPDATE
-// #define SUPERPROGRESSUPDATE
 // [!TIP]
 // You can explicitly `#undef`  if you don't want to allow for Makefile control of these variables
+#undef SUPERPROGRESSUPDATE
 #undef DEBUG_TESTDEALINTERFACE
 
 /***********************/

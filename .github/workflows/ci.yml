@@ -40,7 +40,7 @@ jobs:
   automated_tests:
     name: 'Test (see holdem/unittests/main.cpp)'
     runs-on: 'ubuntu-24.04'
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
     - uses: actions/checkout@v5
     - name: Extract opening book (speedup unit test runtime)

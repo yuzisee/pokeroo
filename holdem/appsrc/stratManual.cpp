@@ -273,12 +273,8 @@ void ConsoleStrategy::showSituation()
 	const int8 totalPlayers = myTable.GetTotalPlayers();
 #endif // INFOASSIST_UPDATE
 
-    #ifdef OLD_DISPLAY_STYLE
-	UI_DESCRIPTOR << endl << "The pot contains " << ViewTable().GetPrevPotSize() << " from previous rounds and "
-			<< ViewTable().GetRoundPotSize() << " from this round" << endl;
-    #else
+	  // UI_DESCRIPTOR << endl << "The pot contains " << ViewTable().GetPrevPotSize() << " from previous rounds and " << ViewTable().GetRoundPotSize() << " from this round" << endl;
     UI_DESCRIPTOR << endl << "The pot contains $" << ViewTable().GetPrevPotSize() + ViewTable().GetRoundPotSize() << endl;
-    #endif
 
 
     #ifdef INFOASSIST_STRONG
@@ -295,31 +291,7 @@ void ConsoleStrategy::showSituation()
 
 	++tempIndex;
 	tempIndex %= totalPlayers;
-	#ifdef OLD_DISPLAY_STYLE
-	UI_DESCRIPTOR << endl << "You are betting " << ViewPlayer().GetBetSize() << " and have " << (ViewPlayer().GetMoney() - ViewPlayer().GetBetSize()) << " remaining." << endl;
-	UI_DESCRIPTOR << "OPPONENTS IN HAND" << endl;
 
-	while( tempIndex != myIndex )
-	{
-		if( ViewTable().IsInHand(tempIndex) )
-		{
-			const Player& withP = *(myTable.ViewPlayer(tempIndex));
-			UI_DESCRIPTOR << "\t" << withP.GetIdent();
-			if( withP.GetBetSize() > 0 )
-			{
-				UI_DESCRIPTOR << " bet " << withP.GetBetSize() << " of";
-			}
-			else
-			{
-				UI_DESCRIPTOR << " has";
-			}
-
-			UI_DESCRIPTOR << " " << withP.GetMoney() << endl;
-		}
-		++tempIndex;
-		tempIndex %= totalPlayers;
-	}
-	#else //then !OLD_DISPLAY_STYLE
 	UI_DESCRIPTOR << endl ;
 	UI_DESCRIPTOR << "PLAYER SUMMARY" << endl;
 
@@ -383,8 +355,6 @@ void ConsoleStrategy::showSituation()
 
 	}
     }while( tempIndex !=  myIndex);//ViewTable().GetDealer() );
-
-	#endif // OLD_DISPLAY_STYLE, else
 
 
 #endif // INFOASSIST_UPDATE

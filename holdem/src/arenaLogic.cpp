@@ -491,22 +491,14 @@ int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize,
 	if( bVerbose )
 	{
 
-#ifdef OLD_DISPLAY_STYLE
-		gamelog <<endl<<endl<<endl;
-#else
 		if( comSize == 0 )
 		{
 		    gamelog << endl << endl << "Preflop" << endl;
 		}
-#endif
 
-#ifdef OLD_DISPLAY_STYLE
-		gamelog <<endl<<endl;
-#else
 		gamelog << "(Pot: $" << myPot << ")" << endl;
 		PrintPositions(gamelog);
 		gamelog <<endl;
-#endif
 	}
 
 

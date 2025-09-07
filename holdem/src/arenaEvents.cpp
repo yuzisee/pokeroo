@@ -94,7 +94,7 @@ If everyone checks (or is all-in) on the final betting round, the player who act
 
 	delete [] allInsNow;
     allInsNow = 0;
-    
+
 
 	myBetSum = 0;
 	highBet = 0;
@@ -178,7 +178,7 @@ void HoldemArenaBetting::allInsReset()
 	allInsNowCount = 0;
 }
 
-		
+
 bool HoldemArenaBetting::IsHeadsUp() const
 {
 	return ((comSize == 0) && (myTable->NumberStartedRoundInclAllIn() == 2));
@@ -317,13 +317,6 @@ void HoldemArenaBetting::startBettingRound(std::ostream * const spectateLog)
 
         curHighBlind = highestBetter;
 
-        #ifdef OLD_DISPLAY_STYLE
-        if( bVerbose )
-        {
-            gamelog << "(Blinds posted)" << endl << endl;
-        }
-        #endif
-
         //POSTCONDITION: Player::forcedBetTotal is assigned correctly for BB and SB players
         //POSTCONDITION: highestBetter is correct as of after both blinds are posted (accounting for short-stack all-in's etc.)
         //POSTCONDITION: highBet is correct as of after both blinds are posted (accounting for short-stack all-in's etc.)
@@ -446,15 +439,15 @@ HoldemAction HoldemArenaBetting::MakeBet(float64 betSize, struct MinRaiseError *
 				PlayerBet(withP) = betSize;
 			}
 
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
 			/// ===== Decide what to do with the bet =====
-    
-    
+
+
 			if( PlayerBet(withP) >= PlayerMoney(withP) - GetChipDenom()/2.0 )
 			{
 						randRem *= (PlayerLastBet(withP)+1.0) / PlayerBet(withP) ;
@@ -466,7 +459,7 @@ HoldemAction HoldemArenaBetting::MakeBet(float64 betSize, struct MinRaiseError *
 					//we must remember allIn as above: it's what we can win/person
 
 				allInsAppend(curIndex);
-                                
+
                 nonfoldActionOccurred();
 			}
 			else
@@ -485,7 +478,7 @@ HoldemAction HoldemArenaBetting::MakeBet(float64 betSize, struct MinRaiseError *
                     forcedBetSum += PlayerLastBet(withP);
 
 					PlayerBet(withP) = HoldemArena::FOLDED;
-                    
+
                     // Decrement playersInHand, etc.
                     foldActionOccurred();
 				}else
@@ -512,17 +505,17 @@ HoldemAction HoldemArenaBetting::MakeBet(float64 betSize, struct MinRaiseError *
                         message.result = PlayerBet(withP);
 
                     } //end if: raised less than MinRaise
-                    
+
                     nonfoldActionOccurred();
 				}//end if: fold, else not fold
 			}//end if: all-in, else not all-in
 ///TODO Reraises need to say RERAISE.
-    
-    
+
+
             // =====     =====
-    
-    
-    
+
+
+
 			const HoldemAction currentMove(withP.GetIdent(), myPot, withP.GetMoney()
                                            ,
                                  curIndex, PlayerBet(withP), PlayerBet(withP) - PlayerLastBet(withP), highBet, 0
@@ -695,11 +688,7 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const Commun
             viewHand.SetUnique(playerHand);
             viewHand.DisplayHand(gamelog);
             gamelog << endl << "Trying to stay alive, makes " << flush;
-            //#ifdef OLD_DISPLAY_STYLE
-            comp.DisplayHandBig(gamelog);
-            //#else
-            //comp.DisplayHandText(gamelog);
-            //#endif
+            comp.DisplayHandBig(gamelog); //comp.DisplayHandText(gamelog);
         }
         winners.push_back(comp);
         best = comp;
@@ -717,11 +706,7 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const Commun
             viewHand.SetUnique(playerHand);
             viewHand.DisplayHand(gamelog);
             gamelog << endl << "Is eliminated after making only" << flush;
-            //#ifdef OLD_DISPLAY_STYLE
-            comp.DisplayHandBig(gamelog);
-            //#else
-            //comp.DisplayHandText(gamelog);
-            //#endif
+            comp.DisplayHandBig(gamelog); //comp.DisplayHandText(gamelog);
         }
     }
 
@@ -764,11 +749,7 @@ Reveal HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Commun
 					viewHand.SetUnique(playerHand);
 					viewHand.DisplayHand(gamelog);
 					gamelog << endl << "Making," << flush;
-					//#ifdef OLD_DISPLAY_STYLE
-					comp.DisplayHandBig(gamelog);
-					//#else
-					//comp.DisplayHandText(gamelog);
-					//#endif
+					comp.DisplayHandBig(gamelog); //comp.DisplayHandText(gamelog);
 				}
 
 				winners.clear();
@@ -788,17 +769,9 @@ Reveal HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Commun
 					gamelog << endl << withP.GetIdent() << flush;
 					gamelog << " turns up: ";
 					viewHand.SetUnique(playerHand);
-					#ifdef OLD_DISPLAY_STYLE
-					viewHand.DisplayHandBig(gamelog);
-					#else
-					viewHand.DisplayHand(gamelog);
-					#endif
+					viewHand.DisplayHand(gamelog); // viewHand.DisplayHandBig(gamelog);
 					gamelog << endl << "Split... " << flush;
-					//#ifdef OLD_DISPLAY_STYLE
-					comp.DisplayHand(gamelog);
-					//#else
-					//comp.DisplayHandText(gamelog);
-					//#endif
+					comp.DisplayHand(gamelog); //comp.DisplayHandText(gamelog);
 					gamelog << endl;
 				}
 
@@ -865,6 +838,3 @@ Reveal HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const C
         }
     }
 }
-
-
-

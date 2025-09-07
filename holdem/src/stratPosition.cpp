@@ -22,6 +22,7 @@
 #include "stratPosition.h"
 #include <float.h>
 
+#include "arena.h"
 #include "stratFear.h"
 
 //#define DEBUG_TRAP_AS_NORMAL
@@ -144,7 +145,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
 
     // INVARIANT: this->detailPCT now describes the distribution of a random variable X.
-   
+
 
     ///====================================
     ///   Compute Relevant Probabilities
@@ -562,7 +563,7 @@ void PositionalStrategy::printBetGradient(ExactCallBluffD & rl, ExactCallBluffD 
     logFile << "(Fixed at $" << separatorBet << ")";
     printPessimisticWinPct(logFile, separatorBet, csrp);
     logFile << endl;
-    
+
     const float64 minNextRaiseTo = (separatorBet*2-betToCall);
     if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
 
@@ -1261,7 +1262,7 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
     // excess kurtosis of uniform is -1.2
     // excess kurtosis of Gaussian (~binomial) is 0.0
     // a histogram can be leptokurtic as well: http://en.wikipedia.org/wiki/File:KurtosisChanges.png
-    
+
     logF << "Community outcomes (stdev = " << distrPct.stdDev << " pcts , avgdev = " << distrPct.avgDev << " pcts ), kurtosis = " << distrPct.kurtosis << "\n";
     logF << distrPct.worst.pct << " pct: least helpful community\n";
 
