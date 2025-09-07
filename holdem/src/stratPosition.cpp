@@ -1363,7 +1363,12 @@ float64 PureGainStrategy::MakeBet()
     if (ViewPlayer().GetIdent() == "P4") { std::cerr << "Data initialized ✓" << endl; }
 
 #ifdef LOGPOSITION
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "defined(LOGPOSITION)?" << endl; }
+
     printCommunityOutcomes(logFile, outcomes, detailPCT);
+
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "printCommunityOutcomes OK" << endl; }
+
     char statResultMode;
     if (tablestate.handsToShowdownAgainst() > 1) {
         CoarseCommunityHistogram rankComparison(DistrShape::newEmptyDistrShape(), left);
@@ -1381,11 +1386,13 @@ float64 PureGainStrategy::MakeBet()
         statResultMode = 'm';
     }
     logFile << "CallStrength W(" << static_cast<int>(tablestate.handStrengthOfRound()) << statResultMode << ")=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "statResultMode OK" << endl; }
     const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
     logFile << "(MinRaise to $" << minRaiseTo << ") ";
     printPessimisticWinPct(logFile, minRaiseTo, &csrp);
     logFile << endl;
 
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "printPessimisticWinPct OK" << endl; }
 
 	if( bGamble == 0 )
 	{ logFile << " -  statranking algb RAW - " << endl;}
