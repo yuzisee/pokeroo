@@ -1,4 +1,4 @@
-TODO(from joseph): Pass unit tests, then clean warnings
+TODO(from joseph): Continue https://github.com/yuzisee/pokeroo/commit/d964729929ee4495a762d8f929767029b0954d5a
 
 # Getting started
 ```sh
