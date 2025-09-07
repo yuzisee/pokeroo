@@ -37,7 +37,6 @@
 #include <typeinfo>
 #endif
 
-#ifdef DEBUGSAVEGAME
 void HoldemArena::UnserializeRoundStart(std::istream & fileLoadState, std::string botStorageDir, std::string gameId)
 {
 
@@ -137,8 +136,6 @@ void HoldemArena::SerializeRoundStart(std::ostream & fileSaveState)
 
 
 }
-
-#endif // DEBUGSAVEGAME
 
 
 playernumber_t HoldemArena::AddHumanOpponent(const char* const id, float64 money)

@@ -400,10 +400,10 @@ class HoldemArena
 
         char pTypes[SEATS_AT_TABLE];
 
-#ifdef DEBUGSAVEGAME
+    // #if defined(DEBUGSAVEGAME) || defined(INTERFACEC_BINDING)
     void SerializeRoundStart(std::ostream & fileSaveState);
     void UnserializeRoundStart(std::istream & fileSaveState, std::string botStorageDir, std::string gameId);
-#endif
+    // #endif
 
 
 //=================
