@@ -1425,7 +1425,7 @@ void OpponentHandOpportunity::query(const float64 betSize) {
     // Loop over every opponent ...
     while( pIndex != fIdx)
     {
-        std::cerr << " while " << pIndex << " != " << fIdx << endl;
+        std::cerr << " while " << (int)pIndex << " != " << (int)fIdx << endl;
 
         // ... but only showdown-eligible opponents
         if (fTable.IsInHand(pIndex)) {

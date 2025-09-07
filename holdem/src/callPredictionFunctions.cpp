@@ -471,11 +471,17 @@ float64 FoldWaitLengthModel::FindBestLength()
     }while( maxTurns[0] < maxTurns[1]/2 );
     // UNTIL: These two guys are reasonably close enough that a search makes sense.
 
+#ifdef DEBUG_TRACE_SEARCH
     std::cerr << "ScalarFunctionModel::FindMax(" << (1/rarity()) <<  "," << ceil(maxTurns[0] + 1) << ") is next" << std::endl;
+    bTraceEnable = true;
+#endif
     bSearching = true;
     const float64 bestN = FindMax(1/rarity(), ceil(maxTurns[0] + 1) );
     bSearching = false;
+#ifdef DEBUG_TRACE_SEARCH
+    bTraceEnable = false;
     std::cerr << "FoldWaitLengthModel::FindBestLength ALL CLEAR" << std::endl;
+#endif
     return bestN;
 }
 
