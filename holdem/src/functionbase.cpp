@@ -151,41 +151,57 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 	        exit(1);
 	        #else
 
-			float64 x1b = xb;
-			float64 x2b = xb;
-			float64 x1b_outer, x2b_outer;
-			float64 y1b, y2b;
+			        float64 x1b = xb;
+			        float64 x2b = xb;
+			        float64 x1b_outer, x2b_outer;
+			        float64 y1b, y2b;
 
-			do{
-				x1b_outer = x1b;
-				x2b_outer = x2b;
-				x1b = bisectionStep(x1,x1b);
-				x2b = bisectionStep(x2,x2b);
+			        do{
+			        	x1b_outer = x1b;
+			        	x2b_outer = x2b;
+			        	x1b = bisectionStep(x1,x1b);
+			        	x2b = bisectionStep(x2,x2b);
 
-				y1b = f(x1b);
-				y2b = f(x2b);
+			        	y1b = f(x1b);
+			        	y2b = f(x2b);
 
-			}while( y1b <= y1 && y2b <= y2  &&  x1b - x1 > quantum/2 && x2 - x2b > quantum/2 );
+					      #ifdef DEBUG_TRACE_SEARCH
+                  if(bTraceEnable) {
+                    std::cout << "\t\t\tMore than one maximum?" << endl;
+                    std::cout << "\t\t\t\tx<" << x1 << ",\t" << x1b << ",\t" << x1b_outer << ",\t" << x2b << ",\t" << x2b_outer << ",\t" << x2b << ",\t" << x2 << ">" << endl;
+                    std::cout << "\t\t\t\ty<" << y1 << ",\t" << y1b << ",\t __ ,\t" << y2b << ",\t __ ,\t" << y2b << ",\t" << y2 << ">" << endl;
+                  }
+                #endif
 
-	        float64 leftmax = std::round(FindMax(x1,x1b_outer)/quantum)*quantum;
-	        float64 rightmax = std::round(FindMax(x2b_outer,x2)/quantum)*quantum;
+			        }while( y1b <= y1 && y2b <= y2  &&  x1b - x1 > quantum/2 && x2 - x2b > quantum/2 );
 
-            // Clean up rounding error before querying.
-            if (leftmax < x1) {
-                leftmax = x1;
-            }
-            if (x2 < rightmax) {
-                rightmax = x2;
-            }
+	                float64 leftmax = std::round(FindMax(x1,x1b_outer)/quantum)*quantum;
+	                float64 rightmax = std::round(FindMax(x2b_outer,x2)/quantum)*quantum;
 
-            // Now compare the recursive results to each other...
-	        if( f(leftmax) > f(rightmax) )
-	        {
-	            return leftmax;
-	        }
-	        return rightmax;
+         					#ifdef DEBUG_TRACE_SEARCH
+                      if(bTraceEnable) std::cout << "\t\t  <leftmax , rightmax> = < " << leftmax << " , " << rightmax << " >" << endl;
+                  #endif
 
-	        #endif
+                    // Clean up rounding error before querying.
+                    if (leftmax < x1) {
+                        leftmax = x1;
+                    }
+                    if (x2 < rightmax) {
+                        rightmax = x2;
+                    }
+
+               					#ifdef DEBUG_TRACE_SEARCH
+                            if(bTraceEnable) std::cout << "\t\t  CONCLUSION = Max{ " << f(leftmax) << " , " << f(rightmax) << " }" << endl;
+                        #endif
+
+                    // Now compare the recursive results to each other...
+	                if( f(leftmax) > f(rightmax) )
+	                {
+	                    return leftmax;
+	                }
+	                return rightmax;
+
+	        #endif // SINGLETURNINGPOINT, else
 	    }
 
         #ifdef DEBUG_TRACE_SEARCH
@@ -197,13 +213,29 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
         #ifdef DEBUG_TRACE_SEARCH
             if(bTraceEnable) std::cout << "\t\t  FindTurningPoint" << endl;
         #endif
-	return FindTurningPoint(x1, y1, xb, yb, x2, y2, 1);
+  float64 local_max = FindTurningPoint(x1, y1, xb, yb, x2, y2, 1);
+  #ifdef DEBUG_TRACE_SEARCH
+      if(bTraceEnable) std::cout << "\t\t\tFindMax returns " << local_max << endl;
+  #endif
+  return local_max;
 }
 
 float64 ScalarFunctionModel::FindMin(float64 x1, float64 x2)
 {
-    const float64 y1 = f(x1);
-    const float64 y2 = f(x2);
+
+  #ifdef DEBUG_TRACE_SEARCH
+      if(bTraceEnable) std::cout << "\t\t\t(x1,y1)=" << x1 << std::flush;
+  #endif
+const float64 y1 = f(x1);
+  #ifdef DEBUG_TRACE_SEARCH
+      if(bTraceEnable)
+      {  std::cout <<","<< y1 << endl;
+         std::cout << "\t\t\t(x2,y2)=" << x2 << std::flush; }
+  #endif
+const float64 y2 = f(x2);
+  #ifdef DEBUG_TRACE_SEARCH
+      if(bTraceEnable) std::cout <<","<< y2 << endl;
+  #endif
 
     const float64 xb = bisectionStep(x1,x2);
     const float64 yb = f(xb);
@@ -347,17 +379,17 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 
         dyb = fd(xb,yb);
 
-		if( y1*signDir > y2*signDir ) ///y1 is closer
-		{
-			x2 = xb;
-			y2 = yb;
-			dy2 = dyb;
-		}else//y2 is closer
-		{
-			x1 = xb;
-			y1 = yb;
-			dy1 = dyb;
-		}
+		    if( y1*signDir > y2*signDir ) ///y1 is closer
+		    {
+		    	x2 = xb;
+		    	y2 = yb;  // ============== adjust (x2,y2,dy2)
+		    	dy2 = dyb;
+		    }else//y2 is closer
+		    {
+		    	x1 = xb;
+		    	y1 = yb;  // ============== adjust (x1,y1,dy1)
+		    	dy1 = dyb;
+		    }
 
 
         ++stepMode;
@@ -365,11 +397,11 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
 
 
         if( !bSlopes )
-		{
-			dy1 = fd(x1,y1);
-			dy2 = fd(x2,y2);
-			bSlopes = true;
-		}
+		    {
+		    	dy1 = fd(x1,y1);
+		    	dy2 = fd(x2,y2);
+		    	bSlopes = true;
+		    }
 
         //Newton step:
         //  f1 = y1 + (x-x1)*dy1
@@ -393,13 +425,13 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
             xb = bisectionStep(x1,x2);
         }
 
-		yb = f(xb);
+		    yb = f(xb);
 
 
         #ifdef DEBUG_TRACE_SEARCH
-            if(bTraceEnable) std::cout << "\t\t\tSlide x<" << x1 << "," << xb << "," << x2 << ">  y<" << y1 << "," << yb << "," << y2 << ">" << std::endl;
+            if(bTraceEnable) std::cout << "\t\t\tSlide  x<" << x1 << ", " << xb << ", " << x2 << ">   y<" << y1 << ", " << yb << ", " << y2 << ">" << std::endl;
         #endif
-	}
+	  } // end while IsDifferentSign && x2-x1 quantum/2
     }
     /*
     if( !bSlopes )
@@ -410,6 +442,10 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
     }
     dyb = fd(xb,yb);
 */
+
+#ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable) std::cout << "\t\t\tINVARIANT: Either all of y1, yb, y2 are monotonic " << (y1-yb) << " ≷ " << (y2-yb) << "   OR   x2 ↔ x1 are so close together we can return early " << (quantum/2) << endl;
+#endif
 
     while(x2 - x1 > quantum/2)
     {
@@ -592,8 +628,15 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
         }
 
         //xn = searchStep(x1,y1,xb,yb,x2,y2);
-    }
-    return std::round(bisectionStep(x1,x2)/quantum)*quantum;
+    } // end while(x2 - x1 > quantum/2)
+    #ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable) std::cout << "\t\t\tRESULT: bisectionStep(" << x1 << " , " << x2 << ")" << endl;
+    #endif
+    float64 local_optimum = std::round(bisectionStep(x1,x2)/quantum)*quantum;
+    #ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable) std::cout << "\t\t\tlocal_optimum = " << local_optimum << endl;
+    #endif
+    return local_optimum;
 }
 
 

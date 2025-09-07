@@ -1482,7 +1482,7 @@ float64 PureGainStrategy::MakeBet()
         logFile << "if playstyle is Danger/Conservative, overall utility is " << choicemodel.f(displaybet) << endl;
     }
 
-#endif
+#endif // LOGPOSITION
 
     return bestBet;
 

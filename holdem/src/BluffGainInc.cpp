@@ -624,17 +624,19 @@ void StateModel::query( const float64 betSize )
      }
      */
 
+     ///Store results
+     struct AggregatedState gainCombined = fStateCombiner.combinedContributionOf(outcomePush, outcomeCalled, blendedRaises);
+
 #ifdef DEBUG_TRACE_SEARCH
     if(bTraceEnable)
     {
-        std::cout << "\t\t (gainWithFoldlnD+gainNormallnD+gainRaisedlnD) = " << gainWithFoldlnD << " + " << gainNormallnD << " + " <<  gainRaisedlnD << std::endl;
-        std::cout << "\t\t (gainWithFold   +gainNormal   +gainRaised   ) = " << gainWithFold << " + " << gainNormal << " + " <<  gainRaised << std::endl;
-        std::cout << "\t\t (potNormalWin , playChance) = " << potNormalWin << " , " << playChance << std::endl;
+      // https://github.com/yuzisee/pokeroo/commit/ecec2a0e4f8d119a01f310fef9ce4e4652c3ce58
+        std::cout << "\t\t (gainWithFold*gainNormal*gainRaised) = " << gainCombined.contribution << std::endl;
+        std::cout << "\t\t ((gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y) = " << gainCombined.dContribution << std::endl;
+        std::cout << "\t\t fMyFoldGain.myFoldGain(" << (fMyFoldGain.suggestMeanOrRank() == 0 ? "MEAN" : "RANK") << ") = " << fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank()) << std::endl;
     }
 #endif
 
-    ///Store results
-    struct AggregatedState gainCombined = fStateCombiner.combinedContributionOf(outcomePush, outcomeCalled, blendedRaises);
     y = gainCombined.contribution; // e.g. gainWithFold*gainNormal*gainRaised;
 
     dy = gainCombined.dContribution; // e.g. (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
