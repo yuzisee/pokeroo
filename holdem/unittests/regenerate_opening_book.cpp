@@ -339,6 +339,15 @@ int main(int argc, const char * argv[]) {
     const int mode = std::stoi(argv[1]); // atoi(argv[1])
     // see also `std::strtol`
 
+    /*
+      const std::string trueStr("true");
+      char* github_actions_env;
+      github_actions_env = getenv ("GITHUB_ACTIONS");
+      if (github_actions_env && (trueStr == github_actions_env)) {
+
+      }
+    */
+
     const bool spot_check_regression_test = (mode < 0);
     if (spot_check_regression_test) {
       std::cout << "↓ If you run into issues, reproduce locally by running:" << std::endl;
