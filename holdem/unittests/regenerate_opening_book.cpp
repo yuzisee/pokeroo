@@ -51,7 +51,7 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
             // EXPORT as .jsonC
 
             StatsManager::holdemCtoJSON(holdemjson_data, statprob_core_handcumu);
-            (std::ofstream(StatsManager::dbFileName(withCommunity, CommunityPlus::EMPTY_COMPLUS,".jsonC")) << holdemjson_data.str()).close();
+            (std::ofstream(StatsManager::dbFileName(withCommunity, CommunityPlus::EMPTY_COMPLUS,"C.json")) << holdemjson_data.str()).close();
 
           } else if (fileSuffix == 'W') {
 
@@ -66,7 +66,7 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
             // EXPORT as .jsonW
 
             StatsManager::holdemWtoJSON(holdemjson_data, dPCT);
-            (std::ofstream(StatsManager::dbFileName(withCommunity, CommunityPlus::EMPTY_COMPLUS,".jsonW")) << holdemjson_data.str()).close();
+            (std::ofstream(StatsManager::dbFileName(withCommunity, CommunityPlus::EMPTY_COMPLUS,"W.json")) << holdemjson_data.str()).close();
           } else {
             std::cerr << "spotCheckDb(…, " << fileSuffix << ")" << std::endl;
             exit(70); // man sysexits → EX_SOFTWARE
@@ -183,7 +183,7 @@ static void regenerateDb(int mode) {
     counter = 0;
     for (const DeckLocationPair & holeCards : handList) {
         if (counter % CPUs != offset) {
-            std::cout << "skip\n";
+            std::cout << "skip→";
             std::cout.flush();
             ++counter;
             continue;
@@ -209,7 +209,7 @@ static void regenerateDb(int mode) {
     counter = 0;
     for (const DeckLocationPair & holeCards : handList) {
         if (counter % CPUs != offset) {
-            std::cout << "skip\n";
+            std::cout << "skip→";
             std::cout.flush();
             ++counter;
             continue;

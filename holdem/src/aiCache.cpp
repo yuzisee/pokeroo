@@ -183,7 +183,8 @@ void StatsManager::holdemWtoJSON ( std::stringstream& dataf, const DistrShape& d
   dataf << "  \"stdDev\": " << dPCT.stdDev << "," << std::endl;
   dataf << "  \"improve\": " << dPCT.improve << "," << std::endl;
   dataf << "  \"skew\": " << dPCT.skew << "," << std::endl;
-  dataf << "  \"kurtosis\": " << dPCT.kurtosis;
+  dataf << "  \"kurtosis\": " << dPCT.kurtosis << "," << std::endl;
+  dataf << "  \"_COARSE_COMMUNITY_NUM_BINS\": " << COARSE_COMMUNITY_NUM_BINS;
   dataf << std::endl << "}" << std::endl;
 }
 void StatsManager::SerializeW( ofstream& dataf, const DistrShape& dPCT )
