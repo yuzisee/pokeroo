@@ -1400,15 +1400,20 @@ float64 PureGainStrategy::MakeBet()
 
 #endif
 
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "Algb / Geom initialize" << endl; }
+
     // Choose from ca or cg
     AlgbStateCombiner ca;
     GeomStateCombiner cg;
     IStateCombiner &stateCombiner = (bGamble % 4 == 0) ? dynamic_cast<IStateCombiner &>(ca) : dynamic_cast<IStateCombiner &>(cg);
 
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "Algb / Geom combiners" << endl; }
 
     GainModelNoRisk raiseModelAlgb(csrp, myDeterredCall);
     GainModelGeom raiseModelGeom(csrp, myDeterredCall);
     GainModel &raiseModel = (bGamble % 4 == 0) ? dynamic_cast<GainModel &>(raiseModelAlgb) : dynamic_cast<GainModel &>(raiseModelGeom);
+
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "Algb / Geom slider next" << endl; }
 
     // Choose between "defensive" (a.k.a. RAW) vs. "offensive" (a.k.a. SLIDERX) modes.
     // RAW means we expect that the opponent will raise more only with good hands, thus if the pot gets high we will have a harder time winning it with weaker hands.
@@ -1417,6 +1422,7 @@ float64 PureGainStrategy::MakeBet()
 
 
     printCommon(tablestate);
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "AlgbGeom above/below" << endl; }
 
     ///Choose from geom to algb
     const float64 aboveCallBelowRaise1 = betToCall + ViewTable().GetChipDenom() / 2.0;
@@ -1425,7 +1431,7 @@ float64 PureGainStrategy::MakeBet()
 
     StateModel ap_aggressive( myDeterredCall, &callOrRaise, stateCombiner );
 
-
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "↑ StateModel / choicemodel ↓" << endl; }
 
     HoldemFunctionModel& choicemodel = ap_aggressive;
 
