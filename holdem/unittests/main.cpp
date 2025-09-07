@@ -4486,11 +4486,19 @@ namespace RegressionTests {
 
 }
 
+void print_lineseparator(const char* const separator_msg) {
+
+  std::cout << "────────────────────────────────────────────────────────────────────────────────" << endl;
+  const time_t now = time(0);
+  std::cout << asctime(std::localtime(&now)) << separator_msg << endl;
+  std::cout << "────────────────────────────────────────────────────────────────────────────────" << endl;
+}
+
 // HOLDEMDB_PATH=/Users/joseph/pokeroo-run/lib/holdemdb /Users/joseph/Documents/pokeroo/holdem
 // /Users/joseph/Documents/pokeroo/holdem/unittests
 int main(int argc, const char * argv[])
 {
-
+    print_lineseparator(" * * * Begin unittests/main.cpp");
 
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
@@ -4511,6 +4519,7 @@ int main(int argc, const char * argv[])
     UnitTests::testRegression_002b();
     UnitTests::testRegression_003();
 
+    print_lineseparator(" ↑↑↑ UNIT TESTS PASS, regressiontests next ↓↓↓");
     // Regression tests
 
     RegressionTests::testRegression_028();
@@ -4536,6 +4545,7 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_019();
 
 
+    print_lineseparator(" ↑↑↑ regressiontests PASS, Hybrid tests next ↓↓↓");
 
 
     // Regression/Unit hybrid
@@ -4543,4 +4553,6 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_008c();
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_002();
+
+    print_lineseparator(" ✓ ALL TESTS PASS ");
 }
