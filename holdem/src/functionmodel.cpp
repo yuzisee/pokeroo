@@ -837,10 +837,6 @@ float64 GainModelGeom::hdx(float64 betFraction, float64 betSize, float64 exf, fl
      }///Else you'd just {savd+=0;} anyways
      }*/
 
-#ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
-#endif
-
     //y is passed in as (y+e->foldGain()) which essentially gives you g()
 
     return
@@ -1011,15 +1007,6 @@ float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, fl
 
     //    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
-#ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable)
-    {
-        std::cout << "\t\t\tbase+exf " << (base+exf)  << "   *   p_cw "  << p_cw << std::endl;
-        std::cout << "\t\t\tbase-x " << (base-x)  << "   *   p_cl "  << p_cl << std::endl;
-        std::cout << "\t\t\tsav " << (sav)  << std::endl;
-    }
-#endif
-
     const float64 onWin = exf * fOutcome.getWinProb(betSize);
     const float64 onLose = -x * fOutcome.getLoseProb(betSize);
 
@@ -1134,11 +1121,6 @@ float64 GainModelNoRisk::hdx(float64 betFraction, float64 betSize, float64 exf, 
      */
     //}
 
-
-
-#ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
-#endif
 
 
     return

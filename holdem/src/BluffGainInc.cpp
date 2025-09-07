@@ -624,15 +624,6 @@ void StateModel::query( const float64 betSize )
      }
      */
 
-#ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable)
-    {
-        std::cout << "\t\t (gainWithFoldlnD+gainNormallnD+gainRaisedlnD) = " << gainWithFoldlnD << " + " << gainNormallnD << " + " <<  gainRaisedlnD << std::endl;
-        std::cout << "\t\t (gainWithFold   +gainNormal   +gainRaised   ) = " << gainWithFold << " + " << gainNormal << " + " <<  gainRaised << std::endl;
-        std::cout << "\t\t (potNormalWin , playChance) = " << potNormalWin << " , " << playChance << std::endl;
-    }
-#endif
-
     ///Store results
     struct AggregatedState gainCombined = fStateCombiner.combinedContributionOf(outcomePush, outcomeCalled, blendedRaises);
     y = gainCombined.contribution; // e.g. gainWithFold*gainNormal*gainRaised;
