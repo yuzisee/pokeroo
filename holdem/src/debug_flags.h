@@ -69,4 +69,4 @@
 
 /* functionbase.h Debugging */
 #undef DEBUG_TRACE_ZERO
-#undef DEBUG_TRACE_SEARCH
+#define DEBUG_TRACE_SEARCH

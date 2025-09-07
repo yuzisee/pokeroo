@@ -440,6 +440,8 @@ float64 FoldWaitLengthModel::FindBestLength()
     // Dummy value to get the loop started.
     //maxTurns[1] = std::numeric_limits<float64>::infinity();
 
+    std::cerr << "FoldGainModel's FoldWaitLengthModel::FindBestLength ± was there a divide by zero above? Or shall we investigate the loop below " << quantum << std::endl;
+
     do
     {
         // Okay, so let's consider the most you could win.
@@ -447,6 +449,7 @@ float64 FoldWaitLengthModel::FindBestLength()
         maxTurns[1] = maxTurns[0]; // (store the old value of maxTurns[0])
         maxTurns[0] = maxProfit/amountSacrificePerHand;
 
+        std::cerr << "maxTurns[0] = " << maxTurns[0] << ";  maxTurns[1] = " << maxTurns[1] << std::endl;
 
         if( maxTurns[1] - maxTurns[0] < quantum )
         {
@@ -463,12 +466,16 @@ float64 FoldWaitLengthModel::FindBestLength()
             return 0;
         }
 
+        std::cerr << "COMPARE: " << maxTurns[0] << " < " << (maxTurns[1]/2) << std::endl;
+
     }while( maxTurns[0] < maxTurns[1]/2 );
     // UNTIL: These two guys are reasonably close enough that a search makes sense.
 
+    std::cerr << "ScalarFunctionModel::FindMax(" << (1/rarity()) <<  "," << ceil(maxTurns[0] + 1) << ") is next" << std::endl;
     bSearching = true;
     const float64 bestN = FindMax(1/rarity(), ceil(maxTurns[0] + 1) );
     bSearching = false;
+    std::cerr << "FoldWaitLengthModel::FindBestLength ALL CLEAR" << std::endl;
     return bestN;
 }
 
