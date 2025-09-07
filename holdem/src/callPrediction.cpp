@@ -224,12 +224,12 @@ float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 
 	}
 
 
-    
+
     // We don't need to set w, because a.FindZero searches over w
     a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
     a.FG.waitLength.meanConv = useMean;
-    
+
     //a.FG.dw_dbet = 0; //We don't need this, unless we want the derivative of FG.f; Since we don't need any extrema or zeros of FG, we can set this to anything
 
 
@@ -482,7 +482,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
 
     nearest = (betSize <= tableinfo->callBet() + tableinfo->chipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
-    
+
 	const float64 opponents = tableinfo->handsToShowdownAgainst(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
     const float64 myexf = betSize;
     const float64 mydexf = 1;
@@ -798,7 +798,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                     // We don't use RANK here. RANK might overestimate the amount of calls from strong hands.
                     const float64 w = facedOdds_call_Geom(oppCPS,betSize, opponents, ed());
                     nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan(w - EPS_WIN_PCT);
-                    
+
 
                     nextdexf = nextexf + oppBetMake * (- ed()->Pr_haveWorsePCT_continuous(w - EPS_WIN_PCT).second)
                                         * dfacedOdds_dbetSize_Geom(oppCPS,betSize,totaldexf,w, opponents, ed());
@@ -825,7 +825,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                 ChipPositionState oppmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit, prevPot);
 
                 nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan( facedOdds_call_Geom(oppmaxCPS,oppBankRoll, opponents,ed()) - EPS_WIN_PCT );
-                
+
 				nextexf *= oppBetMake ;
 
                 if( oppBetAlready + nextexf + (betSize - oppBankRoll) > nearest )
@@ -914,7 +914,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                 }
             }
 #endif //DEBUGASSERT
-            
+
             noRaiseChance_A[i] *=noRaiseChance_adjust;
             if( noRaiseChance_A[i] == 0 ) //and nextNoRaiseD == 0
             {
@@ -1419,9 +1419,14 @@ void OpponentHandOpportunity::query(const float64 betSize) {
     fTable.incrIndex(pIndex);
     float64 totalOpposingHandOpportunityCount = 0.0;
     float64 totalOpposingHandOpportunityCount_dbetSize = 0.0;
+
+    std::cerr << "OpponentHandOpportunity::query LOOP start" << endl;
+
     // Loop over every opponent ...
     while( pIndex != fIdx)
     {
+        std::cerr << " while " << pIndex << " != " << fIdx << endl;
+
         // ... but only showdown-eligible opponents
         if (fTable.IsInHand(pIndex)) {
 
@@ -1435,7 +1440,8 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 const float64 opponentsFacingThem = handsCommitted(fIdx, fTable, betSize, pIndex);
 
                 // Now, take 1.0 - E[min{1.0 / oppN, 1.0 - oppW}] === 1.0 - \sum_oppW Pr{oppW} min{1.0 / waitLength.n(w:oppW), 1.0 - oppW}
-                
+
+                std::cerr << "OpponentHandOpportunity::query ▸ constructing FoldGainModel FG ...for " << fTable.ViewPlayer(pIndex)->GetIdent() << endl;
 
                 // We only need FoldWaitLengthModel, technically, but FoldGain helps us guess a derivative.
                 FoldGainModel FG(fTable.GetChipDenom()/2);
@@ -1462,7 +1468,12 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 FG.waitLength.setW( pow(1.0 / tableStrength, 1.0 / FG.waitLength.opponents) ); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
                 FG.waitLength.prevPot = fTable.GetPrevPotSize();
 
+                std::cerr << "OpponentHandOpportunity::query ▸ running FG.f(" << betSizeFacingThem << ")" << endl;
+
                 const float64 foldGain = FG.f(betSizeFacingThem); // Calling this will invoke query which will populate FG.n
+
+                std::cerr << "OpponentHandOpportunity::query ▸ foldGain SUCCESS ✓" << endl;
+
                 if (foldGain > 0.0) {
                     // This opponent can profit from folding.
 
@@ -1485,7 +1496,7 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 // totalOpposingHandOpportunityCount_dbetSize += 0.0;
             }
         }
-        
+
         fTable.incrIndex(pIndex);
     }
 
@@ -1498,4 +1509,3 @@ void OpponentHandOpportunity::query(const float64 betSize) {
         f_d_HandsToBeat_dbetSize = totalOpposingHandOpportunityCount_dbetSize;
     }
 }
-

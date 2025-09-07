@@ -174,7 +174,10 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
     }
     fLastBetSize = betSize;
 
+    std::cerr << "printPessimisticWinPct → CombinedStatResultsPessimistic::query" << endl;
     fOpposingHands.query(betSize);
+    std::cerr << "OpponentHandOpportunity opponentHandOpportunity successful query(betSize)" << endl;
+
     fHandsToBeat = fOpposingHands.handsToBeat();
     const float64 fractionOfHandsToBeat_dbetSize = fOpposingHands.d_HandsToBeat_dbetSize();
 
@@ -1179,4 +1182,3 @@ float64 SlidingPairFunction::fd(const float64 x, const float64 y_dummy)
     }
     return dy;
 }
-

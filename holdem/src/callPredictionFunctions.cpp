@@ -155,7 +155,7 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 
                 // Your showdown chance of winning, given the opponent count.
                 cached_d_dbetSize = pow(rawPCT,opponents);
-                
+
 #ifdef INLINE_INTEGER_POWERS
             }//end if intOpponents == opponents , else
 #endif
@@ -499,6 +499,7 @@ float64 FoldWaitLengthModel::getW() const {
 void FoldGainModel::query( const float64 betSize )
 {
 
+    std::cerr << "FoldGainModel::query " << betSize << std::endl;
 
     if(     lastBetSize == betSize
          //&& last_dw_dbet == dw_dbet
@@ -528,8 +529,10 @@ void FoldGainModel::query( const float64 betSize )
         return;
     }else
     {
+        std::cerr << "FoldGainModel's FoldWaitLengthModel::FindBestLength " << betSize << std::endl;
         n = waitLength.FindBestLength();
 
+        std::cerr << "FoldGainModel's FoldWaitLengthModel::f " << betSize << std::endl;
 		const float64 gain_ref = waitLength.f(n);
 		const float64 FB_ref = waitLength.get_cached_d_dbetSize();
 /*
@@ -769,6 +772,3 @@ void FacedOddsRaiseGeom::query( const float64 w )
 
 float64 FacedOddsRaiseGeom::f( const float64 w ) { query(w);  return lastF; }
 float64 FacedOddsRaiseGeom::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
-
-
-

@@ -51,6 +51,7 @@ test:
 	echo $(BUILD_SRC)
 	echo $(CORE_OBJS)
 	mkdir -v -p bin
+	date
 	g++ $(CXXFLAGS) -D RTTIASSERT -O3 -o bin/unittests_gcc_O3 -Isrc $(wildcard src/*.cpp) unittests/main.cpp
 	echo ~/pokeroo-run/lib/holdemdb/ > unittests/holdemdb.ini
 	cd unittests && ../bin/unittests_gcc_O3
