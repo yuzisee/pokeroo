@@ -70,3 +70,4 @@
 /* functionbase.h Debugging */
 #undef DEBUG_TRACE_ZERO
 #define DEBUG_TRACE_SEARCH
+#undef DEBUG_TRACE_SEARCH_PRECISE

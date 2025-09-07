@@ -790,6 +790,9 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
 
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
+#ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable) std::cout << "\t\t\t\tGainModelGeom::gd → hdx(…,dexf = " << dexf << std::endl;
+#endif
     return hdx(x, betSize, exf, dexf, f_pot, dx, fOutcome, y) * estat->betFraction(1.0);
 
 }
@@ -931,6 +934,16 @@ float64 GainModelNoRisk::g(float64 betSize)
 
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return 0.0; ///"Negative raise" means betting less than the minimum call = FOLD
 
+#ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable)
+    {
+      const StatResult & inShape = fOutcome.ViewShape(betSize);
+        std::cout << "\t\t\t(t_w,t_s,t_l) " << inShape.wins << "," << inShape.splits << "," << inShape.loss << std::endl;
+        std::cout << "\t\t\t(betSize,f_pot) " << x << " , " << f_pot << " , " << std::endl;
+        std::cout << "\t\t\tt_1w " << (1+exf) << std::endl;
+        std::cout << "\t\t\tt_1l " << (1-x) << std::endl;
+    }
+#endif
     return h(x, betSize, exf, f_pot, fOutcome);
 }
 
@@ -1078,6 +1091,9 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     //     dh/dx * dx/dbetSize
+#ifdef DEBUG_TRACE_SEARCH
+    if(bTraceEnable) std::cout << "\t\t\t\tGainModelNoRisk::gd → hdx(…,dexf = " << dexf << std::endl;
+#endif
     return hdx(x, betSize, exf, dexf, fOutcome, y) * estat->betFraction(1.0);
 
 }

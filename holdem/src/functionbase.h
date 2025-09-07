@@ -31,7 +31,7 @@
 
 //------------------------
 //Bookkeeping
-#if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
+#if defined(DEBUG_TRACE_SEARCH_PRECISE) || defined(DEBUG_TRACE_ZERO)
 #include <iostream>
 #endif
 
@@ -74,12 +74,12 @@ class ScalarFunctionModel : public IFunctionDifferentiable
     float64 quantum;
     float64 getQuantum() const override final { return quantum; }
 
-    #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
+    #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO) || defined(DEBUG_TRACE_SEARCH_PRECISE)
     bool bTraceEnable;
     #endif
 
     ScalarFunctionModel(float64 step) : quantum(step)
-    #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
+    #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO) || defined(DEBUG_TRACE_SEARCH_PRECISE)
     ,bTraceEnable(false)
     #endif
     {};
@@ -95,5 +95,3 @@ class ScalarFunctionModel : public IFunctionDifferentiable
 
 
 #endif
-
-

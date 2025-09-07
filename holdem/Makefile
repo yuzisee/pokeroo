@@ -46,13 +46,13 @@ all:
 	make $(FINAL_TARGETS)
 
 test:
-	# TODO(from joseph): Must build with DEBUG_TRACE_SEARCH, Must build with NO_LOG_FILES
+	# TODO(from joseph): Must build with DEBUG_TRACE_SEARCH/DEBUG_TRACE_SEARCH_PRECISE, Must build with NO_LOG_FILES
 	echo $(SRC_DIRS)
 	echo $(HEADERS_SRC)
 	echo $(BUILD_SRC)
 	echo $(CORE_OBJS)
 	mkdir -v -p bin
-	clang $(CXXFLAGS) -D RTTIASSERT -o bin/unittests_clang -Isrc $(wildcard src/*.cpp) unittests/main.cpp
+	# clang $(CXXFLAGS) -D RTTIASSERT -o bin/unittests_clang -Isrc $(wildcard src/*.cpp) unittests/main.cpp
 	date
 	g++ $(CXXFLAGS) -D RTTIASSERT -O3 -o bin/unittests_gcc_O3 -Isrc $(wildcard src/*.cpp) unittests/main.cpp
 	echo ~/pokeroo-run/lib/holdemdb/ > unittests/holdemdb.ini

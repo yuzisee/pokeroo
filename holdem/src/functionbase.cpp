@@ -146,7 +146,7 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
     const float64 yb = f(xb);
 
 
-        #ifdef DEBUG_TRACE_SEARCH
+        #ifdef DEBUG_TRACE_SEARCH_PRECISE
 			if(bTraceEnable)
 			{
 				std::streamsize olprec = std::cout.precision();
