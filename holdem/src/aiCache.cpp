@@ -178,7 +178,7 @@ void StatsManager::SerializeC( ofstream& dataf, const CallCumulation& q )
 	if (vcount != q.cumulation.size())
 	{
 		std::cerr << "Portability error in SerializeC" << endl;
-		exit(1);
+		exit(73); // EX_CANTCREAT
 	}
 #endif
     dataf.write(reinterpret_cast<const char*>(&vcount),sizeof(cachesize_t));
@@ -203,7 +203,7 @@ bool StatsManager::UnserializeC( ifstream& dataf,  CallCumulation& q )
 	if (sizeof(cachesize_t) > sizeof(size_t))
 	{
 		std::cerr << "Cached size_t could be larger than current arch size_t" << endl;
-		exit(1);
+		exit(78); // EX_CONFIG
 	}
 #endif
     dataf.read(reinterpret_cast<char*>(&vcount),sizeof(cachesize_t));

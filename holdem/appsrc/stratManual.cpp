@@ -780,7 +780,7 @@ float64 UserConsoleStrategy::queryAction()
                 if( myFifos.IsFileInput() )
                 {
                     UI_DESCRIPTOR << "Blank lines in file got caught" << endl;
-                    exit(1);
+                    exit(74); // man sysexits → EX_IOERR
                 }
                 #endif
 
@@ -813,7 +813,7 @@ float64 UserConsoleStrategy::queryAction()
                                     logFile << endl;
                                     #ifdef DEBUGASSERT
                                     UI_DESCRIPTOR << "No default action found!" << endl;
-                                    exit(1);
+                                    exit(65); // man sysexits → EX_DATAERR
                                     #endif
                                     break;
                             }
@@ -861,4 +861,3 @@ float64 UserConsoleStrategy::queryAction()
 
     return returnMe;
 }
-

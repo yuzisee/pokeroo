@@ -305,7 +305,7 @@ static Player* PlayGameLoop(std::ostream& gamelog, HoldemArena & my,BlindStructu
 		{
 			std::cerr << "randRem is out of control! " << my.GetDRseed() << endl;
 			std::cerr << "We ResetDRseed at the end of this while loop, and it's never expected to change until PlayGameInner. What happenned?" << endl;
-			exit(1);
+      exit(69); // man sysexits → EX_UNAVAILABLE
 		}
 #endif
 		my.ResetDRseed();
@@ -415,8 +415,6 @@ int8 * Permute(uint8 count, uint32 seed)
 // Usage
 //  * headsUp = 'P' means play new game
 //  * headsUp = 'L' means load game, i.e. continue from the most recent 'AUTOEXTRATOKEN'
-//  * headsUp = 1 is for "Legacy run mode"? TODO(from joseph): Seems it's not supported anymore, remove.
-//                ^^^ https://github.com/yuzisee/pokeroo/blob/5e86947b70fc8741e55ee26a9aecc66ec8cbc560/holdem/appsrc/testDriver.cpp#L683
 static std::string testPlay(std::string gameId, char headsUp = 'G', std::ostream& gameLog = cout)
 {
 
@@ -427,11 +425,6 @@ static std::string testPlay(std::string gameId, char headsUp = 'G', std::ostream
     #endif
 
     bool bLoadGame = false;
-
-    if( headsUp == 1 )
-    {
-        bLoadGame = true;
-    }
 
 	const float64 AUTO_CHIP_COUNT = 100.0;
 
@@ -539,7 +532,7 @@ HoldemArena myTable(smallBlindChoice,true, true);
         }else
         {
             std::cout << "Assert headsUp == 'P' or headsUp == 'L' which becomes 'P' after loading\n";
-            exit(1);
+            exit(70); // man sysexits → EX_SOFTWARE
 
         }
 
@@ -569,12 +562,10 @@ std::ifstream loadFile;
         consolePlay.myFifos.SetFileStream(saveLoc);
       }
 
-    } else if( headsUp == 1 ) {
-      bLoadGame = false; //Autodetect bLoadGame
     } else {
       std::cerr << "Load state requested, couldn't open file " << DEBUGSAVEGAME << endl;
       std::cerr << "(If you never took any fold/check/call/raise action, this file won't exist yet)" << endl;
-      exit(1);
+      exit(66); // man sysexits → EX_NOINPUT
     }
   }
 #endif
@@ -637,18 +628,11 @@ std::ifstream loadFile;
 
                 break;
 
-            case 0:
-                std::cerr << "This is supergame mode. ASSERT FAILED\n";
-                // We should invoke sim/supergame.cpp instead. Why are we in this file?
-                exit(1);
-
-
-                break;
-
-
             default:
+                std::cerr << "For supergame mode, invoke sim/supergame.cpp instead. ASSERT FAILED\n";
+                // Why are we in this file?
+                exit(64); // man sysexits → EX_USAGE
 
-            std::cerr << "Legacy run mode not supported anymore.\n";
 
                 break;
 

@@ -51,7 +51,7 @@ void CommunityCallStats::Compare(const float64 occ)
             if( showdownIndex >= showdownCount )
             {
 				std::cerr << "Ran out of array space to collect showdownCount (up to " << showdownCount << "). Note: showdownMax=" << showdownMax << endl;
-                exit(1);
+                exit(75); // EX_TEMPFAIL
             }
         #endif
 
@@ -429,6 +429,3 @@ std::cout << "Releasing " << std::flush;
         myHands = 0;
     }
 }
-
-
-

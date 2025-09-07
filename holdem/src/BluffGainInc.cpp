@@ -117,7 +117,7 @@ void AutoScalingFunction::query(float64 sliderx, float64 x)
 #ifdef DEBUGASSERT
                 else{
                     std::cerr << "AutoScale TYPE MUST BE SPECIFIED" << endl;
-                    exit(1);
+                    exit(71); // EX_OSERR (?)
                 }
 #endif // DEBUGASSERT
 #endif // TRANSFORMED_AUTOSCALES
@@ -165,7 +165,7 @@ float64 AutoScalingFunction::fd_raised(float64 sliderx, const float64 x, const f
     if(fSliderBehaviour == RAW) {
         sliderx = x;
     }
-    
+
     if( last_x != x || last_sliderx != sliderx)
     {
         query(sliderx,x);
@@ -650,25 +650,25 @@ void StateModel::query( const float64 betSize )
 
     if (fMyFoldGain.getPlayerId() != estat->playerID) {
         //estat->ViewPlayer()
-        
+
         std::cerr << "myFoldGain initialized with a player other than that which we intended to call myFoldGain on!" << std::endl;
         std::cerr << (int)(fMyFoldGain.getPlayerId()) << " != " << (int)(estat->playerID) << std::endl;
         exit(1);
     }
     //);
 #endif // DEBUGASSERT
-    
-    
+
+
     delete [] raiseAmount_A;
-    
+
     delete [] oppRaisedChance_A;
     delete [] oppRaisedChanceD_A;
-    
-    
+
+
     delete [] potRaisedWin_A;
     delete [] potRaisedWinD_A;
-    
-    
+
+
 }
 
 bool StateModel::willFoldToReraise

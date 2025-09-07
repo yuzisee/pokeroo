@@ -441,7 +441,7 @@ static std::string testPlay(std::string gameId, char headsUp = 'G', std::ostream
     float64 smallBlindChoice;
     if( headsUp == 'P' )
     {
-        std::cerr << "For interactdive play, use appsrc (a.k.a. WINRELEASE) instead. See appsrc/testDriver.cpp\n";
+        std::cerr << "For interactive play, use appsrc (a.k.a. WINRELEASE) instead. See appsrc/testDriver.cpp\n";
         exit(1);
 
     }else
@@ -615,7 +615,7 @@ static void superGame(char headsUp = 0)
         std::string iWin = testPlay("0000000", headsUp);
     #endif
 
-    
+
 
     std::ofstream tourny("batchResults.txt", std::ios::app);
     tourny << " - - - - - \n";
@@ -627,7 +627,7 @@ static void superGame(char headsUp = 0)
     {
 
         ++gameNum;
-        
+
         std::ostringstream gameIdStr; //output string stream
         gameIdStr << std::setfill('0') << std::setw(8) << gameNum;
 
@@ -650,11 +650,11 @@ static void superGame(char headsUp = 0)
 // Are you profiling? Run this with no arguments.
 int main(int argc, char* argv[])
 {
-    
+
     char cCurrentPath[FILENAME_MAX];
     cCurrentPath[0] = ':';
     cCurrentPath[1] = '\0';
-    
+
     GetCwd(cCurrentPath, sizeof(cCurrentPath));
 
     std::cerr << "Current working directory is " << cCurrentPath << std::endl;

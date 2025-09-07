@@ -160,7 +160,6 @@ if __name__ == "__main__":
             assert len(b) == 2
             players[b[0]].add_bet(float('nan'))
         else:
-            # TODO(from joseph): Does this work? It missed the `158.0` by P3 in unittests/main.cpp#testRegression_028
             b = PLAYER_CALLS.match(line)
             if b:
                 players[b.group(1)].add_bet(float(b.group(2)))
