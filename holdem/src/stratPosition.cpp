@@ -326,7 +326,9 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
     /// MATHEMATIC SOLVING BEGINS HERE
     // #############################################################################
 
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "FindBestBet?" << endl; }
     float64 choicePoint = targetModel->FindBestBet();
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "FindBestBet OK" << endl; }
 
     if( choicePoint < betToCall )
     {///It's probably really close though
@@ -345,7 +347,9 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
 
     }
 
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "FindFoldBet?" << endl; }
     const float64 choiceFold = targetModel->FindFoldBet(choicePoint);
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "FindFoldBet OK" << endl; }
 
 
     //const float64 callGain = gainmean.f(betToCall); ///Using most accurate gain see if it is worth folding
@@ -387,8 +391,10 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
 
 
 
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "raiseGain?" << endl; }
     const float64 raiseGain = targetModel->f(choicePoint)
     ;
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "raiseGain OK" << endl; }
 
     if( raiseGain < 0 )
     {
@@ -1294,10 +1300,14 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
 
 float64 PureGainStrategy::MakeBet()
 {
+
+  if (ViewPlayer().GetIdent() == "P4") { std::cerr << "PureGainStrategy::MakeBet BEGIN" << endl; }
+
 	setupPosition();
 
 	if( maxShowdown <= 0 ) return 0;
 
+	if (ViewPlayer().GetIdent() == "P4") { std::cerr << "setupPosition() ok ✓" << endl; }
 
 
     ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
@@ -1350,6 +1360,7 @@ float64 PureGainStrategy::MakeBet()
     OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, ViewTable(), statprob.core);
     CombinedStatResultsPessimistic csrp(opponentHandOpportunity, statprob.core);
 
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "Data initialized ✓" << endl; }
 
 #ifdef LOGPOSITION
     printCommunityOutcomes(logFile, outcomes, detailPCT);
@@ -1418,64 +1429,64 @@ float64 PureGainStrategy::MakeBet()
 
     HoldemFunctionModel& choicemodel = ap_aggressive;
 
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "Ready to solve…" << endl; }
 
     const float64 bestBet = solveGainModel(&choicemodel, &(statprob.core.callcumu));
-    
+
 #ifdef LOGPOSITION
-    
-    
-    
-    
+
+
+
+
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
-    
+
     printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
-    
+
     printStateModel(logFile, displaybet, ap_aggressive, ViewPlayer());
-    
+
     if (betToCall < displaybet) {
         // If you raised, also show CALL
         printStateModel(logFile, betToCall, ap_aggressive, ViewPlayer());
     }
 
     const float64 displayMinRaise = (myMoney < minRaiseTo) ? myMoney : minRaiseTo;
-    
+
     if (betToCall == displaybet) {
         // If you called, also show MINRAISE
         if (betToCall < displayMinRaise) {
             printStateModel(logFile, displayMinRaise, ap_aggressive, ViewPlayer());
         }
     }
-    
+
 #endif
-    
+
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
         /*
          logFile << "PlayAt($"<< displaybet <<")Call=" << callModel.f(displaybet) << endl;
          logFile << "PlayAt($"<< displaybet <<")Raise=" << raiseModel.f(displaybet) << endl;
          */
-        
+
     }
-    
-    
+
+
     printBetGradient< StateModel >
     (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, &csrp);
-    
-    
+
+
     logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
-    
+
     logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(displaybet) << "   d\\" << myDeterredCall.pWinD(displaybet) << endl;
     if( myDeterredCall.pWin(displaybet) > 0 )
     {
         logFile << "if playstyle is Danger/Conservative, overall utility is " << choicemodel.f(displaybet) << endl;
     }
-    
-#endif
-    
+
+#endif // LOGPOSITION
+
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "PureGainStrategy::MakeBet RETURNED!" << endl; }
+
     return bestBet;
-    
+
 }
-
-
-

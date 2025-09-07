@@ -511,12 +511,13 @@ int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize,
     {
         struct MinRaiseError msg;
 
+        gamelog << "DEBUG DEBUG " << p[curIndex]->GetIdent() << " calculating..." << endl;
 
         // ============== Make the bet here ==============
         HoldemAction action(b.MakeBet(p[curIndex]->myStrat->MakeBet(), &msg));
         // ============== Make the bet here ==============
 
-
+        gamelog << "DEBUG DEBUG " << p[curIndex]->GetIdent() << " returned..." << endl;
 
         if (bSpectate) {
             HoldemArena::ToString(action, gamelog);
