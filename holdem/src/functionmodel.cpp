@@ -24,7 +24,6 @@
 #include "functionmodel.h"
 #include "math_support.h"
 #include "ai.h"
-#include "matrixbase.h"
 
 
 static inline float64 cleanpow(float64 b, float64 x)
