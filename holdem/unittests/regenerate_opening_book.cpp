@@ -47,6 +47,12 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
             ///Compute CallStats
             StatsManager::QueryDefense(statprob_core_handcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
 
+
+            // EXPORT as .jsonC
+
+            StatsManager::holdemCtoJSON(holdemjson_data, statprob_core_handcumu);
+            (std::ofstream(StatsManager::dbFileName(withCommunity, CommunityPlus::EMPTY_COMPLUS,".jsonC")) << holdemjson_data.str()).close();
+
           } else if (fileSuffix == 'W') {
 
             DistrShape dPCT(DistrShape::newEmptyDistrShape());
@@ -56,6 +62,11 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
             ///Compute CommunityCallStats
             StatsManager::Query(&dPCT, withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
 
+
+            // EXPORT as .jsonW
+
+            StatsManager::holdemWtoJSON(holdemjson_data, dPCT);
+            (std::ofstream(StatsManager::dbFileName(withCommunity, CommunityPlus::EMPTY_COMPLUS,".jsonW")) << holdemjson_data.str()).close();
           } else {
             std::cerr << "spotCheckDb(…, " << fileSuffix << ")" << std::endl;
             exit(70); // man sysexits → EX_SOFTWARE
