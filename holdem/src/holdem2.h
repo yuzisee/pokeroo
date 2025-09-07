@@ -92,6 +92,7 @@ class ShowdownRep
 	public:
 
 		ShowdownRep(const playernumber_t playerID) : strength(0), valueset(0), playerIndex(playerID), revtiebreak(0) {}
+		ShowdownRep(const ShowdownRep &a) : comp(a.comp), strength(a.strength), valueset(a.valueset), playerIndex(a.playerIndex), revtiebreak(a.revtiebreak) {}
 
 
 		ShowdownRep(const CommunityPlus* h, const CommunityPlus* h2, const playernumber_t pIndex)
@@ -115,6 +116,15 @@ class ShowdownRep
 			comp.evaluateStrength();
 			strength = comp.strength;
 			valueset = comp.valueset;
+		}
+
+		void swap(ShowdownRep& other) noexcept
+		{
+			std::swap(strength, other.strength);
+			std::swap(valueset, other.valueset);
+			std::swap(playerIndex, other.playerIndex);
+			std::swap(revtiebreak, other.revtiebreak);
+			std::swap(comp, other.comp);
 		}
 
 	bool operator> (const ShowdownRep& x) const
@@ -164,14 +174,10 @@ class ShowdownRep
 		return ((strength == x.strength) && (valueset == x.valueset));
 	}
 
-    const ShowdownRep & operator=(const ShowdownRep& a)
+    const ShowdownRep & operator=(ShowdownRep a_byvalue)
     {
-        comp.SetUnique(a.comp);
-        strength = a.strength;
-        valueset = a.valueset;
-        playerIndex = a.playerIndex;
-        revtiebreak = a.revtiebreak;
-        return *this;
+      swap(a_byvalue);
+      return *this;
     }
 
     bool bIdenticalTo (const ShowdownRep& x) const

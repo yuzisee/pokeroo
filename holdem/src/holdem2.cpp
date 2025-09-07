@@ -654,6 +654,8 @@ void CommunityPlus::SetUnique(const HandPlus& h)
 
 }
 
+// [!CAUTION]
+// Please keep this behavior EXACTLY MATCHING the copy constructor of CommunityPlus
 void CommunityPlus::SetUnique(const CommunityPlus& h)
 {
 	HandPlus::SetUnique(h);
