@@ -37,6 +37,15 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y universal-ctags
     - name: Must compile successfully
       run: cd holdem && make SHELL="$SHELL -x"
+    - name: "…but `-D DEBUG_TRACE_SEARCH` and `-D NO_LOG_FILES` should also build without issues"
+      run: |
+        mkdir -v holdem/clang_plist
+        cd holdem/clang_plist
+        set -x
+        set -e
+        # It seems that `clang++ --analyze` creates a lot of `*.plist` files?
+        clang++ -Wl,-z,defs -o /dev/null -Werror -D NO_LOG_FILES -I../src ../src/*.cpp ../appsrc/*.cpp
+        clang++ --analyze -Werror -D DEBUG_TRACE_SEARCH -I../src ../src/*.cpp ../libsrc/interfaceC.cpp
 
   automated_tests:
     name: 'Test (see holdem/unittests/main.cpp)'

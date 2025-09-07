@@ -19,8 +19,12 @@
  ***************************************************************************/
 
 /* Dev Testing Flags */
-#undef NO_LOG_FILES
+
 #define DEBUGASSERT
+// #define NO_LOG_FILES
+// ^^^ Enable if you are in a situation where you don't want to pollute the disk on every run
+// ^^^ Disable (i.e. explicitly `#undef NO_LOG_FILES`) if you don't want `.github/workflows/ci.yml` to test that it compiles
+
 // #define RTTIASSERT
 // ^^^ You can explicitly `#undef RTTIASSERT` if you don't want to allow for Makefile control of these variables
 
@@ -52,7 +56,7 @@
 
 // #define PROGRESSUPDATE 140
 // [!TIP]
-// You can explicitly `#undef`  if you don't want to allow for Makefile control of these variables
+// You can explicitly `#undef PROGRESSUPDATE`  if you don't want to allow for Makefile control of these variables
 #undef SUPERPROGRESSUPDATE
 #undef DEBUG_TESTDEALINTERFACE
 
@@ -69,4 +73,6 @@
 
 /* functionbase.h Debugging */
 #undef DEBUG_TRACE_ZERO
-#undef DEBUG_TRACE_SEARCH
+// #define DEBUG_TRACE_SEARCH
+// ^^^ Enable if you need to trace through a specific search (usually you'll set `bTraceEnable = true` near where the issue occurs)
+// ^^^ Disable (i.e. You can explicitly `#undef DEBUG_TRACE_SEARCH`) if you don't want `.github/workflows/ci.yml` to test with it

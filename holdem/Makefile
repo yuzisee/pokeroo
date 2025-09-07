@@ -56,12 +56,12 @@ test:
 	mkdir -v -p bin
 	date
 	echo '::group::Compile bin/unittests_clang'
-	clang++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) -fprofile-instr-generate -fcoverage-mapping -o bin/unittests_clang -Isrc $(wildcard src/*.cpp) unittests/main.cpp
+	clang++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) -fprofile-instr-generate -fcoverage-mapping -Isrc -o bin/unittests_clang $(wildcard src/*.cpp) unittests/main.cpp
 	echo '::endgroup::'
 	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
 	date
 	echo '::group::Compile bin/unittests_gcc_O3'
-	g++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) -O3 -o bin/unittests_gcc_O3 -Isrc $(wildcard src/*.cpp) unittests/main.cpp
+	g++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) $(CXXFLAGS_EXTREME_SPEEDUP) -Isrc -o bin/unittests_gcc_O3 $(wildcard src/*.cpp) unittests/main.cpp
 	echo '::endgroup::'
 	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
 	date
