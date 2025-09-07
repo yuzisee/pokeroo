@@ -1388,7 +1388,17 @@ float64 PureGainStrategy::MakeBet()
     logFile << "CallStrength W(" << static_cast<int>(tablestate.handStrengthOfRound()) << statResultMode << ")=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
     if (ViewPlayer().GetIdent() == "P4") { std::cerr << "statResultMode OK" << endl; }
     const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
+    if (ViewPlayer().GetIdent() == "P4") { std::cerr << "GetMinRaise OK " << minRaiseTo << endl; }
     logFile << "(MinRaise to $" << minRaiseTo << ") ";
+
+    if (ViewPlayer().GetIdent() == "P4") {
+      std::cerr << "(a) ↔ printPessimisticWinPct" << csrp.getHandsToBeat(minRaiseTo) << endl;
+      std::cerr << "(b) ↔ printPessimisticWinPct" << csrp.getWinProb(minRaiseTo) << endl;
+      std::cerr << "(c) ↔ printPessimisticWinPct" << csrp.getLoseProb(minRaiseTo) << endl;
+      std::cerr << "(d) ↔ printPessimisticWinPct" << csrp.splitOpponents() << endl;
+      std::cerr << "(e) ↔ printPessimisticWinPct" << csrp.ViewShape(minRaiseTo).wins << endl;
+      std::cerr << "(f) ↔ printPessimisticWinPct" << csrp.ViewShape(minRaiseTo).splits << endl;
+    }
     printPessimisticWinPct(logFile, minRaiseTo, &csrp);
     logFile << endl;
 
