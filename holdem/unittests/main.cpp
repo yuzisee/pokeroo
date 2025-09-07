@@ -972,7 +972,7 @@ namespace RegressionTests {
         // Add player   Gear   $158.0
         // Add player   P0   $84.0
         // Add player   P3   $204.0
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(2);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -1107,7 +1107,7 @@ namespace RegressionTests {
          [Gear $128]
 
          */
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(2);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -1191,7 +1191,7 @@ namespace RegressionTests {
          [D0 $91.4286]
          [D2 $91.4286]
          */
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(2.85714);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -1327,7 +1327,7 @@ namespace RegressionTests {
         [ComR $137.143]
         [NormR $74.2857]
 */
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(2.85714);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -1416,7 +1416,7 @@ namespace RegressionTests {
 
 
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(1.0);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -1588,7 +1588,7 @@ namespace RegressionTests {
 
 
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(1.0);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -1801,7 +1801,7 @@ namespace RegressionTests {
 
 
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(1.0);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -1991,7 +1991,7 @@ namespace RegressionTests {
 
 
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(5.0);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -2189,7 +2189,7 @@ namespace RegressionTests {
 
 
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(5.0);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -2408,7 +2408,7 @@ namespace RegressionTests {
          */
 
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(5.0);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -2511,7 +2511,7 @@ namespace RegressionTests {
          */
 
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(5.0);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -2617,7 +2617,7 @@ namespace RegressionTests {
          [Ali $1500]
          */
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(5.0);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -2807,7 +2807,7 @@ namespace RegressionTests {
          MultiBotV posts BB of $10 ($15)
          */
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(5.0);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -2907,7 +2907,7 @@ namespace RegressionTests {
          ActionBotV posts BB of $11.25 ($16.875)
          */
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(5.625);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -3102,7 +3102,7 @@ namespace RegressionTests {
          [NormalBotV $1495.5]
          */
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(5.0625);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -3282,7 +3282,7 @@ namespace RegressionTests {
          [TrapBotV $1497]
          */
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(1.0);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -3475,7 +3475,7 @@ namespace RegressionTests {
          [Nav $2474]
          [GearBotV $4273]
          */
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(1.125);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -3610,7 +3610,7 @@ namespace RegressionTests {
 
         const playernumber_t dealer = 0;
 
-        struct BlindValues bl;
+        BlindValues bl;
         bl.SetSmallBigBlind(5.0);
 
         HoldemArena myTable(bl.GetSmallBlind(), true, true);
@@ -3836,7 +3836,7 @@ namespace RegressionTests {
          [Nav $2474]
          [GearBotV $4273]
          */
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(1.125);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
@@ -4014,7 +4014,7 @@ namespace RegressionTests {
 
 
 
-        struct BlindValues bl;
+        BlindValues bl;
         bl.SetSmallBigBlind(5.0);
 
         HoldemArena myTable(bl.GetSmallBlind(), true, true);
@@ -4377,7 +4377,7 @@ namespace RegressionTests {
          B posts BB of $0.25 ($0.375)
          */
 
-        struct BlindValues b;
+        BlindValues b;
         b.SetSmallBigBlind(0.125);
 
         HoldemArena myTable(b.GetSmallBlind(), true, true);
