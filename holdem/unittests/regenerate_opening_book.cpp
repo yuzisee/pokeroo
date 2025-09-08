@@ -3,14 +3,14 @@
 #include "callRarity.h"
 #include <cassert>
 #include <cmath>
-#include <ctime>
+#include <chrono>
 #include <iostream>
 #include <sstream>
 
 #include "randomDeck.h"
 
 
-static void spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuffix) {
+static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuffix) {
       const int8_t cardsInCommunity = 0;
 
           CommunityPlus withCommunity;
@@ -26,8 +26,8 @@ static void spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuffi
           string handName = o.NamePockets();
 
           {
-              const time_t now = time(0);
-              std::cout << asctime(std::localtime(&now));
+              const std::time_t time_now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+              std::cout << std::ctime(&time_now);
           }
 
           std::stringstream holdemjson_data;
@@ -59,6 +59,8 @@ static void spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuffi
             std::cerr << "spotCheckDb(…, " << fileSuffix << ")" << std::endl;
             exit(70); // man sysexits → EX_SOFTWARE
           }
+
+          return handName;
 }
 
 /**
@@ -199,8 +201,8 @@ static void regenerateDb(int mode) {
         std::cout.flush(); // Flush for timestamping
     }
 
-    const time_t now = time(0);
-    std::cout << asctime(std::localtime(&now));
+    const std::time_t time_now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::cout << std::ctime(&time_now);
 }
 
 
@@ -274,8 +276,9 @@ https://github.com/yuzisee/pokeroo/commit/3041337be97ca5e4d43cde9f37650b1acfff2b
 
 int main(int argc, const char * argv[]) {
 
-  const time_t now = time(0);
-  std::cout << asctime(std::localtime(&now)) << " ▸ " << argv[0] << std::endl;
+  const std::chrono::time_point<std::chrono::system_clock> start_time = std::chrono::system_clock::now();
+  const std::time_t t_c = std::chrono::system_clock::to_time_t(start_time);
+  std::cout << std::ctime(&t_c) << " ▸ " << argv[0] << std::endl;
 
   if (argc == 1) {
     // No arguments other than the executable name itself.
@@ -303,10 +306,10 @@ int main(int argc, const char * argv[]) {
   } else {
 
     // Regenerate the DB (striped, in case you want to run multiple times on separate threads)
-    int mode = std::stoi(argv[1]); // atoi(argv[1])
+    const int mode = std::stoi(argv[1]); // atoi(argv[1])
     // see also `std::strtol`
 
-    bool spot_check_regression_test = (mode < 0);
+    const bool spot_check_regression_test = (mode < 0);
     if (spot_check_regression_test) {
       std::cout << "↓ If you run into issues, reproduce locally by running:" << std::endl;
       std::cout << "HOLDEMDB_PATH=" << StatsManager::dbFolderPath() << " " << argv[0] << " " << mode << std::endl;
@@ -314,31 +317,18 @@ int main(int argc, const char * argv[]) {
       DeckLocation card2;
       // This is for continuous integration testing: We'll quickly run 22
 
-      // A9S
-      card1.SetByIndex(51);
-      card2.SetByIndex(51-4*5);
-      spotCheckDb(DeckLocationPair(card1, card2), 'C');
-      spotCheckDb(DeckLocationPair(card1, card2), 'W');
+      const int16_t cardidx1 = (-mode) / 100;
+      const int16_t cardidx2 = (-mode) % 100;
 
-      // AKx
-      card1.SetByIndex(48);
-      card2.SetByIndex(47);
-      spotCheckDb(DeckLocationPair(card1, card2), 'C');
-      spotCheckDb(DeckLocationPair(card1, card2), 'W');
+      card1.SetByIndex(cardidx1);
+      card2.SetByIndex(cardidx2);
+      const string name1 = spotCheckDb(DeckLocationPair(card1, card2), 'C');
+      const string name2 = spotCheckDb(DeckLocationPair(card1, card2), 'W');
 
-      // JTS
-      card1.SetByIndex(37);
-      card2.SetByIndex(33);
-      spotCheckDb(DeckLocationPair(card1, card2), 'C');
-      spotCheckDb(DeckLocationPair(card1, card2), 'W');
+      const std::chrono::time_point<std::chrono::system_clock> completion = std::chrono::system_clock::now();
+      // https://stackoverflow.com/questions/7889136/stdchrono-and-cout
+      std::cout << name1 << " completed in " << std::chrono::duration_cast<std::chrono::seconds>(completion - start_time).count() << " seconds → " << name2 << endl;
 
-      // 22
-      card1.SetByIndex(0);
-      card2.SetByIndex(1);
-      spotCheckDb(DeckLocationPair(card1, card2), 'C');
-      spotCheckDb(DeckLocationPair(card1, card2), 'W');
-
-      // If time permits, also AA + 72x + Q7x
     } else {
       regenerateDb(mode);
     }
