@@ -50,7 +50,7 @@
 
 /* AI Processing Interface */
 
-// #define PROGRESSUPDATE
+// #define PROGRESSUPDATE 140
 // [!TIP]
 // You can explicitly `#undef`  if you don't want to allow for Makefile control of these variables
 #undef SUPERPROGRESSUPDATE

@@ -50,3 +50,28 @@ jobs:
         # ~/pokeroo-run/lib/holdemdb ← is because of the runtime path used in the `test` target of the Makefile
     - name: Must pass unit tests
       run: cd holdem && make test
+  spot_check_db:
+    name: 'Sanity check database generation'
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 45
+    steps:
+    - uses: actions/checkout@v5
+    - name: "make db (unittests/regenerate_opening_book.cpp has a special codepath that checks for GITHUB_ACTIONS=truw)"
+      run: cd holdem && make db
+    - name: "Extract comparison DB (A9S, AKx, JTS, 22x) into hexdump // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
+      run: |
+        mkdir -v -p ~/pokeroo-run/lib/holdemdb
+        unzip "holdem/holdemdb_arm64.zip" -d ~/pokeroo-run/lib/holdemdb/
+
+        cd ~/pokeroo-run/lib/holdemdb
+        echo A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW | tr ' ' "\n" | sort | xargs -I @ hexdump -C @ > /tmp/opening_book_selftest/gold.txt
+
+    - name: Parse generated DB into hexdump
+      run: |
+        cd /tmp/opening_book_selftest
+        ls -1 *.holdemC *.holdemW | sort | xargs -I @ hexdump -C @ > current.txt
+
+        # INVARIANT: We now have /tmp/opening_book_selftest/gold.txt and /tmp/opening_book_selftest/current.txt that can be compared
+
+    - name: "Compare gold (binary) vs. current (binary)"
+      run: diff -uw /tmp/opening_book_selftest/gold.txt /tmp/opening_book_selftest/current.txt

@@ -97,7 +97,7 @@ protected:
     static bool UnserializeW(ifstream& dataf, DistrShape* dPCT);
     static string baseDataPath;
 
-public:
+  public:
 
     static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity, const string label);
 

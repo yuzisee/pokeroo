@@ -1,7 +1,7 @@
 
 CXX = g++
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
-# `-ffast-math` also? If you're not worried about floating point...
+CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -flto -march=native
 CXXFLAGS_EXECUTABLE_CHAIN = -O -fpic
 #The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
 CXXFLAGS += -g -Wall -Wextra
@@ -59,12 +59,19 @@ test:
 	echo ~/pokeroo-run/lib/holdemdb/ > unittests/holdemdb.ini
 	cd unittests && ../bin/unittests_clang && ../bin/unittests_gcc_O3
 
-# `-fno-exceptions -fno-rtti` maybe?
+# `-ffast-math` also? If you're not worried about floating point...
 db:
-	mkdir -p /tmp/opening_book
-	clang++ $(CXXFLAGS) -O3 -funroll-loops -flto -march=native -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
+	mkdir -v -p bin
+	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
 	date
+	# Same as above but with -fno-exceptions -fno-rtti
+	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140 unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
+	mkdir -p /tmp/opening_book
+ifeq ($(GITHUB_ACTIONS),true)
+	HOLDEMDB_PATH=/tmp/opening_book_selftest bin/regenerate_opening_book_selftest -1
+else
 	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 1
+endif
 	date
 
 clean:
