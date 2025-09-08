@@ -56,7 +56,7 @@ jobs:
     timeout-minutes: 45
     steps:
     - uses: actions/checkout@v5
-    # TODO(from joseph): If time permits, also AA + 72x + Q7x
+    # TODO(from joseph): If time permits, also AA (5049) + 72x (322) + Q7x (4023)
     - name: "make db (trigger bin/regenerate_opening_book_selftest for GITHUB_ACTIONS=truw)"
       env:
         HOLDEMDB_PATH: /tmp/opening_book_selftest

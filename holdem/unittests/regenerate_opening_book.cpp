@@ -3,14 +3,14 @@
 #include "callRarity.h"
 #include <cassert>
 #include <cmath>
-#include <ctime>
+#include <chrono>
 #include <iostream>
 #include <sstream>
 
 #include "randomDeck.h"
 
 
-static void spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuffix) {
+static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuffix) {
       const int8_t cardsInCommunity = 0;
 
           CommunityPlus withCommunity;
@@ -26,8 +26,8 @@ static void spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuffi
           string handName = o.NamePockets();
 
           {
-              const time_t now = time(0);
-              std::cout << asctime(std::localtime(&now));
+              const std::time_t time_now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+              std::cout << std::ctime(&time_now);
           }
 
           std::stringstream holdemjson_data;
@@ -59,6 +59,8 @@ static void spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuffi
             std::cerr << "spotCheckDb(…, " << fileSuffix << ")" << std::endl;
             exit(70); // man sysexits → EX_SOFTWARE
           }
+
+          return handName;
 }
 
 /**
@@ -199,8 +201,8 @@ static void regenerateDb(int mode) {
         std::cout.flush(); // Flush for timestamping
     }
 
-    const time_t now = time(0);
-    std::cout << asctime(std::localtime(&now));
+    const std::time_t time_now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::cout << std::ctime(&time_now);
 }
 
 
@@ -274,8 +276,9 @@ https://github.com/yuzisee/pokeroo/commit/3041337be97ca5e4d43cde9f37650b1acfff2b
 
 int main(int argc, const char * argv[]) {
 
-  const time_t now = time(0);
-  std::cout << asctime(std::localtime(&now)) << " ▸ " << argv[0] << std::endl;
+  const std::chrono::time_point<std::chrono::system_clock> start_time = std::chrono::system_clock::now();
+  const std::time_t t_c = std::chrono::system_clock::to_time_t(start_time);
+  std::cout << std::ctime(&t_c) << " ▸ " << argv[0] << std::endl;
 
   if (argc == 1) {
     // No arguments other than the executable name itself.
@@ -319,8 +322,13 @@ int main(int argc, const char * argv[]) {
 
       card1.SetByIndex(cardidx1);
       card2.SetByIndex(cardidx2);
-      spotCheckDb(DeckLocationPair(card1, card2), 'C');
-      spotCheckDb(DeckLocationPair(card1, card2), 'W');
+      const string name1 = spotCheckDb(DeckLocationPair(card1, card2), 'C');
+      const string name2 = spotCheckDb(DeckLocationPair(card1, card2), 'W');
+
+      const std::chrono::time_point<std::chrono::system_clock> completion = std::chrono::system_clock::now();
+      // https://stackoverflow.com/questions/7889136/stdchrono-and-cout
+      std::cout << name1 << " completed in " << std::chrono::duration_cast<std::chrono::seconds>(completion - start_time).count() << " seconds → " << name2 << endl;
+
     } else {
       regenerateDb(mode);
     }
