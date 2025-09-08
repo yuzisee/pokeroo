@@ -18,4 +18,11 @@ if test '1' -lt "${NTHREADS}"; then
   NTHREADS=$(expr "$NTHREADS" '-' 1)
 fi
 
+if test -n "$*"; then
+  if test "$*" '!=' "$NTHREADS"; then
+    echo 'Assertion failed, supposed to be: (expected) ' "$*" '=' "$NTHREADS" '(actual)' 1>&2
+    exit $NTHREADS
+  fi
+fi
+
 echo "$NTHREADS"
