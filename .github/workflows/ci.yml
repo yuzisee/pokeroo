@@ -56,10 +56,15 @@ jobs:
     timeout-minutes: 45
     steps:
     - uses: actions/checkout@v5
-    - name: "make db (unittests/regenerate_opening_book.cpp has a special codepath that checks for GITHUB_ACTIONS=truw)"
+    # TODO(from joseph): If time permits, also AA + 72x + Q7x
+    - name: "make db (trigger bin/regenerate_opening_book_selftest for GITHUB_ACTIONS=truw)"
       env:
         HOLDEMDB_PATH: /tmp/opening_book_selftest
-      run: cd holdem && make db && mkdir -vp /tmp/opening_book_selftest && bin/regenerate_opening_book_selftest -1
+      run: cd holdem && make db && mkdir -vp /tmp/opening_book_selftest && echo -5131 -4847 -3733 -1 | tr ' ' "\n" | xargs -P "$(sh ../n_threads_minus_1.sh)" -n 1 bin/regenerate_opening_book_selftest
+      # A9S (51, 51-4*5)
+      # AKx (48,47)
+      # JTS (37,33)
+      # 22 (0, 1)
     - name: "Extract comparison DB (A9S, AKx, JTS, 22x) into hexdump // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
       run: |
         mkdir -v -p ~/pokeroo-run/lib/holdemdb

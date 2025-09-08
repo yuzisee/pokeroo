@@ -303,10 +303,10 @@ int main(int argc, const char * argv[]) {
   } else {
 
     // Regenerate the DB (striped, in case you want to run multiple times on separate threads)
-    int mode = std::stoi(argv[1]); // atoi(argv[1])
+    const int mode = std::stoi(argv[1]); // atoi(argv[1])
     // see also `std::strtol`
 
-    bool spot_check_regression_test = (mode < 0);
+    const bool spot_check_regression_test = (mode < 0);
     if (spot_check_regression_test) {
       std::cout << "↓ If you run into issues, reproduce locally by running:" << std::endl;
       std::cout << "HOLDEMDB_PATH=" << StatsManager::dbFolderPath() << " " << argv[0] << " " << mode << std::endl;
@@ -314,31 +314,13 @@ int main(int argc, const char * argv[]) {
       DeckLocation card2;
       // This is for continuous integration testing: We'll quickly run 22
 
-      // A9S
-      card1.SetByIndex(51);
-      card2.SetByIndex(51-4*5);
+      const int16_t cardidx1 = (-mode) / 100;
+      const int16_t cardidx2 = (-mode) % 100;
+
+      card1.SetByIndex(cardidx1);
+      card2.SetByIndex(cardidx2);
       spotCheckDb(DeckLocationPair(card1, card2), 'C');
       spotCheckDb(DeckLocationPair(card1, card2), 'W');
-
-      // AKx
-      card1.SetByIndex(48);
-      card2.SetByIndex(47);
-      spotCheckDb(DeckLocationPair(card1, card2), 'C');
-      spotCheckDb(DeckLocationPair(card1, card2), 'W');
-
-      // JTS
-      card1.SetByIndex(37);
-      card2.SetByIndex(33);
-      spotCheckDb(DeckLocationPair(card1, card2), 'C');
-      spotCheckDb(DeckLocationPair(card1, card2), 'W');
-
-      // 22
-      card1.SetByIndex(0);
-      card2.SetByIndex(1);
-      spotCheckDb(DeckLocationPair(card1, card2), 'C');
-      spotCheckDb(DeckLocationPair(card1, card2), 'W');
-
-      // If time permits, also AA + 72x + Q7x
     } else {
       regenerateDb(mode);
     }
