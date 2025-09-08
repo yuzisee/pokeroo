@@ -181,8 +181,10 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 			++statGroup;
 
 				#ifdef PROGRESSUPDATE
+			  	if ((statGroup % PROGRESSUPDATE) == 0) {
                 if (statGroup == 0 ) std::cerr << endl << endl;
                 std::cerr << "\rW: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
+					}
 				#endif
 
 
@@ -586,7 +588,7 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
 
 #ifdef PROGRESSUPDATE
-            showProgressUpdate();
+    if ((statGroup % PROGRESSUPDATE) == 0) { showProgressUpdate(); }
 #endif
 
         }
@@ -658,7 +660,3 @@ PlayStats::~PlayStats()
     if (myWins != NULL) delete [] myWins;
     myWins = NULL;
 }
-
-
-
-

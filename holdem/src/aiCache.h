@@ -97,7 +97,9 @@ protected:
     static bool UnserializeW(ifstream& dataf, DistrShape* dPCT);
     static string baseDataPath;
 
-public:
+  public:
+
+    static const string& dbFolderPath() { StatsManager::initPath(); return baseDataPath; }
 
     static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity, const string label);
 

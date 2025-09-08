@@ -454,7 +454,7 @@ public:
 	DistrShape(float64 count, StatResult worstPCT, StatResult meanOverall, StatResult bestPCT);
 
     const DistrShape & operator=(const DistrShape& o);
-    
+
 	void AddVal(const StatResult &);
 
 	void Complete();
@@ -478,7 +478,7 @@ public:
         }
 
     #endif
-}
+} // DistrShape
 ;
 
 // TODO(from yuzisee): For now, this is used to denote whether FoldGain reads the MEAN or RANK from CoreProbabilities

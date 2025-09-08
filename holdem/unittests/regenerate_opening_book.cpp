@@ -2,10 +2,64 @@
 #include "aiCache.h"
 #include "callRarity.h"
 #include <cassert>
+#include <cmath>
+#include <ctime>
 #include <iostream>
+#include <sstream>
 
 #include "randomDeck.h"
 
+
+static void spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuffix) {
+      const int8_t cardsInCommunity = 0;
+
+          CommunityPlus withCommunity;
+
+          withCommunity.AddToHand(holeCards.first);
+
+          withCommunity.AddToHand(holeCards.second);
+
+          NamedTriviaDeck o;
+          o.OmitCards(withCommunity);
+          o.DiffHand(CommunityPlus::EMPTY_COMPLUS);
+          o.sortSuits();
+          string handName = o.NamePockets();
+
+          {
+              const time_t now = time(0);
+              std::cout << asctime(std::localtime(&now));
+          }
+
+          std::stringstream holdemjson_data;
+          holdemjson_data << std::numeric_limits<float64>::max_digits10;
+          if (fileSuffix == 'C') {
+
+             // StatResultProbabilities statprob;
+             // ^^^ Back during https://github.com/yuzisee/pokeroo/commit/45ac51bd2b0407bbcbf980d66d91acc22f1a0df6
+             //     this was StatResultProbabilities but it didn't need to be.
+                std::cout << "Computing   " << handName << "   CallStats (.holdemC)\n";
+
+                std::cout.flush(); // Flush for timestamping
+
+            // struct CoreProbabilities statprob_core;
+            CallCumulationD statprob_core_handcumu;
+            ///Compute CallStats
+            StatsManager::QueryDefense(statprob_core_handcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
+
+          } else if (fileSuffix == 'W') {
+
+            DistrShape dPCT(DistrShape::newEmptyDistrShape());
+                std::cout << "Computing " << handName << " DistrShape (depends on *.holdemW)\n";
+                std::cout.flush(); // Flush for timestamping
+
+            ///Compute CommunityCallStats
+            StatsManager::Query(&dPCT, withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
+
+          } else {
+            std::cerr << "spotCheckDb(…, " << fileSuffix << ")" << std::endl;
+            exit(70); // man sysexits → EX_SOFTWARE
+          }
+}
 
 /**
  * mode 0 & mode 1 are normal
@@ -52,14 +106,12 @@ static void regenerateDb(int mode) {
     if (mode <= 1) {
         CPUs = 1;
     } else {
-        CPUs = std::floor((sqrt(8*mode - 7) + 1)/2);
+        CPUs = std::floor((std::sqrt(8*mode - 7) + 1)/2);
         offset = mode - CPUs * (CPUs - 1) / 2 - 1;
     }
 
     std::cout << "CPUs: " << CPUs << " offset: " << offset << "\n";
 
-
-    const int8_t cardsInCommunity = 0;
 
 
 
@@ -121,33 +173,7 @@ static void regenerateDb(int mode) {
             continue;
         }
 
-        CommunityPlus withCommunity;
-
-        withCommunity.AddToHand(holeCards.first);
-
-        withCommunity.AddToHand(holeCards.second);
-
-        NamedTriviaDeck o;
-        o.OmitCards(withCommunity);
-        o.DiffHand(CommunityPlus::EMPTY_COMPLUS);
-        o.sortSuits();
-        string handName = o.NamePockets();
-
-
-
-        StatResultProbabilities statprob;
-
-        {
-            const time_t now = time(0);
-            std::cout << asctime(std::localtime(&now));
-            std::cout << "Computing   " << handName << "   CallStats (.holdemC)\n";
-            std::cout.flush(); // Flush for timestamping
-        }
-
-        ///Compute CallStats
-        StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
-
-
+        spotCheckDb(holeCards, 'C');
 
         ++counter;
 
@@ -165,32 +191,8 @@ static void regenerateDb(int mode) {
             continue;
         }
 
-        CommunityPlus withCommunity;
+        spotCheckDb(holeCards, 'W');
 
-        withCommunity.AddToHand(holeCards.first);
-
-        withCommunity.AddToHand(holeCards.second);
-
-        NamedTriviaDeck o;
-        o.OmitCards(withCommunity);
-        o.DiffHand(CommunityPlus::EMPTY_COMPLUS);
-        o.sortSuits();
-        string handName = o.NamePockets();
-
-
-
-        DistrShape dPCT(DistrShape::newEmptyDistrShape());
-
-
-        {
-            const time_t now = time(0);
-            std::cout << asctime(std::localtime(&now));
-            std::cout << "Computing " << handName << " DistrShape (depends on *.holdemW)\n";
-            std::cout.flush(); // Flush for timestamping
-        }
-
-        ///Compute CommunityCallStats
-        StatsManager::Query(&dPCT, withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
         ++counter;
 
         std::cout << "=== Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size()) << "   ===\n\n";
@@ -200,6 +202,7 @@ static void regenerateDb(int mode) {
     const time_t now = time(0);
     std::cout << asctime(std::localtime(&now));
 }
+
 
 // StatsManager::UnserializeW and StatsManager::SerializeW
 /* [22x.holdemW]
@@ -271,6 +274,9 @@ https://github.com/yuzisee/pokeroo/commit/3041337be97ca5e4d43cde9f37650b1acfff2b
 
 int main(int argc, const char * argv[]) {
 
+  const time_t now = time(0);
+  std::cout << asctime(std::localtime(&now)) << " ▸ " << argv[0] << std::endl;
+
   if (argc == 1) {
     // No arguments other than the executable name itself.
 
@@ -299,7 +305,43 @@ int main(int argc, const char * argv[]) {
     // Regenerate the DB (striped, in case you want to run multiple times on separate threads)
     int mode = std::stoi(argv[1]); // atoi(argv[1])
     // see also `std::strtol`
-    regenerateDb(mode);
+
+    bool spot_check_regression_test = (mode < 0);
+    if (spot_check_regression_test) {
+      std::cout << "↓ If you run into issues, reproduce locally by running:" << std::endl;
+      std::cout << "HOLDEMDB_PATH=" << StatsManager::dbFolderPath() << " " << argv[0] << " " << mode << std::endl;
+      DeckLocation card1;
+      DeckLocation card2;
+      // This is for continuous integration testing: We'll quickly run 22
+
+      // A9S
+      card1.SetByIndex(51);
+      card2.SetByIndex(51-4*5);
+      spotCheckDb(DeckLocationPair(card1, card2), 'C');
+      spotCheckDb(DeckLocationPair(card1, card2), 'W');
+
+      // AKx
+      card1.SetByIndex(48);
+      card2.SetByIndex(47);
+      spotCheckDb(DeckLocationPair(card1, card2), 'C');
+      spotCheckDb(DeckLocationPair(card1, card2), 'W');
+
+      // JTS
+      card1.SetByIndex(37);
+      card2.SetByIndex(33);
+      spotCheckDb(DeckLocationPair(card1, card2), 'C');
+      spotCheckDb(DeckLocationPair(card1, card2), 'W');
+
+      // 22
+      card1.SetByIndex(0);
+      card2.SetByIndex(1);
+      spotCheckDb(DeckLocationPair(card1, card2), 'C');
+      spotCheckDb(DeckLocationPair(card1, card2), 'W');
+
+      // If time permits, also AA + 72x + Q7x
+    } else {
+      regenerateDb(mode);
+    }
   }
 
 }

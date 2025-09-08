@@ -114,6 +114,15 @@ string StatsManager::dbFileName(const Hand& withCommunity, const Hand& onlyCommu
 
 }
 
+static void abort_if_big_endian() {
+  if (std_endian_little()) {
+    return;
+  }
+
+  std::cerr << "All of our serialization formats assume little-endian memory layouts. You are on a big-endian system so you should be EXTRA CAREFUL about reading anything from `holdem/holdemdb*.zip`" << endl;
+	exit(72); // EX_OSFILE
+}
+
 bool StatsManager::unserializeDistrShape(ifstream& dataf, DistrShape* d)
 {
     long cachebufSize= sizeof(DistrShape);
@@ -158,12 +167,15 @@ void StatsManager::serializeStatResult(ofstream& dataf, const StatResult& d)
 
 void StatsManager::SerializeW( ofstream& dataf, const DistrShape& dPCT )
 {
+    abort_if_big_endian();
     serializeDistrShape( dataf, dPCT );
 }
 
 bool StatsManager::UnserializeW( ifstream& dataf, DistrShape* dPCT )
 {
     if(! (unserializeDistrShape( dataf, dPCT )) ) return false;
+
+    abort_if_big_endian();
 
     ///It better be the end of the file now....
     char temp[1];
@@ -173,6 +185,8 @@ bool StatsManager::UnserializeW( ifstream& dataf, DistrShape* dPCT )
 
 void StatsManager::SerializeC( ofstream& dataf, const CallCumulation& q )
 {
+    abort_if_big_endian();
+
     cachesize_t vcount = static_cast<cachesize_t>(q.cumulation.size());
 #ifdef DEBUGASSERT
 	if (vcount != q.cumulation.size())
@@ -198,6 +212,8 @@ void StatsManager::SerializeC( ofstream& dataf, const CallCumulation& q )
 
 bool StatsManager::UnserializeC( ifstream& dataf,  CallCumulation& q )
 {
+    abort_if_big_endian();
+
     cachesize_t vcount;
 #ifdef DEBUGASSERT
 	if (sizeof(cachesize_t) > sizeof(size_t))
