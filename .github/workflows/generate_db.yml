@@ -23,10 +23,10 @@ jobs:
         sh n_threads_minus_1.sh 3 || exit 78 # EX_CONFIG
         cd holdem && make db
         mkdir -vp /tmp/opening_book
-    - name: "Build bin/regenerate_opening_book"
+    - name: "Generate DB (front rotation)"
       env:
         HOLDEMDB_PATH: /tmp/opening_book
-      run: echo 16 17 18 | tr ' ' "\n" | xargs -P 3 -n 1 bin/regenerate_opening_book
+      run: echo 16 17 18 | tr ' ' "\n" | xargs -P 3 -n 1 holdem/bin/regenerate_opening_book
 
     - name: Upload opening book zip
       uses: actions/upload-artifact@v4
@@ -49,10 +49,10 @@ jobs:
         sh n_threads_minus_1.sh 3 || exit 78 # EX_CONFIG
         cd holdem && make db
         mkdir -vp /tmp/opening_book
-    - name: "Build bin/regenerate_opening_book"
+    - name: "Generate DB (back rotation)"
       env:
         HOLDEMDB_PATH: /tmp/opening_book
-      run: echo 19 20 21 | tr ' ' "\n" | xargs -P 3 -n 1 bin/regenerate_opening_book
+      run: echo 19 20 21 | tr ' ' "\n" | xargs -P 3 -n 1 holdem/bin/regenerate_opening_book
 
     - name: Upload opening book zip
       uses: actions/upload-artifact@v4
