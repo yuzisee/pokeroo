@@ -1,0 +1,46 @@
+name: "Generate DB (partial)"
+description: "Run a subset of the `make db` target implemented in `holdem/unittests/regenerate_opening_book.cpp`"
+inputs:
+  cpu_threads_expected:
+    description: "e.g. '3'"
+    required: true
+  regenerate_opening_book_modes:
+    description: "e.g. '16 17 18'"
+    required: true
+  rotation_suffix:
+    description: "e.g. '1of3'"
+    required: true
+runs:
+  using: "composite" # https://www.jameskerr.blog/posts/sharing-steps-in-github-action-workflows/
+
+  steps:
+  - name: System setup
+    shell: sh
+    env:
+      HARDCODE_EXPECTED_THREADS: ${{ inputs.cpu_threads_expected }}
+    run: |
+      date
+      sh n_threads_minus_1.sh "$HARDCODE_EXPECTED_THREADS" || exit 78 # EX_CONFIG
+      echo '::group::zopflipng:: Build bin/regenerate_opening_book'
+      cd holdem && make db
+      echo '::endgroup::'
+      mkdir -vp /tmp/opening_book
+      date
+  - name: "Generate DB ${{ inputs.rotation_suffix }}"
+    shell: sh
+    env:
+      HOLDEMDB_PATH: /tmp/opening_book
+      THREAD_COUNT: ${{ inputs.cpu_threads_expected }}
+      THREAD_STRIPES: ${{ inputs.regenerate_opening_book_modes }}
+    run: echo $THREAD_STRIPES | tr ' ' "\n" | xargs -P "$THREAD_COUNT" -n 1 holdem/bin/regenerate_opening_book
+
+  - name: Upload opening book zip
+    uses: actions/upload-artifact@v4
+    with:
+      name: opening_book-${{ inputs.rotation_suffix }}
+      path: /tmp/opening_book
+      # include-hidden-files: false by default
+      if-no-files-found: error
+      overwrite: true
+      compression-level: 0
+      retention-days: 21
