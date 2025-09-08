@@ -20,7 +20,7 @@ on:
 # etc.
 jobs:
   rotation123:
-    name: '(front rotation) make db → bin/regenerate_opening_book'
+    name: '(soprano) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
     # timeout-minutes: 360
     steps:
@@ -28,18 +28,42 @@ jobs:
       - uses: ./.github/actions/generate_db_one_stripe
         with:
           cpu_threads_expected: 3
-          regenerate_opening_book_modes: "16 17 18"
-          rotation_suffix: 1of2
+          regenerate_opening_book_modes: "67 68 69"
+          rotation_suffix: 1of4
         id: generate123
 
   rotation456:
-    name: '(back rotation) make db → bin/regenerate_opening_book'
+    name: '(alto) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/generate_db_one_stripe
         with:
           cpu_threads_expected: 3
-          regenerate_opening_book_modes: "19 20 21"
-          rotation_suffix: 2of2
+          regenerate_opening_book_modes: "70 71 72"
+          rotation_suffix: 2of4
         id: generate456
+
+  rotation789:
+    name: '(tenor) make db → bin/regenerate_opening_book'
+    runs-on: 'ubuntu-24.04'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/generate_db_one_stripe
+        with:
+          cpu_threads_expected: 3
+          regenerate_opening_book_modes: "73 74 75"
+          rotation_suffix: 3of4
+        id: generate789
+
+  rotation10_11_12:
+    name: '(bass) make db → bin/regenerate_opening_book'
+    runs-on: 'ubuntu-24.04'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/generate_db_one_stripe
+        with:
+          cpu_threads_expected: 3
+          regenerate_opening_book_modes: "76 77 78"
+          rotation_suffix: 4of4
+        id: generate_10_11_12
