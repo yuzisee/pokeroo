@@ -57,7 +57,9 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     - name: "make db (unittests/regenerate_opening_book.cpp has a special codepath that checks for GITHUB_ACTIONS=truw)"
-      run: cd holdem && make db
+      env:
+        HOLDEMDB_PATH: /tmp/opening_book_selftest
+      run: cd holdem && make db && mkdir -vp /tmp/opening_book_selftest && bin/regenerate_opening_book_selftest -1
     - name: "Extract comparison DB (A9S, AKx, JTS, 22x) into hexdump // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
       run: |
         mkdir -v -p ~/pokeroo-run/lib/holdemdb

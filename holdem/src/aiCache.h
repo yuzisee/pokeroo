@@ -99,6 +99,8 @@ protected:
 
   public:
 
+    static const string& dbFolderPath() { StatsManager::initPath(); return baseDataPath; }
+
     static string dbFileName(const Hand& withCommunity, const Hand& onlyCommunity, const string label);
 
     // relies on `*.holdemW`

@@ -309,7 +309,7 @@ int main(int argc, const char * argv[]) {
     bool spot_check_regression_test = (mode < 0);
     if (spot_check_regression_test) {
       std::cout << "↓ If you run into issues, reproduce locally by running:" << std::endl;
-      std::cout << "HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book -1" << std::endl;
+      std::cout << "HOLDEMDB_PATH=" << StatsManager::dbFolderPath() << " " << argv[0] << " " << mode << std::endl;
       DeckLocation card1;
       DeckLocation card2;
       // This is for continuous integration testing: We'll quickly run 22
