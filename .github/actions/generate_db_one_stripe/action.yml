@@ -21,9 +21,7 @@ runs:
     run: |
       date
       sh n_threads_minus_1.sh "$HARDCODE_EXPECTED_THREADS" || exit 78 # EX_CONFIG
-      echo '::group::zopflipng:: Build bin/regenerate_opening_book'
       cd holdem && make db
-      echo '::endgroup::'
       mkdir -vp /tmp/opening_book
       date
   - name: "Generate DB ${{ inputs.rotation_suffix }}"
