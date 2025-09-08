@@ -32,7 +32,7 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
           }
 
           std::stringstream holdemjson_data;
-          holdemjson_data << std::numeric_limits<float64>::max_digits10;
+          holdemjson_data << std::setprecision(std::numeric_limits<float64>::max_digits10 - 1);
           if (fileSuffix == 'C') {
 
              // StatResultProbabilities statprob;

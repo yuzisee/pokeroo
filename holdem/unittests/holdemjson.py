@@ -2,9 +2,19 @@
 """Convert between .holdemC/.holdemW binary format ↔ JSON format"""
 
 import json
+import math
 import struct
 import sys
 import typing
+
+DBL_DECIMAL_DIG = 17
+# ^^^ C++17 only
+
+# https://en.cppreference.com/w/cpp/types/climits.html
+DBL_MANT_DIG = 53
+# https://en.cppreference.com/w/cpp/types/numeric_limits/digits.html
+NUMERIC_LIMITS_FLOAT64_MAX_DIGITS10 = math.ceil(DBL_MANT_DIG * math.log10(2.0) + 1)
+# https://en.cppreference.com/w/cpp/types/numeric_limits/max_digits10
 
 COARSE_COMMUNITY_NUM_BINS = 7
 SIZEOF_CACHESIZE_T = 4 # uint32 is 4 bytes
@@ -16,9 +26,14 @@ class StatResult(typing.TypedDict):
     repeated: float
     pct: float
 
+def round_float_sigfig(float_val):
+  assert NUMERIC_LIMITS_FLOAT64_MAX_DIGITS10 == DBL_DECIMAL_DIG, "Needs at least to match significant digit settings in unittests/regenerate_opening_book.cpp"
+  std_setprecision = '{:.' + str(DBL_DECIMAL_DIG - 1) + 'g}'
+  return float(std_setprecision.format(float_val))
+
 def read_typed_float(f: typing.IO) -> float:
   # https://docs.python.org/3/library/struct.html#format-characters
-  return struct.unpack('d', f.read(8))[0]
+  return round_float_sigfig(struct.unpack('d', f.read(8))[0])
 
 def statresult_to_dict(f: typing.IO) -> StatResult:
     """StatsManager::serializeStatResult⁻¹ ∘ StatsManager::StatResultToJSON"""
@@ -45,7 +60,7 @@ def holdem_c_to_json(holdemc_filename: str) -> str:
 
     # [!NOTE]
     # There's a bit of wonkiness here to match the whitespace/indentation/formatting of StatsManager::holdemCtoJSON on the C++ side
-    return json.dumps(holdem_c_json, sort_keys=False).replace('{', "\n    {").replace('"!vcount"', "\n" + '  "!vcount"').replace('"cumulation"', "\n" + '  "cumulation"').replace(']', "\n" + '  ]').replace('.0,', ',').replace('.0}', '}').replace('.0}', '}').strip()[:-1] + "\n" + '}'
+    return json.dumps(holdem_c_json, sort_keys=False).replace('{', "\n    {").replace('"!vcount"', "\n" + '  "!vcount"').replace('"cumulation"', "\n" + '  "cumulation"').replace(']', "\n" + '  ]').replace('.0,', ',').replace('.0}', '}').strip()[:-1] + "\n" + '}'
 
 def holdem_w_to_json(holdemc_filename: str) -> str:
     """StatsManager::serializeDistrShape⁻¹ ∘ StatsManager::holdemWtoJSON"""
@@ -70,7 +85,7 @@ def holdem_w_to_json(holdemc_filename: str) -> str:
     json_to_format = json.dumps(holdem_w_json, sort_keys=False)
     for toplevel_k in holdem_w_json.keys():
         json_to_format = json_to_format.replace('"' + toplevel_k + '"', "\n" + '  "' + toplevel_k + '"')
-    return json_to_format.replace('[', '[' + "\n    ").replace('}, {', '},' + "\n" + '    {').replace(']', "\n" + '  ]').strip()[:-1] + "\n" + '}'
+    return json_to_format.replace('[', '[' + "\n    ").replace('}, {', '},' + "\n" + '    {').replace(']', "\n" + '  ]').replace('.0,', ',').strip()[:-1] + "\n" + '}'
 
 def usage():
     sys.stderr.write("\n")

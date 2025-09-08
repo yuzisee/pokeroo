@@ -29,7 +29,8 @@ jobs:
   automated_build:
     name: 'Build (see Makefile)'
     runs-on: 'ubuntu-24.04'
-    timeout-minutes: 3
+    timeout-minutes: 6
+    # This only needs a minute or so, but installing ctags can have unpredicable delays...
     steps:
     - uses: actions/checkout@v5
     - name: Install ctags (needed by Makefile `tags` target)
