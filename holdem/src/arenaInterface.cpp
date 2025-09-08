@@ -33,9 +33,10 @@
  const float64 HoldemArena::INVALID = -2;
 
 
+ // Write the digits of `value` into `str`
  void HoldemArena::FileNumberString(handnum_t value, char * str)
  {
-	sprintf(str,"%u",value);
+	snprintf(str, HANDNUM_T_STR_MAXCHARS, "%u",value);
  }
 
 
@@ -43,7 +44,7 @@
 void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
 {
     o << e.myPlayerName << " " << flush;
-    
+
     if ( e.IsFold() )
     {
         o << "folds" << endl;

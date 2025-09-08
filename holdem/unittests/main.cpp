@@ -4500,6 +4500,8 @@ int main(int argc, const char * argv[])
 {
     print_lineseparator(" * * * Begin unittests/main.cpp");
 
+    std::cout << "::group::Running... unit tests" << std::endl;
+
     // Run all unit tests.
     NamedTriviaDeckTests::testNamePockets();
 
@@ -4519,7 +4521,10 @@ int main(int argc, const char * argv[])
     UnitTests::testRegression_002b();
     UnitTests::testRegression_003();
 
+    std::cout << "::endgroup::" << std::endl;
+
     print_lineseparator(" ↑↑↑ UNIT TESTS PASS, regressiontests next ↓↓↓");
+    std::cout << "::group::Running... logreplay tests" << std::endl;
     // Regression tests
 
     RegressionTests::testRegression_028();
@@ -4544,15 +4549,17 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_005();
     RegressionTests::testRegression_019();
 
+    std::cout << "::endgroup::" << std::endl;
 
     print_lineseparator(" ↑↑↑ regressiontests PASS, Hybrid tests next ↓↓↓");
-
+    std::cout << "::group::Running... hybrid tests" << std::endl;
 
     // Regression/Unit hybrid
 
     RegressionTests::testRegression_008c();
     RegressionTests::testRegression_008();
     RegressionTests::testRegression_002();
+    std::cout << "::endgroup::" << std::endl;
 
     print_lineseparator(" ✓ ALL TESTS PASS ");
 }

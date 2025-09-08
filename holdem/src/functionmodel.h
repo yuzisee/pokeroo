@@ -139,22 +139,22 @@ public:
 
     virtual ~CombinedStatResultsPessimistic() {}
 
-    virtual playernumber_t splitOpponents() const { return fSplitOpponents; }
+    virtual playernumber_t splitOpponents() const override { return fSplitOpponents; }
 
     // per-player outcome: wins and splits are used to calculate split possibilities across NumPlayersInHand()
-    const virtual StatResult & ViewShape(float64 betSize) { query(betSize); return fNet.fShape; }
+    const virtual StatResult & ViewShape(float64 betSize) override { query(betSize); return fNet.fShape; }
 
-    virtual float64 getLoseProb(float64 betSize) { query(betSize); return fNet.fLoseProb; }
-	virtual float64 getWinProb(float64 betSize) { query(betSize); return fNet.fOutrightWinProb; }
+    virtual float64 getLoseProb(float64 betSize) override { query(betSize); return fNet.fLoseProb; }
+    virtual float64 getWinProb(float64 betSize) override { query(betSize); return fNet.fOutrightWinProb; }
 
-    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) { query(betSize); return f_d_LoseProb_dbetSize; }
-    virtual float64 get_d_WinProb_dbetSize(float64 betSize) { query(betSize); return f_d_WinProb_dbetSize; }
+    virtual float64 get_d_LoseProb_dbetSize(float64 betSize) override { query(betSize); return f_d_LoseProb_dbetSize; }
+    virtual float64 get_d_WinProb_dbetSize(float64 betSize) override { query(betSize); return f_d_WinProb_dbetSize; }
 
     virtual float64 getHandsToBeat(float64 betSize) { query(betSize); return fHandsToBeat; }
-    
+
 private:
     void query(float64 betSize);
-    
+
     // query inputs
     float64 fLastBetSize;
 
@@ -258,7 +258,7 @@ public:
     const CoarseCommunityBin &getBin(size_t idx) const {
         return fBins[idx];
     }
-    
+
 private:
     CoarseCommunityBin fBins[COARSE_COMMUNITY_NUM_BINS];
 }
@@ -277,10 +277,10 @@ public:
     virtual ~PureStatResultGeom() {}
 
     playernumber_t splitOpponents() const override final { return fShowdownOpponents; }
-    
+
     const StatResult & ViewShape(float64 betSize) override final { return fNet.fShape; } // per-player outcome: wins and splits are used to calculate split possibilities
     float64 getLoseProb(float64 betSize) override final { return fNet.fLoseProb; }
-	float64 getWinProb(float64 betSize) override final { return fNet.fOutrightWinProb; }
+    float64 getWinProb(float64 betSize) override final { return fNet.fOutrightWinProb; }
 
     float64 get_d_LoseProb_dbetSize(float64 betSize) override final { return 0.0; }
     float64 get_d_WinProb_dbetSize(float64 betSize) override final { return 0.0; }
@@ -303,7 +303,7 @@ private:
     // Prior to calling forceRenormalize, you just want the relative weight of p_cl and p_cw to be accurate.
     void forceRenormalize();
 
-    
+
 	StatResult shape;
 	float64 p_cl;
 	float64 p_cw;
@@ -312,14 +312,14 @@ private:
     //Who can you split with?
 	const uint8 e_battle;
 
-    
+
 
 public:
     //Floating point version of totalEnemy (which is handsToBeat), but adjustable by playerStrategy based on expectations
 	const float64 f_battle;
 
 
-    
+
     CombinedStatResultsGeom(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, ExactCallD & c)
     :
     e_battle(c.tableinfo->handsIn()-1)
@@ -329,8 +329,8 @@ public:
         combineStatResults(s_acted,s_nonacted, bConvertToNet);
     }
 
-    virtual playernumber_t splitOpponents() const { return e_battle; }
-    const virtual StatResult & ViewShape(float64 betSize) { return shape; }
+    virtual playernumber_t splitOpponents() const override { return e_battle; }
+    const virtual StatResult & ViewShape(float64 betSize) override { return shape; }
     const StatResult & ViewShape() { return shape; }
 
     /*
@@ -362,14 +362,14 @@ class GainModelGeom : public virtual GainModel
 protected:
 
 	IExf & espec;
-    
+
     ICombinedStatResults & fOutcome; // predict the outcome of a showdown
 
 
 
     virtual float64 g(float64) override final;
     virtual float64 gd(float64, const float64) override final;
-    
+
 	public:
 
     static float64 h(float64 betFraction, float64 betSize, float64 exf, float64 f_pot, ICombinedStatResults & fOutcome);
@@ -395,8 +395,8 @@ protected:
 
     virtual ~GainModelGeom();
 
-	virtual float64 f(const float64);
-    virtual float64 fd(const float64, const float64);
+    virtual float64 f(const float64) override;
+    virtual float64 fd(const float64, const float64) override;
 
     #ifdef DEBUG_GAIN
         void breakdown(float64 points, std::ostream& target, float64 start=0, float64 end=1)
@@ -465,9 +465,9 @@ class GainModelNoRisk : public virtual GainModel
     protected:
     IExf & espec;
     ICombinedStatResults & fOutcome; // predict the outcome of a showdown
-    
-        virtual float64 g(float64);
-        virtual float64 gd(float64,const float64);
+
+        virtual float64 g(float64) override;
+        virtual float64 gd(float64, const float64) override;
     public:
 
 
@@ -522,6 +522,3 @@ class SlidingPairFunction : public virtual HoldemFunctionModel
 
 
 #endif // HOLDEM_GainModels
-
-
-

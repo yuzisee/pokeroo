@@ -42,6 +42,7 @@ typedef float float32;
 
 ///========================================================
 
+#define HANDNUM_T_STR_MAXCHARS 10
 typedef uint32 handnum_t;
 typedef int8 playernumber_t;
 typedef uint32 cachesize_t; //Note: data cache is stored little-endian too...

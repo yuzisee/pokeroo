@@ -45,6 +45,7 @@ class StatResult
 {
 	public:
 		StatResult() : wins(0), splits(0), loss(0), repeated(1), pct(0) {}
+		StatResult(const StatResult& a) : wins(a.wins), splits(a.splits), loss(a.loss), repeated(a.repeated), pct(a.pct) {}
 	bool operator> (const StatResult& x) const
 	{	return pct > x.pct;	}
 	bool operator< (const StatResult& x) const
