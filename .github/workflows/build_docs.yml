@@ -1,4 +1,4 @@
-name: Generate Projct Documentation
+name: Render Project Documentation
 
 on:
   workflow_dispatch:
@@ -10,6 +10,20 @@ jobs:
     timeout-minutes: 7
     steps:
     - uses: actions/checkout@v5
+    # TODO(from joseph): Should we use https://typst.app/docs/guides/guide-for-latex-users/ instead?
+    # https://github.com/typst/typst
+    - name: Github Actions prerequisites
+      run: mkdir -vp /home/runner/.local/bin
+      # ^^^ Github Actions has /home/runner/.local/bin in the PATH but not /home/runner/bin (which tinytex falls back on if it can't find the ~/.local/bin)
+    - name: install tinytex in userspace
+      # https://github.com/rstudio/tinytex-releases
+      run: wget -qO- "https://yihui.org/tinytex/install-bin-unix.sh" | sh -x
+      # run: sudo apt-get update && sudo apt-get install -y universal-ctags
+    - name: verify setup
+      run: |
+        env
+        ls -l $HOME/.local/bin || echo $HOME/.local/bin
+        ls -l $HOME/bin || echo $HOME/bin
     - name: make
       run: cd holdem/doc/report && make
 

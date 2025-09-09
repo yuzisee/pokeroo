@@ -261,7 +261,8 @@ CoarseCommunityHistogram::~CoarseCommunityHistogram()
 }
 
 
-
+// @param difficultyOpponents - e.g. The number of opponents that were at the table when the bet was made (the "implied" difficulty of the group at the time the bet was made)
+// @param showdownOpponents - The number of remaining opponents that are left for you to beat by taking them to a showdown
 static NetStatResult initByRank(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, StatResult baseShape) {
 
 

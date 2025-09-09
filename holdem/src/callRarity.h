@@ -65,7 +65,7 @@ private:
 //protected:
 // TODO(from jdhuang)
 public:
-    
+
 ///Single Opponent Probabilities
 
     StatResult statworse(playernumber_t handsCompeting) const {
@@ -79,17 +79,17 @@ public:
     }
 
     StatResult statrelation; // Against what fraction of opponents will you have the better hand?
-    StatResult statranking; // How often do you get a hand this good?
-    // The distinction here is that some hands with typically high change of winning in general may do poorly against the particular hand you're holding, and vice versa.
+    StatResult statranking; // How often do you get a hand with... a rwa probabiliy of winning that's this good?
+    // The distinction here is that some hands with typically high chance of winning in general may do poorly against the particular hand you're holding, and vice versa.
 
 	StatResult hybridMagnified;
 
-///Group Probabilities (a function of 
+///Group Probabilities (a function of
 
 public:
 ///Core Probabilities
     struct CoreProbabilities core;
-    
+
 ///Initialize foldcumu, callcumu, and statmean, and then call Process_FoldCallMean().
 	void Process_FoldCallMean();
 
@@ -101,4 +101,3 @@ public:
 ;
 
 #endif // HOLDEM_CallRarity
-
