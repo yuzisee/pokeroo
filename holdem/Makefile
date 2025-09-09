@@ -89,10 +89,6 @@ db:
 	echo '::group::Compile bin/regenerate_opening_book_profiling (`g++ -pg` instead of clang++) use gprof to inspect'
 	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -g -pg -o bin/regenerate_opening_book_profiling -Isrc -D PROGRESSUPDATE=140 -ffast-math $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
-	echo '::group::Compile bin/regenerate_opening_book_timetrace (`g++ -pg` instead of clang++) use gprof to inspect'
-	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -ftime-trace=/tmp/profiling_dust.clang/regenerate_opening_book.json -ftime-trace-granularity=1 -o bin/regenerate_opening_book_timetrace -Isrc -D PROGRESSUPDATE=140 -ffast-math $(REGENERATE_OPENING_BOOK_SRC)
-	# https://clang.llvm.org/docs/analyzer/developer-docs/PerformanceInvestigation.html
-	echo '::endgroup::'
 ifneq ($(GITHUB_ACTIONS),true)
 	mkdir -p /tmp/opening_book
 	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book-gcc 1

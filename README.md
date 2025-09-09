@@ -40,14 +40,14 @@ make test
 ### Do a quick runtime profiling
 e.g.
 ```sh
-rm -r /tmp/profiling_dust.perf /tmp/profiling_dust.clang /tmp/profiling_dust.gcc
-mkdir -vp /tmp/profiling_dust.perf /tmp/profiling_dust.clang /tmp/profiling_dust.gcc
+rm -r /tmp/profiling_dust.perf /tmp/profiling_dust.gcc /tmp/profiling_dust.x
+mkdir -vp /tmp/profiling_dust.perf /tmp/profiling_dust.gcc /tmp/profiling_dust.x
 cd holdem
 GITHUB_ACTIONS="true" make db
 # -4847 is "Ace-King offsuit" but you can choose any other hand if you prefer
 HOLDEMDB_PATH="/tmp/profiling_dust.perf" perf record -F max -g -o /tmp/profiling_dust.perf/regenerate_opening_book.perf -- bin/regenerate_opening_book_selftest -4847
 HOLDEMDB_PATH="/tmp/profiling_dust.gcc" bin/regenerate_opening_book_profiling -4847
-HOLDEMDB_PATH="/tmp/profiling_dust.clang" bin/regenerate_opening_book_timetrace -4847
+HOLDEMDB_PATH="/tmp/profiling_dust.x" instruments -t 'Time Profiler' -D /tmp/profiling_dust.x/regenerate_opening_book.trace -- bin/regenerate_opening_book-clang -4847
 
 gprof bin/regenerate_opening_book_profiling bin/gmon*.out
 
