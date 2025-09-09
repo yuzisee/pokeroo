@@ -5,7 +5,7 @@ on:
 
 jobs:
   latex_make:
-    name: 'Build (see holdem/doc/report)'
+    name: 'PDF (see holdem/doc/report/Makefile)'
     runs-on: 'ubuntu-24.04'
     timeout-minutes: 7
     steps:
@@ -19,11 +19,23 @@ jobs:
       # https://github.com/rstudio/tinytex-releases
       run: wget -qO- "https://yihui.org/tinytex/install-bin-unix.sh" | sh -x
       # run: sudo apt-get update && sudo apt-get install -y universal-ctags
-    - name: verify setup
+    - name: "verify setup against `\\usepackage` entries in holdem/doc/report/ece499rpt.tex"
       run: |
         env
-        ls -l $HOME/.local/bin || echo $HOME/.local/bin
-        ls -l $HOME/bin || echo $HOME/bin
+        (ls -l $HOME/.local/bin && echo "$HOME/.local/bin") || (ls -l $HOME/bin && echo "$HOME/bin")
+
+        tlmgr install fmtcount
+        tlmgr install ulem
+        tlmgr install titlesec
+        tlmgr install setspace
+        tlmgr install titling
+        tlmgr install subfig
+        tlmgr install fancyhdr
+        # fontenc, inputenc, babel, amsmath,
+        # ^^^ are all included by default, I guess?
+        tlmgr install caption
+        tlmgr install multirow
+        # graphics, epsfig, wrapfig
     - name: make
       run: cd holdem/doc/report && make
 
