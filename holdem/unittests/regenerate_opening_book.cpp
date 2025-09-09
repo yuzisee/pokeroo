@@ -366,7 +366,7 @@ int main(int argc, const char * argv[]) {
 
       const std::chrono::time_point<std::chrono::system_clock> completion = std::chrono::system_clock::now();
       // https://stackoverflow.com/questions/7889136/stdchrono-and-cout
-      std::cout << name1 << " completed in " << std::chrono::duration_cast<std::chrono::seconds>(completion - start_time).count() << " seconds → " << name2 << endl;
+      std::cout << "✅`" << name1 << ".holdem{C,W}` altogether completed in " << std::chrono::duration_cast<std::chrono::seconds>(completion - start_time).count() << " seconds → " << name2 << endl;
 
     } else {
       regenerateDb(mode);
