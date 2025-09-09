@@ -100,6 +100,8 @@ void WinStats::countWin(const float64 occ)
 
 }
 
+// [!NOTE]
+// this->myDistr is the part that ultimately gets saved during `StatsManager::SerializeW`
 void WinStats::Analyze()
 {
 
@@ -122,6 +124,9 @@ void WinStats::Analyze()
 
 	}
 
+  // [!NOTE]
+  // The constructor initializes myDistr->coarseHistogram[...] to all zeroes
+  // See for yourself at src/inferentials.cpp:DistrShape::DistrShape
 	myDistr = new DistrShape(myTotalChances, worst, myAvg, best);
 
 	for(int32 i=0;i<statCount;i++)
