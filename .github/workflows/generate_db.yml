@@ -111,3 +111,46 @@ jobs:
           regenerate_opening_book_modes: "229 230 231"
           rotation_suffix: 7of7
         id: generate_19_20_21
+
+  # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-requiring-successful-dependent-jobs
+  combine_and_upload_results:
+    name: "Aggregate & save for upload"
+    runs-on: 'ubuntu-24.04'
+    needs: [rotation123, rotation456, rotation789, rotation10_11_12]
+    # https://docs.github.com/en/actions/tutorials/store-and-share-data#downloading-artifacts-during-a-workflow-run
+    steps:
+      - name: Fetch
+        uses: actions/download-artifact@v5
+        with:
+          pattern: opening_book-*
+          merge-multiple: true
+      - name: "Inspect results (supposedly actions/download-artifact will extract the contents for us into $GITHUB_WORKSPACE by default)"
+        run: pwd -P && ls -l
+      - name: "Done!"
+        uses: actions/upload-artifact@v4
+        with:
+          # https://docs.github.com/en/actions/reference/workflows-and-actions/variables
+          # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+          # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
+          name: opening_book-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            *.holdemC
+            *.holdemW
+          # include-hidden-files: false by default
+          if-no-files-found: error
+          overwrite: true
+          compression-level: 9
+          retention-days: 21
+      - name: "Save debugging info"
+        uses: actions/upload-artifact@v4
+        with:
+          name: inspect_json-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            *
+            **/*
+            !*.holdemC.json
+            !*.holdemW.json
+          if-no-files-found: error
+          overwrite: true
+          compression-level: 9
+          retention-days: 21

@@ -41,4 +41,4 @@ runs:
       if-no-files-found: error
       overwrite: true
       compression-level: 0
-      retention-days: 21
+      retention-days: 1
