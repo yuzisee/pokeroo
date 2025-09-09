@@ -171,7 +171,6 @@ void StatsManager::holdemWtoJSON ( std::stringstream& dataf, const DistrShape& d
   dataf << "  \"mean\": ";  StatResultToJSON(dataf, dPCT.mean); dataf << "," << std::endl;
   dataf << "  \"best\": ";  StatResultToJSON(dataf, dPCT.best); dataf << "," << std::endl;
   dataf << "  \"worst\": ";  StatResultToJSON(dataf, dPCT.worst); dataf << "," << std::endl;
-  dataf << "  \"_COARSE_COMMUNITY_NUM_BINS\": " << COARSE_COMMUNITY_NUM_BINS << "," << std::endl;
   dataf << "  \"coarseHistogram\": [" << std::endl;
   for(size_t i=0;i<COARSE_COMMUNITY_NUM_BINS;++i) {
     dataf << "    ";  StatResultToJSON(dataf, dPCT.coarseHistogram[i]);
@@ -210,7 +209,7 @@ void StatsManager::StatResultToJSON(std::stringstream& dataf, const StatResult &
 }
 void StatsManager::holdemCtoJSON ( std::stringstream& dataf, const CallCumulation& q ) {
   dataf << "{" << std::endl;
-  dataf << "  \"_vcount\": " << q.cumulation.size() << "," << std::endl;
+  dataf << "  \"!vcount\": " << q.cumulation.size() << "," << std::endl;
   dataf << "  \"cumulation\": [" << std::endl;
   bool first_elem = true;
   vector<StatResult>::const_iterator target;

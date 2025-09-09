@@ -27,8 +27,8 @@ class StatResult(typing.TypedDict):
     pct: float
 
 def round_float_sigfig(float_val):
-  assert NUMERIC_LIMITS_FLOAT64_MAX_DIGITS10 == DBL_DECIMAL_DIG, "Needs at least to match significant digit settings in unittests/regenerate_opening_book.cpp"
-  std_setprecision = '{:.' + str(DBL_DECIMAL_DIG - 1) + 'g}'
+  assert NUMERIC_LIMITS_FLOAT64_MAX_DIGITS10 == DBL_DECIMAL_DIG, "Needs at least to match the `std::setprecision` significant digit settings of unittests/regenerate_opening_book.cpp:spotCheckDb"
+  std_setprecision = '{:.' + str(DBL_DECIMAL_DIG - 2) + 'g}'
   return float(std_setprecision.format(float_val))
 
 def read_typed_float(f: typing.IO) -> float:
@@ -76,6 +76,7 @@ def holdem_w_to_json(holdemc_filename: str) -> str:
         holdem_w_json["improve"] = read_typed_float(f)
         holdem_w_json["skew"] = read_typed_float(f)
         holdem_w_json["kurtosis"] = read_typed_float(f)
+        holdem_w_json['_COARSE_COMMUNITY_NUM_BINS'] = COARSE_COMMUNITY_NUM_BINS
 
         no_leftover = f.read(1)
         assert no_leftover == b'', f"Corrupt {holdemc_filename} ⚠ DistrShape contains at least {repr(no_leftover)} after deserializing…\n{holdem_w_json}"
@@ -85,7 +86,7 @@ def holdem_w_to_json(holdemc_filename: str) -> str:
     json_to_format = json.dumps(holdem_w_json, sort_keys=False)
     for toplevel_k in holdem_w_json.keys():
         json_to_format = json_to_format.replace('"' + toplevel_k + '"', "\n" + '  "' + toplevel_k + '"')
-    return json_to_format.replace('[', '[' + "\n    ").replace('}, {', '},' + "\n" + '    {').replace(']', "\n" + '  ]').replace('.0,', ',').strip()[:-1] + "\n" + '}'
+    return json_to_format.replace('[', '[' + "\n    ").replace('}, {', '},' + "\n" + '    {').replace(']', "\n" + '  ]').replace('.0,', ',').replace('.0}', '}').strip()[:-1] + "\n" + '}'
 
 def usage():
     sys.stderr.write("\n")
