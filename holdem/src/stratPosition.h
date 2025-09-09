@@ -54,8 +54,8 @@ public:
 
 		DistrShape detailPCT;
 		StatResultProbabilities statprob;
-		
-		
+
+
 		float64 myMoney;
 
 
@@ -137,14 +137,14 @@ class DeterredGainStrategy : public PositionalStrategy
 ;
 
 /**
- * The basic presmise here is based on the following discussion:
+ * The basic premise here is based on the following discussion:
  *  Why don't you bet all-in? Is it because of the Kelly criterion, or is it because of optimism?
  *  Why don't you _call_ all-in? Is it because of the Kelley criterion, or is it because of optimism?
  *
  * "If someone bets all-in, and you have the option to call it, you pick your spots. You can wait for a better opportunity. Obviously you don't take this one because you are putting too much of your money at risk at once" (thus, use Kelly criterion, a.k.a. GainModel, when calling or less, and use AlgbModel, a.k.a. GainModelNoRisk for raising)
  * "If you are the one raising all-in, the deterrent for not always doing this is that you will only be called by good hands." (Thus, we should use AlgbModel as the default for raises but scale from X to statworse as your raise gets higher.)
  * -Nav
- 
+
  * So:
  * + Use CombinedStatResultsPessimistic when raising (any amount)
  * + Use geom to call, always. Since calling is the smallest bet, do we hard algb/worse for any raise? Sure. At least it's simple. Let's try it.

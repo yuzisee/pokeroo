@@ -519,7 +519,7 @@ struct CoreProbabilities {
         return statrelation;
     }
 
-    // How often do you get a hand this good?
+    // How often do you get a hand this good? (Here, "good" = raw percentage chance to win)
     // This is high for strong playing hands.
     StatResult statRanking() {
         StatResult statranking;

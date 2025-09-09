@@ -361,8 +361,8 @@ float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, Cal
 #ifdef LOGPOSITION
     //logFile << "selected risk  " << (choicePoint - myBet)/(maxShowdown - myBet) << endl;
 
-    logFile << "Choice Optimal " << choicePoint << endl;
-    logFile << "Choice Fold " << choiceFold << endl;
+    logFile << "Choice Optimal " << choicePoint << endl; // Ideally I'd like the bet to stop here.
+    logFile << "Choice Fold " << choiceFold << endl; // If I need to call a bet larger than this, I will lose money.
 
     logFile << "f("<< betToCall <<")=" << 1.0+callGain << endl;
 
@@ -466,7 +466,7 @@ void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, E
     float64 numfolds = xw * e->Pr_haveWinPCT_strictlyBetterThan(statprob.core.statmean.pct - EPS_WIN_PCT); // waitlength (in folds)
 
 
-    logFile << " x " << xw << "(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
+    logFile << " by waiting " << xw << "hands(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
     if( ViewPlayer().GetInvoluntaryContribution() > 0 ) logFile << "   ->assumes $" << ViewPlayer().GetInvoluntaryContribution() << " forced";
     logFile << endl;
 #endif // #ifdef LOGPOSITION
@@ -1359,6 +1359,11 @@ float64 PureGainStrategy::MakeBet()
         CoarseCommunityHistogram rankComparison(DistrShape::newEmptyDistrShape(), left);
         PureStatResultGeom rankOnly(statprob.core.statmean, left, rankComparison, statprob.core.foldcumu, tablestate);
 
+        // Compare both PureStatResultGeom objects...
+        //   leftCS is based on `CoarseCommunityHistogram outcomes(detailPCT, left)`
+        //   rankOnly is based on `CoarseCommunityHistogram rankComparison(DistrShape::newEmptyDistrShape(), left)`
+        //            i.e. how good is my hand, right now, according to `left` (which is defined by the bot type, see `bGamble` just below this)
+        // The reason this matters is because PureStatResultGeom's constructor calls initMultiOpponent which uses different calculations for drawing hands vs. playing hands
         if (rankOnly.ViewShape(betToCall).pct < leftCS.ViewShape(betToCall).pct) {
             // Drawing hand (since it's higher than rank alone)
             statResultMode = 'c';
@@ -1370,12 +1375,17 @@ float64 PureGainStrategy::MakeBet()
         // Mean / Pessemistic mode (heads-up)
         statResultMode = 'm';
     }
+    // [!NOTE]
+    // In the "playing hand" scenario,
+    //   leftCS.getWinProb() === initByRank(..., left).fOutrightWinProb
+    //   leftCS.getLoseProb() === initByRank(..., left).fLoseProb
+    //   leftCS.ViewShape() == initByRank(..., left.fShape)
     logFile << "CallStrength W(" << static_cast<int>(tablestate.handStrengthOfRound()) << statResultMode << ")=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
+    // leftCS.ViewShape() is your "implied" win rate against a single opponent (i.e. the generalized hand strength of your current situation)
     const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
     logFile << "(MinRaise to $" << minRaiseTo << ") ";
     printPessimisticWinPct(logFile, minRaiseTo, &csrp);
     logFile << endl;
-
 
 	if( bGamble == 0 )
 	{ logFile << " -  statranking algb RAW - " << endl;}
@@ -1391,8 +1401,8 @@ float64 PureGainStrategy::MakeBet()
 #endif
 
     // Choose from ca or cg
-    AlgbStateCombiner ca;
-    GeomStateCombiner cg;
+    AlgbStateCombiner ca; // "algebraic bets" are the optimal dollar bet to maximize Expected Value
+    GeomStateCombiner cg; // "geometric bets" are the optimal _fraction of bankroll_ bet to maximize the Kelly Criterion
     IStateCombiner &stateCombiner = (bGamble % 4 == 0) ? dynamic_cast<IStateCombiner &>(ca) : dynamic_cast<IStateCombiner &>(cg);
 
 

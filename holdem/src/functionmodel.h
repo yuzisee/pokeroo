@@ -120,6 +120,8 @@ public:
 }
 ;
 
+// StatResult is the 1v1 statistics calculation.
+// NetStatResult extrapolates this to your win/lose prediction against the _entire group_ of remaining players.
 struct NetStatResult {
     StatResult fShape;
     float64 fLoseProb;
@@ -184,6 +186,7 @@ private:
  // For example, post-flop pre-turn X has 47 possible outcomes.
  // Pre-flop X has 19600 possible outcomes (a.k.a. 50*49*48/3!)
  // Post-river, n = 1, skew is NaN, kurtosis is NaN, stdDev = 0.0, avgDev = 0.0, worst"_community" == mean == winPct
+ //             ^^^ presumably `DistrShape::newEmptyDistrShape()` serves as the placeholder for this
 
  // Imagine a quantized version of X, that we express below as a histogram
  //
