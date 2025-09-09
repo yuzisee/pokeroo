@@ -78,12 +78,9 @@ db:
 	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
-	echo '::group::Compile bin/regenerate_opening_book-clang (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
-	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book-clang -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
-	echo '::endgroup::'
-	date
-	echo '::group::Compile bin/regenerate_opening_book-gcc (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
-	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book-gcc -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
+	echo '::group::Compile bin/regenerate_opening_book (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
+	# clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book-clang -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
+	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book_profiling (`g++ -pg` instead of clang++) use gprof to inspect'
@@ -91,7 +88,7 @@ db:
 	echo '::endgroup::'
 ifneq ($(GITHUB_ACTIONS),true)
 	mkdir -p /tmp/opening_book
-	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book-gcc 1
+	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 1
 endif
 	date
 
