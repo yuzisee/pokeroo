@@ -1265,6 +1265,7 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
 
     logF << "Community outcomes (stdev = " << distrPct.stdDev << " pcts , avgdev = " << distrPct.avgDev << " pcts ), kurtosis = " << distrPct.kurtosis << "\n";
     logF << distrPct.worst.pct << " pct: least helpful community\n";
+    // ^^ possible upcoming community cards, and how they affect your existing hand
 
     size_t k=0;
     while(1) {
@@ -1420,62 +1421,59 @@ float64 PureGainStrategy::MakeBet()
 
 
     const float64 bestBet = solveGainModel(&choicemodel, &(statprob.core.callcumu));
-    
+
 #ifdef LOGPOSITION
-    
-    
-    
-    
+
+
+
+
 #ifdef VERBOSE_STATEMODEL_INTERFACE
     const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
-    
+
     printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
-    
+
     printStateModel(logFile, displaybet, ap_aggressive, ViewPlayer());
-    
+
     if (betToCall < displaybet) {
         // If you raised, also show CALL
         printStateModel(logFile, betToCall, ap_aggressive, ViewPlayer());
     }
 
     const float64 displayMinRaise = (myMoney < minRaiseTo) ? myMoney : minRaiseTo;
-    
+
     if (betToCall == displaybet) {
         // If you called, also show MINRAISE
         if (betToCall < displayMinRaise) {
             printStateModel(logFile, displayMinRaise, ap_aggressive, ViewPlayer());
         }
     }
-    
+
 #endif
-    
+
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
         /*
          logFile << "PlayAt($"<< displaybet <<")Call=" << callModel.f(displaybet) << endl;
          logFile << "PlayAt($"<< displaybet <<")Raise=" << raiseModel.f(displaybet) << endl;
          */
-        
+
     }
-    
-    
+
+
     printBetGradient< StateModel >
     (myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, &csrp);
-    
-    
+
+
     logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
-    
+
     logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(displaybet) << "   d\\" << myDeterredCall.pWinD(displaybet) << endl;
     if( myDeterredCall.pWin(displaybet) > 0 )
     {
         logFile << "if playstyle is Danger/Conservative, overall utility is " << choicemodel.f(displaybet) << endl;
     }
-    
+
 #endif
-    
+
     return bestBet;
-    
+
 }
-
-
-
