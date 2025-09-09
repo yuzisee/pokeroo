@@ -41,7 +41,7 @@ jobs:
   automated_tests:
     name: 'Test (see holdem/unittests/main.cpp)'
     runs-on: 'ubuntu-24.04'
-    timeout-minutes: 4
+    timeout-minutes: 8
     steps:
     - uses: actions/checkout@v5
     - name: Extract opening book (speedup unit test runtime)
@@ -51,10 +51,12 @@ jobs:
         # ~/pokeroo-run/lib/holdemdb ← is because of the runtime path used in the `test` target of the Makefile
     - name: Must pass unit tests
       run: cd holdem && make test
+    - name: We need llvm-profdata
+      run: sudo apt-get update && sudo apt-get install -y llvm
     - name: clang coverage report
       run: |
         cd holdem
-        echo /Library/Developer/CommandLineTools/usr/bin/llvm-{profdata,cov}
+        # echo /Library/Developer/CommandLineTools/usr/bin/llvm-{profdata,cov}
         llvm-profdata merge -sparse -o /tmp/code_coverage.llvm/combined.profdata /tmp/code_coverage.llvm/unittests*.profraw
         llvm-cov show bin/unittests_clang -instr-profile=/tmp/code_coverage.llvm/coverage.profdata -format=html -output-dir=/tmp/code_coverage.llvm/html
         cd /tmp/code_coverage.llvm/
