@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -100,6 +101,8 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
  */
 static void regenerateDb(int mode) {
 
+    const std::chrono::time_point<std::chrono::system_clock> process_start = std::chrono::system_clock::now();
+
     // This is for easier parallelization
     std::cout << "Mode: " << mode << "\n";
 
@@ -175,11 +178,19 @@ static void regenerateDb(int mode) {
             continue;
         }
 
+        const std::chrono::time_point<std::chrono::system_clock> time_start = std::chrono::system_clock::now();
         spotCheckDb(holeCards, 'C');
+        const std::chrono::time_point<std::chrono::system_clock> time_end = std::chrono::system_clock::now();
 
         ++counter;
 
-        std::cout << "=== Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size()) << "   ===\n\n";
+        std::stringstream complete_msg;
+        complete_msg << "=== 📊 Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size())
+                     << "   (by worker #" << static_cast<int>(offset) << "/" << static_cast<int>(CPUs) << " in "
+                     << std::chrono::duration_cast<std::chrono::seconds>(time_end - time_start).count() << " seconds"
+                     << ", ⏱total " << std::setprecision(3) << (std::chrono::duration_cast<std::chrono::minutes>(time_end - process_start).count() / 60.0) << "h elapsed"
+                     << ") ===\n\n";
+        std::cout << complete_msg.str();
         std::cout.flush(); // Flush for timestamping
     }
 
@@ -193,11 +204,19 @@ static void regenerateDb(int mode) {
             continue;
         }
 
+        const std::chrono::time_point<std::chrono::system_clock> time_start = std::chrono::system_clock::now();
         spotCheckDb(holeCards, 'W');
+        const std::chrono::time_point<std::chrono::system_clock> time_end = std::chrono::system_clock::now();
 
         ++counter;
 
-        std::cout << "=== Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size()) << "   ===\n\n";
+        std::stringstream complete_msg;
+        complete_msg << "=== ❚❙❘ Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size())
+                     << "   (by worker #" << static_cast<int>(offset) << "/" << static_cast<int>(CPUs) << " in "
+                     << std::setprecision(3) << (std::chrono::duration_cast<std::chrono::seconds>(time_end - time_start).count() / 60.0) << " minutes"
+                     << ", ⏱total " << std::setprecision(3) << (std::chrono::duration_cast<std::chrono::minutes>(time_end - process_start).count() / 60.0) << "h elapsed"
+                     << ") ===\n\n";
+        std::cout << complete_msg.str();
         std::cout.flush(); // Flush for timestamping
     }
 

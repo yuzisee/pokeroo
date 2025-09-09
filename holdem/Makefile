@@ -77,8 +77,8 @@ db:
 	echo '::group::Compile bin/regenerate_opening_book (Same as above but with `-fno-exceptions -fno-rtti`)'
 	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140 unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
 	echo '::endgroup::'
-	mkdir -p /tmp/opening_book
 ifneq ($(GITHUB_ACTIONS),true)
+	mkdir -p /tmp/opening_book
 	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 1
 endif
 	date
