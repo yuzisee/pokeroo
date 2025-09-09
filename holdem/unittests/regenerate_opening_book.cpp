@@ -32,7 +32,7 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
           }
 
           std::stringstream holdemjson_data;
-          holdemjson_data << std::numeric_limits<float64>::max_digits10;
+          holdemjson_data << std::setprecision(std::numeric_limits<float64>::max_digits10 - 2);
           if (fileSuffix == 'C') {
 
              // StatResultProbabilities statprob;
@@ -47,6 +47,12 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
             ///Compute CallStats
             StatsManager::QueryDefense(statprob_core_handcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
 
+
+            // EXPORT as .jsonC
+
+            StatsManager::holdemCtoJSON(holdemjson_data, statprob_core_handcumu);
+            (std::ofstream(StatsManager::dbFileName(withCommunity, CommunityPlus::EMPTY_COMPLUS,"C.json")) << holdemjson_data.str()).close();
+
           } else if (fileSuffix == 'W') {
 
             DistrShape dPCT(DistrShape::newEmptyDistrShape());
@@ -56,6 +62,11 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
             ///Compute CommunityCallStats
             StatsManager::Query(&dPCT, withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
 
+
+            // EXPORT as .jsonW
+
+            StatsManager::holdemWtoJSON(holdemjson_data, dPCT);
+            (std::ofstream(StatsManager::dbFileName(withCommunity, CommunityPlus::EMPTY_COMPLUS,"W.json")) << holdemjson_data.str()).close();
           } else {
             std::cerr << "spotCheckDb(…, " << fileSuffix << ")" << std::endl;
             exit(70); // man sysexits → EX_SOFTWARE
@@ -172,7 +183,7 @@ static void regenerateDb(int mode) {
     counter = 0;
     for (const DeckLocationPair & holeCards : handList) {
         if (counter % CPUs != offset) {
-            std::cout << "skip\n";
+            std::cout << "skip→";
             std::cout.flush();
             ++counter;
             continue;
@@ -198,7 +209,7 @@ static void regenerateDb(int mode) {
     counter = 0;
     for (const DeckLocationPair & holeCards : handList) {
         if (counter % CPUs != offset) {
-            std::cout << "skip\n";
+            std::cout << "skip→";
             std::cout.flush();
             ++counter;
             continue;
@@ -327,6 +338,15 @@ int main(int argc, const char * argv[]) {
     // Regenerate the DB (striped, in case you want to run multiple times on separate threads)
     const int mode = std::stoi(argv[1]); // atoi(argv[1])
     // see also `std::strtol`
+
+    /*
+      const std::string trueStr("true");
+      char* github_actions_env;
+      github_actions_env = getenv ("GITHUB_ACTIONS");
+      if (github_actions_env && (trueStr == github_actions_env)) {
+
+      }
+    */
 
     const bool spot_check_regression_test = (mode < 0);
     if (spot_check_regression_test) {

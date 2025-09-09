@@ -165,6 +165,27 @@ void StatsManager::serializeStatResult(ofstream& dataf, const StatResult& d)
     dataf.write(cachebuf,cachebufSize);
 }
 
+void StatsManager::holdemWtoJSON ( std::stringstream& dataf, const DistrShape& dPCT ) {
+  dataf << "{" << std::endl;
+  dataf << "  \"n\": " << dPCT.n << "," << std::endl;
+  dataf << "  \"mean\": ";  StatResultToJSON(dataf, dPCT.mean); dataf << "," << std::endl;
+  dataf << "  \"best\": ";  StatResultToJSON(dataf, dPCT.best); dataf << "," << std::endl;
+  dataf << "  \"worst\": ";  StatResultToJSON(dataf, dPCT.worst); dataf << "," << std::endl;
+  dataf << "  \"coarseHistogram\": [" << std::endl;
+  for(size_t i=0;i<COARSE_COMMUNITY_NUM_BINS;++i) {
+    dataf << "    ";  StatResultToJSON(dataf, dPCT.coarseHistogram[i]);
+    if (i < COARSE_COMMUNITY_NUM_BINS - 1) { dataf << ","; }
+    dataf << std::endl;
+  }
+  dataf << "  ]," << std::endl;
+  dataf << "  \"avgDev\": " << dPCT.avgDev << "," << std::endl;
+  dataf << "  \"stdDev\": " << dPCT.stdDev << "," << std::endl;
+  dataf << "  \"improve\": " << dPCT.improve << "," << std::endl;
+  dataf << "  \"skew\": " << dPCT.skew << "," << std::endl;
+  dataf << "  \"kurtosis\": " << dPCT.kurtosis << "," << std::endl;
+  dataf << "  \"_COARSE_COMMUNITY_NUM_BINS\": " << COARSE_COMMUNITY_NUM_BINS;
+  dataf << std::endl << "}" << std::endl;
+}
 void StatsManager::SerializeW( ofstream& dataf, const DistrShape& dPCT )
 {
     abort_if_big_endian();
@@ -181,6 +202,27 @@ bool StatsManager::UnserializeW( ifstream& dataf, DistrShape* dPCT )
     char temp[1];
     dataf.read(temp,1);
     return dataf.eof();
+}
+
+void StatsManager::StatResultToJSON(std::stringstream& dataf, const StatResult &target) {
+  dataf << "{\"wins\": " << target.wins << ", \"splits\": " << target.splits << ", \"loss\": " << target.loss << ", \"repeated\": " << target.repeated << ", \"pct\": " << target.pct << "}";
+}
+void StatsManager::holdemCtoJSON ( std::stringstream& dataf, const CallCumulation& q ) {
+  dataf << "{" << std::endl;
+  dataf << "  \"!vcount\": " << q.cumulation.size() << "," << std::endl;
+  dataf << "  \"cumulation\": [" << std::endl;
+  bool first_elem = true;
+  vector<StatResult>::const_iterator target;
+  for(target = q.cumulation.begin();target != q.cumulation.end();++target) {
+    if (!first_elem) {
+      dataf << "," << std::endl;
+    }
+    dataf << "    ";
+    StatResultToJSON(dataf, *target);
+    first_elem = false;
+  }
+  dataf << std::endl << "  ]" << std::endl;
+  dataf << "}" << std::endl;
 }
 
 void StatsManager::SerializeC( ofstream& dataf, const CallCumulation& q )

@@ -29,7 +29,8 @@ jobs:
   automated_build:
     name: 'Build (see Makefile)'
     runs-on: 'ubuntu-24.04'
-    timeout-minutes: 3
+    timeout-minutes: 6
+    # This only needs a minute or so, but installing ctags can have unpredicable delays...
     steps:
     - uses: actions/checkout@v5
     - name: Install ctags (needed by Makefile `tags` target)
@@ -56,8 +57,8 @@ jobs:
     timeout-minutes: 45
     steps:
     - uses: actions/checkout@v5
-    # TODO(from joseph): If time permits, also AA (5049) + 72x (322) + Q7x (4023)
     - name: "make db (trigger bin/regenerate_opening_book_selftest for GITHUB_ACTIONS=truw)"
+      # TODO(from joseph): If time permits, also AA (5049) + 72x (322) + Q7x (4023)
       env:
         HOLDEMDB_PATH: /tmp/opening_book_selftest
       run: cd holdem && make db && mkdir -vp /tmp/opening_book_selftest && echo -5131 -4847 -3733 -1 | tr ' ' "\n" | xargs -P "$(sh ../n_threads_minus_1.sh)" -n 1 bin/regenerate_opening_book_selftest
@@ -65,20 +66,43 @@ jobs:
       # AKx (48,47)
       # JTS (37,33)
       # 22 (0, 1)
-    - name: "Extract comparison DB (A9S, AKx, JTS, 22x) into hexdump // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
+    - name: "Extract comparison DB (A9S, AKx, JTS, 22x) into hexdump & JSON // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
       run: |
         mkdir -v -p ~/pokeroo-run/lib/holdemdb
         unzip "holdem/holdemdb_arm64.zip" -d ~/pokeroo-run/lib/holdemdb/
 
-        cd ~/pokeroo-run/lib/holdemdb
-        echo A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW | tr ' ' "\n" | sort | xargs -I @ hexdump -C @ > /tmp/opening_book_selftest/gold.txt
+        mkdir -p /tmp/opening_book_json.gold
+        echo A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW | tr ' ' "\n" | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py ~/pokeroo-run/lib/holdemdb/@ > /tmp/opening_book_json.gold/@.json'
 
-    - name: Parse generated DB into hexdump
+        # INVARIANT: We now have /tmp/opening_book_json.gold/ which will be compared with the /tmp/opening_book_json.current_ofstream_logs/ generated later below
+
+        cd ~/pokeroo-run/lib/holdemdb
+        ls -1 A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW | sort | xargs -I @ hexdump -C @ > /tmp/opening_book_selftest/gold.txt
+
+    - name: "Parse generated DB into hexdump & JSON"
       run: |
         cd /tmp/opening_book_selftest
         ls -1 *.holdemC *.holdemW | sort | xargs -I @ hexdump -C @ > current.txt
 
         # INVARIANT: We now have /tmp/opening_book_selftest/gold.txt and /tmp/opening_book_selftest/current.txt that can be compared
 
-    - name: "Compare gold (binary) vs. current (binary)"
-      run: diff -uw /tmp/opening_book_selftest/gold.txt /tmp/opening_book_selftest/current.txt
+        mkdir -p /tmp/opening_book_json.current_ofstream_logs
+        mv -v *.json /tmp/opening_book_json.current_ofstream_logs/
+
+        # RESULT: We now have /tmp/opening_book_json.current_ofstream_logs/
+
+    - name: "Compare current(binary)→converted(json) vs. current(json)"
+      run: |
+        mkdir -p /tmp/opening_book_json.current_extract_from_binary
+        ls -1 /tmp/opening_book_selftest/*.holdem{C,W} | xargs -n 1 basename | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py /tmp/opening_book_selftest/@ > /tmp/opening_book_json.current_extract_from_binary/@.json'
+
+        diff -urw /tmp/opening_book_json.current_extract_from_binary/ /tmp/opening_book_json.current_ofstream_logs/
+
+    - name: "Compare [ gold(binary)→converted(json) vs. current(json) ] ⬞ && ⬞ [ gold (binary) vs. current (binary) ]"
+      run: |
+        if diff -uw /tmp/opening_book_selftest/gold.txt /tmp/opening_book_selftest/current.txt; then
+          echo 'PASS (binary identical)'
+        else
+          FAIL_CODE=$?
+          diff -rw -U 1 /tmp/opening_book_json.gold/ /tmp/opening_book_json.current_ofstream_logs/ && exit $FAIL_CODE
+        fi

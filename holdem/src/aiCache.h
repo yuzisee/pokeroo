@@ -85,6 +85,7 @@ private:
     static bool readPathFromIni();
     static bool readPathFromEnv();
 
+    static void StatResultToJSON(std::stringstream& dataf, const StatResult &target);
     static void serializeDistrShape(ofstream& dataf, const DistrShape& d);
     static void serializeStatResult(ofstream& dataf, const StatResult& d);
     static bool unserializeDistrShape(ifstream& dataf, DistrShape* d);
@@ -97,7 +98,14 @@ protected:
     static bool UnserializeW(ifstream& dataf, DistrShape* dPCT);
     static string baseDataPath;
 
+#ifdef PROGRESSUPDATE
   public:
+#endif
+  static void holdemWtoJSON(std::stringstream& dataf, const DistrShape& dPCT);
+  static void holdemCtoJSON(std::stringstream& dataf, const CallCumulation& q);
+#ifndef PROGRESSUPDATE
+  public:
+#endif
 
     static const string& dbFolderPath() { StatsManager::initPath(); return baseDataPath; }
 
