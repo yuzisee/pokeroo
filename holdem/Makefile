@@ -2,9 +2,10 @@
 CXX = g++
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
 CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -flto -march=native
-CXXFLAGS_EXECUTABLE_CHAIN = -O -fpic -Wextra -Wno-parentheses
+CXXFLAGS_EXECUTABLE_CHAIN = -g -O -fpic -Wextra -Wno-parentheses
+CXXFLAGS_LIVEDEBUG = -g -D RTTIASSERT
 #The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
-CXXFLAGS += -g -Wall
+CXXFLAGS += -Wall
 # [!NOTE]
 # We manually override with `-Wno-unused-parameter` below in some spots
 
@@ -55,31 +56,46 @@ test:
 	mkdir -v -p bin
 	date
 	echo '::group::Compile bin/unittests_clang'
-	clang++ $(CXXFLAGS) -D RTTIASSERT -o bin/unittests_clang -Isrc $(wildcard src/*.cpp) unittests/main.cpp
+	clang++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) -fprofile-instr-generate -fcoverage-mapping -o bin/unittests_clang -Isrc $(wildcard src/*.cpp) unittests/main.cpp
 	echo '::endgroup::'
 	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
 	date
 	echo '::group::Compile bin/unittests_gcc_O3'
-	g++ $(CXXFLAGS) -D RTTIASSERT -O3 -o bin/unittests_gcc_O3 -Isrc $(wildcard src/*.cpp) unittests/main.cpp
+	g++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) -O3 -o bin/unittests_gcc_O3 -Isrc $(wildcard src/*.cpp) unittests/main.cpp
 	echo '::endgroup::'
 	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
 	date
 	echo ~/pokeroo-run/lib/holdemdb/ > unittests/holdemdb.ini
-	cd unittests && ../bin/unittests_clang && ../bin/unittests_gcc_O3
+	mkdir -p /tmp/code_coverage.llvm
+	cd unittests && LLVM_PROFILE_FILE="/tmp/code_coverage.llvm/unittests.profraw" ../bin/unittests_clang && ../bin/unittests_gcc_O3
+
+REGENERATE_OPENING_BOOK_SRC = unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
 
 # `-ffast-math` also? If you're not worried about floating point...
 db:
 	mkdir -v -p bin
-	echo '::group::Compile bin/regenerate_opening_book_selftest'
-	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
+	echo '::group::Compile bin/regenerate_opening_book_selftest (perf can be used for profiling)'
+	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
-	echo '::group::Compile bin/regenerate_opening_book (Same as above but with `-fno-exceptions -fno-rtti`)'
-	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140 unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
+	echo '::group::Compile bin/regenerate_opening_book-clang (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
+	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book-clang -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
+	echo '::endgroup::'
+	date
+	echo '::group::Compile bin/regenerate_opening_book-gcc (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
+	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book-gcc -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
+	echo '::endgroup::'
+	date
+	echo '::group::Compile bin/regenerate_opening_book_profiling (`g++ -pg` instead of clang++) use gprof to inspect'
+	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -g -pg -o bin/regenerate_opening_book_profiling -Isrc -D PROGRESSUPDATE=140 -ffast-math $(REGENERATE_OPENING_BOOK_SRC)
+	echo '::endgroup::'
+	echo '::group::Compile bin/regenerate_opening_book_timetrace (`g++ -pg` instead of clang++) use gprof to inspect'
+	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -ftime-trace=/tmp/profiling_dust.clang/regenerate_opening_book.json -ftime-trace-granularity=1 -o bin/regenerate_opening_book_timetrace -Isrc -D PROGRESSUPDATE=140 -ffast-math $(REGENERATE_OPENING_BOOK_SRC)
+	# https://clang.llvm.org/docs/analyzer/developer-docs/PerformanceInvestigation.html
 	echo '::endgroup::'
 ifneq ($(GITHUB_ACTIONS),true)
 	mkdir -p /tmp/opening_book
-	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 1
+	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book-gcc 1
 endif
 	date
 
