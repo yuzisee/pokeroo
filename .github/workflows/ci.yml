@@ -98,5 +98,11 @@ jobs:
 
         diff -urw /tmp/opening_book_json.current_extract_from_binary/ /tmp/opening_book_json.current_ofstream_logs/
 
-    - name: "Compare gold(binary)→converted(json) vs. current(json)   &&   gold (binary) vs. current (binary)"
-      run: diff -rw -U 1 /tmp/opening_book_json.gold/ /tmp/opening_book_json.current_ofstream_logs/ && diff -uw /tmp/opening_book_selftest/gold.txt /tmp/opening_book_selftest/current.txt
+    - name: "Compare [ gold(binary)→converted(json) vs. current(json) ] ⬞ && ⬞ [ gold (binary) vs. current (binary) ]"
+      run: |
+        if diff -uw /tmp/opening_book_selftest/gold.txt /tmp/opening_book_selftest/current.txt; then
+          echo 'PASS (binary identical)'
+        else
+          FAIL_CODE=$?
+          diff -rw -U 1 /tmp/opening_book_json.gold/ /tmp/opening_book_json.current_ofstream_logs/ && exit $FAIL_CODE
+        fi
