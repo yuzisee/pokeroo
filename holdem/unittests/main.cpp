@@ -1525,12 +1525,12 @@ namespace RegressionTests {
          [Badr]
          [Mona]
 
-         Joseph bets $6
-         Nav calls $6
+         Joseph bets $x (limp / small bet)
+         Nav calls $x
          Sam folds
          Laily folds
          Joyce folds
-         Andrew calls $6
+         Andrew calls $x
          Badr folds
          Mona folds
          */
@@ -1544,8 +1544,9 @@ namespace RegressionTests {
          Turn:	Ac Qd 2h 2d  (Pot: $34)
          */
 
+        // You have top two pair. One of your
 
-        assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
+        assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1); // ASSERT: PureGainStrategy should not fold with top two pair, right?
         /*
 
          (3 players)
@@ -1553,10 +1554,10 @@ namespace RegressionTests {
          [Nav]
          [Andrew]
 
-         Joseph bet $40
-         Nav folds
+         Joseph bets (e.g. $40) or doesn't bet (check)
+         Nav check/folds
          Andrew raise to $100
-         Joseph call
+         Joseph call if already $40 comitted, and fold otherwise
 
          */
 
@@ -4532,7 +4533,7 @@ int main(int argc, const char * argv[])
     RegressionTests::testRegression_026();
     RegressionTests::testRegression_025();
     RegressionTests::testRegression_021b();
-//    RegressionTests::testRegression_022();
+    //RegressionTests::testRegression_022(); // In later versions of the code, the bot is more tight-aggressive in this situation so it's not an issue anymore
 //    RegressionTests::testRegression_021(); // TODO(from yuzisee): We need to track distribution of flops to identify drawing hands.
 
     RegressionTests::testRegression_006();
