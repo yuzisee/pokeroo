@@ -58,7 +58,7 @@ jobs:
         cd holdem
         # echo /Library/Developer/CommandLineTools/usr/bin/llvm-{profdata,cov}
         llvm-profdata merge -sparse -o /tmp/code_coverage.llvm/combined.profdata /tmp/code_coverage.llvm/unittests*.profraw
-        llvm-cov show bin/unittests_clang -instr-profile=/tmp/code_coverage.llvm/coverage.profdata -format=html -output-dir=/tmp/code_coverage.llvm/html
+        llvm-cov show bin/unittests_clang -instr-profile=/tmp/code_coverage.llvm/combined.profdata -format=html -output-dir=/tmp/code_coverage.llvm/html
         cd /tmp/code_coverage.llvm/
         tar -cv html | xz -vv -z -9 -e > "/tmp/code_coverage.llvm/report-${RUNNER_NAME}-$(hostname)_${GITHUB_DESCRIPTION}.${GITHUB_SHA}.${GITHUB_HEAD_REF}${GITHUB_REF_NAME}_llvm-cov_html.tar.xz"
     - name: Upload opening book zip
