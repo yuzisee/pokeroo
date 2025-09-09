@@ -69,7 +69,7 @@ jobs:
     - name: "Extract comparison DB (A9S, AKx, JTS, 22x) into hexdump & JSON // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
       run: |
         mkdir -v -p ~/pokeroo-run/lib/holdemdb
-        unzip "holdem/holdemdb_arm64.zip" -d ~/pokeroo-run/lib/holdemdb/
+        unzip "holdem/holdemdb.zip" -d ~/pokeroo-run/lib/holdemdb/
 
         mkdir -p /tmp/opening_book_json.gold
         echo A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW | tr ' ' "\n" | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py ~/pokeroo-run/lib/holdemdb/@ > /tmp/opening_book_json.gold/@.json'

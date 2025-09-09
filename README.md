@@ -13,7 +13,7 @@ make
 ```sh
 cd "$(git rev-parse --show-toplevel)"
 
-mkdir -p ~/pokeroo-run/lib
+mkdir -vp ~/pokeroo-run/lib
 unzip holdem/holdemdb.zip -d ~/pokeroo-run/lib/holdemdb/ # or, regenerate them (see below)
 
 touch ~/pokeroo-run/lib/__init__.py
