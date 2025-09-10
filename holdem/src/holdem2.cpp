@@ -158,26 +158,40 @@ void CommunityPlus::DisplayHandBig(std::ostream& targetFile) const
 	HandPlus::DisplayHandBig(targetFile);
 }
 
-// TODO(from joseph): Investigate https://github.com/llvm/llvm-project/issues/74101 and we might be able to accomplish it in a single instruction
-//                    In any case we can make this _much_ faster in all likelihood
 void CommunityPlus::cleanLastTwo()
 {
 	const int8 VALUESETSHIFT = 2;
     //THIS MEANS WE ALWAYS HAVE SEVEN CARDS!!
     int8 shiftCount = 0;
-    int8 cleanLeft = 2;
-    valueset >>= VALUESETSHIFT;
-    while (cleanLeft > 0)
+    // int8 cleanLeft = 2;
+    this->valueset >>= VALUESETSHIFT;
+    #ifdef RTTIASSERT
+       if (this->valueset == 0) { std::cerr << "IMPOSSIBLE! cleanLastTwo() is called only during evaluateStrength() which should have 7 cards" << endl; exit(1); }
+    #endif
+
+    for (int8 cleanLeft = 2; cleanLeft > 0; --cleanLeft)
     {
+      /*
         while ((valueset & HoldemConstants::VALUE_ACELOW) == 0)
         {
             shiftCount+=2;
             valueset >>= 2;
         }
-        cleanLeft--;
         valueset--;
+        */
+        // [!TIP]
+        // The while-loop above is functionally identical, but much slower
+        const int8 slideLowestCard =
+          __builtin_ctz(this->valueset)
+          & ~1u; // round down to even: 0,2,4,…,30
+        shiftCount += slideLowestCard;
+        this->valueset >>= slideLowestCard;
+        // INVARIANT: The lowest value card is now in the front two least significant digits (so we can subtract one, as the next line does)
+        this->valueset--;
+        // INVARIANT: Whatever was your lowest card now has one fewer
     }
-    valueset <<= shiftCount + VALUESETSHIFT;
+
+    this->valueset <<= shiftCount + VALUESETSHIFT;
 }
 
 // TODO(from joseph): Improve cache locality by loading critical member variables into local variables.
