@@ -11,16 +11,24 @@ on:
 # 7 8 9 10
 # 11 12 13 14 15
 # 16 17 18 19 20 21 (6 threads)
-# 22 23 24 25 26 27 28
-# 29 30 31 32 33 34 35 36
-# 37 38 39 40 41 42 43 44 45 (9 threads)
-# 46 47 48 49 50 51 52 53 54 55
-# 56 57 58 59 60 61 62 63 64 65 66
-# 67 68 69 70 71 72 73 74 75 76 77 78 (12 threads)
-# etc.
+# 22 23 24 25 26 27  28
+# 29 30 31 32 33 34  35 36
+# 37 38 39 40 41 42  43 44 45 (9 threads)
+# 46 47 48 49 50 51  52 53 54  55
+# 56 57 58 59 60 61  62 63 64  65  66
+# 67 68 69 70 71 72  73 74 75  76  77  78 (12 threads)
+# 79 80 81 82 83 84  85 86 87  88  89  90  91
+# 92 93 94 95 96 97  98 99 100 101 102 103 104 105
+# 106 107 108  109 110 111  112 113 114  115 116 117  118 119 120 (15 threads)
+# 121 122 123  124 125 126  127 128 129  130 131 132  133 134 135  136
+# 137 138 139  140 141 142  143 144 145  146 147 148  149 150 151  152 153
+# 154 155 156  157 158 159  160 161 162  163 164 165  166 167 168  169 170 171 (18 threads)
+# 172 173 174  175 176 177  178 179 180  181 182 183  184 185 186  187 188 189  190
+# 191 192 193  194 195 196  197 198 199  200 201 202  203 204 205  206 207 208  209 210
+# 211  etc.
 jobs:
   rotation123:
-    name: '(soprano) make db → bin/regenerate_opening_book'
+    name: '(mastodon) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
     # timeout-minutes: 360
     steps:
@@ -28,42 +36,78 @@ jobs:
       - uses: ./.github/actions/generate_db_one_stripe
         with:
           cpu_threads_expected: 3
-          regenerate_opening_book_modes: "67 68 69"
-          rotation_suffix: 1of4
+          regenerate_opening_book_modes: "211 212 213"
+          rotation_suffix: 1of7
         id: generate123
 
   rotation456:
-    name: '(alto) make db → bin/regenerate_opening_book'
+    name: '(pterodactyl) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/generate_db_one_stripe
         with:
           cpu_threads_expected: 3
-          regenerate_opening_book_modes: "70 71 72"
-          rotation_suffix: 2of4
+          regenerate_opening_book_modes: "214 215 216"
+          rotation_suffix: 2of7
         id: generate456
 
   rotation789:
-    name: '(tenor) make db → bin/regenerate_opening_book'
+    name: '(triceratops) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/generate_db_one_stripe
         with:
           cpu_threads_expected: 3
-          regenerate_opening_book_modes: "73 74 75"
-          rotation_suffix: 3of4
+          regenerate_opening_book_modes: "217 218 219"
+          rotation_suffix: 3of7
         id: generate789
 
   rotation10_11_12:
-    name: '(bass) make db → bin/regenerate_opening_book'
+    name: '(sabertooth tiger) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/generate_db_one_stripe
         with:
           cpu_threads_expected: 3
-          regenerate_opening_book_modes: "76 77 78"
-          rotation_suffix: 4of4
+          regenerate_opening_book_modes: "220 221 222"
+          rotation_suffix: 4of7
         id: generate_10_11_12
+
+  rotation13_14_15:
+    name: '(tyrannosaurus) make db → bin/regenerate_opening_book'
+    runs-on: 'ubuntu-24.04'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/generate_db_one_stripe
+        with:
+          cpu_threads_expected: 3
+          regenerate_opening_book_modes: "223 224 225"
+          rotation_suffix: 5of7
+        id: generate_13_14_15
+
+  rotation16_17_18:
+    name: '(dragonzord) make db → bin/regenerate_opening_book'
+    runs-on: 'ubuntu-24.04'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/generate_db_one_stripe
+        with:
+          cpu_threads_expected: 3
+          regenerate_opening_book_modes: "226 227 228"
+          rotation_suffix: 6of7
+        id: generate_16_17_18
+
+  rotation19_20_21:
+    name: '(titanus) make db → bin/regenerate_opening_book'
+    runs-on: 'ubuntu-24.04'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/generate_db_one_stripe
+        with:
+          cpu_threads_expected: 3
+          regenerate_opening_book_modes: "229 230 231"
+          rotation_suffix: 7of7
+        id: generate_19_20_21
