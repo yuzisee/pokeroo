@@ -466,9 +466,22 @@ float64 FoldWaitLengthModel::FindBestLength()
     }while( maxTurns[0] < maxTurns[1]/2 );
     // UNTIL: These two guys are reasonably close enough that a search makes sense.
 
+#ifdef DEBUG_TRACE_SEARCH
+    if (bTraceEnable) {
+      std::cerr << "ScalarFunctionModel::FindMax(" << (1/rarity()) <<  "," << ceil(maxTurns[0] + 1) << ") is next" << std::endl;
+    }
+#endif
     bSearching = true;
     const float64 bestN = FindMax(1/rarity(), ceil(maxTurns[0] + 1) );
+    #ifdef DEBUG_TRACE_SEARCH
+        if (bTraceEnable) { std::cerr << "bestN = " << bestN << std::endl; }
+    #endif
     bSearching = false;
+#ifdef DEBUG_TRACE_SEARCH
+    if (bTraceEnable) {
+      std::cerr << "FoldWaitLengthModel::FindBestLength ALL CLEAR" << std::endl;
+    }
+#endif
     return bestN;
 }
 
@@ -528,7 +541,17 @@ void FoldGainModel::query( const float64 betSize )
         return;
     }else
     {
+        #ifdef DEBUG_TRACE_SEARCH
+          std::cerr << "FoldGainModel's FoldWaitLengthModel::FindBestLength " << betSize << std::endl;
+          // waitLength.bTraceEnable = true;
+        #endif
+
         n = waitLength.FindBestLength();
+
+        #ifdef DEBUG_TRACE_SEARCH
+          // waitLength.bTraceEnable = false;
+          std::cerr << "FoldGainModel's FoldWaitLengthModel::f " << betSize << std::endl;
+        #endif
 
 		const float64 gain_ref = waitLength.f(n);
 		const float64 FB_ref = waitLength.get_cached_d_dbetSize();
