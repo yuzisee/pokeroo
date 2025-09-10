@@ -82,6 +82,13 @@ struct OrganizedWinnings *HoldemArena::organizeWinnings(int8& potDistrSize, vect
 
 	}
 
+	#ifdef DEBUGASSERT
+        if (potDistrSize == 0) {
+            std::cerr << "Use of memory allocated with size zero when we reach 'moneyWon[0].fIdx = potDistr[0].playerIndex;' below" << endl;
+            exit(1);
+        }
+	#endif // DEBUGASSERT
+
 	/// Now the best hand is STARTING AT THE FRONT!
 	struct OrganizedWinnings * moneyWon = new struct OrganizedWinnings[potDistrSize];
 
