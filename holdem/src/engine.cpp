@@ -66,12 +66,12 @@ float64 DealRemainder::DealCard(Hand& h)
 		const uint32 hHere=h.SeeCards(dealt.Suit);
 		const uint32 hBack=h.SeeCards(qprevSuit);
 
+		// Remember, `dealtHand` is everything that has been dealt previously.
+		// `h.SeeCards(…)` is what's currently in the hand
 
         const bool bPreviouslyIdentical = addendSameSuit[dealt.Suit][qprevSuit];
-
+   if (bPreviouslyIdentical) { //if eligible for "greater first" rule
 		if(
-             bPreviouslyIdentical//if eligible for "greater first" rule
-             &&
              (hHere | dealt.Value) > hBack //would violate "greater first" rule
            )
         {
@@ -81,19 +81,23 @@ float64 DealRemainder::DealCard(Hand& h)
 		}
 
 
-        if (bPreviouslyIdentical && hBack==hHere) //bMatchesOld here implies bPreviouslyIdentical, if also hBack==hHere
+		// TODO(from joseph): Since https://github.com/yuzisee/pokeroo/commit/b6105aed2141aac9164861aa01102ad2dc750cf2 it seems this condition is no longer possible????
+		//                    If `hBack == hHere` we would have essentially tested for `(hHere | dealt.Value) > hHere` above, already.
+		//                    But that means `hHere` CONTAINS `dealt.Value` and we are attempting to deal a card that the hand already has!!!
+		// Instead, we should raise an assertion if this happens: "Hand h already contains the card we are trying to deal"
+        if (hBack==hHere) //bMatchesOld here implies bPreviouslyIdentical, if also hBack==hHere
 		{
             //Essentially, we need to avoid adding to this suit, since it is the same as the last suit, which would already
             //have been counted for double!
 
-            // TODO(from joseph): LLMs say this codepath is impossible? Add an assert and see...
 			SetNextSuit();
 			return DealCard(h);
 		}
+   } // end if bPreviouslyIdentical
 	}
 
 	//successful!
-	float64 occBase = 0;
+	uint8 occBase = 0;
 
 	uint32 baseInto = dealtHand[dealt.Suit]; ///This is prior to {dealtHand[dealt.Suit] |= dealt.Value;}
 
@@ -118,7 +122,7 @@ float64 DealRemainder::DealCard(Hand& h)
 	uint32 addedTo = h.SeeCards(dealt.Suit);
 
 
-	float64 matchesNew = 0; //matchesNew reflects how many new duplicate suits formed.
+	uint8 matchesNew = 0; //matchesNew reflects how many new duplicate suits formed.
 
 	for(int8 i=0;i<4;++i)
 	{
@@ -127,8 +131,7 @@ float64 DealRemainder::DealCard(Hand& h)
 				        addendSameSuit[dealt.Suit][i] )  ++matchesNew;
 	}
 
-
-	return occBase/matchesNew;
+	return static_cast<float64>(occBase)/static_cast<float64>(matchesNew);
 } // end DealCard
 
 
