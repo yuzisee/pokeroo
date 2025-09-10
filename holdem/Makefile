@@ -1,7 +1,7 @@
 
 CXX = g++
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
-CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -flto -march=native
+CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -march=native
 CXXFLAGS_EXECUTABLE_CHAIN = -g -O -fpic -Wextra -Wno-parentheses
 CXXFLAGS_LIVEDEBUG = -g -D RTTIASSERT
 #The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
@@ -71,16 +71,15 @@ test:
 
 REGENERATE_OPENING_BOOK_SRC = unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
 
-# `-ffast-math` also? If you're not worried about floating point...
 db:
 	mkdir -v -p bin
 	echo '::group::Compile bin/regenerate_opening_book_selftest (perf can be used for profiling)'
-	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
+	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -ffast-math -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
 	# clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book-clang -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
-	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
+	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -ffast-math -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book_profiling (`g++ -pg` instead of clang++) use gprof to inspect'
