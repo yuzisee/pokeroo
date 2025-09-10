@@ -38,7 +38,6 @@ jobs:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "211 212 213"
           rotation_suffix: 1of7
-        id: generate123
 
   rotation456:
     name: '(pterodactyl) make db → bin/regenerate_opening_book'
@@ -50,7 +49,6 @@ jobs:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "214 215 216"
           rotation_suffix: 2of7
-        id: generate456
 
   rotation789:
     name: '(triceratops) make db → bin/regenerate_opening_book'
@@ -62,7 +60,6 @@ jobs:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "217 218 219"
           rotation_suffix: 3of7
-        id: generate789
 
   rotation10_11_12:
     name: '(sabertooth tiger) make db → bin/regenerate_opening_book'
@@ -74,7 +71,6 @@ jobs:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "220 221 222"
           rotation_suffix: 4of7
-        id: generate_10_11_12
 
   rotation13_14_15:
     name: '(tyrannosaurus) make db → bin/regenerate_opening_book'
@@ -86,7 +82,6 @@ jobs:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "223 224 225"
           rotation_suffix: 5of7
-        id: generate_13_14_15
 
   rotation16_17_18:
     name: '(dragonzord) make db → bin/regenerate_opening_book'
@@ -98,7 +93,6 @@ jobs:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "226 227 228"
           rotation_suffix: 6of7
-        id: generate_16_17_18
 
   rotation19_20_21:
     name: '(titanus) make db → bin/regenerate_opening_book'
@@ -110,4 +104,48 @@ jobs:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "229 230 231"
           rotation_suffix: 7of7
-        id: generate_19_20_21
+
+  # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-requiring-successful-dependent-jobs
+  combine_and_upload_results:
+    name: "Aggregate & save for upload"
+    runs-on: 'ubuntu-24.04'
+    needs: [rotation123, rotation456, rotation789, rotation10_11_12, rotation13_14_15, rotation16_17_18, rotation19_20_21]
+    # https://docs.github.com/en/actions/tutorials/store-and-share-data#downloading-artifacts-during-a-workflow-run
+    steps:
+      - name: Fetch
+        uses: actions/download-artifact@v5
+        with:
+          path: holdemdb.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{ github.sha }}
+          pattern: opening_book-*
+          merge-multiple: true
+      - name: "Inspect results (supposedly actions/download-artifact will extract the contents for us into $GITHUB_WORKSPACE by default)"
+        run: pwd -P && ls -l && ls -l holdemdb*
+      - name: "Done!"
+        uses: actions/upload-artifact@v4
+        with:
+          # https://docs.github.com/en/actions/reference/workflows-and-actions/variables
+          # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+          # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
+          name: opening_book-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            holdemdb*/*.holdemC
+            holdemdb*/*.holdemW
+          # include-hidden-files: false by default
+          if-no-files-found: error
+          overwrite: true
+          compression-level: 9
+          retention-days: 21
+      - name: "Save debugging info"
+        uses: actions/upload-artifact@v4
+        with:
+          name: inspect_json-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            holdemdb*
+            holdemdb*/**/*
+            !holdemdb*/*.holdemC
+            !holdemdb*/*.holdemW
+          include-hidden-files: true
+          if-no-files-found: error
+          overwrite: true
+          compression-level: 9
+          retention-days: 21

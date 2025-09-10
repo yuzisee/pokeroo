@@ -111,8 +111,7 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
  * CPUs = floor((sqrt(​8*​x-​7)+​1)/​2);
  */
 static void regenerateDb(int mode) {
-
-    const std::chrono::time_point<std::chrono::system_clock> process_start = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::system_clock> time_end;
 
     // This is for easier parallelization
     std::cout << "Mode: " << mode << "\n";
@@ -178,6 +177,8 @@ static void regenerateDb(int mode) {
 
     assert(handList.size() == 169);
 
+    const std::chrono::time_point<std::chrono::system_clock> holdemC_start = std::chrono::system_clock::now();
+
     size_t counter;
     std::cout << "Begin CallStats.\n";
     counter = 0;
@@ -191,7 +192,7 @@ static void regenerateDb(int mode) {
 
         const std::chrono::time_point<std::chrono::system_clock> time_start = std::chrono::system_clock::now();
         spotCheckDb(holeCards, 'C');
-        const std::chrono::time_point<std::chrono::system_clock> time_end = std::chrono::system_clock::now();
+        time_end = std::chrono::system_clock::now();
 
         ++counter;
 
@@ -199,11 +200,14 @@ static void regenerateDb(int mode) {
         complete_msg << "=== 📊 Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size())
                      << "   (by worker #" << static_cast<int>(offset) << "/" << static_cast<int>(CPUs) << " in "
                      << std::chrono::duration_cast<std::chrono::seconds>(time_end - time_start).count() << " seconds"
-                     << ", ⏱total " << std::setprecision(3) << (std::chrono::duration_cast<std::chrono::minutes>(time_end - process_start).count() / 60.0) << "h elapsed"
+                     << ", ⏱total " << std::setprecision(3) << (std::chrono::duration_cast<std::chrono::minutes>(time_end - holdemC_start).count() / 60.0) << "h elapsed"
                      << ") ===\n\n";
         std::cout << complete_msg.str();
         std::cout.flush(); // Flush for timestamping
     }
+
+    const double holdemC_hours = (std::chrono::duration_cast<std::chrono::minutes>(time_end - holdemC_start).count() / 60.0);
+    const std::chrono::time_point<std::chrono::system_clock> holdemW_start = std::chrono::system_clock::now();
 
     std::cout << "Begin CommunityCallStats.\n";
     counter = 0;
@@ -217,7 +221,7 @@ static void regenerateDb(int mode) {
 
         const std::chrono::time_point<std::chrono::system_clock> time_start = std::chrono::system_clock::now();
         spotCheckDb(holeCards, 'W');
-        const std::chrono::time_point<std::chrono::system_clock> time_end = std::chrono::system_clock::now();
+        time_end = std::chrono::system_clock::now();
 
         ++counter;
 
@@ -225,7 +229,7 @@ static void regenerateDb(int mode) {
         complete_msg << "=== ❚❙❘ Complete!   " << static_cast<int>(counter) << " of " << static_cast<int>(handList.size())
                      << "   (by worker #" << static_cast<int>(offset) << "/" << static_cast<int>(CPUs) << " in "
                      << std::setprecision(3) << (std::chrono::duration_cast<std::chrono::seconds>(time_end - time_start).count() / 60.0) << " minutes"
-                     << ", ⏱total " << std::setprecision(3) << (std::chrono::duration_cast<std::chrono::minutes>(time_end - process_start).count() / 60.0) << "h elapsed"
+                     << ", ⏱total " << std::setprecision(3) << holdemC_hours << " + " << (std::chrono::duration_cast<std::chrono::minutes>(time_end - holdemW_start).count() / 60.0) << "h elapsed"
                      << ") ===\n\n";
         std::cout << complete_msg.str();
         std::cout.flush(); // Flush for timestamping
