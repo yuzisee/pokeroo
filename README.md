@@ -47,12 +47,17 @@ GITHUB_ACTIONS="true" make db
 # -4847 is "Ace-King offsuit" but you can choose any other hand if you prefer
 HOLDEMDB_PATH="/tmp/profiling_dust.perf" perf record -F max -g -o /tmp/profiling_dust.perf/regenerate_opening_book.perf -- bin/regenerate_opening_book_selftest -4847
 HOLDEMDB_PATH="/tmp/profiling_dust.gcc" bin/regenerate_opening_book_profiling -4847
-HOLDEMDB_PATH="/tmp/profiling_dust.x" instruments -t 'Time Profiler' -D /tmp/profiling_dust.x/regenerate_opening_book.trace -- bin/regenerate_opening_book-clang -4847
-
-gprof bin/regenerate_opening_book_profiling bin/gmon*.out
+HOLDEMDB_PATH="/tmp/profiling_dust.x" xcrun xctrace record --template 'CPU Profiler' --output /tmp/profiling_dust.x/regenerate_opening_book.trace --target-stdout - --launch -- bin/regenerate_opening_book-clang -4847
 
 cd /tmp/profiling_dust.perf
 perf report regenerate_opening_book.perf
+
+# Linux only:
+gprof bin/regenerate_opening_book_profiling bin/gmon*.out
+
+# macOS only:
+open /tmp/profiling_dust.x/regenerate_opening_book.trace
+
 ```
 
 ### Regenerate the opening book

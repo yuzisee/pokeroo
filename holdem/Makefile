@@ -71,15 +71,18 @@ test:
 
 REGENERATE_OPENING_BOOK_SRC = unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
 
+# `-ffast-math` also? If you're not worried about floating point...
+# It manifests in the final result only within https://github.com/yuzisee/pokeroo/pull/16#discussion_r2336961785
+# but for now we'll leave it off since having an accurate DB seems preferred since the true runtime of reading from disk is super fast anyway
 db:
 	mkdir -v -p bin
 	echo '::group::Compile bin/regenerate_opening_book_selftest (perf can be used for profiling)'
-	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -ffast-math -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
+	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
 	# clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book-clang -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
-	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -ffast-math -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
+	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book_profiling (`g++ -pg` instead of clang++) use gprof to inspect'
