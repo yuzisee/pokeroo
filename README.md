@@ -33,30 +33,50 @@ python3 NewGame.Python.py
 
 ### Run unit tests
 ```sh
+cd holdem
 make test
+```
+
+### Do a quick runtime profiling
+e.g.
+```sh
+rm -r /tmp/profiling_dust.perf /tmp/profiling_dust.gcc /tmp/profiling_dust.x
+mkdir -vp /tmp/profiling_dust.perf /tmp/profiling_dust.gcc /tmp/profiling_dust.x
+cd holdem
+GITHUB_ACTIONS="true" make db
+# -4847 is "Ace-King offsuit" but you can choose any other hand if you prefer
+HOLDEMDB_PATH="/tmp/profiling_dust.perf" perf record -F max -g -o /tmp/profiling_dust.perf/regenerate_opening_book.perf -- bin/regenerate_opening_book_selftest -4847
+HOLDEMDB_PATH="/tmp/profiling_dust.gcc" bin/regenerate_opening_book_profiling -4847
+HOLDEMDB_PATH="/tmp/profiling_dust.x" instruments -t 'Time Profiler' -D /tmp/profiling_dust.x/regenerate_opening_book.trace -- bin/regenerate_opening_book-clang -4847
+
+gprof bin/regenerate_opening_book_profiling bin/gmon*.out
+
+cd /tmp/profiling_dust.perf
+perf report regenerate_opening_book.perf
 ```
 
 ### Regenerate the opening book
 
 Edit `src/debug_flags.h` to set SUPERPROGRESSUPDATE if needed
 ```sh
+cd holdem
 make db
 ```
 Or, even better use the `int mode` mult-threading tools provided by `regenerateDb`
-- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 2`
-- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 3`
+- `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 2`
+- `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 3`
 
 vs.
 
-- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 4`
-- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 5`
-- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 6`
+- `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 4`
+- `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 5`
+- `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 6`
 
 vs.
 
-- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 7`
-- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 8`
-- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 9`
-- `HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 10`
+- `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 7`
+- `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 8`
+- `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 9`
+- `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 10`
 
 etc.
