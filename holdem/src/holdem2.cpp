@@ -585,9 +585,9 @@ void CommunityPlus::SetEmpty()
 
 void CommunityPlus::SetUnique(const Hand& h)
 {
-	HandPlus::SetUnique(h);
+	HandPlus::SetUnique(h); // convert from Hand to HandPlus
 	//set valueset
-	preEvalStrength();
+	preEvalStrength(); // convert from HandPlus to CommunityPlus
 }
 
 void CommunityPlus::preEvalStrength()
@@ -650,7 +650,7 @@ void CommunityPlus::SetUnique(const HandPlus& h)
 {
 	HandPlus::SetUnique(h);
 
-	preEvalStrength();
+	preEvalStrength(); // convert from HandPlus to CommunityPlus
 
 }
 
