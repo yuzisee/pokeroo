@@ -122,10 +122,11 @@ jobs:
       - name: Fetch
         uses: actions/download-artifact@v5
         with:
+          path: holdemdb.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{ github.sha }}
           pattern: opening_book-*
           merge-multiple: true
       - name: "Inspect results (supposedly actions/download-artifact will extract the contents for us into $GITHUB_WORKSPACE by default)"
-        run: pwd -P && ls -l
+        run: pwd -P && ls -l && ls -l holdemdb*
       - name: "Done!"
         uses: actions/upload-artifact@v4
         with:
@@ -134,8 +135,8 @@ jobs:
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
           name: opening_book-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
           path: |
-            *.holdemC
-            *.holdemW
+            holdemdb*/*.holdemC
+            holdemdb*/*.holdemW
           # include-hidden-files: false by default
           if-no-files-found: error
           overwrite: true
@@ -146,10 +147,11 @@ jobs:
         with:
           name: inspect_json-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
           path: |
-            *
-            **/*
-            !*.holdemC.json
-            !*.holdemW.json
+            holdemdb*
+            holdemdb*/**/*
+            !holdemdb*/*.holdemC
+            !holdemdb*/*.holdemW
+          include-hidden-files: true
           if-no-files-found: error
           overwrite: true
           compression-level: 9
