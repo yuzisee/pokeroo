@@ -172,7 +172,7 @@ void DealRemainder::UpdateSameSuits()
     {
         for( int8 suitNumB=0;suitNumB<4;++suitNumB)
         {
-            addendSameSuit[suitNumA][suitNumB] &= (addendSum.SeeCards(suitNumA) == addendSum.SeeCards(suitNumB));
+            this->addendSetStillSameSuit(suitNumA, suitNumB, (addendSum.SeeCards(suitNumA) == addendSum.SeeCards(suitNumB)));
         }
     }
 

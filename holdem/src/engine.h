@@ -62,6 +62,9 @@ class DealRemainder : public virtual DealableOrderedDeck
 
 		void CleanStats(); //Releasing memory?
 
+		inline void addendSetStillSameSuit(int8 suitNumA, int8 suitNumB, bool stillSameSuit) {
+		  addendSameSuit[suitNumA][suitNumB] &= stillSameSuit;
+		}
 
 		float64 AnalyzeComplete(PlayStats* instructions);
 
