@@ -676,10 +676,12 @@ int main(int argc, char* argv[])
     cCurrentPath[0] = ':';
     cCurrentPath[1] = '\0';
 
-    GetCwd(cCurrentPath, sizeof(cCurrentPath));
-
-    std::cerr << "Current working directory is " << cCurrentPath << std::endl;
-
+	if (GetCwd(cCurrentPath, sizeof(cCurrentPath))) {
+      std::cerr << "Current working directory is " << cCurrentPath << std::endl;
+    } else {
+      std::cerr << "GetCwd failed; something is wrong with the files on your system. How is this program even running? ABORT" << std::endl;
+      exit(77); // EX_NOPERM
+    }
 
 	cout << "Final Table: 9 Players" << endl;
 

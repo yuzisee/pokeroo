@@ -195,16 +195,9 @@ void DealRemainder::LockNewAddend()
 
 float64 DealRemainder::AnalyzeComplete(PlayStats* lastStats)
 {
-
     #ifdef PROGRESSUPDATE
     lastStats->handsComputed = 0;
     #endif
-
-	DeckLocation pos;
-	pos.Rank = BaseDealtRank();
-	pos.Value = BaseDealtValue();
-	pos.Suit = BaseDealtSuit();
-
 
 	CleanStats();
 	float64 returnResult;

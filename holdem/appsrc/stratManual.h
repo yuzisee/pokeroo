@@ -67,6 +67,7 @@ class DualInputStream
 ;
 
 ///This class is used only for debugging, but the derived class UserConsoleStrategy allows for human players
+///By default, it will always check/call any bet it faces.
 class ConsoleStrategy : public PlayerStrategy
 {
     private:
@@ -134,4 +135,3 @@ class UserConsoleStrategy : virtual public ConsoleStrategy
 ;
 
 #endif
-
