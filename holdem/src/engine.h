@@ -36,19 +36,7 @@ class DealRemainder : public virtual DealableOrderedDeck
 
         void UpdateSameSuits();
 
-    inline void addendSetStillSameSuit(const int8 suitNumA, const int8 suitNumB, const bool stillSameSuit) {
-		  addendSameSuit[suitNumA][suitNumB] &= stillSameSuit;
-			// TODO(from joseph): Optimize data layout for cache utilization
-			// addendSameSuit_bits &= (1 << (suitNumA * 4 + suitNumB));
-		}
    		bool addendSameSuit[4][4];
-    protected:
-
-    inline bool isAddendSameSuit(const int8 suitNumA, const int8 suitNumB) const {
-      // TODO(from joseph): Optimize data layout for cache utilization
-			// return (addendSameSuit_bits >> (suitNumA * 4 + suitNumB)) & 1;
-      return addendSameSuit[suitNumA][suitNumB];
-    }
 
 	public:
 

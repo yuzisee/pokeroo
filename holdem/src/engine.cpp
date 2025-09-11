@@ -22,6 +22,10 @@
 #include "holdem2.h"
 #include "ai.h"
 
+// TODO(from joseph): Optimize data layout for cache utilization
+// return (addendSameSuit_bits >> (suitNumA * 4 + suitNumB)) & 1;
+#define isAddendSameSuit(suitA, suitB) ( this->addendSameSuit[(suitA)][(suitB)] )
+
 float64 DealRemainder::DealCard(Hand& h)
 {
     const int8 & qprevSuit = prevSuit[dealt.Suit];
@@ -164,13 +168,17 @@ void DealRemainder::OmitSet(const CommunityPlus& setOne, const CommunityPlus& se
 
 }
 
+// TODO(from joseph): Optimize data layout for cache utilization
+// addendSameSuit_bits &= (1 << (suitNumA * 4 + suitNumB));
+#define addendSetStillSameSuit(suitA, suitB, stillSame) do { this->addendSameSuit[(suitA)][(suitB)] &= (stillSame); } while (0)
+
 void DealRemainder::UpdateSameSuits()
 {
     for( int8 suitNumA=0;suitNumA<4;++suitNumA)
     {
         for( int8 suitNumB=0;suitNumB<4;++suitNumB)
         {
-            this->addendSetStillSameSuit(suitNumA, suitNumB, (addendSum.SeeCards(suitNumA) == addendSum.SeeCards(suitNumB)));
+            addendSetStillSameSuit(suitNumA, suitNumB, (addendSum.SeeCards(suitNumA) == addendSum.SeeCards(suitNumB)));
         }
     }
 
