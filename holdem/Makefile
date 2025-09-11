@@ -23,7 +23,6 @@ LIB_DIR = lib
 
 CORE_OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(wildcard src/*.cpp)) appsrc/stratManual.o
 
-BUILD_OBJS = $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(notdir $(BUILD_SRC)))
 BUILT_OBJS := $(wildcard $(BUILD_DIR)/*.o)
 BUILD_DEPS = $(patsubst $(BUILD_DIR)/%.o,$(BUILD_DIR)/%.d,$(BUILT_OBJS))
 
@@ -120,6 +119,10 @@ $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo
 	@echo "Rebuilding $@ [$?]:"
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_CHAIN) -Wno-unused-parameter -c -o $@ $<
+
+appsrc/stratManual.o: appsrc/stratManual.cpp
+	@echo "appsrc/stratManual.cpp is needed only for the actual appsrc/testDriver.cpp entrypoint $@ [$<]:"
 	$(CXX) $(CXXFLAGS) $(CXXFLAGS_EXECUTABLE_CHAIN) -Wno-unused-parameter -c -o $@ $<
 
 $(STATIC_OBJ_CPP): $(CORE_OBJS)
