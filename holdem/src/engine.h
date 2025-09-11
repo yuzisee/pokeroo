@@ -36,7 +36,8 @@ class DealRemainder : public virtual DealableOrderedDeck
 
         void UpdateSameSuits();
 
-   		bool addendSameSuit[4][4];
+   		// bool addendSameSuit[4][4];
+   		uint16 addendSameSuit_bits; // Bitmask implementation of the old `bool…[4][4]` code
 
 	public:
 
@@ -69,6 +70,8 @@ class DealRemainder : public virtual DealableOrderedDeck
             addendSum.SetUnique(other.addendSum);
             justDealt.SetUnique(other.justDealt);
 
+            addendSameSuit_bits = other.addendSameSuit_bits;
+            /*
             for( int8 i=0; i<4 ; ++i )
             {
                 for( int8 j=0; j<4 ; ++j )
@@ -76,12 +79,15 @@ class DealRemainder : public virtual DealableOrderedDeck
                     addendSameSuit[i][j] = other.addendSameSuit[i][j];
                 }
             }
+            */
 
 
         }
 
 		DealRemainder() : DealableOrderedDeck()
 		{//They start true, and once two suits are different, there is no changing it. They stay different forever
+            addendSameSuit_bits = ~0;
+        		/*
             for( int8 i=0; i<4 ; ++i )
             {
                 for( int8 j=0; j<4 ; ++j )
@@ -89,6 +95,7 @@ class DealRemainder : public virtual DealableOrderedDeck
                     addendSameSuit[i][j] = true;
                 }
             }
+            */
 
             justDealt.SetEmpty();
 		}

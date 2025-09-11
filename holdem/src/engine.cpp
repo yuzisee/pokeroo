@@ -22,9 +22,9 @@
 #include "holdem2.h"
 #include "ai.h"
 
-// TODO(from joseph): Optimize data layout for cache utilization
-// return (addendSameSuit_bits >> (suitNumA * 4 + suitNumB)) & 1;
-#define isAddendSameSuit(suitA, suitB) ( this->addendSameSuit[(suitA)][(suitB)] )
+#define isAddendSameSuit(suitA, suitB) static_cast<bool>(( this->addendSameSuit_bits >> (suitA * 4 + suitB)) & 1 )
+// addendSameSuit_bits is the faster bitmask version of the old `bool…[4][4]` code:
+// #define isAddendSameSuit(suitA, suitB) ( this->addendSameSuit[(suitA)][(suitB)] )
 
 float64 DealRemainder::DealCard(Hand& h)
 {
@@ -178,9 +178,9 @@ void DealRemainder::OmitSet(const CommunityPlus& setOne, const CommunityPlus& se
 
 }
 
-// TODO(from joseph): Optimize data layout for cache utilization
-// addendSameSuit_bits &= (1 << (suitNumA * 4 + suitNumB));
-#define addendSetStillSameSuit(suitA, suitB, stillSame) do { this->addendSameSuit[(suitA)][(suitB)] &= (stillSame); } while (0)
+#define addendSetStillSameSuit(suitA, suitB, stillSame) do { if (!(stillSame)) { this->addendSameSuit_bits &= ~(1 << (suitA * 4 + suitB)); } } while (0)
+// addendSameSuit_bits is the faster bitmask version of the old `bool…[4][4]` code:
+// #define addendSetStillSameSuit(suitA, suitB, stillSame) do { this->addendSameSuit[(suitA)][(suitB)] &= (stillSame); } while (0)
 
 void DealRemainder::UpdateSameSuits()
 {
