@@ -81,7 +81,7 @@ db:
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
-	# clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -fno-exceptions -fno-rtti -o bin/regenerate_opening_book-clang -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
+	# clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
 	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date

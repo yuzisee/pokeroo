@@ -58,7 +58,7 @@ jobs:
     - name: Extract opening book (speedup unit test runtime)
       run: |
         mkdir -v -p ~/pokeroo-run/lib/holdemdb
-        unzip holdem/holdemdb.zip -d ~/pokeroo-run/lib/holdemdb/
+        unzip holdem/holdemdb_clang.zip -d ~/pokeroo-run/lib/holdemdb/
         # ~/pokeroo-run/lib/holdemdb ← is because of the runtime path used in the `test` target of the Makefile
     - name: Must pass unit tests
       run: cd holdem && make test
@@ -107,7 +107,7 @@ jobs:
         echo A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW KKx.holdemC KKx.holdemW 42x.holdemC 42x.holdemW | tr ' ' "\n" | sort | tee /tmp/opening_book_json-test_cases.txt
 
         mkdir -v -p ~/pokeroo-run/lib/holdemdb
-        unzip "holdem/holdemdb.zip" -d ~/pokeroo-run/lib/holdemdb/
+        unzip "holdem/holdemdb_clang.zip" -d ~/pokeroo-run/lib/holdemdb/
 
         cat /tmp/opening_book_json-test_cases.txt | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py ~/pokeroo-run/lib/holdemdb/@ > /tmp/opening_book_json.gold/@.json'
 
