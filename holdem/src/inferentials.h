@@ -443,7 +443,23 @@ public:
 	float64 stdDev;   //raw moment (i.e. divided by n not n-1)
 	float64 improve_numerator;
 	float64 skew;     //positive or negative ("Distributions with positive skew have larger means than medians.")
-	float64 kurtosis; //risk-reward magnifier (high k is high risk high reward, long tail)
+
+	//risk-reward magnifier (high k is high risk high reward, long tail)
+	float64 pearson_kurtosis_numerator;
+	float64 pearson_kurtosis_denominator;
+	inline constexpr float64 kurtosis() const {
+	  return pearson_kurtosis_numerator / pearson_kurtosis_denominator - 3.0;
+  }
+
+  // Return the fraction of outcomes that cause your gain function f(x) to be above vs. below 1.0
+  // ...but instead of [0.0..1.0] we rescale to [-1.0..+1.0]
+  inline constexpr float64 improve() const {
+    // Rescale from
+    return
+      (improve_numerator / n  // [0.0..1.0]
+      * 2.0)  -               // into
+                 1.0;         // [-1.0..+1.0]
+  }
 
  // Return the fraction of outcomes that cause your gain function f(x) to be above vs. below 1.0
   // ...but instead of [0.0..1.0] we rescale to [-1.0..+1.0]
@@ -483,7 +499,7 @@ private:
             targetoutput << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << std::endl;
             targetoutput << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << std::endl;
             targetoutput << "Skew:" << myDistrPCT.skew*100 << "%" << std::endl;
-            targetoutput << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << std::endl;
+            targetoutput << "Kurtosis:" << (myDistrPCT.kurtosis())*100 << "%" << std::endl;
 
             targetoutput << std::endl;
         }
