@@ -101,45 +101,51 @@ jobs:
       # ~261s for JTS (37,33)
       # TODO(from joseph): If time permits, also AA (5049) + 72x (322) + Q7x (4023)
       run: cd holdem && make db && mkdir -vp /tmp/opening_book_selftest && echo -4847 -310 -1 -4645 -5131 -3733 | tr ' ' "\n" | xargs -P "$(sh ../n_threads_minus_1.sh)" -n 1 bin/regenerate_opening_book_selftest
-    - name: "Extract comparison DB (A9S, AKx, JTS, 22x, KKx, 42x) into hexdump & JSON // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
+    - name: "[EXPECTED] define expected results to be: A9S, AKx, JTS, 22x, KKx, 42x"
+      run: echo A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW KKx.holdemC KKx.holdemW 42x.holdemC 42x.holdemW | tr ' ' "\n" | sort | tee /tmp/opening_book_json-test_cases.txt
+    - name: "[EXPECTED] write expected DB as JSON // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
       run: |
         mkdir -p /tmp/opening_book_json.gold
-        echo A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW KKx.holdemC KKx.holdemW 42x.holdemC 42x.holdemW | tr ' ' "\n" | sort | tee /tmp/opening_book_json-test_cases.txt
 
         mkdir -v -p ~/pokeroo-run/lib/holdemdb
         unzip "holdem/holdemdb_clang.zip" -d ~/pokeroo-run/lib/holdemdb/
 
         cat /tmp/opening_book_json-test_cases.txt | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py ~/pokeroo-run/lib/holdemdb/@ > /tmp/opening_book_json.gold/@.json'
 
-        # INVARIANT: We now have /tmp/opening_book_json.gold/ which will be compared with the /tmp/opening_book_json.current_ofstream_logs/ generated later below
+        # INVARIANT: We now have /tmp/opening_book_json.gold/ which will be compared with the /tmp/opening_book_json.current_ofstream_logs/ generated below
 
-        cd ~/pokeroo-run/lib/holdemdb
-        cat /tmp/opening_book_json-test_cases.txt | xargs -I @ hexdump -C @ > /tmp/opening_book_selftest/gold.txt
-
-    - name: "Parse generated DB into hexdump & JSON"
+    - name: "[ACTUAL] parse actual DB into JSON"
       run: |
-        cd /tmp/opening_book_selftest
-        ls -1 *.holdemC *.holdemW | sort | xargs -I @ hexdump -C @ > current.txt
+        mkdir -v -p /tmp/opening_book_json.current_ofstream_logs
+        mv -v /tmp/opening_book_selftest/*.json /tmp/opening_book_json.current_ofstream_logs/
 
-        # INVARIANT: We now have /tmp/opening_book_selftest/gold.txt and /tmp/opening_book_selftest/current.txt that can be compared
-
-        mkdir -p /tmp/opening_book_json.current_ofstream_logs
-        mv -v *.json /tmp/opening_book_json.current_ofstream_logs/
-
-        # RESULT: We now have /tmp/opening_book_json.current_ofstream_logs/
+        # INVARIANT: We now have /tmp/opening_book_json.current_ofstream_logs/ which cab be compared against the /tmp/opening_book_json.gold/ from above
 
     - name: "Compare current(binary)→converted(json) vs. current(json)"
       run: |
-        mkdir -p /tmp/opening_book_json.current_extract_from_binary
+        mkdir -v -p /tmp/opening_book_json.current_extract_from_binary
         ls -1 /tmp/opening_book_selftest/*.holdem{C,W} | xargs -n 1 basename | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py /tmp/opening_book_selftest/@ > /tmp/opening_book_json.current_extract_from_binary/@.json'
 
         diff -urw /tmp/opening_book_json.current_extract_from_binary/ /tmp/opening_book_json.current_ofstream_logs/
 
-    - name: "Compare [ gold(binary)→converted(json) vs. current(json) ] ⬞ && ⬞ [ gold (binary) vs. current (binary) ]"
+    - name: "Compare [ gold (binary) vs. current (binary) ] ⬞ && ⬞ [ gold(binary)→converted(json) vs. current(json) ]"
       run: |
-        if diff -uw /tmp/opening_book_selftest/gold.txt /tmp/opening_book_selftest/current.txt; then
+        echo '::group::hexdump ∀ /tmp/opening_book_selftest → /tmp/opening_book_selftest/current.txt'
+        cd /tmp/opening_book_selftest
+        ls -1 *.holdemC *.holdemW | sort | xargs -I @ sh -c 'echo @ start ↓ && hexdump -C @ && echo @ end ↑' | tee current.txt
+        echo '::endgroup::'
+
+        echo '::group::hexdump ⊷ holdem/holdemdb_clang.zip → /tmp/opening_book_selftest/gold.txt'
+        cd ~/pokeroo-run/lib/holdemdb
+        cat /tmp/opening_book_json-test_cases.txt | xargs -I @ sh -c 'echo @ start ↓ && hexdump -C @ && echo @ end ↑' | tee /tmp/opening_book_selftest/gold.txt
+        echo '::endgroup::'
+
+        # INVARIANT: We now have /tmp/opening_book_selftest/gold.txt and /tmp/opening_book_selftest/current.txt that can be compared
+
+        if diff -w -U 15 /tmp/opening_book_selftest/gold.txt /tmp/opening_book_selftest/current.txt; then
           echo 'PASS (binary identical)'
         else
           FAIL_CODE=$?
+
           diff -rw -U 1 /tmp/opening_book_json.gold/ /tmp/opening_book_json.current_ofstream_logs/ && exit $FAIL_CODE
         fi
