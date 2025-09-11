@@ -7,6 +7,7 @@ on:
       - master
     paths:
       - '.github/workflows/ci.yml'
+      - '.github/actions/selftest_db/**'
       - 'holdem/appsrc/**'
       - 'holdem/libsrc/**'
       - 'holdem/Makefile'
@@ -17,6 +18,7 @@ on:
     types: [synchronize, opened]
     paths:
       - '.github/workflows/ci.yml'
+      - '.github/actions/selftest_db/**'
       - 'holdem/appsrc/**'
       - 'holdem/libsrc/**'
       - 'holdem/Makefile'
@@ -101,7 +103,7 @@ jobs:
     - uses: ./.github/actions/selftest_db
       with:
         name_pockets: '42x.KKx.T3S'
-        self_test_args: '-310 -4546 -3733'
+        self_test_args: '-310 -4546 -3507'
   spot_check_db:
     runs-on: 'ubuntu-24.04'
     #           42x (3, 10) ideally one of 54S 55x 76S 98x [T3S] T6S J5S J9S QJS K2S KTx A5S also?
@@ -156,9 +158,20 @@ jobs:
     - name: "Compare [ gold (binary) vs. current (binary) ] ⬞ && ⬞ [ gold(binary)→converted(json) vs. current(json) ]"
       timeout-minutes: 1
       run: |
-        echo '::group::hexdump ∀ /tmp/opening_book_selftest → /tmp/opening_book_selftest/current.txt'
         cd /tmp/opening_book_selftest
-        ls -1 *.holdemC *.holdemW | sort | xargs -I @ sh -c 'echo @ start ↓ && hexdump -C @ && echo @ end ↑' | tee current.txt
+        ls -1 *.holdemC *.holdemW | sort > /tmp/opening_book_json-actual_filenames.txt
+
+        if diff -uw /tmp/opening_book_json-test_cases.txt /tmp/opening_book_json-actual_filenames.txt; then
+          echo 'Proceed'
+        else
+          FAIL_CODE=$?
+
+          echo 'The wrong test files were generated. ABORT.' 1>&2
+          exit $FAIL_CODE
+        fi
+
+        echo '::group::hexdump ∀ /tmp/opening_book_selftest → /tmp/opening_book_selftest/current.txt'
+        cat /tmp/opening_book_json-actual_filenames.txt | xargs -I @ sh -c 'echo @ start ↓ && hexdump -C @ && echo @ end ↑' | tee current.txt
         echo '::endgroup::'
 
         echo '::group::hexdump ⊷ holdem/holdemdb_clang.zip → /tmp/opening_book_selftest/gold.txt'
