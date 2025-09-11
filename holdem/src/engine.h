@@ -36,9 +36,20 @@ class DealRemainder : public virtual DealableOrderedDeck
 
         void UpdateSameSuits();
 
+    inline void addendSetStillSameSuit(const int8 suitNumA, const int8 suitNumB, const bool stillSameSuit) {
+		  addendSameSuit[suitNumA][suitNumB] &= stillSameSuit;
+			// TODO(from joseph): Optimize data layout for cache utilization
+			// addendSameSuit_bits &= (1 << (suitNumA * 4 + suitNumB));
+		}
+   		bool addendSameSuit[4][4];
     protected:
 
-   		bool addendSameSuit[4][4];
+    inline bool isAddendSameSuit(const int8 suitNumA, const int8 suitNumB) const {
+      // TODO(from joseph): Optimize data layout for cache utilization
+			// return (addendSameSuit_bits >> (suitNumA * 4 + suitNumB)) & 1;
+      return addendSameSuit[suitNumA][suitNumB];
+    }
+
 	public:
 
         /**
@@ -61,10 +72,6 @@ class DealRemainder : public virtual DealableOrderedDeck
    		/// 3) Afterwards, using addendSameSuit or otherwise, whether two adjacent cardsets are identical or not must be known.
 
 		void CleanStats(); //Releasing memory?
-
-		inline void addendSetStillSameSuit(int8 suitNumA, int8 suitNumB, bool stillSameSuit) {
-		  addendSameSuit[suitNumA][suitNumB] &= stillSameSuit;
-		}
 
 		float64 AnalyzeComplete(PlayStats* instructions);
 
