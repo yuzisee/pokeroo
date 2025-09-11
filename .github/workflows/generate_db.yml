@@ -119,7 +119,7 @@ jobs:
           pattern: opening_book-*
           merge-multiple: true
       - name: "Inspect results (supposedly actions/download-artifact will extract the contents for us into $GITHUB_WORKSPACE by default)"
-        run: pwd -P && ls -l && ls -l holdemdb*
+        run: pwd -P && ls -l && ls -l holdemdb* && cd holdemdb* && ls -1 *.holdemC *.holdemW | sort | xargs -I @ sh -c 'echo @ start ↓ && hexdump -C @ && echo @ end ↑' > hexdump.txt
       - name: "Done!"
         uses: actions/upload-artifact@v4
         with:
@@ -138,7 +138,7 @@ jobs:
       - name: "Save debugging info"
         uses: actions/upload-artifact@v4
         with:
-          name: inspect_json-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
+          name: inspect_hexdump_and_json-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
           path: |
             holdemdb*
             holdemdb*/**/*

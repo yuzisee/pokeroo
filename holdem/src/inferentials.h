@@ -461,16 +461,6 @@ public:
                  1.0;         // [-1.0..+1.0]
   }
 
- // Return the fraction of outcomes that cause your gain function f(x) to be above vs. below 1.0
-  // ...but instead of [0.0..1.0] we rescale to [-1.0..+1.0]
-  inline constexpr float64 improve() const {
-    // Rescale from
-    return
-      (improve_numerator / n  // [0.0..1.0]
-      * 2.0)  -               // into
-                 1.0;         // [-1.0..+1.0]
-  }
-
         DistrShape(const DistrShape &o)
         {
             *this = o;
@@ -483,6 +473,7 @@ public:
     const DistrShape & operator=(const DistrShape& o);
 
 	void AddVal(const StatResult &);
+	void AddKurtosisStable(const StatResult &, float64 mag);
 
 	void Complete(float64);
 private:
