@@ -82,28 +82,51 @@ jobs:
         overwrite: true
         compression-level: 0
         retention-days: 5
-  spot_check_db:
-    name: 'Sanity check database generation'
+  self_test_db1:
+    name: Self-test AKx 22x JTS
     runs-on: 'ubuntu-24.04'
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
     - uses: actions/checkout@v5
-    - name: "make db (trigger bin/regenerate_opening_book_selftest for GITHUB_ACTIONS=truw)"
-      # https://github.com/yuzisee/pokeroo/pull/14
-      #   REGRESSIONS found in → 42x 54S 55x 62x 65x 72x 73S 75S 76S 92S 96S 98x T2S T3S T6S T7x J2x J5S J5x J9S Q2x Q6S QJS QQx K2S K3x K7S KTx KKx A2x A5S A5x A6x AAx
-      env:
-        HOLDEMDB_PATH: /tmp/opening_book_selftest
-      # ~781s for AKx (48,47) is the slowest, try to run first on the performance core (even in Github Actions this seems to be a thing?)
-      #           42x (3, 10)
-      # ~389s for 22 (0, 1)
-      #           KK (46,45)
-      # ~266s for A9S (51, 51-4*5)
-      # ~261s for JTS (37,33)
-      # TODO(from joseph): If time permits, also AA (5049) + 72x (322) + Q7x (4023)
-      run: cd holdem && make db && mkdir -vp /tmp/opening_book_selftest && echo -4847 -310 -1 -4645 -5131 -3733 | tr ' ' "\n" | xargs -P "$(sh ../n_threads_minus_1.sh)" -n 1 bin/regenerate_opening_book_selftest
-    - name: "[EXPECTED] define expected results to be: A9S, AKx, JTS, 22x, KKx, 42x"
-      run: echo A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW KKx.holdemC KKx.holdemW 42x.holdemC 42x.holdemW | tr ' ' "\n" | sort | tee /tmp/opening_book_json-test_cases.txt
+    - uses: ./.github/actions/selftest_db
+      with:
+        name_pockets: 'AKx.22x.JTS'
+        self_test_args: '-4847 -1 -3733'
+  self_test_db2:
+    name: Self-test 42x KKx T3S
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v5
+    - uses: ./.github/actions/selftest_db
+      with:
+        name_pockets: '42x.KKx.T3S'
+        self_test_args: '-310 -4546 -3733'
+  spot_check_db:
+    runs-on: 'ubuntu-24.04'
+    #           42x (3, 10) ideally one of 54S 55x 76S 98x [T3S] T6S J5S J9S QJS K2S KTx A5S also?
+    # ~781s for AKx (48,47) is the slowest, try to run first on the performance core (even in Github Actions this seems to be a thing?)
+    #           KK (45,46)
+    # ~389s for 22 (0, 1)
+    #           T3S (35,07)
+    # ~261s for JTS (37,33)
+    # TODO(from joseph): If time permits, also AA (5049) + 72x (322) + Q7x (4023) + A9S (51, 51-4*5)
+    # ~266s for A9S (51, 51-4*5)
+    needs: [self_test_db1, self_test_db2]
+    name: Assert no anomalies in generated opening book
+    steps:
+    - uses: actions/checkout@v5
+    - name: "[EXPECTED] define expected results to be: T3S, AKx, JTS, 22x, KKx, 42x"
+      timeout-minutes: 1
+      run: echo T3S.holdemC T3S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW KKx.holdemC KKx.holdemW 42x.holdemC 42x.holdemW | tr ' ' "\n" | sort | tee /tmp/opening_book_json-test_cases.txt
+    - name: "Collect data from each `make db`"
+      uses: actions/download-artifact@v5
+      with:
+        path: /tmp/opening_book_selftest
+        pattern: openingbook_selftest-*
+        merge-multiple: true
     - name: "[EXPECTED] write expected DB as JSON // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
+      timeout-minutes: 1
       run: |
         mkdir -p /tmp/opening_book_json.gold
 
@@ -115,6 +138,7 @@ jobs:
         # INVARIANT: We now have /tmp/opening_book_json.gold/ which will be compared with the /tmp/opening_book_json.current_ofstream_logs/ generated below
 
     - name: "[ACTUAL] parse actual DB into JSON"
+      timeout-minutes: 1
       run: |
         mkdir -v -p /tmp/opening_book_json.current_ofstream_logs
         mv -v /tmp/opening_book_selftest/*.json /tmp/opening_book_json.current_ofstream_logs/
@@ -122,6 +146,7 @@ jobs:
         # INVARIANT: We now have /tmp/opening_book_json.current_ofstream_logs/ which cab be compared against the /tmp/opening_book_json.gold/ from above
 
     - name: "Compare current(binary)→converted(json) vs. current(json)"
+      timeout-minutes: 1
       run: |
         mkdir -v -p /tmp/opening_book_json.current_extract_from_binary
         ls -1 /tmp/opening_book_selftest/*.holdem{C,W} | xargs -n 1 basename | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py /tmp/opening_book_selftest/@ > /tmp/opening_book_json.current_extract_from_binary/@.json'
@@ -129,6 +154,7 @@ jobs:
         diff -urw /tmp/opening_book_json.current_extract_from_binary/ /tmp/opening_book_json.current_ofstream_logs/
 
     - name: "Compare [ gold (binary) vs. current (binary) ] ⬞ && ⬞ [ gold(binary)→converted(json) vs. current(json) ]"
+      timeout-minutes: 1
       run: |
         echo '::group::hexdump ∀ /tmp/opening_book_selftest → /tmp/opening_book_selftest/current.txt'
         cd /tmp/opening_book_selftest

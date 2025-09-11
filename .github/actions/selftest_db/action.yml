@@ -1,0 +1,28 @@
+name: Sanity check database generation
+description: "trigger bin/regenerate_opening_book_selftest for GITHUB_ACTIONS=true"
+inputs:
+  name_pockets:
+    description: "e.g. AAx.72x.Q7x"
+    required: true
+  self_test_args:
+    description: "e.g. -5049 -322 -4023"
+    required: true
+runs:
+  using: "composite" # https://www.jameskerr.blog/posts/sharing-steps-in-github-action-workflows/
+  steps:
+  - name: "make db (${{ inputs.name_pockets }})"
+    shell: sh
+    env:
+      HOLDEMDB_PATH: /tmp/opening_book_selftest
+      CARDIDX1_CARDIDX2: ${{ inputs.self_test_args }}
+    run: cd holdem && make db && mkdir -vp /tmp/opening_book_selftest && echo $CARDIDX1_CARDIDX2 | tr ' ' "\n" | xargs -P "$(sh ../n_threads_minus_1.sh)" -n 1 bin/regenerate_opening_book_selftest
+  - name: Upload self-test data
+    uses: actions/upload-artifact@v4
+    with:
+      name: openingbook_selftest-${{ inputs.name_pockets }}
+      path: /tmp/opening_book_selftest
+      include-hidden-files: true
+      if-no-files-found: error
+      overwrite: true
+      compression-level: 9
+      retention-days: 2
