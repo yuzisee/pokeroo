@@ -150,7 +150,15 @@ float64 ConsoleStepStrategy::MakeBet()
 {
 
 	if(bNoPrint){
+	  /*
+	  // Press any key to continue...
 		system("pause");
+		*/
+
+		if (std::cin.peek() == '\n') { std::cin.get(); }
+		std::cout << "Press [Enter] to continue…" << std::flush;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
 	}
 	return ConsoleStrategy::MakeBet();
 }
