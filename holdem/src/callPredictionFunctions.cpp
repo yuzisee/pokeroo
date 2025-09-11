@@ -512,7 +512,7 @@ void FoldGainModel::query( const float64 betSize )
 
     lastBetSize = betSize;
     //last_dw_dbet = dw_dbet;
-    lastWaitLength = waitLength;
+    lastWaitLength.copyFrom_noCaches(waitLength);
 
 
 	const float64 concedeGain = -waitLength.amountSacrificeVoluntary -waitLength.amountSacrificeForced;

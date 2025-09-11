@@ -116,13 +116,42 @@ public:
     w(std::numeric_limits<float64>::signaling_NaN()), meanConv(0), amountSacrificeVoluntary(std::numeric_limits<float64>::signaling_NaN()), amountSacrificeForced(std::numeric_limits<float64>::signaling_NaN()), bankroll(std::numeric_limits<float64>::signaling_NaN()), opponents(std::numeric_limits<float64>::signaling_NaN()), betSize(std::numeric_limits<float64>::signaling_NaN()), prevPot(std::numeric_limits<float64>::signaling_NaN())
     {}
 
+    /*
     // NOTE: Although this is the copy constructor, it doesn't copy caches. This lets you clone a configuration and re-evaluate it.
     FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0),
         cacheRarity(std::numeric_limits<float64>::signaling_NaN()), lastdBetSizeN(std::numeric_limits<float64>::signaling_NaN()), lastRawPCT(std::numeric_limits<float64>::signaling_NaN()), cached_d_dbetSize(std::numeric_limits<float64>::signaling_NaN()), bSearching(false),
         w(o.w), meanConv(o.meanConv), amountSacrificeVoluntary(o.amountSacrificeVoluntary), amountSacrificeForced(o.amountSacrificeForced), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize), prevPot(o.prevPot)
     {};
+    */
+    FoldWaitLengthModel(const FoldWaitLengthModel & o) = delete;
 
-    //const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o );
+    const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o ) = delete;
+    void resetCaches() {
+      this->cacheRarity = std::numeric_limits<float64>::signaling_NaN();
+      this->lastdBetSizeN = std::numeric_limits<float64>::signaling_NaN();
+      this -> lastRawPCT = std::numeric_limits<float64>::signaling_NaN();
+      this->cached_d_dbetSize = std::numeric_limits<float64>::signaling_NaN();
+      this->bSearching = false;
+    }
+    void copyFrom_withCaches ( const FoldWaitLengthModel & o ) {
+      this->copyFrom_noCaches(o);
+
+      this->cacheRarity = o.cacheRarity;
+      this->lastdBetSizeN = o.lastdBetSizeN;
+      this -> lastRawPCT = o.lastRawPCT;
+      this->cached_d_dbetSize = o.cached_d_dbetSize;
+      this->bSearching = o.bSearching;
+    }
+    void copyFrom_noCaches ( const FoldWaitLengthModel & o ) {
+      this->w = o.w;
+      this->meanConv = o.meanConv;
+      this->amountSacrificeVoluntary = o.amountSacrificeVoluntary;
+      this->amountSacrificeForced = o.amountSacrificeForced;
+      this->bankroll = o.bankroll;
+      this->opponents = o.opponents;
+      this->betSize = o.betSize;
+      this->prevPot = o.prevPot;
+    }
 
     bool operator== ( const FoldWaitLengthModel & o ) const;
 
