@@ -787,6 +787,9 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
 
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
+    #ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable) std::cout << "\t\t\t\tGainModelGeom::gd → hdx(…,dexf = " << dexf << std::endl;
+    #endif
     return hdx(x, betSize, exf, dexf, f_pot, dx, fOutcome, y) * estat->betFraction(1.0);
 
 }
@@ -833,10 +836,6 @@ float64 GainModelGeom::hdx(float64 betFraction, float64 betSize, float64 exf, fl
      savd += C * (-1.0 + (1.0 + dexf * dragCalls) / (i+1)) / sav_root;
      }///Else you'd just {savd+=0;} anyways
      }*/
-
-#ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
-#endif
 
     //y is passed in as (y+e->foldGain()) which essentially gives you g()
 
@@ -932,6 +931,16 @@ float64 GainModelNoRisk::g(float64 betSize)
 
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return 0.0; ///"Negative raise" means betting less than the minimum call = FOLD
 
+    #ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable)
+        {
+          const StatResult & inShape = fOutcome.ViewShape(betSize);
+            std::cout << "\t\t\t(t_w,t_s,t_l) " << inShape.wins << "," << inShape.splits << "," << inShape.loss << std::endl;
+            std::cout << "\t\t\t(betSize,f_pot) " << x << " , " << f_pot << " , " << std::endl;
+            std::cout << "\t\t\tt_1w " << (1+exf) << std::endl;
+            std::cout << "\t\t\tt_1l " << (1-x) << std::endl;
+        }
+    #endif
     return h(x, betSize, exf, f_pot, fOutcome);
 }
 
@@ -1008,15 +1017,6 @@ float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, fl
 
     //    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
-#ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable)
-    {
-        std::cout << "\t\t\tbase+exf " << (base+exf)  << "   *   p_cw "  << p_cw << std::endl;
-        std::cout << "\t\t\tbase-x " << (base-x)  << "   *   p_cl "  << p_cl << std::endl;
-        std::cout << "\t\t\tsav " << (sav)  << std::endl;
-    }
-#endif
-
     const float64 onWin = exf * fOutcome.getWinProb(betSize);
     const float64 onLose = -x * fOutcome.getLoseProb(betSize);
 
@@ -1088,6 +1088,9 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     //     dh/dx * dx/dbetSize
+    #ifdef DEBUG_TRACE_SEARCH
+        if(bTraceEnable) std::cout << "\t\t\t\tGainModelNoRisk::gd → hdx(…,dexf = " << dexf << std::endl;
+    #endif
     return hdx(x, betSize, exf, dexf, fOutcome, y) * estat->betFraction(1.0);
 
 }
@@ -1130,13 +1133,6 @@ float64 GainModelNoRisk::hdx(float64 betFraction, float64 betSize, float64 exf, 
      }///Else you'd just {savd+=0;} anyways
      */
     //}
-
-
-
-#ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable) std::cout << "\t\t\t\tdexf = " << dexf << std::endl;
-#endif
-
 
     return
     (
