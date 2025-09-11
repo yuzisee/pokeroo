@@ -363,6 +363,8 @@ int main(int argc, const char * argv[]) {
       const int16_t cardidx1 = (-mode) / 100;
       const int16_t cardidx2 = (-mode) % 100;
 
+      // TODO(from joseph): Would it make more sense to use HoldemUtil::ReadCard (or even HoldemUtil::ParseCard)
+
       card1.SetByIndex(cardidx1);
       card2.SetByIndex(cardidx2);
       const string name1 = spotCheckDb(DeckLocationPair(card1, card2), 'C');
