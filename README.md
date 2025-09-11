@@ -14,7 +14,7 @@ make
 cd "$(git rev-parse --show-toplevel)"
 
 mkdir -vp ~/pokeroo-run/lib
-unzip holdem/holdemdb.zip -d ~/pokeroo-run/lib/holdemdb/ # or, regenerate them (see below)
+unzip holdem/holdemdb_clang.zip -d ~/pokeroo-run/lib/holdemdb/ # or, regenerate them (see below)
 
 touch ~/pokeroo-run/lib/__init__.py
 cp -v consoleseparate.web/* ~/pokeroo-run/lib/

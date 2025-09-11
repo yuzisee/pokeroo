@@ -58,7 +58,7 @@ jobs:
     - name: Extract opening book (speedup unit test runtime)
       run: |
         mkdir -v -p ~/pokeroo-run/lib/holdemdb
-        unzip holdem/holdemdb.zip -d ~/pokeroo-run/lib/holdemdb/
+        unzip holdem/holdemdb_clang.zip -d ~/pokeroo-run/lib/holdemdb/
         # ~/pokeroo-run/lib/holdemdb ← is because of the runtime path used in the `test` target of the Makefile
     - name: Must pass unit tests
       run: cd holdem && make test
@@ -89,26 +89,32 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     - name: "make db (trigger bin/regenerate_opening_book_selftest for GITHUB_ACTIONS=truw)"
-      # TODO(from joseph): If time permits, also AA (5049) + 72x (322) + Q7x (4023)
+      # https://github.com/yuzisee/pokeroo/pull/14
+      #   REGRESSIONS found in → 42x 54S 55x 62x 65x 72x 73S 75S 76S 92S 96S 98x T2S T3S T6S T7x J2x J5S J5x J9S Q2x Q6S QJS QQx K2S K3x K7S KTx KKx A2x A5S A5x A6x AAx
       env:
         HOLDEMDB_PATH: /tmp/opening_book_selftest
-      run: cd holdem && make db && mkdir -vp /tmp/opening_book_selftest && echo -4847 -1 -5131 -3733 | tr ' ' "\n" | xargs -P "$(sh ../n_threads_minus_1.sh)" -n 1 bin/regenerate_opening_book_selftest
       # ~781s for AKx (48,47) is the slowest, try to run first on the performance core (even in Github Actions this seems to be a thing?)
+      #           42x (3, 10)
       # ~389s for 22 (0, 1)
+      #           KK (46,45)
       # ~266s for A9S (51, 51-4*5)
       # ~261s for JTS (37,33)
-    - name: "Extract comparison DB (A9S, AKx, JTS, 22x) into hexdump & JSON // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
+      # TODO(from joseph): If time permits, also AA (5049) + 72x (322) + Q7x (4023)
+      run: cd holdem && make db && mkdir -vp /tmp/opening_book_selftest && echo -4847 -310 -1 -4645 -5131 -3733 | tr ' ' "\n" | xargs -P "$(sh ../n_threads_minus_1.sh)" -n 1 bin/regenerate_opening_book_selftest
+    - name: "Extract comparison DB (A9S, AKx, JTS, 22x, KKx, 42x) into hexdump & JSON // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
       run: |
-        mkdir -v -p ~/pokeroo-run/lib/holdemdb
-        unzip "holdem/holdemdb.zip" -d ~/pokeroo-run/lib/holdemdb/
-
         mkdir -p /tmp/opening_book_json.gold
-        echo A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW | tr ' ' "\n" | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py ~/pokeroo-run/lib/holdemdb/@ > /tmp/opening_book_json.gold/@.json'
+        echo A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW KKx.holdemC KKx.holdemW 42x.holdemC 42x.holdemW | tr ' ' "\n" | sort | tee /tmp/opening_book_json-test_cases.txt
+
+        mkdir -v -p ~/pokeroo-run/lib/holdemdb
+        unzip "holdem/holdemdb_clang.zip" -d ~/pokeroo-run/lib/holdemdb/
+
+        cat /tmp/opening_book_json-test_cases.txt | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py ~/pokeroo-run/lib/holdemdb/@ > /tmp/opening_book_json.gold/@.json'
 
         # INVARIANT: We now have /tmp/opening_book_json.gold/ which will be compared with the /tmp/opening_book_json.current_ofstream_logs/ generated later below
 
         cd ~/pokeroo-run/lib/holdemdb
-        ls -1 A9S.holdemC A9S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW | sort | xargs -I @ hexdump -C @ > /tmp/opening_book_selftest/gold.txt
+        cat /tmp/opening_book_json-test_cases.txt | xargs -I @ hexdump -C @ > /tmp/opening_book_selftest/gold.txt
 
     - name: "Parse generated DB into hexdump & JSON"
       run: |
