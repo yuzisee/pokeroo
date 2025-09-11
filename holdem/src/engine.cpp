@@ -22,8 +22,10 @@
 #include "holdem2.h"
 #include "ai.h"
 
-// TODO(from joseph): I've heard that runtime performance is dominated by optimal caching & data layout.
-// When you get a chance, see if we can improve the caching & data layout for the sole purpose of significant runtime speedups (with a focus on changes that modern compilers probably aren't doing for us already under the hood)
+// TODO(from joseph): Optimize data layout for cache utilization
+// return (addendSameSuit_bits >> (suitNumA * 4 + suitNumB)) & 1;
+#define isAddendSameSuit(suitA, suitB) ( this->addendSameSuit[(suitA)][(suitB)] )
+
 float64 DealRemainder::DealCard(Hand& h)
 {
     const int8 & qprevSuit = prevSuit[dealt.Suit];
@@ -69,7 +71,7 @@ float64 DealRemainder::DealCard(Hand& h)
 		// Remember, `dealtHand` is everything that has been dealt previously.
 		// `h.SeeCards(…)` is what's currently in the hand
 
-        const bool bPreviouslyIdentical = addendSameSuit[dealt.Suit][qprevSuit];
+        const bool bPreviouslyIdentical = isAddendSameSuit(dealt.Suit, qprevSuit);
    if (bPreviouslyIdentical) { //if eligible for "greater first" rule
 		if(
              (hHere | dealt.Value) > hBack //would violate "greater first" rule
@@ -104,7 +106,7 @@ float64 DealRemainder::DealCard(Hand& h)
 		for( int8 i=dealt.Suit;i!=HoldemConstants::NO_SUIT;i = nextSuit[i])
 		{//Although we could check all four here, it is assumed that you would only deal into the first of identical suits, plus it may help sort out the 2/2/2 corner case
 
-			if ((dealtHand[i] == baseInto) && (addendSameSuit[dealt.Suit][i]))
+			if ((dealtHand[i] == baseInto) && (isAddendSameSuit(dealt.Suit, i)))
 			{
 				++occBase;
 			}
@@ -128,7 +130,7 @@ float64 DealRemainder::DealCard(Hand& h)
 	{
 		if (dealtHand[i] == dealtTo &&
 				  h.SeeCards(i) == addedTo &&
-				        addendSameSuit[dealt.Suit][i] )  ++matchesNew;
+				        isAddendSameSuit(dealt.Suit, i) )  ++matchesNew;
 	}
 
 	return static_cast<float64>(occBase)/static_cast<float64>(matchesNew);
@@ -166,13 +168,17 @@ void DealRemainder::OmitSet(const CommunityPlus& setOne, const CommunityPlus& se
 
 }
 
+// TODO(from joseph): Optimize data layout for cache utilization
+// addendSameSuit_bits &= (1 << (suitNumA * 4 + suitNumB));
+#define addendSetStillSameSuit(suitA, suitB, stillSame) do { this->addendSameSuit[(suitA)][(suitB)] &= (stillSame); } while (0)
+
 void DealRemainder::UpdateSameSuits()
 {
     for( int8 suitNumA=0;suitNumA<4;++suitNumA)
     {
         for( int8 suitNumB=0;suitNumB<4;++suitNumB)
         {
-            addendSameSuit[suitNumA][suitNumB] &= (addendSum.SeeCards(suitNumA) == addendSum.SeeCards(suitNumB));
+            addendSetStillSameSuit(suitNumA, suitNumB, (addendSum.SeeCards(suitNumA) == addendSum.SeeCards(suitNumB)));
         }
     }
 

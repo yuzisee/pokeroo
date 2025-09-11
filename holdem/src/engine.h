@@ -36,9 +36,8 @@ class DealRemainder : public virtual DealableOrderedDeck
 
         void UpdateSameSuits();
 
-    protected:
-
    		bool addendSameSuit[4][4];
+
 	public:
 
         /**
@@ -61,7 +60,6 @@ class DealRemainder : public virtual DealableOrderedDeck
    		/// 3) Afterwards, using addendSameSuit or otherwise, whether two adjacent cardsets are identical or not must be known.
 
 		void CleanStats(); //Releasing memory?
-
 
 		float64 AnalyzeComplete(PlayStats* instructions);
 
