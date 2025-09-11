@@ -645,7 +645,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 	if( maxShowdown <= 0 ) return 0;
 
-    const float64 improveMod = detailPCT.improve; //Generally preflop is negative here, so you probably don't want to accentuate that
+    const float64 improveMod = detailPCT.improve(); //Generally preflop is negative here, so you probably don't want to accentuate that
 #ifdef LOGPOSITION
 
     const float64 improvePure= (improveMod+1)/2;
@@ -1276,7 +1276,7 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
             if (distrPct.skew < 0) {
                 logF << "(skew " << distrPct.skew << " tail left) ";
             }
-            logF << "mean- " << (0.5 - 0.5*distrPct.improve) << "   mean+ " << (0.5 + 0.5*distrPct.improve);
+            logF << "mean- " << (0.5 - 0.5*distrPct.improve()) << "   mean+ " << (0.5 + 0.5*distrPct.improve());
             if (distrPct.skew > 0) {
                 logF << " (skew " << distrPct.skew << " tail right) ";
             }

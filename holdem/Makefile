@@ -1,5 +1,9 @@
 
 CXX = g++
+# [!NOTE]
+# As far as we can tell for now, the executable built by g++ runs about 25% faster.
+# Meanwhile, we are investigating whether clang++ or g++ is more *accurate* also
+CXX_REGENERATE_DB = g++
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
 CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -march=native
 CXXFLAGS_EXECUTABLE_CHAIN = -g -O -fpic -Wextra -Wno-parentheses
@@ -81,8 +85,7 @@ db:
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
-	# clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
-	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
+	$(CXX_REGENERATE_DB) $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book_profiling (`g++ -pg` instead of clang++) use gprof to inspect'
