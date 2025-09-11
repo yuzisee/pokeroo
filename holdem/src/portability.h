@@ -21,14 +21,16 @@
 #ifndef HOLDEM_Porting
 #define HOLDEM_Porting
 
-typedef unsigned char uint8;
-typedef signed char int8;
+#include <cstdint>
 
-typedef unsigned short int uint16;
-typedef signed short int int16;
+typedef std::uint8_t uint8;
+typedef std::int8_t int8;
 
-typedef unsigned int uint32;
-typedef signed int int32;
+typedef std::uint16_t uint16;
+typedef std::int16_t int16;
+
+typedef std::uint32_t uint32;
+typedef std::int32_t int32;
 /*
 ISO C++ doesn't support 'long long'
 typedef unsigned long long int uint64;
