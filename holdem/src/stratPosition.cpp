@@ -1263,7 +1263,7 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
     // excess kurtosis of Gaussian (~binomial) is 0.0
     // a histogram can be leptokurtic as well: http://en.wikipedia.org/wiki/File:KurtosisChanges.png
 
-    logF << "Community outcomes (stdev = " << distrPct.stdDev << " pcts , avgdev = " << distrPct.avgDev << " pcts ), kurtosis = " << distrPct.kurtosis << "\n";
+    logF << "Community outcomes (stdev = " << distrPct.stdDev << " pcts , avgdev = " << distrPct.avgDev << " pcts ), kurtosis = " << distrPct.kurtosis() << "\n";
     logF << distrPct.worst.pct << " pct: least helpful community\n";
     // ^^ possible upcoming community cards, and how they affect your existing hand
 
