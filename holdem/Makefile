@@ -4,6 +4,7 @@ CXX = g++
 # As far as we can tell for now, the executable built by g++ runs about 25% faster.
 # Meanwhile, we are investigating whether clang++ or g++ is more *accurate* also
 CXX_REGENERATE_DB = g++
+# CXX_REGENERATE_DB = clang++
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
 CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -march=native
 CXXFLAGS_EXECUTABLE_CHAIN = -g -O -fpic -Wextra -Wno-parentheses
@@ -95,6 +96,21 @@ ifneq ($(GITHUB_ACTIONS),true)
 	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 1
 endif
 	date
+
+# CXX_REGENERATE_DB is used to compile `bin/regenerate_opening_book_selftest` used to cross-validate the results of the archive
+echoreferencearchive:
+ifeq ($(CXX_REGENERATE_DB),clang++)
+		@echo holdemdb_clang.zip
+else ifeq ($(CXX_REGENERATE_DB),g++)
+		@echo holdemdb_gcc.zip
+else
+		exit 78 # EX_CONFIG
+endif
+
+# Ideally we could choose whichever one is more "accurate" but I don't have an easy way to check that right now?
+echoreleasearchive:
+	@echo holdemdb_clang.zip
+# @echo holdemdb_gcc.zip
 
 clean:
 	rm -R $(BUILD_DIR)
