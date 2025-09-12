@@ -134,14 +134,12 @@ void WinStats::Analyze()
 		const StatResult& wr = myWins[i];
 		myDistr->AddVal( wr );
 	}
-
-    myDistr->Complete(myChancesEach);
-
-  for(int32 i=0;i<statCount;i++)
+	for(int32 i=0;i<statCount;i++)
   {
    	const StatResult& wr = myWins[i];
    	myDistr->AddKurtosisStable( wr, myChancesEach );
   }
+    myDistr->Complete(myChancesEach);
 
 }
 

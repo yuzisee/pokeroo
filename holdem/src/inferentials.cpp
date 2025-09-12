@@ -109,7 +109,7 @@ void DistrShape::AddVal(const StatResult &x)
 	const float64 d1 = d * occ;
 	const float64 d2 = d1*d;
 	const float64 d3 = d2*d;
-	const float64 d4 = d3*d;
+	// const float64 d4 = d3*d;
 
 	avgDev += fabs(d1);
 	stdDev += d2;
@@ -144,29 +144,29 @@ void DistrShape::Complete()
 	float64 o3 = stdDev*stdDev*stdDev;
 	skew /= n*o3;
 }
-// stdDev_final = sqrt(stdDev_input / mag / mag / n)
-//              = sqrt(stdDev_input / n) / mag
+// stdDev_final = sqrt(variance_input / mag / mag / n)
+//              = sqrt(variance_input / n) / mag
+// variance_final = (variance_input / n) / mag^2
 //
 // variance_final^2 * n
-// = stdDev_final * o3 * n = (sqrt(stdDev_input / n)^4 / mag^4) * n
-//                         = (stdDev_input^2 / n^2 / mag^4) * n
-//                         = stdDev_input^2 / n / mag^4
-//                         = variance_input / n / mag^4
+// = stdDev_final * o3 * n = (sqrt(variance_input / n)^4 / mag^4) * n
+//                         = (variance_input^2 / n^2 / mag^4) * n
+//                         = variance_input^2 / n / mag^4
 //  variance_input / n / mag^4
 void DistrShape::AddKurtosisStable(const StatResult &x, float64 mag) {
   const float64 occ = x.repeated;
-  const float64 d = (x.pct - mean.pct);
+  const float64 d_mag = (x.pct - mean.pct) * mag;
   const float64 sampleVariance = stdDev * stdDev;
-  pearson_kurtosis_numerator += occ * d*d*d*d/sampleVariance/sampleVariance / sqrt(n) / 3.0;
-  // \sum d*d*d*d/variance_final/variance_final/n is close to 3
-  // \sum d*d*d*d/variance_input*n*mag^4 is close to 3
+  pearson_kurtosis_numerator += occ * (d_mag * d_mag * d_mag * d_mag / stdDev / stdDev) * n * sqrt(n) / 3.0;
+  // \sum  d*d*d*d/variance_final/variance_final/n is close to 3
+  // \sum (d*d*d*d/variance_input^2)*n*mag^4 is close to 3
   // on average, each d*d*d*d/variance_final/variance_final/n
-  //                = (d*d*d*d/variance_input)*n*mag^4        … is ~3/n
+  //                = (d*d*d*d/variance_input^2)*n*mag^4      … is ~3/n
   // on average, each d*d*d*d/variance_final/variance_final/sqrt(n)
-  //                = (d*d*d*d/variance_input)*n*sqrt(n)*mag^4      … is ~3/sqrt(n), after kurtosis_denominator = sqrt(n)
+  //                = (d*d*d*d/variance_input^2)*n*sqrt(n)*mag^4    … is ~3/sqrt(n), after kurtosis_denominator = sqrt(n)
   //
   // thus kurtosis_numerator[i] = d*d*d*d/variance_final/variance_final/sqrt(n) / 3.0
-  //                            = (d*d*d*d/variance_input)*n*sqrt(n)*mag^4 / 3.0      … will be on the order of magnitude ~1/sqrt(n), after kurtosis_denominator = sqrt(n) / 3.0
+  //                            = (d*d*d*d/variance_input^2)*n*sqrt(n)*mag^4 / 3.0      … will be on the order of magnitude ~1/sqrt(n), after kurtosis_denominator = sqrt(n) / 3.0
   // and \sum_i kurtosis_numerator[i] will be on the order of magnitude ~sqrt(n) leaving us as close to 1.0 as possible to maximize floating point precision during addition
 }
 
