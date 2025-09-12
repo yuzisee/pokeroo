@@ -9,9 +9,10 @@ CXX_SELFTEST_DB = clang++
 # ^^^ We generally use clang++ when we want maximum debugging/exception handling/error checking, such as during assertion testing.
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
 CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -march=native
-CXXFLAGS_EXECUTABLE_CHAIN = -g -O -fpic -Wextra -Wno-parentheses -Werror
+CXXFLAGS_HOLDEMDB_CHAIN = -Wextra -Wno-unused-parameter -Wno-parentheses -Werror $(CXXFLAGS_EXTREME_SPEEDUP)
 CXXFLAGS_LIVEDEBUG = -g -D RTTIASSERT
-#The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
+# The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
+CXXFLAGS_EXECUTABLE_CHAIN = -g -O -fpic -Wextra -Wno-parentheses -Werror
 CXXFLAGS += -Wall
 # [!NOTE]
 # We manually override with `-Wno-unused-parameter` below in some spots
@@ -83,15 +84,15 @@ REGENERATE_OPENING_BOOK_SRC = unittests/regenerate_opening_book.cpp src/aiCache.
 db:
 	mkdir -v -p bin
 	echo '::group::Compile bin/regenerate_opening_book_selftest (perf can be used for profiling)'
-	$(CXX_SELFTEST_DB) $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
+	$(CXX_SELFTEST_DB) $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
-	$(CXX_REGENERATE_DB) $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
+	$(CXX_REGENERATE_DB) $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book_profiling (`g++ -pg` instead of clang++) use gprof to inspect'
-	g++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -g -pg -o bin/regenerate_opening_book_profiling -Isrc -D PROGRESSUPDATE=140 -ffast-math $(REGENERATE_OPENING_BOOK_SRC)
+	g++ $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -g -pg -o bin/regenerate_opening_book_profiling -Isrc -D PROGRESSUPDATE=140 -ffast-math $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 ifneq ($(GITHUB_ACTIONS),true)
 	mkdir -p /tmp/opening_book

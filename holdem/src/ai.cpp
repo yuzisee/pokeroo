@@ -37,6 +37,13 @@ void CallStats::dump_csv_plot(const char * dump_filename)
 #endif
 */
 
+#ifdef DEBUGASSERT
+  [[noreturn]] void hard_exit() {
+    std::exit(1);
+    __builtin_unreachable();
+  }
+#endif
+
 void PlayStats::Compare(const float64 occ)
 {
 
@@ -274,8 +281,20 @@ void WinStats::DropCard(const DeckLocation deck)
 
 void WinStats::initW(const int8 cardsInCommunity)
 {
+  PlayStats::moreCards = (5-cardsInCommunity+2);
 
+    const size_t moreCardsAlloc = moreCards;
+		if ((2 <= moreCardsAlloc) && (moreCardsAlloc <= 7)) {
+		  myUndo = new CommunityPlus[moreCardsAlloc-2];
+		  oppUndo = new CommunityPlus[moreCardsAlloc];
+		}
 		#ifdef DEBUGASSERT
+		else
+    {
+        std::cerr << "WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") means `cardsInCommunity < 0` or `cardsInCommunity > 5` but that's not possible. The River is the last round and it's 5 community cards." << std::endl;
+        exit(1);
+    }
+
 			int8 temp1 = oppStrength.CardsInSuit( 0 ) +
 				oppStrength.CardsInSuit( 1 ) +
 				oppStrength.CardsInSuit( 2 ) +
@@ -297,11 +316,6 @@ void WinStats::initW(const int8 cardsInCommunity)
 				return;
 			}
 		#endif
-
-	PlayStats::moreCards = (5-cardsInCommunity+2);
-
-	myUndo = new CommunityPlus[moreCards-2];
-	oppUndo = new CommunityPlus[moreCards];
 
 	if( moreCards == 2)
 	{
@@ -350,6 +364,34 @@ void WinStats::initW(const int8 cardsInCommunity)
 		statCount = HoldemUtil::nchoosep<int32>(52-cardsDealt,cardsToNextBet);
 		myTotalChances = static_cast<float64>(statCount);
 
+		#ifdef DEBUGASSERT
+		  // cardsInCommunity inclusive of [0..5]
+		  // cardsDealt inclusive of [2..7]
+			/*
+		   statCount is one of [
+				 HoldemUtil::nchoosep<int32>(52-7,0) i.e. 1 (after the River) BUT there is a special case for (moreCards == 2) already above, so...
+				 HoldemUtil::nchoosep<int32>(52-6,1) i.e. 46 (right after the Turn)
+				 HoldemUtil::nchoosep<int32>(52-5,1) i.e. 47 (right after the Flop)
+				 HoldemUtil::nchoosep<int32>(52-2,3) i.e. 19600 (Pre-flop)
+				]
+			*/
+		  if(statCount > 19600) {
+				std::cerr << "WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") caused moreCards=" << PlayStats::moreCards
+				  << " cardsToNextBet=" << static_cast<int>(cardsToNextBet)
+				  << " cardsDealt=" << static_cast<int>(cardsDealt)
+					<< " HoldemUtil::nchoosep<int32>(" << static_cast<int>(52-cardsDealt) << "," << static_cast<int>(cardsToNextBet) << ")"
+					<< " = " << statCount << std::endl;
+				return exit(1);
+			}
+			if(statCount < 46) {
+				std::cerr << "HoldemUtil::nchoosep<int32>(" << static_cast<int>(52-cardsDealt) << "," << static_cast<int>(cardsToNextBet) << ")"
+				  << " = " << statCount << " would never return a negative value. And otherwise You should have hit the special case above for (moreCards == 2)" << std::endl
+					<< "So then, how did WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") cause "
+					<< " cardsToNextBet=" << static_cast<int>(cardsToNextBet)
+				  << " cardsDealt=" << static_cast<int>(cardsDealt) << std::endl;
+				return exit(1);
+			}
+		#endif
 		myWins = new StatResult[statCount];
 
 
@@ -617,25 +659,47 @@ void CallStats::initC(const int8 cardsInCommunity)
 {
 	calc = new CallCumulation();
 
+	const int8 cardsAvail = realCardsAvailable(cardsInCommunity);
+		const size_t oppHands = cardsAvail*(cardsAvail-1)/2;
+
 	moreCards = 7-cardsInCommunity;
 
-	myUndo = new CommunityPlus[moreCards-2];
-	oppUndo = new CommunityPlus[moreCards];
+		const size_t moreCardsAlloc = moreCards;
 
-    int8 cardsAvail = realCardsAvailable(cardsInCommunity);
+		if ((2 <= moreCardsAlloc) && (moreCardsAlloc <= 7)) {
+				myUndo = new CommunityPlus[moreCardsAlloc-2];
+				oppUndo = new CommunityPlus[moreCardsAlloc];
+		}
+		#ifdef DEBUGASSERT
+		else if (moreCards < 2) {
+				std::cerr << "How did we get `cardsInCommunity > 5` causing CallStats::initC(" << static_cast<int>(cardsInCommunity) << ")" << std::endl;
+				return exit(1);
+		} else if (moreCards > 7) {
+				std::cerr << "CallStats::initC(" << static_cast<int>(cardsInCommunity) << ") is being called with a negative value??" << std::endl;
+				return exit(1);
+		} else {
+				std::cerr << "There's no way to get here. We guarded on `moreCardsAlloc` in multiple places: " << static_cast<int>(moreCards) << " : " << moreCardsAlloc << std::endl;
+				return exit(1);
+		}
 
-    int32 oppHands = cardsAvail*(cardsAvail-1)/2;
-    myTotalChances = static_cast<float64>(oppHands);
+	if (oppHands > 1225)
+					{
+									std::cerr << "CallStats::realCardsAvailable(" << static_cast<int>(cardsInCommunity) << ") means " << static_cast<int>(cardsAvail) << " = `cardsAvail > 50`" << std::endl;
+									hard_exit();
+					}
+	#endif
+
+				myTotalChances = static_cast<float64>(oppHands);
 	statCount = oppHands;
 
-    myWins = new StatResult[oppHands];
+				myWins = new StatResult[oppHands];
 
 
-    myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
+				myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
 
 	if (moreCards == 2)
 	{
-        myEval();
+								myEval();
 	}
 }
 
