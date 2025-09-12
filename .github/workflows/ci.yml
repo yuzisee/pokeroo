@@ -63,7 +63,9 @@ jobs:
     - name: Extract opening book (speedup unit test runtime)
       run: |
         mkdir -v -p ~/pokeroo-run/lib/holdemdb
-        unzip holdem/holdemdb_clang.zip -d ~/pokeroo-run/lib/holdemdb/
+        cd holdem
+        unzip "$(make echoreleasearchive | tail -n 1)" -d ~/pokeroo-run/lib/holdemdb/
+        #  ^^^   e.g. >>> `unzip holdemdb_clang.zip -d ~/pokeroo-run/lib/holdemdb/`
         # ~/pokeroo-run/lib/holdemdb ← is because of the runtime path used in the `test` target of the Makefile
     - name: Must pass unit tests
       timeout-minutes: 5
@@ -136,9 +138,11 @@ jobs:
         mkdir -p /tmp/opening_book_json.gold
 
         mkdir -v -p ~/pokeroo-run/lib/holdemdb
-        unzip "holdem/holdemdb_clang.zip" -d ~/pokeroo-run/lib/holdemdb/
+        cd holdem
+        unzip "$(make echoreferencearchive | tail -n 1)" -d ~/pokeroo-run/lib/holdemdb/
+        #  ^^^   e.g. >>> `unzip holdemdb_clang.zip -d ~/pokeroo-run/lib/holdemdb/`
 
-        cat /tmp/opening_book_json-test_cases.txt | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py ~/pokeroo-run/lib/holdemdb/@ > /tmp/opening_book_json.gold/@.json'
+        cat /tmp/opening_book_json-test_cases.txt | xargs -I @ sh -xe -c 'python3 unittests/holdemjson.py ~/pokeroo-run/lib/holdemdb/@ > /tmp/opening_book_json.gold/@.json'
 
         # INVARIANT: We now have /tmp/opening_book_json.gold/ which will be compared with the /tmp/opening_book_json.current_ofstream_logs/ generated below
 

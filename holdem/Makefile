@@ -4,6 +4,9 @@ CXX = g++
 # As far as we can tell for now, the executable built by g++ runs about 25% faster.
 # Meanwhile, we are investigating whether clang++ or g++ is more *accurate* also
 CXX_REGENERATE_DB = g++
+# CXX_REGENERATE_DB = clang++
+CXX_SELFTEST_DB = clang++
+# ^^^ We generally use clang++ when we want maximum debugging/exception handling/error checking, such as during assertion testing.
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
 CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -march=native
 CXXFLAGS_EXECUTABLE_CHAIN = -g -O -fpic -Wextra -Wno-parentheses -Werror
@@ -80,7 +83,7 @@ REGENERATE_OPENING_BOOK_SRC = unittests/regenerate_opening_book.cpp src/aiCache.
 db:
 	mkdir -v -p bin
 	echo '::group::Compile bin/regenerate_opening_book_selftest (perf can be used for profiling)'
-	clang++ $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
+	$(CXX_SELFTEST_DB) $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
@@ -95,6 +98,31 @@ ifneq ($(GITHUB_ACTIONS),true)
 	HOLDEMDB_PATH=/tmp/opening_book bin/regenerate_opening_book 1
 endif
 	date
+
+# CXX_SELFTEST_DB is used to compile `bin/regenerate_opening_book_selftest` used to cross-validate the results of the archive
+echoreferencearchive:
+ifeq ($(CXX_SELFTEST_DB),clang++)
+		@echo holdemdb_clang.zip
+else ifeq ($(CXX_SELFTEST_DB),g++)
+		@echo holdemdb_gcc.zip
+else
+		exit 78 # EX_CONFIG
+endif
+
+# TODO(from joseph): Use this alongside https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#env-context and https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#setting-an-environment-variable to dynamically choose the artifact name created by `.github/workflows/generate_db.yml`
+echooutputarchive:
+ifeq ($(CXX_REGENERATE_DB),clang++)
+		@echo holdemdb_clang.zip
+else ifeq ($(CXX_REGENERATE_DB),g++)
+		@echo holdemdb_gcc.zip
+else
+		exit 78 # EX_CONFIG
+endif
+
+# Ideally we could choose whichever one is more "accurate" but I don't have an easy way to check that right now?
+echoreleasearchive:
+	@echo holdemdb_clang.zip
+# @echo holdemdb_gcc.zip
 
 clean:
 	rm -R $(BUILD_DIR)
