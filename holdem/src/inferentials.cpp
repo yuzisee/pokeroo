@@ -133,11 +133,11 @@ void DistrShape::Complete()
 {
 	avgDev /= n;
 	stdDev /= n;
+	float64 o2 = stdDev;
 	stdDev = sqrt(stdDev);
 
-	float64 o3 = stdDev*stdDev*stdDev;
-	skew /= n*o3;
-	kurtosis /= n*o3*stdDev;
+	skew /= n*o2*stdDev;
+	kurtosis /= n*o2*o2;
 	kurtosis -= 3;
 }
 
