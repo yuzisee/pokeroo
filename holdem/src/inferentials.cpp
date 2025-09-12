@@ -155,9 +155,12 @@ void DistrShape::Complete()
 //  variance_input / n / mag^4
 void DistrShape::AddKurtosisStable(const StatResult &x, float64 mag) {
   const float64 occ = x.repeated;
-  const float64 d_mag = (x.pct - mean.pct) * mag;
-  const float64 sampleVariance = stdDev * stdDev;
-  pearson_kurtosis_numerator += occ * (d_mag * d_mag * d_mag * d_mag / stdDev / stdDev) * n * sqrt(n) / 3.0;
+  const float64 dmag = (x.pct - mean.pct) * mag;
+  const float64 dmag2 = dmag * dmag;
+  const float64 dmag2_no2 = dmag2 / stdDev;
+  // pearson_kurtosis_numerator += occ * (dmag * dmag * dmag * dmag / stdDev / stdDev) * n * sqrt(n) / 3.0;
+  // pearson_kurtosis_numerator += occ * (dmag2 * dmag2 / stdDev / stdDev) * n * sqrt(n) / 3.0;
+  pearson_kurtosis_numerator += occ * dmag2_no2 * dmag2_no2 * n * sqrt(n) / 3.0;
   // \sum  d*d*d*d/variance_final/variance_final/n is close to 3
   // \sum (d*d*d*d/variance_input^2)*n*mag^4 is close to 3
   // on average, each d*d*d*d/variance_final/variance_final/n
