@@ -31,15 +31,17 @@ jobs:
   automated_build:
     name: 'Build (see Makefile)'
     runs-on: 'ubuntu-24.04'
-    timeout-minutes: 6
-    # This only needs a minute or so, but installing ctags can have unpredicable delays...
+    timeout-minutes: 11
+    # Installing ctags can take anywhere from 1 minute to 6+ minutes!!
     steps:
     - uses: actions/checkout@v5
     - name: Install ctags (needed by Makefile `tags` target)
       run: sudo apt-get update && sudo apt-get install -y universal-ctags
     - name: Must compile successfully
+      timeout-minutes: 1
       run: cd holdem && make SHELL="$SHELL -x"
     - name: "…but `-D DEBUG_TRACE_SEARCH` and `-D NO_LOG_FILES` should also build without issues"
+      timeout-minutes: 3
       run: |
         mkdir -v holdem/clang_plist
         cd holdem/clang_plist
@@ -54,7 +56,8 @@ jobs:
   automated_tests:
     name: 'Test (see holdem/unittests/main.cpp)'
     runs-on: 'ubuntu-24.04'
-    timeout-minutes: 8
+    timeout-minutes: 12
+    # We have to assume that apt-get calls can sometimes take 6+ minutes
     steps:
     - uses: actions/checkout@v5
     - name: Extract opening book (speedup unit test runtime)
@@ -63,6 +66,7 @@ jobs:
         unzip holdem/holdemdb_clang.zip -d ~/pokeroo-run/lib/holdemdb/
         # ~/pokeroo-run/lib/holdemdb ← is because of the runtime path used in the `test` target of the Makefile
     - name: Must pass unit tests
+      timeout-minutes: 5
       run: cd holdem && make test
     - name: We need llvm-profdata
       run: sudo apt-get update && sudo apt-get install -y llvm
@@ -116,10 +120,10 @@ jobs:
     # ~266s for A9S (51, 51-4*5)
     needs: [self_test_db1, self_test_db2]
     name: Assert no anomalies in generated opening book
+    timeout-minutes: 1
     steps:
     - uses: actions/checkout@v5
     - name: "[EXPECTED] define expected results to be: T3S, AKx, JTS, 22x, KKx, 42x"
-      timeout-minutes: 1
       run: echo T3S.holdemC T3S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW KKx.holdemC KKx.holdemW 42x.holdemC 42x.holdemW | tr ' ' "\n" | sort | tee /tmp/opening_book_json-test_cases.txt
     - name: "Collect data from each `make db`"
       uses: actions/download-artifact@v5
@@ -128,7 +132,6 @@ jobs:
         pattern: openingbook_selftest-*
         merge-multiple: true
     - name: "[EXPECTED] write expected DB as JSON // See `spot_check_regression_test` in unittests/regenerate_opening_book.cpp"
-      timeout-minutes: 1
       run: |
         mkdir -p /tmp/opening_book_json.gold
 
@@ -140,7 +143,6 @@ jobs:
         # INVARIANT: We now have /tmp/opening_book_json.gold/ which will be compared with the /tmp/opening_book_json.current_ofstream_logs/ generated below
 
     - name: "[ACTUAL] parse actual DB into JSON"
-      timeout-minutes: 1
       run: |
         mkdir -v -p /tmp/opening_book_json.current_ofstream_logs
         mv -v /tmp/opening_book_selftest/*.json /tmp/opening_book_json.current_ofstream_logs/
@@ -148,7 +150,6 @@ jobs:
         # INVARIANT: We now have /tmp/opening_book_json.current_ofstream_logs/ which cab be compared against the /tmp/opening_book_json.gold/ from above
 
     - name: "Compare current(binary)→converted(json) vs. current(json)"
-      timeout-minutes: 1
       run: |
         mkdir -v -p /tmp/opening_book_json.current_extract_from_binary
         ls -1 /tmp/opening_book_selftest/*.holdem{C,W} | xargs -n 1 basename | xargs -I @ sh -xe -c 'python3 holdem/unittests/holdemjson.py /tmp/opening_book_selftest/@ > /tmp/opening_book_json.current_extract_from_binary/@.json'
@@ -156,7 +157,6 @@ jobs:
         diff -urw /tmp/opening_book_json.current_extract_from_binary/ /tmp/opening_book_json.current_ofstream_logs/
 
     - name: "Compare [ gold (binary) vs. current (binary) ] ⬞ && ⬞ [ gold(binary)→converted(json) vs. current(json) ]"
-      timeout-minutes: 1
       run: |
         cd /tmp/opening_book_selftest
         ls -1 *.holdemC *.holdemW | sort > /tmp/opening_book_json-actual_filenames.txt
