@@ -275,6 +275,7 @@ void WinStats::DropCard(const DeckLocation deck)
 void WinStats::initW(const int8 cardsInCommunity)
 {
 
+  PlayStats::moreCards = (5-cardsInCommunity+2);
 		#ifdef DEBUGASSERT
 			int8 temp1 = oppStrength.CardsInSuit( 0 ) +
 				oppStrength.CardsInSuit( 1 ) +
@@ -296,9 +297,19 @@ void WinStats::initW(const int8 cardsInCommunity)
 				std::cerr << "COMMUNITY HAS " << (int)(cardsInCommunity) << endl;
 				return;
 			}
+
+
+		if (moreCards < 2)
+    {
+        std::cerr << "WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") means `cardsInCommunity > 5` but that's not possible. The River is the last round and it's 5 community cards." << std::endl;
+        return exit(1);
+    }
+		if (moreCards > 7) {
+		std::cerr << "WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") means `cardsInCommunity < 0` so how can it be negative?" << std::endl;
+        return exit(1);
+		}
 		#endif
 
-	PlayStats::moreCards = (5-cardsInCommunity+2);
 
 	myUndo = new CommunityPlus[moreCards-2];
 	oppUndo = new CommunityPlus[moreCards];
@@ -350,6 +361,34 @@ void WinStats::initW(const int8 cardsInCommunity)
 		statCount = HoldemUtil::nchoosep<int32>(52-cardsDealt,cardsToNextBet);
 		myTotalChances = static_cast<float64>(statCount);
 
+		#ifdef DEBUGASSERT
+		  // cardsInCommunity inclusive of [0..5]
+		  // cardsDealt inclusive of [2..7]
+			/*
+		   statCount is one of [
+				 HoldemUtil::nchoosep<int32>(52-7,0) i.e. 1 (after the River) BUT there is a special case for (moreCards == 2) already above, so...
+				 HoldemUtil::nchoosep<int32>(52-6,1) i.e. 46 (right after the Turn)
+				 HoldemUtil::nchoosep<int32>(52-5,1) i.e. 47 (right after the Flop)
+				 HoldemUtil::nchoosep<int32>(52-2,3) i.e. 19600 (Pre-flop)
+				]
+			*/
+		  if(statCount > 19600) {
+				std::cerr << "WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") caused moreCards=" << PlayStats::moreCards
+				  << " cardsToNextBet=" << static_cast<int>(cardsToNextBet)
+				  << " cardsDealt=" << static_cast<int>(cardsDealt)
+					<< " HoldemUtil::nchoosep<int32>(" << static_cast<int>(52-cardsDealt) << "," << static_cast<int>(cardsToNextBet) << ")"
+					<< " = " << statCount << std::endl;
+				return exit(1);
+			}
+			if(statCount < 46) {
+				std::cerr << "HoldemUtil::nchoosep<int32>(" << static_cast<int>(52-cardsDealt) << "," << static_cast<int>(cardsToNextBet) << ")"
+				  << " = " << statCount << " would never return a negative value. And otherwise You should have hit the special case above for (moreCards == 2)" << std::endl
+					<< "So then, how did WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") cause "
+					<< " cardsToNextBet=" << static_cast<int>(cardsToNextBet)
+				  << " cardsDealt=" << static_cast<int>(cardsDealt) << std::endl;
+				return exit(1);
+			}
+		#endif
 		myWins = new StatResult[statCount];
 
 
@@ -617,14 +656,31 @@ void CallStats::initC(const int8 cardsInCommunity)
 {
 	calc = new CallCumulation();
 
+	const int8 cardsAvail = realCardsAvailable(cardsInCommunity);
+  const size_t oppHands = cardsAvail*(cardsAvail-1)/2;
+
 	moreCards = 7-cardsInCommunity;
+
+ #ifdef DEBUGASSERT
+	if (moreCards < 2)
+    {
+        std::cerr << "How did we get `cardsInCommunity > 5` causing CallStats::initC(" << static_cast<int>(cardsInCommunity) << ")" << std::endl;
+        return exit(1);
+    }
+	  if (moreCards > 7) {
+        std::cerr << "CallStats::initC(" << static_cast<int>(cardsInCommunity) << ") is being called with a negative value??" << std::endl;
+        return exit(1);
+    }
+	if (oppHands > 1225)
+    {
+        std::cerr << "CallStats::realCardsAvailable(" << static_cast<int>(cardsInCommunity) << ") means " << static_cast<int>(cardsAvail) << " = `cardsAvail > 50`" << std::endl;
+        return exit(1);
+    }
+#endif
 
 	myUndo = new CommunityPlus[moreCards-2];
 	oppUndo = new CommunityPlus[moreCards];
 
-    int8 cardsAvail = realCardsAvailable(cardsInCommunity);
-
-    int32 oppHands = cardsAvail*(cardsAvail-1)/2;
     myTotalChances = static_cast<float64>(oppHands);
 	statCount = oppHands;
 
