@@ -37,6 +37,13 @@ void CallStats::dump_csv_plot(const char * dump_filename)
 #endif
 */
 
+#ifdef DEBUGASSERT
+  [[noreturn]] void hard_exit() {
+    std::exit(1);
+    __builtin_unreachable();
+  }
+#endif
+
 void PlayStats::Compare(const float64 occ)
 {
 
@@ -274,9 +281,20 @@ void WinStats::DropCard(const DeckLocation deck)
 
 void WinStats::initW(const int8 cardsInCommunity)
 {
-
   PlayStats::moreCards = (5-cardsInCommunity+2);
+
+    const size_t moreCardsAlloc = moreCards;
+		if ((2 <= moreCardsAlloc) && (moreCardsAlloc <= 7)) {
+		  myUndo = new CommunityPlus[moreCardsAlloc-2];
+		  oppUndo = new CommunityPlus[moreCardsAlloc];
+		}
 		#ifdef DEBUGASSERT
+		else
+    {
+        std::cerr << "WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") means `cardsInCommunity < 0` or `cardsInCommunity > 5` but that's not possible. The River is the last round and it's 5 community cards." << std::endl;
+        exit(1);
+    }
+
 			int8 temp1 = oppStrength.CardsInSuit( 0 ) +
 				oppStrength.CardsInSuit( 1 ) +
 				oppStrength.CardsInSuit( 2 ) +
@@ -297,22 +315,7 @@ void WinStats::initW(const int8 cardsInCommunity)
 				std::cerr << "COMMUNITY HAS " << (int)(cardsInCommunity) << endl;
 				return;
 			}
-
-
-		if (moreCards < 2)
-    {
-        std::cerr << "WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") means `cardsInCommunity > 5` but that's not possible. The River is the last round and it's 5 community cards." << std::endl;
-        return exit(1);
-    }
-		if (moreCards > 7) {
-		std::cerr << "WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") means `cardsInCommunity < 0` so how can it be negative?" << std::endl;
-        return exit(1);
-		}
 		#endif
-
-
-	myUndo = new CommunityPlus[moreCards-2];
-	oppUndo = new CommunityPlus[moreCards];
 
 	if( moreCards == 2)
 	{
@@ -657,41 +660,46 @@ void CallStats::initC(const int8 cardsInCommunity)
 	calc = new CallCumulation();
 
 	const int8 cardsAvail = realCardsAvailable(cardsInCommunity);
-  const size_t oppHands = cardsAvail*(cardsAvail-1)/2;
+		const size_t oppHands = cardsAvail*(cardsAvail-1)/2;
 
 	moreCards = 7-cardsInCommunity;
 
- #ifdef DEBUGASSERT
-	if (moreCards < 2)
-    {
-        std::cerr << "How did we get `cardsInCommunity > 5` causing CallStats::initC(" << static_cast<int>(cardsInCommunity) << ")" << std::endl;
-        return exit(1);
-    }
-	  if (moreCards > 7) {
-        std::cerr << "CallStats::initC(" << static_cast<int>(cardsInCommunity) << ") is being called with a negative value??" << std::endl;
-        return exit(1);
-    }
+		const size_t moreCardsAlloc = moreCards;
+
+		if ((2 <= moreCardsAlloc) && (moreCardsAlloc <= 7)) {
+				myUndo = new CommunityPlus[moreCardsAlloc-2];
+				oppUndo = new CommunityPlus[moreCardsAlloc];
+		}
+		#ifdef DEBUGASSERT
+		else if (moreCards < 2) {
+				std::cerr << "How did we get `cardsInCommunity > 5` causing CallStats::initC(" << static_cast<int>(cardsInCommunity) << ")" << std::endl;
+				return exit(1);
+		} else if (moreCards > 7) {
+				std::cerr << "CallStats::initC(" << static_cast<int>(cardsInCommunity) << ") is being called with a negative value??" << std::endl;
+				return exit(1);
+		} else {
+				std::cerr << "There's no way to get here. We guarded on `moreCardsAlloc` in multiple places: " << static_cast<int>(moreCards) << " : " << moreCardsAlloc << std::endl;
+				return exit(1);
+		}
+
 	if (oppHands > 1225)
-    {
-        std::cerr << "CallStats::realCardsAvailable(" << static_cast<int>(cardsInCommunity) << ") means " << static_cast<int>(cardsAvail) << " = `cardsAvail > 50`" << std::endl;
-        return exit(1);
-    }
-#endif
+					{
+									std::cerr << "CallStats::realCardsAvailable(" << static_cast<int>(cardsInCommunity) << ") means " << static_cast<int>(cardsAvail) << " = `cardsAvail > 50`" << std::endl;
+									hard_exit();
+					}
+	#endif
 
-	myUndo = new CommunityPlus[moreCards-2];
-	oppUndo = new CommunityPlus[moreCards];
-
-    myTotalChances = static_cast<float64>(oppHands);
+				myTotalChances = static_cast<float64>(oppHands);
 	statCount = oppHands;
 
-    myWins = new StatResult[oppHands];
+				myWins = new StatResult[oppHands];
 
 
-    myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
+				myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
 
 	if (moreCards == 2)
 	{
-        myEval();
+								myEval();
 	}
 }
 
