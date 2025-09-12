@@ -99,6 +99,7 @@ ifneq ($(GITHUB_ACTIONS),true)
 endif
 	date
 
+# CXX_SELFTEST_DB is used to compile `bin/regenerate_opening_book_selftest` used to cross-validate the results of the archive
 echoreferencearchive:
 ifeq ($(CXX_SELFTEST_DB),clang++)
 		@echo holdemdb_clang.zip
@@ -108,7 +109,7 @@ else
 		exit 78 # EX_CONFIG
 endif
 
-# CXX_REGENERATE_DB is used to compile `bin/regenerate_opening_book_selftest` used to cross-validate the results of the archive
+# TODO(from joseph): Use this alongside https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#env-context and https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#setting-an-environment-variable to dynamically choose the artifact name created by `.github/workflows/generate_db.yml`
 echooutputarchive:
 ifeq ($(CXX_REGENERATE_DB),clang++)
 		@echo holdemdb_clang.zip
