@@ -47,7 +47,7 @@ DistrShape::DistrShape(float64 count, StatResult worstPCT, StatResult meanOveral
 ,
 mean(meanOverall), best(bestPCT), worst(worstPCT)
 ,
-avgDev(0), stdDev(0), improve_numerator(0), skew(0), kurtosis(0)
+avgDev(0), stdDev(0), improve_numerator(0), skew(0), pearson_kurtosis_numerator(0), pearson_kurtosis_denominator(0)
 {
     for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
         coarseHistogram[k].wins = 0.0;
@@ -62,7 +62,8 @@ const DistrShape & DistrShape::operator=(const DistrShape& o)
 {
     avgDev = o.avgDev;
     improve_numerator = o.improve_numerator;
-    kurtosis = o.kurtosis;
+    pearson_kurtosis_numerator = o.pearson_kurtosis_numerator;
+    pearson_kurtosis_denominator = o.pearson_kurtosis_denominator;
     mean = o.mean;
     n = o.n;
     skew = o.skew;
@@ -108,12 +109,11 @@ void DistrShape::AddVal(const StatResult &x)
 	const float64 d1 = d * occ;
 	const float64 d2 = d1*d;
 	const float64 d3 = d2*d;
-	const float64 d4 = d3*d;
+	// const float64 d4 = d3*d;
 
 	avgDev += fabs(d1);
 	stdDev += d2;
 	skew += d3;
-	kurtosis += d4;
 
 	if( d > 0 ){
 		improve_numerator += occ;
@@ -126,9 +126,15 @@ void DistrShape::AddVal(const StatResult &x)
 void DistrShape::Complete(float64 mag)
 {
 	normalize(mag);
+	pearson_kurtosis_denominator = sqrt(n) / 3.0;
 	Complete();
 }
 
+// This used to have:
+// ```
+// pearson_kurtosis_denominator *= stdDev_final * o3;
+// ```
+// but we replaced it with AddKurtosisStable for floating point stability
 void DistrShape::Complete()
 {
 	avgDev /= n;
@@ -137,8 +143,34 @@ void DistrShape::Complete()
 
 	float64 o3 = stdDev*stdDev*stdDev;
 	skew /= n*o3;
-	kurtosis /= n*o3*stdDev;
-	kurtosis -= 3;
+}
+// stdDev_final = sqrt(variance_input / mag / mag / n)
+//              = sqrt(variance_input / n) / mag
+// variance_final = (variance_input / n) / mag^2
+//
+// variance_final^2 * n
+// = stdDev_final * o3 * n = (sqrt(variance_input / n)^4 / mag^4) * n
+//                         = (variance_input^2 / n^2 / mag^4) * n
+//                         = variance_input^2 / n / mag^4
+//  variance_input / n / mag^4
+void DistrShape::AddKurtosisStable(const StatResult &x, float64 mag) {
+  const float64 occ = x.repeated;
+  const float64 dmag = (x.pct - mean.pct) * mag;
+  const float64 dmag2 = dmag * dmag;
+  const float64 dmag2_no2 = dmag2 / stdDev;
+  // pearson_kurtosis_numerator += occ * (dmag * dmag * dmag * dmag / stdDev / stdDev) * n * sqrt(n) / 3.0;
+  // pearson_kurtosis_numerator += occ * (dmag2 * dmag2 / stdDev / stdDev) * n * sqrt(n) / 3.0;
+  pearson_kurtosis_numerator += occ * dmag2_no2 * dmag2_no2 * n * sqrt(n) / 3.0;
+  // \sum  d*d*d*d/variance_final/variance_final/n is close to 3
+  // \sum (d*d*d*d/variance_input^2)*n*mag^4 is close to 3
+  // on average, each d*d*d*d/variance_final/variance_final/n
+  //                = (d*d*d*d/variance_input^2)*n*mag^4      … is ~3/n
+  // on average, each d*d*d*d/variance_final/variance_final/sqrt(n)
+  //                = (d*d*d*d/variance_input^2)*n*sqrt(n)*mag^4    … is ~3/sqrt(n), after kurtosis_denominator = sqrt(n)
+  //
+  // thus kurtosis_numerator[i] = d*d*d*d/variance_final/variance_final/sqrt(n) / 3.0
+  //                            = (d*d*d*d/variance_input^2)*n*sqrt(n)*mag^4 / 3.0      … will be on the order of magnitude ~1/sqrt(n), after kurtosis_denominator = sqrt(n) / 3.0
+  // and \sum_i kurtosis_numerator[i] will be on the order of magnitude ~sqrt(n) leaving us as close to 1.0 as possible to maximize floating point precision during addition
 }
 
 /**
@@ -150,7 +182,6 @@ void DistrShape::normalize(float64 mag)
 	avgDev /= mag;
 	stdDev /= mag*mag;
 	skew /= mag*mag*mag;
-	kurtosis /= mag*mag*mag*mag;
 
     best.scaleOrdinateOnly(1.0 / mag);
     worst.scaleOrdinateOnly(1.0 / mag);
