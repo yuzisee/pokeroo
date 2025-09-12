@@ -115,7 +115,7 @@ string StatsManager::dbFileName(const Hand& withCommunity, const Hand& onlyCommu
 }
 
 static void abort_if_big_endian() {
-  if (std_endian_little()) {
+  if (STD_ENDIAN_LITTLE()) {
     return;
   }
 

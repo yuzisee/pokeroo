@@ -50,7 +50,7 @@ namespace NamedTriviaDeckTests {
 
 #include "callRarity.h"
 #include "functionmodel.h"
-#include "matrixbase.h"
+// TODO(from joseph): You could unit test "matrixbase.h"/"matrixbase.cpp" here too, if you'd like
 #include "stratPosition.h"
 namespace UnitTests {
 
@@ -59,7 +59,7 @@ namespace UnitTests {
     public:
         playernumber_t fOpponents;
 
-        struct StatResult fShape;
+        StatResult fShape;
 
 
         FixedStatResult() {}
@@ -1568,7 +1568,7 @@ namespace RegressionTests {
          River:	Ac Qd 2h 2d 3s  (Pot: $234)
          */
 
-        const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
+        // const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
         //assert(highbettor == 4);
         // No all-fold; assert that the pot was increased at least.
         //assert(myTable.GetPotSize() > 55);

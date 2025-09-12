@@ -50,17 +50,12 @@ typedef uint32 cachesize_t; //Note: data cache is stored little-endian too...
 
 #ifdef __cplusplus
 
-static bool std_endian_little() {
-  // TODO(from joseph): Eventually once C++20 is the default everywhere (even on old systems) we can check `std::endian::native` instead
-  int n = 1;
-  if (*(char*)&n == 1) {
-    // Little endian (the first byte contains the least significant bit)
-    return true;
-  } else {
-    // Big endian
-    return false;
-  }
-}
+// TODO(from joseph): Eventually once C++20 is the default everywhere (even on old systems) we can check `std::endian::native` instead
+#define STD_ENDIAN_LITTLE() ([] { \
+  const unsigned int n = 1; \
+  return *reinterpret_cast<const char*>(&n) == 1; \
+}())
+// Check the first byte of the integer representation of 1. If it's 1, we know the first byte contains the least significant bit.
 
 class HoldemConstants
 {

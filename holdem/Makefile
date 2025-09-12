@@ -6,7 +6,7 @@ CXX = g++
 CXX_REGENERATE_DB = g++
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
 CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -march=native
-CXXFLAGS_EXECUTABLE_CHAIN = -g -O -fpic -Wextra -Wno-parentheses
+CXXFLAGS_EXECUTABLE_CHAIN = -g -O -fpic -Wextra -Wno-parentheses -Werror
 CXXFLAGS_LIVEDEBUG = -g -D RTTIASSERT
 #The x86 instruction set only allows for -fpic compatible code, but on other architectures we may need this flag to make sure dynamic linking is possible
 CXXFLAGS += -Wall
