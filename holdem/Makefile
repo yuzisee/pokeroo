@@ -5,7 +5,7 @@ CXX = g++
 # Meanwhile, we are investigating whether clang++ or g++ is more *accurate* also
 CXX_REGENERATE_DB = g++
 # CXX_REGENERATE_DB = clang++
-CSS_SELFTEST_DB = clang++
+CXX_SELFTEST_DB = clang++
 # ^^^ We generally use clang++ when we want maximum debugging/exception handling/error checking, such as during assertion testing.
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
 CXXFLAGS_EXTREME_SPEEDUP = -O3 -funroll-loops -march=native
@@ -83,7 +83,7 @@ REGENERATE_OPENING_BOOK_SRC = unittests/regenerate_opening_book.cpp src/aiCache.
 db:
 	mkdir -v -p bin
 	echo '::group::Compile bin/regenerate_opening_book_selftest (perf can be used for profiling)'
-	$(CSS_SELFTEST_DB) $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
+	$(CXX_SELFTEST_DB) $(CXXFLAGS) $(CXXFLAGS_EXTREME_SPEEDUP) -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
