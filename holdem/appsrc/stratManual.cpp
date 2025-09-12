@@ -403,7 +403,7 @@ void ConsoleStrategy::showSituation()
 */
         if( bComSize < 5 )
         {
-            UI_DESCRIPTOR << endl << endl << (detailPCT.improve + 1) * 50 << "% of the time, you will be more likely to win after the " << flush;
+            UI_DESCRIPTOR << endl << endl << (detailPCT.improve() + 1) * 50 << "% of the time, you will be more likely to win after the " << flush;
             switch( bComSize )
             {
                 case 0:
@@ -419,7 +419,7 @@ void ConsoleStrategy::showSituation()
                     UI_DESCRIPTOR << "next community cards" << flush;
                     break;
             }
-            UI_DESCRIPTOR << "." << endl << 50 * (1 - detailPCT.improve) << "% of the time, you are more likely to win now." << flush;
+            UI_DESCRIPTOR << "." << endl << 50 * (1 - detailPCT.improve()) << "% of the time, you are more likely to win now." << flush;
         }
 
     UI_DESCRIPTOR.precision(6);

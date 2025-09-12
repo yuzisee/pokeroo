@@ -47,7 +47,7 @@ DistrShape::DistrShape(float64 count, StatResult worstPCT, StatResult meanOveral
 ,
 mean(meanOverall), best(bestPCT), worst(worstPCT)
 ,
-avgDev(0), stdDev(0), improve(0), skew(0), kurtosis(0)
+avgDev(0), stdDev(0), improve_numerator(0), skew(0), kurtosis(0)
 {
     for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
         coarseHistogram[k].wins = 0.0;
@@ -61,7 +61,7 @@ avgDev(0), stdDev(0), improve(0), skew(0), kurtosis(0)
 const DistrShape & DistrShape::operator=(const DistrShape& o)
 {
     avgDev = o.avgDev;
-    improve = o.improve;
+    improve_numerator = o.improve_numerator;
     kurtosis = o.kurtosis;
     mean = o.mean;
     n = o.n;
@@ -75,7 +75,8 @@ const DistrShape & DistrShape::operator=(const DistrShape& o)
     return *this;
 }
 
-
+// PRECONDITION: By the time you get here, you already know the `mean` from WinStats.
+//               We'll be using `DistrShape::AddVal` to calculate higher order moments.
 void DistrShape::AddVal(const StatResult &x)
 {
     const float64 occ = x.repeated;
@@ -115,10 +116,10 @@ void DistrShape::AddVal(const StatResult &x)
 	kurtosis += d4;
 
 	if( d > 0 ){
-		improve += occ;
+		improve_numerator += occ;
 	}
 	else if( d == 0 ){
-		improve += occ/2;
+		improve_numerator += occ/2;
 	}
 }
 
@@ -133,8 +134,6 @@ void DistrShape::Complete()
 	avgDev /= n;
 	stdDev /= n;
 	stdDev = sqrt(stdDev);
-	improve *= 2/n;
-	improve -= 1;
 
 	float64 o3 = stdDev*stdDev*stdDev;
 	skew /= n*o3;

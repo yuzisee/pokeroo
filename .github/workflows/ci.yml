@@ -174,7 +174,7 @@ jobs:
         cat /tmp/opening_book_json-actual_filenames.txt | xargs -I @ sh -c 'echo @ start ↓ && hexdump -C @ && echo @ end ↑' | tee current.txt
         echo '::endgroup::'
 
-        echo '::group::hexdump ⊷ holdem/holdemdb_clang.zip → /tmp/opening_book_selftest/gold.txt'
+        echo '::group::hexdump ⊷ holdem/holdemdb_….zip → /tmp/opening_book_selftest/gold.txt'
         cd ~/pokeroo-run/lib/holdemdb
         cat /tmp/opening_book_json-test_cases.txt | xargs -I @ sh -c 'echo @ start ↓ && hexdump -C @ && echo @ end ↑' | tee /tmp/opening_book_selftest/gold.txt
         echo '::endgroup::'

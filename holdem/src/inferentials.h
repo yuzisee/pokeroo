@@ -441,9 +441,19 @@ public:
     // Stats about PCT
 	float64 avgDev;
 	float64 stdDev;   //raw moment (i.e. divided by n not n-1)
-	float64 improve;  //above or below 1.0
+	float64 improve_numerator;
 	float64 skew;     //positive or negative ("Distributions with positive skew have larger means than medians.")
 	float64 kurtosis; //risk-reward magnifier (high k is high risk high reward, long tail)
+
+ // Return the fraction of outcomes that cause your gain function f(x) to be above vs. below 1.0
+  // ...but instead of [0.0..1.0] we rescale to [-1.0..+1.0]
+  inline constexpr float64 improve() const {
+    // Rescale from
+    return
+      (improve_numerator / n  // [0.0..1.0]
+      * 2.0)  -               // into
+                 1.0;         // [-1.0..+1.0]
+  }
 
         DistrShape(const DistrShape &o)
         {
@@ -458,9 +468,9 @@ public:
 
 	void AddVal(const StatResult &);
 
-	void Complete();
 	void Complete(float64);
-
+private:
+	void Complete();
 
     #ifdef DUMP_CSV_PLOTS
         static void dump_csv_plots(std::ostream& targetoutput, const DistrShape& myDistrPCT)
@@ -468,7 +478,7 @@ public:
 
             //targetoutput << "myAvg.genPCT " << myWins.pct << "!"  << endl;
             targetoutput << "(Mean) " << myDistrPCT.mean * 100 << "%"  << std::endl;
-            targetoutput << std::endl << "Adjusted improve? " << myDistrPCT.improve * 100 << "%"  << std::endl;
+            targetoutput << std::endl << "Adjusted improve? " << myDistrPCT.improve() * 100 << "%"  << std::endl;
             targetoutput << "Worst:" << myDistrPCT.worst *100 << "%" << std::endl;
             targetoutput << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << std::endl;
             targetoutput << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << std::endl;
