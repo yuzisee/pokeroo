@@ -7,7 +7,7 @@ make
 ```
 * creates executable bin/holdem.arm64 on macOS
 * creates executable bin/holdem.exe on Windows?
-* creates executable bin/holdem on Linux??
+* creates executable e.g. bin/holdem.x86_64 on Linux
 
 ## Pre-calulate the database
 ```sh
@@ -68,7 +68,7 @@ Edit `src/debug_flags.h` to set SUPERPROGRESSUPDATE if needed
 cd holdem
 make db
 ```
-Or, even better use the `int mode` mult-threading tools provided by `regenerateDb`
+Or, even better use the `int mode` multi-threading tools provided by `regenerateDb`
 - `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 2`
 - `HOLDEMDB_PATH="/tmp/opening_book" bin/regenerate_opening_book 3`
 
