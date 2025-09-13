@@ -1273,12 +1273,12 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
         const bool bMeanBelowNext = (k==h.fNumBins || distrPct.mean.pct <= h.getBin(k).myChances.pct);
         if (bMeanAbovePrev  &&  bMeanBelowNext) {
             logF << distrPct.mean.pct << " pct (mean): ";
-            if (distrPct.skew < 0) {
-                logF << "(skew " << distrPct.skew << " tail left) ";
+            if (distrPct.skew() < 0) {
+                logF << "(skew " << distrPct.skew() << " tail left) ";
             }
             logF << "mean- " << (0.5 - 0.5*distrPct.improve()) << "   mean+ " << (0.5 + 0.5*distrPct.improve());
-            if (distrPct.skew > 0) {
-                logF << " (skew " << distrPct.skew << " tail right) ";
+            if (distrPct.skew() > 0) {
+                logF << " (skew " << distrPct.skew() << " tail right) ";
             }
             logF << "\n";
         }

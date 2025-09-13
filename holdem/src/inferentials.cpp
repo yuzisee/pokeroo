@@ -47,7 +47,7 @@ DistrShape::DistrShape(float64 count, StatResult worstPCT, StatResult meanOveral
 ,
 mean(meanOverall), best(bestPCT), worst(worstPCT)
 ,
-avgDev(0), stdDev(0), improve_numerator(0), skew(0), kurtosis(0)
+avgDev(0), stdDev(0), improve_numerator(0), skew_numerator(0), skew_denominator(0), kurtosis(0)
 {
     for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
         coarseHistogram[k].wins = 0.0;
@@ -65,7 +65,8 @@ const DistrShape & DistrShape::operator=(const DistrShape& o)
     kurtosis = o.kurtosis;
     mean = o.mean;
     n = o.n;
-    skew = o.skew;
+    skew_numerator = o.skew_numerator;
+    skew_denominator = o.skew_denominator;
     stdDev= o.stdDev;
     worst = o.worst;
     best = o.best;
@@ -112,7 +113,7 @@ void DistrShape::AddVal(const StatResult &x)
 
 	avgDev += fabs(d1);
 	stdDev += d2;
-	skew += d3;
+	skew_numerator += d3;
 	kurtosis += d4;
 
 	if( d > 0 ){
@@ -126,6 +127,7 @@ void DistrShape::AddVal(const StatResult &x)
 void DistrShape::Complete(float64 mag)
 {
 	normalize(mag);
+	skew_denominator = mag*mag*mag;
 	Complete();
 }
 
@@ -136,7 +138,7 @@ void DistrShape::Complete()
 	float64 o2 = stdDev;
 	stdDev = sqrt(stdDev);
 
-	skew /= n*o2*stdDev;
+	skew_denominator *= n*o2*stdDev;
 	kurtosis /= n*o2*o2;
 	kurtosis -= 3;
 }
@@ -149,7 +151,6 @@ void DistrShape::normalize(float64 mag)
 {
 	avgDev /= mag;
 	stdDev /= mag*mag;
-	skew /= mag*mag*mag;
 	kurtosis /= mag*mag*mag*mag;
 
     best.scaleOrdinateOnly(1.0 / mag);
