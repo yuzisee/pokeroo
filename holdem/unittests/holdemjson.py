@@ -76,7 +76,7 @@ def holdem_w_to_json(holdemc_filename: str) -> str:
         holdem_w_json["improve_numerator"] = read_typed_float(f)
         holdem_w_json["skew_numerator"] = read_typed_float(f)
         holdem_w_json["skew_denominator"] = read_typed_float(f)
-        holdem_w_json["kurtosis"] = read_typed_float(f)
+        holdem_w_json["pearson_kurtosis"] = read_typed_float(f)
         holdem_w_json['_COARSE_COMMUNITY_NUM_BINS'] = COARSE_COMMUNITY_NUM_BINS
 
         no_leftover = f.read(1)
