@@ -442,7 +442,12 @@ public:
 	float64 avgDev;
 	float64 stdDev;   //raw moment (i.e. divided by n not n-1)
 	float64 improve_numerator;
-	float64 skew;     //positive or negative ("Distributions with positive skew have larger means than medians.")
+	float64 skew_numerator;
+	float64 skew_denominator;
+	//positive or negative ("Distributions with positive skew have larger means than medians.")
+	inline constexpr float64 skew() const {
+	  return skew_numerator / skew_denominator;
+	}
 	float64 kurtosis; //risk-reward magnifier (high k is high risk high reward, long tail)
 
  // Return the fraction of outcomes that cause your gain function f(x) to be above vs. below 1.0
@@ -482,7 +487,7 @@ private:
             targetoutput << "Worst:" << myDistrPCT.worst *100 << "%" << std::endl;
             targetoutput << "Standard Deviations:" << myDistrPCT.stdDev*100 << "%" << std::endl;
             targetoutput << "Average Absolute Fluctuation:" << myDistrPCT.avgDev*100 << "%" << std::endl;
-            targetoutput << "Skew:" << myDistrPCT.skew*100 << "%" << std::endl;
+            targetoutput << "Skew:" << myDistrPCT.skew()*100 << "%" << std::endl;
             targetoutput << "Kurtosis:" << (myDistrPCT.kurtosis)*100 << "%" << std::endl;
 
             targetoutput << std::endl;

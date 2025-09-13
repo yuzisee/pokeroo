@@ -181,7 +181,8 @@ void StatsManager::holdemWtoJSON ( std::stringstream& dataf, const DistrShape& d
   dataf << "  \"avgDev\": " << dPCT.avgDev << "," << std::endl;
   dataf << "  \"stdDev\": " << dPCT.stdDev << "," << std::endl;
   dataf << "  \"improve_numerator\": " << dPCT.improve_numerator << "," << std::endl;
-  dataf << "  \"skew\": " << dPCT.skew << "," << std::endl;
+  dataf << "  \"skew_numerator\": " << dPCT.skew_numerator << "," << std::endl;
+  dataf << "  \"skew_denominator\": " << dPCT.skew_denominator << "," << std::endl;
   dataf << "  \"kurtosis\": " << dPCT.kurtosis << "," << std::endl;
   dataf << "  \"_COARSE_COMMUNITY_NUM_BINS\": " << COARSE_COMMUNITY_NUM_BINS;
   dataf << std::endl << "}" << std::endl;
@@ -362,7 +363,7 @@ std::cout.precision(old_precision);
             std::cout << "Worst:" << ds.pctDistr().worst *100 << "%" << endl;
             std::cout << "Standard Deviations:" << ds.pctDistr().stdDev*100 << "%" << endl;
             std::cout << "Average Absolute Fluctuation:" << ds.pctDistr().avgDev*100 << "%" << endl;
-            std::cout << "Skew:" << ds.pctDistr().skew*100 << "%" << endl;
+            std::cout << "Skew:" << ds.pctDistr().skew()*100 << "%" << endl;
             std::cout << "Kurtosis:" << (ds.pctDistr().kurtosis)*100 << "%" << endl;
 
             std::cout << endl;
