@@ -27,13 +27,40 @@ on:
 # 191 192 193  194 195 196  197 198 199  200 201 202  203 204 205  206 207 208  209 210
 # 211  etc.
 jobs:
+  save_executable_for_introspection:
+    name: 'holdem/bin/regenerate_opening_book + holdemdb.ini + n_threads_minus_1.sh'
+    runs-on: 'ubuntu-24.04'
+    steps:
+      - uses: actions/checkout@v5
+      - name: make db
+        run: cd holdem && make db && mv -v bin/regenerate_opening_book ../
+      - name: "echooutputarchive > holdendb.ini"
+        run: cd holdem && echo /tmp/opening_book/"$(make echooutputarchive | sed 's/\.[^.]*$//')" | tee ../holdemdb.ini
+      # We already have the executable, so let's just use it rather than: `cd holdem && make db && echo … > ../holdemdb.ini` etc."
+      - name: "copy generate_db_one_stripe/action.yml to save one step later"
+        run: mkdir -vp gendb_worker && cp -v ./.github/actions/generate_db_one_stripe/action.yml gendb_worker/action.yml
+      - name: Transfer executables to workers
+        uses: actions/upload-artifact@v4
+        with:
+          name: make-db-requirements
+          path: |
+            regenerate_opening_book
+            holdemdb.ini
+            n_threads_minus_1.sh
+            gendb_worker/action.yml
+          # include-hidden-files: false by default
+          if-no-files-found: error
+          overwrite: true
+          compression-level: 9
+          retention-days: 11
   rotation123:
     name: '(mastodon) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
+    needs: save_executable_for_introspection
     # timeout-minutes: 360
     steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "211 212 213"
@@ -42,9 +69,10 @@ jobs:
   rotation456:
     name: '(pterodactyl) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
+    needs: save_executable_for_introspection
     steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "214 215 216"
@@ -53,9 +81,10 @@ jobs:
   rotation789:
     name: '(triceratops) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
+    needs: save_executable_for_introspection
     steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "217 218 219"
@@ -64,9 +93,10 @@ jobs:
   rotation10_11_12:
     name: '(sabertooth tiger) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
+    needs: save_executable_for_introspection
     steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "220 221 222"
@@ -75,9 +105,10 @@ jobs:
   rotation13_14_15:
     name: '(tyrannosaurus) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
+    needs: save_executable_for_introspection
     steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "223 224 225"
@@ -86,9 +117,10 @@ jobs:
   rotation16_17_18:
     name: '(dragonzord) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
+    needs: save_executable_for_introspection
     steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "226 227 228"
@@ -97,9 +129,10 @@ jobs:
   rotation19_20_21:
     name: '(titanus) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
+    needs: save_executable_for_introspection
     steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "229 230 231"
@@ -142,9 +175,9 @@ jobs:
       - name: "Save diagnostics"
         uses: actions/upload-artifact@v4
         with:
-          name: inspect_hexdump_and_json-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
+          name: investigate_hexdump_json-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
           path: |
-            /tmp/hexdump_and_json-*
+            /tmp/hexdump_and_json-*/*.tar.xz
           include-hidden-files: true
           if-no-files-found: error
           overwrite: true

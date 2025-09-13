@@ -674,6 +674,8 @@ void CommunityPlus::SetUnique(const CommunityPlus& h)
 {
 	HandPlus::SetUnique(h);
 
+	prestraight = h.prestraight;
+	bFlushSuit = h.bFlushSuit;
 	flushCount[0] = h.flushCount[0];
 	flushCount[1] = h.flushCount[1];
 	flushCount[2] = h.flushCount[2];
@@ -682,8 +684,6 @@ void CommunityPlus::SetUnique(const CommunityPlus& h)
 	bestPair = h.bestPair;
 	nextbestPair = h.nextbestPair;
 	strength = h.strength;
-    prestraight = h.prestraight;
-    bFlushSuit = h.bFlushSuit;
 }
 
 

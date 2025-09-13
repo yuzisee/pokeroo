@@ -14,24 +14,21 @@ runs:
   using: "composite" # https://www.jameskerr.blog/posts/sharing-steps-in-github-action-workflows/
 
   steps:
-  - name: System setup
+  - name: Assert thread count
     shell: sh
     env:
       HARDCODE_EXPECTED_THREADS: ${{ inputs.cpu_threads_expected }}
     run: |
-      date
       sh n_threads_minus_1.sh "$HARDCODE_EXPECTED_THREADS" || exit 78 # EX_CONFIG
-      cd holdem && make db
-      echo /tmp/opening_book/"$(make echooutputarchive | sed 's/\.[^.]*$//')" > ../holdemdb.ini
-      mkdir -vp "$(cat ../holdemdb.ini)"
-      date
+      mkdir -vp "$(cat holdemdb.ini)"
+      chmod +x regenerate_opening_book
   - name: "Generate DB ${{ inputs.rotation_suffix }}"
     shell: sh
     # `HOLDEMDB_PATH: /tmp/opening_book/.../` not needed, we're using holdemdb.ini instead
     env:
       THREAD_COUNT: ${{ inputs.cpu_threads_expected }}
       THREAD_STRIPES: ${{ inputs.regenerate_opening_book_modes }}
-    run: echo $THREAD_STRIPES | tr ' ' "\n" | xargs -P "$THREAD_COUNT" -n 1 holdem/bin/regenerate_opening_book
+    run: echo $THREAD_STRIPES | tr ' ' "\n" | xargs -P "$THREAD_COUNT" -n 1 ./regenerate_opening_book
 
   - name: Upload opening book zip
     uses: actions/upload-artifact@v4
