@@ -3,8 +3,9 @@ CXX = g++
 # [!NOTE]
 # As far as we can tell for now, the executable built by g++ runs about 25% faster.
 # Meanwhile, we are investigating whether clang++ or g++ is more *accurate* also
-CXX_REGENERATE_DB = g++
-# CXX_REGENERATE_DB = clang++
+# CXX_REGENERATE_DB = g++
+CXX_REGENERATE_DB = clang++
+
 CXX_SELFTEST_DB = clang++
 # ^^^ We generally use clang++ when we want maximum debugging/exception handling/error checking, such as during assertion testing.
 CXXFLAGS_RELATED_HEADERS_OPT = -Os
