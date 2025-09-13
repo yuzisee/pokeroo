@@ -32,7 +32,6 @@
 #include "../src/aiInformation.h"
 #include "stratManual.h"
 
-#include <cstdint>
 #include <ctime>
 #include <algorithm>
 #include <string.h>
