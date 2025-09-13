@@ -301,6 +301,9 @@ void StatsManager::Query(DistrShape* dPCT,
             {
                 std::cerr << "Error reading " << datafilename << endl;
                 dataserial.close();
+                #ifdef RTTIASSERT
+                  exit(76); // EX_PROTOCOL
+                #endif
             }
         }else
         {
@@ -484,6 +487,9 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
             {
                 std::cerr << "Error reading " << datafilename << endl;
                 dataserial.close();
+                #ifdef RTTIASSERT
+                  exit(76); // EX_PROTOCOL
+                #endif
             }
         }else
 	{
