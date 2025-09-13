@@ -14,10 +14,6 @@ runs:
   using: "composite" # https://www.jameskerr.blog/posts/sharing-steps-in-github-action-workflows/
 
   steps:
-  - name: "We already have the executable, so let's just use it rather than: `cd holdem && make db && echo … > ../holdemdb.ini` etc."
-    uses: actions/download-artifact@v5
-    with:
-      name: make-db-requirements
   - name: Assert thread count
     shell: sh
     env:

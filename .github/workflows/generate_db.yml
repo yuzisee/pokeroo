@@ -35,7 +35,10 @@ jobs:
       - name: make db
         run: cd holdem && make db && mv -v bin/regenerate_opening_book ../
       - name: "echooutputarchive > holdendb.ini"
-        run: cd holdem && echo /tmp/opening_book/"$(make echooutputarchive | sed 's/\.[^.]*$//')" > ../holdemdb.ini
+        run: cd holdem && echo /tmp/opening_book/"$(make echooutputarchive | sed 's/\.[^.]*$//')" | tee ../holdemdb.ini
+      # We already have the executable, so let's just use it rather than: `cd holdem && make db && echo … > ../holdemdb.ini` etc."
+      - name: "copy generate_db_one_stripe/action.yml to save one step later"
+        run: mkdir -vp gendb_worker && cp -v ./.github/actions/generate_db_one_stripe/action.yml gendb_worker/action.yml
       - name: Transfer executables to workers
         uses: actions/upload-artifact@v4
         with:
@@ -44,19 +47,20 @@ jobs:
             regenerate_opening_book
             holdemdb.ini
             n_threads_minus_1.sh
+            gendb_worker/action.yml
           # include-hidden-files: false by default
           if-no-files-found: error
           overwrite: true
           compression-level: 9
           retention-days: 11
-
   rotation123:
     name: '(mastodon) make db → bin/regenerate_opening_book'
     runs-on: 'ubuntu-24.04'
     needs: save_executable_for_introspection
     # timeout-minutes: 360
     steps:
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "211 212 213"
@@ -67,7 +71,8 @@ jobs:
     runs-on: 'ubuntu-24.04'
     needs: save_executable_for_introspection
     steps:
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "214 215 216"
@@ -78,7 +83,8 @@ jobs:
     runs-on: 'ubuntu-24.04'
     needs: save_executable_for_introspection
     steps:
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "217 218 219"
@@ -89,7 +95,8 @@ jobs:
     runs-on: 'ubuntu-24.04'
     needs: save_executable_for_introspection
     steps:
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "220 221 222"
@@ -100,7 +107,8 @@ jobs:
     runs-on: 'ubuntu-24.04'
     needs: save_executable_for_introspection
     steps:
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "223 224 225"
@@ -111,7 +119,8 @@ jobs:
     runs-on: 'ubuntu-24.04'
     needs: save_executable_for_introspection
     steps:
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "226 227 228"
@@ -122,7 +131,8 @@ jobs:
     runs-on: 'ubuntu-24.04'
     needs: save_executable_for_introspection
     steps:
-      - uses: ./.github/actions/generate_db_one_stripe
+      - {uses: actions/download-artifact@v5, with: {name: make-db-requirements}}
+      - uses: ./gendb_worker
         with:
           cpu_threads_expected: 3
           regenerate_opening_book_modes: "229 230 231"
