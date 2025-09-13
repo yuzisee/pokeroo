@@ -115,11 +115,11 @@ jobs:
       - name: Fetch
         uses: actions/download-artifact@v5
         with:
-          path: holdemdb.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{ github.sha }}
+          path: holdemgen.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{ github.sha }}
           pattern: opening_book-*
           merge-multiple: true
       - name: "Inspect results (supposedly actions/download-artifact will extract the contents for us into $GITHUB_WORKSPACE by default)"
-        run: pwd -P && ls -l && ls -l holdemdb*
+        run: pwd -P && ls -l && cd holdemgen* && ls -l && ls -l */ && cd * && ls -1 *.holdemC *.holdemW | sort | xargs -I @ sh -c 'echo @ start ↓ && hexdump -C @ && echo @ end ↑' > hexdump.txt
       - name: "Done!"
         uses: actions/upload-artifact@v4
         with:
@@ -128,24 +128,23 @@ jobs:
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
           name: opening_book-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
           path: |
-            holdemdb*/*.holdemC
-            holdemdb*/*.holdemW
+            holdemgen*/**/*.holdemC
+            holdemgen*/**/*.holdemW
           # include-hidden-files: false by default
           if-no-files-found: error
           overwrite: true
           compression-level: 9
           retention-days: 21
-      - name: "Save debugging info"
+      - name: "Compress debugging info"
+        run: mkdir -v -p "/tmp/hexdump_and_json-${RUNNER_OS}" && cd holdemgen* && rm -v */*.holdemC */*.holdemW && tar -cv ../holdemgen* | xz -vv -z -9 -e > "/tmp/hexdump_and_json-${RUNNER_OS}/${GITHUB_RUN_ID}.$(hostname)-${RUNNER_ARCH}.tar.xz"
+      - name: "Save diagnostics"
         uses: actions/upload-artifact@v4
         with:
-          name: inspect_json-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
+          name: inspect_hexdump_and_json-${{ github.run_id }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_${{github.sha}}-${{ runner.os }}-${{ runner.arch }}
           path: |
-            holdemdb*
-            holdemdb*/**/*
-            !holdemdb*/*.holdemC
-            !holdemdb*/*.holdemW
+            /tmp/hexdump_and_json-*
           include-hidden-files: true
           if-no-files-found: error
           overwrite: true
           compression-level: 9
-          retention-days: 21
+          retention-days: 8

@@ -22,12 +22,13 @@ runs:
       date
       sh n_threads_minus_1.sh "$HARDCODE_EXPECTED_THREADS" || exit 78 # EX_CONFIG
       cd holdem && make db
-      mkdir -vp /tmp/opening_book
+      echo /tmp/opening_book/"$(make echooutputarchive | sed 's/\.[^.]*$//')" > ../holdemdb.ini
+      mkdir -vp "$(cat ../holdemdb.ini)"
       date
   - name: "Generate DB ${{ inputs.rotation_suffix }}"
     shell: sh
+    # `HOLDEMDB_PATH: /tmp/opening_book/.../` not needed, we're using holdemdb.ini instead
     env:
-      HOLDEMDB_PATH: /tmp/opening_book
       THREAD_COUNT: ${{ inputs.cpu_threads_expected }}
       THREAD_STRIPES: ${{ inputs.regenerate_opening_book_modes }}
     run: echo $THREAD_STRIPES | tr ' ' "\n" | xargs -P "$THREAD_COUNT" -n 1 holdem/bin/regenerate_opening_book
