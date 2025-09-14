@@ -11,10 +11,9 @@ make
 
 ## Pre-calulate the database
 ```sh
-
 mkdir -vp ~/pokeroo-run/lib
 cd holdem
-unzip "$(make echoreleasearchive)" -d ~/pokeroo-run/lib/holdemdb/ # or, unzip a specific archive such as holdemdb_clang.zip, OR regenerate the files fresh (see `regenerate_opening_book` below)
+unzip "$(make echoreleasearchive | tail -n 1)" -d ~/pokeroo-run/lib/holdemdb/ # or, unzip a specific archive such as holdemdb_clang.zip, OR regenerate the files fresh (see `regenerate_opening_book` below)
 
 cd "$(git rev-parse --show-toplevel)"
 touch ~/pokeroo-run/lib/__init__.py
