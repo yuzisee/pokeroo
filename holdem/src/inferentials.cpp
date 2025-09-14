@@ -47,7 +47,7 @@ DistrShape::DistrShape(float64 count, StatResult worstPCT, StatResult meanOveral
 ,
 mean(meanOverall), best(bestPCT), worst(worstPCT)
 ,
-avgDev(0), stdDev(0), improve_numerator(0), skew_numerator(0), skew_denominator(0), pearson_kurtosis(0)
+avgDev(0), stdDev(0), improve_numerator(0), skew_numerator(0), skew_denominator(0), pearson_kurtosis_delta_skew_numerator(0), pearson_kurtosis_denominator(0)
 {
     for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
         coarseHistogram[k].wins = 0.0;
@@ -62,7 +62,8 @@ const DistrShape & DistrShape::operator=(const DistrShape& o)
 {
     avgDev = o.avgDev;
     improve_numerator = o.improve_numerator;
-    pearson_kurtosis = o.pearson_kurtosis;
+    pearson_kurtosis_delta_skew_numerator = o.pearson_kurtosis_delta_skew_numerator;
+    pearson_kurtosis_denominator = o.pearson_kurtosis_denominator;
     mean = o.mean;
     n = o.n;
     skew_numerator = o.skew_numerator;
@@ -109,12 +110,14 @@ void DistrShape::AddVal(const StatResult &x)
 	const float64 d1 = d * occ;
 	const float64 d2 = d1*d;
 	const float64 d3 = d2*d;
-	const float64 d4 = d3*d;
+	// const float64 d4 = d3*d;
 
 	avgDev += fabs(d1);
 	stdDev += d2;
 	skew_numerator += d3;
-	pearson_kurtosis += d4;
+	// pearson_kurtosis_numerator += d4;
+	// d4 - d3 = (d-1)*d3
+	pearson_kurtosis_delta_skew_numerator += (d - 1.0) * d3;
 
 	if( d > 0 ){
 		improve_numerator += occ;
@@ -128,6 +131,7 @@ void DistrShape::Complete(float64 mag)
 {
 	normalize(mag);
 	skew_denominator = mag*mag*mag;
+	pearson_kurtosis_denominator = mag*mag*mag*mag;
 	Complete();
 }
 
@@ -139,12 +143,7 @@ void DistrShape::Complete()
 	stdDev = sqrt(stdDev);
 
 	skew_denominator *= n*o2*stdDev;
-	pearson_kurtosis /= n*o2*o2;
-	// kurtosis -= 3.0
-	// So...  when we had the old `kurtosis -= 3.0;` line in here, the ASM materializes  `1/mag` early and uses it consistently for scalar and vector updates;
-	//        after removing the `-= 3.0; `thing, it will first build `mag^2, mag^3, mag^4` and then derives/uses the reciprocal for scaling
-
-	// It seems like removing the subtraction gives more room for GCC optimizations (since now almost everything in here is an add or divide of more or less combinations of the same underlying quantities
+	pearson_kurtosis_denominator *= n*o2*o2;
 }
 
 /**
@@ -155,7 +154,6 @@ void DistrShape::normalize(float64 mag)
 {
 	avgDev /= mag;
 	stdDev /= mag*mag;
-	pearson_kurtosis /= mag*mag*mag*mag;
 
     best.scaleOrdinateOnly(1.0 / mag);
     worst.scaleOrdinateOnly(1.0 / mag);

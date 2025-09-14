@@ -445,7 +445,8 @@ public:
 	float64 skew_numerator;
 	float64 skew_denominator;
 
-	float64 pearson_kurtosis;
+	float64 pearson_kurtosis_delta_skew_numerator;
+	float64 pearson_kurtosis_denominator;
 
 	//positive or negative ("Distributions with positive skew have larger means than medians.")
 	inline constexpr float64 skew() const {
@@ -454,10 +455,10 @@ public:
 
 	//risk-reward magnifier (high k is high risk high reward, long tail)
 	inline constexpr float64 kurtosis() const {
-	  return pearson_kurtosis - 3.0;
+	  return (skew_numerator + pearson_kurtosis_delta_skew_numerator) / pearson_kurtosis_denominator - 3.0;
   }
 
- // Return the fraction of outcomes that cause your gain function f(x) to be above vs. below 1.0
+  // Return the fraction of outcomes that cause your gain function f(x) to be above vs. below 1.0
   // ...but instead of [0.0..1.0] we rescale to [-1.0..+1.0]
   inline constexpr float64 improve() const {
     // Rescale from

@@ -183,7 +183,8 @@ void StatsManager::holdemWtoJSON ( std::stringstream& dataf, const DistrShape& d
   dataf << "  \"improve_numerator\": " << dPCT.improve_numerator << "," << std::endl;
   dataf << "  \"skew_numerator\": " << dPCT.skew_numerator << "," << std::endl;
   dataf << "  \"skew_denominator\": " << dPCT.skew_denominator << "," << std::endl;
-  dataf << "  \"pearson_kurtosis\": " << dPCT.pearson_kurtosis << "," << std::endl;
+  dataf << "  \"pearson_kurtosis_delta_skew_numerator\": " << dPCT.pearson_kurtosis_delta_skew_numerator << "," << std::endl;
+  dataf << "  \"pearson_kurtosis_denominator\": " << dPCT.pearson_kurtosis_denominator << "," << std::endl;
   dataf << "  \"_COARSE_COMMUNITY_NUM_BINS\": " << COARSE_COMMUNITY_NUM_BINS;
   dataf << std::endl << "}" << std::endl;
 }
