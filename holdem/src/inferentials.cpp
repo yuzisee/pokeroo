@@ -106,15 +106,16 @@ void DistrShape::AddVal(const StatResult &x)
 
     // Apply "PCT only" summary statistics
 	const float64 d = (x.pct - mean.pct);
-	const float64 d1 = d * occ;
-	const float64 d2 = d1*d;
-	const float64 d3 = d2*d;
-	const float64 d4 = d3*d;
+	const float64 d2 = d*d;
+	const float64 d1o = d * occ;
+	const float64 d2o = d2 * occ;
+	const float64 d3o = d2o*d;
+	const float64 d4o = d2o*d2;
 
-	avgDev += fabs(d1);
-	stdDev += d2;
-	skew_numerator += d3;
-	pearson_kurtosis += d4;
+	avgDev += fabs(d1o);
+	stdDev += d2o;
+	skew_numerator += d3o;
+	pearson_kurtosis += d4o;
 
 	if( d > 0 ){
 		improve_numerator += occ;
