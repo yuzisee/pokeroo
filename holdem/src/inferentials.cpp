@@ -140,6 +140,11 @@ void DistrShape::Complete()
 
 	skew_denominator *= n*o2*stdDev;
 	pearson_kurtosis /= n*o2*o2;
+	// kurtosis -= 3.0
+	// So...  when we had the old `kurtosis -= 3.0;` line in here, the ASM materializes  `1/mag` early and uses it consistently for scalar and vector updates;
+	//        after removing the `-= 3.0; `thing, it will first build `mag^2, mag^3, mag^4` and then derives/uses the reciprocal for scaling
+
+	// It seems like removing the subtraction gives more room for GCC optimizations (since now almost everything in here is an add or divide of more or less combinations of the same underlying quantities
 }
 
 /**
