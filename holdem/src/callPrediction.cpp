@@ -505,8 +505,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     #endif
 
 
-    noRaiseArraySize = 0;
-    while( RaiseAmount(betSize,noRaiseArraySize) < tableinfo->maxRaiseAmount() )
+    this->noRaiseArraySize = 0;
+    while( RaiseAmount(betSize,this->noRaiseArraySize) < tableinfo->maxRaiseAmount() )
     {
         ++noRaiseArraySize;
     }
@@ -516,18 +516,20 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     if( noRaiseChance_A != 0 ) delete [] noRaiseChance_A;
     if( noRaiseChanceD_A != 0 ) delete [] noRaiseChanceD_A;
 
-    noRaiseChance_A = new float64[noRaiseArraySize];
-    noRaiseChanceD_A = new float64[noRaiseArraySize];
+    const size_t noRaiseArraySize_now = this->noRaiseArraySize;
 
-    for( int32 i=0; i< noRaiseArraySize; ++i)
+    noRaiseChance_A = new float64[noRaiseArraySize_now];
+    noRaiseChanceD_A = new float64[noRaiseArraySize_now];
+
+    for( int32 i=0; i< noRaiseArraySize_now; ++i)
     {
         noRaiseChance_A[i] = 1;
         noRaiseChanceD_A[i] = 0;
     }
 
 
-    float64 * nextNoRaise_A = new float64[noRaiseArraySize];
-    float64 * nextNoRaiseD_A = new float64[noRaiseArraySize];
+    float64 * nextNoRaise_A = new float64[noRaiseArraySize_now];
+    float64 * nextNoRaiseD_A = new float64[noRaiseArraySize_now];
 
 
     // Loop through each player to:
@@ -554,7 +556,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         ///Initialize player-specific (no)raisechange
         int8 oppRaiseChances = 0;
         int8 oppRaiseChancesPessimistic = 0;
-        for(int32 i=0;i<noRaiseArraySize;++i)
+        for(int32 i=0;i<noRaiseArraySize_now;++i)
         {
             nextNoRaise_A[i] = 1; //Won't raise (by default)
             nextNoRaiseD_A[i] = 0;
@@ -606,7 +608,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                     float64 prev_w_r_mean = 0.0;
                     float64 prev_w_r_rank = 0.0;
                     ///Check for each raise percentage
-                    for( int32 i=0;i<noRaiseArraySize;++i)
+                    for( int32 i=0;i<noRaiseArraySize_now;++i)
                     {   const bool bMyWouldCall = i < callSteps;
                         const float64 thisRaise = RaiseAmount(betSize,i);
                         const float64 oppRaiseMake = thisRaise - oppBetAlready;
@@ -751,8 +753,17 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
                                     // ... but ensure that nextNoRaise remains monotonic
                                     if (i > 0) {
-                                        if (nextNoRaise_A[i] < nextNoRaise_A[i-1]) {
-                                            nextNoRaise_A[i] = nextNoRaise_A[i-1];
+                                        #ifdef DEBUGASSERT
+                                          const size_t i_cascade = i-1;
+                                          if (noRaiseArraySize_now <= i_cascade ) {
+                                            std::cerr << "We need this assertion to solve a 'core.UndefinedBinaryOperatorResult' compiler (clang++ static analyzer) warning, but it's already impossible because the for-loop above only goes up to: i=" << static_cast<int>(i) << " < noRaiseArraySize=" << static_cast<int>(noRaiseArraySize) << std::endl;
+                                            exit(1);
+                                          } else
+                                        #endif
+                                        if (nextNoRaise_A[i] < nextNoRaise_A[i_cascade]) {
+                                            nextNoRaise_A[i] = nextNoRaise_A[i_cascade];
+                                            // i.e.
+                                            // nextNoRaise_A[i] = nextNoRaise_A[i-1];
                                         }
                                     }
 
@@ -876,7 +887,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
         }
 
-        for( int32 i=0;i<noRaiseArraySize;++i)
+        for( int32 i=0;i<noRaiseArraySize_now;++i)
         {
             //Always be pessimistic about the opponent's raises.
             //If being raised against is preferable, then expect an aware opponent not to raise into you in later rounds -- since they'd be giving you money.
@@ -946,7 +957,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     if( totalexf < 0 ) totalexf = 0; //Due to rounding error in overexf?
     if( totaldexf < 0 ) totaldexf = 0; //Due to rounding error in overexf?
 
-    for( int32 i=0;i<noRaiseArraySize;++i)
+    for( int32 i=0;i<noRaiseArraySize_now;++i)
     {
         noRaiseChanceD_A[i] *= noRaiseChance_A[i];
     }
