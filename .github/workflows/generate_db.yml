@@ -155,8 +155,8 @@ jobs:
         run: |
           pwd -P && ls -l && cd holdemgen* && ls -l && ls -l */
           ARCHIVENAME="$(ls -1d *)"
-          zip -j -9 "../holdemgen_${GITHUB_SHA}.${ARCHIVENAME}-${GITHUB_RUN_ID}.zip" */*.holdemC */*.holdemW
           cd *
+          zip -9 "../../holdemgen_${GITHUB_SHA}.${ARCHIVENAME}-${GITHUB_RUN_ID}.zip" *.holdemC *.holdemW
           ls -1 *.holdemC *.holdemW | sort | xargs -I @ sh -c 'echo @ start ↓ && hexdump -C @ && echo @ end ↑' > ../hexdump.txt
           rm -v *.holdemC *.holdemW
       - name: "Done!"
