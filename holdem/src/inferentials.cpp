@@ -47,7 +47,7 @@ DistrShape::DistrShape(float64 count, StatResult worstPCT, StatResult meanOveral
 ,
 mean(meanOverall), best(bestPCT), worst(worstPCT)
 ,
-avgDev(0), stdDev(0), improve_numerator(0), skew_numerator(0), skew_denominator(0), pearson_kurtosis_numerator(0), pearson_kurtosis_denominator(0)
+avgDev(0), stdDev(0), improve_numerator(0), skew_numerator(0), skew_denominator(0), pearson_kurtosis_delta_skew_numerator(0), pearson_kurtosis_denominator(0)
 {
     for (size_t k=0; k<COARSE_COMMUNITY_NUM_BINS; ++k) {
         coarseHistogram[k].wins = 0.0;
@@ -62,7 +62,7 @@ const DistrShape & DistrShape::operator=(const DistrShape& o)
 {
     avgDev = o.avgDev;
     improve_numerator = o.improve_numerator;
-    pearson_kurtosis_numerator = o.pearson_kurtosis_numerator;
+    pearson_kurtosis_delta_skew_numerator = o.pearson_kurtosis_delta_skew_numerator;
     pearson_kurtosis_denominator = o.pearson_kurtosis_denominator;
     mean = o.mean;
     n = o.n;
@@ -110,12 +110,14 @@ void DistrShape::AddVal(const StatResult &x)
 	const float64 d1 = d * occ;
 	const float64 d2 = d1*d;
 	const float64 d3 = d2*d;
-	const float64 d4 = d3*d;
+	// const float64 d4 = d3*d;
 
 	avgDev += fabs(d1);
 	stdDev += d2;
 	skew_numerator += d3;
-	pearson_kurtosis_numerator += d4;
+	// pearson_kurtosis_numerator += d4;
+	// d4 - d3 = (d-1)*d3
+	pearson_kurtosis_delta_skew_numerator += (d - 1.0) * d3;
 
 	if( d > 0 ){
 		improve_numerator += occ;
