@@ -94,7 +94,7 @@ db:
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book_profiling (`g++ -pg` instead of clang++) use gprof to inspect'
-	g++ $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -g -pg -flto -o bin/regenerate_opening_book_profiling -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
+	g++ $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -g -flto -o bin/regenerate_opening_book_profiling -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
 	# ^^^ TODO(from joseph): You'll need to add `-pg` in order to generate `gmon.out` but understanding is that `-pg` interferes with `-flto`, so you may need to remove `-flto` first. Having said that, if we don't profile the actual `-flto` result will it be accurate enough?
 	echo '::endgroup::'
 	# [!NOTE]
