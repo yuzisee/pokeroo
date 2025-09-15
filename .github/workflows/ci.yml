@@ -110,23 +110,33 @@ jobs:
       with:
         name_pockets: '42x.KKx.T3S'
         self_test_args: '-310 -4546 -3507'
+  self_test_db3:
+    name: Self-test AA Q7x 72
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 40
+    steps:
+    - uses: actions/checkout@v5
+    - uses: ./.github/actions/selftest_db
+      with:
+        name_pockets: 'AAx.Q7x.72x'
+        self_test_args: '-5049 -322 -4023'
   spot_check_db:
     runs-on: 'ubuntu-24.04'
+    # AA (5049) + 72x (322) + Q7x (4023)
     #           42x (3, 10) ideally one of 54S 55x 76S 98x [T3S] T6S J5S J9S QJS K2S KTx A5S also?
     # ~781s for AKx (48,47) is the slowest, try to run first on the performance core (even in Github Actions this seems to be a thing?)
     #           KK (45,46)
     # ~389s for 22 (0, 1)
     #           T3S (35,07)
     # ~261s for JTS (37,33)
-    # TODO(from joseph): If time permits, also AA (5049) + 72x (322) + Q7x (4023) + A9S (51, 51-4*5)
-    # ~266s for A9S (51, 51-4*5)
-    needs: [self_test_db1, self_test_db2]
+    # TODO(from joseph): If time permits, also A9S (51, 51-4*5), then? (~266s)
+    needs: [self_test_db1, self_test_db2, self_test_db3]
     name: Assert no anomalies in generated opening book
     timeout-minutes: 1
     steps:
     - uses: actions/checkout@v5
-    - name: "[EXPECTED] define expected results to be: T3S, AKx, JTS, 22x, KKx, 42x"
-      run: echo T3S.holdemC T3S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW KKx.holdemC KKx.holdemW 42x.holdemC 42x.holdemW | tr ' ' "\n" | sort | tee /tmp/opening_book_json-test_cases.txt
+    - name: "[EXPECTED] define expected results to be: T3S, AKx, JTS, 22, KK, 42x, AA, Q7x, 72x"
+      run: echo T3S.holdemC T3S.holdemW AKx.holdemC AKx.holdemW JTS.holdemC JTS.holdemW 22x.holdemC 22x.holdemW KKx.holdemC KKx.holdemW 42x.holdemC 42x.holdemW AAx.holdemC AAx.holdemW Q7x.holdemC Q7x.holdemW 72x.holdemC 72x.holdemW | tr ' ' "\n" | sort | tee /tmp/opening_book_json-test_cases.txt
     - name: "Collect data from each `make db`"
       uses: actions/download-artifact@v5
       with:

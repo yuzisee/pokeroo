@@ -94,7 +94,8 @@ db:
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book_profiling (`g++ -pg` instead of clang++) use gprof to inspect'
-	g++ $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -g -pg -o bin/regenerate_opening_book_profiling -Isrc -D PROGRESSUPDATE=140 -ffast-math $(REGENERATE_OPENING_BOOK_SRC)
+	g++ $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -g -pg -o bin/regenerate_opening_book_profiling -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
+	# TODO(from joseph): Does it even make sense to `-pg` without `-flto` though? My understanding is that these two flags will interfere, but if we don't profile the actual `-flto` result will it be accurate enough?
 	echo '::endgroup::'
 	# [!NOTE]
 	# `.github/actions/selftest_db/action.yml` will randomly select between Clang (bin/regenerate_opening_book_selftest) and GCC (bin/regenerate_opening_book_profiling) to ensure that both will produce identical results
