@@ -23,8 +23,6 @@
 #define HOLDEM_AICache
 
 #include "aiInformation.h"
-#include "engine.h"
-#include "ai.h"
 #include <string>
 #include <fstream>
 

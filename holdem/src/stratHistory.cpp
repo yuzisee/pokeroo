@@ -27,11 +27,6 @@
 #include <string.h>
 
 
-
-
-
-
-
 /*
 const int8 PerformanceHistory::SORT_NUM_WINLOSE = 1;
 const int8 PerformanceHistory::SORT_ABOVE_BELOW = 2;

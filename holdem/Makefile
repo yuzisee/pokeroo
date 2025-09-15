@@ -63,12 +63,12 @@ test:
 	mkdir -v -p bin
 	date
 	echo '::group::Compile bin/unittests_clang'
-	clang++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) -fprofile-instr-generate -fcoverage-mapping -Isrc -o bin/unittests_clang $(wildcard src/*.cpp) unittests/main.cpp
+	clang++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) -fprofile-instr-generate -fcoverage-mapping -o bin/unittests_clang $(wildcard src/*.cpp) unittests/main.cpp
 	echo '::endgroup::'
 	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
 	date
 	echo '::group::Compile bin/unittests_gcc_O3'
-	g++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) $(CXXFLAGS_EXTREME_SPEEDUP) -Isrc -o bin/unittests_gcc_O3 $(wildcard src/*.cpp) unittests/main.cpp
+	g++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) $(CXXFLAGS_EXTREME_SPEEDUP) -o bin/unittests_gcc_O3 $(wildcard src/*.cpp) unittests/main.cpp
 	echo '::endgroup::'
 	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
 	date
@@ -84,17 +84,17 @@ REGENERATE_OPENING_BOOK_SRC = unittests/regenerate_opening_book.cpp src/aiCache.
 db:
 	mkdir -v -p bin
 	echo '::group::Compile bin/regenerate_opening_book_selftest (perf can be used for profiling)'
-	clang++ $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
+	clang++ $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -flto -g -fno-omit-frame-pointer -o bin/regenerate_opening_book_selftest -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
 	# ^^^ We generally use clang++ when we want the best compiler messages / stack traces, or maximum debugging/exception handling/error checking, such as during assertion testing.
 	echo '::endgroup::'
 	date
 	echo '::group::Compile GCC bin/regenerate_opening_book (full speed, i.e `-fno-exceptions -fno-rtti` and no profiling)'
-	$(CXX_REGENERATE_DB) $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -Isrc -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
+	$(CXX_REGENERATE_DB) $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -flto -fno-exceptions -fno-rtti -o bin/regenerate_opening_book -D PROGRESSUPDATE=140  $(REGENERATE_OPENING_BOOK_SRC)
 	# ^^^ So far g++ is able to optimize much more than clang++ for us, running ~25% faster overall
 	echo '::endgroup::'
 	date
 	echo '::group::Compile bin/regenerate_opening_book_profiling (`g++ -pg` instead of clang++) use gprof to inspect'
-	g++ $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -g -flto -o bin/regenerate_opening_book_profiling -Isrc -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
+	g++ $(CXXFLAGS) $(CXXFLAGS_HOLDEMDB_CHAIN) -g -flto -o bin/regenerate_opening_book_profiling -D PROGRESSUPDATE=140 $(REGENERATE_OPENING_BOOK_SRC)
 	# ^^^ TODO(from joseph): You'll need to add `-pg` in order to generate `gmon.out` but understanding is that `-pg` interferes with `-flto`, so you may need to remove `-flto` first. Having said that, if we don't profile the actual `-flto` result will it be accurate enough?
 	echo '::endgroup::'
 	# [!NOTE]

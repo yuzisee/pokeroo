@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <math.h>
 #include "ai.h"
-#include "engine.h"
 
 using std::endl;
 using std::sort;

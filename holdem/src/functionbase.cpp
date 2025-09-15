@@ -19,11 +19,13 @@
  ***************************************************************************/
 
 #include "functionbase.h"
-#include <iostream>
-#include <math.h>
+#include <cmath>
 #include <float.h>
 
+#if defined(SINGLETURNINGPOINT) || defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
+#include <iostream>
 using std::endl;
+#endif
 
 ScalarFunctionModel::~ScalarFunctionModel()
 {
@@ -466,11 +468,11 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
                 {
                     xn = searchStep(x1,y1,xb,yb,x2,y2);
                 }
-				else if( fabs(xn - xb) < fabs(xn - x1)/2 && fabs(xn - xb) < fabs(xn - x2)/2 )
-				{//Very close to xb, try to tighten bounds
-					xn += xn - xb;
-				}
-                break;
+                else if( fabs(xn - xb) < fabs(xn - x1)/2 && fabs(xn - xb) < fabs(xn - x2)/2 )
+                {//Very close to xb, try to tighten bounds
+                  xn += xn - xb;
+                }
+            break;
         }
 
         yn = f(xn);

@@ -1,6 +1,5 @@
 
-#include "aiCache.h"
-#include "callRarity.h"
+#include "../src/aiCache.h"
 #include <cassert>
 #include <cmath>
 #include <chrono>
@@ -8,8 +7,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "randomDeck.h"
-
+#include "../src/randomDeck.h"
 
 static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuffix) {
       const int8_t cardsInCommunity = 0;
