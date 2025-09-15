@@ -1,8 +1,5 @@
 #include "engine_base.h"
 
-using std::cout;
-using std::endl;
-
 const OrderedDeck OrderedDeck::EMPTY_ODECK;
 
 ///Assumes sorted
@@ -198,5 +195,3 @@ OrderedDeck::~OrderedDeck()
 DealableOrderedDeck::~DealableOrderedDeck()
 {
 }
-
-

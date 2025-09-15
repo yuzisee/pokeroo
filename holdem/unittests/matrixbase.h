@@ -24,8 +24,8 @@
 #include <stddef.h>
 #include <string>
 
-#include "portability.h"
-#include "debug_flags.h"
+#include "../src/portability.h"
+#include "../src/debug_flags.h"
 
 
 struct SizedArray {
@@ -192,5 +192,3 @@ namespace ElementWise
 }
 
 #endif
-
-

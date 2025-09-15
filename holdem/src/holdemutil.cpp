@@ -54,7 +54,7 @@ if not full house,
 FLUSH (ADD-SHIFT x; 13)
 STRAIGHT (OR the cardsets, then AND-SHIFT x; 5)
 */
-#include <fstream>
+//#include <fstream>
 #include "holdem2.h"
 
 using std::endl;
@@ -360,4 +360,3 @@ if (cardset[2] == cardset[3]) ++reoc;
     return matchCount[reoc];
 }
 */
-

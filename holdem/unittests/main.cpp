@@ -10,7 +10,7 @@
 #include <cassert>
 #include <limits>
 
-#include "aiCache.h"
+#include "../src/aiCache.h"
 namespace NamedTriviaDeckTests {
 
     void testNamePockets() {
@@ -47,11 +47,11 @@ namespace NamedTriviaDeckTests {
         assert(expected == actual);
     }
 }
-
-#include "callRarity.h"
-#include "functionmodel.h"
 // TODO(from joseph): You could unit test "matrixbase.h"/"matrixbase.cpp" here too, if you'd like
-#include "stratPosition.h"
+
+#include "../src/callRarity.h"
+#include "../src/functionmodel.h"
+#include "../src/stratPosition.h"
 namespace UnitTests {
 
 
@@ -896,9 +896,9 @@ namespace UnitTests {
 
 #define VectorOf(_ilistarray) std::vector<float64>((_ilistarray), (_ilistarray) + sizeof(_ilistarray) / sizeof((_ilistarray)[0]) )
 
-#include "arena.h"
-#include "arenaEvents.h"
-#include "stratPosition.h"
+#include "../src/arena.h"
+#include "../src/arenaEvents.h"
+#include "../src/stratPosition.h"
 namespace RegressionTests {
 
     // Deal a fixed, pre-determined set of hands (and community)
@@ -1774,7 +1774,9 @@ namespace RegressionTests {
          */
 
         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
+        (void)highbettor; // -Wunused-variable
         //assert(highbettor == 4);
+
         // No all-fold; assert that the pot was increased at least.
         //assert(myTable.GetPotSize() > 55);
 
@@ -1959,7 +1961,9 @@ namespace RegressionTests {
          */
 
         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
+        (void)highbettor; // -Wunused-variable
         //assert(highbettor == 4);
+
         // No all-fold; assert that the pot was increased at least.
         //assert(myTable.GetPotSize() > 55);
 

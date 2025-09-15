@@ -31,15 +31,7 @@
 #include <iostream>
 #include <string.h>
 
-#ifdef INFOASSIST_STRONG
-#include "../src/functionmodel.h"
-#endif
-
-
-using std::cout;
 using std::endl;
-using std::cin;
-
 
 
 #ifdef DEBUGSAVEGAME
@@ -507,8 +499,8 @@ void DualInputStream::GetCommandString(char * inputBuf, const int MAXINPUTLEN)
     #ifdef USERINPUT
     UI_DESCRIPTOR << endl << "Force clear" << endl;
     #endif
-	cin.clear();
-        cin.sync();
+	std::cin.clear();
+        std::cin.sync();
     }
 
     //You don't want to switch streams mid-command.
@@ -569,8 +561,8 @@ float64 UserConsoleStrategy::queryAction()
     char defaultAction = 0;
     float64 returnMe = ViewPlayer().GetBetSize();
 
-    cin.clear();
-    cin.sync();
+    std::cin.clear();
+    std::cin.sync();
 
     showSituation();
 
@@ -811,8 +803,8 @@ float64 UserConsoleStrategy::queryAction()
 		    UI_DESCRIPTOR << "Clearing" << endl;
 		    #endif
 
-		cin.clear();
-		cin.sync();
+		std::cin.clear();
+		std::cin.sync();
 
 		break;
 

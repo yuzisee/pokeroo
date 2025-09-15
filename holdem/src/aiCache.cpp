@@ -22,9 +22,12 @@
 //#define QUERYTOTALS
 
 #include "aiCache.h"
-#include "functionmodel.h"
 #include <sstream>
 #include <fstream>
+
+#ifdef PROGRESSUPDATE
+#include <cmath>
+#endif
 
 using std::stringstream;
 using std::ifstream;

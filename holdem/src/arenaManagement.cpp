@@ -33,7 +33,7 @@
 //Number of bot types including aggregate bot types
 #define NUMBER_OF_BOTS_TOTAL 8
 
-#ifdef DEBUGASSERT
+#ifdef RTTIASSERT
 #include <typeinfo>
 #endif
 
