@@ -553,7 +553,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 		  }
 		  #endif
 
-        this->accumulateOneOpponentPossibleRaises(pIndex, nextNoRaise_A, nextNoRaiseD_A, noRaiseArraySize_now, betSize, callSteps, &overexf, &overdexf);
+        this->accumulateOneOpponentPossibleRaises(pIndex, nextNoRaise_A, noRaiseArraySize_now, betSize, callSteps, &overexf, &overdexf);
 
         tableinfo->table->incrIndex(pIndex);
     }
@@ -581,7 +581,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     }
 }
 
-void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 * const nextNoRaise_A, float64 * const nextNoRaiseD_A, const size_t noRaiseArraySize_now, float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out) {
+void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out) {
   const float64 prevPot = tableinfo->table->GetPrevPotSize();
   const float64 opponents = tableinfo->handsToShowdownAgainst(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
 
@@ -683,19 +683,17 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
 
                           const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
-                                ValueAndSlope noRaise;
-                          {
-                                  const ValueAndSlope noraisePess = {
-                                    1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
-                                    ,
-                                    fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu))
-                                  };
+                                const ValueAndSlope noraisePess = {
+                                  1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
+                                  ,
+                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu))
+                                };
 
-                                  const ValueAndSlope noraiseMean = {
-                                    1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
-                                    ,
-                                    fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu))
-                                  };
+                                const ValueAndSlope noraiseMean = {
+                                  1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
+                                  ,
+                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu))
+                                };
 
                           //nextNoRaise_A[i_step].v = w_r_rank;
                           //nextNoRaise_A[i_step].d_v = noraiseRankD;
@@ -706,16 +704,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
                           //   If you know you'd fold (weak hand), let the opponent raise the worse amount (larger)
                           //   If you know you'd call (good hand), let the opponent raise the worse amount (smaller)
 
-                              noRaise = bMyWouldCall ?
+                                const ValueAndSlope noraise = bMyWouldCall ?
                                         IFunctionDifferentiable::lesserOfTwo(noraisePess, noraiseMean) : // I would call. I want them to raise. (Adversarial is smaller)
                                         IFunctionDifferentiable::greaterOfTwo(noraisePess, noraiseMean) // I won't call. I want them not to raise. (Adversarial is larger)
                                     ;
-                          }
 
-
-
-                          nextNoRaise_A[i_step].v = (noRaise.v+w_r_rank)/2;
-                          nextNoRaise_A[i_step].d_v = (noRaise.d_v + noraiseRankD)/2;
+                          nextNoRaise_A[i_step].v = (noraise.v+w_r_rank)/2;
+                          nextNoRaise_A[i_step].d_v = (noraise.d_v + noraiseRankD)/2;
 
                           // nextNoRaise should be monotonically increasing. That is, the probability of being raised all-in is lower than the probabilty of being raised at least minRaise.
                           if (i_step>0) {

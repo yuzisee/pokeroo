@@ -62,7 +62,7 @@ class ExactCallD : public IExf
         float64 totalexf;
         float64 totaldexf;
 
-        void accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 * const nextNoRaise_A, float64 * const nextNoRaiseD_A, const size_t noRaiseArraySize_now, const float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out);
+        void accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, const float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out);
 
     protected:
         static const float64 UNITIALIZED_QUERY;
