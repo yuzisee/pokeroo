@@ -60,8 +60,7 @@ void ExactCallD::SetImpliedFactor(const float64 bonus)
 }
 
 
-
-///This function is used to maximize chance to fold on a player-by-player basis
+/*
 float64 ExactCallBluffD::topTwoOfThree(float64 a, float64 b, float64 c, float64 a_d, float64 b_d, float64 c_d, float64 & r) const
 {
     if( b < a )
@@ -89,7 +88,8 @@ float64 ExactCallBluffD::topTwoOfThree(float64 a, float64 b, float64 c, float64 
         }
     }
 }
-
+*/
+///This function is used to maximize chance to fold on a player-by-player basis
 float64 ExactCallBluffD::bottomThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const
 {
     float64 x[4] = {a,b,c,d};
@@ -112,7 +112,7 @@ float64 ExactCallBluffD::bottomThreeOfFour(float64 a, float64 b, float64 c, floa
     }
 }
 
-
+/*
 float64 ExactCallBluffD::topThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const
 {
     float64 x[4] = {a,b,c,d};
@@ -164,6 +164,7 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
         }
     }
 }
+*/
 
 // useMean is a table metric here (see RiskLoss), so always use callcumu
 float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrRaise, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
@@ -284,8 +285,15 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
     }else
     {
     //USE FG for riskLoss
-        float64 dRiskLoss_pot;
+        float64 dRiskLoss_pot = std::numeric_limits<float64>::signaling_NaN();
         tableinfo->RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
+        #ifdef DEBUGASSERT
+          if (is_nan(dRiskLoss_pot)) {
+            std::cerr << "dRiskLoss_pot failed to initialize, please unit test tableinfo->RiskLoss("
+              << cps.alreadyBet << " , " << cps.bankroll << " , " << opponents << " , " << raiseto << " , … , &dRiskLoss_pot)" << std::endl;
+            exit(1);
+          }
+        #endif
 
         FoldGainModel myFG(tableinfo->chipDenom());
 
@@ -421,18 +429,20 @@ float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incr
 float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 {
 
-	float64 raiseAmount;
     float64 minRaiseDirect = tableinfo->minRaiseTo();
     float64 minRaiseBy = minRaiseDirect - tableinfo->callBet();
     float64 minRaiseBet = betSize - tableinfo->callBet();
 
-    if( minRaiseBet < minRaiseDirect )
-    {
-        raiseAmount = betSize + minRaiseBy;
-
-    }else{
-        raiseAmount = betSize + minRaiseBet;
-    }
+    float64 raiseAmount =
+      ( minRaiseBet < minRaiseDirect ) ?
+      (
+        betSize + minRaiseBy
+      )
+      :
+      (
+        betSize + minRaiseBet
+      )
+    ;
 
 	if( step > 0 )
 	{
@@ -629,15 +639,10 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                             if(thisRaise <= oppBankRoll)
                             {
 
-#ifdef DEBUGASSERT
-                                if (is_nan(prev_w_r_mean) || is_nan(prev_w_r_rank)) {
-                                    std::cerr << "prev_w_r_mean and prev_w_r_rank only become NaN after thisRaise passes oppBankRoll." << std::endl;
-                                    exit(1);
-                                }
-#endif // DEBUGASSERT
                                 const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
                                                                                                                                         //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
 
+                               if (!is_nan(prev_w_r_mean) && !is_nan(prev_w_r_rank)) {
                                 // TODO(from yuzisee): Raises are now Algb instead of Geom?
                                 float64 w_r_pess = facedOdds_raise_Geom(oppCPS,prev_w_r_pess, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.foldcumu));
                                 float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.callcumu));
@@ -650,9 +655,9 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                                 }
                                 #endif
 
-
                                 const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
+                                // TODO(from joseph): Is there a std::tuple or something to return these two values so that we can make them const?
                                 float64 noRaise;
                                 float64 noraiseD;
                                 {
@@ -675,6 +680,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                                     float64 noRaise_smallerD;
                                     float64 noRaise_larger;
                                     float64 noRaise_largerD;
+                                    // TODO(from joseph): Is there some C++11 or C++14 construct for returning these four values together so that we can make them const?
                                     if (noRaisePess < noRaiseMean) {
                                         noRaise_smaller = noRaisePess;
                                         noRaise_smallerD = noraisePessD;
@@ -704,6 +710,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                                         noRaise_larger; // I won't call. I want them not to raise. (Adversarial is larger)
                                     noraiseD = bMyWouldCall ? noRaise_smallerD : noRaise_largerD;
                                 }
+
+
 
                                 nextNoRaise_A[i_step] = (noRaise+w_r_rank)/2;
                                 nextNoRaiseD_A[i_step] = (noraiseD+noraiseRankD)/2;
@@ -737,6 +745,13 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
                                 prev_w_r_pess = w_r_pess;
                                 prev_w_r_mean = w_r_mean;
                                 prev_w_r_rank = w_r_rank;
+                               } // endif prev_w_r_mean,prev_w_r_rank not NaN
+                               #ifdef DEBUGASSERT
+                               else {
+                                 std::cerr << "prev_w_r_mean and prev_w_r_rank only become NaN after thisRaise passes oppBankRoll." << std::endl;
+                                 exit(1);
+                               }
+                               #endif // DEBUGASSERT
 
                             }else
                             { // raising this amount would put player[pIndex] all-in.
@@ -755,8 +770,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
                                     // ... but ensure that nextNoRaise remains monotonic
                                     if (i_step > 0) {
+                                        const size_t i_cascade = i_step-1;
                                         #ifdef DEBUGASSERT
-                                          const size_t i_cascade = i_step-1;
                                           if (noRaiseArraySize_now <= i_cascade ) {
                                             std::cerr << "We need this assertion to solve a 'core.UndefinedBinaryOperatorResult' compiler (clang++ static analyzer) warning, but it's already impossible because the for-loop above only goes up to: i=" << static_cast<int>(i) << " < noRaiseArraySize=" << static_cast<int>(noRaiseArraySize) << std::endl;
                                             exit(1);

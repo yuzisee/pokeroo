@@ -248,7 +248,7 @@ float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 
 {
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
                                  // handsDealt() is appropriate here because it suggests how often they'd have the winning hand in the first place.
-    
+
     const float64 avgBlind = table->GetBlindValues().OpportunityPerHand(N);
 
     FoldGainModel FG(table->GetChipDenom()/2);
@@ -275,7 +275,8 @@ float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 
 
 	if( riskLoss < 0 )
 	{//If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
-		drisk = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1 / (handsIn()-1);
+		drisk = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / (handsIn()-1);
+		// TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
 	}else
     {//If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
 		riskLoss = 0;
@@ -409,10 +410,3 @@ std::pair<float64,float64> FoldOrCall::myFoldGainAndWaitlength(MeanOrRank meanOr
     result.first = foldGain(meanOrRank, 0, fTable.GetBetToCall(), &(result.second));
     return result;
 }
-
-
-
-
-
-
-
