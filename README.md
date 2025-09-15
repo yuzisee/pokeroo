@@ -43,6 +43,8 @@ e.g.
 rm -r /tmp/profiling_dust.perf /tmp/profiling_dust.gcc /tmp/profiling_dust.x
 mkdir -vp /tmp/profiling_dust.perf /tmp/profiling_dust.gcc /tmp/profiling_dust.x
 cd holdem
+# [!WARNING]
+# When building `bin/regenerate_opening_book_profiling` you'll also need -pg in the Makefile in order to generate `gmon.out` but you probably have to take out `-flto` first because these two flags don't interact well
 GITHUB_ACTIONS="true" make db
 # -4847 is "Ace-King offsuit" but you can choose any other hand if you prefer
 HOLDEMDB_PATH="/tmp/profiling_dust.perf" perf record -F max -g -o /tmp/profiling_dust.perf/regenerate_opening_book.perf -- bin/regenerate_opening_book_selftest -4847
