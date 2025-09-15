@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
+#include "functionbase.h"
 #include "math_support.h"
 #include <float.h>
 #include <algorithm>
@@ -533,8 +534,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         noRaiseChanceD_A[i] = 0;
     }
 
-    float64 * nextNoRaise_A = new float64[noRaiseArraySize_now];
-    float64 * nextNoRaiseD_A = new float64[noRaiseArraySize_now];
+
+    ValueAndSlope * nextNoRaise_A = new ValueAndSlope[noRaiseArraySize_now];
 
     // Loop through each player to:
     //  + accumulate chance of NOT being raised by that player
@@ -557,8 +558,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         tableinfo->table->incrIndex(pIndex);
     }
 
+
     delete [] nextNoRaise_A;
-    delete [] nextNoRaiseD_A;
 
     #ifdef DEBUG_TRACE_DEXF
     if( traceOut != 0 )  *traceOut << endl << "Final is " << totaldexf;
@@ -578,7 +579,6 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     {
         this->noRaiseChanceD_A[i] *= noRaiseChance_A[i];
     }
-
 }
 
 void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 * const nextNoRaise_A, float64 * const nextNoRaiseD_A, const size_t noRaiseArraySize_now, float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out) {
@@ -594,8 +594,8 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
   int8 oppRaiseChancesPessimistic = 0;
   for(size_t i=0;i<noRaiseArraySize_now;++i)
   {
-      nextNoRaise_A[i] = 1; //Won't raise (by default)
-      nextNoRaiseD_A[i] = 0;
+            nextNoRaise_A[i].v = 1; //Won't raise (by default)
+            nextNoRaise_A[i].d_v = 0;
   }
 
   ///Initialize player bet state
@@ -651,8 +651,8 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
                   const float64 thisRaise = RaiseAmount(betSize,i);
                   const float64 oppRaiseMake = thisRaise - oppBetAlready;
                   if( oppRaiseMake <= 0 ) {
-                      nextNoRaise_A[i_step] = 0.0; // well then we're guaranteed to hit this amount
-                      nextNoRaiseD_A[i_step] = 0.0;
+                      nextNoRaise_A[i_step].v = 0.0; // well then we're guaranteed to hit this amount
+                      nextNoRaise_A[i_step].d_v = 0.0;
                       prevRaise = 0;
 #ifdef DEBUGASSERT
                       if (prev_w_r_mean != 0.0 || prev_w_r_rank != 0.0) {
@@ -683,18 +683,22 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
 
                           const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
-                          // TODO(from joseph): Is there a std::tuple or something to return these two values so that we can make them const?
-                          float64 noRaise;
-                          float64 noraiseD;
+                                ValueAndSlope noRaise;
                           {
-                          const float64 noRaisePess = 1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_pess - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess);
-                          const float64 noraisePessD = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu));
+                                  const ValueAndSlope noraisePess = {
+                                    1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
+                                    ,
+                                    fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu))
+                                  };
 
-                          const float64 noRaiseMean = 1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean);
-                          const float64 noraiseMeanD = fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu));
+                                  const ValueAndSlope noraiseMean = {
+                                    1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
+                                    ,
+                                    fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu))
+                                  };
 
-                          //nextNoRaise_A[i_step] = w_r_rank;
-                          //nextNoRaiseD_A[i_step] = noraiseRankD;
+                          //nextNoRaise_A[i_step].v = w_r_rank;
+                          //nextNoRaise_A[i_step].d_v = noraiseRankD;
 
                           // But the opponent may or may not know your hand!
                           // Unforunately, knowing your hand is weak doesn't always make more opponents want to raise.
@@ -702,49 +706,20 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
                           //   If you know you'd fold (weak hand), let the opponent raise the worse amount (larger)
                           //   If you know you'd call (good hand), let the opponent raise the worse amount (smaller)
 
-                              float64 noRaise_smaller;
-                              float64 noRaise_smallerD;
-                              float64 noRaise_larger;
-                              float64 noRaise_largerD;
-                              // TODO(from joseph): Is there some C++11 or C++14 construct for returning these four values together so that we can make them const?
-                              if (noRaisePess < noRaiseMean) {
-                                  noRaise_smaller = noRaisePess;
-                                  noRaise_smallerD = noraisePessD;
-                                  noRaise_larger = noRaiseMean;
-                                  noRaise_largerD = noraiseMeanD;
-                              } else if (noRaiseMean < noRaisePess) {
-                                  noRaise_smaller = noRaiseMean;
-                                  noRaise_smallerD = noraiseMeanD;
-                                  noRaise_larger = noRaisePess;
-                                  noRaise_largerD = noraisePessD;
-                              } else {
-                                  if (noraisePessD < noraiseMeanD) {
-                                      noRaise_smaller = noRaisePess;
-                                      noRaise_smallerD = noraisePessD;
-                                      noRaise_larger = noRaiseMean;
-                                      noRaise_largerD = noraiseMeanD;
-                                  } else {
-                                      noRaise_smaller = noRaiseMean;
-                                      noRaise_smallerD = noraiseMeanD;
-                                      noRaise_larger = noRaisePess;
-                                      noRaise_largerD = noraisePessD;
-                                  }
-                              }
-
                               noRaise = bMyWouldCall ?
-                                  noRaise_smaller : // I would call. I want them to raise. (Adversarial is smaller)
-                                  noRaise_larger; // I won't call. I want them not to raise. (Adversarial is larger)
-                              noraiseD = bMyWouldCall ? noRaise_smallerD : noRaise_largerD;
+                                        IFunctionDifferentiable::lesserOfTwo(noraisePess, noraiseMean) : // I would call. I want them to raise. (Adversarial is smaller)
+                                        IFunctionDifferentiable::greaterOfTwo(noraisePess, noraiseMean) // I won't call. I want them not to raise. (Adversarial is larger)
+                                    ;
                           }
 
 
 
-                          nextNoRaise_A[i_step] = (noRaise+w_r_rank)/2;
-                          nextNoRaiseD_A[i_step] = (noraiseD+noraiseRankD)/2;
+                          nextNoRaise_A[i_step].v = (noRaise.v+w_r_rank)/2;
+                          nextNoRaise_A[i_step].d_v = (noRaise.d_v + noraiseRankD)/2;
 
                           // nextNoRaise should be monotonically increasing. That is, the probability of being raised all-in is lower than the probabilty of being raised at least minRaise.
                           if (i_step>0) {
-                              //if (nextNoRaise_A[i_step] < nextNoRaise_A[i_step-1]) {
+                              //if (nextNoRaise_A[i_step].v < nextNoRaise_A[i_step-1].v) {
                                   // The returned total cumulative probability distributions won't be allowed to drop.
                                   // However, this can happen in many cases.
                                   // For example, say you have a Q3o
@@ -752,13 +727,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
                                   // When this happens it means: if the opponent knew your hand, fewer of them would want to raise -- even if those that do would beat you by more or those that don't have better odds against random hands.
                               //}
 #ifdef DEBUGASSERT
-                              if (!(nextNoRaise_A[i_step-1] <= nextNoRaise_A[i_step])) {
+                              if (!(nextNoRaise_A[i_step-1].v <= nextNoRaise_A[i_step].v)) {
                                   std::cerr << "Invalid nextNoRaise_A for player " << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << " raising to " << thisRaise << std::endl;
                                   // If you get here, look at prev_w_r_mean, prev_w_r_rank, etc. to help debug.
                                   // They are populated just below.
                                   // Also, check callSteps!
                                   for( size_t k=0;k<=i_step;++k) {
-                                      std::cerr << "nextNoRaise_A[" << (int)k << "]=" << nextNoRaise_A[k] << std::endl;
+                                      std::cerr << "nextNoRaise_A[" << (int)k << "]=" << nextNoRaise_A[k].v << std::endl;
                                   }
                                   exit(1);
                               }
@@ -792,7 +767,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
 
                               //if(noraiseMean < w_r){ noraiseMean = 0; }
 
-                              nextNoRaise_A[i_step] = w_r;//(noraiseMean+w_r)/2;
+                              nextNoRaise_A[i_step].v = w_r;//(noraiseMean+w_r)/2;
 
                               // ... but ensure that nextNoRaise remains monotonic
                               if (i_step > 0) {
@@ -803,14 +778,14 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
                                       exit(1);
                                     } else
                                   #endif
-                                  if (nextNoRaise_A[i_step] < nextNoRaise_A[i_cascade]) {
-                                      nextNoRaise_A[i_step] = nextNoRaise_A[i_cascade];
+                                  if (nextNoRaise_A[i_step].v < nextNoRaise_A[i_cascade].v) {
+                                      nextNoRaise_A[i_step].v = nextNoRaise_A[i_cascade].v;
                                       // i.e.
-                                      // nextNoRaise_A[i] = nextNoRaise_A[i-1];
+                                      // nextNoRaise_A[i].v = nextNoRaise_A[i-1].v;
                                   }
                               }
 
-                              nextNoRaiseD_A[i_step] = 0;
+                              nextNoRaise_A[i_step].d_v = 0;
                           }
 
                           prevRaise = 0;
@@ -943,7 +918,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
 
 
       //At this point, each nextNoRaise is 100% unless otherwise adjusted.
-      const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step] < 0) ? 0 : pow(nextNoRaise_A[i],oppRaiseChancesAware);
+      const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step].v < 0) ? 0 : pow(nextNoRaise_A[i].v,oppRaiseChancesAware);
 
 
 #ifdef DEBUGASSERT
@@ -976,7 +951,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
           noRaiseChanceD_A[i_step] = 0;
       }else
       {
-          noRaiseChanceD_A[i_step] += nextNoRaiseD_A[i_step]/nextNoRaise_A[i_step]  *   oppRaiseChancesAware; //Logairthmic differentiation
+          noRaiseChanceD_A[i_step] += nextNoRaise_A[i_step].d_v/nextNoRaise_A[i_step].v  *   oppRaiseChancesAware; //Logairthmic differentiation
       }
   }
 } // end accumulateOneOpponentPossibleRaises
@@ -1282,8 +1257,10 @@ float64 ExactCallD::pRaise(const float64 betSize, const int32 step, const int32 
 {
     query(betSize,callSteps);
 
-	if( RaiseAmount( betSize, step ) >= tableinfo->maxBet() - tableinfo->chipDenom()/2 ) { return 0; } //You don't care about raises if you are all-in
-    else if( step >= noRaiseArraySize ) { return std::numeric_limits<float64>::signaling_NaN(); }
+	if( RaiseAmount( betSize, step ) >= tableinfo->maxBet() - tableinfo->chipDenom()/2 )
+    { return 0; } //You don't care about raises if you are all-in
+	else if( step >= noRaiseArraySize )
+    { return std::numeric_limits<float64>::signaling_NaN(); }
 
     return 1.0-noRaiseChance_A[step];
 }
