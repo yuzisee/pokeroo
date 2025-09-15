@@ -296,7 +296,6 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
     //                                                                             ^^^ see `setAmountSacrificeVoluntary`
     //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
 		drisk = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / (handsIn()-1);
-		// TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
 	}else
     {//If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
 		riskLoss = 0;
