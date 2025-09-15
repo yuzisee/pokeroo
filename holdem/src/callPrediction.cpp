@@ -181,6 +181,7 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct Hypot
 
     return facedOdds_raise_Geom_forTest( startingPoint
                                         ,tableinfo->table->GetChipDenom()
+                                        // TODO(from joseph): But isn't this deprecated? Use OpponentHandOpportunity from CombinedStatResultsPessemistic instead.
                                         ,tableinfo->RiskLoss(hypothetical, foldwait_length_distr, 0)
                                         ,avgBlind
                                         ,hypothetical

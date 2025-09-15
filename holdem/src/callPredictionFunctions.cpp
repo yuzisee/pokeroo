@@ -446,7 +446,6 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBest
     // But if even you can fold the entire bankroll, you'd only win `maxProfit` below, so
     //   we should really be searching only up to `maxProfit/amountSacrificePerHand`
     // ...but then if that wins only $x (repeat)
-
     do
     {
         // Okay, so let's consider the most you could win.
