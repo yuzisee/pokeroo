@@ -243,7 +243,7 @@ const Player * ExpectedCallD::ViewPlayer() const {
     return table->ViewPlayer(playerID);
 }
 
-// DEPRECATED: Use OpponentHandOpportunity and CombinedStatResultsPessemistic instead.
+// DEPRECATED: Use OpponentHandOpportunity from CombinedStatResultsPessemistic instead.
 // TODO: Let's say riskLoss is a table metric. In that case, if you use mean it's callcumu always.
 // At the time of this writing...
 //  + src/stratFear.h:ScalarPWinFunction uses ExactCallBluffD but it's inconclusive.
@@ -268,7 +268,7 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
     {
         FG.waitLength.setW( foldwait_length_distr->nearest_winPCT_given_rank(1.0 - 1.0/N) );
     }
-	FG.waitLength.amountSacrificeForced = avgBlind;
+    FG.waitLength.amountSacrificeForced = avgBlind;
 
     // This is a weird "generic player" who represents all the other players combined
     // It has, as a "bankroll" that splits the entire rest of the chip stack equally
@@ -288,22 +288,30 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
 		// ^^^ Given the hand strength, how much do you gain by folding against a bet of `raiseTo`?
 	float64 drisk;
 
-	//If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
-	if( riskLoss < 0 )
-	{
-    // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
-    // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
-    //                                                                             ^^^ see `setAmountSacrificeVoluntary`
-    //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
-		drisk = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / (handsIn()-1);
-	}else
-    {//If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
+	if( riskLoss > 0 ) {
+	  //If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
 		riskLoss = 0;
-		drisk = 0;
 	}
 
-	if(out_dPot != 0)
-	{
+	if(out_dPot != 0) {
+	  //If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
+    if( riskLoss < 0 )
+    {
+      // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
+      // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
+      //                                                                             ^^^ see `setAmountSacrificeVoluntary`
+      //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
+      const float64 d_riskLoss_d_pot = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1);
+      const float64 d_AmountSacrifice_d_pot = 1.0 / (handsIn()-1);
+      if (d_riskLoss_d_pot != 0.0 ) {
+       	drisk = d_riskLoss_d_pot + d_AmountSacrifice_d_pot;
+      } else {
+       	drisk = d_AmountSacrifice_d_pot;
+      }
+    } else {
+   		drisk = 0;
+   	}
+
 		*out_dPot = drisk;
 	}
 
