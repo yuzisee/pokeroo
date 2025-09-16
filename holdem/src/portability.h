@@ -87,42 +87,42 @@ class HoldemConstants
     */
 
 public:
-    static const uint8 PAIR_ZERO=1, PAIRS_LOW=15, SET_ZERO=92;
-    static const uint8 SET_HIGH=105,STRAIGHT=106,FLUSH=107,BOAT=108;
-    static const uint8 QUAD_LOW=109,QUAD_HIGH=121,ROYAL=122;
-    static const int8 NO_SUIT=-1;
-    static const int8 SPADES=0,HEARTS=1,CLUBS=2,DIAMONDS=3;
+    static constexpr uint8 PAIR_ZERO=1, PAIRS_LOW=15, SET_ZERO=92;
+    static constexpr uint8 SET_HIGH=105,STRAIGHT=106,FLUSH=107,BOAT=108;
+    static constexpr uint8 QUAD_LOW=109,QUAD_HIGH=121,ROYAL=122;
+    static constexpr int8 NO_SUIT=-1;
+    static constexpr int8 SPADES=0,HEARTS=1,CLUBS=2,DIAMONDS=3;
 
     //short?
-    static const uint32
+    static constexpr uint32
     CARD_ACELOW=1,CARD_DEUCE=2,CARD_TREY=4,CARD_FOUR=8;
-    static const uint32
+    static constexpr uint32
     CARD_FIVE=16,CARD_SIX=32,CARD_SEVEN=64,CARD_EIGHT=128;
-    static const uint32
+    static constexpr uint32
     CARD_NINE=256,CARD_TEN=512,CARD_JACK=1024;
-    static const uint32
+    static constexpr uint32
     CARD_QUEEN=2048,CARD_KING=4096,CARD_ACEHIGH=8192,CARD_MISC=16384;
 
-    static const uint32
+    static constexpr uint32
     VALUE_ACELOW=3,VALUE_DEUCE=12;
-    static const uint32
+    static constexpr uint32
     VALUE_TREY=48,VALUE_FOUR=192,VALUE_FIVE=768,VALUE_SIX=3072;
-    static const uint32
+    static constexpr uint32
     VALUE_SEVEN=12288,VALUE_EIGHT=49152,VALUE_NINE=196608;
-    static const uint32
+    static constexpr uint32
     VALUE_TEN=786432,VALUE_JACK=3145728,VALUE_QUEEN=12582912;
-    static const uint32
+    static constexpr uint32
     VALUE_KING=50331648,VALUE_ACEHIGH=201326592,VALUE_MISC=805306368;
 
-	static const uint32
+	static constexpr uint32
     INCR_ACELOW=1,INCR_DEUCE=4;
-    static const uint32
+    static constexpr uint32
     INCR_TREY=16,INCR_FOUR=64,INCR_FIVE=256,INCR_SIX=1024;
-    static const uint32
+    static constexpr uint32
     INCR_SEVEN=4096,INCR_EIGHT=16384,INCR_NINE=65536;
-    static const uint32
+    static constexpr uint32
     INCR_TEN=262144,INCR_JACK=1048576,INCR_QUEEN=4194304;
-    static const uint32
+    static constexpr uint32
     INCR_KING=16777216,INCR_ACEHIGH=67108864,INCR_MISC=268435456;
 };
 #endif // __cplusplus

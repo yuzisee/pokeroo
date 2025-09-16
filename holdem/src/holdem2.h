@@ -127,7 +127,7 @@ class ShowdownRep
 			std::swap(comp, other.comp);
 		}
 
-	bool operator> (const ShowdownRep& x) const
+	constexpr bool operator> (const ShowdownRep& x) const
 	{
 		if( strength > x.strength )
 		{
@@ -150,7 +150,7 @@ class ShowdownRep
 			return (valueset > x.valueset);
 		}
 	}
-	bool operator< (const ShowdownRep& x) const
+	constexpr bool operator< (const ShowdownRep& x) const
 	{
 		if( strength < x.strength )
 		{
@@ -169,7 +169,7 @@ class ShowdownRep
 			return (valueset < x.valueset);
 		}
 	}
-	bool operator== (const ShowdownRep& x) const
+	constexpr bool operator== (const ShowdownRep& x) const
 	{
 		return ((strength == x.strength) && (valueset == x.valueset));
 	}

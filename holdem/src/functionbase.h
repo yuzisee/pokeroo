@@ -57,8 +57,8 @@ class ScalarFunctionModel : public IFunctionDifferentiable
         float64 SplitTurningPoint(float64 x1, float64 xb, float64 xn, float64 x2, float64 signDir);
         #endif
 
-		bool IsDifferentSign(const float64&,const float64&) const;
-		bool IsSameSignOrZero(const float64&,const float64&) const;
+		constexpr bool IsDifferentSign(const float64&,const float64&) const;
+		constexpr bool IsSameSignOrZero(const float64&,const float64&) const;
     protected:
 
         // When no other information is available, just pick an x based on the other x values.

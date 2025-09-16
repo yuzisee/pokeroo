@@ -183,7 +183,7 @@ class StatResult
 
 	}
 
-	float64 genPeripheral() const
+	constexpr float64 genPeripheral() const
 	{
 		if( loss == 0 && wins == 0 )
 		{ //All split maybe?

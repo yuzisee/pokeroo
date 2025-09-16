@@ -546,10 +546,10 @@ class HoldemArena
 		playernumber_t NumberStartedRoundExclAllIn() const //Number of players that started the round and could bet
 		   { return NumberStartedRound().exclAllIn(); }
 
-		constexpr playernumber_t NumberInHandInclAllIn() const //NumberInShowdown
+		playernumber_t NumberInHandInclAllIn() const //NumberInShowdown
 		   { return NumberInHand().inclAllIn(); }
 
-		constexpr playernumber_t NumberInHandExclAllIn() const //NumberWithBetting
+		playernumber_t NumberInHandExclAllIn() const //NumberWithBetting
 			{ return NumberInHand().exclAllIn(); }
 		// ---  End deprecated
 

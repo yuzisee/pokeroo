@@ -39,9 +39,9 @@ public:
 
 class RandomDeck : virtual public GameDeck
 {
-	
+
 	protected:
-   		static const uint8 DECKSIZE = 52;
+   		static constexpr uint8 DECKSIZE = 52;
         bool bDeckEmpty;
         bool bAutoShuffle;
 		uint8 deckOrder[DECKSIZE];
@@ -75,5 +75,3 @@ class RandomDeck : virtual public GameDeck
 
 
 #endif
-
-

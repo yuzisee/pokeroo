@@ -95,7 +95,7 @@ public:
     virtual playernumber_t handStrengthOfRound() const; // Same units as handsToOutplay, handsToShowdown, handsToBeat() -- it's the number of opponents, not the number in the hand
     virtual playernumber_t handsToShowdownAgainst() const; // Number of opponents who haven't folded yet
 
-    
+
     virtual playernumber_t handsDealt() const;
     virtual playernumber_t handsIn() const;
     virtual float64 prevpotChips() const;
@@ -212,7 +212,7 @@ public:
     fCore(core)
     {}
 
-    int8 getPlayerId() const {
+    constexpr int8 getPlayerId() const {
         return fCore.playerID;
     }
 
@@ -229,4 +229,3 @@ public:
 
 
 #endif // HOLDEM_ArenaSituations
-

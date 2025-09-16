@@ -44,7 +44,7 @@ float64 FoldOrCall::foldGain(CallCumulationD* const e, const float64 extra, cons
 */
 
 
-static playercounts_t constexpr suggestPlayerCount(const HoldemArena & table) {
+static playercounts_t suggestPlayerCount(const HoldemArena & table) {
     return table.NumberStartedRound();
 }
 

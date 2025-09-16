@@ -32,7 +32,7 @@ ScalarFunctionModel::~ScalarFunctionModel()
 }
 
 
-bool ScalarFunctionModel::IsSameSignOrZero(const float64 &ya, const float64 &yb) const
+bool constexpr ScalarFunctionModel::IsSameSignOrZero(const float64 &ya, const float64 &yb) const
 {
 	const bool yaZero = fabs(ya) < DBL_EPSILON;
 	const bool ybZero = fabs(yb) < DBL_EPSILON;
@@ -41,7 +41,7 @@ bool ScalarFunctionModel::IsSameSignOrZero(const float64 &ya, const float64 &yb)
 	return (   yaZero || ybZero || !(yaPositive ^ ybPositive)   );
 }
 
-bool ScalarFunctionModel::IsDifferentSign(const float64 &ya, const float64 &yb) const
+bool constexpr ScalarFunctionModel::IsDifferentSign(const float64 &ya, const float64 &yb) const
 {
 	const bool yaZero = fabs(ya) < DBL_EPSILON;
 	const bool ybZero = fabs(yb) < DBL_EPSILON;
