@@ -161,9 +161,12 @@ class ExactCallBluffD : public virtual ExactCallD
     private:
         //topTwoOfThree returns the average of the top two values {a,b,c} through the 7th parameter.
         //The average of the corresponding values of {a_d, b_d, c_d} are returned by the function.
+        /*
         float64 topTwoOfThree(float64 a, float64 b, float64 c, float64 a_d, float64 b_d, float64 c_d, float64 & r) const;
         float64 bottomTwoOfThree(float64 a, float64 b, float64 c, float64 a_d, float64 b_d, float64 c_d, float64 & r) const;
         float64 topThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const;
+        /*/
+        // ^^^ TODO(from joseph): Unit test these if you want (see unittests/main.cpp), but for now I'm pretty sure they aren't used
         float64 bottomThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const;
     protected:
 
@@ -195,7 +198,7 @@ class ExactCallBluffD : public virtual ExactCallD
 
 
 
-                            /** 
+                            /**
                              *  pWin()
                              *
                              *   Parameters:
@@ -262,4 +265,3 @@ private:
 
 
 #endif
-

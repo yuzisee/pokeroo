@@ -11,6 +11,7 @@ on:
       - 'holdem/appsrc/**'
       - 'holdem/libsrc/**'
       - 'holdem/Makefile'
+      - 'holdem/holdemdb*.zip'
       - 'holdem/sim/**'
       - 'holdem/src/**'
       - 'holdem/unittests/**'
@@ -22,6 +23,7 @@ on:
       - 'holdem/appsrc/**'
       - 'holdem/libsrc/**'
       - 'holdem/Makefile'
+      - 'holdem/holdemdb*.zip'
       - 'holdem/sim/**'
       - 'holdem/src/**'
       - 'holdem/unittests/**'
@@ -40,7 +42,7 @@ jobs:
     - name: Must compile successfully
       timeout-minutes: 1
       run: cd holdem && make SHELL="$SHELL -x"
-    - name: "…but `-D DEBUG_TRACE_SEARCH` and `-D NO_LOG_FILES` should also build without issues"
+    - name: "…but `-D DEBUG_TRACE_SEARCH`, `-D DEBUG_TRACE_ZERO` and `-D NO_LOG_FILES` should also build without issues"
       timeout-minutes: 3
       run: |
         mkdir -v holdem/clang_plist
@@ -49,9 +51,15 @@ jobs:
         set -e
         # It seems that `clang++ --analyze` creates a lot of `*.plist` files?
         clang++ -Wl,-z,defs -o /dev/null -Werror -D NO_LOG_FILES -I../src ../src/*.cpp ../appsrc/*.cpp
-        clang++ --analyze -Werror -D DEBUG_TRACE_SEARCH -I../src ../src/*.cpp ../libsrc/interfaceC.cpp 2> static_analysis_errors.txt
+        clang++ --analyze -Werror -D DEBUG_TRACE_ZERO -D DEBUG_TRACE_SEARCH ../src/*.cpp ../libsrc/interfaceC.cpp 2> static_analysis_errors.txt || cat static_analysis_errors.txt
         # EX_DATAERR
-        (test -s static_analysis_errors.txt) && (echo "clang++ --analyze also generates warnings, but they that don't fall under -Werror" && cat static_analysis_errors.txt && exit 65) || (echo 'clang++ --analyze OK')
+        if test -s static_analysis_errors.txt; then
+          echo "clang++ --analyze ← generated warnings even though they that don't fall under -Werror"
+          cat static_analysis_errors.txt 1>&2
+          exit 65
+        else
+          echo 'clang++ --analyze OK'
+        fi
 
   automated_tests:
     name: 'Test (see holdem/unittests/main.cpp)'
