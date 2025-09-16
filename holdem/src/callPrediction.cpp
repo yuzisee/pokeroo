@@ -167,7 +167,7 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
 */
 
 // useMean is a table metric here (see RiskLoss), so always use callcumu
-float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrRaise, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
+float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrRaise, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const
 {
 
     float64 raiseto = cps.alreadyBet + incrRaise; //Assume this is controlled to be less than or equal to bankroll
@@ -249,7 +249,7 @@ float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 
 
 
 //Here, dbetsize/dpot = 0
-float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrRaise, float64 fold_bet, float64 w, float64 opponents, float64 dexfy,  bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
+float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrRaise, float64 fold_bet, float64 w, float64 opponents, float64 dexfy,  bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const
 {
     if( w <= 0 ) return 0;
     const float64 raiseto = cps.alreadyBet + incrRaise;
@@ -313,7 +313,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
 
 
 
-float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 opponents, CallCumulationD * useMean)
+float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 opponents, CallCumulationD * useMean) const
 {
 
     if( humanbet >= cps.bankroll )
@@ -339,7 +339,7 @@ float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 h
     return a.FindZero(0,1, false);
 }
 
-float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot_dhumanbet, float64 w, float64 opponents, CallCumulationD * useMean)
+float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot_dhumanbet, float64 w, float64 opponents, CallCumulationD * useMean) const
 {
     if( w <= 0 ) return 0;
 	if( humanbet >= cps.bankroll ) return 0;
@@ -426,7 +426,7 @@ float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incr
 }
 
 
-float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
+float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step) const
 {
 
     float64 minRaiseDirect = tableinfo->minRaiseTo();
@@ -470,8 +470,13 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step)
 	return raiseAmount;
 }
 
-
 /*
+struct FacedOdds {
+  float64 pess;
+  float64 mean;
+  float64 rank;
+};
+
     ::query generates the values noRaiseChance_A and totalexf along with their corresponding derivatives.
     ::query is called by exf() and pRaise() (along with their corresponding derivatives)
     ::query provides a mechanism for caching the result for multiple calls during the same configuration
@@ -487,33 +492,24 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 	}
 
 ///Update cache
-	queryinput = betSize;
-	querycallSteps = callSteps;
+	this->queryinput = betSize;
+	this->querycallSteps = callSteps;
 
 
-    nearest = (betSize <= tableinfo->callBet() + tableinfo->chipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
+    this->nearest = (betSize <= tableinfo->callBet() + tableinfo->chipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
 
-	const float64 opponents = tableinfo->handsToShowdownAgainst(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
     const float64 myexf = betSize;
     const float64 mydexf = 1;
-    const float64 prevPot = tableinfo->table->GetPrevPotSize();
 
     float64 overexf = 0;
     float64 overdexf = 0;
 
-    totalexf = tableinfo->table->GetPotSize() - tableinfo->alreadyBet()  +  myexf; //alreadyBet is GetBetSize
-
-    //float64 lastexf = totalexf;
-
-
-    totaldexf = mydexf;
-    //float64 lastdexf = totaldexf;
-
+    this->totalexf = tableinfo->table->GetPotSize() - tableinfo->alreadyBet()  +  myexf; //alreadyBet is GetBetSize
+    this->totaldexf = mydexf;
 
     #ifdef DEBUG_TRACE_DEXF
             if( traceOut != 0 ) *traceOut << "Begin Query with mydexf " << mydexf << endl;
     #endif
-
 
     this->noRaiseArraySize = 0;
     while( RaiseAmount(betSize,this->noRaiseArraySize) < tableinfo->maxRaiseAmount() )
@@ -523,10 +519,10 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
     ++noRaiseArraySize; //Now it's the size of the array
 
+    const size_t noRaiseArraySize_now = noRaiseArraySize;
+
     if( noRaiseChance_A != 0 ) delete [] noRaiseChance_A;
     if( noRaiseChanceD_A != 0 ) delete [] noRaiseChanceD_A;
-
-    const size_t noRaiseArraySize_now = this->noRaiseArraySize;
 
     noRaiseChance_A = new float64[noRaiseArraySize_now];
     noRaiseChanceD_A = new float64[noRaiseArraySize_now];
@@ -537,10 +533,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         noRaiseChanceD_A[i] = 0;
     }
 
-
     float64 * nextNoRaise_A = new float64[noRaiseArraySize_now];
     float64 * nextNoRaiseD_A = new float64[noRaiseArraySize_now];
-
 
     // Loop through each player to:
     //  + accumulate chance of NOT being raised by that player
@@ -550,410 +544,15 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     tableinfo->table->incrIndex(pIndex);
     while( pIndex != tableinfo->playerID )
     {
-
-        #ifdef DEBUG_TRACE_DEXF
-		if( traceOut != 0 )
-		{
-			*traceOut << endl << "totaldexf is " << totaldexf << " overdexf is " << overdexf << endl;
-			*traceOut << "\tPlayer " << (int)pIndex;
-		}
-		#endif
-
-        ///Initialize player-specific callgain
-        float64 nextexf = 0;
-        float64 nextdexf = 0;
-
-        ///Initialize player-specific (no)raisechange
-        int8 oppRaiseChances = 0;
-        int8 oppRaiseChancesPessimistic = 0;
-        for(size_t i=0;i<noRaiseArraySize_now;++i)
-        {
-            nextNoRaise_A[i] = 1; //Won't raise (by default)
-            nextNoRaiseD_A[i] = 0;
-        }
-
-        ///Initialize player bet state
-        const Player * withP = tableinfo->table->ViewPlayer(pIndex);
-        const float64 oppBetAlready = withP->GetBetSize();
-        const float64 oppPastCommit = withP->GetVoluntaryContribution();
-        const float64 oppBankRoll = withP->GetMoney(); //To predict how much the bet will be
-
-        if( oppBankRoll - betSize < tableinfo->chipDenom()/4  ) // oppBankRoll <= betSize
-        {
-            oppRaiseChances = 0; //Not enough to raise more
-            oppRaiseChancesPessimistic = 0;
-        }
-        else
-        {
-            if( betSize > tableinfo->callBet() && betSize < tableinfo->maxRaiseAmount() - tableinfo->chipDenom()/4  ) //this bet would be a raise, so anyone is allowed to reraise me
-            {//(provided they have enough chips)
-                oppRaiseChances = 1 + tableinfo->table->FutureRounds(); //this round, or any future round
-                oppRaiseChancesPessimistic = 1;
-            }else
-            {
-                oppRaiseChances = tableinfo->OppRaiseOpportunities(pIndex); //the opponent's only chance to raise is once in each future round
-                oppRaiseChancesPessimistic = oppRaiseChances - tableinfo->table->FutureRounds();
-            }
-        }
-
-        if( tableinfo->table->CanStillBet(pIndex) ) // Make sure the player is still fit to bet ( in this or any future round )
-        {
-
-            if( betSize - oppBankRoll < tableinfo->chipDenom()/4  ) // betSize <= oppBankRoll
-            {	//Can still call, at least
-
-                ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit, prevPot);
-
-			///=========================
-			///   1. Estimate noRaise
-			///=========================
-            // This populates nextNoRaise_A of this player, for all raise amounts. Step 3 will aggregate it them into noRaiseChance_A which combines all players.
-                if( oppRaiseChances > 0 )
-                { //The player can raise you if he hasn't called yet, OR you're (hypothetically) raising
-
-                    //if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
-
-                    float64 prevRaise = 0.0;
-                    float64 prev_w_r_pess = 0.0;
-                    float64 prev_w_r_mean = 0.0;
-                    float64 prev_w_r_rank = 0.0;
-                    ///Check for each raise percentage
-                    for( size_t i_step=0;i_step<noRaiseArraySize_now;++i_step)
-                    {
-                        const int32 i = i_step;
-                        const bool bMyWouldCall = i < callSteps;
-                        const float64 thisRaise = RaiseAmount(betSize,i);
-                        const float64 oppRaiseMake = thisRaise - oppBetAlready;
-                        if( oppRaiseMake <= 0 ) {
-                            nextNoRaise_A[i_step] = 0.0; // well then we're guaranteed to hit this amount
-                            nextNoRaiseD_A[i_step] = 0.0;
-                            prevRaise = 0;
-#ifdef DEBUGASSERT
-                            if (prev_w_r_mean != 0.0 || prev_w_r_rank != 0.0) {
-                                std::cerr << "How did prev_w_r_mean get set while we're still in oppRaiseMake <= 0.0?" << std::endl;
-                                exit(1);
-                            }
-#endif // DEBUGASSERT
-                        } else
-                        {
-                            if(thisRaise <= oppBankRoll)
-                            {
-
-                                const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
-                                                                                                                                        //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
-
-                               if (!is_nan(prev_w_r_mean) && !is_nan(prev_w_r_rank)) {
-                                // TODO(from yuzisee): Raises are now Algb instead of Geom?
-                                float64 w_r_pess = facedOdds_raise_Geom(oppCPS,prev_w_r_pess, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.foldcumu));
-                                float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.callcumu));
-                                float64 w_r_rank = facedOdds_raise_Geom(oppCPS,prev_w_r_rank, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
-                                #ifdef ANTI_CHECK_PLAY
-                                if( bOppCouldCheck )
-                                {
-                                    w_r_mean = 1;
-                                    w_r_rank = 1;
-                                }
-                                #endif
-
-                                const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
-
-                                // TODO(from joseph): Is there a std::tuple or something to return these two values so that we can make them const?
-                                float64 noRaise;
-                                float64 noraiseD;
-                                {
-                                const float64 noRaisePess = 1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_pess - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess);
-                                const float64 noraisePessD = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu));
-
-                                const float64 noRaiseMean = 1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean);
-                                const float64 noraiseMeanD = fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu));
-
-                                //nextNoRaise_A[i_step] = w_r_rank;
-                                //nextNoRaiseD_A[i_step] = noraiseRankD;
-
-                                // But the opponent may or may not know your hand!
-                                // Unforunately, knowing your hand is weak doesn't always make more opponents want to raise.
-                                // However, we can guide the choice between callcumu and foldcumu, in this case, adversarially:
-                                //   If you know you'd fold (weak hand), let the opponent raise the worse amount (larger)
-                                //   If you know you'd call (good hand), let the opponent raise the worse amount (smaller)
-
-                                    float64 noRaise_smaller;
-                                    float64 noRaise_smallerD;
-                                    float64 noRaise_larger;
-                                    float64 noRaise_largerD;
-                                    // TODO(from joseph): Is there some C++11 or C++14 construct for returning these four values together so that we can make them const?
-                                    if (noRaisePess < noRaiseMean) {
-                                        noRaise_smaller = noRaisePess;
-                                        noRaise_smallerD = noraisePessD;
-                                        noRaise_larger = noRaiseMean;
-                                        noRaise_largerD = noraiseMeanD;
-                                    } else if (noRaiseMean < noRaisePess) {
-                                        noRaise_smaller = noRaiseMean;
-                                        noRaise_smallerD = noraiseMeanD;
-                                        noRaise_larger = noRaisePess;
-                                        noRaise_largerD = noraisePessD;
-                                    } else {
-                                        if (noraisePessD < noraiseMeanD) {
-                                            noRaise_smaller = noRaisePess;
-                                            noRaise_smallerD = noraisePessD;
-                                            noRaise_larger = noRaiseMean;
-                                            noRaise_largerD = noraiseMeanD;
-                                        } else {
-                                            noRaise_smaller = noRaiseMean;
-                                            noRaise_smallerD = noraiseMeanD;
-                                            noRaise_larger = noRaisePess;
-                                            noRaise_largerD = noraisePessD;
-                                        }
-                                    }
-
-                                    noRaise = bMyWouldCall ?
-                                        noRaise_smaller : // I would call. I want them to raise. (Adversarial is smaller)
-                                        noRaise_larger; // I won't call. I want them not to raise. (Adversarial is larger)
-                                    noraiseD = bMyWouldCall ? noRaise_smallerD : noRaise_largerD;
-                                }
-
-
-
-                                nextNoRaise_A[i_step] = (noRaise+w_r_rank)/2;
-                                nextNoRaiseD_A[i_step] = (noraiseD+noraiseRankD)/2;
-
-                                // nextNoRaise should be monotonically increasing. That is, the probability of being raised all-in is lower than the probabilty of being raised at least minRaise.
-                                if (i_step>0) {
-                                    //if (nextNoRaise_A[i_step] < nextNoRaise_A[i_step-1]) {
-                                        // The returned total cumulative probability distributions won't be allowed to drop.
-                                        // However, this can happen in many cases.
-                                        // For example, say you have a Q3o
-                                        // A bunch of the _better_ hands have a slightly better chance to win against most hands, but although they fare better against random hands they fare just the same against your Q3o.
-                                        // When this happens it means: if the opponent knew your hand, fewer of them would want to raise -- even if those that do would beat you by more or those that don't have better odds against random hands.
-                                    //}
-#ifdef DEBUGASSERT
-                                    if (!(nextNoRaise_A[i_step-1] <= nextNoRaise_A[i_step])) {
-                                        std::cerr << "Invalid nextNoRaise_A for player " << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << " raising to " << thisRaise << std::endl;
-                                        // If you get here, look at prev_w_r_mean, prev_w_r_rank, etc. to help debug.
-                                        // They are populated just below.
-                                        // Also, check callSteps!
-                                        for( size_t k=0;k<=i_step;++k) {
-                                            std::cerr << "nextNoRaise_A[" << (int)k << "]=" << nextNoRaise_A[k] << std::endl;
-                                        }
-                                        exit(1);
-                                    }
-#endif //DEBUGASSERT
-
-                                }
-
-                                prevRaise = thisRaise;
-
-                                prev_w_r_pess = w_r_pess;
-                                prev_w_r_mean = w_r_mean;
-                                prev_w_r_rank = w_r_rank;
-                               } // endif prev_w_r_mean,prev_w_r_rank not NaN
-                               #ifdef DEBUGASSERT
-                               else {
-                                 std::cerr << "prev_w_r_mean and prev_w_r_rank only become NaN after thisRaise passes oppBankRoll." << std::endl;
-                                 exit(1);
-                               }
-                               #endif // DEBUGASSERT
-
-                            }else
-                            { // raising this amount would put player[pIndex] all-in.
-                                const float64 oppAllInMake = oppBankRoll - oppBetAlready;
-
-                                if (prevRaise > 0 && oppBankRoll > prevRaise && oppAllInMake > 0)
-                                { //This is the precise bet of the all-in raise. Higher raiseAmounts won't be raised by this player, no matter what hand he/she has regardless of their chance to win the showdown.
-
-                                    float64 w_r = 1-1.0/RAREST_HAND_CHANCE;
-
-                                    //float64 noraiseMean = e->weakestOpponent(); //What are his odds against the weakest opponent
-
-                                    //if(noraiseMean < w_r){ noraiseMean = 0; }
-
-                                    nextNoRaise_A[i_step] = w_r;//(noraiseMean+w_r)/2;
-
-                                    // ... but ensure that nextNoRaise remains monotonic
-                                    if (i_step > 0) {
-                                        const size_t i_cascade = i_step-1;
-                                        #ifdef DEBUGASSERT
-                                          if (noRaiseArraySize_now <= i_cascade ) {
-                                            std::cerr << "We need this assertion to solve a 'core.UndefinedBinaryOperatorResult' compiler (clang++ static analyzer) warning, but it's already impossible because the for-loop above only goes up to: i=" << static_cast<int>(i) << " < noRaiseArraySize=" << static_cast<int>(noRaiseArraySize) << std::endl;
-                                            exit(1);
-                                          } else
-                                        #endif
-                                        if (nextNoRaise_A[i_step] < nextNoRaise_A[i_cascade]) {
-                                            nextNoRaise_A[i_step] = nextNoRaise_A[i_cascade];
-                                            // i.e.
-                                            // nextNoRaise_A[i] = nextNoRaise_A[i-1];
-                                        }
-                                    }
-
-                                    nextNoRaiseD_A[i_step] = 0;
-                                }
-
-                                prevRaise = 0;
-                                prev_w_r_mean = std::numeric_limits<float64>::signaling_NaN();
-                                prev_w_r_rank = std::numeric_limits<float64>::signaling_NaN();
-
-                            } // end of block: if (thisRaise <= oppBankRoll), else ...
-
-                        } // end of block: if (oppRaiseMake <= 1), else ...
-                    }//end of for loop
-                }
-
-			///=====================
-			///   2. Estimate exf
-			///=====================
-
-				///Check for most likely call amount
-                const float64 oppBetMake = betSize - oppBetAlready;
-				//To understand the above, consider that totalexf includes already made bets
-
-                #ifdef DEBUG_TRACE_DEXF
-                if( traceOut != 0 )  *traceOut << " to bet " << oppBetMake << "more";
-                #endif
-
-                if( oppBetMake <= DBL_EPSILON )
-                { //Definitely call
-                    nextexf = 0;
-                    nextdexf = 1;
-
-                    #ifdef DEBUG_TRACE_DEXF
-                    if( traceOut != 0 )  *traceOut << " ALREADY CALLED" << endl ;
-                    #endif
-                }else
-                {
-
-                    // Since this is Pr{call}, we're using table stats, i.e. ed()
-                    // Nothing special going on here.
-                    // TODO(from yuzisee): if you feel that predicted calls are too loose, we can switch to ef() which is more adversarial.f
-                    // We don't use RANK here. RANK might overestimate the amount of calls from strong hands.
-                    const float64 w = facedOdds_call_Geom(oppCPS,betSize, opponents, ed());
-                    nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan(w - EPS_WIN_PCT);
-
-
-                    nextdexf = nextexf + oppBetMake * (- ed()->Pr_haveWorsePCT_continuous(w - EPS_WIN_PCT).second)
-                                        * dfacedOdds_dbetSize_Geom(oppCPS,betSize,totaldexf,w, opponents, ed());
-
-                    nextexf *= oppBetMake;
-                    if( oppBetAlready + nextexf > nearest )
-                    {
-                        nearest = oppBetAlready + nextexf;
-                    }
-
-                    #ifdef DEBUG_TRACE_DEXF
-                    //if( traceOut != 0 )  *traceOut << " nextdexf=" << nextdexf << endl;
-                    #endif
-
-                }
-				//End of else, blocked executed UNLESS oppBetMake <= 0
-
-            }else
-            {///Opponent would be all-in to call this bet
-                const float64 oldpot = tableinfo->table->GetPrevPotSize();
-                const float64 effroundpot = (totalexf - oldpot) * oppBankRoll / betSize;
-                const float64 oppBetMake = oppBankRoll - oppBetAlready;
-
-                ChipPositionState oppmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit, prevPot);
-
-                nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan( facedOdds_call_Geom(oppmaxCPS,oppBankRoll, opponents,ed()) - EPS_WIN_PCT );
-
-				nextexf *= oppBetMake ;
-
-                if( oppBetAlready + nextexf + (betSize - oppBankRoll) > nearest )
-                {
-                    nearest = oppBetAlready + nextexf + (betSize - oppBankRoll);
-                }
-
-                nextdexf = 0;
-
-                    #ifdef DEBUG_TRACE_DEXF
-                    if( traceOut != 0 )  *traceOut << " Is ALL IN" << endl;
-                    #endif
-
-				//Obviously the opponent won't raise...  ie. NoRaise = 100%
-				// (nextNoRaise , nextNoRaiseD ) is already (1,0)
-            }
-
-			///===================================
-			///   3. Tally/Aggregate/Accumulate
-			///===================================
-
-
-            //lastexf = nextexf;
-            totalexf += nextexf;
-
-                    #ifdef DEBUG_TRACE_DEXF
-                    //if( traceOut != 0 )  *traceOut << "totaldexf was " << totaldexf;
-                    #endif
-
-            //lastdexf = nextdexf;
-            totaldexf += nextdexf;
-
-
-                    #ifdef DEBUG_TRACE_DEXF
-                    //if( traceOut != 0 )  *traceOut << " is " << totaldexf << ",  last added " << nextdexf << endl;
-                    //if( traceOut != 0 )  *traceOut << " is " << totaldexf << endl;
-                    //if( traceOut != 0 )  *traceOut << " last added " << nextdexf << endl;
-                    //if( traceOut != 0 )  *traceOut << endl;
-                    #endif
-
-
-            const float64 oppInPot = oppBetAlready + nextexf;
-            if( oppInPot - betSize > DBL_EPSILON )
-            {
-                overexf += oppInPot - betSize;
-                overdexf += nextdexf;
-            }
-
-        }
-
-        for( size_t i_step=0;i_step<noRaiseArraySize_now;++i_step)
-        {
-            const int32 i = i_step;
-            //Always be pessimistic about the opponent's raises.
-            //If being raised against is preferable, then expect an aware opponent not to raise into you in later rounds -- since they'd be giving you money.
-            //If being raised against is undesirable, expect an aware opponent to raise you early and often -- since you are giving them push-opportunity
-            const bool bMyWouldCall = (i < callSteps);
-
-            const int8 oppRaiseChancesAware = bMyWouldCall ? oppRaiseChancesPessimistic : oppRaiseChances;
-            // Increasing oppRaiseChancesAware decreases noRaiseChance, which increases the chance we expect to be raised at a certain price.
-
-
-            //At this point, each nextNoRaise is 100% unless otherwise adjusted.
-            const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step] < 0) ? 0 : pow(nextNoRaise_A[i],oppRaiseChancesAware);
-
-
-#ifdef DEBUGASSERT
-            if (oppRaiseChancesAware < 0) {
-                std::cerr << "Invalid oppRaiseChancesAware " << (int)oppRaiseChancesAware << " for player " << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << std::endl;
-                exit(1);
-            }
-
-            if (i_step>0
-                 && (i != callSteps) // at the callSteps boundary, sometimes the raise probability spikes (and thus the noRaise probability drops) before continuing to converge toward "very unlikely to raise all-in" and thus noRaise --> 1.0 again.
-                ) {
-                if (!(
-                      noRaiseChance_A[i_step-1]
-                      <=
-                      noRaiseChance_A[i_step] * noRaiseChance_adjust
-                      )) {
-                    std::cerr << "Invalid noRaiseChance_A for player " << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << std::endl;
-                    for( size_t k=0;k<i_step;++k) {
-                        std::cerr << "noRaiseChance_A[" << (int)k << "]=" << noRaiseChance_A[k] << std::endl;
-                    }
-                    std::cerr << "vs. noRaiseChance_A[" << (int)i << "] is " << noRaiseChance_A[i_step] << " --> " << (noRaiseChance_A[i_step] * noRaiseChance_adjust) << std::endl;
-                    exit(1);
-                }
-            }
-#endif //DEBUGASSERT
-
-            noRaiseChance_A[i_step] *=noRaiseChance_adjust;
-            if( noRaiseChance_A[i_step] == 0 ) //and nextNoRaiseD == 0
-            {
-                noRaiseChanceD_A[i_step] = 0;
-            }else
-            {
-                noRaiseChanceD_A[i_step] += nextNoRaiseD_A[i_step]/nextNoRaise_A[i_step]  *   oppRaiseChancesAware; //Logairthmic differentiation
-            }
-        }
-
+      #ifdef DEBUG_TRACE_DEXF
+		  if( traceOut != 0 )
+		  {
+		  	*traceOut << endl << "totaldexf is " << totaldexf << " overdexf is " << overdexf << endl;
+		  	*traceOut << "\tPlayer " << (int)pIndex;
+		  }
+		  #endif
+
+        this->accumulateOneOpponentPossibleRaises(pIndex, nextNoRaise_A, nextNoRaiseD_A, noRaiseArraySize_now, betSize, callSteps, &overexf, &overdexf);
 
         tableinfo->table->incrIndex(pIndex);
     }
@@ -965,22 +564,422 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     if( traceOut != 0 )  *traceOut << endl << "Final is " << totaldexf;
     #endif
 
-    totalexf = totalexf - myexf - overexf;
-    totaldexf = totaldexf - mydexf - overdexf;
+    this->totalexf = totalexf - myexf - overexf;
+    this->totaldexf = totaldexf - mydexf - overdexf;
 
     #ifdef DEBUG_TRACE_DEXF
     if( traceOut != 0 )  *traceOut << " adjusted to " << totaldexf << " by mydexf=" << mydexf << " and overdexf=" << overdexf << endl;
     #endif
 
-    if( totalexf < 0 ) totalexf = 0; //Due to rounding error in overexf?
-    if( totaldexf < 0 ) totaldexf = 0; //Due to rounding error in overexf?
+    if( totalexf < 0 ) this->totalexf = 0; //Due to rounding error in overexf?
+    if( totaldexf < 0 ) this->totaldexf = 0; //Due to rounding error in overexf?
 
     for( size_t i=0;i<noRaiseArraySize_now;++i)
     {
-        noRaiseChanceD_A[i] *= noRaiseChance_A[i];
+        this->noRaiseChanceD_A[i] *= noRaiseChance_A[i];
     }
 
 }
+
+void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 * const nextNoRaise_A, float64 * const nextNoRaiseD_A, const size_t noRaiseArraySize_now, float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out) {
+  const float64 prevPot = tableinfo->table->GetPrevPotSize();
+  const float64 opponents = tableinfo->handsToShowdownAgainst(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
+
+  ///Initialize player-specific callgain
+  float64 nextexf = 0;
+  float64 nextdexf = 0;
+
+  ///Initialize player-specific (no)raisechange
+  int8 oppRaiseChances = 0;
+  int8 oppRaiseChancesPessimistic = 0;
+  for(size_t i=0;i<noRaiseArraySize_now;++i)
+  {
+      nextNoRaise_A[i] = 1; //Won't raise (by default)
+      nextNoRaiseD_A[i] = 0;
+  }
+
+  ///Initialize player bet state
+  const Player * withP = tableinfo->table->ViewPlayer(pIndex);
+  const float64 oppBetAlready = withP->GetBetSize();
+  const float64 oppPastCommit = withP->GetVoluntaryContribution();
+  const float64 oppBankRoll = withP->GetMoney(); //To predict how much the bet will be
+
+  if( oppBankRoll - betSize < tableinfo->chipDenom()/4  ) // oppBankRoll <= betSize
+  {
+      oppRaiseChances = 0; //Not enough to raise more
+      oppRaiseChancesPessimistic = 0;
+  }
+  else
+  {
+      if( betSize > tableinfo->callBet() && betSize < tableinfo->maxRaiseAmount() - tableinfo->chipDenom()/4  ) //this bet would be a raise, so anyone is allowed to reraise me
+      {//(provided they have enough chips)
+          oppRaiseChances = 1 + tableinfo->table->FutureRounds(); //this round, or any future round
+          oppRaiseChancesPessimistic = 1;
+      }else
+      {
+          oppRaiseChances = tableinfo->OppRaiseOpportunities(pIndex); //the opponent's only chance to raise is once in each future round
+          oppRaiseChancesPessimistic = oppRaiseChances - tableinfo->table->FutureRounds();
+      }
+  }
+
+  if( tableinfo->table->CanStillBet(pIndex) ) // Make sure the player is still fit to bet ( in this or any future round )
+  {
+
+      if( betSize - oppBankRoll < tableinfo->chipDenom()/4  ) // betSize <= oppBankRoll
+      {	//Can still call, at least
+
+          ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit, prevPot);
+
+			///=========================
+			///   1. Estimate noRaise
+			///=========================
+      // This populates nextNoRaise_A of this player, for all raise amounts. Step 3 will aggregate it them into noRaiseChance_A which combines all players.
+          if( oppRaiseChances > 0 )
+          { //The player can raise you if he hasn't called yet, OR you're (hypothetically) raising
+
+              //if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
+
+              float64 prevRaise = 0.0;
+              float64 prev_w_r_pess = 0.0;
+              float64 prev_w_r_mean = 0.0;
+              float64 prev_w_r_rank = 0.0;
+              ///Check for each raise percentage
+              for( size_t i_step=0;i_step<noRaiseArraySize_now;++i_step)
+              {
+                  const int32 i = i_step;
+                  const bool bMyWouldCall = i < callSteps;
+                  const float64 thisRaise = RaiseAmount(betSize,i);
+                  const float64 oppRaiseMake = thisRaise - oppBetAlready;
+                  if( oppRaiseMake <= 0 ) {
+                      nextNoRaise_A[i_step] = 0.0; // well then we're guaranteed to hit this amount
+                      nextNoRaiseD_A[i_step] = 0.0;
+                      prevRaise = 0;
+#ifdef DEBUGASSERT
+                      if (prev_w_r_mean != 0.0 || prev_w_r_rank != 0.0) {
+                          std::cerr << "How did prev_w_r_mean get set while we're still in oppRaiseMake <= 0.0?" << std::endl;
+                          exit(1);
+                      }
+#endif // DEBUGASSERT
+                  } else
+                  {
+                      if(thisRaise <= oppBankRoll)
+                      {
+
+                          const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+                                                                                                                                  //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
+
+                         if (!is_nan(prev_w_r_mean) && !is_nan(prev_w_r_rank)) {
+                          // TODO(from yuzisee): Raises are now Algb instead of Geom?
+                          float64 w_r_pess = facedOdds_raise_Geom(oppCPS,prev_w_r_pess, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.foldcumu));
+                          float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.callcumu));
+                          float64 w_r_rank = facedOdds_raise_Geom(oppCPS,prev_w_r_rank, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
+                          #ifdef ANTI_CHECK_PLAY
+                          if( bOppCouldCheck )
+                          {
+                              w_r_mean = 1;
+                              w_r_rank = 1;
+                          }
+                          #endif
+
+                          const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
+
+                          // TODO(from joseph): Is there a std::tuple or something to return these two values so that we can make them const?
+                          float64 noRaise;
+                          float64 noraiseD;
+                          {
+                          const float64 noRaisePess = 1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_pess - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess);
+                          const float64 noraisePessD = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu));
+
+                          const float64 noRaiseMean = 1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) ; // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean);
+                          const float64 noraiseMeanD = fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu));
+
+                          //nextNoRaise_A[i_step] = w_r_rank;
+                          //nextNoRaiseD_A[i_step] = noraiseRankD;
+
+                          // But the opponent may or may not know your hand!
+                          // Unforunately, knowing your hand is weak doesn't always make more opponents want to raise.
+                          // However, we can guide the choice between callcumu and foldcumu, in this case, adversarially:
+                          //   If you know you'd fold (weak hand), let the opponent raise the worse amount (larger)
+                          //   If you know you'd call (good hand), let the opponent raise the worse amount (smaller)
+
+                              float64 noRaise_smaller;
+                              float64 noRaise_smallerD;
+                              float64 noRaise_larger;
+                              float64 noRaise_largerD;
+                              // TODO(from joseph): Is there some C++11 or C++14 construct for returning these four values together so that we can make them const?
+                              if (noRaisePess < noRaiseMean) {
+                                  noRaise_smaller = noRaisePess;
+                                  noRaise_smallerD = noraisePessD;
+                                  noRaise_larger = noRaiseMean;
+                                  noRaise_largerD = noraiseMeanD;
+                              } else if (noRaiseMean < noRaisePess) {
+                                  noRaise_smaller = noRaiseMean;
+                                  noRaise_smallerD = noraiseMeanD;
+                                  noRaise_larger = noRaisePess;
+                                  noRaise_largerD = noraisePessD;
+                              } else {
+                                  if (noraisePessD < noraiseMeanD) {
+                                      noRaise_smaller = noRaisePess;
+                                      noRaise_smallerD = noraisePessD;
+                                      noRaise_larger = noRaiseMean;
+                                      noRaise_largerD = noraiseMeanD;
+                                  } else {
+                                      noRaise_smaller = noRaiseMean;
+                                      noRaise_smallerD = noraiseMeanD;
+                                      noRaise_larger = noRaisePess;
+                                      noRaise_largerD = noraisePessD;
+                                  }
+                              }
+
+                              noRaise = bMyWouldCall ?
+                                  noRaise_smaller : // I would call. I want them to raise. (Adversarial is smaller)
+                                  noRaise_larger; // I won't call. I want them not to raise. (Adversarial is larger)
+                              noraiseD = bMyWouldCall ? noRaise_smallerD : noRaise_largerD;
+                          }
+
+
+
+                          nextNoRaise_A[i_step] = (noRaise+w_r_rank)/2;
+                          nextNoRaiseD_A[i_step] = (noraiseD+noraiseRankD)/2;
+
+                          // nextNoRaise should be monotonically increasing. That is, the probability of being raised all-in is lower than the probabilty of being raised at least minRaise.
+                          if (i_step>0) {
+                              //if (nextNoRaise_A[i_step] < nextNoRaise_A[i_step-1]) {
+                                  // The returned total cumulative probability distributions won't be allowed to drop.
+                                  // However, this can happen in many cases.
+                                  // For example, say you have a Q3o
+                                  // A bunch of the _better_ hands have a slightly better chance to win against most hands, but although they fare better against random hands they fare just the same against your Q3o.
+                                  // When this happens it means: if the opponent knew your hand, fewer of them would want to raise -- even if those that do would beat you by more or those that don't have better odds against random hands.
+                              //}
+#ifdef DEBUGASSERT
+                              if (!(nextNoRaise_A[i_step-1] <= nextNoRaise_A[i_step])) {
+                                  std::cerr << "Invalid nextNoRaise_A for player " << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << " raising to " << thisRaise << std::endl;
+                                  // If you get here, look at prev_w_r_mean, prev_w_r_rank, etc. to help debug.
+                                  // They are populated just below.
+                                  // Also, check callSteps!
+                                  for( size_t k=0;k<=i_step;++k) {
+                                      std::cerr << "nextNoRaise_A[" << (int)k << "]=" << nextNoRaise_A[k] << std::endl;
+                                  }
+                                  exit(1);
+                              }
+#endif //DEBUGASSERT
+
+                          }
+
+                          prevRaise = thisRaise;
+
+                          prev_w_r_pess = w_r_pess;
+                          prev_w_r_mean = w_r_mean;
+                          prev_w_r_rank = w_r_rank;
+                         } // endif prev_w_r_mean,prev_w_r_rank not NaN
+                         #ifdef DEBUGASSERT
+                         else {
+                           std::cerr << "prev_w_r_mean and prev_w_r_rank only become NaN after thisRaise passes oppBankRoll." << std::endl;
+                           exit(1);
+                         }
+                         #endif // DEBUGASSERT
+
+                      }else
+                      { // raising this amount would put player[pIndex] all-in.
+                          const float64 oppAllInMake = oppBankRoll - oppBetAlready;
+
+                          if (prevRaise > 0 && oppBankRoll > prevRaise && oppAllInMake > 0)
+                          { //This is the precise bet of the all-in raise. Higher raiseAmounts won't be raised by this player, no matter what hand he/she has regardless of their chance to win the showdown.
+
+                              float64 w_r = 1-1.0/RAREST_HAND_CHANCE;
+
+                              //float64 noraiseMean = e->weakestOpponent(); //What are his odds against the weakest opponent
+
+                              //if(noraiseMean < w_r){ noraiseMean = 0; }
+
+                              nextNoRaise_A[i_step] = w_r;//(noraiseMean+w_r)/2;
+
+                              // ... but ensure that nextNoRaise remains monotonic
+                              if (i_step > 0) {
+                                  const size_t i_cascade = i_step-1;
+                                  #ifdef DEBUGASSERT
+                                    if (noRaiseArraySize_now <= i_cascade ) {
+                                      std::cerr << "We need this assertion to solve a 'core.UndefinedBinaryOperatorResult' compiler (clang++ static analyzer) warning, but it's already impossible because the for-loop above only goes up to: i=" << static_cast<int>(i) << " < noRaiseArraySize=" << static_cast<int>(noRaiseArraySize) << std::endl;
+                                      exit(1);
+                                    } else
+                                  #endif
+                                  if (nextNoRaise_A[i_step] < nextNoRaise_A[i_cascade]) {
+                                      nextNoRaise_A[i_step] = nextNoRaise_A[i_cascade];
+                                      // i.e.
+                                      // nextNoRaise_A[i] = nextNoRaise_A[i-1];
+                                  }
+                              }
+
+                              nextNoRaiseD_A[i_step] = 0;
+                          }
+
+                          prevRaise = 0;
+                          prev_w_r_mean = std::numeric_limits<float64>::signaling_NaN();
+                          prev_w_r_rank = std::numeric_limits<float64>::signaling_NaN();
+
+                      } // end of block: if (thisRaise <= oppBankRoll), else ...
+
+                  } // end of block: if (oppRaiseMake <= 1), else ...
+              }//end of for loop
+          }
+
+			///=====================
+			///   2. Estimate exf
+			///=====================
+
+				///Check for most likely call amount
+          const float64 oppBetMake = betSize - oppBetAlready;
+				//To understand the above, consider that totalexf includes already made bets
+
+          #ifdef DEBUG_TRACE_DEXF
+          if( traceOut != 0 )  *traceOut << " to bet " << oppBetMake << "more";
+          #endif
+
+          if( oppBetMake <= DBL_EPSILON )
+          { //Definitely call
+              nextexf = 0;
+              nextdexf = 1;
+
+              #ifdef DEBUG_TRACE_DEXF
+              if( traceOut != 0 )  *traceOut << " ALREADY CALLED" << endl ;
+              #endif
+          }else
+          {
+
+              // Since this is Pr{call}, we're using table stats, i.e. ed()
+              // Nothing special going on here.
+              // TODO(from yuzisee): if you feel that predicted calls are too loose, we can switch to ef() which is more adversarial.f
+              // We don't use RANK here. RANK might overestimate the amount of calls from strong hands.
+              const float64 w = facedOdds_call_Geom(oppCPS,betSize, opponents, ed());
+              nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan(w - EPS_WIN_PCT);
+
+
+              nextdexf = nextexf + oppBetMake * (- ed()->Pr_haveWorsePCT_continuous(w - EPS_WIN_PCT).second)
+                                  * dfacedOdds_dbetSize_Geom(oppCPS,betSize,totaldexf,w, opponents, ed());
+
+              nextexf *= oppBetMake;
+              if( oppBetAlready + nextexf > nearest )
+              {
+                  this->nearest = oppBetAlready + nextexf;
+              }
+
+              #ifdef DEBUG_TRACE_DEXF
+              //if( traceOut != 0 )  *traceOut << " nextdexf=" << nextdexf << endl;
+              #endif
+
+          }
+				//End of else, blocked executed UNLESS oppBetMake <= 0
+
+      }else
+      {///Opponent would be all-in to call this bet
+          const float64 oldpot = tableinfo->table->GetPrevPotSize();
+          const float64 effroundpot = (totalexf - oldpot) * oppBankRoll / betSize;
+          const float64 oppBetMake = oppBankRoll - oppBetAlready;
+
+          ChipPositionState oppmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit, prevPot);
+
+          nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan( facedOdds_call_Geom(oppmaxCPS,oppBankRoll, opponents,ed()) - EPS_WIN_PCT );
+
+				nextexf *= oppBetMake ;
+
+          if( oppBetAlready + nextexf + (betSize - oppBankRoll) > nearest )
+          {
+              this->nearest = oppBetAlready + nextexf + (betSize - oppBankRoll);
+          }
+
+          nextdexf = 0;
+
+              #ifdef DEBUG_TRACE_DEXF
+              if( traceOut != 0 )  *traceOut << " Is ALL IN" << endl;
+              #endif
+
+				//Obviously the opponent won't raise...  ie. NoRaise = 100%
+				// (nextNoRaise , nextNoRaiseD ) is already (1,0)
+      }
+
+			///===================================
+			///   3. Tally/Aggregate/Accumulate
+			///===================================
+
+
+      //lastexf = nextexf;
+      this->totalexf += nextexf;
+
+              #ifdef DEBUG_TRACE_DEXF
+              //if( traceOut != 0 )  *traceOut << "totaldexf was " << totaldexf;
+              #endif
+
+      //lastdexf = nextdexf;
+      this->totaldexf += nextdexf;
+
+
+              #ifdef DEBUG_TRACE_DEXF
+              //if( traceOut != 0 )  *traceOut << " is " << totaldexf << ",  last added " << nextdexf << endl;
+              //if( traceOut != 0 )  *traceOut << " is " << totaldexf << endl;
+              //if( traceOut != 0 )  *traceOut << " last added " << nextdexf << endl;
+              //if( traceOut != 0 )  *traceOut << endl;
+              #endif
+
+
+      const float64 oppInPot = oppBetAlready + nextexf;
+      if( oppInPot - betSize > DBL_EPSILON )
+      {
+          *overexf_out += oppInPot - betSize;
+          *overdexf_out += nextdexf;
+      }
+
+  } // end if CanStillBet(pIndex)
+
+  for( size_t i_step=0;i_step<noRaiseArraySize_now;++i_step)
+  {
+      const int32 i = i_step;
+      //Always be pessimistic about the opponent's raises.
+      //If being raised against is preferable, then expect an aware opponent not to raise into you in later rounds -- since they'd be giving you money.
+      //If being raised against is undesirable, expect an aware opponent to raise you early and often -- since you are giving them push-opportunity
+      const bool bMyWouldCall = (i < callSteps);
+
+      const int8 oppRaiseChancesAware = bMyWouldCall ? oppRaiseChancesPessimistic : oppRaiseChances;
+      // Increasing oppRaiseChancesAware decreases noRaiseChance, which increases the chance we expect to be raised at a certain price.
+
+
+      //At this point, each nextNoRaise is 100% unless otherwise adjusted.
+      const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step] < 0) ? 0 : pow(nextNoRaise_A[i],oppRaiseChancesAware);
+
+
+#ifdef DEBUGASSERT
+      if (oppRaiseChancesAware < 0) {
+          std::cerr << "Invalid oppRaiseChancesAware " << (int)oppRaiseChancesAware << " for player " << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << std::endl;
+          exit(1);
+      }
+
+      if (i_step>0
+           && (i != callSteps) // at the callSteps boundary, sometimes the raise probability spikes (and thus the noRaise probability drops) before continuing to converge toward "very unlikely to raise all-in" and thus noRaise --> 1.0 again.
+          ) {
+          if (!(
+                noRaiseChance_A[i_step-1]
+                <=
+                noRaiseChance_A[i_step] * noRaiseChance_adjust
+                )) {
+              std::cerr << "Invalid noRaiseChance_A for player " << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << std::endl;
+              for( size_t k=0;k<i_step;++k) {
+                  std::cerr << "noRaiseChance_A[" << (int)k << "]=" << noRaiseChance_A[k] << std::endl;
+              }
+              std::cerr << "vs. noRaiseChance_A[" << (int)i << "] is " << noRaiseChance_A[i_step] << " --> " << (noRaiseChance_A[i_step] * noRaiseChance_adjust) << std::endl;
+              exit(1);
+          }
+      }
+#endif //DEBUGASSERT
+
+      noRaiseChance_A[i_step] *=noRaiseChance_adjust;
+      if( noRaiseChance_A[i_step] == 0 ) //and nextNoRaiseD == 0
+      {
+          noRaiseChanceD_A[i_step] = 0;
+      }else
+      {
+          noRaiseChanceD_A[i_step] += nextNoRaiseD_A[i_step]/nextNoRaise_A[i_step]  *   oppRaiseChancesAware; //Logairthmic differentiation
+      }
+  }
+} // end accumulateOneOpponentPossibleRaises
 
 void ExactCallBluffD::query(const float64 betSize)
 {

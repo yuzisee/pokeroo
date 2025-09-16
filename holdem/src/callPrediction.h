@@ -62,9 +62,7 @@ class ExactCallD : public IExf
         float64 totalexf;
         float64 totaldexf;
 
-
-
-
+        void accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 * const nextNoRaise_A, float64 * const nextNoRaiseD_A, const size_t noRaiseArraySize_now, const float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out);
 
     protected:
         static const float64 UNITIALIZED_QUERY;
@@ -81,12 +79,12 @@ class ExactCallD : public IExf
         float64 *noRaiseChanceD_A;
 
 
-        float64 facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 n,  CallCumulationD * useMean);
-        float64 dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD * useMean);
+        float64 facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 n,  CallCumulationD * useMean) const;
+        float64 dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD * useMean) const;
 
 
-        float64 facedOdds_raise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
-        float64 dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
+        float64 facedOdds_raise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const;
+        float64 dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const;
 
         float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
         float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n);
@@ -144,7 +142,7 @@ class ExactCallD : public IExf
             // If you want you could interpolate in between, but we typically just average the outcomes, since we're taking an expectation over all raise amounts that we might face.
             // callSteps is an index that indicates: "all iterator values (of step) starting from this one and higher, are raises that I would fold against)
             // In other worst, callSteps it the smallest RaiseAmount where we know we would just fold to it.
-            virtual float64 RaiseAmount(const float64 betSize, int32 step);
+            virtual float64 RaiseAmount(const float64 betSize, int32 step) const;
 			virtual float64 pRaise(const float64 betSize, const int32 step, const int32 callSteps  );
 			virtual float64 pRaiseD(const float64 betSize, const int32 step, const int32 callSteps );
 
