@@ -244,8 +244,11 @@ const Player * ExpectedCallD::ViewPlayer() const {
 
 // DEPRECATED: Use OpponentHandOpportunity and CombinedStatResultsPessemistic instead.
 // TODO: Let's say riskLoss is a table metric. In that case, if you use mean it's callcumu always.
-float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot) const
+float64 ExpectedCallD::RiskLoss(const ChipPositionState & cps, float64 opponents, float64 raiseTo,  CallCumulationD * useMean, float64 * out_dPot) const
 {
+
+  CombinedStatResultsPessimistic csrp(opponentHandOpportunity, statprob.core);
+
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
                                  // handsDealt() is appropriate here because it suggests how often they'd have the winning hand in the first place.
 
@@ -264,7 +267,7 @@ float64 ExpectedCallD::RiskLoss(float64 rpAlreadyBet, float64 bankroll, float64 
 	FG.waitLength.amountSacrificeForced = avgBlind;
     FG.waitLength.setAmountSacrificeVoluntary( (table->GetPotSize() - stagnantPot() - rpAlreadyBet)/(handsIn()-1) );
 
-    FG.waitLength.bankroll = (allChips() - bankroll)/(N-1);
+    FG.waitLength.bankroll = (allChips() - cps.bankroll)/(N-1);
     FG.waitLength.opponents = 1;
     FG.waitLength.prevPot = table->GetPrevPotSize();
     // We don't need FG.waitLength.betSize because FG.f() will set betSize;

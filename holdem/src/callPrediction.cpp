@@ -175,6 +175,7 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
     const playernumber_t N = tableinfo->handsDealt();
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
 
+  	OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, tableinfo->table, statprob.core);
 
     return facedOdds_raise_Geom_forTest( startingPoint
                                         ,tableinfo->table->GetChipDenom()
@@ -255,7 +256,6 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
     if( w <= 0 ) return 0;
     const float64 raiseto = cps.alreadyBet + incrRaise;
 	if( raiseto >= cps.bankroll - tableinfo->chipDenom()/2 ) return 0;
-
 
     if( fold_bet > cps.bankroll )
     {
