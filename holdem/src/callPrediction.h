@@ -148,6 +148,7 @@ class ExactCallD : public IExf
 
             virtual void SetImpliedFactor(const float64 bonus);
 
+  friend struct FacedOdds;
 }
 ;
 

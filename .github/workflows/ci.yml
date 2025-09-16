@@ -88,7 +88,7 @@ jobs:
         llvm-cov show bin/unittests_clang -instr-profile=/tmp/code_coverage.llvm/combined.profdata -format=html -output-dir=/tmp/code_coverage.llvm/html
         cd /tmp/code_coverage.llvm/
         tar -cv html | xz -vv -z -9 -e > "/tmp/code_coverage.llvm/report-${RUNNER_NAME}-$(hostname)_${GITHUB_DESCRIPTION}.${GITHUB_SHA}.${GITHUB_HEAD_REF}_llvm-cov_html.tar.xz"
-    - name: Upload opening book zip
+    - name: Upload code_coverage.llvm
       uses: actions/upload-artifact@v4
       with:
         name: report-${{ runner.name }}_${{ github.description }}.${{ github.sha }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_llvm-cov

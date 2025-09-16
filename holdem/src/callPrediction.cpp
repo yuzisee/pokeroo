@@ -471,13 +471,60 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step) const
 	return raiseAmount;
 }
 
-/*
 struct FacedOdds {
   float64 pess;
   float64 mean;
   float64 rank;
+
+  bool constexpr is_all_zero() const noexcept {
+    return ((pess == 0.0) && (mean == 0.0) && (rank == 0.0));
+  }
+
+  bool constexpr assert_not_nan() const {
+    if (!std::isnan(pess) && !std::isnan(mean) && !std::isnan(rank)) {
+      return true;
+    }
+    #ifdef DEBUGASSERT
+    else {
+      std::cerr << "FacedOdds data is corrupt: pess=" << pess << " , mean=" << mean << " , rank = " << rank << std::endl;
+      std::cerr << "prev_w_r.mean and prev_w_r.rank only become NaN after thisRaise passes oppBankRoll." << std::endl;
+      exit(1);
+    }
+    #endif // DEBUGASSERT
+	return false;
+  }
+
+  static FacedOdds constexpr all_nan() {
+    FacedOdds invalid_val = {
+      std::numeric_limits<float64>::signaling_NaN(),
+      std::numeric_limits<float64>::signaling_NaN(),
+      std::numeric_limits<float64>::signaling_NaN()
+    };
+
+    return invalid_val;
+  }
+
+  // TODO(from yuzisee): Raises are now Algb instead of Geom?
+  void init_facedOdds_raise(ExactCallD & pr_call_pr_raiseby, const ChipPositionState & oppCPS, const FacedOdds &prev_w_r, const float64 oppRaiseMake, const float64 betSize, const bool bOppCouldCheck, const bool bMyWouldCall) {
+    const float64 opponents = pr_call_pr_raiseby.tableinfo->handsToShowdownAgainst();
+
+    this->pess = pr_call_pr_raiseby.facedOdds_raise_Geom(oppCPS,prev_w_r.pess, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&pr_call_pr_raiseby.fCore.foldcumu));
+    #ifdef ANTI_CHECK_PLAY
+    if( bOppCouldCheck )
+    {
+        this->mean = 1;
+        this->rank = 1;
+    } else
+    #endif
+    {
+      this->mean = pr_call_pr_raiseby.facedOdds_raise_Geom(oppCPS,prev_w_r.mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&pr_call_pr_raiseby.fCore.callcumu));
+      this->rank = pr_call_pr_raiseby.facedOdds_raise_Geom(oppCPS,prev_w_r.rank, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
+    }
+  }
+
 };
 
+/*
     ::query generates the values noRaiseChance_A and totalexf along with their corresponding derivatives.
     ::query is called by exf() and pRaise() (along with their corresponding derivatives)
     ::query provides a mechanism for caching the result for multiple calls during the same configuration
@@ -525,8 +572,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     if( noRaiseChance_A != 0 ) delete [] noRaiseChance_A;
     if( noRaiseChanceD_A != 0 ) delete [] noRaiseChanceD_A;
 
-    noRaiseChance_A = new float64[noRaiseArraySize_now];
-    noRaiseChanceD_A = new float64[noRaiseArraySize_now];
+    this->noRaiseChance_A = new float64[noRaiseArraySize_now];
+    this->noRaiseChanceD_A = new float64[noRaiseArraySize_now];
 
     for( size_t i=0; i<noRaiseArraySize_now; ++i)
     {
@@ -640,9 +687,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
               //if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
 
               float64 prevRaise = 0.0;
-              float64 prev_w_r_pess = 0.0;
-              float64 prev_w_r_mean = 0.0;
-              float64 prev_w_r_rank = 0.0;
+              FacedOdds prev_w_r = {0.0, 0.0, 0.0};
               ///Check for each raise percentage
               for( size_t i_step=0;i_step<noRaiseArraySize_now;++i_step)
               {
@@ -655,7 +700,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                       nextNoRaise_A[i_step].d_v = 0.0;
                       prevRaise = 0;
 #ifdef DEBUGASSERT
-                      if (prev_w_r_mean != 0.0 || prev_w_r_rank != 0.0) {
+                      if (!prev_w_r.is_all_zero()) {
                           std::cerr << "How did prev_w_r_mean get set while we're still in oppRaiseMake <= 0.0?" << std::endl;
                           exit(1);
                       }
@@ -666,36 +711,27 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                       {
 
                           const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
-                                                                                                                                  //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
+                                                                                                                                 //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
 
-                         if (!is_nan(prev_w_r_mean) && !is_nan(prev_w_r_rank)) {
-                          // TODO(from yuzisee): Raises are now Algb instead of Geom?
-                          float64 w_r_pess = facedOdds_raise_Geom(oppCPS,prev_w_r_pess, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.foldcumu));
-                          float64 w_r_mean = facedOdds_raise_Geom(oppCPS,prev_w_r_mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&fCore.callcumu));
-                          float64 w_r_rank = facedOdds_raise_Geom(oppCPS,prev_w_r_rank, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
-                          #ifdef ANTI_CHECK_PLAY
-                          if( bOppCouldCheck )
-                          {
-                              w_r_mean = 1;
-                              w_r_rank = 1;
-                          }
-                          #endif
+                         if (prev_w_r.assert_not_nan()) {
+                          FacedOdds w_r_facedodds; // TODO(from joseph): Rename to noraiseRank or, rename noraiseRankD to w_r_facedodds_D
+                          w_r_facedodds.init_facedOdds_raise(*this, oppCPS, prev_w_r, oppRaiseMake, betSize, bOppCouldCheck, bMyWouldCall);
 
-                          const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
+                          const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_facedodds.rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
                                 const ValueAndSlope noraisePess = {
-                                  1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
+                                  1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
                                   ,
-                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu))
+                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_facedodds.pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu))
                                 };
 
                                 const ValueAndSlope noraiseMean = {
-                                  1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
+                                  1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
                                   ,
-                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu))
+                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_facedodds.mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu))
                                 };
 
-                          //nextNoRaise_A[i_step].v = w_r_rank;
+                          //nextNoRaise_A[i_step].v = w_r_facedodds.rank;
                           //nextNoRaise_A[i_step].d_v = noraiseRankD;
 
                           // But the opponent may or may not know your hand!
@@ -709,7 +745,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                                         IFunctionDifferentiable::greaterOfTwo(noraisePess, noraiseMean) // I won't call. I want them not to raise. (Adversarial is larger)
                                     ;
 
-                          nextNoRaise_A[i_step].v = (noraise.v+w_r_rank)/2;
+                          nextNoRaise_A[i_step].v = (noraise.v + w_r_facedodds.rank)/2;
                           nextNoRaise_A[i_step].d_v = (noraise.d_v + noraiseRankD)/2;
 
                           // nextNoRaise should be monotonically increasing. That is, the probability of being raised all-in is lower than the probabilty of being raised at least minRaise.
@@ -738,16 +774,8 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
                           prevRaise = thisRaise;
 
-                          prev_w_r_pess = w_r_pess;
-                          prev_w_r_mean = w_r_mean;
-                          prev_w_r_rank = w_r_rank;
-                         } // endif prev_w_r_mean,prev_w_r_rank not NaN
-                         #ifdef DEBUGASSERT
-                         else {
-                           std::cerr << "prev_w_r_mean and prev_w_r_rank only become NaN after thisRaise passes oppBankRoll." << std::endl;
-                           exit(1);
-                         }
-                         #endif // DEBUGASSERT
+                          prev_w_r = w_r_facedodds;
+                         } // endif prev_w_r.assert_not_nan()
 
                       }else
                       { // raising this amount would put player[pIndex] all-in.
@@ -784,8 +812,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                           }
 
                           prevRaise = 0;
-                          prev_w_r_mean = std::numeric_limits<float64>::signaling_NaN();
-                          prev_w_r_rank = std::numeric_limits<float64>::signaling_NaN();
+                          prev_w_r = FacedOdds::all_nan();
 
                       } // end of block: if (thisRaise <= oppBankRoll), else ...
 

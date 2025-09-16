@@ -249,7 +249,7 @@ public:
     firstFoldToRaise(-1)
     {
     }
-    
+
     /*
      StateModel(ExactCallBluffD &c, IFunctionDifferentiable &functionL, IFunctionDifferentiable &functionR) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
      ,last_x(-1)
@@ -310,4 +310,3 @@ public:
 
 
 #endif
-
