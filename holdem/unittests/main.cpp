@@ -4512,10 +4512,10 @@ namespace RegressionTests {
 
         void testHybrid_drisk_handsIn() {
 
-          FixedReplayPlayerStrategy p1(std::vector<float64>(0.0));
-          FixedReplayPlayerStrategy p2(std::vector<float64>(0.0));
-          FixedReplayPlayerStrategy p3(std::vector<float64>(0.0));
-          FixedReplayPlayerStrategy p4(std::vector<float64>(0.0));
+          FixedReplayPlayerStrategy p1(std::vector<float64>{});
+          FixedReplayPlayerStrategy p2(std::vector<float64>{});
+          FixedReplayPlayerStrategy p3(std::vector<float64>{});
+          FixedReplayPlayerStrategy p4(std::vector<float64>{});
 
           BlindValues b;
           b.SetSmallBigBlind(5.0);
@@ -4546,6 +4546,7 @@ namespace RegressionTests {
               r.MakeBet(20, &msg); // P3
 
           }
+          const playernumber_t myPositionIndex = 3; // P4's turn next
 
           DeckLocation card;
 
@@ -4580,7 +4581,6 @@ namespace RegressionTests {
               }
 
 
-          const playernumber_t myPositionIndex = 1;
           // StatResultProbabilities statprob;
           ExpectedCallD   tablestate_tableinfo(myPositionIndex, &myTable, core.statRanking().pct, detailPCT.mean.pct);
 
