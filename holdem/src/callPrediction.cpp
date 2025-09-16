@@ -492,11 +492,11 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 	}
 
 ///Update cache
-	queryinput = betSize;
-	querycallSteps = callSteps;
+	this->queryinput = betSize;
+	this->querycallSteps = callSteps;
 
 
-    nearest = (betSize <= tableinfo->callBet() + tableinfo->chipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
+    this->nearest = (betSize <= tableinfo->callBet() + tableinfo->chipDenom()/2) ? betSize : 0; //nearest can probably be ALWAYS callBet() to start!
 
     const float64 myexf = betSize;
     const float64 mydexf = 1;
@@ -504,19 +504,12 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     float64 overexf = 0;
     float64 overdexf = 0;
 
-    totalexf = tableinfo->table->GetPotSize() - tableinfo->alreadyBet()  +  myexf; //alreadyBet is GetBetSize
-
-    //float64 lastexf = totalexf;
-
-
-    totaldexf = mydexf;
-    //float64 lastdexf = totaldexf;
-
+    this->totalexf = tableinfo->table->GetPotSize() - tableinfo->alreadyBet()  +  myexf; //alreadyBet is GetBetSize
+    this->totaldexf = mydexf;
 
     #ifdef DEBUG_TRACE_DEXF
             if( traceOut != 0 ) *traceOut << "Begin Query with mydexf " << mydexf << endl;
     #endif
-
 
     this->noRaiseArraySize = 0;
     while( RaiseAmount(betSize,this->noRaiseArraySize) < tableinfo->maxRaiseAmount() )
@@ -526,10 +519,10 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
     ++noRaiseArraySize; //Now it's the size of the array
 
+    const size_t noRaiseArraySize_now = noRaiseArraySize;
+
     if( noRaiseChance_A != 0 ) delete [] noRaiseChance_A;
     if( noRaiseChanceD_A != 0 ) delete [] noRaiseChanceD_A;
-
-    const size_t noRaiseArraySize_now = this->noRaiseArraySize;
 
     noRaiseChance_A = new float64[noRaiseArraySize_now];
     noRaiseChanceD_A = new float64[noRaiseArraySize_now];
@@ -540,10 +533,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
         noRaiseChanceD_A[i] = 0;
     }
 
-
     float64 * nextNoRaise_A = new float64[noRaiseArraySize_now];
     float64 * nextNoRaiseD_A = new float64[noRaiseArraySize_now];
-
 
     // Loop through each player to:
     //  + accumulate chance of NOT being raised by that player
@@ -573,19 +564,19 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     if( traceOut != 0 )  *traceOut << endl << "Final is " << totaldexf;
     #endif
 
-    totalexf = totalexf - myexf - overexf;
-    totaldexf = totaldexf - mydexf - overdexf;
+    this->totalexf = totalexf - myexf - overexf;
+    this->totaldexf = totaldexf - mydexf - overdexf;
 
     #ifdef DEBUG_TRACE_DEXF
     if( traceOut != 0 )  *traceOut << " adjusted to " << totaldexf << " by mydexf=" << mydexf << " and overdexf=" << overdexf << endl;
     #endif
 
-    if( totalexf < 0 ) totalexf = 0; //Due to rounding error in overexf?
-    if( totaldexf < 0 ) totaldexf = 0; //Due to rounding error in overexf?
+    if( totalexf < 0 ) this->totalexf = 0; //Due to rounding error in overexf?
+    if( totaldexf < 0 ) this->totaldexf = 0; //Due to rounding error in overexf?
 
     for( size_t i=0;i<noRaiseArraySize_now;++i)
     {
-        noRaiseChanceD_A[i] *= noRaiseChance_A[i];
+        this->noRaiseChanceD_A[i] *= noRaiseChance_A[i];
     }
 
 }
@@ -893,7 +884,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, float64 
 
           if( oppBetAlready + nextexf + (betSize - oppBankRoll) > nearest )
           {
-              nearest = oppBetAlready + nextexf + (betSize - oppBankRoll);
+              this->nearest = oppBetAlready + nextexf + (betSize - oppBankRoll);
           }
 
           nextdexf = 0;
