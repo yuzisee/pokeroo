@@ -135,7 +135,7 @@ public:
 	static uint8 cleanz(const uint32);
 
 		template<typename T>
-        static T nchoosep(const int32 n, int32 p) //inline
+        static T constexpr nchoosep(const int32 n, int32 p) //inline
         {
 			if( (n-p) < p ) p = n-p;/* OPTIMIZATION INCLUDED LATER */
 

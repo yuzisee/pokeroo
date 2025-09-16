@@ -13,14 +13,14 @@
 #include <math.h>
 
 #ifndef log1p
-inline float64 log1p(float64 x)
+inline constexpr float64 log1p(float64 x)
 {
     return log(1+x);
 }
 #endif // log1p
 
 
-inline bool is_nan(float64 x)
+inline constexpr bool is_nan(float64 x)
 {
     return (!(x == x));
 }

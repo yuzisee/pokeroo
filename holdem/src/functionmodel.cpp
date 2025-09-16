@@ -25,7 +25,7 @@
 #include "math_support.h"
 
 
-static inline float64 cleanpow(float64 b, float64 x)
+static inline constexpr float64 cleanpow(float64 b, float64 x)
 {
     if( b < DBL_EPSILON ) return 0;
     //if( b > 1 ) return 1;
