@@ -177,7 +177,6 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
     return facedOdds_raise_Geom_forTest( startingPoint
                                         ,tableinfo->table->GetChipDenom()
                                         ,raiseto
-                                        ,tableinfo->RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, 0)
                                         ,avgBlind
                                         ,cps
                                         ,fold_bet
@@ -188,7 +187,7 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
                                         );
 }
 
-float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 raiseto, float64 riskLoss, float64 avgBlind, const ChipPositionState & cps, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
+float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 raiseto, float64 avgBlind, const ChipPositionState & cps, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
 {
     if( raiseto >= cps.bankroll )
     {
@@ -211,7 +210,6 @@ float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 
     a.raiseTo = raiseto;
     a.fold_bet = fold_bet;
     a.bCheckPossible = bCheckPossible;
-    a.riskLoss = (bCheckPossible) ? 0 : riskLoss;
 
 	if( bMyWouldCall )
 	{
@@ -222,7 +220,6 @@ float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 
 		a.callIncrLoss = 0;
 		a.callIncrBase = 0;
 	}
-
 
 
     // We don't need to set w, because a.FindZero searches over w
@@ -284,15 +281,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
     }else
     {
     //USE FG for riskLoss
-        float64 dRiskLoss_pot = std::numeric_limits<float64>::signaling_NaN();
-        tableinfo->RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
-        #ifdef DEBUGASSERT
-          if (std::isnan(dRiskLoss_pot)) {
-            std::cerr << "dRiskLoss_pot failed to initialize, please unit test tableinfo->RiskLoss("
-              << cps.alreadyBet << " , " << cps.bankroll << " , " << opponents << " , " << raiseto << " , … , &dRiskLoss_pot)" << std::endl;
-            exit(1);
-          }
-        #endif
+
 
         FoldGainModel myFG(tableinfo->chipDenom());
 
@@ -304,7 +293,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
         //myFG.dw_dbet = 0; //Again, we don't need this
 
 
-        return (h_times_remaining*C*dexfy - myFG.F_b(fold_bet) + dRiskLoss_pot*dexfy) / (myFG.F_a(fold_bet) - h_times_remaining*A);
+        return (h_times_remaining*C*dexfy - myFG.F_b(fold_bet)) / (myFG.F_a(fold_bet) - h_times_remaining*A);
     }
 
 

@@ -750,28 +750,19 @@ void FacedOddsRaiseGeom::query( const float64 w )
     const float64 fw = pow(w,FG.waitLength.opponents);
 
     const float64 U = pow(1 + pot/FG.waitLength.bankroll  , fw)*pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
-    float64 excess = 1;
 
+    float64 excess = 1;
     if( !bCheckPossible )
     {
         excess += FG.f(fold_bet) / FG.waitLength.bankroll;
     }
 
-	float64 nonRaiseGain = excess - riskLoss / FG.waitLength.bankroll;
-
-	bool bUseCall = false;
 	const float64 callGain = callIncrLoss * pow(callIncrBase,fw);
 
-	//We need to compare raising to the opportunity cost of calling/folding
-	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
-	if( callGain > nonRaiseGain )
-	{   //calling is more profitable than folding
-		nonRaiseGain = callGain;
-		bUseCall = true;
-	}//else, folding (opportunity cost) is more profitable than calling (expected value)
-
-
-    lastF = U - nonRaiseGain;
+  // TODO(from joseph): Idea → if it's the _final_ betting round, we can still use FoldWaitGainModel, right?
+  bool bUseCall = false;
+  // And then you should still set bUseCall accordingly, in that case
+    lastF = U - excess;
 
 
     const float64 dfw = FG.waitLength.opponents*pow(w,FG.waitLength.opponents-1);
