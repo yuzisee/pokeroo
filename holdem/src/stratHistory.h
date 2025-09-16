@@ -67,7 +67,7 @@ class PerformanceHistory
             sortMode = o.sortMode;
         }
 
-	bool operator> (const PerformanceHistory& x) const
+	constexpr bool operator> (const PerformanceHistory& x) const
 	{
         switch( sortMode )
         {
@@ -86,7 +86,7 @@ class PerformanceHistory
                 break;
         }
 	}
-	bool operator< (const PerformanceHistory& x) const
+	constexpr bool operator< (const PerformanceHistory& x) const
 	{
         switch( sortMode )
         {
@@ -106,7 +106,7 @@ class PerformanceHistory
         }
 
 	}
-	bool operator== (const PerformanceHistory& x) const
+	constexpr bool operator== (const PerformanceHistory& x) const
 	{
         switch( sortMode )
         {
@@ -191,4 +191,3 @@ class HistoryStrategy : public virtual PlayerStrategy
 ;
 
 #endif
-
