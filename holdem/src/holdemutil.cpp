@@ -59,21 +59,21 @@ STRAIGHT (OR the cardsets, then AND-SHIFT x; 5)
 
 using std::endl;
 
-const uint32 HoldemUtil::PRIMES[14] =
+constexpr uint32 HoldemUtil::PRIMES[14] =
 	{1,2,3,5,7,11,13,17,19,23,29,31,37,41};
 
 
 
-const char HoldemUtil::VALKEY[16] =
+constexpr char HoldemUtil::VALKEY[16] =
 	{'?','?','2','3','4','5','6','7','8','9','T','J','Q','K','A', '?'};
-const char HoldemUtil::ALT_VALKEY[16] =
+constexpr char HoldemUtil::ALT_VALKEY[16] =
 	{'?','?','2','3','4','5','6','7','8','9','t','j','q','k','a', '?'};
-const char HoldemUtil::SUITKEY[5] =
+constexpr char HoldemUtil::SUITKEY[5] =
 	{'s','h','c','d','?'};
 
 
 
-const uint32 HoldemUtil::CARDORDER[14] =
+constexpr uint32 HoldemUtil::CARDORDER[14] =
     {
         HoldemConstants::CARD_ACELOW,HoldemConstants::CARD_DEUCE,HoldemConstants::CARD_TREY
         ,HoldemConstants::CARD_FOUR,HoldemConstants::CARD_FIVE,HoldemConstants::CARD_SIX
@@ -82,7 +82,7 @@ const uint32 HoldemUtil::CARDORDER[14] =
         ,HoldemConstants::CARD_KING,HoldemConstants::CARD_ACEHIGH
     };
 
-const uint32 HoldemUtil::VALUEORDER[14] =
+constexpr uint32 HoldemUtil::VALUEORDER[14] =
     {
         HoldemConstants::VALUE_ACELOW,HoldemConstants::VALUE_DEUCE,HoldemConstants::VALUE_TREY
         ,HoldemConstants::VALUE_FOUR,HoldemConstants::VALUE_FIVE,HoldemConstants::VALUE_SIX
@@ -91,7 +91,7 @@ const uint32 HoldemUtil::VALUEORDER[14] =
         ,HoldemConstants::VALUE_KING,HoldemConstants::VALUE_ACEHIGH
     };
 
-const uint32 HoldemUtil::INCRORDER[14] =
+constexpr uint32 HoldemUtil::INCRORDER[14] =
     {
         HoldemConstants::INCR_ACELOW,HoldemConstants::INCR_DEUCE,HoldemConstants::INCR_TREY
         ,HoldemConstants::INCR_FOUR,HoldemConstants::INCR_FIVE,HoldemConstants::INCR_SIX

@@ -29,8 +29,8 @@
 
 
 // const float64 HoldemArena::BASE_CHIP_COUNT = 100;
- const float64 HoldemArena::FOLDED = -1;
- const float64 HoldemArena::INVALID = -2;
+ constexpr float64 HoldemArena::FOLDED = -1;
+ constexpr float64 HoldemArena::INVALID = -2;
 
 
  // Write the digits of `value` into `str`
@@ -200,7 +200,7 @@ playernumber_t HoldemArena::GetCurPlayer() const
 	return curIndex;
 }
 
-playernumber_t HoldemArena::GetDealer() const
+constexpr playernumber_t HoldemArena::GetDealer() const
 {
     return curDealer;
 }
@@ -209,7 +209,6 @@ float64 HoldemArena::GetAllChips() const
 {
 	return allChips;
 }
-
 
 playercounts_t const & HoldemArena::NumberAtFirstActionOfRound() const
 {
@@ -254,7 +253,6 @@ bool HoldemArena::IsInHand(int8 n) const
 
 	return IsAlive(n) && (p[n]->GetBetSize() >= 0);
 }
-
 
 const Player* HoldemArena::ViewPlayer(playernumber_t n) const
 {
@@ -306,8 +304,6 @@ uint32 HoldemArena::jenkins_one_at_a_time_hash(const char *key_null_termninated)
 }
 
 
-
-
 float64 HoldemArena::GetPotSize() const
 {
 	return myPot;
@@ -318,17 +314,17 @@ float64 HoldemArena::GetFoldedPotSize() const
 	return myFoldedPot;
 }
 
-float64 HoldemArena::GetUnfoldedPotSize() const
+constexpr float64 HoldemArena::GetUnfoldedPotSize() const
 {
 	return myPot - myFoldedPot;
 }
 
-float64 HoldemArena::GetDeadPotSize() const
+constexpr float64 HoldemArena::GetDeadPotSize() const
 {
 	return myPot - myBetSum;
 }
 
-float64 HoldemArena::GetLivePotSize() const
+constexpr float64 HoldemArena::GetLivePotSize() const
 {
 	return myBetSum;
 }
@@ -369,7 +365,7 @@ float64 HoldemArena::GetChipDenom() const
     return smallestChip;
 }
 
-bool HoldemArena::HasFolded(int8 n) const
+constexpr bool HoldemArena::HasFolded(int8 n) const
 {
 	return p[n]->myBetSize == FOLDED;
 }

@@ -3,7 +3,7 @@
 const OrderedDeck OrderedDeck::EMPTY_ODECK;
 
 ///Assumes sorted
-bool OrderedDeck::operator==(const OrderedDeck& o) const
+constexpr bool OrderedDeck::operator==(const OrderedDeck& o) const
 {
 	bool bMatch = true;
 	int8 csuit = firstSuit;

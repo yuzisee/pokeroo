@@ -62,10 +62,10 @@ class BlindValues
         }
 
 
-        const float64 & GetSmallBlind() const { return blindSize[0]; } //Small Blind
-        const float64 & GetBigBlind() const { return blindSize[1]; } //Big Blind
+        constexpr const float64 & GetSmallBlind() const { return blindSize[0]; } //Small Blind
+        constexpr const float64 & GetBigBlind() const { return blindSize[1]; } //Big Blind
 
-        float64 AverageForcedBetPerHand(const playernumber_t livePlayers) const
+        constexpr float64 AverageForcedBetPerHand(const playernumber_t livePlayers) const
         {
             float64 blindsPerButton = 0;
             for(playernumber_t n=0;n<PLAYERS_IN_BLIND;++n)
@@ -81,7 +81,7 @@ class BlindValues
 
 
         // If you were to fold each hand continuously, return total money lost divided by number of times folded.
-        float64 OpportunityPerHand(const playernumber_t livePlayers) const
+        constexpr float64 OpportunityPerHand(const playernumber_t livePlayers) const
         {
             const float64 averageForced = AverageForcedBetPerHand(livePlayers);
             //Each round is worth averageForced of opportunity cost.
@@ -122,7 +122,7 @@ class BlindValues
         }
 
 
-        const BlindValues & operator*=(const float64& fx)
+        constexpr const BlindValues & operator*=(const float64& fx)
         {
             this->anteSize *= fx;
             for(playernumber_t n=0;n<PLAYERS_IN_BLIND;++n)

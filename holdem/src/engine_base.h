@@ -68,7 +68,7 @@ class OrderedDeck
 
                 virtual ~OrderedDeck();
 
-		bool operator==(const OrderedDeck&) const;
+		constexpr bool operator==(const OrderedDeck&) const;
 }
 ;
 
@@ -80,15 +80,15 @@ class DealableOrderedDeck : public OrderedDeck
         virtual float64 DealCard(Hand&)=0;
         virtual void UndealCard(const DeckLocation & deck); //Can be undealt only if not locked into addendSum
 
-		uint32 BaseDealtValue() const
+		constexpr uint32 BaseDealtValue() const
 		{
 			return HoldemConstants::CARD_ACELOW;
 		}
-		int8 BaseDealtSuit() const
+		constexpr int8 BaseDealtSuit() const
 		{
 			return firstSuit;
 		}
-		uint8 BaseDealtRank() const
+		constexpr uint8 BaseDealtRank() const
 		{
 			return 0;
 		}
@@ -118,4 +118,3 @@ class DealableOrderedDeck : public OrderedDeck
 
 // HOLDEM_BaseDeck
 #endif
-

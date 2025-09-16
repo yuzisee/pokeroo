@@ -150,7 +150,7 @@ const DistrShape& WinStats::getDistr()
     if( myDistr == NULL ) myDistr = new DistrShape(DistrShape::newEmptyDistrShape());
     return *myDistr;
 }
-const StatResult& WinStats::avgStat()
+const StatResult& WinStats::avgStat() const
 {
     return myAvg;
 }

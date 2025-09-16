@@ -25,7 +25,7 @@
 
 #include "functionbase.h"
 #include "inferentials.h"
-#include "math_support.h"
+#include "portability.h"
 
 
 

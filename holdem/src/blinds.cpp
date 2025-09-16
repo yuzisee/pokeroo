@@ -21,7 +21,7 @@
 #include "blinds.h"
 #include <math.h>
 
-const playernumber_t BlindValues::playersInBlind = PLAYERS_IN_BLIND;
+constexpr playernumber_t BlindValues::playersInBlind = PLAYERS_IN_BLIND;
 
 struct BlindUpdate GeomPlayerBlinds::UpdateSituation(struct BlindUpdate currentBlinds, struct BlindUpdate updateSituation)
 {

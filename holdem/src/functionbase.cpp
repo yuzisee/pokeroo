@@ -31,8 +31,7 @@ ScalarFunctionModel::~ScalarFunctionModel()
 {
 }
 
-
-bool ScalarFunctionModel::IsSameSignOrZero(const float64 &ya, const float64 &yb) const
+bool constexpr ScalarFunctionModel::IsSameSignOrZero(const float64 &ya, const float64 &yb) const
 {
 	const bool yaZero = fabs(ya) < DBL_EPSILON;
 	const bool ybZero = fabs(yb) < DBL_EPSILON;
@@ -40,8 +39,11 @@ bool ScalarFunctionModel::IsSameSignOrZero(const float64 &ya, const float64 &yb)
 	const bool ybPositive = yb > 0;
 	return (   yaZero || ybZero || !(yaPositive ^ ybPositive)   );
 }
-
-bool ScalarFunctionModel::IsDifferentSign(const float64 &ya, const float64 &yb) const
+// [!CAUTION]
+// These are marked as `constexpr` in order to be futureproof with C++23
+// In the meantime, it WILL give you a compile error if you try to call them at compile time.
+// Even still, calling them at runtime is safe as usual.
+bool constexpr ScalarFunctionModel::IsDifferentSign(const float64 &ya, const float64 &yb) const
 {
 	const bool yaZero = fabs(ya) < DBL_EPSILON;
 	const bool ybZero = fabs(yb) < DBL_EPSILON;

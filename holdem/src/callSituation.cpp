@@ -379,7 +379,7 @@ float64 FoldOrCall::predictedRaiseToThisRound(float64 actualBetToCall, float64 h
     //  reraisedByFinal = (hypotheticalMyRaise - actualBetToCall) * k * exp(0.5/k) * (exp(K/k) - 1.0)
 
 #ifdef DEBUGASSERT
-    if(is_nan(r)) {
+    if(std::isnan(r)) {
         std::cout << "raiseRatio(" << quantum << "," << myRaiseBy << "," << reraisedByFinal << "," << static_cast<int>(spreadRaisesOverThisManyBettingRounds) << ") NaN'ed" << std::endl;
         exit(1);
     }

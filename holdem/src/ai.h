@@ -68,8 +68,8 @@ class PlayStats
         virtual void Analyze() = 0;
 		virtual void Compare(const float64 occ);
 
-        const CommunityPlus & SeeCommunityOnly() { return oppStrength; }
-        const CommunityPlus & SeeCommunityAndHand() { return myStrength; }
+        constexpr const CommunityPlus & SeeCommunityOnly() const { return oppStrength; }
+        constexpr const CommunityPlus & SeeCommunityAndHand() const { return myStrength; }
 
 		PlayStats(const CommunityPlus& withcommunity, const CommunityPlus& onlycommunity)
 		{
@@ -123,15 +123,15 @@ protected:
 public:
 
     //double myCallPct(double); //give pct of HIS percieved bankroll and returns chance to call
-    
+
     /**
      * Analyze()
-     * 
+     *
      * Discussion:
      *   Once this->myWins has been populated with raw sampled outcomes, this will reorder and accumulate them into a cumulative histogram for O(log(n)) lookup.
      */
     virtual void Analyze();
-    
+
     virtual void DropCard(const DeckLocation);
     virtual StatRequest NewCard(const DeckLocation, const float64 occ);
 
@@ -169,7 +169,7 @@ protected:
 	StatResult myAvg;
 public:
     const DistrShape& getDistr();
-    const StatResult& avgStat();
+    const StatResult& avgStat() const;
 
 	virtual void Analyze();
 	virtual StatRequest NewCard(const DeckLocation, const float64 occ);

@@ -531,19 +531,19 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
     q = newC;
 }
 
-int8 PreflopCallStats::largestDiscount(int8 * discount)
+int8 PreflopCallStats::largestDiscount(const int8 * discount) const
 {
     return (  (discount[0]<discount[1]) ? discount[0] : discount[1]);
 }
 
-int8 PreflopCallStats::getDiscount(const char carda, const char cardb)
+int8 PreflopCallStats::getDiscount(const char carda, const char cardb) const
 {
     return (
             ( carda == cardb ) ? -1 : 0
            );
 }
 
-int8 PreflopCallStats::oppSuitedOcc(int8 * discount, char mySuited )
+int8 PreflopCallStats::oppSuitedOcc(const int8 * discount, char mySuited ) const
 {
     //dOcc = 4;
     if( mySuited == 'S' )

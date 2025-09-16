@@ -84,28 +84,28 @@ class Player
 
 		bool IsBot() const { return (myStrat != 0); }
 
-		const std::string & GetIdent() const
+		constexpr const std::string & GetIdent() const
 		{	return myName;	}
 
-		float64 GetMoney() const
+		constexpr float64 GetMoney() const
 		{	return myMoney;	}
 
-		float64 GetOfficialContribution() const
+		constexpr float64 GetOfficialContribution() const
 		{	return handBetTotal;	}
 
-		float64 GetVoluntaryContribution() const
+		constexpr float64 GetVoluntaryContribution() const
 		{	return (handBetTotal - forcedBetTotal);	}
 
 		// If you're the big blind or small blind, etc. you didn't _choose_ to make that bet, so
 		// it's not reflective of how strong you think your hand is.
-		float64 GetInvoluntaryContribution() const
+		constexpr float64 GetInvoluntaryContribution() const
 		{	return forcedBetTotal;	}
 
 		//BetSize is since ROUND start, active players only
-		float64 GetBetSize() const
+		constexpr float64 GetBetSize() const
 		{	return myBetSize;	}
 
-		float64 GetLastBet() const
+		constexpr float64 GetLastBet() const
 		{	return lastBetSize;	}
 }
 ;
@@ -236,9 +236,9 @@ class HoldemAction
     , incrBet(incr), bBlind(blind)
     {}
 
-		int8 GetPlayerID() const {return myPlayerIndex;}
-		float64 GetAmount() const {return bet;}
-		float64 GetRaiseBy() const
+		constexpr int8 GetPlayerID() const {return myPlayerIndex;}
+		constexpr float64 GetAmount() const {return bet;}
+		constexpr float64 GetRaiseBy() const
 		{
 			if ( IsRaise() )
 			{
@@ -250,13 +250,13 @@ class HoldemAction
 			}
 		}
 
-		bool IsFold() const {return bet < callAmount && !bAllIn;}
-		bool IsCheck() const {return (bet == 0) || (bCheckBlind && bet == callAmount);}
-		bool IsCall() const {return (bet == callAmount || (bet < callAmount && bAllIn)) && callAmount > 0;}
-		bool IsRaise() const {return bet > callAmount && callAmount > 0;}
-        bool IsAllIn() const {return bAllIn;}
+		constexpr bool IsFold() const {return bet < callAmount && !bAllIn;}
+		constexpr bool IsCheck() const {return (bet == 0) || (bCheckBlind && bet == callAmount);}
+		constexpr bool IsCall() const {return (bet == callAmount || (bet < callAmount && bAllIn)) && callAmount > 0;}
+		constexpr bool IsRaise() const {return bet > callAmount && callAmount > 0;}
+        constexpr bool IsAllIn() const {return bAllIn;}
 
-        bool IsPostBlind() const {return (bBlind != 0);}
+        constexpr bool IsPostBlind() const {return (bBlind != 0);}
 
 }
 ;
@@ -270,10 +270,10 @@ struct playercounts
 	void ResetNewHands(playernumber_t numLive) { total = numLive; allInsOnly = 0; }
 
     //Number of players (e.g. NumberInShowdown)
-    playernumber_t inclAllIn() const { return total; }
+    constexpr playernumber_t inclAllIn() const { return total; }
 
 	//Number of players that could bet (e.g. NumberWithBetting)
-	playernumber_t exclAllIn() const { return total - allInsOnly; }
+	constexpr playernumber_t exclAllIn() const { return total - allInsOnly; }
 }
 playercounts_t
 ;
@@ -556,7 +556,7 @@ class HoldemArena
 		playernumber_t GetTotalPlayers() const;
 
 		playernumber_t GetCurPlayer() const;
-		playernumber_t GetDealer() const;
+		constexpr playernumber_t GetDealer() const;
 
 		const Player* ViewPlayer(playernumber_t) const;
 		bool ShowHoleCards(const Player & withP, const CommunityPlus & dealHandP);
@@ -565,16 +565,16 @@ class HoldemArena
 
 		bool IsAlive(playernumber_t) const;
 		bool IsInHand(playernumber_t) const;
-		bool HasFolded(playernumber_t) const;
+		constexpr bool HasFolded(playernumber_t) const;
 		bool CanStillBet(playernumber_t) const; //This will not include players who have pushed all in
 		uint8 RaiseOpportunities(int8,int8) const;
 		uint8 FutureRounds() const;
 
         float64 GetAllChips() const;
         float64 GetFoldedPotSize() const;
-        float64 GetUnfoldedPotSize() const;
-		float64 GetDeadPotSize() const; //That's pot - betSum;
-		float64 GetLivePotSize() const;
+        constexpr float64 GetUnfoldedPotSize() const;
+		constexpr float64 GetDeadPotSize() const; //That's pot - betSum;
+		constexpr float64 GetLivePotSize() const;
 		float64 GetRoundPotSize() const; //ThisRound pot size
 		float64 GetPrevPotSize() const; //Pot size from previous rounds
    		float64 GetPrevFoldedRetroactive() const;
@@ -585,7 +585,7 @@ class HoldemArena
 		float64 GetMaxShowdown(const float64 myMoney = -1) const;
 		float64 GetMinRaise() const; // Minimum amount to raise BY
 		float64 GetChipDenom() const;
-		const BlindValues & GetBlindValues() const{ return myBlinds; }
+		constexpr const BlindValues & GetBlindValues() const{ return myBlinds; }
 
 
 
