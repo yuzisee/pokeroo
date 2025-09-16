@@ -10,12 +10,13 @@
 #define holdem_math_support_h
 
 #include "portability.h"
+#include <limits>
 
 struct ValueAndSlope {
   float64 v;
   float64 d_v;
 
-  static const ValueAndSlope constexpr lesserOfTwo(const ValueAndSlope &a, const ValueAndSlope &b) {
+  static ValueAndSlope constexpr lesserOfTwo(const ValueAndSlope &a, const ValueAndSlope &b) {
     if (a.v < b.v) {
       return a;
     } else if (b.v < a.v) {
@@ -28,7 +29,7 @@ struct ValueAndSlope {
         }
     }
   }
-  static const ValueAndSlope constexpr greaterOfTwo(const ValueAndSlope &a, const ValueAndSlope &b) {
+  static ValueAndSlope constexpr greaterOfTwo(const ValueAndSlope &a, const ValueAndSlope &b) {
     if (a.v < b.v) {
       return b;
     } else if (b.v < a.v) {
@@ -43,6 +44,6 @@ struct ValueAndSlope {
   }
 };
 
-static_assert(std::numeric_limits<double>::has_signaling_NaN, "We use signaling_NaN everywhere. Sorry!");
+static_assert(std::numeric_limits<float64>::has_signaling_NaN, "We use signaling_NaN everywhere. Sorry!");
 
 #endif

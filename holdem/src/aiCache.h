@@ -136,8 +136,8 @@ class PreflopCallStats : public virtual CallStats
     private:
         void initPC();
 
-        int8 largestDiscount(int8 * discount) const;
-        int8 oppSuitedOcc(int8 * discount, char mySuited ) const;
+        int8 largestDiscount(const int8 * discount) const;
+        int8 oppSuitedOcc(const int8 * discount, char mySuited ) const;
         int8 getDiscount(const char carda, const char cardb) const;
         int8 popSet(const int8 carda, const int8 cardb);
 
