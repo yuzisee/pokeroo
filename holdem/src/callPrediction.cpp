@@ -166,7 +166,7 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
 */
 
 // useMean is a table metric here (see RiskLoss), so always use callcumu
-float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrRaise, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const
+float64 ExactCallD::facedOdds_nonraise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrRaise, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const
 {
 
     float64 raiseto = cps.alreadyBet + incrRaise; //Assume this is controlled to be less than or equal to bankroll
@@ -492,10 +492,10 @@ struct FacedOdds {
   }
 
   // TODO(from yuzisee): Raises are now Algb instead of Geom?
-  void init_facedOdds_raise(ExactCallD & pr_call_pr_raiseby, const ChipPositionState & oppCPS, const FacedOdds &prev_w_r, const float64 oppRaiseMake, const float64 betSize, const bool bOppCouldCheck, const bool bMyWouldCall) {
+  void init_facedOdds_nonraise(ExactCallD & pr_call_pr_raiseby, const ChipPositionState & oppCPS, const FacedOdds &prev_w_r, const float64 oppRaiseMake, const float64 betSize, const bool bOppCouldCheck, const bool bMyWouldCall) {
     const float64 opponents = pr_call_pr_raiseby.tableinfo->handsToShowdownAgainst();
 
-    this->pess = pr_call_pr_raiseby.facedOdds_raise_Geom(oppCPS,prev_w_r.pess, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&pr_call_pr_raiseby.fCore.foldcumu));
+    this->pess = pr_call_pr_raiseby.facedOdds_nonraise_Geom(oppCPS,prev_w_r.pess, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&pr_call_pr_raiseby.fCore.foldcumu));
     #ifdef ANTI_CHECK_PLAY
     if( bOppCouldCheck )
     {
@@ -504,8 +504,8 @@ struct FacedOdds {
     } else
     #endif
     {
-      this->mean = pr_call_pr_raiseby.facedOdds_raise_Geom(oppCPS,prev_w_r.mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&pr_call_pr_raiseby.fCore.callcumu));
-      this->rank = pr_call_pr_raiseby.facedOdds_raise_Geom(oppCPS,prev_w_r.rank, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
+      this->mean = pr_call_pr_raiseby.facedOdds_nonraise_Geom(oppCPS,prev_w_r.mean, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,(&pr_call_pr_raiseby.fCore.callcumu));
+      this->rank = pr_call_pr_raiseby.facedOdds_nonraise_Geom(oppCPS,prev_w_r.rank, oppRaiseMake, betSize, opponents,bOppCouldCheck,bMyWouldCall,0);
     }
   }
 
@@ -702,7 +702,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
                          if (prev_w_r.assert_not_nan()) {
                           FacedOdds w_r_facedodds; // TODO(from joseph): Rename to noraiseRank or, rename noraiseRankD to w_r_facedodds_D
-                          w_r_facedodds.init_facedOdds_raise(*this, oppCPS, prev_w_r, oppRaiseMake, betSize, bOppCouldCheck, bMyWouldCall);
+                          w_r_facedodds.init_facedOdds_nonraise(*this, oppCPS, prev_w_r, oppRaiseMake, betSize, bOppCouldCheck, bMyWouldCall);
 
                           const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_facedodds.rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
