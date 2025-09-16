@@ -491,6 +491,7 @@ struct FacedOdds {
       exit(1);
     }
     #endif // DEBUGASSERT
+	return false;
   }
 
   static FacedOdds constexpr all_nan() {
