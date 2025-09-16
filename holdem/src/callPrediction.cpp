@@ -744,7 +744,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                                         IFunctionDifferentiable::greaterOfTwo(noraisePess, noraiseMean) // I won't call. I want them not to raise. (Adversarial is larger)
                                     ;
 
-                          nextNoRaise_A[i_step].v = (noraise.v+w_r_facedodds.rank)/2;
+                          nextNoRaise_A[i_step].v = (noraise.v + w_r_facedodds.rank)/2;
                           nextNoRaise_A[i_step].d_v = (noraise.d_v + noraiseRankD)/2;
 
                           // nextNoRaise should be monotonically increasing. That is, the probability of being raised all-in is lower than the probabilty of being raised at least minRaise.
