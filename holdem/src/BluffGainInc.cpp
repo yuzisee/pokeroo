@@ -28,6 +28,10 @@
 
 void AutoScalingFunction::query(float64 sliderx, float64 x)
 {
+float64 yl;
+float64 yr;
+float64 fd_yl;
+float64 fd_yr;
 
     last_x = x;
     last_sliderx = sliderx;
@@ -59,8 +63,10 @@ void AutoScalingFunction::query(float64 sliderx, float64 x)
 
         if( slider >= 1 )
         {
-            y = right.f(x);
-            dy = right.fd(x, yr);
+            yr = right.f(x);
+            fd_yr = right.fd(x, yr);
+
+            y = yr; dy = fd_yr;
 
 #ifdef DEBUG_TRACE_SEARCH
             if(bTraceEnable) std::cout << "\t\t\tbMax" << std::flush;
@@ -69,7 +75,7 @@ void AutoScalingFunction::query(float64 sliderx, float64 x)
         else if( slider <= 0 )
         {
             yl = left.f(x);
-            fd_yl = left.fd(x,yl);
+            fd_yl = left.fd(x, yl);
 
             y = yl; dy = fd_yl;
 

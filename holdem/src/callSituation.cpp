@@ -312,8 +312,10 @@ MeanOrRank FoldOrCall::suggestMeanOrRank() const {
     {}
 
 
+    // [!TIP]
+    // This is just a simple sum of a finite geometric series.
     float64 RaiseRatio::f(const float64 r)  {
-        float64 expected = fS;
+        float64 expected = fS; // We would like to reach this target amount at the end
         float64 actual = 0.0;
         float64 next = fA;
         for (int i=1;i<=fK;++i) {
@@ -337,7 +339,10 @@ MeanOrRank FoldOrCall::suggestMeanOrRank() const {
 
 float64 RaiseRatio::FindRatio() {
 
-    const float64 reraisedByFinalRatio = fS / fA; // If fK == 1 this would be the solution. If fK < 1 the required ratio only gets lower.
+    const float64 reraisedByFinalRatio = fS / fA;
+    // If it's the final betting round this would be the solution.
+    //         ^^^ i.e. `fK == 1` ^^^
+    // If fK > 1 the required ratio only gets lower.
 
     return FindZero(1.0, reraisedByFinalRatio, false);
 }
@@ -377,6 +382,15 @@ float64 FoldOrCall::predictedRaiseToThisRound(float64 actualBetToCall, float64 h
     if(is_nan(r)) {
         std::cout << "raiseRatio(" << quantum << "," << myRaiseBy << "," << reraisedByFinal << "," << static_cast<int>(spreadRaisesOverThisManyBettingRounds) << ") NaN'ed" << std::endl;
         exit(1);
+    }
+    if( (r < 1.0) && (start < reraisedByFinal)) {
+      std::cout << "We are outside the range? Raising would never cause the pot to SHRINK but... raiseRatio.FindRatio() returned " << r << " during FoldOrCall::predictedRaiseToThisRound" << std::endl;
+      exit(1);
+    }
+    if ((reraisedByFinal + std::numeric_limits<double>::epsilon()) / (start - std::numeric_limits<double>::epsilon()) < r - std::numeric_limits<double>::epsilon()) {
+      std::cout << "We want to answer the question of \"if their *target* raise is to reach reraisedByFinal: knowing there are `spreadRaisesOverThisManyBettingRounds` remaining, how much will they raise _this round_?\"  And, yet, raiseRatio.FindRatio() returned " << r
+      << " which would exceed their target of " << reraisedByFinal << " if the first raise is " << start << std::endl;
+      exit(1);
     }
 #endif // DEBUGASSERT
 

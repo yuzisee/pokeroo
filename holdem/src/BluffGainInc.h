@@ -59,11 +59,6 @@ protected:
     float64 y;
     float64 dy;
 
-    float64 yl;
-    float64 yr;
-    float64 fd_yl;
-    float64 fd_yr;
-
 public:
 
 #ifdef TRANSFORMED_AUTOSCALES
@@ -249,7 +244,7 @@ public:
     firstFoldToRaise(-1)
     {
     }
-    
+
     /*
      StateModel(ExactCallBluffD &c, IFunctionDifferentiable &functionL, IFunctionDifferentiable &functionR) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
      ,last_x(-1)
@@ -310,4 +305,3 @@ public:
 
 
 #endif
-
