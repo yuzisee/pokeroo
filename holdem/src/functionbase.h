@@ -36,39 +36,9 @@
 #endif
 
 
-struct ValueAndSlope {
-  float64 v;
-  float64 d_v;
-};
-
 class IFunctionDifferentiable {
 public:
-    static const ValueAndSlope constexpr lesserOfTwo(const ValueAndSlope &a, const ValueAndSlope &b) {
-      if (a.v < b.v) {
-        return a;
-      } else if (b.v < a.v) {
-        return b;
-      } else {
-          if (a.d_v < b.d_v) {
-            return a;
-          } else {
-            return b;
-          }
-      }
-    }
-    static const ValueAndSlope constexpr greaterOfTwo(const ValueAndSlope &a, const ValueAndSlope &b) {
-      if (a.v < b.v) {
-        return b;
-      } else if (b.v < a.v) {
-        return a;
-      } else {
-          if (a.d_v < b.d_v) {
-            return b;
-          } else {
-            return a;
-          }
-      }
-    }
+
 
     virtual ~IFunctionDifferentiable() {}
 

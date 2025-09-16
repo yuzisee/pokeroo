@@ -22,7 +22,7 @@
 #include <float.h>
 
 #include "functionmodel.h"
-#include "math_support.h"
+#include "portability.h"
 
 
 static inline constexpr float64 cleanpow(float64 b, float64 x)
@@ -177,7 +177,7 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
     const float64 fractionOfHandsToBeat_dbetSize = fOpposingHands.d_HandsToBeat_dbetSize();
 
 #ifdef DEBUGASSERT
-    if (is_nan(fHandsToBeat)) {
+    if (std::isnan(fHandsToBeat)) {
         std::cerr << "NaN encountered in fHandsToBeat" << endl;
         exit(1);
     }

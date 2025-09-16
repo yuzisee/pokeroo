@@ -45,15 +45,15 @@ public:
 	: a(p.a), b(p.b), abRepeated(p.abRepeated),repeated(p.repeated), result(p.result)
 	{}
 
-    bool operator> (const PocketHand& x) const
+    constexpr bool operator> (const PocketHand& x) const
 	{
 		return result > x.result;
 	}
-	bool operator< (const PocketHand& x) const
+	constexpr bool operator< (const PocketHand& x) const
 	{
 		return result < x.result;
 	}
-	bool operator== (const PocketHand& x) const
+	constexpr bool operator== (const PocketHand& x) const
 	{
 	    return result == x.result;
 	}
@@ -146,4 +146,3 @@ class TriviaDeck : public OrderedDeck
 
 
 #endif
-

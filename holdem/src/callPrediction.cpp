@@ -19,8 +19,6 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
-#include "functionbase.h"
-#include "math_support.h"
 #include <float.h>
 #include <algorithm>
 
@@ -289,7 +287,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
         float64 dRiskLoss_pot = std::numeric_limits<float64>::signaling_NaN();
         tableinfo->RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
         #ifdef DEBUGASSERT
-          if (is_nan(dRiskLoss_pot)) {
+          if (std::isnan(dRiskLoss_pot)) {
             std::cerr << "dRiskLoss_pot failed to initialize, please unit test tableinfo->RiskLoss("
               << cps.alreadyBet << " , " << cps.bankroll << " , " << opponents << " , " << raiseto << " , … , &dRiskLoss_pot)" << std::endl;
             exit(1);
@@ -741,8 +739,8 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                           //   If you know you'd call (good hand), let the opponent raise the worse amount (smaller)
 
                                 const ValueAndSlope noraise = bMyWouldCall ?
-                                        IFunctionDifferentiable::lesserOfTwo(noraisePess, noraiseMean) : // I would call. I want them to raise. (Adversarial is smaller)
-                                        IFunctionDifferentiable::greaterOfTwo(noraisePess, noraiseMean) // I won't call. I want them not to raise. (Adversarial is larger)
+                                        ValueAndSlope::lesserOfTwo(noraisePess, noraiseMean) : // I would call. I want them to raise. (Adversarial is smaller)
+                                        ValueAndSlope::greaterOfTwo(noraisePess, noraiseMean) // I won't call. I want them not to raise. (Adversarial is larger)
                                     ;
 
                           nextNoRaise_A[i_step].v = (noraise.v + w_r_facedodds.rank)/2;

@@ -44,7 +44,7 @@ float64 FoldOrCall::foldGain(CallCumulationD* const e, const float64 extra, cons
 */
 
 
-static playercounts_t suggestPlayerCount(const HoldemArena & table) {
+static playercounts_t constexpr suggestPlayerCount(const HoldemArena & table) {
     return table.NumberStartedRound();
 }
 
@@ -374,7 +374,7 @@ float64 FoldOrCall::predictedRaiseToThisRound(float64 actualBetToCall, float64 h
     //  reraisedByFinal = (hypotheticalMyRaise - actualBetToCall) * k * exp(0.5/k) * (exp(K/k) - 1.0)
 
 #ifdef DEBUGASSERT
-    if(is_nan(r)) {
+    if(std::isnan(r)) {
         std::cout << "raiseRatio(" << quantum << "," << myRaiseBy << "," << reraisedByFinal << "," << static_cast<int>(spreadRaisesOverThisManyBettingRounds) << ") NaN'ed" << std::endl;
         exit(1);
     }

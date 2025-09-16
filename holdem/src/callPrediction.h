@@ -28,6 +28,7 @@
 #undef DEBUG_TRACE_PWIN
 #undef DEBUG_TRACE_DEXF
 
+#include "math_support.h"
 #include "callPredictionFunctions.h"
 #include "callSituation.h"
 

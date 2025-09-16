@@ -10,28 +10,38 @@
 #define holdem_math_support_h
 
 #include "portability.h"
-#include <math.h>
 
-#ifndef log1p
-inline constexpr float64 log1p(float64 x)
-{
-    return log(1+x);
-}
-#endif // log1p
+struct ValueAndSlope {
+  float64 v;
+  float64 d_v;
 
-
-inline constexpr bool is_nan(float64 x)
-{
-    return (!(x == x));
-}
-
-#include <limits>
-//#ifndef nan
-//inline float64 nan()
-//{
-//    return std::numeric_limits<float64>::signaling_NaN();
-//}
-//#endif // nan
+  static const ValueAndSlope constexpr lesserOfTwo(const ValueAndSlope &a, const ValueAndSlope &b) {
+    if (a.v < b.v) {
+      return a;
+    } else if (b.v < a.v) {
+      return b;
+    } else {
+        if (a.d_v < b.d_v) {
+          return a;
+        } else {
+          return b;
+        }
+    }
+  }
+  static const ValueAndSlope constexpr greaterOfTwo(const ValueAndSlope &a, const ValueAndSlope &b) {
+    if (a.v < b.v) {
+      return b;
+    } else if (b.v < a.v) {
+      return a;
+    } else {
+        if (a.d_v < b.d_v) {
+          return b;
+        } else {
+          return a;
+        }
+    }
+  }
+};
 
 static_assert(std::numeric_limits<double>::has_signaling_NaN, "We use signaling_NaN everywhere. Sorry!");
 
