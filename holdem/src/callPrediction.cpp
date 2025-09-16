@@ -481,7 +481,7 @@ struct FacedOdds {
   }
 
   bool constexpr assert_not_nan() const {
-    if (!is_nan(pess) && !is_nan(mean) && !is_nan(rank)) {
+    if (!std::isnan(pess) && !std::isnan(mean) && !std::isnan(rank)) {
       return true;
     }
     #ifdef DEBUGASSERT
