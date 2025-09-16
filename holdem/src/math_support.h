@@ -33,4 +33,6 @@ inline bool is_nan(float64 x)
 //}
 //#endif // nan
 
+static_assert(std::numeric_limits<double>::has_signaling_NaN, "We use signaling_NaN everywhere. Sorry!");
+
 #endif
