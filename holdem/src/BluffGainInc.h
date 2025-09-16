@@ -59,11 +59,6 @@ protected:
     float64 y;
     float64 dy;
 
-    float64 yl;
-    float64 yr;
-    float64 fd_yl;
-    float64 fd_yr;
-
 public:
 
 #ifdef TRANSFORMED_AUTOSCALES
