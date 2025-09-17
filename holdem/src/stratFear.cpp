@@ -64,7 +64,6 @@ float64 OpponentFoldWait::FearStartingBet(ExactCallBluffD & oppFoldEst, float64 
 
 
 
-
 float64 ScalarPWinFunction::f( const float64 betSize )
 {
     return deterredCall.pWin(betSize) - oppFoldStartingPct;

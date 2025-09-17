@@ -19,6 +19,8 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
+#include "inferentials.h"
+#include <float.h>
 #include <algorithm>
 
 
@@ -1203,7 +1205,7 @@ void ExactCallBluffD::query(const float64 betSize)
 
 }
 
-float64 ExpectedCallD::PushGain()
+float64 ExpectedCallD::PushGain() const
 {
     const float64 baseFraction = betFraction(table->GetPotSize() - alreadyBet());
 

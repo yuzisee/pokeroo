@@ -236,6 +236,15 @@ class ExactCallBluffD : public virtual ExactCallD
 }
 ;
 
+// ExactCallD & pr_opponentcallraise;
+// ExactCallBluffD & ea;
+// const IStateCombiner & fStateCombiner;
+// const ExpectedCallD * const myInfo;
+struct TableSpec {
+  ExpectedCallD * const tableView;
+  const IStateCombiner & stateCombiner;
+};
+
 // Based on the bet size I am making, how many times can the opponent afford to fold?
 // We use this value to determine our expected hand strength assuming the opponent knows what we have.
 class OpponentHandOpportunity {

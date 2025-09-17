@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
+#include "callSituation.h"
 
 #ifndef HOLDEM_FearManagement
 #define HOLDEM_FearManagement
