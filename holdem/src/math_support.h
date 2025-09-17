@@ -54,7 +54,7 @@ struct ValueAndSlope {
 
   static constexpr ValueAndSlope sum3(const ValueAndSlope &a, const ValueAndSlope &b, const ValueAndSlope &c) {
     float64 addition_sum_v = a.v + b.v + c.v;
-    float64 addition_sum_d_v = a.d_v * b.d_v * c.d_v;
+    float64 addition_sum_d_v = a.d_v + b.d_v + c.d_v;
     return ValueAndSlope{
       addition_sum_v, addition_sum_d_v
     };
