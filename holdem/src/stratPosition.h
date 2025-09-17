@@ -46,7 +46,7 @@ public:
         static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp);
 
         template< typename T >
-        void printBetGradient(ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * csrp);
+        void printBetGradient(ofstream &logF, ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * csrp) const;
 
         void printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat);
 

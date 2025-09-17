@@ -149,19 +149,6 @@ struct AggregatedState {
 }
 ;
 
-// All values should be expressed as a fraction of your bankroll (so that Geom and Algb can be compared directly)
-// 1.0 is "no change"
-class IStateCombiner {
-public:
-    virtual ~IStateCombiner() {}
-
-    virtual struct AggregatedState createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const = 0;
-    virtual struct AggregatedState createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const = 0;
-
-    virtual struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const = 0;
-}
-;
-
 class GeomStateCombiner : public IStateCombiner {
 public:
     virtual ~GeomStateCombiner() {}
@@ -200,7 +187,6 @@ private:
 
 protected:
     ExactCallBluffD & ea;
-    FoldOrCall fMyFoldGain; // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
     const IStateCombiner & fStateCombiner;
     AutoScalingFunction *fp;
     const bool bSingle;
@@ -234,8 +220,6 @@ public:
     ,last_x(std::numeric_limits<float64>::signaling_NaN())
     ,
     ea(c)
-    ,
-    fMyFoldGain(*(c.tableinfo->table),c.fCore)
     ,
     fStateCombiner(stateCombiner)
     ,
@@ -276,9 +260,9 @@ public:
      ,
      const float64 playGain
      ,
-     FoldOrCall & fMyFoldGain
+     const FoldOrCall & fMyFoldGain
      ,
-     ExpectedCallD & myInfo
+     const ExpectedCallD & myInfo
      ,
      const float64 hypotheticalMyRaiseTo
      );

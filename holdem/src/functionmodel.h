@@ -106,6 +106,7 @@ protected:
 }
 ;
 
+// Classes that implement ICombinedStatResults are different algorithms for extrapolating whether you'll win the entire showdown based on your individual 1-on-1 win percentage against each hand
 class ICombinedStatResults {
 public:
     virtual ~ICombinedStatResults() {}

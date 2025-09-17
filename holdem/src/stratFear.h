@@ -40,12 +40,12 @@ class OpponentFoldWait
     // this allows us to understand which bets aren't a fear threat.
     // Alternatively, consider that any bet where someone has a choice of folding, he/she will start to wait for better hands.
     // It may also be just fine to use minRaise instead. But let's see.
-    float64 FearStartingBet(ExactCallBluffD & oppFoldEst, float64 maxScaler);
+    static float64 FearStartingBet(ExactCallBluffD & oppFoldEst, float64 maxScaler, const ExpectedCallD & table_info);
 
     // If we hit this percentage, it's possible to get all-fold for one of the 169 hands for each remaining player (the smallest of which has probability 1 in 221)
     // This is the smallest relevant non-zero win percentage we care about.
-    float64 oppFoldStartingPct(ExactCallD & oppFoldEst) {
-        return pow(1.0 / RAREST_HAND_CHANCE, oppFoldEst.tableinfo->handsToShowdownAgainst());
+    static float64 oppFoldStartingPct(const ExpectedCallD & table_info) {
+        return pow(1.0 / RAREST_HAND_CHANCE, table_info.handsToShowdownAgainst());
     }
 }
 ;
