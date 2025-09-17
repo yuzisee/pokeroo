@@ -42,12 +42,19 @@
 #include <iostream>
 #endif
 
+// At the time of this writing, we are used by:
+//  * GainModelGeom
+//  * GainModelNoRisk
+// which, in turn, are used by all three of:
+//  + ImproveGainStrategy (Normal, Trap, Action)
+//  + DeterredGainStrategy, and PureGainStrategy
 class IExf {
 public:
     virtual ~IExf() {}
 
-
+    // E[x]
     virtual float64 exf(const float64 betSize) = 0;
+    // d/dbetsize E[x]
     virtual float64 dexf(const float64 betSize) = 0;
 
 }
@@ -84,7 +91,7 @@ class ExactCallD : public IExf
         float64 dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD * useMean) const;
 
 
-        float64 facedOdds_raise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const;
+        float64 facedOdds_nonraise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const;
         float64 dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const;
 
         float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
@@ -96,7 +103,7 @@ class ExactCallD : public IExf
 
     // By default, startingPoint == 0.0
     // When using this function for the purposes of nextNoRaise_A, you'll want to start at the previous value to avoid rounding errors.
-    static float64 facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 raiseto, float64 riskLoss, float64 avgBlind, const ChipPositionState & cps, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
+    static float64 facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 raiseto, float64 avgBlind, const ChipPositionState & cps, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
 
 
 

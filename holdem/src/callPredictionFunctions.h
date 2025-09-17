@@ -283,7 +283,6 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     float64 pot;
     float64 raiseTo;
     float64 fold_bet;
-    float64 riskLoss;
 	float64 callIncrLoss;
 	float64 callIncrBase;
     bool bCheckPossible;
