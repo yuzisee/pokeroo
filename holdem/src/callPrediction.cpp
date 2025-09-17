@@ -841,7 +841,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
               // Since this is Pr{call}, we're using table stats, i.e. ed()
               // Nothing special going on here.
-              // TODO(from yuzisee): if you feel that predicted calls are too loose, we can switch to ef() which is more adversarial.f
+              // TODO(from yuzisee): if you feel that predicted calls are too loose, we can switch to `fCore.foldcumu` which is more adversarial.f
               // We don't use RANK here. RANK might overestimate the amount of calls from strong hands.
               const float64 w = facedOdds_call_Geom(oppCPS,betSize, opponents, ed());
               nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan(w - EPS_WIN_PCT);
@@ -1129,7 +1129,7 @@ void ExactCallBluffD::query(const float64 betSize)
                 {
                     ChipPositionState opporigmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit,prevPot);
 
-                    float64 w_mean = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,&fCallCumu);
+                    float64 w_mean = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,&fCallCumu); // ed() is for callcumu i.e. when they don't know your hand
                     float64 w_rank = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,0);
 
                     if( nLinear <= 0 )

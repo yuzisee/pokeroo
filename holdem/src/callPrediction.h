@@ -186,10 +186,6 @@ class ExactCallBluffD
         // ^^^ TODO(from joseph): Unit test these if you want (see unittests/main.cpp), but for now I'm pretty sure they aren't used
         float64 bottomThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const;
 
-        const CallCumulationD * ef() const {
-            return &fFoldCumu;
-        }
-
         const ExpectedCallD * const tableinfo;
 
         CallCumulationD &fFoldCumu; // when they know your hand
