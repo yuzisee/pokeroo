@@ -419,13 +419,13 @@ void StateModel::query( const float64 betSize )
     // betSize here is always "my" bet size. The perspective of opponents is already covered in <tt>ea</tt>
 
     last_x = betSize;
-    const float64 invisiblePercent = EPS_WIN_PCT;// quantum / ea.tableinfo->allChips();
+    const float64 invisiblePercent = EPS_WIN_PCT;// quantum / myInfo->allChips();
 
-    const FoldOrCall fMyFoldGain(*(ea.tableinfo->table), ea.fCore); // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
+    const FoldOrCall fMyFoldGain(*(table_spec.tableView->table), c.fCore); // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
 
     ///Establish [PushGain] values
 
-	float64 potFoldWin = ea.tableinfo->PushGain();
+	float64 potFoldWin = table_spec.tableView->PushGain();
 	const float64 potFoldWinD = 0;
 #ifndef DUMP_CSV_PLOTS
 	float64
@@ -446,16 +446,17 @@ void StateModel::query( const float64 betSize )
 
     //Count needed array size
     int32 arraySize = 0;
-    while( ea.RaiseAmount(betSize,arraySize) < ea.tableinfo->maxRaiseAmount() )
+    while( c.RaiseAmount(betSize,arraySize) < table_spec.tableView->maxRaiseAmount() )
     {
         ++arraySize;
     }
     //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
-    if(betSize < ea.tableinfo->maxRaiseAmount()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
+    if(betSize < table_spec.tableView->maxRaiseAmount()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
 
     const bool bCallerWillPush = (arraySize == 1); //If arraySize is 1, then minRaise goes over maxbet. Anybody who can call will just reraise over the top.
 
     //Create arrays
+    // TODO(from joseph) ValueAndSlope
     float64 * raiseAmount_A = new float64[arraySize];
 
     ValueAndSlope * oppRaisedChance_A = new ValueAndSlope[arraySize];
@@ -471,7 +472,7 @@ void StateModel::query( const float64 betSize )
 	for( int32 i=0;i<arraySize; ++i)
     {
 #ifdef RAISED_PWIN
-        raiseAmount_A[i] = ea.RaiseAmount(betSize,i);
+        raiseAmount_A[i] = c.RaiseAmount(betSize,i);
 
         const float64 sliderx = betSize;
         // TODO(from yuzisee): Explore using
@@ -484,15 +485,14 @@ void StateModel::query( const float64 betSize )
         potRaisedWin_A[i].D_v = gd_raised(sliderx,evalX,potRaisedWin_A[i].v);
         // ^^^ Can't use `.set_value_and_slope` here because we need `potRaisedWin_A[i].v` when computing `potRaisedWin_A[i].D_v`
 
-
-        if (willFoldToReraise(raiseAmount_A[i], potRaisedWin_A[i].v, fMyFoldGain, *(ea.tableinfo), betSize))
+        if (willFoldToReraise(raiseAmount_A[i], potRaisedWin_A[i].v, fMyFoldGain, *(table_spec.tableView), betSize))
         {
           if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
 
             //Since g_raised isn't pessimistic based on raiseAmount (especially when we're just calling), don't add additional gain opportunity -- we should instead assume that if we would fold against such a raise that the opponent has us as beat as we are.
             // Deduct the bet you make and fold
             potRaisedWin_A[i].set_value_and_slope(
-              1.0 - ea.tableinfo->betFraction(betSize)
+              1.0 - table_spec.tableView->betFraction(betSize)
               , -1.0
             );
           }
@@ -513,8 +513,8 @@ void StateModel::query( const float64 betSize )
         }else{
             //Standard calculation
             // NOTE! Pr{Raise} includes the probability of being raised later in future rounds too
-            newRaisedChance = ea.pRaise(betSize,i,firstFoldToRaise);
-            newRaisedChanceD = ea.pRaiseD(betSize,i,firstFoldToRaise);
+            newRaisedChance = c.pRaise(betSize,i,firstFoldToRaise);
+            newRaisedChanceD = c.pRaiseD(betSize,i,firstFoldToRaise);
         }
 
 		if( newRaisedChance - lastuptoRaisedChance > invisiblePercent )
@@ -619,7 +619,7 @@ void StateModel::query( const float64 betSize )
      }
      #endif
 
-     if( raiseAmount_A[i] >= ea.tableinfo->maxBet()-quantum/2 )
+     if( raiseAmount_A[i] >= myInfo->maxBet()-quantum/2 )
      {
      gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g_raised(betSize,raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g_raised(betSize,raiseAmount_A[i]-quantum/2) );
      }else

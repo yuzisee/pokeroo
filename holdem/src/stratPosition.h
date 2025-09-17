@@ -46,7 +46,8 @@ public:
         static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp);
 
         template< typename T >
-        void printBetGradient(std::ofstream &logF, ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * csrp) const;
+        void printBetGradient(std::ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * csrp) const;
+        // ^^^ `.pRaise(…)` and `.pWin(…)` will update their respective caches, so it's not a *true* `const ExactCallD &` nor `const ExactCallBluffD &`
 
         void printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat);
 

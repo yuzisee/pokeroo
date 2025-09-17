@@ -81,6 +81,8 @@ class ExactCallD : public IExf
 
         void accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, const float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out);
 
+        const ExpectedCallD * const tableinfo;
+
     protected:
         float64 queryinput;
 		int32 querycallSteps;
@@ -119,7 +121,6 @@ class ExactCallD : public IExf
     CallCumulationD * ed() const {
         return &(fCore.callcumu);
     }
-        ExpectedCallD * const tableinfo;
 #ifdef DEBUG_TRACE_EXACTCALL
 		std::ostream * traceOut;
 #endif
@@ -129,13 +130,13 @@ class ExactCallD : public IExf
                    CoreProbabilities &core
                    )
         :
+        tableinfo(tbase)
+        ,
         impliedFactor(1)
         , noRaiseArraySize(0),noRaiseChance_A(0),noRaiseChanceD_A(0)
         ,
         //ed(data)
         fCore(core)
-        ,
-        tableinfo(tbase)
 #ifdef DEBUG_TRACE_EXACTCALL
 					,traceOut(0)
 #endif
@@ -168,12 +169,12 @@ class ExactCallD : public IExf
 ///======================
 ///   Pr{opponentFold}
 ///======================
-class ExactCallBluffD : public virtual ExactCallD
+class ExactCallBluffD
 {//NO ASSIGNMENT OPERATOR
     private:
 
-    float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
-    float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n);
+    float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean) const;
+    float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n) const;
 
         //topTwoOfThree returns the average of the top two values {a,b,c} through the 7th parameter.
         //The average of the corresponding values of {a_d, b_d, c_d} are returned by the function.
@@ -184,6 +185,11 @@ class ExactCallBluffD : public virtual ExactCallD
         /*/
         // ^^^ TODO(from joseph): Unit test these if you want (see unittests/main.cpp), but for now I'm pretty sure they aren't used
         float64 bottomThreeOfFour(float64 a, float64 b, float64 c, float64 d, float64 a_d, float64 b_d, float64 c_d, float64 d_d, float64 & r) const;
+
+        const ExpectedCallD * const tableinfo;
+
+        CallCumulationD &fFoldCumu; // when they know your hand
+        CallCumulationD &fCallCumu; // when they _don't_ know your hand
     protected:
 
         float64 allFoldChance;
@@ -193,9 +199,6 @@ class ExactCallBluffD : public virtual ExactCallD
 
         void query(const float64 betSize);
 
-    CallCumulationD * ef() const {
-        return &(fCore.foldcumu);
-    }
     public:
         float64 insuranceDeterrent;
 
@@ -204,8 +207,9 @@ class ExactCallBluffD : public virtual ExactCallD
                         //, CallCumulationD* data, CallCumulationD* foldData*
                         )
     :
-    //ExactCallD(tbase,data), ef(foldData)
-    ExactCallD(tbase,core)
+    tableinfo(tbase)
+    ,
+    fFoldCumu(core.foldcumu), fCallCumu(core.callcumu)
     ,
     insuranceDeterrent(0)
                             {

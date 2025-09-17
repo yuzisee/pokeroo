@@ -187,6 +187,7 @@ private:
 protected:
     ExactCallBluffD & ea;
     const struct TableSpec & table_spec;
+    ExactCallD & c;
     AutoScalingFunction *fp;
     const bool bSingle;
 
@@ -211,14 +212,16 @@ public:
 
     float64 g_raised(float64 raisefrom, float64);
 
-    StateModel(const struct TableSpec &currentSituation, ExactCallBluffD & c, AutoScalingFunction *function
+    StateModel(const struct TableSpec &currentSituation, ExactCallBluffD & pr_opponentfold, ExactCallD & pr_opponentcallraise, AutoScalingFunction *function
                )
     : ScalarFunctionModel(currentSituation.tableView->chipDenom()),HoldemFunctionModel(currentSituation.tableView->chipDenom(),currentSituation.tableView)
     ,last_x(std::numeric_limits<float64>::signaling_NaN())
     ,
-    ea(c)
+    ea(pr_opponentfold)
     ,
     table_spec(currentSituation)
+    ,
+    c(pr_opponentcallraise)
     ,
     fp(function),bSingle(false)
     ,

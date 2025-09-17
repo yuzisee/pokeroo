@@ -3795,6 +3795,7 @@ namespace RegressionTests {
         const playernumber_t myPositionIndex = 1;
         ExpectedCallD   tablestate(myPositionIndex, &myTable, statprob.statranking.pct, statprob.core.statmean.pct);
 
+        ExactCallD pr_opponentcallraise(&tablestate, statprob.core);
         ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
 
         OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, myTable, statprob.core);
@@ -3803,7 +3804,7 @@ namespace RegressionTests {
         const int32 i = 1;
         //const float64 raiseCount = myDeterredCall.pRaise(myTable.GetBetToCall(), i, firstFold);
 
-        opponentHandOpportunity.query(myDeterredCall.RaiseAmount(myTable.GetBetToCall(), i));
+        opponentHandOpportunity.query(pr_opponentcallraise.RaiseAmount(myTable.GetBetToCall(), i));
         //const float64 pessimisticHandCount = 1.0 / opponentHandOpportunity.handsToBeat();
 
         // pessimisticHandCount should not be MORE RARE than raiseCount.
