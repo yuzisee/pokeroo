@@ -126,8 +126,7 @@ public:
 
 struct AggregatedState {
     // Overall contribution: outcome value combined with probability of that outcome
-    float64 contribution;
-    float64 dContribution;
+    ValueAndSlope contribution;
 
     // Value of this particular outcome, if it were certain
     // If this outcome is a combination of sub-outcomes, this value will represent a "blended" value
@@ -138,9 +137,7 @@ struct AggregatedState {
 
     AggregatedState()
     :
-    contribution(std::numeric_limits<float64>::signaling_NaN())
-    ,
-    dContribution(std::numeric_limits<float64>::signaling_NaN())
+    contribution{std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()}
     ,
     value(std::numeric_limits<float64>::signaling_NaN())
     ,

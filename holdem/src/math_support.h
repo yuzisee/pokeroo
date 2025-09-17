@@ -16,6 +16,35 @@ struct ValueAndSlope {
   float64 v;
   float64 d_v;
 
+  static constexpr ValueAndSlope multiply2(const ValueAndSlope &a, const ValueAndSlope &b) {
+    float64 multiplication_product_v = a.v * b.v;
+    float64 multiplication_product_d_v = a.d_v * b.v + b.d_v * a.v;
+    return ValueAndSlope{
+      multiplication_product_v, multiplication_product_d_v
+    };
+  }
+
+  static constexpr ValueAndSlope multiply3(const ValueAndSlope &a, const ValueAndSlope &b, const ValueAndSlope &c) {
+    // multiplicand, multiplier, product
+    float64 multiplication_product_v = a.v * b.v * c.v;
+    // y = a * b * c
+    // log(y) = log(a) + log(b) + log(c)
+    // dy / y =  da / a + db / b + dc / c
+    // dy = y * (da / a + db / b + dc / c)
+    float64 multiplication_product_d_v = multiplication_product_v * ( a.d_v / a.v + b.d_v / b.v + c.d_v / c.v );
+    return ValueAndSlope{
+      multiplication_product_v, multiplication_product_d_v
+    };
+  }
+
+  static constexpr ValueAndSlope sum3(const ValueAndSlope &a, const ValueAndSlope &b, const ValueAndSlope &c) {
+    float64 addition_sum_v = a.v + b.v + c.v;
+    float64 addition_sum_d_v = a.d_v * b.d_v * c.d_v;
+    return ValueAndSlope{
+      addition_sum_v, addition_sum_d_v
+    };
+  }
+
   static ValueAndSlope constexpr lesserOfTwo(const ValueAndSlope &a, const ValueAndSlope &b) {
     if (a.v < b.v) {
       return a;
