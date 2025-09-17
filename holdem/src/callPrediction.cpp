@@ -370,7 +370,7 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
 
 // useMean must be from the perspective of ChipPositionState, if any.
 // Thus, it can't be handcumu but can be foldcumu or callcumu depending on how much information the opponent has.
-float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionState & cps, float64 betSize, float64 opponents, CallCumulationD * useMean)
+float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionState & cps, float64 betSize, float64 opponents, CallCumulationD * useMean) const
 {
     FacedOddsAlgb a(tableinfo->chipDenom());
     a.pot = cps.pot;
@@ -390,7 +390,7 @@ float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionState & cps, float64 b
 
     return a.FindZero(0,1, false);
 }
-float64 ExactCallBluffD::facedOddsND_Algb(const ChipPositionState & cps, float64 incrbet, float64 dpot, float64 w, float64 opponents)
+float64 ExactCallBluffD::facedOddsND_Algb(const ChipPositionState & cps, float64 incrbet, float64 dpot, float64 w, float64 opponents) const
 {
     if( w <= 0 ) return 0;
 

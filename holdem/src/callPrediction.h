@@ -173,8 +173,8 @@ class ExactCallBluffD
 {//NO ASSIGNMENT OPERATOR
     private:
 
-    float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
-    float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n);
+    float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean) const;
+    float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n) const;
 
         //topTwoOfThree returns the average of the top two values {a,b,c} through the 7th parameter.
         //The average of the corresponding values of {a_d, b_d, c_d} are returned by the function.

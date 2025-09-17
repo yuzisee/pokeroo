@@ -503,7 +503,7 @@ void PositionalStrategy::printPessimisticWinPct(std::ofstream & logF, float64 be
 
 
 template< typename T >
-void PositionalStrategy::printBetGradient(ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp) const
+void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp) const
 {
 #ifdef LOGPOSITION
 
