@@ -182,7 +182,9 @@ float64 AutoScalingFunction::fd_raised(float64 sliderx, const float64 x, const f
 
 
 
-
+// @param value - bankroll multiplier if you win (i.e. `value - 1.0` is your profit)
+// @param probability - the chance that you'll actually get to the showdown
+// @return `result.value` is the "expected" worth of trying to reach the showdown, accounting for both: profit of the showdown AND the probability your opponents actually make it to the showdown
 struct AggregatedState GeomStateCombiner::createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const {
     struct AggregatedState result;
     result.pr = probability;
@@ -190,18 +192,19 @@ struct AggregatedState GeomStateCombiner::createOutcome(float64 value, float64 p
         // otherwise pow(0.0, 0.0) might be undefined
         result.value = 1.0;
         result.contribution.v = 1.0;
+
+        // y = std::pow(value, probability)
+        // log(y) = probability * log(value)
+        // d log(y) = d probability * log(value) + probability * d log(value)
+        // dy / y = d probability * log(value) + probability * (d value) / value
+        // dy = y * (d probability * log(value) + probability * (d value) / value)
+        // dy = y * (d probability * log(value) + probability * (d value) / value)
+
+        result.contribution.d_v = result.contribution.v * ( probability*dValue/value + dProbability*log(value) );
     } else {
         result.value = value;
-        result.contribution.v = std::pow(value, probability);
+        result.contribution = ValueAndSlope::exponentiate(ValueAndSlope{value, dValue}, ValueAndSlope{probability, dProbability});
     }
-
-    // y = std::pow(value, probability)
-    // log(y) = probability * log(value)
-    // d log(y) = d probability * log(value) + probability * d log(value)
-    // dy / y = d probability * log(value) + probability * (d value) / value
-    // dy = y * (d probability * log(value) + probability * (d value) / value)
-
-    result.contribution.d_v = result.contribution.v * ( probability*dValue/value + dProbability*log(value) );
 
     return result;
 }
@@ -643,8 +646,8 @@ void StateModel::query( const float64 betSize )
     if(bTraceEnable)
     {
       // https://github.com/yuzisee/pokeroo/commit/ecec2a0e4f8d119a01f310fef9ce4e4652c3ce58
-        std::cout << "\t\t (gainWithFold*gainNormal*gainRaised) = " << gainCombined.contribution << std::endl;
-        std::cout << "\t\t ((gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y) = " << gainCombined.dContribution << std::endl;
+        std::cout << "\t\t (gainWithFold*gainNormal*gainRaised) = " << gainCombined.contribution.v << std::endl;
+        std::cout << "\t\t ((gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y) = " << gainCombined.contribution.d_v << std::endl;
         std::cout << "\t\t fMyFoldGain.myFoldGain(" << (fMyFoldGain.suggestMeanOrRank() == 0 ? "MEAN" : "RANK") << ") = " << fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank()) << std::endl;
     }
 #endif

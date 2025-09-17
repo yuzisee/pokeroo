@@ -10,11 +10,25 @@
 #define holdem_math_support_h
 
 #include "portability.h"
+#include "cmath"
 #include <limits>
 
 struct ValueAndSlope {
   float64 v;
   float64 d_v;
+
+  static constexpr ValueAndSlope exponentiate(const ValueAndSlope &a, const ValueAndSlope &b) {
+    // y = std::pow(base, exponent)
+    float64 exponentiation_power_v = std::pow(a.v, b.v);
+    // log(y) = exponent * log(base)
+    // d log(y) = d exponent * log(base) + exponent * d log(base)
+    // dy / y = d exponent * log(base) + exponent * (d base) / base
+    // dy = y * (d exponent * log(base) + exponent * (d base) / base)
+    float64 exponentiation_power_d_v = exponentiation_power_v * (b.d_v * std::log(a.v)  +  b.v * a.d_v / a.v);
+    return ValueAndSlope{
+      exponentiation_power_v, exponentiation_power_d_v
+    };
+  }
 
   static constexpr ValueAndSlope multiply2(const ValueAndSlope &a, const ValueAndSlope &b) {
     float64 multiplication_product_v = a.v * b.v;
