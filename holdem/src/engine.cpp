@@ -33,26 +33,32 @@ float64 DealRemainder::DealCard(Hand& h)
 	++(dealt.Rank);
 	dealt.Value <<= 1;
 
+	const uint32 dealV = dealt.Value;
+	const int8 dealS = dealt.Suit;
 
-	if(dealt.Suit == HoldemConstants::NO_SUIT)
+	const uint32 baseInto = dealtHand[dealS];
+	/// ^^^ This is prior to {dealtHand[dealt.Suit] |= dealt.Value;} at the end
+	///     Look for `dealtHand[dealS] |= dealV;` below
+
+	if(dealS == HoldemConstants::NO_SUIT)
 	{//no more cards. That's it for this configuration entirely.
 
 		SetIndependant();
 		return 0;
 	}
-	else if (HoldemConstants::CARD_MISC == dealt.Value)
+	else if (HoldemConstants::CARD_MISC == dealV)
 	{//time for next suit
 
 		SetNextSuit();
 		return DealCard(h);
 
 	}
-	else if ( (dealtHand[dealt.Suit] & dealt.Value) != 0 )
+	else if ( (baseInto & dealV) != 0 ) // (dealtHand[dealt.Suit] & dealt.Value) != 0
 	{//card already dealt/omitted, i.e. needs to be skipped
 
 		return DealCard(h);
 	}
-	else if(prevSuit[dealt.Suit] != HoldemConstants::NO_SUIT) //unless we are in the first suit, we have to check for certain cases
+	else if(prevSuit[dealS] != HoldemConstants::NO_SUIT) //unless we are in the first suit, we have to check for certain cases
 	{
         ///What we're looking for is...
         ///    (Action) Reason...
@@ -65,16 +71,16 @@ float64 DealRemainder::DealCard(Hand& h)
         /// 3. (matchesnew)  Imagine having 2 Spades, and then dealing a 2 of Hearts. That has ×3, but then what if the next card is 2 of Clubs, without LockNewAddend?
 
 
-		const uint32 hHere=h.SeeCards(dealt.Suit);
+		const uint32 hHere=h.SeeCards(dealS);
 		const uint32 hBack=h.SeeCards(qprevSuit);
 
 		// Remember, `dealtHand` is everything that has been dealt previously.
 		// `h.SeeCards(…)` is what's currently in the hand
 
-        const bool bPreviouslyIdentical = isAddendSameSuit(dealt.Suit, qprevSuit);
+        const bool bPreviouslyIdentical = isAddendSameSuit(dealS, qprevSuit);
    if (bPreviouslyIdentical) { //if eligible for "greater first" rule
 		if(
-             (hHere | dealt.Value) > hBack //would violate "greater first" rule
+             (hHere | dealV) > hBack //would violate "greater first" rule
            )
         {
             //To optimize redundant paths, we keep additions sorted in previously identical suits
@@ -87,7 +93,7 @@ float64 DealRemainder::DealCard(Hand& h)
 		//                    If `hBack == hHere` we would have essentially tested for `(hHere | dealt.Value) > hHere` above, already.
 		//                    But that means `hHere` CONTAINS `dealt.Value` and we are attempting to deal a card that the hand already has!!!
 		// Instead, we should raise an assertion if this happens: "Hand h already contains the card we are trying to deal"
-        if (hBack==hHere) //bMatchesOld here implies bPreviouslyIdentical, if also hBack==hHere
+        if (hBack==hHere)
 		{
             //Essentially, we need to avoid adding to this suit, since it is the same as the last suit, which would already
             //have been counted for double!
@@ -101,12 +107,11 @@ float64 DealRemainder::DealCard(Hand& h)
 	//successful!
 	uint8 occBase = 0;
 
-	uint32 baseInto = dealtHand[dealt.Suit]; ///This is prior to {dealtHand[dealt.Suit] |= dealt.Value;}
 
-		for( int8 i=dealt.Suit;i!=HoldemConstants::NO_SUIT;i = nextSuit[i])
+		for( int8 i=dealS;i!=HoldemConstants::NO_SUIT;i = nextSuit[i])
 		{//Although we could check all four here, it is assumed that you would only deal into the first of identical suits, plus it may help sort out the 2/2/2 corner case
 
-			if ((dealtHand[i] == baseInto) && (isAddendSameSuit(dealt.Suit, i)))
+			if ((dealtHand[i] == baseInto) && (isAddendSameSuit(dealS, i)))
 			{
 				++occBase;
 			}
@@ -115,13 +120,13 @@ float64 DealRemainder::DealCard(Hand& h)
 		}
 
 
-	dealtHand[dealt.Suit] |= dealt.Value;
+	dealtHand[dealS] |= dealV;
 
 
 	h.AddToHand(dealt);
 
-	uint32 dealtTo = dealtHand[dealt.Suit];
-	uint32 addedTo = h.SeeCards(dealt.Suit);
+	uint32 dealtTo = dealtHand[dealS];
+	uint32 addedTo = h.SeeCards(dealS);
 
 
 	uint8 matchesNew = 0; //matchesNew reflects how many new duplicate suits formed.
@@ -130,7 +135,7 @@ float64 DealRemainder::DealCard(Hand& h)
 	{
 		if (dealtHand[i] == dealtTo &&
 				  h.SeeCards(i) == addedTo &&
-				        isAddendSameSuit(dealt.Suit, i) )  ++matchesNew;
+				        isAddendSameSuit(dealS, i) )  ++matchesNew;
 	}
 
 	return static_cast<float64>(occBase)/static_cast<float64>(matchesNew);
