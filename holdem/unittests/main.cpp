@@ -4524,8 +4524,8 @@ namespace RegressionTests {
 
           myTable.ManuallyAddPlayer("P1", 600.0, &p1);
           myTable.ManuallyAddPlayer("P2", 300.0, &p2); // dealer
-          myTable.ManuallyAddPlayer("P3", 2800.0, &p3);
-          myTable.ManuallyAddPlayer("P4", 1400.0, &p4);
+          myTable.ManuallyAddPlayer("P3", 1800.0, &p3);
+          myTable.ManuallyAddPlayer("P4", 2400.0, &p4);
 
           const playernumber_t dealer = 2;
 
@@ -4612,6 +4612,20 @@ namespace RegressionTests {
           // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
           float64 dRiskLoss_pot =  std::numeric_limits<float64>::signaling_NaN();
           const float64 actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu), &dRiskLoss_pot);
+          // To get a high P4 RiskLoss against P3, we want:
+          //  [FoldWaitLengthModel::FindBestLength]
+          //  → a high maxProfit, which means a high rawPCT and/or low opponents
+          //  → a high betSize
+          //  → a small amountSacrificePerHand, which means...
+          //    ... a large numHandsPerSameSituationFold, which means a very rare `rarity()`, which means
+          //      [ExpectedCallD::RiskLoss]
+          //      → a large N, which means a large `handsDealt()`
+          //    ... a small amountSacrificeVoluntary and small amountSacrificeForced, which means
+          //      [ExpectedCallD::RiskLoss]
+          //      → a small `avgBlind`
+          //      → a small ACTIVE pot (current round, players who haven't yet folded)
+          //      → a large rpAlreadyBet by P3
+          // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
           assert(actual_RiskLoss < 0);
           // assert(dRiskLoss_pot >= 1.0 / (tablestate_tableinfo.handsIn()-1));
           // [!CAUTION]

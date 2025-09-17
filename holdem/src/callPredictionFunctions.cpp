@@ -597,12 +597,12 @@ template<typename T1, typename T2> void FoldGainModel<T1, T2>::query( const floa
             lastFB = FB_above;
         }
 
-		if( gain_ref > lastf )
+		  if( gain_ref > lastf )
 */
-		{
-			lastf = gain_ref;
-			lastFB = FB_ref;
-		}
+		  {
+		  	lastf = gain_ref;
+		  	lastFB = FB_ref;
+		  }
     }
 
     if( concedeGain > lastf || n < 1.0 )
