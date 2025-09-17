@@ -22,6 +22,7 @@
 #define HOLDEM_StateModel
 
 #include "functionmodel.h"
+#include "math_support.h"
 
 #define VERBOSE_STATEMODEL_INTERFACE
 
@@ -151,7 +152,7 @@ public:
     virtual ~GeomStateCombiner() {}
 
     struct AggregatedState createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const override final;
-    struct AggregatedState createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const override final;
+    struct AggregatedState createBlendedOutcome(const size_t arraySize, const ValueAndSlope * const values, const ValueAndSlope * const probabilities) const override final;
 
     struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const override final;
 };
@@ -161,7 +162,7 @@ public:
     virtual ~AlgbStateCombiner() {}
 
     struct AggregatedState createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const override final;
-    struct AggregatedState createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const override final;
+    struct AggregatedState createBlendedOutcome(const size_t arraySize, const ValueAndSlope * const values, const ValueAndSlope * const probabilities) const override final;
 
     struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const override final;
 };

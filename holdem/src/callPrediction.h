@@ -49,7 +49,7 @@ public:
     virtual ~IStateCombiner() {}
 
     virtual struct AggregatedState createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const = 0;
-    virtual struct AggregatedState createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const = 0;
+    virtual struct AggregatedState createBlendedOutcome(const size_t arraySize, const ValueAndSlope * const values, const ValueAndSlope * const probabilities) const = 0;
 
     virtual struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const = 0;
 }

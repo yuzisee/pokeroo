@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
-#include <float.h>
 #include <algorithm>
 
 
@@ -828,7 +827,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
           if( traceOut != 0 )  *traceOut << " to bet " << oppBetMake << "more";
           #endif
 
-          if( oppBetMake <= DBL_EPSILON )
+          if( oppBetMake <= std::numeric_limits<double>::epsilon() )
           { //Definitely call
               nextexf = 0;
               nextdexf = 1;
@@ -915,7 +914,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
 
       const float64 oppInPot = oppBetAlready + nextexf;
-      if( oppInPot - betSize > DBL_EPSILON )
+      if( oppInPot - betSize > std::numeric_limits<double>::epsilon() )
       {
           *overexf_out += oppInPot - betSize;
           *overdexf_out += nextdexf;
@@ -1318,7 +1317,6 @@ float64 ExactCallBluffD::RiskPrice(const ExpectedCallD &tableinfo, CallCumulatio
     const float64 Ne = static_cast<float64>(Ne_int);
 
     const float64 estSacrifice = (tableinfo.table->GetPotSize() - tableinfo.alreadyBet());
-
 
     const float64 maxStack = tableinfo.table->GetAllChips();
 

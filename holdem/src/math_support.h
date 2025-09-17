@@ -13,9 +13,29 @@
 #include <cmath>
 #include <limits>
 
+
 struct ValueAndSlope {
   float64 v;
   float64 d_v;
+
+  void clearToZero() {
+    this->v = 0.0;
+    this->d_v = 0.0;
+  }
+
+  void set_value_and_slope(float64 new_v, float64 new_dv) {
+    this->v = new_v;
+    this->d_v = new_dv;
+  }
+
+  void rescale(float64 mag) {
+    this->v *= mag;
+    this->d_v *= mag;
+  }
+
+  constexpr bool any_nan() const {
+    return (std::isnan(this->v) || std::isnan(this->d_v));
+  }
 
   // Marked `…_unsafe` because you should be guarding against `pow(0.0, 0.0)` before you call this
   static constexpr ValueAndSlope exponentiate_unsafe(const ValueAndSlope &a, const ValueAndSlope &b) {
