@@ -35,8 +35,6 @@
 
 //#define ANTI_CHECK_PLAY
 
-const float64 ExactCallD::UNITIALIZED_QUERY = -1;
-
 ExactCallD::~ExactCallD()
 {
     if( noRaiseChance_A != 0 )
@@ -372,7 +370,7 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
 
 // useMean must be from the perspective of ChipPositionState, if any.
 // Thus, it can't be handcumu but can be foldcumu or callcumu depending on how much information the opponent has.
-float64 ExactCallD::facedOdds_Algb(const ChipPositionState & cps, float64 betSize, float64 opponents, CallCumulationD * useMean)
+float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionState & cps, float64 betSize, float64 opponents, CallCumulationD * useMean)
 {
     FacedOddsAlgb a(tableinfo->chipDenom());
     a.pot = cps.pot;
@@ -392,7 +390,7 @@ float64 ExactCallD::facedOdds_Algb(const ChipPositionState & cps, float64 betSiz
 
     return a.FindZero(0,1, false);
 }
-float64 ExactCallD::facedOddsND_Algb(const ChipPositionState & cps, float64 incrbet, float64 dpot, float64 w, float64 opponents)
+float64 ExactCallBluffD::facedOddsND_Algb(const ChipPositionState & cps, float64 incrbet, float64 dpot, float64 w, float64 opponents)
 {
     if( w <= 0 ) return 0;
 
@@ -1314,17 +1312,17 @@ float64 ExactCallD::dexf(const float64 betSize)
 
 
 // RiskPrice is only used as a heuristic and only for the bot itself during stratPosition so it's fine to use either ef() here (if pessimistic) or ed() here (if no information has been revealed yet)
-float64 ExactCallBluffD::RiskPrice() const
+float64 ExactCallBluffD::RiskPrice(const ExpectedCallD &tableinfo, CallCumulationD * foldcumu_caching)
 {//At what price is it always profitable to fold if one has the average winning hand?
-	const int8 Ne_int = tableinfo->table->NumberStartedRound().inclAllIn() - 1; // This is the number of players you'd have to beat, regardless of who is betting.
+	const int8 Ne_int = tableinfo.table->NumberStartedRound().inclAllIn() - 1; // This is the number of players you'd have to beat, regardless of who is betting.
     const float64 Ne = static_cast<float64>(Ne_int);
 
-    const float64 estSacrifice = (tableinfo->table->GetPotSize() - tableinfo->alreadyBet());
+    const float64 estSacrifice = (tableinfo.table->GetPotSize() - tableinfo.alreadyBet());
 
 
-    const float64 maxStack = tableinfo->table->GetAllChips();
+    const float64 maxStack = tableinfo.table->GetAllChips();
 
-    FoldGainModel FG(tableinfo->chipDenom());
+    FoldGainModel FG(tableinfo.chipDenom());
 	//FG.bTraceEnable = true;
 
     // TODO(from yuzisee): MEAN (callcumu) vs. RANK vs "pessimistic" to:
@@ -1332,14 +1330,14 @@ float64 ExactCallBluffD::RiskPrice() const
     //   + distinguish between (information given to opponent)
     // ef() is pessimistic
     // NOTE: below that opponents = 1, so RANK is not necessary here.
-    FG.waitLength.setW( ef()->nearest_winPCT_given_rank(1.0 - 1.0/Ne) ); //If you're past the flop, we need definitely consider only the true number of opponents
+    FG.waitLength.setW( foldcumu_caching->nearest_winPCT_given_rank(1.0 - 1.0/Ne) ); //If you're past the flop, we need definitely consider only the true number of opponents
     FG.waitLength.amountSacrificeVoluntary = estSacrifice; //rarity() already implies the Ne
 	FG.waitLength.amountSacrificeForced = 0; //estSacrifice*rarity() already implies a forced avgBlinds
     FG.waitLength.bankroll = maxStack;
     FG.waitLength.opponents = 1;
-    FG.waitLength.prevPot = tableinfo->table->GetPrevPotSize();
-    FG.waitLength.meanConv = ef();
-    const float64 riskprice = FG.FindZero(tableinfo->table->GetMinRaise() + tableinfo->callBet(),maxStack/2, true);
+    FG.waitLength.prevPot = tableinfo.table->GetPrevPotSize();
+    FG.waitLength.meanConv = foldcumu_caching;
+    const float64 riskprice = FG.FindZero(tableinfo.table->GetMinRaise() + tableinfo.callBet(),maxStack/2, true);
 
 
     FG.f(riskprice);
@@ -1348,10 +1346,10 @@ float64 ExactCallBluffD::RiskPrice() const
         return riskprice;
     }else
     {
-		FG.f(riskprice+tableinfo->chipDenom());
+		FG.f(riskprice+tableinfo.chipDenom());
 		if( FG.n > 0 )
 		{
-			return ( riskprice+tableinfo->chipDenom() );
+			return ( riskprice+tableinfo.chipDenom() );
 		}else
 		{
 			return maxStack;

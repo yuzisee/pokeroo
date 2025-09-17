@@ -50,7 +50,7 @@ static playercounts_t suggestPlayerCount(const HoldemArena & table) {
 
 
 
-float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out)
+float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out) const
 {
     const Player &p = fPlayer;
 
@@ -403,7 +403,7 @@ float64 FoldOrCall::predictedRaiseToThisRound(float64 actualBetToCall, float64 h
     }
 }
 
-FoldResponse FoldOrCall::myFoldGainAgainstPredictedReraise(MeanOrRank meanOrRank, float64 currentAlreadyBet, float64 actualBetToCall, float64 hypotheticalMyRaiseTo, float64 predictedReraiseToFinal) {
+FoldResponse FoldOrCall::myFoldGainAgainstPredictedReraise(MeanOrRank meanOrRank, float64 currentAlreadyBet, float64 actualBetToCall, float64 hypotheticalMyRaiseTo, float64 predictedReraiseToFinal) const {
     struct FoldResponse result;
     result.gain = foldGain(meanOrRank, hypotheticalMyRaiseTo - currentAlreadyBet
                     ,
@@ -415,7 +415,7 @@ FoldResponse FoldOrCall::myFoldGainAgainstPredictedReraise(MeanOrRank meanOrRank
     return result;
 }
 
-float64 FoldOrCall::myFoldGain(MeanOrRank meanOrRank) {
+float64 FoldOrCall::myFoldGain(MeanOrRank meanOrRank) const {
     return foldGain(meanOrRank, 0, fTable.GetBetToCall(), (float64*)0);
 }
 

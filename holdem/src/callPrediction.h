@@ -42,8 +42,23 @@
 #include <iostream>
 #endif
 
+// All values should be expressed as a fraction of your bankroll (so that Geom and Algb can be compared directly)
+// 1.0 is "no change"
+class IStateCombiner {
+public:
+    virtual ~IStateCombiner() {}
+
+    virtual struct AggregatedState createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const = 0;
+    virtual struct AggregatedState createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const = 0;
+
+    virtual struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const = 0;
+}
+;
+
 class IExf {
 public:
+    static constexpr float64 UNITIALIZED_QUERY = -1;
+
     virtual ~IExf() {}
 
 
@@ -56,6 +71,7 @@ public:
 ///==============================
 ///   Pr{call} and Pr{raiseby}
 ///==============================
+// TODO(from joseph): Rename to "ExactPlayD" to better contrast against `ExactCallBluffD` below
 class ExactCallD : public IExf
 {//NO ASSIGNMENT OPERATOR
     private:
@@ -66,7 +82,6 @@ class ExactCallD : public IExf
         void accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, const float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out);
 
     protected:
-        static const float64 UNITIALIZED_QUERY;
         float64 queryinput;
 		int32 querycallSteps;
 
@@ -86,9 +101,6 @@ class ExactCallD : public IExf
 
         float64 facedOdds_raise_Geom(const ChipPositionState & cps, float64 startingPoint, float64 incrbet_forraise, float64 fold_bet, float64 n, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const;
         float64 dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrbet_forraise, float64 fold_bet, float64 w, float64 opponents, float64 dexf, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const;
-
-        float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
-        float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n);
 
 
         void query(const float64 betSize, const int32 callSteps);
@@ -159,6 +171,10 @@ class ExactCallD : public IExf
 class ExactCallBluffD : public virtual ExactCallD
 {//NO ASSIGNMENT OPERATOR
     private:
+
+    float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean);
+    float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n);
+
         //topTwoOfThree returns the average of the top two values {a,b,c} through the 7th parameter.
         //The average of the corresponding values of {a_d, b_d, c_d} are returned by the function.
         /*
@@ -193,7 +209,7 @@ class ExactCallBluffD : public virtual ExactCallD
     ,
     insuranceDeterrent(0)
                             {
-                                queryinputbluff = UNITIALIZED_QUERY;
+                                queryinputbluff = IExf::UNITIALIZED_QUERY;
                             }
 
 
@@ -212,7 +228,7 @@ class ExactCallBluffD : public virtual ExactCallD
 
                             virtual float64 pWinD(const float64 betSize);
 
-            float64 RiskPrice() const;
+            static float64 RiskPrice(const ExpectedCallD &tableinfo, CallCumulationD * foldcumu_caching);
 
             ~ExactCallBluffD();
 

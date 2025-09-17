@@ -414,6 +414,8 @@ void StateModel::query( const float64 betSize )
     last_x = betSize;
     const float64 invisiblePercent = EPS_WIN_PCT;// quantum / ea.tableinfo->allChips();
 
+    const FoldOrCall fMyFoldGain(*(ea.tableinfo->table), ea.fCore); // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
+
     ///Establish [PushGain] values
 
 	float64 potFoldWin = ea.tableinfo->PushGain();
@@ -685,9 +687,9 @@ bool StateModel::willFoldToReraise
  ,
  const float64 playGain
  ,
- FoldOrCall & fMyFoldGain
+ const FoldOrCall & fMyFoldGain
  ,
- ExpectedCallD & myInfo
+ const ExpectedCallD & myInfo
  ,
  const float64 hypotheticalMyRaiseTo
 ) {
