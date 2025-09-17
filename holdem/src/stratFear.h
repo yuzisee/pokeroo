@@ -45,7 +45,7 @@ class OpponentFoldWait
     // If we hit this percentage, it's possible to get all-fold for one of the 169 hands for each remaining player (the smallest of which has probability 1 in 221)
     // This is the smallest relevant non-zero win percentage we care about.
     static float64 oppFoldStartingPct(const ExpectedCallD & table_info) {
-        return pow(1.0 / RAREST_HAND_CHANCE, table_info.handsToShowdownAgainst());
+        return std::pow(1.0 / RAREST_HAND_CHANCE, table_info.handsToShowdownAgainst());
     }
 }
 ;

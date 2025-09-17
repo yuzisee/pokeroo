@@ -221,7 +221,7 @@ public:
 
     struct FoldResponse myFoldGainAgainstPredictedReraise(MeanOrRank meanOrRank, float64 currentAlreadyBet, float64 actualBetToCall, float64 hypotheticalMyRaise, float64 predictedReraiseToFinal) const;
     float64 myFoldGain(MeanOrRank meanOrRank) const;
-    std::pair<float64,float64> myFoldGainAndWaitlength(MeanOrRank meanOrRank);
+    std::pair<float64,float64> myFoldGainAndWaitlength(MeanOrRank meanOrRank) const;
 
 }
 ;
