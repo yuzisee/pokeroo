@@ -976,8 +976,6 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
 void ExactCallBluffD::query(const float64 betSize)
 {
-    ExactCallD::query(betSize, querycallSteps);
-
     if( queryinputbluff == betSize ) { return; }
 
 	queryinputbluff = betSize;
@@ -1055,8 +1053,8 @@ void ExactCallBluffD::query(const float64 betSize)
 
                 // TODO(from yuzisee): Since this is Pr{opponentFold}, do we use Algb still? See updated PureGainStrategy.
                 float64 w_rank = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,0);
-                float64 w_mean = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,ed());
-                float64 w_pess = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,ef());
+                float64 w_mean = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,&fCallCumu);
+                float64 w_pess = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,&fFoldCumu);
                 if( nLinear <= 0 )
                 {
                     w_mean = 1.0;
@@ -1071,9 +1069,9 @@ void ExactCallBluffD::query(const float64 betSize)
                     //float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
                     //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
                     //ea-> is if they know your hand
-                    std::pair<float64,float64> eaFold = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_pess); // (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
+                    std::pair<float64,float64> eaFold = fFoldCumu.Pr_haveWorsePCT_continuous(w_pess); // (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
                     //e-> is if they don't know your hand
-                    std::pair<float64,float64> meanFold = ed()->Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
+                    std::pair<float64,float64> meanFold = fCallCumu.Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
                     //w is if they don't know your hand
                     const float64 rankFold = w_rank;
                     //handRarity is based on if they know your hand
@@ -1131,7 +1129,7 @@ void ExactCallBluffD::query(const float64 betSize)
                 {
                     ChipPositionState opporigmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit,prevPot);
 
-                    float64 w_mean = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,ed());
+                    float64 w_mean = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,&fCallCumu);
                     float64 w_rank = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,0);
 
                     if( nLinear <= 0 )
@@ -1142,8 +1140,8 @@ void ExactCallBluffD::query(const float64 betSize)
 
                     //float64 oppCommitted = table->ViewPlayer(pIndex)->GetContribution();
                     //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
-                    std::pair<float64, float64> eaFold = fCore.foldcumu.Pr_haveWorsePCT_continuous(w_mean); //(1 - ef()->Pr_haveWorsePCT_continuous( w_mean ));//*(1 - oppCommitted);
-                    std::pair<float64, float64> meanFold = ed()->Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
+                    std::pair<float64, float64> eaFold = fFoldCumu.Pr_haveWorsePCT_continuous(w_mean); //(1 - ef()->Pr_haveWorsePCT_continuous( w_mean ));//*(1 - oppCommitted);
+                    std::pair<float64, float64> meanFold = fCallCumu.Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
                     const float64 rankFold = w_rank;
                     const float64 eaRkFold = 1-tableinfo->handRarity;
 

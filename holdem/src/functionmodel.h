@@ -324,11 +324,11 @@ public:
 
 
 
-    CombinedStatResultsGeom(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, ExactCallD & c)
+    CombinedStatResultsGeom(const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet, const ExpectedCallD & table_info_now)
     :
-    e_battle(c.tableinfo->handsIn()-1)
+    e_battle(table_info_now.handsIn()-1)
     ,
-    f_battle(c.tableinfo->handStrengthOfRound())
+    f_battle(table_info_now.handStrengthOfRound())
     {
         combineStatResults(s_acted,s_nonacted, bConvertToNet);
     }
@@ -385,13 +385,13 @@ protected:
      *      Set this to true if the StatResult objects provided are the odds to beat one person.
      *      If this is false, we will assume the StatResult objects provided are the odds of winning the table.
      */
-    GainModelGeom(ICombinedStatResults & outcome, ExactCallD & c)
+    GainModelGeom(ICombinedStatResults & outcome, ExactCallD & c, ExpectedCallD * const tableView)
 		:
-    ScalarFunctionModel(c.tableinfo->chipDenom())
+    ScalarFunctionModel(tableView->chipDenom())
     ,
-    HoldemFunctionModel(c.tableinfo->chipDenom(), c.tableinfo)
+    HoldemFunctionModel(tableView->chipDenom(), tableView)
     ,
-    GainModel(c.tableinfo->chipDenom(),c.tableinfo)
+    GainModel(tableView->chipDenom(), tableView)
         , espec(c)
         , fOutcome(outcome)
     {}
@@ -485,10 +485,10 @@ class GainModelNoRisk : public virtual GainModel
      *      Set this to true if the StatResult objects provided are the odds to beat one person.
      *      If this is false, we will assume the StatResult objects provided are the odds of winning the table.
      */
-	GainModelNoRisk(ICombinedStatResults & outcome, ExactCallD & c)
-    : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
+	GainModelNoRisk(ICombinedStatResults & outcome, ExactCallD & c, ExpectedCallD * const tableView)
+    : ScalarFunctionModel(tableView->chipDenom()),HoldemFunctionModel(tableView->chipDenom(),tableView)
     ,
-    GainModel(c.tableinfo->chipDenom(),c.tableinfo)
+    GainModel(tableView->chipDenom(),tableView)
     ,espec(c)
     ,fOutcome(outcome){}
 	virtual ~GainModelNoRisk();

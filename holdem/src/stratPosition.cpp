@@ -20,6 +20,7 @@
 
 #include "stratPosition.h"
 #include "arena.h"
+#include "callPrediction.h"
 #include "stratFear.h"
 
 #include <math.h>
@@ -502,7 +503,7 @@ void PositionalStrategy::printPessimisticWinPct(std::ofstream & logF, float64 be
 
 
 template< typename T >
-void PositionalStrategy::printBetGradient(std::ofstream & logF, ExactCallBluffD & rl, ExactCallBluffD & rr, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp) const
+void PositionalStrategy::printBetGradient(ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp) const
 {
 #ifdef LOGPOSITION
 
@@ -512,13 +513,13 @@ void PositionalStrategy::printBetGradient(std::ofstream & logF, ExactCallBluffD 
     int32 raiseStep = 0;
 
     {
-        FoldOrCall rlF(*(tablestate.table), rl.fCore);
+        FoldOrCall rlF(*(tablestate.table), opp_callraise.fCore);
 
         int32 firstFoldToRaise = -1;
         float64 orAmount;
         for(raiseStep = 0, orAmount = 0.0; orAmount < maxShowdown; ++raiseStep )
         {
-            orAmount =  rl.RaiseAmount(betToCall,raiseStep);
+            orAmount =  opp_callraise.RaiseAmount(betToCall,raiseStep);
 
             const float64 oppRaisedPlayGain = m.g_raised(betToCall,orAmount);
             if(StateModel::willFoldToReraise(orAmount, oppRaisedPlayGain, rlF, tablestate, betToCall))
@@ -532,7 +533,7 @@ void PositionalStrategy::printBetGradient(std::ofstream & logF, ExactCallBluffD 
         }
         for(raiseStep = 0, orAmount = 0.0; orAmount < maxShowdown; ++raiseStep )
         {
-            orAmount =  rl.RaiseAmount(betToCall,raiseStep);
+            orAmount =  opp_callraise.RaiseAmount(betToCall,raiseStep);
             logF << "OppRAISEChance";
             switch (rlF.suggestMeanOrRank()) {
                 case MEAN:
@@ -544,12 +545,12 @@ void PositionalStrategy::printBetGradient(std::ofstream & logF, ExactCallBluffD 
             }
             if( raiseStep >= firstFoldToRaise ) {  logF << " [F] ";  } else { logF << " [*] "; }
 
-            // Here, raiseStep is just the iterator. rl.RaiseAmount(betToCall,raiseStep) is the amount, rl.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
-            logF << rl.pRaise(betToCall,raiseStep,firstFoldToRaise) << " @ $" << orAmount << " ($" << rlF.predictedRaiseToThisRound(betToCall, betToCall, orAmount) << " now)";
+            // Here, raiseStep is just the iterator. opp_callraise.RaiseAmount(betToCall,raiseStep) is the amount, opp_callraise.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
+            logF << opp_callraise.pRaise(betToCall,raiseStep,firstFoldToRaise) << " @ $" << orAmount << " ($" << rlF.predictedRaiseToThisRound(betToCall, betToCall, orAmount) << " now)";
 
             // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
             logF << "\tfold -- " // << "left"
-            << rl.pWin(orAmount); //<< "  " << rr.pWin(orAmount) << " right";
+            << opp_fold.pWin(orAmount); //<< "  " << rr.pWin(orAmount) << " right";
             printPessimisticWinPct(logF, orAmount, csrp);
             logF << endl;
 
@@ -569,13 +570,13 @@ void PositionalStrategy::printBetGradient(std::ofstream & logF, ExactCallBluffD 
         logF << "What am I expecting now, given my actual bet?" << endl;
 
 
-        FoldOrCall rrF(*(tablestate.table), rr.fCore);
+        FoldOrCall rrF(*(tablestate.table), opp_callraise.fCore);
 
         int32 firstFoldToRaise = -1;
         float64 mrAmount;
         for(raiseStep = 0, mrAmount = 0.0; mrAmount < maxShowdown; ++raiseStep )
         {
-            mrAmount = rl.RaiseAmount(separatorBet,raiseStep);
+            mrAmount = opp_callraise.RaiseAmount(separatorBet,raiseStep);
 
             const float64 oppRaisedPlayGain = m.g_raised(separatorBet,mrAmount);
             if(StateModel::willFoldToReraise(mrAmount, oppRaisedPlayGain, rrF, tablestate, separatorBet))
@@ -586,7 +587,7 @@ void PositionalStrategy::printBetGradient(std::ofstream & logF, ExactCallBluffD 
 
         for(raiseStep = 0, mrAmount = 0.0; mrAmount < maxShowdown; ++raiseStep )
         {
-            mrAmount =  rl.RaiseAmount(separatorBet,raiseStep);
+            mrAmount =  opp_callraise.RaiseAmount(separatorBet,raiseStep);
             logF << "OppRAISEChance";
             switch (rrF.suggestMeanOrRank()) {
                 case MEAN:
@@ -598,7 +599,7 @@ void PositionalStrategy::printBetGradient(std::ofstream & logF, ExactCallBluffD 
             }
             if( raiseStep >= firstFoldToRaise ) {  logF << " [F] ";  } else { logF << " [*] "; }
 
-            logF << rl.pRaise(separatorBet,raiseStep,firstFoldToRaise) << " @ $" << mrAmount << " ($" << rrF.predictedRaiseToThisRound(betToCall, separatorBet, mrAmount) << " now)";
+            logF << opp_callraise.pRaise(separatorBet,raiseStep,firstFoldToRaise) << " @ $" << mrAmount << " ($" << rrF.predictedRaiseToThisRound(betToCall, separatorBet, mrAmount) << " now)";
 
             /*
              logF << "\tfold -- left" << rl.pWin(mrAmount) << "  " << rr.pWin(mrAmount) << " right";
@@ -661,13 +662,19 @@ float64 ImproveGainStrategy::MakeBet()
     statversus.genPCT();
 
 
-
 #ifdef ANTI_PRESSURE_FOLDGAIN
     ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
-    ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
+
+    // These two are only the same for NormalBot. The others set `.insuranceDeterrent` below
     ExactCallBluffD myDeterredCall_left(&tablestate, statprob.core);
     ExactCallBluffD myDeterredCall_right(&tablestate, statprob.core);
+
+    // These two are the same, except for ActionBot which uses `SetImpliedFactor` below
+    ExactCallD c_left(&tablestate, statprob.core);
+    ExactCallD c_right(&tablestate, statprob.core);
 #else
+    // CallCumulationD &choicecumu = statprob.core.callcumu;
+    // CallCumulationD &raisecumu = statprob.core.foldcumu;
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
 #endif
 
@@ -704,7 +711,7 @@ float64 ImproveGainStrategy::MakeBet()
 
     if( bGamble >= 2 ) //Actionbot only
     {
-        myDeterredCall_left.SetImpliedFactor(impliedOddsGain);
+        c_left.SetImpliedFactor(impliedOddsGain);
 
         //Need scaling (This could adjust RiskPrice or the geom/algb equilibrium as needed)
         // myDeterredCall_right.callingPlayers(newVersus);  // LEGACY ASSUMEFOLDS support here.
@@ -741,21 +748,26 @@ float64 ImproveGainStrategy::MakeBet()
       OpponentFoldWait::FearStartingBet(myDeterredCall_right,riskprice, tablestate)
     );
 
-    CombinedStatResultsGeom leftCS(left,left,true, myDeterredCall_left);
-    CombinedStatResultsGeom cornerCS(statversus,statversus,true, myDeterredCall_right);
+    // Hmm?? Ever since https://github.com/yuzisee/pokeroo/commit/b601d0d29e9b83bef574de5eb498b24b8f5da75b we haven't needed
+    // So it is a bit unnecessary three days later to have different ExactCallBluffD assigned to different CombinedStatResultsGeom
+    // during https://github.com/yuzisee/pokeroo/commit/38677f3619be3c2b679449a9d981cb170634e56b
+    //
+    // Anyway, it's not an issue now since we pass `tablestate` directly these days.
 
+    CombinedStatResultsGeom leftCS(left,left,true, tablestate);
+    CombinedStatResultsGeom cornerCS(statversus,statversus,true, tablestate);
 
-    CombinedStatResultsGeom cornerCS_fear(right,right,false, myDeterredCall_left);
+    CombinedStatResultsGeom cornerCS_fear(right,right,false, tablestate);
 
-    CombinedStatResultsGeom rightCS_fear(right,right,false, myDeterredCall_right);
+    CombinedStatResultsGeom rightCS_fear(right,right,false, tablestate);
     // const StatResult s_acted, const StatResult s_nonacted, bool bConvertToNet s_acted, s_nonacted, bConvertToNet, c)
 
 
-    GainModelGeom geomModel(leftCS, myDeterredCall_left);
-    GainModelNoRisk algbModel(cornerCS, myDeterredCall_right);
+    GainModelGeom geomModel(leftCS, c_left, &tablestate);
+    GainModelNoRisk algbModel(cornerCS, c_right, &tablestate);
 
-	GainModelGeom geomModel_fear(cornerCS_fear, myDeterredCall_left);
-	GainModelNoRisk algbModel_fear(rightCS_fear, myDeterredCall_right);
+	GainModelGeom geomModel_fear(cornerCS_fear, c_left, &tablestate);
+	GainModelNoRisk algbModel_fear(rightCS_fear, c_right, &tablestate);
 
 
 
@@ -808,7 +820,7 @@ float64 ImproveGainStrategy::MakeBet()
       cg
     };
 
-	StateModel choicemodel(state_model_config, myDeterredCall_left, &ap);
+	StateModel choicemodel(state_model_config, myDeterredCall_left, c_left, &ap);
 #ifdef DEBUG_TRAP_AS_NORMAL
 #ifdef LOGPOSITION
     logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
@@ -819,7 +831,7 @@ float64 ImproveGainStrategy::MakeBet()
 #else
 	///From regular to fear B(x2)
 	AutoScalingFunction ap_right(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate, SLIDERX);
-    StateModel choicemodel_right(state_model_config, myDeterredCall_right, &ap_right);
+    StateModel choicemodel_right(state_model_config, myDeterredCall_right, c_right, &ap_right);
 
 
 
@@ -1051,6 +1063,7 @@ float64 DeterredGainStrategy::MakeBet()
 #ifdef ANTI_PRESSURE_FOLDGAIN
     ExpectedCallD   tablestate(myPositionIndex,  &(ViewTable()), statprob.statranking.pct, statprob.core.statmean.pct);
     ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
+    ExactCallD pr_opponentcallraise(&tablestate, statprob.core);
 #else
     //ExactCallD myExpectedCall(myPositionIndex, &(ViewTable()), &choicecumu);
     ExactCallBluffD myDeterredCall(myPositionIndex, &(ViewTable()), &choicecumu, &raisecumu);
@@ -1083,14 +1096,11 @@ float64 DeterredGainStrategy::MakeBet()
     if( bGamble <= 1 ) //DangerBot, ComBot, not SpaceBot
     {
         //small insuranceDeterrent means more likely for opponent to fold vs. call
-        myDeterredCall.SetImpliedFactor( 1 / nearEndOfBets );
+        pr_opponentcallraise.SetImpliedFactor( 1 / nearEndOfBets );
     }
 
     StatResult left = statversus;
 	if( bGamble == 0 ) left = statprob.core.statmean;
-
-    CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
-    GainModelGeom geomModel(leftCS, myDeterredCall);
 
 	GeomStateCombiner cg;
     struct TableSpec state_model_config = {
@@ -1098,13 +1108,16 @@ float64 DeterredGainStrategy::MakeBet()
       cg
     };
 
+    CombinedStatResultsGeom leftCS(left, left, true, tablestate);
+    GainModelGeom geomModel(leftCS, pr_opponentcallraise, &tablestate);
+
     StatResult right = statWorse;
     right.repeated = 1-certainty;
 
     left.repeated = certainty;
 
-    CombinedStatResultsGeom rightCS(right, right, false, myDeterredCall);
-	GainModelNoRisk algbModel(rightCS, myDeterredCall);
+    CombinedStatResultsGeom rightCS(right, right, false, tablestate);
+	GainModelNoRisk algbModel(rightCS, pr_opponentcallraise, &tablestate);
 
 
 
@@ -1150,7 +1163,7 @@ float64 DeterredGainStrategy::MakeBet()
 	AutoScalingFunction hybridgainDeterred(geomModel,algbModel,min_worst_scaler,geom_algb_scaler,&tablestate, SLIDERX);
 
 
-    StateModel ap_aggressive(state_model_config, myDeterredCall, &hybridgainDeterred);
+    StateModel ap_aggressive(state_model_config, myDeterredCall, pr_opponentcallraise, &hybridgainDeterred);
 
 
     HoldemFunctionModel& choicemodel = ap_aggressive;
@@ -1239,7 +1252,7 @@ float64 DeterredGainStrategy::MakeBet()
 
 
     printBetGradient< StateModel >
-    (logFile, myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, 0);
+    (logFile, pr_opponentcallraise, myDeterredCall, ap_aggressive, tablestate, displaybet, 0);
 
 
     logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
@@ -1345,13 +1358,8 @@ float64 PureGainStrategy::MakeBet()
 
     CoarseCommunityHistogram outcomes(detailPCT, left);
     PureStatResultGeom leftCS(statprob.core.statmean, left, outcomes, statprob.core.foldcumu, tablestate);
-    ExactCallBluffD myDeterredCall(&tablestate, statprob.core);
-
-    // TODO(from joseph_huang): Switch this back to GainModelGeom for better bankroll management?
-    // For now, simplify so we can debug other bugs easier.
-    // Also, consider that true bankroll management would never call all-in without a guaranteed win.
-    // Unfortunately, the Kelly criterion approach has corner cases that make it hard to get working off the bat. We'll revisit this later.
-    GainModelNoRisk callModel(leftCS, myDeterredCall);
+    ExactCallBluffD ea(&tablestate, statprob.core);
+    ExactCallD pr_opponentcallraise(&tablestate, statprob.core);
 
     // TODO(from yuzisee): When callgain is based on rank vs. mean, should the comparative opponentHandOpportunity's foldgain be based on rank vs. mean?
     // Consider: Opponent knows what I have vs. Opponent doesn't know what I have
@@ -1418,8 +1426,14 @@ float64 PureGainStrategy::MakeBet()
       stateCombiner
     };
 
-    GainModelNoRisk raiseModelAlgb(csrp, myDeterredCall);
-    GainModelGeom raiseModelGeom(csrp, myDeterredCall);
+    // TODO(from joseph_huang): Switch this back to GainModelGeom for better bankroll management?
+    // For now, simplify so we can debug other bugs easier.
+    // Also, consider that true bankroll management would never call all-in without a guaranteed win.
+    // Unfortunately, the Kelly criterion approach has corner cases that make it hard to get working off the bat. We'll revisit this later.
+    GainModelNoRisk callModel(leftCS, pr_opponentcallraise, &tablestate);
+
+    GainModelNoRisk raiseModelAlgb(csrp, pr_opponentcallraise, &tablestate);
+    GainModelGeom raiseModelGeom(csrp, pr_opponentcallraise, &tablestate);
     GainModel &raiseModel = (bGamble % 4 == 0) ? dynamic_cast<GainModel &>(raiseModelAlgb) : dynamic_cast<GainModel &>(raiseModelGeom);
 
     // Choose between "defensive" (a.k.a. RAW) vs. "offensive" (a.k.a. SLIDERX) modes.
@@ -1437,7 +1451,7 @@ float64 PureGainStrategy::MakeBet()
 
     // PureGainStrategy doesn't perform any blending across StateModel objects.
     // It has some scaling between GainModel (for calls) → CombinedStatResultsPessimistic (for raises) instead.
-    StateModel ap_aggressive( state_model_config, myDeterredCall, &callOrRaise );
+    StateModel ap_aggressive( state_model_config, ea, pr_opponentcallraise, &callOrRaise );
 
 
 
@@ -1485,13 +1499,13 @@ float64 PureGainStrategy::MakeBet()
 
 
     printBetGradient< StateModel >
-    (logFile, myDeterredCall, myDeterredCall, ap_aggressive, tablestate, displaybet, &csrp);
+    (logFile, pr_opponentcallraise, ea, ap_aggressive, tablestate, displaybet, &csrp);
 
 
     logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
 
-    logFile << "OppFoldChance% ...    " << myDeterredCall.pWin(displaybet) << "   ∇=" << myDeterredCall.pWinD(displaybet) << endl;
-    if( myDeterredCall.pWin(displaybet) > 0 )
+    logFile << "OppFoldChance% ...    " << ea.pWin(displaybet) << "   ∇=" << ea.pWinD(displaybet) << endl;
+    if( ea.pWin(displaybet) > 0 )
     {
         logFile << "if playstyle is Danger/Conservative, overall utility is " << choicemodel.f(displaybet) << endl;
     }
