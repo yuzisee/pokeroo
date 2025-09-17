@@ -148,13 +148,13 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
             float64 intOpponents = std::round(opponents);
             if( intOpponents == opponents )
             {
-                cached_d_dbetSize = pow(rawPCT,static_cast<uint8>(intOpponents));
+                cached_d_dbetSize = std::pow(rawPCT,static_cast<uint8>(intOpponents));
             }else
             {//opponents isn't an even integer
 #endif
 
                 // Your showdown chance of winning, given the opponent count.
-                cached_d_dbetSize = pow(rawPCT,opponents);
+                cached_d_dbetSize = std::pow(rawPCT,opponents);
 
 #ifdef INLINE_INTEGER_POWERS
             }//end if intOpponents == opponents , else
@@ -184,7 +184,7 @@ float64 FoldWaitLengthModel::d_dw( const float64 n )
     //         = 2 * (opponents) * pow(getRawPCT, opponents - 1) * d_dw {getRawPCT}
 
     const float64 rawPCT = getRawPCT(n);
-    const float64 d_PW_d_w = 2.0 * opponents * pow(rawPCT, opponents - 1) * d_rawPCT_d_w(n, rawPCT);
+    const float64 d_PW_d_w = 2.0 * opponents * std::pow(rawPCT, opponents - 1) * d_rawPCT_d_w(n, rawPCT);
 
     const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).second);
 
@@ -367,7 +367,7 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
     }
 
     const float64 wmean  = getRawPCT(n);
-    const float64 dPW_dn = 2*pow(wmean,opponents-1)*opponents * d_rawPCT_d_n(n, wmean);
+    const float64 dPW_dn = 2*std::pow(wmean,opponents-1)*opponents * d_rawPCT_d_n(n, wmean);
 
     const float64 dRemainingbet = dRemainingBet_dn();
 
@@ -658,12 +658,12 @@ void FacedOddsCallGeom::query( const float64 w )
 
     FG.waitLength.setW( w );
 //Chip scale
-    const float64 fw = pow(w,FG.waitLength.opponents);
-    const float64 U = pow(B+pot,fw)*pow(B-outsidebet,1-fw);
+    const float64 fw = std::pow(w,FG.waitLength.opponents);
+    const float64 U = std::pow(B+pot,fw)*std::pow(B-outsidebet,1-fw);
 
     lastF = U - B - FG.f(outsidebet);
 
-    const float64 dfw = FG.waitLength.opponents*pow(w,FG.waitLength.opponents-1);
+    const float64 dfw = FG.waitLength.opponents*std::pow(w,FG.waitLength.opponents-1);
     const float64 dU_dw = dfw*log1p((pot+outsidebet)/(B-outsidebet)) * U;
 
 
@@ -695,7 +695,7 @@ void FacedOddsAlgb::query( const float64 w )
 
     FG.waitLength.setW( w );
 //Chip scale
-    const float64 fw = pow(w,FG.waitLength.opponents);
+    const float64 fw = std::pow(w,FG.waitLength.opponents);
     const float64 U = (pot + betSize)*fw;
 
     #ifdef DEBUG_TRACE_SEARCH
@@ -747,9 +747,9 @@ void FacedOddsRaiseGeom::query( const float64 w )
 
     FG.waitLength.setW( w );
 //Fraction scale
-    const float64 fw = pow(w,FG.waitLength.opponents);
+    const float64 fw = std::pow(w,FG.waitLength.opponents);
 
-    const float64 U = pow(1 + pot/FG.waitLength.bankroll  , fw)*pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
+    const float64 U = std::pow(1 + pot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
     float64 excess = 1;
 
     if( !bCheckPossible )
@@ -760,7 +760,7 @@ void FacedOddsRaiseGeom::query( const float64 w )
 	float64 nonRaiseGain = excess - riskLoss / FG.waitLength.bankroll;
 
 	bool bUseCall = false;
-	const float64 callGain = callIncrLoss * pow(callIncrBase,fw);
+	const float64 callGain = callIncrLoss * std::pow(callIncrBase,fw);
 
 	//We need to compare raising to the opportunity cost of calling/folding
 	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
@@ -774,7 +774,7 @@ void FacedOddsRaiseGeom::query( const float64 w )
     lastF = U - nonRaiseGain;
 
 
-    const float64 dfw = FG.waitLength.opponents*pow(w,FG.waitLength.opponents-1);
+    const float64 dfw = FG.waitLength.opponents*std::pow(w,FG.waitLength.opponents-1);
     const float64 dU_dw = dfw*log1p((pot+raiseTo)/(FG.waitLength.bankroll-raiseTo)) * U;
 
     lastFD = dU_dw;

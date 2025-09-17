@@ -29,7 +29,7 @@ static inline constexpr float64 cleanpow(float64 b, float64 x)
 {
     if( b < DBL_EPSILON ) return 0;
     //if( b > 1 ) return 1;
-    return pow(b,x);
+    return std::pow(b,x);
 }
 
 
@@ -116,7 +116,7 @@ static std::pair<struct NetStatResult, float64> againstBestXOpponents(CallCumula
         float64 splitTotal = 0.0;
         for( int8 i=1;i<=fSplitOpponents;++i )
         {//Split with i
-            splitTotal += HoldemUtil::nchoosep<float64>(fSplitOpponents,i)*pow(fSplitShape.wins,fSplitOpponents-i)*pow(fSplitShape.splits,i);
+            splitTotal += HoldemUtil::nchoosep<float64>(fSplitOpponents,i)*std::pow(fSplitShape.wins,fSplitOpponents-i)*std::pow(fSplitShape.splits,i);
         }
 
         ///Normalize, total split possibilities must add up to showdownResults.split
@@ -496,7 +496,7 @@ void CombinedStatResultsGeom::forceRenormalize()
     float64 splitTotal = 0;
     for( int8 i=1;i<=e_battle;++i )
     {//Split with i
-        splitTotal += HoldemUtil::nchoosep<float64>(e_battle,i)*pow(shape.wins,e_battle-i)*pow(shape.splits,i);
+        splitTotal += HoldemUtil::nchoosep<float64>(e_battle,i)*std::pow(shape.wins,e_battle-i)*std::pow(shape.splits,i);
     }
 
     p_cl *= (1-splitTotal)/newTotal;
@@ -645,11 +645,11 @@ float64 GainModelGeom::g(float64 betSize)
     const float64& t_s = shape.splits;
     const float64& t_l = shape.loss;
     const float64 t_1w = 1+exf;
-    const float64 t_cw = pow(shape.wins,e_battle);
-    const float64 t_1wp = pow(t_1w , t_cw);
+    const float64 t_cw = std::pow(shape.wins,e_battle);
+    const float64 t_1wp = std::pow(t_1w , t_cw);
     const float64 t_1l = 1-x ;
-    const float64 t_cl = 1 - pow(1 - shape.loss,e_battle);
-    const float64 t_1lp = pow(t_1l, t_cl);
+    const float64 t_cl = 1 - std::pow(1 - shape.loss,e_battle);
+    const float64 t_1lp = std::pow(t_1l, t_cl);
 #endif
 
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return 0.0; ///"Negative raise" means betting less than the minimum call = FOLD
@@ -672,7 +672,7 @@ float64 GainModelGeom::h(float64 betFraction, float64 betSize, float64 exf, floa
     float64 sav=1;
     for(int8 i=1;i<=e_call;++i)
     {
-        const float64 C = HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i) * pow(splitShape.wins,fOutcome.splitOpponents()-i) * pow(splitShape.splits,i);
+        const float64 C = HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i) * std::pow(splitShape.wins,fOutcome.splitOpponents()-i) * std::pow(splitShape.splits,i);
         /*
          //In our model, we can assume that if it is obvious many (everyone) will split, only those who don't see that opportunity will definitely fold
          //  however if it is not clear there will be a split (few split) everybody will call as expected
@@ -688,13 +688,13 @@ float64 GainModelGeom::h(float64 betFraction, float64 betSize, float64 exf, floa
          C
          );
          */
-        sav *= pow(base + f_pot / (i+1), C);
+        sav *= std::pow(base + f_pot / (i+1), C);
     }
 
     //    const float64 t_result = t_1wp * t_1lp * sav - 1;
 
-    const float64 winGain = pow(base+exf , fOutcome.getWinProb(betSize));
-    const float64 loseGain = pow(base-x , fOutcome.getLoseProb(betSize));
+    const float64 winGain = std::pow(base+exf , fOutcome.getWinProb(betSize));
+    const float64 loseGain = std::pow(base-x , fOutcome.getLoseProb(betSize));
 
     return
 
@@ -920,10 +920,10 @@ float64 GainModelNoRisk::g(float64 betSize)
     const float64& t_s = shape.splits;
     const float64& t_l = shape.loss;
     const float64 t_1w = 1+exf;
-    const float64 t_cw = pow(shape.wins,e_battle);
+    const float64 t_cw = std::pow(shape.wins,e_battle);
     const float64 t_1wp = (t_1w * t_cw);
     const float64 t_1l = 1-x ;
-    const float64 t_cl = 1 - pow(1 - shape.loss,e_battle);
+    const float64 t_cl = 1 - std::pow(1 - shape.loss,e_battle);
     const float64 t_1lp = (t_1l* t_cl);
 
 #endif
@@ -970,7 +970,7 @@ float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, fl
                                     */
 
         // Probability of this split
-        const float64 C =  HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i)  ;
+        const float64 C =  HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*std::pow(splitShape.wins,fOutcome.splitOpponents()-i)*std::pow(splitShape.splits,i)  ;
 
         //if (i - maxOpposingSplittersBasedOnExf <= DBL_EPSILON) {
         // This number of splitters is okay. Let's go ahead with it.

@@ -241,7 +241,7 @@ namespace UnitTests {
 
             // Drop to 0.8, 15% the time (because betFraction == 0.2)
             // Increase to 1.5, 75% of the time (because exf == 0.5)
-            float64 expected = pow(0.8, 0.25) * pow(1.5, 0.75);
+            float64 expected = std::pow(0.8, 0.25) * std::pow(1.5, 0.75);
             float64 actual = GainModelGeom::h(betFraction, betSize, exf, f_pot, a);
             assert(fabs(expected - actual) < fabs(expected) * 1e-14);
 
@@ -277,7 +277,7 @@ namespace UnitTests {
             // Drop to 0.8, 15% the time (because betFraction == 0.2)
             // Increase to 1.5, 75% of the time (because exf == 0.5)
             // Split two ways has probability 0.1 and payout 0.8 + (0.2 + 0.3) / 2
-            float64 expected = pow(0.8, 0.15) * pow(1.5, 0.75) * pow(0.8 + 0.5 / 2, 0.1);
+            float64 expected = std::pow(0.8, 0.15) * std::pow(1.5, 0.75) * std::pow(0.8 + 0.5 / 2, 0.1);
             float64 actual = GainModelGeom::h(betFraction, betSize, exf, f_pot, a);
             assert(fabs(expected - actual) < fabs(expected) * 1e-14);
 
@@ -314,7 +314,7 @@ namespace UnitTests {
             // Split three ways has probability 0.1*0.1, and payout 0.8 + (0.2 + 0.5) / 3
             // Split two ways has probability 0.1 * 0.75 * 2 and payout 0.8 + (0.2 + 0.3) / 2
 
-            float64 expected = pow(0.8, 0.2775) * pow(1.5, 9.0/16.0) * pow((0.8 + 0.7 / 3), 0.1*0.1) * pow(0.8 + (0.1 + 0.2 + 0.2) / 2, 0.1 * 0.75 * 2);
+            float64 expected = std::pow(0.8, 0.2775) * std::pow(1.5, 9.0/16.0) * std::pow((0.8 + 0.7 / 3), 0.1*0.1) * std::pow(0.8 + (0.1 + 0.2 + 0.2) / 2, 0.1 * 0.75 * 2);
             float64 actual = GainModelGeom::h(betFraction, betSize, exf, f_pot, a);
 
             assert(fabs(expected - actual) < fabs(expected) * 1e-14);

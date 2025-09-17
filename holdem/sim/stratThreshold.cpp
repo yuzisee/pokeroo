@@ -124,9 +124,9 @@ float64 MultiThresholdStrategy::MakeBet()
 
     // TODO(from yuzisee): handsToBeat() here.
 	const playernumber_t toBeat = ViewTable().NumberStartedRoundInclAllIn()-1; // This is the "established" hand strength requirement of anyone willing to claim they will win this hand.
-    
 
-    float64 multiThreshhold = pow(w->mean.pct,toBeat+redundancy); //subtract yourself
+
+    float64 multiThreshhold = std::pow(w->mean.pct,toBeat+redundancy); //subtract yourself
         #ifdef LOGTHRESHOLD
 
             if( !(logFile.is_open()) )
@@ -140,7 +140,7 @@ float64 MultiThresholdStrategy::MakeBet()
             convertOutput.DisplayHand(logFile);
             logFile << "ThresholdAI" << endl;
 
-			
+
             logFile << multiThreshhold << " = " << w->mean.pct << "^" << (int)(toBeat+redundancy) << endl;
         #endif
 

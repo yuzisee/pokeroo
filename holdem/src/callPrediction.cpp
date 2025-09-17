@@ -265,13 +265,13 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
     //The pot can't be zero, so base_minus_1 can't be 0, so base can't be 1, so log(base) can't be zero
     const float64 base_minus_1 = (cps.pot+raiseto+retBet)/(cps.bankroll-raiseto);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
 
-    const float64 wN_1 = pow(w,opponents-1);
+    const float64 wN_1 = std::pow(w,opponents-1);
     float64 fw = wN_1 * w;
     float64 dfw = opponents * wN_1;
 
     const float64 A = dfw * log1p( base_minus_1 );
     const float64 C = fw/(cps.bankroll+cps.pot+retBet) ;
-    const float64 h_times_remaining = pow( (cps.bankroll+cps.pot+retBet)/(cps.bankroll-raiseto), fw ) * (cps.bankroll - raiseto);
+    const float64 h_times_remaining = std::pow( (cps.bankroll+cps.pot+retBet)/(cps.bankroll-raiseto), fw ) * (cps.bankroll - raiseto);
 
 
 
@@ -352,11 +352,11 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
     FG.waitLength.meanConv = useMean;
     //FG.dw_dbet = 0; //Again, we don't need this
 
-    const float64 wN_1 = pow(w,opponents-1);
+    const float64 wN_1 = std::pow(w,opponents-1);
     float64 fw = wN_1 * w;
     float64 dfw = opponents * wN_1;
 
-    const float64 h = pow( (cps.bankroll+cps.pot)/(cps.bankroll-humanbet), fw );
+    const float64 h = std::pow( (cps.bankroll+cps.pot)/(cps.bankroll-humanbet), fw );
     const float64 A = dfw * log1p( base_minus_1 );
     const float64 C = (  dpot_dhumanbet/(cps.bankroll+cps.pot) + 1/(cps.bankroll-humanbet)  ) * fw;
 
@@ -393,7 +393,7 @@ float64 ExactCallBluffD::facedOddsND_Algb(const ChipPositionState & cps, float64
 {
     if( w <= 0 ) return 0;
 
-    const float64 wN_1 = pow(w,opponents-1);
+    const float64 wN_1 = std::pow(w,opponents-1);
 
     float64 fw = wN_1 * w;
     float64 dfw = opponents * wN_1;
@@ -935,7 +935,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
 
       //At this point, each nextNoRaise is 100% unless otherwise adjusted.
-      const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step].v < std::numeric_limits<float64>::epsilon()) ? 0 : pow(nextNoRaise_A[i_step].v,oppRaiseChancesAware);
+      const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step].v < std::numeric_limits<float64>::epsilon()) ? 0 : std::pow(nextNoRaise_A[i_step].v,oppRaiseChancesAware);
 
 
 #ifdef DEBUGASSERT
@@ -1241,7 +1241,7 @@ float64 ExpectedCallD::PushGain()
 #else
     const float64 blindsGain = (1 + baseFraction + bigBlindFraction)*(1 + baseFraction + smallBlindFraction);
         //const float64 blindPerHandGain = ( ViewTable().GetBigBlind()+ViewTable().GetSmallBlind() ) / myMoney / ViewTable().GetNumberAtTable();
-    const float64 totalFG = pow(1+baseFraction,1-2*blindsPow)*pow(blindsGain,blindsPow);
+    const float64 totalFG = std::pow(1+baseFraction,1-2*blindsPow)*std::pow(blindsGain,blindsPow);
 
 #endif
 
@@ -1477,7 +1477,7 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 - FG.waitLength.amountSacrificeForced // exclude forced portion since it wasn't voluntary.
                 );
                 FG.waitLength.opponents = opponentsFacingThem;
-                FG.waitLength.setW( pow(1.0 / tableStrength, 1.0 / FG.waitLength.opponents) ); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
+                FG.waitLength.setW( std::pow(1.0 / tableStrength, 1.0 / FG.waitLength.opponents) ); // As a baseline, set this so that the overall showdown win percentage required is "1.0 / tableStrength" per person after pow(..., opponents);
                 FG.waitLength.prevPot = fTable.GetPrevPotSize();
 
                 const float64 foldGain = FG.f(betSizeFacingThem); // Calling this will invoke query which will populate FG.n

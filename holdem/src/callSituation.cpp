@@ -419,7 +419,7 @@ float64 FoldOrCall::myFoldGain(MeanOrRank meanOrRank) const {
     return foldGain(meanOrRank, 0, fTable.GetBetToCall(), (float64*)0);
 }
 
-std::pair<float64,float64> FoldOrCall::myFoldGainAndWaitlength(MeanOrRank meanOrRank) {
+std::pair<float64,float64> FoldOrCall::myFoldGainAndWaitlength(MeanOrRank meanOrRank) const {
     std::pair<float64,float64> result;
     result.first = foldGain(meanOrRank, 0, fTable.GetBetToCall(), &(result.second));
     return result;
