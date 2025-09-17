@@ -128,9 +128,14 @@ float64 DealRemainder::DealCard(Hand& h)
 
 	for(int8 i=0;i<4;++i)
 	{
-		if (dealtHand[i] == dealtTo &&
-				  h.SeeCards(i) == addedTo &&
-				        isAddendSameSuit(dealt.Suit, i) )  ++matchesNew;
+	  const bool bDuplicateSuitFound =
+	  dealtHand[i] == dealtTo &&
+	    h.SeeCards(i) == addedTo &&
+	      isAddendSameSuit(dealt.Suit, i)
+	  ;
+	  // if ( bDuplicateSuitFound )  ++matchesNew;
+	  // https://stackoverflow.com/questions/57240259/is-it-safe-to-cast-bool-to-float
+	  matchesNew += static_cast<uint8>(bDuplicateSuitFound);
 	}
 
 	return static_cast<float64>(occBase)/static_cast<float64>(matchesNew);
