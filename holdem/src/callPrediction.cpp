@@ -172,6 +172,7 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
 // so in that sense, callcumu is completely ridiculous
 //
 // @return How likely is the player `cps` to call vs. fold against a raise by `incrRaise`? We will calculate the winning percentages that make folding / calling / raising profitable.
+// @return How likely is the player `cps` to call vs. fold against a raise by `incrRaise`? We will calculate the winning percentages that make folding / calling / raising profitable.
 template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
 {
 

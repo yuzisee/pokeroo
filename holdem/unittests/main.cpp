@@ -4505,8 +4505,8 @@ namespace RegressionTests {
 
           myTable.ManuallyAddPlayer("P1", 600.0, &p1);
           myTable.ManuallyAddPlayer("P2", 300.0, &p2); // dealer
-          myTable.ManuallyAddPlayer("P3", 2800.0, &p3);
-          myTable.ManuallyAddPlayer("P4", 1400.0, &p4);
+          myTable.ManuallyAddPlayer("P3", 1800.0, &p3);
+          myTable.ManuallyAddPlayer("P4", 2400.0, &p4);
 
           const playernumber_t dealer = 2;
 
@@ -4593,6 +4593,20 @@ namespace RegressionTests {
           // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
           float64 dRiskLoss_pot =  std::numeric_limits<float64>::signaling_NaN();
           const float64 actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu), &dRiskLoss_pot);
+          // To get a high P4 RiskLoss against P3, we want:
+          //  [FoldWaitLengthModel::FindBestLength]
+          //  → a high maxProfit, which means a high rawPCT and/or low opponents
+          //  → a high betSize
+          //  → a small amountSacrificePerHand, which means...
+          //    ... a large numHandsPerSameSituationFold, which means a very rare `rarity()`, which means
+          //      [ExpectedCallD::RiskLoss]
+          //      → a large N, which means a large `handsDealt()`
+          //    ... a small amountSacrificeVoluntary and small amountSacrificeForced, which means
+          //      [ExpectedCallD::RiskLoss]
+          //      → a small `avgBlind`
+          //      → a small ACTIVE pot (current round, players who haven't yet folded)
+          //      → a large rpAlreadyBet by P3
+          // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
           assert(actual_RiskLoss < 0);
           // assert(dRiskLoss_pot >= 1.0 / (tablestate_tableinfo.handsIn()-1));
           // [!CAUTION]
@@ -4615,39 +4629,28 @@ void print_lineseparator(const char* const separator_msg) {
   std::cout << "────────────────────────────────────────────────────────────────────────────────" << endl;
 }
 
-// HOLDEMDB_PATH=/Users/joseph/pokeroo-run/lib/holdemdb /Users/joseph/Documents/pokeroo/holdem
-// /Users/joseph/Documents/pokeroo/holdem/unittests
-int main(int argc, const char * argv[])
-{
-    print_lineseparator(" * * * Begin unittests/main.cpp");
-
-    std::cout << "::group::Running... unit tests" << std::endl;
-
-    // Run all unit tests.
-    NamedTriviaDeckTests::testNamePockets();
+static void all_unit_tests() {
+  // Run all unit tests.
+  NamedTriviaDeckTests::testNamePockets();
 
 
-    UnitTests::testUnit_024();
-    UnitTests::testMatrixbase_023();
-    UnitTests::testUnit_020();
+  UnitTests::testUnit_024();
+  UnitTests::testMatrixbase_023();
+  UnitTests::testUnit_020();
 
-    UnitTests::testUnit_016();
-    UnitTests::testUnit_015();
-    UnitTests::testUnit_010c();
-    UnitTests::testUnit_010b();
-    UnitTests::testUnit_010();
-    UnitTests::testUnit_007();
-    UnitTests::testUnit_007b();
-    UnitTests::testUnit_007c();
-    UnitTests::testUnit_002b();
-    UnitTests::testUnit_003();
+  UnitTests::testUnit_016();
+  UnitTests::testUnit_015();
+  UnitTests::testUnit_010c();
+  UnitTests::testUnit_010b();
+  UnitTests::testUnit_010();
+  UnitTests::testUnit_007();
+  UnitTests::testUnit_007b();
+  UnitTests::testUnit_007c();
+  UnitTests::testUnit_002b();
+  UnitTests::testUnit_003();
+}
 
-    std::cout << "::endgroup::" << std::endl;
-
-    print_lineseparator(" ↑↑↑ UNIT TESTS PASS, regressiontests next ↓↓↓");
-    std::cout << "::group::Running... logreplay tests" << std::endl;
-    // Regression tests
-
+static void all_regression_tests() {
     RegressionTests::testRegression_028();
     RegressionTests::testRegression_027();
     RegressionTests::testRegression_026();
@@ -4669,6 +4672,25 @@ int main(int argc, const char * argv[])
 
     RegressionTests::testRegression_005();
     RegressionTests::testRegression_019();
+}
+
+// HOLDEMDB_PATH=/Users/joseph/pokeroo-run/lib/holdemdb /Users/joseph/Documents/pokeroo/holdem
+// /Users/joseph/Documents/pokeroo/holdem/unittests
+int main(int argc, const char * argv[])
+{
+    print_lineseparator(" * * * Begin unittests/main.cpp");
+
+    std::cout << "::group::Running... unit tests" << std::endl;
+
+    all_unit_tests();
+
+    std::cout << "::endgroup::" << std::endl;
+
+    print_lineseparator(" ↑↑↑ UNIT TESTS PASS, regressiontests next ↓↓↓");
+    std::cout << "::group::Running... logreplay tests" << std::endl;
+    // Regression tests
+
+    all_regression_tests();
 
     std::cout << "::endgroup::" << std::endl;
 
