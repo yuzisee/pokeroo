@@ -1136,7 +1136,10 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 eaRkFoldPartial = 0;
 
                     ///topTwoOfThree is on a player-by-player basis
+                    // [!NOTE]
+                    // This next line DOES write to `nextFold`
                     nextFoldPartial = bottomThreeOfFour(eaFold.first,meanFold.first,rankFold,eaRkFold,eaFold.second,meanFold.second,rankFoldPartial,eaRkFoldPartial,nextFold);
+                    ///topTwoOfThree is on a player-by-player basis
                     //nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
                     //nextFoldPartial=(eaFoldPartial+meanFoldPartial+rankFoldPartial+eaRkFoldPartial)/4;
 
