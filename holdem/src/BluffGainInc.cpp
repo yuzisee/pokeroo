@@ -596,10 +596,10 @@ void StateModel::query( const float64 betSize )
     ///Calculate factors
 
 
-    outcomePush = fStateCombiner.createOutcome(potFoldWin, oppFoldChance, potFoldWinD, oppFoldChanceD);
-    outcomeCalled = fStateCombiner.createOutcome(potNormalWin, playChance, potNormalWinD, playChanceD);
+    outcomePush = table_spec.stateCombiner.createOutcome(potFoldWin, oppFoldChance, potFoldWinD, oppFoldChanceD);
+    outcomeCalled = table_spec.stateCombiner.createOutcome(potNormalWin, playChance, potNormalWinD, playChanceD);
 
-    blendedRaises = fStateCombiner.createBlendedOutcome(arraySize, potRaisedWin_A, oppRaisedChance_A);
+    blendedRaises = table_spec.stateCombiner.createBlendedOutcome(arraySize, potRaisedWin_A, oppRaisedChance_A);
 
     /*
      STATEMODEL_ACCESS gainRaised = 1;
@@ -630,14 +630,14 @@ void StateModel::query( const float64 betSize )
      }
 
 
-     if( betSize >= ea.tableinfo->maxBet() )
+     if( betSize >= myInfo->maxBet() )
      {
      gainNormallnD = playChance*potNormalWinD/g_raised(betSize,betSize-quantum/2) + playChanceD*log(g_raised(betSize,betSize-quantum/2));
      }
      */
 
      ///Store results
-     struct AggregatedState gainCombined = fStateCombiner.combinedContributionOf(outcomePush, outcomeCalled, blendedRaises);
+     struct AggregatedState gainCombined = table_spec.stateCombiner.combinedContributionOf(outcomePush, outcomeCalled, blendedRaises);
 
 #ifdef DEBUG_TRACE_SEARCH
     if(bTraceEnable)

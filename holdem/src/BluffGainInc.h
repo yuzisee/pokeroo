@@ -21,6 +21,7 @@
 #ifndef HOLDEM_StateModel
 #define HOLDEM_StateModel
 
+#include "callSituation.h"
 #include "functionmodel.h"
 #include "math_support.h"
 
@@ -185,7 +186,7 @@ private:
 
 protected:
     ExactCallBluffD & ea;
-    const IStateCombiner & fStateCombiner;
+    const struct TableSpec & table_spec;
     AutoScalingFunction *fp;
     const bool bSingle;
 
@@ -208,18 +209,16 @@ public:
     // It's blended because there are actually several raise possibilities and this blends them into one.
     struct AggregatedState blendedRaises;
 
-
     float64 g_raised(float64 raisefrom, float64);
 
-    StateModel(ExactCallBluffD & c, AutoScalingFunction *function, const IStateCombiner & stateCombiner
-
+    StateModel(const struct TableSpec &currentSituation, ExactCallBluffD & c, AutoScalingFunction *function
                )
-    : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
+    : ScalarFunctionModel(currentSituation.tableView->chipDenom()),HoldemFunctionModel(currentSituation.tableView->chipDenom(),currentSituation.tableView)
     ,last_x(std::numeric_limits<float64>::signaling_NaN())
     ,
     ea(c)
     ,
-    fStateCombiner(stateCombiner)
+    table_spec(currentSituation)
     ,
     fp(function),bSingle(false)
     ,

@@ -18,12 +18,12 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <math.h>
 #include "stratPosition.h"
-#include <float.h>
-
 #include "arena.h"
 #include "stratFear.h"
+
+#include <math.h>
+#include <float.h>
 
 //#define DEBUG_TRAP_AS_NORMAL
 
@@ -528,7 +528,7 @@ void PositionalStrategy::printBetGradient(std::ofstream & logF, ExactCallBluffD 
         ;
 
         if (separatorBet != betToCall) {
-            logF << endl << "Why didn't I call?" << endl;
+            logF << std::endl << "Why didn't I call?" << std::endl;
         }
         for(raiseStep = 0, orAmount = 0.0; orAmount < maxShowdown; ++raiseStep )
         {
@@ -677,7 +677,6 @@ float64 ImproveGainStrategy::MakeBet()
 
     const float64 riskprice = ExactCallBluffD::RiskPrice(tablestate, &statprob.core.foldcumu); // If you repeatedly bet this price in this situation, even the average best hand on the table is worth throwing down and you'll only get caught by really strong hands.
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
-    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall,riskprice, tablestate);
 
     StatResult statWorse = statprob.statworse(tablestate.handsDealt());
 
@@ -737,6 +736,10 @@ float64 ImproveGainStrategy::MakeBet()
 
     }
 
+    const float64 min_worst_scaler = std::min(
+      OpponentFoldWait::FearStartingBet(myDeterredCall_left,riskprice, tablestate),
+      OpponentFoldWait::FearStartingBet(myDeterredCall_right,riskprice, tablestate)
+    );
 
     CombinedStatResultsGeom leftCS(left,left,true, myDeterredCall_left);
     CombinedStatResultsGeom cornerCS(statversus,statversus,true, myDeterredCall_right);
@@ -800,7 +803,12 @@ float64 ImproveGainStrategy::MakeBet()
 	AutoScalingFunction ap(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate, SLIDERX);
 
     GeomStateCombiner cg;
-	StateModel choicemodel( myDeterredCall_left, &ap, cg );
+    TableSpec state_model_config = {
+      &tablestate,
+      cg
+    };
+
+	StateModel choicemodel(state_model_config, myDeterredCall_left, &ap);
 #ifdef DEBUG_TRAP_AS_NORMAL
 #ifdef LOGPOSITION
     logFile << "  DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL DEBUGTRAPASNORMAL  " << endl;
@@ -811,7 +819,7 @@ float64 ImproveGainStrategy::MakeBet()
 #else
 	///From regular to fear B(x2)
 	AutoScalingFunction ap_right(hybridgainDeterred_aggressive,hybridgain_fear,min_worst_scaler,riskprice,&tablestate, SLIDERX);
-    StateModel choicemodel_right( myDeterredCall_right, &ap_right, cg );
+    StateModel choicemodel_right(state_model_config, myDeterredCall_right, &ap_right);
 
 
 
@@ -986,11 +994,9 @@ float64 ImproveGainStrategy::MakeBet()
     logFile << "Call Regular("<< viewBet <<")=" << 1.0+hybridgainDeterred_aggressive.f(viewBet) << endl;
     logFile << "   Call Fear("<< viewBet <<")=" << 1.0+hybridgain_fear.f(viewBet) << endl;
 
-
-
     logFile << "Guaranteed > $" << tablestate.stagnantPot() << " is in the pot for sure" << endl;
     logFile << "OppFoldChance% if betting " << viewBet << " … left " << myDeterredCall_left.pWin(viewBet) << " --" << myDeterredCall_right.pWin(viewBet) << " right" << endl;
-    if( myDeterredCall.pWin(viewBet) > 0 )
+    if(( myDeterredCall_left.pWin(viewBet) > 0) || (myDeterredCall_right.pWin(viewBet) > 0))
     {
         logFile << "if playstyle NormalBot, overall utility is " << 1.0+choicemodel.f(viewBet) << endl;
         logFile << "if playstyle Trap/Ace, overall utility is " << 1.0+rolemodel.f(viewBet) << endl;
@@ -1060,7 +1066,7 @@ float64 DeterredGainStrategy::MakeBet()
     const float64 geom_algb_scaler = (riskprice < maxShowdown) ? riskprice : maxShowdown;
 
     OpponentFoldWait myFearControl(&tablestate);
-    const float64 min_worst_scaler = myFearControl.FearStartingBet(myDeterredCall, geom_algb_scaler, tablestate);
+    const float64 min_worst_scaler = OpponentFoldWait::FearStartingBet(myDeterredCall, geom_algb_scaler, tablestate);
 
 
     //
@@ -1085,6 +1091,12 @@ float64 DeterredGainStrategy::MakeBet()
 
     CombinedStatResultsGeom leftCS(left, left, true, myDeterredCall);
     GainModelGeom geomModel(leftCS, myDeterredCall);
+
+	GeomStateCombiner cg;
+    struct TableSpec state_model_config = {
+      &tablestate,
+      cg
+    };
 
     StatResult right = statWorse;
     right.repeated = 1-certainty;
@@ -1137,9 +1149,8 @@ float64 DeterredGainStrategy::MakeBet()
     ///Choose from geom to algb
 	AutoScalingFunction hybridgainDeterred(geomModel,algbModel,min_worst_scaler,geom_algb_scaler,&tablestate, SLIDERX);
 
-    GeomStateCombiner cg;
-    StateModel ap_aggressive( myDeterredCall, &hybridgainDeterred, cg );
 
+    StateModel ap_aggressive(state_model_config, myDeterredCall, &hybridgainDeterred);
 
 
     HoldemFunctionModel& choicemodel = ap_aggressive;
@@ -1349,7 +1360,6 @@ float64 PureGainStrategy::MakeBet()
     OpponentHandOpportunity opponentHandOpportunity(myPositionIndex, ViewTable(), statprob.core);
     CombinedStatResultsPessimistic csrp(opponentHandOpportunity, statprob.core);
 
-
 #ifdef LOGPOSITION
     printCommunityOutcomes(logFile, outcomes, detailPCT);
     char statResultMode;
@@ -1403,6 +1413,10 @@ float64 PureGainStrategy::MakeBet()
     GeomStateCombiner cg; // "geometric bets" are the optimal _fraction of bankroll_ bet to maximize the Kelly Criterion
     IStateCombiner &stateCombiner = (bGamble % 4 == 0) ? dynamic_cast<IStateCombiner &>(ca) : dynamic_cast<IStateCombiner &>(cg);
 
+    const struct TableSpec state_model_config = {
+      &tablestate,
+      stateCombiner
+    };
 
     GainModelNoRisk raiseModelAlgb(csrp, myDeterredCall);
     GainModelGeom raiseModelGeom(csrp, myDeterredCall);
@@ -1423,7 +1437,7 @@ float64 PureGainStrategy::MakeBet()
 
     // PureGainStrategy doesn't perform any blending across StateModel objects.
     // It has some scaling between GainModel (for calls) → CombinedStatResultsPessimistic (for raises) instead.
-    StateModel ap_aggressive( myDeterredCall, &callOrRaise, stateCombiner );
+    StateModel ap_aggressive( state_model_config, myDeterredCall, &callOrRaise );
 
 
 
