@@ -200,7 +200,7 @@ struct AggregatedState GeomStateCombiner::createOutcome(float64 value, float64 p
         // dy = y * (d probability * log(value) + probability * (d value) / value)
         // dy = y * (d probability * log(value) + probability * (d value) / value)
 
-        result.contribution.d_v = result.contribution.v * ( probability*dValue/value + dProbability*log(value) );
+        result.contribution.D_v = result.contribution.v * ( probability*dValue/value + dProbability*log(value) );
     } else {
         result.value = value;
         result.contribution = ValueAndSlope::exponentiate_unsafe(ValueAndSlope{value, dValue}, ValueAndSlope{probability, dProbability});
@@ -209,40 +209,40 @@ struct AggregatedState GeomStateCombiner::createOutcome(float64 value, float64 p
     return result;
 }
 
-static ValueAndSlope geom_state_combiner_aggregated_contribution(size_t arraySize, const float64 * values, const float64 * probabilities, const float64 * dValues, const float64 * dProbabilities) {
+static ValueAndSlope geom_state_combiner_aggregated_contribution(const size_t arraySize, const ValueAndSlope * const values, const ValueAndSlope * const probabilities) {
   ValueAndSlope aggregated_contribution = {1.0, 0.0};
 
   for (size_t i = 0; i < arraySize; ++i) {
-      if (probabilities[i] < EPS_WIN_PCT) {
+      if (probabilities[i].v < EPS_WIN_PCT) {
           //aggregated_contribution.v *= 1.0; // "no change"
           // log(values) ~= 0.0
           // probability ~= 0.0
-      } else if (values[i] < DBL_EPSILON) {
+      } else if (values[i].v < DBL_EPSILON) {
           aggregated_contribution.v = 0.0; // "lose everything"
           // 1.0 / values ~= \infty
-          aggregated_contribution.d_v = std::numeric_limits<float64>::infinity();
+          aggregated_contribution.D_v = std::numeric_limits<float64>::infinity();
           // [!WARNING]
           // EARLY RETURN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           return aggregated_contribution;
       } else {
-          aggregated_contribution.v *= std::pow(values[i], probabilities[i]);
-          aggregated_contribution.d_v += dProbabilities[i] * std::log(values[i]) + probabilities[i] * dValues[i] / values[i];
+          aggregated_contribution.v *= std::pow(values[i].v, probabilities[i].v);
+          aggregated_contribution.D_v += probabilities[i].D_v * std::log(values[i].v) + probabilities[i].v * values[i].D_v / values[i].v;
       }
 
   }
 
-  aggregated_contribution.d_v *= aggregated_contribution.v;
+  aggregated_contribution.D_v *= aggregated_contribution.v;
 
   return aggregated_contribution;
 }
 
-struct AggregatedState GeomStateCombiner::createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const {
+struct AggregatedState GeomStateCombiner::createBlendedOutcome(const size_t arraySize, const ValueAndSlope * const values, const ValueAndSlope * const probabilities) const {
     struct AggregatedState result;
     result.pr = 0.0;
-    result.contribution = geom_state_combiner_aggregated_contribution(arraySize, values, probabilities, dValues, dProbabilities);
+    result.contribution = geom_state_combiner_aggregated_contribution(arraySize, values, probabilities);
 
     for (size_t i = 0; i < arraySize; ++i) {
-        result.pr += probabilities[i];
+        result.pr += probabilities[i].v;
     }
 
     // y = std::pow(value1, probability1) * ... * std::pow(valueN, probabilityN)
@@ -298,14 +298,14 @@ struct AggregatedState AlgbStateCombiner::createOutcome(float64 value, float64 p
 
     return result;
 }
-struct AggregatedState AlgbStateCombiner::createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const {
+struct AggregatedState AlgbStateCombiner::createBlendedOutcome(const size_t arraySize, const ValueAndSlope * const values, const ValueAndSlope * const probabilities) const {
     struct AggregatedState result;
     result.pr = 0.0;
-    result.contribution.d_v = 0.0;
+    result.contribution.D_v = 0.0;
 
     float64 blendedProfit = 0.0;
     for (size_t i = 0; i < arraySize; ++i) {
-        const float64 profit = values[i] - 1.0;
+        const float64 profit = values[i].v - 1.0;
 
 #ifdef DEBUGASSERT
         if (profit < -1.0) {
@@ -314,11 +314,11 @@ struct AggregatedState AlgbStateCombiner::createBlendedOutcome(size_t arraySize,
         }
 #endif // DEBUGASSERT
 
-        blendedProfit += profit * probabilities[i];
+        blendedProfit += profit * probabilities[i].v;
 
-        result.contribution.d_v += dValues[i] * probabilities[i] + profit * dProbabilities[i];
+        result.contribution.D_v += values[i].D_v * probabilities[i].v + profit * probabilities[i].D_v;
 
-        result.pr += probabilities[i];
+        result.pr += probabilities[i].v;
     }
 
     // y = 1.0 + (v1 - 1.0) * prb1          + ... + (vN - 1.0) * prbN;
@@ -458,13 +458,8 @@ void StateModel::query( const float64 betSize )
     //Create arrays
     float64 * raiseAmount_A = new float64[arraySize];
 
-    float64 * oppRaisedChance_A = new float64[arraySize];
-    float64 * oppRaisedChanceD_A = new float64[arraySize];
-
-
-    float64 * potRaisedWin_A = new float64[arraySize];
-    float64 * potRaisedWinD_A = new float64[arraySize];
-
+    ValueAndSlope * oppRaisedChance_A = new ValueAndSlope[arraySize];
+    ValueAndSlope * potRaisedWin_A = new ValueAndSlope[arraySize];
 
     float64 lastuptoRaisedChance = 0;
     float64 lastuptoRaisedChanceD = 0;
@@ -479,24 +474,28 @@ void StateModel::query( const float64 betSize )
         raiseAmount_A[i] = ea.RaiseAmount(betSize,i);
 
         const float64 sliderx = betSize;
-
         // TODO(from yuzisee): Explore using
         /* fMyFoldGain.predictedRaiseToThisRound(<#float64 currentBetToCall#>, <#float64 currentAlreadyBet#>, <#float64 predictedRaiseTo#>) */
         // as sliderx?
 
-        const float64 evalX = raiseAmount_A[i];
-        potRaisedWin_A[i] = g_raised(sliderx,evalX); // as you can see below, this value is only blended in if we are below firstFoldToRaise
-        potRaisedWinD_A[i] = gd_raised(sliderx,evalX,potRaisedWin_A[i]);
 
-        if (willFoldToReraise(raiseAmount_A[i], potRaisedWin_A[i], fMyFoldGain, *(ea.tableinfo), betSize))
+        const float64 evalX = raiseAmount_A[i];
+        potRaisedWin_A[i].v = g_raised(sliderx,evalX); // as you can see below, this value is only blended in if we are below firstFoldToRaise
+        potRaisedWin_A[i].D_v = gd_raised(sliderx,evalX,potRaisedWin_A[i].v);
+        // ^^^ Can't use `.set_value_and_slope` here because we need `potRaisedWin_A[i].v` when computing `potRaisedWin_A[i].D_v`
+
+
+        if (willFoldToReraise(raiseAmount_A[i], potRaisedWin_A[i].v, fMyFoldGain, *(ea.tableinfo), betSize))
         {
-			if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
+          if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
 
             //Since g_raised isn't pessimistic based on raiseAmount (especially when we're just calling), don't add additional gain opportunity -- we should instead assume that if we would fold against such a raise that the opponent has us as beat as we are.
             // Deduct the bet you make and fold
-            potRaisedWin_A[i] = 1.0 - ea.tableinfo->betFraction(betSize);
-            potRaisedWinD_A[i] = -1.0;
-        }
+            potRaisedWin_A[i].set_value_and_slope(
+              1.0 - ea.tableinfo->betFraction(betSize)
+              , -1.0
+            );
+          }
 
     }
 
@@ -520,8 +519,8 @@ void StateModel::query( const float64 betSize )
 
 		if( newRaisedChance - lastuptoRaisedChance > invisiblePercent )
 		{
-			oppRaisedChance_A[i] = newRaisedChance - lastuptoRaisedChance;
-			oppRaisedChanceD_A[i] = newRaisedChanceD - lastuptoRaisedChanceD;
+			oppRaisedChance_A[i].v = newRaisedChance - lastuptoRaisedChance;
+			oppRaisedChance_A[i].D_v = newRaisedChanceD - lastuptoRaisedChanceD;
 			lastuptoRaisedChance = newRaisedChance;
 			lastuptoRaisedChanceD = newRaisedChanceD;
 		}
@@ -530,14 +529,13 @@ void StateModel::query( const float64 betSize )
 #endif
         {
             //raiseAmount_A[i] = 0;
-            oppRaisedChance_A[i] = 0;
-            oppRaisedChanceD_A[i] = 0;
-            potRaisedWin_A[i] = 1; // "no change"
-            potRaisedWinD_A[i] = 0;
+            oppRaisedChance_A[i].clearToZero();
+            potRaisedWin_A[i].v = 1; // "no change"
+            potRaisedWin_A[i].D_v = 0;
         }
 
 #ifdef DEBUGASSERT
-        if (std::isnan(oppRaisedChance_A[i])) {
+        if (oppRaisedChance_A[i].any_nan()) {
             std::cerr << "oppRaisedChance_A[i] should not be NaN" << std::endl;
             exit(1);
         }
@@ -546,7 +544,7 @@ void StateModel::query( const float64 betSize )
 #ifdef DEBUG_TRACE_SEARCH
         if(bTraceEnable)
         {
-            std::cout << "\t\t(oppRaiseChance[" << i << "] , cur, highest) = " << oppRaisedChance_A[i]  << " , "  << newRaisedChance << " , " << lastuptoRaisedChance << std::endl;
+            std::cout << "\t\t(oppRaiseChance[" << i << "] , cur, highest) = " << oppRaisedChance_A[i].v  << " , "  << newRaisedChance << " , " << lastuptoRaisedChance << std::endl;
         }
 #endif
 
@@ -579,8 +577,7 @@ void StateModel::query( const float64 betSize )
         const float64 totalChance = 1.0 - playChance;
         for( int32 i=arraySize-1;i>=0; --i)
         {
-            oppRaisedChance_A[i] /= totalChance;
-            oppRaisedChanceD_A[i] /= totalChance;
+            oppRaisedChance_A[i].rescale (1.0 / totalChance);
         }
         oppFoldChance /= totalChance;
         oppFoldChanceD /= totalChance;
@@ -602,7 +599,7 @@ void StateModel::query( const float64 betSize )
     outcomePush = fStateCombiner.createOutcome(potFoldWin, oppFoldChance, potFoldWinD, oppFoldChanceD);
     outcomeCalled = fStateCombiner.createOutcome(potNormalWin, playChance, potNormalWinD, playChanceD);
 
-    blendedRaises = fStateCombiner.createBlendedOutcome(arraySize, potRaisedWin_A, oppRaisedChance_A, potRaisedWinD_A, oppRaisedChanceD_A);
+    blendedRaises = fStateCombiner.createBlendedOutcome(arraySize, potRaisedWin_A, oppRaisedChance_A);
 
     /*
      STATEMODEL_ACCESS gainRaised = 1;
@@ -647,14 +644,14 @@ void StateModel::query( const float64 betSize )
     {
       // https://github.com/yuzisee/pokeroo/commit/ecec2a0e4f8d119a01f310fef9ce4e4652c3ce58
         std::cout << "\t\t (gainWithFold*gainNormal*gainRaised) = " << gainCombined.contribution.v << std::endl;
-        std::cout << "\t\t ((gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y) = " << gainCombined.contribution.d_v << std::endl;
+        std::cout << "\t\t ((gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y) = " << gainCombined.contribution.D_v << std::endl;
         std::cout << "\t\t fMyFoldGain.myFoldGain(" << (fMyFoldGain.suggestMeanOrRank() == 0 ? "MEAN" : "RANK") << ") = " << fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank()) << std::endl;
     }
 #endif
 
     y = gainCombined.contribution.v; // e.g. gainWithFold*gainNormal*gainRaised;
 
-    dy = gainCombined.contribution.d_v; // e.g. (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
+    dy = gainCombined.contribution.D_v; // e.g. (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
 
     y -= fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank());
     /* called with ea.ed */
@@ -679,11 +676,9 @@ void StateModel::query( const float64 betSize )
     delete [] raiseAmount_A;
 
     delete [] oppRaisedChance_A;
-    delete [] oppRaisedChanceD_A;
 
 
     delete [] potRaisedWin_A;
-    delete [] potRaisedWinD_A;
 
 
 }

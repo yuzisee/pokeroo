@@ -13,9 +13,29 @@
 #include <cmath>
 #include <limits>
 
+
 struct ValueAndSlope {
   float64 v;
-  float64 d_v;
+  float64 D_v;
+
+  void clearToZero() {
+    this->v = 0.0;
+    this->D_v = 0.0;
+  }
+
+  void set_value_and_slope(float64 new_v, float64 new_dv) {
+    this->v = new_v;
+    this->D_v = new_dv;
+  }
+
+  void rescale(float64 mag) {
+    this->v *= mag;
+    this->D_v *= mag;
+  }
+
+  constexpr bool any_nan() const {
+    return (std::isnan(this->v) || std::isnan(this->D_v));
+  }
 
   // Marked `…_unsafe` because you should be guarding against `pow(0.0, 0.0)` before you call this
   static constexpr ValueAndSlope exponentiate_unsafe(const ValueAndSlope &a, const ValueAndSlope &b) {
@@ -25,7 +45,7 @@ struct ValueAndSlope {
     // d log(y) = d exponent * log(base) + exponent * d log(base)
     // dy / y = d exponent * log(base) + exponent * (d base) / base
     // dy = y * (d exponent * log(base) + exponent * (d base) / base)
-    const float64 exponentiation_power_d_v = exponentiation_power_v * (b.d_v * std::log(a.v)  +  b.v * a.d_v / a.v);
+    const float64 exponentiation_power_d_v = exponentiation_power_v * (b.D_v * std::log(a.v)  +  b.v * a.D_v / a.v);
     return ValueAndSlope{
       exponentiation_power_v, exponentiation_power_d_v
     };
@@ -33,7 +53,7 @@ struct ValueAndSlope {
 
   static constexpr ValueAndSlope multiply2(const ValueAndSlope &a, const ValueAndSlope &b) {
     const float64 multiplication_product_v = a.v * b.v;
-    const float64 multiplication_product_d_v = a.d_v * b.v + b.d_v * a.v;
+    const float64 multiplication_product_d_v = a.D_v * b.v + b.D_v * a.v;
     return ValueAndSlope{
       multiplication_product_v, multiplication_product_d_v
     };
@@ -46,9 +66,9 @@ struct ValueAndSlope {
     // log(y) = log(a) + log(b) + log(c)
     // dy / y =  da / a + db / b + dc / c
     // dy = y * (da / a + db / b + dc / c)
-    const float64 multiplication_product_d_v = a.d_v * b.v * c.v + a.v * b.d_v * c.v + a.v * b.v * c.d_v;
+    const float64 multiplication_product_d_v = a.D_v * b.v * c.v + a.v * b.D_v * c.v + a.v * b.v * c.D_v;
     // ^^^ More stable in case any of (a.v, b.v, c.v) are close to 0.0
-    // const float64 multiplication_product_d_v = multiplication_product_v * ( a.d_v / a.v + b.d_v / b.v + c.d_v / c.v );
+    // const float64 multiplication_product_d_v = multiplication_product_v * ( a.D_v / a.v + b.D_v / b.v + c.D_v / c.v );
 
     return ValueAndSlope{
       multiplication_product_v, multiplication_product_d_v
@@ -57,7 +77,7 @@ struct ValueAndSlope {
 
   static constexpr ValueAndSlope sum3(const ValueAndSlope &a, const ValueAndSlope &b, const ValueAndSlope &c) {
     float64 addition_sum_v = a.v + b.v + c.v;
-    float64 addition_sum_d_v = a.d_v + b.d_v + c.d_v;
+    float64 addition_sum_d_v = a.D_v + b.D_v + c.D_v;
     return ValueAndSlope{
       addition_sum_v, addition_sum_d_v
     };
@@ -69,7 +89,7 @@ struct ValueAndSlope {
     } else if (b.v < a.v) {
       return b;
     } else {
-        if (a.d_v < b.d_v) {
+        if (a.D_v < b.D_v) {
           return a;
         } else {
           return b;
@@ -82,7 +102,7 @@ struct ValueAndSlope {
     } else if (b.v < a.v) {
       return a;
     } else {
-        if (a.d_v < b.d_v) {
+        if (a.D_v < b.D_v) {
           return b;
         } else {
           return a;

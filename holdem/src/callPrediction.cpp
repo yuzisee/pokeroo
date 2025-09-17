@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
-#include <float.h>
 #include <algorithm>
 
 
@@ -638,7 +637,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
   for(size_t i=0;i<noRaiseArraySize_now;++i)
   {
             nextNoRaise_A[i].v = 1; //Won't raise (by default)
-            nextNoRaise_A[i].d_v = 0;
+            nextNoRaise_A[i].D_v = 0;
   }
 
   ///Initialize player bet state
@@ -693,7 +692,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                   const float64 oppRaiseMake = thisRaise - oppBetAlready;
                   if( oppRaiseMake <= 0 ) {
                       nextNoRaise_A[i_step].v = 0.0; // well then we're guaranteed to hit this amount
-                      nextNoRaise_A[i_step].d_v = 0.0;
+                      nextNoRaise_A[i_step].D_v = 0.0;
                       prevRaise = 0;
 #ifdef DEBUGASSERT
                       if (!prev_w_r.is_all_zero()) {
@@ -728,7 +727,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                                 };
 
                           //nextNoRaise_A[i_step].v = w_r_facedodds.rank;
-                          //nextNoRaise_A[i_step].d_v = noraiseRankD;
+                          //nextNoRaise_A[i_step].D_v = noraiseRankD;
 
                           // But the opponent may or may not know your hand!
                           // Unforunately, knowing your hand is weak doesn't always make more opponents want to raise.
@@ -742,7 +741,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                                     ;
 
                           nextNoRaise_A[i_step].v = (noraise.v + w_r_facedodds.rank)/2;
-                          nextNoRaise_A[i_step].d_v = (noraise.d_v + noraiseRankD)/2;
+                          nextNoRaise_A[i_step].D_v = (noraise.D_v + noraiseRankD)/2;
 
                           // nextNoRaise should be monotonically increasing. That is, the probability of being raised all-in is lower than the probabilty of being raised at least minRaise.
                           if (i_step>0) {
@@ -804,7 +803,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                                   }
                               }
 
-                              nextNoRaise_A[i_step].d_v = 0;
+                              nextNoRaise_A[i_step].D_v = 0;
                           }
 
                           prevRaise = 0;
@@ -828,7 +827,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
           if( traceOut != 0 )  *traceOut << " to bet " << oppBetMake << "more";
           #endif
 
-          if( oppBetMake <= DBL_EPSILON )
+          if( oppBetMake <= std::numeric_limits<float64>::epsilon() )
           { //Definitely call
               nextexf = 0;
               nextdexf = 1;
@@ -915,7 +914,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
 
       const float64 oppInPot = oppBetAlready + nextexf;
-      if( oppInPot - betSize > DBL_EPSILON )
+      if( oppInPot - betSize > std::numeric_limits<float64>::epsilon() )
       {
           *overexf_out += oppInPot - betSize;
           *overdexf_out += nextdexf;
@@ -936,7 +935,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
 
       //At this point, each nextNoRaise is 100% unless otherwise adjusted.
-      const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step].v < 0) ? 0 : pow(nextNoRaise_A[i].v,oppRaiseChancesAware);
+      const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step].v < std::numeric_limits<float64>::epsilon()) ? 0 : pow(nextNoRaise_A[i_step].v,oppRaiseChancesAware);
 
 
 #ifdef DEBUGASSERT
@@ -963,13 +962,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       }
 #endif //DEBUGASSERT
 
-      noRaiseChance_A[i_step] *=noRaiseChance_adjust;
-      if( noRaiseChance_A[i_step] == 0 ) //and nextNoRaiseD == 0
+      noRaiseChance_A[i_step] *= noRaiseChance_adjust;
+      if( std::fabs(noRaiseChance_A[i_step]) <= std::numeric_limits<float64>::epsilon() ) //and nextNoRaiseD == 0
       {
           noRaiseChanceD_A[i_step] = 0;
       }else
       {
-          noRaiseChanceD_A[i_step] += nextNoRaise_A[i_step].d_v/nextNoRaise_A[i_step].v  *   oppRaiseChancesAware; //Logairthmic differentiation
+          noRaiseChanceD_A[i_step] += nextNoRaise_A[i_step].D_v/nextNoRaise_A[i_step].v  *   oppRaiseChancesAware; //Logarithmic differentiation
       }
   }
 } // end accumulateOneOpponentPossibleRaises
@@ -1318,7 +1317,6 @@ float64 ExactCallBluffD::RiskPrice(const ExpectedCallD &tableinfo, CallCumulatio
     const float64 Ne = static_cast<float64>(Ne_int);
 
     const float64 estSacrifice = (tableinfo.table->GetPotSize() - tableinfo.alreadyBet());
-
 
     const float64 maxStack = tableinfo.table->GetAllChips();
 
