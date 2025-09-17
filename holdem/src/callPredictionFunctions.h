@@ -108,6 +108,14 @@ struct HypotheticalBet {
 }
 ;
 
+struct HypotheticalBet {
+  const struct ChipPositionState &bettorSituation;
+  float64 hypotheticalRaiseBy;
+  bool bCouldHaveChecked;
+  bool bWillGetCalled;
+}
+;
+
 class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
     private:
@@ -328,7 +336,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     public:
     float64 pot;
     float64 raiseTo;
-    float64 fold_bet;
+    float64 fold_bet; // if I "fold" instead of `raiseTo`, what bet can we get back to just by waiting?
     float64 riskLoss;
 	float64 callIncrLoss;
 	float64 callIncrBase;

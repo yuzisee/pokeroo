@@ -439,12 +439,12 @@ float64 ExactCallBluffD::facedOddsND_Algb(const ChipPositionState & cps, float64
 }
 
 
-float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step) const
+float64 ExactCallD::RaiseAmount(const ExpectedCallD &tableinfo, const float64 betSize, int32 step)
 {
 
-    float64 minRaiseDirect = tableinfo->minRaiseTo();
-    float64 minRaiseBy = minRaiseDirect - tableinfo->callBet();
-    float64 minRaiseBet = betSize - tableinfo->callBet();
+    float64 minRaiseDirect = tableinfo.minRaiseTo();
+    float64 minRaiseBy = minRaiseDirect - tableinfo.callBet();
+    float64 minRaiseBet = betSize - tableinfo.callBet();
 
     float64 raiseAmount =
       ( minRaiseBet < minRaiseDirect ) ?
@@ -459,7 +459,7 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step) const
 
 	if( step > 0 )
 	{
-		raiseAmount = raiseAmount + (raiseAmount - tableinfo->callBet());
+		raiseAmount = raiseAmount + (raiseAmount - tableinfo.callBet());
 
 		if( raiseAmount < betSize + minRaiseDirect )
 		{
@@ -470,14 +470,14 @@ float64 ExactCallD::RaiseAmount(const float64 betSize, int32 step) const
 		while(step > 0)
 		{
 			//You would be raising by {raiseAmount - callBet()};
-			raiseAmount = raiseAmount + (raiseAmount - tableinfo->callBet());
+			raiseAmount = raiseAmount + (raiseAmount - tableinfo.callBet());
 			--step;
 		}
 	}
 
-    if( raiseAmount > tableinfo->maxRaiseAmount() )
+    if( raiseAmount > tableinfo.maxRaiseAmount() )
     {
-        raiseAmount = tableinfo->maxRaiseAmount();
+        raiseAmount = tableinfo.maxRaiseAmount();
     }
 
 	return raiseAmount;
@@ -572,7 +572,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     #endif
 
     this->noRaiseArraySize = 0;
-    while( RaiseAmount(betSize,this->noRaiseArraySize) < tableinfo->maxRaiseAmount() )
+    while( RaiseAmount(*tableinfo, betSize,this->noRaiseArraySize) < tableinfo->maxRaiseAmount() )
     {
         ++noRaiseArraySize;
     }
@@ -640,6 +640,8 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     }
 }
 
+// This simulates the actions of the player (pIndex)
+// It will accumulate this->totalexf as the expected amount you can win in a showdown
 void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out) {
   const float64 prevPot = tableinfo->table->GetPrevPotSize();
   const float64 opponents = tableinfo->handsToShowdownAgainst(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
@@ -687,6 +689,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       if( betSize - oppBankRoll < tableinfo->chipDenom()/4  ) // betSize <= oppBankRoll
       {	//Can still call, at least
 
+          // Assume that the "total pot" they can win is the current `this->totalexf` so far
           ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit, prevPot);
 
 			///=========================
@@ -705,7 +708,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
               {
                   const int32 i = i_step;
                   const bool bMyWouldCall = i < callSteps;
-                  const float64 thisRaise = RaiseAmount(betSize,i);
+                  const float64 thisRaise = RaiseAmount(*tableinfo, betSize,i);
 
                   //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
                   const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
@@ -1291,7 +1294,6 @@ float64 ExpectedCallD::PushGain() const
 
 float64 ExactCallBluffD::pWin(const float64 betSize)
 {
-
     query(betSize);
 
     ///Try pow(,impliedFactor) maybe
@@ -1308,9 +1310,9 @@ float64 ExactCallBluffD::pWinD(const float64 betSize)
 
 float64 ExactCallD::pRaise(const float64 betSize, const int32 step, const int32 callSteps)
 {
-    query(betSize,callSteps);
+    query(betSize, callSteps);
 
-	if( RaiseAmount( betSize, step ) >= tableinfo->maxBet() - tableinfo->chipDenom()/2 )
+	if( RaiseAmount( *tableinfo, betSize, step ) >= tableinfo->maxBet() - tableinfo->chipDenom()/2 )
     { return 0; } //You don't care about raises if you are all-in
 	else if( step >= noRaiseArraySize )
     { return std::numeric_limits<float64>::signaling_NaN(); }
@@ -1320,18 +1322,18 @@ float64 ExactCallD::pRaise(const float64 betSize, const int32 step, const int32 
 
 float64 ExactCallD::pRaiseD(const float64 betSize, const int32 step, const int32 callSteps)
 {
-    query(betSize,callSteps);
+    query(betSize, callSteps);
 
     if( step < noRaiseArraySize ) return -noRaiseChanceD_A[step];
     else return 0;
 }
 
 
-
-
 float64 ExactCallD::exf(const float64 betSize)
 {
-    query(betSize,querycallSteps);
+    // no callSteps because `.exf()` is for searching through E[callers], i.e. the number of players you'll meet in the showdown (and thus, we are assuming we want to find the optimal bet size to take us to the showdown -- in this part of the calculation, we won't be folding ourselves)
+    // this usually happens during `StateModel::query` → `g_raised` → GainModelGeom/GainModelNoRisk → `.f` → `.g` → `espec.exf(…)`
+    query(betSize, -1);
 
     return totalexf*impliedFactor + (betSize - nearest);
 }
@@ -1339,7 +1341,7 @@ float64 ExactCallD::exf(const float64 betSize)
 float64 ExactCallD::dexf(const float64 betSize)
 {
 
-    query(betSize,querycallSteps);
+    query(betSize, -1);
 
 
     return totaldexf*impliedFactor;

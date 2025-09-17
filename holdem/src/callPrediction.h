@@ -57,7 +57,7 @@ public:
 
 class IExf {
 public:
-    static constexpr float64 UNITIALIZED_QUERY = -1;
+    static constexpr float64 UNINITIALIZED_QUERY = -1;
 
     virtual ~IExf() {}
 
@@ -83,6 +83,7 @@ class ExactCallD : public IExf
 
         const ExpectedCallD * const tableinfo;
 
+        static constexpr int32 FOLD_ALL_RERAISES = -1;
     protected:
         float64 queryinput;
 		int32 querycallSteps;
@@ -141,8 +142,8 @@ class ExactCallD : public IExf
 					,traceOut(0)
 #endif
             {
-                queryinput = UNITIALIZED_QUERY;
-				querycallSteps = -1;
+                queryinput = UNINITIALIZED_QUERY;
+                querycallSteps = FOLD_ALL_RERAISES;
             }
 
             virtual ~ExactCallD();
@@ -156,8 +157,8 @@ class ExactCallD : public IExf
             // If you want you could interpolate in between, but we typically just average the outcomes, since we're taking an expectation over all raise amounts that we might face.
             // callSteps is an index that indicates: "all iterator values (of step) starting from this one and higher, are raises that I would fold against)
             // In other worst, callSteps it the smallest RaiseAmount where we know we would just fold to it.
-            virtual float64 RaiseAmount(const float64 betSize, int32 step) const;
-			virtual float64 pRaise(const float64 betSize, const int32 step, const int32 callSteps  );
+            static float64 RaiseAmount(const ExpectedCallD &tableinfo, const float64 betSize, int32 step);
+			virtual float64 pRaise(const float64 betSize, const int32 step, const int32 callSteps );
 			virtual float64 pRaiseD(const float64 betSize, const int32 step, const int32 callSteps );
 
             virtual void SetImpliedFactor(const float64 bonus);
@@ -213,7 +214,7 @@ class ExactCallBluffD
     ,
     insuranceDeterrent(0)
                             {
-                                queryinputbluff = IExf::UNITIALIZED_QUERY;
+                                queryinputbluff = IExf::UNINITIALIZED_QUERY;
                             }
 
 

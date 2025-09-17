@@ -750,7 +750,12 @@ void FacedOddsAlgb::query( const float64 w )
 float64 FacedOddsAlgb::f( const float64 w ) { query(w);  return lastF; }
 float64 FacedOddsAlgb::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
 
-
+// lastF = U - nonRaiseGain
+//       = std::pow(1 + pot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw)   −   nonRaiseGain
+//         ^^^ "win the pot if you win the showdown"     * ^^^ "lose your entire raiseTo if you lose the showdown" −   nonRaiseGain
+//
+// If you haven't bet yet (i.e. bCheckPossible == true)
+// nonRaiseGain = 1 - riskLoss / FG.waitLength.bankroll
 void FacedOddsRaiseGeom::query( const float64 w )
 {
     if( lastW == w ) return;
@@ -765,6 +770,11 @@ void FacedOddsRaiseGeom::query( const float64 w )
 
     if( !bCheckPossible )
     {
+      // Nominally, FoldGain is
+      //     betSize * "pr{W} after n_hands_to_wait" - betSize "Pr{L} after n_hands_to_wait"         - n_hands_to_wait * betSacrifice
+      //     betSize * "pr{W} after n_hands_to_wait" - betSize (1.0 - "Pr{W} after n_hands_to_wait") - n_hands_to_wait * betSacrifice
+      // 2 * betSize * "pr{W} after n_hands_to_wait"             - n_hands_to_wait * betSacrifice - betSize
+      // 2 * betSize * (1.0 - 1.0 / n_hands_to_wait)^N_opponents - n_hands_to_wait * betSacrifice - betSize
         excess += FG.f(fold_bet) / FG.waitLength.bankroll;
     }
 

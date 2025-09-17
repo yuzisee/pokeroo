@@ -519,7 +519,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
         float64 orAmount;
         for(raiseStep = 0, orAmount = 0.0; orAmount < maxShowdown; ++raiseStep )
         {
-            orAmount =  opp_callraise.RaiseAmount(betToCall,raiseStep);
+            orAmount =  ExactCallD::RaiseAmount(tablestate, betToCall,raiseStep);
 
             const float64 oppRaisedPlayGain = m.g_raised(betToCall,orAmount);
             if(StateModel::willFoldToReraise(orAmount, oppRaisedPlayGain, rlF, tablestate, betToCall))
@@ -533,7 +533,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
         }
         for(raiseStep = 0, orAmount = 0.0; orAmount < maxShowdown; ++raiseStep )
         {
-            orAmount =  opp_callraise.RaiseAmount(betToCall,raiseStep);
+            orAmount =  ExactCallD::RaiseAmount(tablestate, betToCall,raiseStep);
             logF << "OppRAISEChance";
             switch (rlF.suggestMeanOrRank()) {
                 case MEAN:
@@ -545,7 +545,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
             }
             if( raiseStep >= firstFoldToRaise ) {  logF << " [F] ";  } else { logF << " [*] "; }
 
-            // Here, raiseStep is just the iterator. opp_callraise.RaiseAmount(betToCall,raiseStep) is the amount, opp_callraise.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
+            // Here, raiseStep is just the iterator. ExactCallD::RaiseAmount(betToCall,raiseStep) is the amount, opp_callraise.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
             logF << opp_callraise.pRaise(betToCall,raiseStep,firstFoldToRaise) << " @ $" << orAmount << " ($" << rlF.predictedRaiseToThisRound(betToCall, betToCall, orAmount) << " now)";
 
             // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
@@ -576,7 +576,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
         float64 mrAmount;
         for(raiseStep = 0, mrAmount = 0.0; mrAmount < maxShowdown; ++raiseStep )
         {
-            mrAmount = opp_callraise.RaiseAmount(separatorBet,raiseStep);
+            mrAmount = ExactCallD::RaiseAmount(tablestate, separatorBet,raiseStep);
 
             const float64 oppRaisedPlayGain = m.g_raised(separatorBet,mrAmount);
             if(StateModel::willFoldToReraise(mrAmount, oppRaisedPlayGain, rrF, tablestate, separatorBet))
@@ -587,7 +587,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
 
         for(raiseStep = 0, mrAmount = 0.0; mrAmount < maxShowdown; ++raiseStep )
         {
-            mrAmount =  opp_callraise.RaiseAmount(separatorBet,raiseStep);
+            mrAmount =  ExactCallD::RaiseAmount(tablestate, separatorBet,raiseStep);
             logF << "OppRAISEChance";
             switch (rrF.suggestMeanOrRank()) {
                 case MEAN:
@@ -899,7 +899,7 @@ float64 ImproveGainStrategy::MakeBet()
      myDeterredCall_left.traceOut = &logFile;
      //myDeterredCall_right.traceOut = &logfile;
      #endif
-     float64 rAmount =  myDeterredCall.RaiseAmount(0.25,3);
+     float64 rAmount =  ExactCallD::RaiseAmount(0.25,3);
      logFile << myDeterredCall.pRaise(0.25,3) << " @ $" << rAmount;
      logFile << "\tfold -- left" << myDeterredCall_left.pWin(rAmount) << "  " << myDeterredCall_right.pWin(rAmount) << " right" << endl;
 
