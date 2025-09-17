@@ -203,7 +203,7 @@ struct AggregatedState GeomStateCombiner::createOutcome(float64 value, float64 p
         result.contribution.d_v = result.contribution.v * ( probability*dValue/value + dProbability*log(value) );
     } else {
         result.value = value;
-        result.contribution = ValueAndSlope::exponentiate(ValueAndSlope{value, dValue}, ValueAndSlope{probability, dProbability});
+        result.contribution = ValueAndSlope::exponentiate_unsafe(ValueAndSlope{value, dValue}, ValueAndSlope{probability, dProbability});
     }
 
     return result;

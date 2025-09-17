@@ -10,14 +10,15 @@
 #define holdem_math_support_h
 
 #include "portability.h"
-#include "cmath"
+#include <cmath>
 #include <limits>
 
 struct ValueAndSlope {
   float64 v;
   float64 d_v;
 
-  static constexpr ValueAndSlope exponentiate(const ValueAndSlope &a, const ValueAndSlope &b) {
+  // Marked `…_unsafe` because you should be guarding against `pow(0.0, 0.0)` before you call this
+  static constexpr ValueAndSlope exponentiate_unsafe(const ValueAndSlope &a, const ValueAndSlope &b) {
     // y = std::pow(base, exponent)
     float64 exponentiation_power_v = std::pow(a.v, b.v);
     // log(y) = exponent * log(base)
