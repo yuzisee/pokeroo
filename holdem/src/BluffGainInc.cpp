@@ -474,16 +474,16 @@ void StateModel::query( const float64 betSize )
         raiseAmount_A[i] = ea.RaiseAmount(betSize,i);
 
         const float64 sliderx = betSize;
-
         // TODO(from yuzisee): Explore using
         /* fMyFoldGain.predictedRaiseToThisRound(<#float64 currentBetToCall#>, <#float64 currentAlreadyBet#>, <#float64 predictedRaiseTo#>) */
         // as sliderx?
 
+
         const float64 evalX = raiseAmount_A[i];
-        potRaisedWin_A[i].set_value_and_slope(
-          g_raised(sliderx,evalX) // as you can see below, this value is only blended in if we are below firstFoldToRaise
-          , gd_raised(sliderx,evalX,potRaisedWin_A[i].v)
-        );
+        potRaisedWin_A[i].v = g_raised(sliderx,evalX); // as you can see below, this value is only blended in if we are below firstFoldToRaise
+        potRaisedWin_A[i].D_v = gd_raised(sliderx,evalX,potRaisedWin_A[i].v);
+        // ^^^ Can't use `.set_value_and_slope` here because we need `potRaisedWin_A[i].v` when computing `potRaisedWin_A[i].D_v`
+
 
         if (willFoldToReraise(raiseAmount_A[i], potRaisedWin_A[i].v, fMyFoldGain, *(ea.tableinfo), betSize))
         {
