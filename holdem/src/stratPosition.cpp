@@ -18,13 +18,12 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <math.h>
 #include "stratPosition.h"
-#include <float.h>
-
 #include "arena.h"
-#include "callPrediction.h"
 #include "stratFear.h"
+
+#include <math.h>
+#include <float.h>
 
 //#define DEBUG_TRAP_AS_NORMAL
 

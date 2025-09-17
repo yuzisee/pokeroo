@@ -20,7 +20,6 @@
 
 #include "callPrediction.h"
 #include "inferentials.h"
-#include <float.h>
 #include <algorithm>
 
 
