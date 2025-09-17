@@ -110,7 +110,7 @@ class ExactCallD : public IExf
 
     // By default, startingPoint == 0.0
     // When using this function for the purposes of nextNoRaise_A, you'll want to start at the previous value to avoid rounding errors.
-    static float64 facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 raiseto, float64 riskLoss, float64 avgBlind, const ChipPositionState & cps, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean);
+    static float64 facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD * useMean);
 
 
 

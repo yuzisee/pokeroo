@@ -186,8 +186,9 @@ float64 ExactCallD::facedOdds_raise_Geom(const ChipPositionState & cps, float64 
                                         );
 }
 
-float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 raiseto, float64 riskLoss, float64 avgBlind, const ChipPositionState & cps, float64 fold_bet, float64 opponents, bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean)
+float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD * useMean)
 {
+  const struct ChipPositionState &cps = hypotheticalRaise.cps;
     if( raiseto >= cps.bankroll )
     {
         const float64 w_r = 1-1.0/RAREST_HAND_CHANCE; // because an opponent would still _always_ raise with the best hand.
@@ -198,23 +199,18 @@ float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 
         }
     }
 
-    if( fold_bet > cps.bankroll )
-    {
-        fold_bet = cps.bankroll;
-    }
-
     FacedOddsRaiseGeom a(denom);
 
-	a.pot = cps.pot + (bMyWouldCall ? (raiseto-fold_bet) : 0);
+	a.pot = cps.pot + (hypotheticalRaise.bWillGetCalled ? (raiseto-fold_bet) : 0);
     a.raiseTo = raiseto;
-    a.fold_bet = fold_bet;
-    a.bCheckPossible = bCheckPossible;
-    a.riskLoss = (bCheckPossible) ? 0 : riskLoss;
+    a.fold_bet = hypotheticalRaise.fold_bet();
+    a.bCheckPossible = hypotheticalRaise.bCouldHaveChecked;
+    a.riskLoss = (hypotheticalRaise.bCouldHaveChecked) ? 0 : riskLoss;
 
-	if( bMyWouldCall )
+	if( hypotheticalRaise.bWillGetCalled )
 	{
-		a.callIncrLoss = 1 - fold_bet/cps.bankroll;
-		a.callIncrBase = (cps.bankroll + cps.pot)/(cps.bankroll - fold_bet); // = 1 + (pot - fold_bet) / (bankroll - fold_bet);
+		a.callIncrLoss = 1 - hypotheticalRaise.fold_bet()/cps.bankroll;
+		a.callIncrBase = (cps.bankroll + cps.pot)/(cps.bankroll - hypotheticalRaise.fold_bet()); // = 1 + (pot - fold_bet) / (bankroll - fold_bet);
 	}else
 	{
 		a.callIncrLoss = 0;
