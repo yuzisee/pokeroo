@@ -20,20 +20,20 @@ struct ValueAndSlope {
   // Marked `…_unsafe` because you should be guarding against `pow(0.0, 0.0)` before you call this
   static constexpr ValueAndSlope exponentiate_unsafe(const ValueAndSlope &a, const ValueAndSlope &b) {
     // y = std::pow(base, exponent)
-    float64 exponentiation_power_v = std::pow(a.v, b.v);
+    const float64 exponentiation_power_v = std::pow(a.v, b.v);
     // log(y) = exponent * log(base)
     // d log(y) = d exponent * log(base) + exponent * d log(base)
     // dy / y = d exponent * log(base) + exponent * (d base) / base
     // dy = y * (d exponent * log(base) + exponent * (d base) / base)
-    float64 exponentiation_power_d_v = exponentiation_power_v * (b.d_v * std::log(a.v)  +  b.v * a.d_v / a.v);
+    const float64 exponentiation_power_d_v = exponentiation_power_v * (b.d_v * std::log(a.v)  +  b.v * a.d_v / a.v);
     return ValueAndSlope{
       exponentiation_power_v, exponentiation_power_d_v
     };
   }
 
   static constexpr ValueAndSlope multiply2(const ValueAndSlope &a, const ValueAndSlope &b) {
-    float64 multiplication_product_v = a.v * b.v;
-    float64 multiplication_product_d_v = a.d_v * b.v + b.d_v * a.v;
+    const float64 multiplication_product_v = a.v * b.v;
+    const float64 multiplication_product_d_v = a.d_v * b.v + b.d_v * a.v;
     return ValueAndSlope{
       multiplication_product_v, multiplication_product_d_v
     };
@@ -41,12 +41,15 @@ struct ValueAndSlope {
 
   static constexpr ValueAndSlope multiply3(const ValueAndSlope &a, const ValueAndSlope &b, const ValueAndSlope &c) {
     // multiplicand, multiplier, product
-    float64 multiplication_product_v = a.v * b.v * c.v;
+    const float64 multiplication_product_v = a.v * b.v * c.v;
     // y = a * b * c
     // log(y) = log(a) + log(b) + log(c)
     // dy / y =  da / a + db / b + dc / c
     // dy = y * (da / a + db / b + dc / c)
-    float64 multiplication_product_d_v = multiplication_product_v * ( a.d_v / a.v + b.d_v / b.v + c.d_v / c.v );
+    const float64 multiplication_product_d_v = a.d_v * b.v * c.v + a.v * b.d_v * c.v + a.v * b.v * c.d_v;
+    // ^^^ More stable in case any of (a.v, b.v, c.v) are close to 0.0
+    // const float64 multiplication_product_d_v = multiplication_product_v * ( a.d_v / a.v + b.d_v / b.v + c.d_v / c.v );
+
     return ValueAndSlope{
       multiplication_product_v, multiplication_product_d_v
     };
