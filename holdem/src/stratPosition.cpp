@@ -487,9 +487,9 @@ static const char * chipSignToString(const struct AggregatedState & state) {
 void PositionalStrategy::printStateModel(std::ofstream &logF, float64 displaybet, StateModel &ap_aggressive, const Player &me) {
 
     ap_aggressive.f(displaybet); // query
-    logF << " AgainstCall("<< displaybet <<")=" << ap_aggressive.outcomeCalled.contribution << " from " << chipSignToString(ap_aggressive.outcomeCalled) << (fabs(ap_aggressive.outcomeCalled.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.outcomeCalled.pr << endl;
-    logF << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.blendedRaises.contribution << " from " << chipSignToString(ap_aggressive.blendedRaises) << (fabs(ap_aggressive.blendedRaises.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.blendedRaises.pr  << endl;
-    logF << "        Push("<< displaybet <<")=" << ap_aggressive.outcomePush.contribution << " from " << chipSignToString(ap_aggressive.outcomePush) << ((ap_aggressive.outcomePush.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.outcomePush.pr << endl;
+    logF << " AgainstCall("<< displaybet <<")=" << ap_aggressive.outcomeCalled.contribution.v << " from " << chipSignToString(ap_aggressive.outcomeCalled) << (fabs(ap_aggressive.outcomeCalled.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.outcomeCalled.pr << endl;
+    logF << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.blendedRaises.contribution.v << " from " << chipSignToString(ap_aggressive.blendedRaises) << (fabs(ap_aggressive.blendedRaises.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.blendedRaises.pr  << endl;
+    logF << "        Push("<< displaybet <<")=" << ap_aggressive.outcomePush.contribution.v << " from " << chipSignToString(ap_aggressive.outcomePush) << ((ap_aggressive.outcomePush.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.outcomePush.pr << endl;
 
 }
 
@@ -1211,9 +1211,9 @@ float64 DeterredGainStrategy::MakeBet()
 
 
     choicemodel.f(displaybet); //since choicemodel is ap_aggressive
-    logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.outcomeCalled.contribution << " from $" << ap_aggressive.outcomeCalled.value << " @ " << ap_aggressive.outcomeCalled.pr << endl;
-    logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.blendedRaises.contribution << " from $" << ap_aggressive.blendedRaises.value << " @ " << ap_aggressive.blendedRaises.pr  << endl;
-    logFile << "        Push("<< displaybet <<")=" << ap_aggressive.outcomePush.contribution << " from $" << ap_aggressive.outcomePush.value << " @ " << ap_aggressive.outcomePush.pr << endl;
+    logFile << " AgainstCall("<< displaybet <<")=" << ap_aggressive.outcomeCalled.contribution.v << " from $" << ap_aggressive.outcomeCalled.value << " @ " << ap_aggressive.outcomeCalled.pr << endl;
+    logFile << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.blendedRaises.contribution.v << " from $" << ap_aggressive.blendedRaises.value << " @ " << ap_aggressive.blendedRaises.pr  << endl;
+    logFile << "        Push("<< displaybet <<")=" << ap_aggressive.outcomePush.contribution.v << " from $" << ap_aggressive.outcomePush.value << " @ " << ap_aggressive.outcomePush.pr << endl;
 
 #endif
 

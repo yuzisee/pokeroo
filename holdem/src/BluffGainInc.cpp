@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "BluffGainInc.h"
+#include "math_support.h"
 
 #include <float.h>
 
@@ -181,54 +182,69 @@ float64 AutoScalingFunction::fd_raised(float64 sliderx, const float64 x, const f
 
 
 
-
+// @param value - bankroll multiplier if you win (i.e. `value - 1.0` is your profit)
+// @param probability - the chance that you'll actually get to the showdown
+// @return `result.value` is the "expected" worth of trying to reach the showdown, accounting for both: profit of the showdown AND the probability your opponents actually make it to the showdown
 struct AggregatedState GeomStateCombiner::createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const {
     struct AggregatedState result;
     result.pr = probability;
     if (probability < EPS_WIN_PCT) {
         // otherwise pow(0.0, 0.0) might be undefined
         result.value = 1.0;
-        result.contribution = 1.0;
+        result.contribution.v = 1.0;
+
+        // y = std::pow(value, probability)
+        // log(y) = probability * log(value)
+        // d log(y) = d probability * log(value) + probability * d log(value)
+        // dy / y = d probability * log(value) + probability * (d value) / value
+        // dy = y * (d probability * log(value) + probability * (d value) / value)
+        // dy = y * (d probability * log(value) + probability * (d value) / value)
+
+        result.contribution.d_v = result.contribution.v * ( probability*dValue/value + dProbability*log(value) );
     } else {
         result.value = value;
-        result.contribution = std::pow(value, probability);
+        result.contribution = ValueAndSlope::exponentiate_unsafe(ValueAndSlope{value, dValue}, ValueAndSlope{probability, dProbability});
     }
 
-    // y = std::pow(value, probability)
-    // log(y) = probability * log(value)
-    // d log(y) = d probability * log(value) + probability * d log(value)
-    // dy / y = d probability * log(value) + probability * (d value) / value
-    // dy = y * (d probability * log(value) + probability * (d value) / value)
-
-    result.dContribution = result.contribution * ( probability*dValue/value + dProbability*log(value) );
-
     return result;
+}
+
+static ValueAndSlope geom_state_combiner_aggregated_contribution(size_t arraySize, const float64 * values, const float64 * probabilities, const float64 * dValues, const float64 * dProbabilities) {
+  ValueAndSlope aggregated_contribution = {1.0, 0.0};
+
+  for (size_t i = 0; i < arraySize; ++i) {
+      if (probabilities[i] < EPS_WIN_PCT) {
+          //aggregated_contribution.v *= 1.0; // "no change"
+          // log(values) ~= 0.0
+          // probability ~= 0.0
+      } else if (values[i] < DBL_EPSILON) {
+          aggregated_contribution.v = 0.0; // "lose everything"
+          // 1.0 / values ~= \infty
+          aggregated_contribution.d_v = std::numeric_limits<float64>::infinity();
+          // [!WARNING]
+          // EARLY RETURN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          return aggregated_contribution;
+      } else {
+          aggregated_contribution.v *= std::pow(values[i], probabilities[i]);
+          aggregated_contribution.d_v += dProbabilities[i] * std::log(values[i]) + probabilities[i] * dValues[i] / values[i];
+      }
+
+  }
+
+  aggregated_contribution.d_v *= aggregated_contribution.v;
+
+  return aggregated_contribution;
 }
 
 struct AggregatedState GeomStateCombiner::createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const {
     struct AggregatedState result;
     result.pr = 0.0;
-    result.contribution = 1.0;
-    result.dContribution = 0.0;
+    result.contribution = geom_state_combiner_aggregated_contribution(arraySize, values, probabilities, dValues, dProbabilities);
 
     for (size_t i = 0; i < arraySize; ++i) {
-        if (probabilities[i] < EPS_WIN_PCT) {
-            //result.contribution *= 1.0; // "no change"
-            // log(values) ~= 0.0
-            // probability ~= 0.0
-        } else if (values[i] < DBL_EPSILON) {
-            result.contribution = 0.0; // "lose everything"
-            // 1.0 / values ~= \infty
-            result.dContribution = std::numeric_limits<float64>::infinity();
-        } else {
-            result.contribution *= std::pow(values[i], probabilities[i]);
-            result.dContribution += dProbabilities[i] * std::log(values[i]) + probabilities[i] * dValues[i] / values[i];
-        }
-
         result.pr += probabilities[i];
     }
 
-    result.dContribution *= result.contribution;
     // y = std::pow(value1, probability1) * ... * std::pow(valueN, probabilityN)
     // log(y) = probability1 * log(value1) + ... + probabilityN * log(valueN)
     // d log(y) = d probability1 * log(value1) + probability1 * d log(value1) + ... + d probabilityN * log(valueN) + probabilityN * d log(valueN)
@@ -238,7 +254,7 @@ struct AggregatedState GeomStateCombiner::createBlendedOutcome(size_t arraySize,
     if (result.pr > 0.0) {
 
         // result.value is the blended value @ result.pr probability
-        result.value = std::pow(result.contribution, 1.0 / result.pr);
+        result.value = std::pow(result.contribution.v, 1.0 / result.pr);
 
     } else {
         result.value = 1.0;
@@ -249,21 +265,12 @@ struct AggregatedState GeomStateCombiner::createBlendedOutcome(size_t arraySize,
 
 struct AggregatedState GeomStateCombiner::combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const {
     struct AggregatedState result;
-    result.contribution = a.contribution * b.contribution * c.contribution;
+    result.contribution = ValueAndSlope::multiply3(a.contribution, b.contribution, c.contribution);
     result.pr = a.pr + b.pr + c.pr;
-    result.value = pow(result.contribution, 1.0 / result.pr);
+    result.value = std::pow(result.contribution.v, 1.0 / result.pr);
 
-    // y = a * b * c
-    // log(y) = log(a) + log(b) + log(c)
-    // dy / y =  da / a + db / b + dc / c
-    // dy = y * (da / a + db / b + dc / c)
-    result.dContribution = result.contribution * ( a.dContribution / a.contribution + b.dContribution / b.contribution + c.dContribution / c.contribution );
     return result;
 }
-
-
-
-
 
 struct AggregatedState AlgbStateCombiner::createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const {
     const float64 profit = value - 1.0;
@@ -279,21 +286,22 @@ struct AggregatedState AlgbStateCombiner::createOutcome(float64 value, float64 p
     struct AggregatedState result;
     result.pr = probability;
     result.value = value;
-    result.contribution = 1.0 + profit * probability;
-
+    result.contribution = ValueAndSlope::multiply2(ValueAndSlope{profit, dValue}, ValueAndSlope{probability, dProbability});
+    result.contribution.v += 1.0;
+    // `profit` === `value - 1.0`
+    // From https://github.com/yuzisee/pokeroo/commit/d4ee09a348f2a091fd9bc9dfaebf27bcbd0cbe62
+    //
     // y = 1.0 + (v             - 1.0) * prb;
     // y = 1.0 +  v * prb         - prb;
     // dy =     dv * prb + v * dprb - dprb;
     // dy =     dv * prb + (v - 1.0) * dprb;
-
-    result.dContribution = dValue * probability + profit * dProbability;
 
     return result;
 }
 struct AggregatedState AlgbStateCombiner::createBlendedOutcome(size_t arraySize, float64 * values, float64 * probabilities, float64 * dValues, float64 * dProbabilities) const {
     struct AggregatedState result;
     result.pr = 0.0;
-    result.dContribution = 0.0;
+    result.contribution.d_v = 0.0;
 
     float64 blendedProfit = 0.0;
     for (size_t i = 0; i < arraySize; ++i) {
@@ -308,7 +316,7 @@ struct AggregatedState AlgbStateCombiner::createBlendedOutcome(size_t arraySize,
 
         blendedProfit += profit * probabilities[i];
 
-        result.dContribution += dValues[i] * probabilities[i] + profit * dProbabilities[i];
+        result.contribution.d_v += dValues[i] * probabilities[i] + profit * dProbabilities[i];
 
         result.pr += probabilities[i];
     }
@@ -327,13 +335,13 @@ struct AggregatedState AlgbStateCombiner::createBlendedOutcome(size_t arraySize,
 
     if (result.pr > 0.0) {
 
-        result.contribution = 1.0 + blendedProfit;
+        result.contribution.v = 1.0 + blendedProfit;
 
         // result.value is the blended value @ result.pr probability
         result.value = 1.0 + blendedProfit / result.pr;
 
     } else {
-        result.contribution = 1.0;
+        result.contribution.v = 1.0;
         result.value = 1.0;
     }
 
@@ -351,12 +359,11 @@ struct AggregatedState AlgbStateCombiner::createBlendedOutcome(size_t arraySize,
 struct AggregatedState AlgbStateCombiner::combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const {
     struct AggregatedState result;
     result.pr = a.pr + b.pr + c.pr;
-    result.contribution = a.contribution + b.contribution + c.contribution - 2.0;
-    result.value = 1.0 + (result.contribution - 1.0) / result.pr;
-
+    result.contribution = ValueAndSlope::sum3(a.contribution, b.contribution, c.contribution);
+    result.contribution.v -= 2.0;
     // y = a + b + c - 2.0
     // dy = da + db + dc
-    result.dContribution = a.dContribution + b.dContribution + c.dContribution;
+    result.value = 1.0 + (result.contribution.v - 1.0) / result.pr;
 
     return result;
 }
@@ -639,15 +646,15 @@ void StateModel::query( const float64 betSize )
     if(bTraceEnable)
     {
       // https://github.com/yuzisee/pokeroo/commit/ecec2a0e4f8d119a01f310fef9ce4e4652c3ce58
-        std::cout << "\t\t (gainWithFold*gainNormal*gainRaised) = " << gainCombined.contribution << std::endl;
-        std::cout << "\t\t ((gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y) = " << gainCombined.dContribution << std::endl;
+        std::cout << "\t\t (gainWithFold*gainNormal*gainRaised) = " << gainCombined.contribution.v << std::endl;
+        std::cout << "\t\t ((gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y) = " << gainCombined.contribution.d_v << std::endl;
         std::cout << "\t\t fMyFoldGain.myFoldGain(" << (fMyFoldGain.suggestMeanOrRank() == 0 ? "MEAN" : "RANK") << ") = " << fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank()) << std::endl;
     }
 #endif
 
-    y = gainCombined.contribution; // e.g. gainWithFold*gainNormal*gainRaised;
+    y = gainCombined.contribution.v; // e.g. gainWithFold*gainNormal*gainRaised;
 
-    dy = gainCombined.dContribution; // e.g. (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
+    dy = gainCombined.contribution.d_v; // e.g. (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
 
     y -= fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank());
     /* called with ea.ed */
