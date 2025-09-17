@@ -827,7 +827,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
           if( traceOut != 0 )  *traceOut << " to bet " << oppBetMake << "more";
           #endif
 
-          if( oppBetMake <= std::numeric_limits<double>::epsilon() )
+          if( oppBetMake <= std::numeric_limits<float64>::epsilon() )
           { //Definitely call
               nextexf = 0;
               nextdexf = 1;
@@ -914,7 +914,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
 
       const float64 oppInPot = oppBetAlready + nextexf;
-      if( oppInPot - betSize > std::numeric_limits<double>::epsilon() )
+      if( oppInPot - betSize > std::numeric_limits<float64>::epsilon() )
       {
           *overexf_out += oppInPot - betSize;
           *overdexf_out += nextdexf;
@@ -962,13 +962,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       }
 #endif //DEBUGASSERT
 
-      noRaiseChance_A[i_step] *=noRaiseChance_adjust;
-      if( noRaiseChance_A[i_step] == 0 ) //and nextNoRaiseD == 0
+      noRaiseChance_A[i_step] *= noRaiseChance_adjust;
+      if( std::fabs(noRaiseChance_A[i_step]) <= std::numeric_limits<float64>::epsilon() ) //and nextNoRaiseD == 0
       {
           noRaiseChanceD_A[i_step] = 0;
       }else
       {
-          noRaiseChanceD_A[i_step] += nextNoRaise_A[i_step].D_v/nextNoRaise_A[i_step].v  *   oppRaiseChancesAware; //Logairthmic differentiation
+          noRaiseChanceD_A[i_step] += nextNoRaise_A[i_step].D_v/nextNoRaise_A[i_step].v  *   oppRaiseChancesAware; //Logarithmic differentiation
       }
   }
 } // end accumulateOneOpponentPossibleRaises

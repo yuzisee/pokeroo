@@ -387,7 +387,7 @@ float64 FoldOrCall::predictedRaiseToThisRound(float64 actualBetToCall, float64 h
       std::cout << "We are outside the range? Raising would never cause the pot to SHRINK but... raiseRatio.FindRatio() returned " << r << " during FoldOrCall::predictedRaiseToThisRound" << std::endl;
       exit(1);
     }
-    if ((reraisedByFinal + std::numeric_limits<double>::epsilon()) / (start - std::numeric_limits<double>::epsilon()) < r - std::numeric_limits<double>::epsilon()) {
+    if ((reraisedByFinal + std::numeric_limits<float64>::epsilon()) / (start - std::numeric_limits<float64>::epsilon()) < r - std::numeric_limits<float64>::epsilon()) {
       std::cout << "We want to answer the question of \"if their *target* raise is to reach reraisedByFinal: knowing there are `spreadRaisesOverThisManyBettingRounds` remaining, how much will they raise _this round_?\"  And, yet, raiseRatio.FindRatio() returned " << r
       << " which would exceed their target of " << reraisedByFinal << " if the first raise is " << start << std::endl;
       exit(1);
