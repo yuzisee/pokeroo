@@ -42,7 +42,9 @@ const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengt
 }
  */
 
-template<typename T1, typename T2> bool FoldWaitLengthModel<T1, T2>::operator== ( const FoldWaitLengthModel<T1, T2> & o ) const
+// This is used by `FoldGainModel::query` to determine whether we can return cached values vs. whether we need to recompute.
+// TODO(from joseph): Find a way to determine whether the cached values are stale or not...
+template<typename T1, typename T2> bool FoldWaitLengthModel<T1, T2>::has_same_inputs ( const FoldWaitLengthModel<T1, T2> & o ) const
 {
     return (
         (o.amountSacrificeVoluntary == amountSacrificeVoluntary)
@@ -53,8 +55,13 @@ template<typename T1, typename T2> bool FoldWaitLengthModel<T1, T2>::operator== 
         && (o.prevPot == prevPot)
         && (o.w == w)
         && (o.meanConv == meanConv)
+    );
+}
 
-        && (o.cacheRarity == cacheRarity)
+template<typename T1, typename T2> bool FoldWaitLengthModel<T1, T2>::has_same_cached_output_values ( const FoldWaitLengthModel<T1, T2> & o ) const
+{
+    return (
+         (o.cacheRarity == cacheRarity)
         && (o.lastdBetSizeN == lastdBetSizeN)
         && (o.lastRawPCT == lastRawPCT)
         && (o.cached_d_dbetSize == cached_d_dbetSize)
@@ -520,7 +527,7 @@ template<typename T1, typename T2> void FoldGainModel<T1, T2>::query( const floa
 
     if(     lastBetSize == betSize
          //&& last_dw_dbet == dw_dbet
-         && lastWaitLength == waitLength
+         && lastWaitLength.has_same_inputs(waitLength)
       )
     {
         return;

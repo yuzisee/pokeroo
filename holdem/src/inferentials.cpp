@@ -378,7 +378,11 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
 
 template<typename T1, typename T2> float64 CallCumulationD<T1, T2>::linearInterpolate(float64 x1, float64 y1, float64 x2, float64 y2, float64 x) const
 {
+  if (std::fabs(x1 - x2) < std::numeric_limits<float64>::epsilon()) {
+    return (y1 + y2) / 2.0;
+  } else {
     return ((x-x1)*y2 + (x2-x)*y1)/(x2-x1);
+  }
 }
 
 ///This function returns the probability of having winPCT_toHave or better

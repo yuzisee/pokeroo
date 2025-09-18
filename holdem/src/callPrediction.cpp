@@ -1503,7 +1503,7 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 // In that case, e_opp would be counter-productive. Let's consider callcumu or even rank here instead.
                 FG.waitLength.meanConv =
                 //(opponentsFacingThem > 1.0) ?
-                0
+                nullptr
                 //: &(fCore.callcumu)
                 ;
                 // ( 1 / (x+1) )  ^ (1/x)

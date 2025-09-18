@@ -159,7 +159,7 @@ public:
     // NOTE: quantum is 1/3rd of a hand. We don't need more precision than that when evaluating f(n).
     FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0),
     cacheRarity(std::numeric_limits<float64>::signaling_NaN()), lastdBetSizeN(std::numeric_limits<float64>::signaling_NaN()), lastRawPCT(std::numeric_limits<float64>::signaling_NaN()), cached_d_dbetSize(std::numeric_limits<float64>::signaling_NaN()), bSearching(false),
-    w(std::numeric_limits<float64>::signaling_NaN()), meanConv(0), amountSacrificeVoluntary(std::numeric_limits<float64>::signaling_NaN()), amountSacrificeForced(std::numeric_limits<float64>::signaling_NaN()), bankroll(std::numeric_limits<float64>::signaling_NaN()), opponents(std::numeric_limits<float64>::signaling_NaN()), betSize(std::numeric_limits<float64>::signaling_NaN()), prevPot(std::numeric_limits<float64>::signaling_NaN())
+    w(std::numeric_limits<float64>::signaling_NaN()), meanConv(nullptr), amountSacrificeVoluntary(std::numeric_limits<float64>::signaling_NaN()), amountSacrificeForced(std::numeric_limits<float64>::signaling_NaN()), bankroll(std::numeric_limits<float64>::signaling_NaN()), opponents(std::numeric_limits<float64>::signaling_NaN()), betSize(std::numeric_limits<float64>::signaling_NaN()), prevPot(std::numeric_limits<float64>::signaling_NaN())
     {}
 
     /*
@@ -199,7 +199,9 @@ public:
       this->prevPot = o.prevPot;
     }
 
-    bool operator== ( const FoldWaitLengthModel & o ) const;
+    bool has_same_inputs ( const FoldWaitLengthModel & o ) const;
+    bool has_same_cached_output_values ( const FoldWaitLengthModel & o ) const;
+    bool operator== ( const FoldWaitLengthModel & o ) const = delete;
 
     virtual ~FoldWaitLengthModel();
 
