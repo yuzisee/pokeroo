@@ -3815,7 +3815,7 @@ namespace RegressionTests {
         const int32 i = 1;
         //const float64 raiseCount = myDeterredCall.pRaise(myTable.GetBetToCall(), i, firstFold);
 
-        opponentHandOpportunity.query(pr_opponentcallraise.RaiseAmount(myTable.GetBetToCall(), i));
+        opponentHandOpportunity.query(ExactCallD::RaiseAmount(tablestate, myTable.GetBetToCall(), i));
         //const float64 pessimisticHandCount = 1.0 / opponentHandOpportunity.handsToBeat();
 
         // pessimisticHandCount should not be MORE RARE than raiseCount.

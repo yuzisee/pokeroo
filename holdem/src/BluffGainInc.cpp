@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "BluffGainInc.h"
+#include "callPrediction.h"
 #include "math_support.h"
 
 #include <float.h>
@@ -446,7 +447,7 @@ void StateModel::query( const float64 betSize )
 
     //Count needed array size
     int32 arraySize = 0;
-    while( c.RaiseAmount(betSize,arraySize) < table_spec.tableView->maxRaiseAmount() )
+    while( ExactCallD::RaiseAmount(*table_spec.tableView, betSize,arraySize) < table_spec.tableView->maxRaiseAmount() )
     {
         ++arraySize;
     }
@@ -472,7 +473,7 @@ void StateModel::query( const float64 betSize )
 	for( int32 i=0;i<arraySize; ++i)
     {
 #ifdef RAISED_PWIN
-        raiseAmount_A[i] = c.RaiseAmount(betSize,i);
+        raiseAmount_A[i] = ExactCallD::RaiseAmount(*table_spec.tableView, betSize,i);
 
         const float64 sliderx = betSize;
         // TODO(from yuzisee): Explore using
@@ -481,6 +482,7 @@ void StateModel::query( const float64 betSize )
 
 
         const float64 evalX = raiseAmount_A[i];
+        // g_raised ultimately calls into either `GainModelGeom` or `GainModelNoRisk`, both of which are IExf of their own
         potRaisedWin_A[i].v = g_raised(sliderx,evalX); // as you can see below, this value is only blended in if we are below firstFoldToRaise
         potRaisedWin_A[i].D_v = gd_raised(sliderx,evalX,potRaisedWin_A[i].v);
         // ^^^ Can't use `.set_value_and_slope` here because we need `potRaisedWin_A[i].v` when computing `potRaisedWin_A[i].D_v`
@@ -495,12 +497,12 @@ void StateModel::query( const float64 betSize )
               1.0 - table_spec.tableView->betFraction(betSize)
               , -1.0
             );
-          }
+        }
 
     }
 
     // Read the values of ea's pRaise below so they can be combined with the values of g_raised above to get an aggregate gain.
-    // Note that we read from the top down, in case it's not monotonic (which can occur due to pessimistic bWouldCall) and
+    // Note that we read from the top down, in case it's not monotonic (which can occur due to pessimistic bMyWouldCall) and
     // the higher of the raises takes precedent (which is the Fold outcome, which trumps expecting lower bets to make money if you can be pushed)
     for( int32 i=arraySize-1;i>=0; --i)
     {
