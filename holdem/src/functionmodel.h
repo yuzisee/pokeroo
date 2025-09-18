@@ -298,6 +298,9 @@ public:
  *  + Pass in two different StatResult objects and we'll use the geometric mean of them instead.
  *
  * DEPRECATED( Use PureStatResultGeom instead. It's simpler, more robust (e.g. fewer knobs), and should be closer to optimal. )
+ * At the time of this writing...
+ *  + src/stratPosition.cpp:PureGainStrategy uses PureStatResultGeom
+ *  + src/stratPosition.cpp:ImproveGainStrategy uses CombinedStatResultsGeom
  */
 class CombinedStatResultsGeom : public virtual ICombinedStatResults {
 private:

@@ -249,6 +249,7 @@ struct TableSpec {
 
 // Based on the bet size I am making, how many times can the opponent afford to fold?
 // We use this value to determine our expected hand strength assuming the opponent knows what we have.
+// By directly establishing the opponent's hand strength this way (as a function of our bet size), there is no need to offet "RiskLoss" anymore. As such, this obsoletes ExpectedCallD::RiskLoss
 class OpponentHandOpportunity {
 public:
     // facedHands: What does the opponent think his/her win percentage is based on rarity?
