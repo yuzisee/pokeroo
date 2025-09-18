@@ -134,8 +134,31 @@ public:
 
 	static uint8 cleanz(const uint32);
 
+	  template<typename T> static int32 constexpr nchoosep(const int32 n, int32 p) {
+			switch (p) {
+	      case 0: { return 1; }
+        case 1: { return n; }
+        case 2: { return n * (n - 1) / 2; }
+        case  3:
+          if (n == 50) { return 19600; }
+          break;
+        // case 4:
+        //   std::cerr << "No speedup for n=4 yet, regardless of p " << p << std::endl;
+        //   break;
+        case  5:
+          if (n == 48) { return 1712304; }
+          break;
+			}
+      std::cerr << "nchoosep( " << n << " , " << p << " )" << std::endl;
+      #if defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND)
+        throw std::runtime_error("I thought we only ever hit these nchoosep cases...");
+      #else
+        exit(1);
+      #endif
+		}
+
 		template<typename T>
-        static T constexpr nchoosep(const int32 n, int32 p) //inline
+        static T constexpr nchoosep_slow(const int32 n, int32 p) //inline
         {
 			if( (n-p) < p ) p = n-p;/* OPTIMIZATION INCLUDED LATER */
 
