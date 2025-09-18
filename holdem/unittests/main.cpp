@@ -4495,6 +4495,7 @@ namespace RegressionTests {
 
           FixedReplayPlayerStrategy p1(std::vector<float64>{});
           FixedReplayPlayerStrategy p2(std::vector<float64>{});
+          FixedReplayPlayerStrategy px(std::vector<float64>{});
           FixedReplayPlayerStrategy p3(std::vector<float64>{});
           FixedReplayPlayerStrategy p4(std::vector<float64>{});
 
@@ -4504,9 +4505,10 @@ namespace RegressionTests {
           myTable.setSmallestChip(5.0);
 
           myTable.ManuallyAddPlayer("P1", 600.0, &p1);
-          myTable.ManuallyAddPlayer("P2", 300.0, &p2); // dealer
-          myTable.ManuallyAddPlayer("P3", 1800.0, &p3);
-          myTable.ManuallyAddPlayer("P4", 2400.0, &p4);
+          myTable.ManuallyAddPlayer("Px", 6000.0, &px);
+          myTable.ManuallyAddPlayer("P2", 3000.0, &p2); // dealer
+          myTable.ManuallyAddPlayer("P3", 18000.0, &p3);
+          myTable.ManuallyAddPlayer("P4", 24000.0, &p4);
 
           const playernumber_t dealer = 2;
 
@@ -4523,6 +4525,7 @@ namespace RegressionTests {
               // P3 small blind $5
               // P4 big blind $10
               r.MakeBet(0, &msg);  // P1
+              r.MakeBet(0, &msg);  // Px
               r.MakeBet(0, &msg);  // P2
               r.MakeBet(20, &msg); // P3
 
@@ -4566,15 +4569,11 @@ namespace RegressionTests {
           ExpectedCallD   tablestate_tableinfo(myPositionIndex, &myTable, core.statRanking().pct, detailPCT.mean.pct);
 
           // Mimic src/callPrediction.cpp#ExactCallD::query
-          const float64 opponents = tablestate_tableinfo.handsToShowdownAgainst(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
-          const float64 p4_betSize = 350.0;
-          //const float64 totalexf = tablestate_tableinfo.table->GetPotSize() - tablestate_tableinfo.alreadyBet()  +  p4_betSize;
-          // ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit, prevPot);
-          // const ChipPositionState oppCPS(p1.GetMoney(),totalexf,p1.GetBetSize(),p1.GetVoluntaryContribution(), tablestate_tableinfo.table->GetPrevPotSize());
 
+          //const float64 totalexf = tablestate_tableinfo.table->GetPotSize() - tablestate_tableinfo.alreadyBet()  +  p4_betSize;
           ChipPositionState cps = {
             p4.ViewPlayer().GetMoney(),
-            myTable.GetPotSize(),
+            myTable.GetPotSize(), // totalexf
             p4.ViewPlayer().GetBetSize(),
             p4.ViewPlayer().GetVoluntaryContribution(),
             myTable.GetPrevPotSize()
@@ -4582,7 +4581,7 @@ namespace RegressionTests {
 
           HypotheticalBet hypothetical = {
             cps,
-            p4_betSize,
+            3500.0,
             p3.ViewPlayer().GetBetSize(),
             cps.alreadyBet,
             false,
@@ -4592,10 +4591,9 @@ namespace RegressionTests {
           // Mimic src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
           // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
           float64 dRiskLoss_pot =  std::numeric_limits<float64>::signaling_NaN();
-          const float64 actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu), &dRiskLoss_pot);
           // To get a high P4 RiskLoss against P3, we want:
           //  [FoldWaitLengthModel::FindBestLength]
-          //  → a high maxProfit, which means a high rawPCT and/or low opponents
+          //  → a high maxProfit, which means a high rawPCT (and/or low opponents)
           //  → a high betSize
           //  → a small amountSacrificePerHand, which means...
           //    ... a large numHandsPerSameSituationFold, which means a very rare `rarity()`, which means
@@ -4606,8 +4604,12 @@ namespace RegressionTests {
           //      → a small `avgBlind`
           //      → a small ACTIVE pot (current round, players who haven't yet folded)
           //      → a large rpAlreadyBet by P3
+          //      (and/or high player count)
           // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
-          assert(actual_RiskLoss < 0);
+          {
+            const float64 actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu), &dRiskLoss_pot);
+            assert((actual_RiskLoss < 0) && "Raising from 20 → 3500 is extreme on a table with 5 players. RiskLoss should be discouraging that." );
+          }
           // assert(dRiskLoss_pot >= 1.0 / (tablestate_tableinfo.handsIn()-1));
           // [!CAUTION]
           // (a) I haven't found a way to trigger `dRiskLoss_pot > 0.0` yet.
@@ -4617,6 +4619,12 @@ namespace RegressionTests {
           //      → ExactCallD::facedOdds_raise_Geom
           //      → ExactCallD::dfacedOdds_dpot_GeomDEXF
           //     ...should be switched over to OpponentHandOpportunity via CombinedStatResultsPessemistic
+
+          hypothetical.hypotheticalRaiseTo = 50.0;
+          {
+            const float64 actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu), &dRiskLoss_pot);
+            assert((actual_RiskLoss == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
+          }
         }
 
 }

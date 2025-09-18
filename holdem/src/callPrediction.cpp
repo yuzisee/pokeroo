@@ -759,13 +759,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
                           const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppRaise, w_r_facedodds.rank, opponents, totaldexf, EMPTY_DISTRIBUTION);
 
-                                const ValueAndSlope noraisePess = {
+                          const ValueAndSlope noraisePess = {
                                   1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
                                   ,
                                   fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppRaise, w_r_facedodds.pess, opponents,totaldexf, (&fCore.foldcumu))
                                 };
 
-                                const ValueAndSlope noraiseMean = {
+                          const ValueAndSlope noraiseMean = {
                                   1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
                                   ,
                                   fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppRaise, w_r_facedodds.mean, opponents,totaldexf, (&fCore.callcumu))
