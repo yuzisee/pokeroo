@@ -880,11 +880,22 @@ namespace UnitTests {
     void testRegression_002b() {
         ChipPositionState oppCPS(2474,7.875,0,0, 0.0);
         // tableinfo->RiskLoss(0, 2474, 4, 6.75, 0, 0) = 0.0
+        HypotheticalBet hypothetical0 = {
+          oppCPS, 6.75 + oppCPS.alreadyBet,
+          std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
+          4.5, false, true
+        };
+        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest(0.0, 1.0 /* denom */, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
+                                                                     ,hypothetical0, 4,0);
         // tableinfo->RiskLoss(0, 2474, 4, 11.25, 0, 0) == 0.0
-        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest(0.0, 1.0 /* denom */, 6.75 + oppCPS.alreadyBet, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
-                                                                     ,oppCPS,4.5, 4,false,true,0);
-        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest(w_r_rank0, 1.0, 11.25 + oppCPS.alreadyBet, 0.0 ,  0.31640625
-                                                                     ,oppCPS, 4.5, 4,false,true,0);
+        HypotheticalBet hypothetical1 = {
+          oppCPS,
+          11.25 + oppCPS.alreadyBet,
+          std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
+          4.5, false, true
+        };
+        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest(w_r_rank0, 1.0, 0.0 ,  0.31640625
+                                                                     ,hypothetical1, 4,0);
 
         // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
         assert(w_r_rank0 <= w_r_rank1);

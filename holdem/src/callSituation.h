@@ -76,7 +76,7 @@ public:
      * Since making a small bet does not allow an average opponent to profit via his/her opportunity cost of folding, your ``RiskLoss`` remains zero as long as your bet is suffciently small compared to an average opponent's opportunity.
      * The value returned by the RiskLoss function is used as a deterrent for raising too high.
      */
-    virtual float64 RiskLoss(float64 alreadyBet, float64 bankroll, float64 opponents, float64 raiseTo, CallCumulationD * useMean, float64 * out_dPot = 0) const;
+    virtual float64 RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CallCumulationD * useMean, float64 * out_dPot = 0) const;
     virtual float64 PushGain() const;
 
     virtual uint8 OppRaiseOpportunities(int8 oppID) const;
