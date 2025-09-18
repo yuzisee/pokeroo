@@ -392,6 +392,9 @@ public:
 
 }
 ;
+template class CallCumulationD<PlayerStrategyPerspective, void>;
+template class CallCumulationD<void, OppositionPerspective>;
+template class CallCumulationD<PlayerStrategyPerspective, OppositionPerspective>;
 
 using MatchupStatsCdf = CallCumulationD<PlayerStrategyPerspective, void>;
 using FoldStatsCdf = CallCumulationD<void, OppositionPerspective>;

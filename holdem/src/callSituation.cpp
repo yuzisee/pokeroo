@@ -296,6 +296,8 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
 
 	return riskLoss;
 }
+template float64 ExpectedCallD::RiskLoss<PlayerStrategyPerspective>(const struct HypotheticalBet &, CallCumulationD<PlayerStrategyPerspective, OppositionPerspective> *, float64 *) const;
+template float64 ExpectedCallD::RiskLoss<void>(const struct HypotheticalBet &, CallCumulationD<void, OppositionPerspective> *, float64 *) const;
 
 MeanOrRank FoldOrCall::suggestMeanOrRank() const {
     if (suggestPlayerCount(fTable).inclAllIn() > 2) {

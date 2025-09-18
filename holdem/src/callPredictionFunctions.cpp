@@ -20,17 +20,13 @@
 
 
 #include "callPredictionFunctions.h"
+#include "inferentials.h"
 #include "portability.h"
 
 #include <iostream>
 
 
 #undef INLINE_INTEGER_POWERS
-
-template<typename T1, typename T2> FoldGainModel<T1, T2>::~FoldGainModel(){}
-
-template<typename T1, typename T2> FoldWaitLengthModel<T1, T2>::~FoldWaitLengthModel(){}
-
 
 /*
 const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengthModel & o )
@@ -820,3 +816,10 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 
 template<typename T> float64 FacedOddsRaiseGeom<T>::f( const float64 w ) { query(w);  return lastF; }
 template<typename T> float64 FacedOddsRaiseGeom<T>::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
+
+template<typename T1, typename T2> FoldGainModel<T1, T2>::~FoldGainModel(){}
+template<typename T1, typename T2> FoldWaitLengthModel<T1, T2>::~FoldWaitLengthModel(){}
+
+template class FoldWaitLengthModel<void, void>;
+template class FoldWaitLengthModel<void, OppositionPerspective>;
+template class FoldWaitLengthModel<PlayerStrategyPerspective, OppositionPerspective>;

@@ -108,6 +108,8 @@ struct HypotheticalBet {
 }
 ;
 
+// [!WARNING]
+// This template is instantiated at the bottom of src/callPredictionFunctions.cpp to avoid linker errors
 template<typename T1, typename T2>
 class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
@@ -136,9 +138,6 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 
     float64 cached_d_dbetSize;
     bool bSearching;
-
-
-
 
 
     // Describe the hand they would be folding
@@ -225,7 +224,6 @@ public:
 
     float64 get_cached_d_dbetSize() const { return cached_d_dbetSize; }
 
-
 }
 ;
 
@@ -270,10 +268,9 @@ class FoldGainModel : public virtual ScalarFunctionModel
     virtual float64 F_a(const float64 betSize);
     virtual float64 F_b(const float64 betSize);
     virtual float64 dF_dAmountSacrifice(const float64 betSize);
-
-
 }
 ;
+template class FoldGainModel<void, void>;
 
 //How much call can you pick up to your bet?
 template<typename T>
@@ -298,6 +295,7 @@ class FacedOddsCallGeom : public virtual ScalarFunctionModel
     virtual float64 fd(const float64 w, const float64 U);
 }
 ;
+template class FacedOddsCallGeom<PlayerStrategyPerspective>;
 
 //Will everybody fold consecutively to your bet?
 template<typename T>
@@ -320,6 +318,8 @@ class FacedOddsAlgb : public virtual ScalarFunctionModel
     virtual float64 fd(const float64 w, const float64 U);
 }
 ;
+template class FacedOddsAlgb<PlayerStrategyPerspective>;
+template class FacedOddsAlgb<void>;
 
 //How much/likely would they raise or reraise?
 template<typename T>
@@ -345,5 +345,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     virtual float64 fd(const float64 w, const float64 U);
 }
 ;
+template class FacedOddsRaiseGeom<void>;
+template class FacedOddsRaiseGeom<PlayerStrategyPerspective>;
 
 #endif
