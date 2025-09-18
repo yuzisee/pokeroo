@@ -288,14 +288,14 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
 		// ^^^ Given the hand strength, how much do you gain by folding against a bet of `raiseTo`?
 	float64 drisk;
 
-	if( riskLoss > 0 ) {
-	  //If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
+	if( riskLoss >= -std::numeric_limits<float64>::epsilon() ) {
+	  //If riskLoss > 0, then the opponent wins by folding (and thus loses by raising, and therefore doesn't raise).
 		riskLoss = 0;
 	}
 
 	if(out_dPot != 0) {
 	  //If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
-    if( riskLoss < 0 )
+    if( riskLoss < std::numeric_limits<float64>::epsilon() )
     {
       // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
       // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
