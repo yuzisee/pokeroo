@@ -55,7 +55,7 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 	comBuf.AppendUnique(h);
 
 	#ifdef INFOASSIST_STRONG
-        CallCumulationD possibleHands;
+        CommunityStatsCdf possibleHands;
         StatResult rankPCT;
 
 	    CommunityPlus onlyCommunity;
