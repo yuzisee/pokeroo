@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
-#include "callPredictionFunctions.h"
 #include "inferentials.h"
 #include <algorithm>
 
@@ -174,7 +173,7 @@ float64 ExactCallD::facedOdds_raise_Geom(const struct HypotheticalBet & hypothet
 
     return facedOdds_raise_Geom_forTest( startingPoint
                                         ,tableinfo->table->GetChipDenom()
-                                        ,tableinfo->RiskLoss(hypothetical, opponents, useMean, 0)
+                                        ,tableinfo->RiskLoss(hypothetical, useMean, 0)
                                         ,avgBlind
                                         ,hypothetical
                                         ,opponents
@@ -273,7 +272,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const struct HypotheticalBet & hypo
     {
     //USE FG for riskLoss
         float64 dRiskLoss_pot = std::numeric_limits<float64>::signaling_NaN();
-        tableinfo->RiskLoss(hypothetical, opponents, useMean, &dRiskLoss_pot);
+        tableinfo->RiskLoss(hypothetical, useMean, &dRiskLoss_pot);
 
         FoldGainModel myFG(tableinfo->chipDenom());
 
@@ -523,7 +522,7 @@ struct FacedOdds {
 
     this->pess = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.pess, opponents, (&pr_call_pr_raiseby.fCore.foldcumu));
     #ifdef ANTI_CHECK_PLAY
-    if( bOppCouldCheck )
+    if( oppRaise.bCouldHaveChecked )
     {
         this->mean = 1;
         this->rank = 1;

@@ -882,10 +882,8 @@ namespace UnitTests {
         // tableinfo->RiskLoss(0, 2474, 4, 6.75, 0, 0) = 0.0
         HypotheticalBet hypothetical0 = {
           oppCPS, 6.75 + oppCPS.alreadyBet,
-          std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test
-          4.5,
-          false,
-          true
+          std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
+          4.5, false, true
         };
         float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest(0.0, 1.0 /* denom */, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
                                                                      ,hypothetical0, 4,0);
@@ -893,10 +891,8 @@ namespace UnitTests {
         HypotheticalBet hypothetical1 = {
           oppCPS,
           11.25 + oppCPS.alreadyBet,
-          std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test
-          4.5,
-          false,
-          true
+          std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
+          4.5, false, true
         };
         float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest(w_r_rank0, 1.0, 0.0 ,  0.31640625
                                                                      ,hypothetical1, 4,0);

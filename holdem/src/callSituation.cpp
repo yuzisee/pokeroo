@@ -244,7 +244,7 @@ const Player * ExpectedCallD::ViewPlayer() const {
 
 // DEPRECATED: Use OpponentHandOpportunity and CombinedStatResultsPessemistic instead.
 // TODO: Let's say riskLoss is a table metric. In that case, if you use mean it's callcumu always.
-float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD * useMean, float64 * out_dPot) const
+float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CallCumulationD * useMean, float64 * out_dPot) const
 {
     const float64 raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
