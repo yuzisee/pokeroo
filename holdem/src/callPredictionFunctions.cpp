@@ -184,7 +184,8 @@ float64 FoldWaitLengthModel::d_dw( const float64 n )
     //         = 2 * (opponents) * pow(getRawPCT, opponents - 1) * d_dw {getRawPCT}
 
     const float64 rawPCT = getRawPCT(n);
-    const float64 d_PW_d_w = 2.0 * opponents * std::pow(rawPCT, opponents - 1) * d_rawPCT_d_w(n, rawPCT);
+    const float64 d_dw_getRawPCT = d_rawPCT_d_w(n, rawPCT);
+    const float64 d_PW_d_w = 2.0 * opponents * std::pow(rawPCT, opponents - 1) * d_dw_getRawPCT;
 
     const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).second);
 
@@ -208,6 +209,16 @@ float64 FoldWaitLengthModel::d_dw( const float64 n )
 
     // lastF = winShowdown*PW - grossSacrifice(n)
     // d_lastF_dw = winShowdown { d_dw PW } - d_dw grossSacrifice
+
+    #ifdef DEBUGASSERT
+      if (std::isnan(winShowdown) || std::isnan(d_PW_d_w) || std::isnan(d_grossSacrifice_dw)) {
+        std::cerr << "prevPot=" << prevPot << "  betSize=" << betSize << std::endl;
+        std::cerr << "opponents=" << opponents << " ← d_rawPCT_d_w(" << n << ", " << rawPCT << ")" << d_dw_getRawPCT << std::endl;
+        std::cerr << "  amountSacrificeVoluntary=" << amountSacrificeVoluntary << "  chanceOfFoldEachHand=" << chanceOfFoldEachHand << "  d_rarity_d_w=" << d_rarity_d_w;
+        std::cerr << std::endl;
+        exit(1);
+      }
+    #endif
 
     return winShowdown * d_PW_d_w - d_grossSacrifice_dw;
 

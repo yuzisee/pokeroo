@@ -536,7 +536,9 @@ void StateModel::query( const float64 betSize )
 
 #ifdef DEBUGASSERT
         if (oppRaisedChance_A[i].any_nan()) {
-            std::cerr << "oppRaisedChance_A[i] should not be NaN" << std::endl;
+            std::cerr << "oppRaisedChance_A[" << static_cast<int>(i) << "] should not be NaN" << std::endl;
+            std::cerr << oppRaisedChance_A[i].v << " = " << newRaisedChance << " − " << lastuptoRaisedChance << " during bCallerWillPush=" << bCallerWillPush << std::endl;
+            std::cerr << oppRaisedChance_A[i].D_v << " = " << newRaisedChanceD << " − " << lastuptoRaisedChanceD << std::endl;
             exit(1);
         }
 #endif // DEBUGASSERT

@@ -246,19 +246,19 @@ float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 
 
 
 //Here, dbetsize/dpot = 0
-float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrRaise, float64 fold_bet, float64 w, float64 opponents, float64 dexfy,  bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const
+float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, float64 incrRaise, float64 faced_bet, float64 w, float64 opponents, float64 dexfy,  bool bCheckPossible, bool bMyWouldCall, CallCumulationD * useMean) const
 {
     if( w <= 0 ) return 0;
     const float64 raiseto = cps.alreadyBet + incrRaise;
 	if( raiseto >= cps.bankroll - tableinfo->chipDenom()/2 ) return 0;
 
 
-    if( fold_bet > cps.bankroll )
+    if( faced_bet > cps.bankroll )
     {
-        fold_bet = cps.bankroll;
+        faced_bet = cps.bankroll;
     }
 
-	const float64 retBet = bMyWouldCall ? (raiseto-fold_bet) : 0;
+	const float64 retBet = bMyWouldCall ? (raiseto-faced_bet) : 0;
 
     const int8 N = tableinfo->handsDealt();
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
@@ -284,13 +284,6 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
     //USE FG for riskLoss
         float64 dRiskLoss_pot = std::numeric_limits<float64>::signaling_NaN();
         tableinfo->RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
-        #ifdef DEBUGASSERT
-          if (std::isnan(dRiskLoss_pot)) {
-            std::cerr << "dRiskLoss_pot failed to initialize, please unit test tableinfo->RiskLoss("
-              << cps.alreadyBet << " , " << cps.bankroll << " , " << opponents << " , " << raiseto << " , … , &dRiskLoss_pot)" << std::endl;
-            exit(1);
-          }
-        #endif
 
         FoldGainModel myFG(tableinfo->chipDenom());
 
@@ -301,8 +294,34 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const ChipPositionState & cps, floa
         myFG.waitLength.opponents = opponents;
         //myFG.dw_dbet = 0; //Again, we don't need this
 
+        #ifdef DEBUGASSERT
+          if (std::isnan(dRiskLoss_pot)) {
+            std::cerr << "dRiskLoss_pot failed to initialize, please unit test tableinfo->RiskLoss("
+              << cps.alreadyBet << " , " << cps.bankroll << " , " << opponents << " , " << raiseto << " , … , &dRiskLoss_pot)" << std::endl;
+            exit(1);
+          }
 
-        return (h_times_remaining*C*dexfy - myFG.F_b(fold_bet) + dRiskLoss_pot*dexfy) / (myFG.F_a(fold_bet) - h_times_remaining*A);
+          if (std::isnan(h_times_remaining) || std::isnan(C) || std::isnan(dexfy) || std::isnan(faced_bet) || std::isnan(A)) {
+            std::cerr << " h_times_remaining=" << h_times_remaining;
+            std::cerr << " C=" << C;
+            std::cerr << " dexfy=" << dexfy;
+            std::cerr << " faced_bet=" << faced_bet;
+            std::cerr << " A=" << A;
+            exit(1);
+          }
+
+          // The derivative `d/dbetSize myFG.f(betSize)`
+          //               = myFG.F_a(betSize) * dw/dbetSize + myFG.F_b(betSize)
+
+          if (std::isnan(myFG.F_b(faced_bet)) || std::isnan(myFG.F_a(faced_bet))) {
+            std::cerr << " myFG.F_a(" << faced_bet << ") = " << myFG.F_a(faced_bet) << std::endl;
+            std::cerr << "  … waitLength.d_dw( " << myFG.n << " ) = " << myFG.waitLength.d_dw( myFG.n ) << std::endl;
+            std::cerr << " myFG.F_b(" << faced_bet << ") = " << myFG.F_b(faced_bet) << std::endl;
+            exit(1);
+          }
+        #endif
+
+        return (h_times_remaining*C*dexfy - myFG.F_b(faced_bet) + dRiskLoss_pot*dexfy) / (myFG.F_a(faced_bet) - h_times_remaining*A);
     }
 
 
@@ -690,8 +709,21 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                   const int32 i = i_step;
                   const bool bMyWouldCall = i < callSteps;
                   const float64 thisRaise = RaiseAmount(betSize,i);
-                  const float64 oppRaiseMake = thisRaise - oppBetAlready;
-                  if( oppRaiseMake <= 0 ) {
+
+                  //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+                  const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+                  //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
+
+                  const struct HypotheticalBet oppRaise = {
+                    oppCPS,
+                    thisRaise,
+                    betSize,
+                    oppBetAlready,
+                    bOppCouldCheck,
+                    bMyWouldCall
+                  };
+
+                  if( oppRaise.betIncrease() <= 0 ) {
                       nextNoRaise_A[i_step].v = 0.0; // well then we're guaranteed to hit this amount
                       nextNoRaise_A[i_step].D_v = 0.0;
                       prevRaise = 0;
@@ -703,28 +735,25 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 #endif // DEBUGASSERT
                   } else
                   {
-                      if(thisRaise <= oppBankRoll)
+                      if(!oppRaise.bMoreThanAllIn())
                       {
-
-                          const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
-                                                                                                                                 //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
 
                          if (prev_w_r.assert_not_nan()) {
                           FacedOdds w_r_facedodds; // TODO(from joseph): Rename to noraiseRank or, rename noraiseRankD to w_r_facedodds_D
-                          w_r_facedodds.init_facedOdds_raise(*this, oppCPS, prev_w_r, oppRaiseMake, betSize, bOppCouldCheck, bMyWouldCall);
+                          w_r_facedodds.init_facedOdds_raise(*this, oppCPS, prev_w_r, oppRaise.betIncrease(), betSize, bOppCouldCheck, bMyWouldCall);
 
-                          const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(), w_r_facedodds.rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
+                          const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaise.betIncrease(),tableinfo->callBet(), w_r_facedodds.rank, opponents, totaldexf, bOppCouldCheck, bMyWouldCall ,0);
 
                                 const ValueAndSlope noraisePess = {
                                   1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
                                   ,
-                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_facedodds.pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu))
+                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaise.betIncrease(),tableinfo->callBet(),w_r_facedodds.pess, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.foldcumu))
                                 };
 
                                 const ValueAndSlope noraiseMean = {
                                   1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
                                   ,
-                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaiseMake,tableinfo->callBet(),w_r_facedodds.mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu))
+                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppCPS,oppRaise.betIncrease(),tableinfo->callBet(),w_r_facedodds.mean, opponents,totaldexf,bOppCouldCheck, bMyWouldCall, (&fCore.callcumu))
                                 };
 
                           //nextNoRaise_A[i_step].v = w_r_facedodds.rank;
@@ -743,6 +772,17 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
                           nextNoRaise_A[i_step].v = (noraise.v + w_r_facedodds.rank)/2;
                           nextNoRaise_A[i_step].D_v = (noraise.D_v + noraiseRankD)/2;
+
+                          #ifdef DEBUGASSERT
+                           if(std::isnan(nextNoRaise_A[i_step].D_v)) {
+                             std::cerr << "One of noraise.D_v or noraiseRankD are NaN" << std::endl;
+                             std::cerr << noraise.D_v << std::endl;
+                             std::cerr << noraiseRankD << std::endl;
+                             std::cerr << "noraiseMean.D_v = " << noraiseMean.D_v << std::endl;
+                             std::cerr << "noraisePess.D_v = " << noraisePess.D_v << std::endl;
+                             exit(1);
+                           }
+                          #endif // DEBUGASSERT
 
                           // nextNoRaise should be monotonically increasing. That is, the probability of being raised all-in is lower than the probabilty of being raised at least minRaise.
                           if (i_step>0) {

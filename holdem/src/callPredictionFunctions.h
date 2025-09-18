@@ -53,12 +53,58 @@ struct ChipPositionState
     : bankroll(stack), pot(tablepot), alreadyBet(sofar), alreadyContributed(commit), prevPot(pastpot)
     {}
 
-    float64 bankroll;
-    float64 pot;
-    float64 alreadyBet; // What is my bet so far, this round?
-    float64 alreadyContributed;
-    float64 prevPot;
+    const float64 bankroll;
+    const float64 pot;
+    const float64 alreadyBet; // What is my bet so far, this round? (As I understand it, this is included in `pot`)
+    const float64 alreadyContributed; // This is the same as `alreadyBet` (except it excludes any blinds, until you call or raise)
+    const float64 prevPot;
 
+}
+;
+
+struct HypotheticalBet {
+  const struct ChipPositionState &bettorSituation;
+  const float64 hypotheticalRaiseTo;
+  const float64 hypotheticalRaiseAgainst;
+  const float64 counderfactualFoldAbandon_raw;
+  const bool bCouldHaveChecked; // either because you're first to act OR because the only bet so far is equal to your blind bet
+  const bool bWillGetCalled;
+
+  // if you're _RE-RAISING_ this is the increase compared to the highest bet so far
+  constexpr float64 raiseBy() const {
+    return hypotheticalRaiseTo - hypotheticalRaiseAgainst;
+  }
+
+   // if you're _RE-RAISING_ this is the increase compared to YOUR last bet
+  constexpr float64 betIncrease() const {
+    return hypotheticalRaiseTo - bettorSituation.alreadyBet;
+  }
+
+  constexpr float64 fold_bet() const {
+    if( counderfactualFoldAbandon_raw > bettorSituation.bankroll )
+    {
+      return bettorSituation.bankroll;
+    } else {
+      return counderfactualFoldAbandon_raw;
+    }
+  }
+
+  constexpr float64 faced_bet() const {
+    if( hypotheticalRaiseAgainst > bettorSituation.bankroll )
+    {
+      return bettorSituation.bankroll;
+    } else {
+      return hypotheticalRaiseAgainst;
+    }
+  }
+
+  constexpr bool bEffectivelyAllIn(const float64 chipDenom) const {
+    return (bettorSituation.bankroll - chipDenom/2.0 <= hypotheticalRaiseTo);
+  }
+
+  constexpr bool bMoreThanAllIn() const {
+    return bettorSituation.bankroll < hypotheticalRaiseTo;
+  }
 }
 ;
 
