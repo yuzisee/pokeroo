@@ -21,6 +21,7 @@
 #include "stratPosition.h"
 #include "arena.h"
 #include "callPrediction.h"
+#include "inferentials.h"
 #include "stratFear.h"
 
 #include <math.h>
@@ -131,8 +132,7 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
     ///Compute CallStats
     StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,onlyCommunity,cardsInCommunity);
-    statprob.core.foldcumu = statprob.core.handcumu;
-    statprob.core.foldcumu.ReversePerspective();
+    statprob.core.foldcumu = CoreProbabilities::ReversePerspective(statprob.core.handcumu);
 
     ///Compute CommunityCallStats
     ViewTable().CachedQueryOffense(statprob.core.callcumu,onlyCommunity, withCommunity);
@@ -301,7 +301,7 @@ void PositionalStrategy::setupPosition()
 
 }
 
-float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel, CallCumulationD* const e)
+float64 PositionalStrategy::solveGainModel(HoldemFunctionModel* targetModel)
 {
 
 #if defined(DEBUG_GAIN) && defined(DEBUG_SINGLE_HAND)
@@ -444,7 +444,7 @@ void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
 
 
 
-void PositionalStrategy::printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat) {
+void PositionalStrategy::printFoldGain(float64 raiseGain, CommunityStatsCdf * e, ExpectedCallD & estat) {
 #ifdef LOGPOSITION
     FoldOrCall foldGainCalculator(ViewTable(), statprob.core);
     std::pair<float64, float64> foldgainVal_xw = foldGainCalculator.myFoldGainAndWaitlength(foldGainCalculator.suggestMeanOrRank());
@@ -981,7 +981,7 @@ float64 ImproveGainStrategy::MakeBet()
 
 
 
-    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel, &(statprob.core.callcumu)) : solveGainModel(&rolemodel, &(statprob.core.callcumu));
+    const float64 bestBet = (bGamble == 0) ? solveGainModel(&choicemodel) : solveGainModel(&rolemodel);
 
 #endif
 
@@ -1223,7 +1223,7 @@ float64 DeterredGainStrategy::MakeBet()
      }
      */
 
-    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.core.callcumu));
+    const float64 bestBet = solveGainModel(&choicemodel);
 
 #ifdef LOGPOSITION
 
@@ -1458,7 +1458,7 @@ float64 PureGainStrategy::MakeBet()
     HoldemFunctionModel& choicemodel = ap_aggressive;
 
 
-    const float64 bestBet = solveGainModel(&choicemodel, &(statprob.core.callcumu));
+    const float64 bestBet = solveGainModel(&choicemodel);
 
 #ifdef LOGPOSITION
 

@@ -108,6 +108,7 @@ struct HypotheticalBet {
 }
 ;
 
+template<typename T1, typename T2>
 class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
     private:
@@ -143,7 +144,7 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     // Describe the hand they would be folding
     float64 w;                    // Set to RANK if meanConv is null. Set to MEAN_winpct if using *meanConv
 public:
-    CallCumulationD (* meanConv); // Set to null if using RANK for payout simulation
+    CallCumulationD<T1, T2> (* meanConv); // Set to null if using RANK for payout simulation
 
     // Describe the situation
     float64 amountSacrificeVoluntary;
@@ -234,10 +235,11 @@ public:
 // If it's an opponent against you that knows your hand, they use foldcumu.
 // If it's you, you use callcumu.
 // If it's an opponent that doesn't know your hand, you use callcumu.
+template<typename T1, typename T2>
 class FoldGainModel : public virtual ScalarFunctionModel
 {
     protected:
-    FoldWaitLengthModel lastWaitLength;
+    FoldWaitLengthModel<T1, T2> lastWaitLength; // cached version of `FoldWaitLengthModel waitLength` below
     float64 lastBetSize;
     float64 last_dw_dbet;
     float64 lastf;
@@ -254,7 +256,7 @@ class FoldGainModel : public virtual ScalarFunctionModel
 
 
 
-    FoldWaitLengthModel waitLength;
+    FoldWaitLengthModel<T1, T2> waitLength;
 
     FoldGainModel(float64 myQuantum) : ScalarFunctionModel(myQuantum)
             , lastWaitLength(), lastBetSize(-1), last_dw_dbet(0) //Cache variables
@@ -274,6 +276,7 @@ class FoldGainModel : public virtual ScalarFunctionModel
 ;
 
 //How much call can you pick up to your bet?
+template<typename T>
 class FacedOddsCallGeom : public virtual ScalarFunctionModel
 {
     protected:
@@ -289,7 +292,7 @@ class FacedOddsCallGeom : public virtual ScalarFunctionModel
     float64 opponents;
 
 
-    FoldGainModel FG;
+    FoldGainModel<T, OppositionPerspective> FG;
     FacedOddsCallGeom(float64 myQuantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
@@ -297,6 +300,7 @@ class FacedOddsCallGeom : public virtual ScalarFunctionModel
 ;
 
 //Will everybody fold consecutively to your bet?
+template<typename T>
 class FacedOddsAlgb : public virtual ScalarFunctionModel
 {
     protected:
@@ -310,7 +314,7 @@ class FacedOddsAlgb : public virtual ScalarFunctionModel
     float64 betSize;
 
 
-    FoldGainModel FG;
+    FoldGainModel<T, OppositionPerspective> FG;
     FacedOddsAlgb(float64 myQuantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
@@ -318,6 +322,7 @@ class FacedOddsAlgb : public virtual ScalarFunctionModel
 ;
 
 //How much/likely would they raise or reraise?
+template<typename T>
 class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 {
     protected:
@@ -334,7 +339,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 	float64 callIncrBase;
     bool bCheckPossible;
 
-    FoldGainModel FG;
+    FoldGainModel<T, OppositionPerspective> FG;
     FacedOddsRaiseGeom(float64 myQuantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);

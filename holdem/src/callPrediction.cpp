@@ -164,7 +164,7 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
 */
 
 // useMean is a table metric here (see RiskLoss), so always use callcumu
-float64 ExactCallD::facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 opponents, CallCumulationD * useMean) const
+template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean) const
 {
 
     const playernumber_t N = tableinfo->handsDealt();
@@ -181,7 +181,7 @@ float64 ExactCallD::facedOdds_raise_Geom(const struct HypotheticalBet & hypothet
                                         );
 }
 
-float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD * useMean)
+template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean)
 {
   const struct ChipPositionState &cps = hypotheticalRaise.bettorSituation;
     if( hypotheticalRaise.hypotheticalRaiseTo >= cps.bankroll )
@@ -197,7 +197,7 @@ float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 
         }
     }
 
-    FacedOddsRaiseGeom a(denom);
+    FacedOddsRaiseGeom<T> a(denom);
 
 	a.pot = cps.pot + (hypotheticalRaise.bWillGetCalled ? (hypotheticalRaise.betIncrease()) : 0);
     a.raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
@@ -240,7 +240,7 @@ float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 
 
 
 //Here, dbetsize/dpot = 0
-float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexfy, CallCumulationD * useMean) const
+template<typename T> float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexfy, CallCumulationD<T, OppositionPerspective> * useMean) const
 {
   const struct ChipPositionState &cps = hypothetical.bettorSituation;
 
@@ -274,7 +274,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const struct HypotheticalBet & hypo
         float64 dRiskLoss_pot = std::numeric_limits<float64>::signaling_NaN();
         tableinfo->RiskLoss(hypothetical, useMean, &dRiskLoss_pot);
 
-        FoldGainModel myFG(tableinfo->chipDenom());
+        FoldGainModel<T, OppositionPerspective> myFG(tableinfo->chipDenom());
 
     //USE myFG for F_a and F_b
         myFG.waitLength.meanConv = useMean;
@@ -326,7 +326,7 @@ float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const struct HypotheticalBet & hypo
 
 
 
-float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 opponents, CallCumulationD * useMean) const
+template<typename T> float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean) const
 {
 
     if( humanbet >= cps.bankroll )
@@ -335,7 +335,7 @@ float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 h
     }
 
 
-    FacedOddsCallGeom a(tableinfo->chipDenom());
+    FacedOddsCallGeom<T> a(tableinfo->chipDenom());
     a.B = cps.bankroll;
     a.pot = cps.pot;
 //    a.alreadyBet = cps.alreadyBet;
@@ -352,7 +352,7 @@ float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 h
     return a.FindZero(0,1, false);
 }
 
-float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot_dhumanbet, float64 w, float64 opponents, CallCumulationD * useMean) const
+template<typename T> float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot_dhumanbet, float64 w, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean) const
 {
     if( w <= 0 ) return 0;
 	if( humanbet >= cps.bankroll ) return 0;
@@ -362,7 +362,7 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     const float64 base_minus_1 = (cps.pot+humanbet)/(cps.bankroll-humanbet);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
 
-    FoldGainModel FG(tableinfo->chipDenom());
+    FoldGainModel<T, OppositionPerspective> FG(tableinfo->chipDenom());
     FG.waitLength.setW(w);
     FG.waitLength.load(cps, avgBlind);
     FG.waitLength.opponents = opponents;
@@ -385,10 +385,11 @@ float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, floa
 }
 
 // useMean must be from the perspective of ChipPositionState, if any.
+// That's what the `template<typename T> … CallCumulationD<T, OppositionPerspective>` is for here.
 // Thus, it can't be handcumu but can be foldcumu or callcumu depending on how much information the opponent has.
-float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionState & cps, float64 betSize, float64 opponents, CallCumulationD * useMean) const
+template<typename T> float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionState & cps, float64 betSize, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean) const
 {
-    FacedOddsAlgb a(tableinfo->chipDenom());
+    FacedOddsAlgb<T> a(tableinfo->chipDenom());
     a.pot = cps.pot;
     //a.alreadyBet = cps.alreadyBet; //just for the books?
     a.betSize = betSize;
@@ -424,7 +425,7 @@ float64 ExactCallBluffD::facedOddsND_Algb(const ChipPositionState & cps, float64
 
     const int8 N = tableinfo->handsDealt();
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
-    FoldGainModel FG(tableinfo->chipDenom());
+    FoldGainModel<void, void> FG(tableinfo->chipDenom());
     FG.waitLength.load(cps, avgBlind);
     FG.waitLength.opponents = opponents;
     FG.waitLength.setW(w);
@@ -530,7 +531,7 @@ struct FacedOdds {
     #endif
     {
       this->mean = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.mean, opponents, (&pr_call_pr_raiseby.fCore.callcumu));
-      this->rank = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.rank, opponents, 0);
+      this->rank = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.rank, opponents, EMPTY_DISTRIBUTION);
     }
   }
 
@@ -742,7 +743,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                           FacedOdds w_r_facedodds; // TODO(from joseph): Rename to noraiseRank or, rename noraiseRankD to w_r_facedodds_D
                           w_r_facedodds.init_facedOdds_raise(*this, prev_w_r, oppRaise);
 
-                          const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppRaise, w_r_facedodds.rank, opponents, totaldexf ,0);
+                          const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppRaise, w_r_facedodds.rank, opponents, totaldexf, EMPTY_DISTRIBUTION);
 
                                 const ValueAndSlope noraisePess = {
                                   1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
@@ -1092,7 +1093,7 @@ void ExactCallBluffD::query(const float64 betSize)
                 //To understand the above, consider that totalexf includes already made bets
 
                 // TODO(from yuzisee): Since this is Pr{opponentFold}, do we use Algb still? See updated PureGainStrategy.
-                float64 w_rank = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,0);
+                float64 w_rank = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,EMPTY_DISTRIBUTION);
                 float64 w_mean = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,&fCallCumu);
                 float64 w_pess = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,&fFoldCumu);
                 if( nLinear <= 0 )
@@ -1170,7 +1171,7 @@ void ExactCallBluffD::query(const float64 betSize)
                     ChipPositionState opporigmaxCPS(oppBankRoll,oldpot + effroundpot,oppBetAlready,oppPastCommit,prevPot);
 
                     float64 w_mean = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,&fCallCumu); // ed() is for callcumu i.e. when they don't know your hand
-                    float64 w_rank = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear,0);
+                    float64 w_rank = facedOdds_Algb(opporigmaxCPS,oppBetMake, nLinear, EMPTY_DISTRIBUTION);
 
                     if( nLinear <= 0 )
                     {
@@ -1349,7 +1350,7 @@ float64 ExactCallD::dexf(const float64 betSize)
 
 
 // RiskPrice is only used as a heuristic and only for the bot itself during stratPosition so it's fine to use either ef() here (if pessimistic) or ed() here (if no information has been revealed yet)
-float64 ExactCallBluffD::RiskPrice(const ExpectedCallD &tableinfo, CallCumulationD * foldcumu_caching)
+float64 ExactCallBluffD::RiskPrice(const ExpectedCallD &tableinfo, FoldStatsCdf * foldcumu_caching)
 {//At what price is it always profitable to fold if one has the average winning hand?
 	const int8 Ne_int = tableinfo.table->NumberStartedRound().inclAllIn() - 1; // This is the number of players you'd have to beat, regardless of who is betting.
     const float64 Ne = static_cast<float64>(Ne_int);
@@ -1358,7 +1359,7 @@ float64 ExactCallBluffD::RiskPrice(const ExpectedCallD &tableinfo, CallCumulatio
 
     const float64 maxStack = tableinfo.table->GetAllChips();
 
-    FoldGainModel FG(tableinfo.chipDenom());
+    FoldGainModel<void, OppositionPerspective> FG(tableinfo.chipDenom());
 	//FG.bTraceEnable = true;
 
     // TODO(from yuzisee): MEAN (callcumu) vs. RANK vs "pessimistic" to:
@@ -1494,7 +1495,7 @@ void OpponentHandOpportunity::query(const float64 betSize) {
 
 
                 // We only need FoldWaitLengthModel, technically, but FoldGain helps us guess a derivative.
-                FoldGainModel FG(fTable.GetChipDenom()/2);
+                FoldGainModel<void, void> FG(fTable.GetChipDenom()/2);
 
                 // TODO(from joseph_huang): Should we assume that the opponents also choose mean when {1 == handsShowdown()} and rank otherwise??
                 // I guess technically this is mean but they know what you have, so pessimistically we're talking about them trying to beat only you.

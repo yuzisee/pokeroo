@@ -27,9 +27,9 @@
 
 #undef INLINE_INTEGER_POWERS
 
-FoldGainModel::~FoldGainModel(){}
+template<typename T1, typename T2> FoldGainModel<T1, T2>::~FoldGainModel(){}
 
-FoldWaitLengthModel::~FoldWaitLengthModel(){}
+template<typename T1, typename T2> FoldWaitLengthModel<T1, T2>::~FoldWaitLengthModel(){}
 
 
 /*
@@ -46,7 +46,7 @@ const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengt
 }
  */
 
-bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) const
+template<typename T1, typename T2> bool FoldWaitLengthModel<T1, T2>::operator== ( const FoldWaitLengthModel<T1, T2> & o ) const
 {
     return (
         (o.amountSacrificeVoluntary == amountSacrificeVoluntary)
@@ -65,7 +65,7 @@ bool FoldWaitLengthModel::operator== ( const FoldWaitLengthModel & o ) const
     );
 }
 
-float64 FoldWaitLengthModel::getRawPCT(const float64 n) {
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::getRawPCT(const float64 n) {
     const float64 opponentInstances = n * rarity(); // After waiting n hands, the opponent will put you in this situation opponentInstances times.
     // The winPCT you would have if you had the best hand you would wait for out of opponentInstances hands.
     const float64 rawPCT = ( opponentInstances < 1 ) ? 0 : lookup(1.0-1.0/(opponentInstances));
@@ -81,7 +81,7 @@ float64 FoldWaitLengthModel::getRawPCT(const float64 n) {
     return rawPCT;
 }
 
-float64 FoldWaitLengthModel::d_rawPCT_d_n(const float64 n, const float64 rawPCT) {
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT_d_n(const float64 n, const float64 rawPCT) {
     if (n < 1) {
         return 0.0;
     }
@@ -103,7 +103,7 @@ float64 FoldWaitLengthModel::d_rawPCT_d_n(const float64 n, const float64 rawPCT)
     }
 }
 
-float64 FoldWaitLengthModel::d_rawPCT_d_w(const float64 n, float64 rawPCT) {
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT_d_w(const float64 n, float64 rawPCT) {
 
     const float64 opponentInstances = n * rarity();
     // rawPCT = lookup(1.0-1.0/(opponentInstances))
@@ -133,7 +133,7 @@ float64 FoldWaitLengthModel::d_rawPCT_d_w(const float64 n, float64 rawPCT) {
 // Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
 // Return value is between -1.0 and +1.0
 // Will memoize while searching
-float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dbetSize( const float64 n )
 {
 
 
@@ -175,7 +175,7 @@ float64 FoldWaitLengthModel::d_dbetSize( const float64 n )
 }
 
 
-float64 FoldWaitLengthModel::d_dw( const float64 n )
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dw( const float64 n )
 {
 
     // d_dw PW =             d_dw { 2 * pow(getRawPCT, opponents) - 1 }
@@ -228,7 +228,7 @@ float64 FoldWaitLengthModel::d_dw( const float64 n )
 
 // This is the derivative of f() with respect to amountSacrifice
 // For now it's only used as heuristic, so assume grossSacrifice is the only user of amountSacrifice.
-float64 FoldWaitLengthModel::d_dC( const float64 n )
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dC( const float64 n )
 {
     const float64 chanceOfFoldEachHand = rarity();
     const float64 chanceOfSameSituationFoldEachHand = chanceOfFoldEachHand * chanceOfFoldEachHand;
@@ -237,7 +237,7 @@ float64 FoldWaitLengthModel::d_dC( const float64 n )
 
 // See {const float64 remainingbet = ( bankroll - grossSacrifice(n)  );} in f()
 // This is the derivative of that expression with respect to n
-float64 FoldWaitLengthModel::dRemainingBet_dn( )
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::dRemainingBet_dn( )
 {
     const float64 chanceOfFoldEachHand = rarity();
     const float64 chanceOfSameSituationFoldEachHand = chanceOfFoldEachHand * chanceOfFoldEachHand;
@@ -245,7 +245,7 @@ float64 FoldWaitLengthModel::dRemainingBet_dn( )
 }
 
 
-float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::grossSacrifice( const float64 n )
 {
 
     const float64 numHandsPerFold = 1.0 / rarity();
@@ -262,7 +262,7 @@ float64 FoldWaitLengthModel::grossSacrifice( const float64 n )
 // NOTE: this->meanConv if specified must be the view of the player who is choosing whether to fold.
 // When predicting opponent folds, it must be core.foldcumu
 // When evaluating your own folds, it must be core.handcumu
-float64 FoldWaitLengthModel::rarity( )
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::rarity( )
 {
 
 #ifdef DEBUGASSERT
@@ -286,20 +286,20 @@ float64 FoldWaitLengthModel::rarity( )
     return cacheRarity;
 }
 
-float64 FoldWaitLengthModel::lookup( const float64 rank ) const
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::lookup( const float64 rank ) const
 {
     if( meanConv == 0 ) return rank;
     return meanConv->nearest_winPCT_given_rank(rank);
 }
 
-float64 FoldWaitLengthModel::dlookup( const float64 rank, const float64 lookupped ) const
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::dlookup( const float64 rank, const float64 lookupped ) const
 {
     if( meanConv == 0 ) return 1;
     return meanConv->inverseD(rank, lookupped);
 }
 
 //Maximizing this function gives you the best length that you want to wait for a fold for
-float64 FoldWaitLengthModel::f( const float64 n )
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::f( const float64 n )
 {
 #ifdef DEBUGASSERT
     if(amountSacrificeVoluntary < 0.0)
@@ -369,7 +369,7 @@ float64 FoldWaitLengthModel::f( const float64 n )
 // When is it better to fold? When:
 // rarity > 1.0 / n
 // rarity > ...
-float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::fd( const float64 n, const float64 y )
 {
     const float64 remainingbet = ( bankroll - grossSacrifice(n)  );
     if(remainingbet < 0)
@@ -413,7 +413,7 @@ float64 FoldWaitLengthModel::fd( const float64 n, const float64 y )
 }
 
 
-float64 FoldWaitLengthModel::FindBestLength()
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBestLength()
 {
     cacheRarity = -1;
     lastdBetSizeN = -1;
@@ -496,7 +496,7 @@ float64 FoldWaitLengthModel::FindBestLength()
     return bestN;
 }
 
-void FoldWaitLengthModel::load(const ChipPositionState &cps, float64 avgBlind) {
+template<typename T1, typename T2> void FoldWaitLengthModel<T1, T2>::load(const ChipPositionState &cps, float64 avgBlind) {
 #ifdef SACRIFICE_COMMITTED
     amountSacrificeForced = avgBlind;
     setAmountSacrificeVoluntary(cps.alreadyContributed + cps.alreadyBet
@@ -510,19 +510,17 @@ void FoldWaitLengthModel::load(const ChipPositionState &cps, float64 avgBlind) {
 }
 
 // Rarity depends on cached_d_dBetSize, so we have to clear the cache if we are updating w
-void FoldWaitLengthModel::setW(float64 neww) {
+template<typename T1, typename T2> void FoldWaitLengthModel<T1, T2>::setW(float64 neww) {
     cacheRarity = std::numeric_limits<float64>::signaling_NaN();
     w = neww;
 }
 
-float64 FoldWaitLengthModel::getW() const {
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::getW() const {
     return w;
 }
 
-
-void FoldGainModel::query( const float64 betSize )
+template<typename T1, typename T2> void FoldGainModel<T1, T2>::query( const float64 betSize )
 {
-
 
     if(     lastBetSize == betSize
          //&& last_dw_dbet == dw_dbet
@@ -642,27 +640,27 @@ void FoldGainModel::query( const float64 betSize )
 #endif // DEBUGASSERT
 }
 
-float64 FoldGainModel::F_a( const float64 betSize ) {   query(betSize);return lastFA;   }
+template<typename T1, typename T2> float64 FoldGainModel<T1, T2>::F_a( const float64 betSize ) {   query(betSize);return lastFA;   }
 
 // Given a fixed number of hands to wait, this is FoldWaitLengthModel's d_dbetsize, a.k.a. winnings fraction.
-float64 FoldGainModel::F_b( const float64 betSize ) {   query(betSize);return lastFB;   }
+template<typename T1, typename T2> float64 FoldGainModel<T1, T2>::F_b( const float64 betSize ) {   query(betSize);return lastFB;   }
 
-float64 FoldGainModel::dF_dAmountSacrifice( const float64 betSize) {    query(betSize);return lastFC;   }
+template<typename T1, typename T2> float64 FoldGainModel<T1, T2>::dF_dAmountSacrifice( const float64 betSize) {    query(betSize);return lastFC;   }
 
-float64 FoldGainModel::f( const float64 betSize )
+template<typename T1, typename T2> float64 FoldGainModel<T1, T2>::f( const float64 betSize )
 {
     query(betSize);
     return lastf;
 
 }
 
-float64 FoldGainModel::fd( const float64 betSize, const float64 y )
+template<typename T1, typename T2> float64 FoldGainModel<T1, T2>::fd( const float64 betSize, const float64 y )
 {
     query(betSize);
     return lastfd;
 }
 
-void FacedOddsCallGeom::query( const float64 w )
+template<typename T> void FacedOddsCallGeom<T>::query( const float64 w )
 {
     if( lastW == w ) return;
     lastW = w;
@@ -686,20 +684,19 @@ void FacedOddsCallGeom::query( const float64 w )
 
 }
 
-float64 FacedOddsCallGeom::f( const float64 w )
+template<typename T> float64 FacedOddsCallGeom<T>::f( const float64 w )
 {
     query(w);
     return lastF;
 }
 
-
-float64 FacedOddsCallGeom::fd( const float64 w, const float64 excessU )
+template<typename T> float64 FacedOddsCallGeom<T>::fd( const float64 w, const float64 excessU )
 {
     query(w);
     return lastFD;
 }
 
-void FacedOddsAlgb::query( const float64 w )
+template<typename T> void FacedOddsAlgb<T>::query( const float64 w )
 {
     if( lastW == w ) return;
     lastW = w;
@@ -747,8 +744,8 @@ void FacedOddsAlgb::query( const float64 w )
     }
 }
 
-float64 FacedOddsAlgb::f( const float64 w ) { query(w);  return lastF; }
-float64 FacedOddsAlgb::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
+template<typename T> float64 FacedOddsAlgb<T>::f( const float64 w ) { query(w);  return lastF; }
+template<typename T> float64 FacedOddsAlgb<T>::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
 
 // lastF = U - nonRaiseGain
 //       = std::pow(1 + pot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw)   −   nonRaiseGain
@@ -756,7 +753,7 @@ float64 FacedOddsAlgb::fd( const float64 w, const float64 excessU ) { query(w); 
 //
 // If you haven't bet yet (i.e. bCheckPossible == true)
 // nonRaiseGain = 1 - riskLoss / FG.waitLength.bankroll
-void FacedOddsRaiseGeom::query( const float64 w )
+template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 {
     if( lastW == w ) return;
     lastW = w;
@@ -821,5 +818,5 @@ void FacedOddsRaiseGeom::query( const float64 w )
 	}
 }
 
-float64 FacedOddsRaiseGeom::f( const float64 w ) { query(w);  return lastF; }
-float64 FacedOddsRaiseGeom::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
+template<typename T> float64 FacedOddsRaiseGeom<T>::f( const float64 w ) { query(w);  return lastF; }
+template<typename T> float64 FacedOddsRaiseGeom<T>::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }

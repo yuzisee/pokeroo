@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "callSituation.h"
+#include "inferentials.h"
 
 
 ExpectedCallD::~ExpectedCallD()
@@ -59,7 +60,7 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
     const float64 playerCount = suggestPlayerCount(fTable).inclAllIn();
 
     const float64 avgBlind = fTable.GetBlindValues().OpportunityPerHand(fTable.NumberAtTable());
-    FoldGainModel FG(fTable.GetChipDenom()/2);
+    FoldGainModel<PlayerStrategyPerspective, OppositionPerspective> FG(fTable.GetChipDenom()/2);
 
     // CoreProbabilities & myOdds;
     // If using RANK for payout simulation:
@@ -77,7 +78,7 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
             // One vote for: core.statmean.pct from statProbability constructor of ExpectedCallD
             break;
         case RANK:
-            FG.waitLength.meanConv = 0;
+            FG.waitLength.meanConv = EMPTY_DISTRIBUTION;
             FG.waitLength.setW( fCore.statRanking().pct ); //fCore.callcumu.Pr_haveWinPCT_orbetter(fCore.statmean.pct); // rankW; // When called with e is 0, what is the rank -- how do we get that from fCore?
             // One vote for: const float64 rarity3 = core.callcumu.Pr_haveWinPCT_orbetter(core.statmean.pct); from StatResultProbabilities::Process_FoldCallMean
 
@@ -244,7 +245,7 @@ const Player * ExpectedCallD::ViewPlayer() const {
 
 // DEPRECATED: Use OpponentHandOpportunity and CombinedStatResultsPessemistic instead.
 // TODO: Let's say riskLoss is a table metric. In that case, if you use mean it's callcumu always.
-float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CallCumulationD * useMean, float64 * out_dPot) const
+template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CallCumulationD<T, OppositionPerspective> * useMean, float64 * out_dPot) const
 {
     const float64 raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
@@ -252,7 +253,7 @@ float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise
 
     const float64 avgBlind = table->GetBlindValues().OpportunityPerHand(N);
 
-    FoldGainModel FG(table->GetChipDenom()/2);
+    FoldGainModel<T, OppositionPerspective> FG(table->GetChipDenom()/2);
     FG.waitLength.meanConv = useMean;
 
     if(useMean == 0)
