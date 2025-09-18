@@ -83,7 +83,7 @@ class ExactCallD : public IExf
 
         const ExpectedCallD * const tableinfo;
 
-        static constexpr int32 FOLD_ALL_RERAISES = -1;
+        static constexpr int32 OPPONENTS_ARE_ALWAYS_ALLOWED_TO_RAISE = -1;
     protected:
         float64 queryinput;
 		int32 querycallSteps;
@@ -143,7 +143,7 @@ class ExactCallD : public IExf
 #endif
             {
                 queryinput = UNINITIALIZED_QUERY;
-                querycallSteps = FOLD_ALL_RERAISES;
+                querycallSteps = OPPONENTS_ARE_ALWAYS_ALLOWED_TO_RAISE;
             }
 
             virtual ~ExactCallD();

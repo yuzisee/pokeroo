@@ -108,14 +108,6 @@ struct HypotheticalBet {
 }
 ;
 
-struct HypotheticalBet {
-  const struct ChipPositionState &bettorSituation;
-  float64 hypotheticalRaiseBy;
-  bool bCouldHaveChecked;
-  bool bWillGetCalled;
-}
-;
-
 class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
     private:

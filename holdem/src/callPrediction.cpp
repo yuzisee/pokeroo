@@ -967,8 +967,8 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
   {
       const int32 i = i_step;
       //Always be pessimistic about the opponent's raises.
-      //If being raised against is preferable, then expect an aware opponent not to raise into you in later rounds -- since they'd be giving you money.
-      //If being raised against is undesirable, expect an aware opponent to raise you early and often -- since you are giving them push-opportunity
+      //If being raised against is preferable for you, then expect an aware opponent not to raise into you in later rounds -- since they'd be giving you money.
+      //If being raised against is undesirable for you, expect an aware opponent to raise you in every round where they can afford it -- since you are giving them push-opportunity
       const bool bMyWouldCall = (i < callSteps);
 
       const int8 oppRaiseChancesAware = bMyWouldCall ? oppRaiseChancesPessimistic : oppRaiseChances;
@@ -1333,7 +1333,7 @@ float64 ExactCallD::exf(const float64 betSize)
 {
     // no callSteps because `.exf()` is for searching through E[callers], i.e. the number of players you'll meet in the showdown (and thus, we are assuming we want to find the optimal bet size to take us to the showdown -- in this part of the calculation, we won't be folding ourselves)
     // this usually happens during `StateModel::query` → `g_raised` → GainModelGeom/GainModelNoRisk → `.f` → `.g` → `espec.exf(…)`
-    query(betSize, -1);
+    query(betSize, OPPONENTS_ARE_ALWAYS_ALLOWED_TO_RAISE);
 
     return totalexf*impliedFactor + (betSize - nearest);
 }
@@ -1341,7 +1341,7 @@ float64 ExactCallD::exf(const float64 betSize)
 float64 ExactCallD::dexf(const float64 betSize)
 {
 
-    query(betSize, -1);
+    query(betSize, OPPONENTS_ARE_ALWAYS_ALLOWED_TO_RAISE);
 
 
     return totaldexf*impliedFactor;

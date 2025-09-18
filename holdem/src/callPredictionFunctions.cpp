@@ -775,6 +775,16 @@ void FacedOddsRaiseGeom::query( const float64 w )
       //     betSize * "pr{W} after n_hands_to_wait" - betSize (1.0 - "Pr{W} after n_hands_to_wait") - n_hands_to_wait * betSacrifice
       // 2 * betSize * "pr{W} after n_hands_to_wait"             - n_hands_to_wait * betSacrifice - betSize
       // 2 * betSize * (1.0 - 1.0 / n_hands_to_wait)^N_opponents - n_hands_to_wait * betSacrifice - betSize
+      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      //       ↑ seems like `F_a` i.e. `lastFA` is the
+      //              derivative of this sevtion?
+      //                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      //                                                           ↑ seems like `F_c` i.e. `lastFC`
+      //                                                          is the derivative of this sevtion?
+      //
+      // So, is `lastFB` a.k.a. `F_b` the derivative of the last `-betSize` on the end, there?
+      //
+      // Furthermore, `ExactCallD::dfacedOdds_dpot_GeomDEXF` has a `float64 A;` and a `float64 C;`  so are they related to these in some way?
         excess += FG.f(fold_bet) / FG.waitLength.bankroll;
     }
 
