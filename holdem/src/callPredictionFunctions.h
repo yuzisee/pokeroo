@@ -108,6 +108,9 @@ struct HypotheticalBet {
 }
 ;
 
+// [!WARNING]
+// This template is instantiated at the bottom of src/callPredictionFunctions.cpp to avoid linker errors
+template<typename T1, typename T2>
 class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
     private:
@@ -137,13 +140,10 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     bool bSearching;
 
 
-
-
-
     // Describe the hand they would be folding
     float64 w;                    // Set to RANK if meanConv is null. Set to MEAN_winpct if using *meanConv
 public:
-    CallCumulationD (* meanConv); // Set to null if using RANK for payout simulation
+    CallCumulationD<T1, T2> (* meanConv); // Set to null if using RANK for payout simulation
 
     // Describe the situation
     float64 amountSacrificeVoluntary;
@@ -159,7 +159,7 @@ public:
     // NOTE: quantum is 1/3rd of a hand. We don't need more precision than that when evaluating f(n).
     FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0),
     cacheRarity(std::numeric_limits<float64>::signaling_NaN()), lastdBetSizeN(std::numeric_limits<float64>::signaling_NaN()), lastRawPCT(std::numeric_limits<float64>::signaling_NaN()), cached_d_dbetSize(std::numeric_limits<float64>::signaling_NaN()), bSearching(false),
-    w(std::numeric_limits<float64>::signaling_NaN()), meanConv(0), amountSacrificeVoluntary(std::numeric_limits<float64>::signaling_NaN()), amountSacrificeForced(std::numeric_limits<float64>::signaling_NaN()), bankroll(std::numeric_limits<float64>::signaling_NaN()), opponents(std::numeric_limits<float64>::signaling_NaN()), betSize(std::numeric_limits<float64>::signaling_NaN()), prevPot(std::numeric_limits<float64>::signaling_NaN())
+    w(std::numeric_limits<float64>::signaling_NaN()), meanConv(nullptr), amountSacrificeVoluntary(std::numeric_limits<float64>::signaling_NaN()), amountSacrificeForced(std::numeric_limits<float64>::signaling_NaN()), bankroll(std::numeric_limits<float64>::signaling_NaN()), opponents(std::numeric_limits<float64>::signaling_NaN()), betSize(std::numeric_limits<float64>::signaling_NaN()), prevPot(std::numeric_limits<float64>::signaling_NaN())
     {}
 
     /*
@@ -199,7 +199,9 @@ public:
       this->prevPot = o.prevPot;
     }
 
-    bool operator== ( const FoldWaitLengthModel & o ) const;
+    bool has_same_inputs ( const FoldWaitLengthModel & o ) const;
+    bool has_same_cached_output_values ( const FoldWaitLengthModel & o ) const;
+    bool operator== ( const FoldWaitLengthModel & o ) const = delete;
 
     virtual ~FoldWaitLengthModel();
 
@@ -224,7 +226,6 @@ public:
 
     float64 get_cached_d_dbetSize() const { return cached_d_dbetSize; }
 
-
 }
 ;
 
@@ -234,10 +235,11 @@ public:
 // If it's an opponent against you that knows your hand, they use foldcumu.
 // If it's you, you use callcumu.
 // If it's an opponent that doesn't know your hand, you use callcumu.
+template<typename T1, typename T2>
 class FoldGainModel : public virtual ScalarFunctionModel
 {
     protected:
-    FoldWaitLengthModel lastWaitLength;
+    FoldWaitLengthModel<T1, T2> lastWaitLength; // cached version of `FoldWaitLengthModel waitLength` below
     float64 lastBetSize;
     float64 last_dw_dbet;
     float64 lastf;
@@ -254,7 +256,7 @@ class FoldGainModel : public virtual ScalarFunctionModel
 
 
 
-    FoldWaitLengthModel waitLength;
+    FoldWaitLengthModel<T1, T2> waitLength;
 
     FoldGainModel(float64 myQuantum) : ScalarFunctionModel(myQuantum)
             , lastWaitLength(), lastBetSize(-1), last_dw_dbet(0) //Cache variables
@@ -268,12 +270,12 @@ class FoldGainModel : public virtual ScalarFunctionModel
     virtual float64 F_a(const float64 betSize);
     virtual float64 F_b(const float64 betSize);
     virtual float64 dF_dAmountSacrifice(const float64 betSize);
-
-
 }
 ;
+template class FoldGainModel<void, void>;
 
 //How much call can you pick up to your bet?
+template<typename T>
 class FacedOddsCallGeom : public virtual ScalarFunctionModel
 {
     protected:
@@ -289,14 +291,16 @@ class FacedOddsCallGeom : public virtual ScalarFunctionModel
     float64 opponents;
 
 
-    FoldGainModel FG;
+    FoldGainModel<T, OppositionPerspective> FG;
     FacedOddsCallGeom(float64 myQuantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 }
 ;
+template class FacedOddsCallGeom<PlayerStrategyPerspective>;
 
 //Will everybody fold consecutively to your bet?
+template<typename T>
 class FacedOddsAlgb : public virtual ScalarFunctionModel
 {
     protected:
@@ -310,14 +314,17 @@ class FacedOddsAlgb : public virtual ScalarFunctionModel
     float64 betSize;
 
 
-    FoldGainModel FG;
+    FoldGainModel<T, OppositionPerspective> FG;
     FacedOddsAlgb(float64 myQuantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 }
 ;
+template class FacedOddsAlgb<PlayerStrategyPerspective>;
+template class FacedOddsAlgb<void>;
 
 //How much/likely would they raise or reraise?
+template<typename T>
 class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 {
     protected:
@@ -334,11 +341,13 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 	float64 callIncrBase;
     bool bCheckPossible;
 
-    FoldGainModel FG;
+    FoldGainModel<T, OppositionPerspective> FG;
     FacedOddsRaiseGeom(float64 myQuantum) : ScalarFunctionModel(0.5/RAREST_HAND_CHANCE), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 }
 ;
+template class FacedOddsRaiseGeom<void>;
+template class FacedOddsRaiseGeom<PlayerStrategyPerspective>;
 
 #endif

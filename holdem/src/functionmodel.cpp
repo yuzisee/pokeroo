@@ -22,6 +22,7 @@
 #include <float.h>
 
 #include "functionmodel.h"
+#include "inferentials.h"
 #include "portability.h"
 
 
@@ -71,7 +72,7 @@ fSplitOpponents(opponentHandOpportunity.fTable.NumberInHand().inclAllIn() - 1)
 {}
 
 
-static std::pair<struct NetStatResult, float64> againstBestXOpponents(CallCumulationD & fOppCumu, float64 fractionOfHandsToBeat, float64 fractionOfHandsToBeat_dbetSize, playernumber_t fSplitOpponents) {
+static std::pair<struct NetStatResult, float64> againstBestXOpponents(FoldStatsCdf & fOppCumu, float64 fractionOfHandsToBeat, float64 fractionOfHandsToBeat_dbetSize, playernumber_t fSplitOpponents) {
     std::pair<struct NetStatResult, float64> result;
 
     const std::pair<StatResult, float64> bestXOpponents = fOppCumu.bestXHands(fractionOfHandsToBeat);
@@ -373,12 +374,12 @@ static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playe
     }
 }
 
-static NetStatResult initSingleOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, CallCumulationD &foldcumu) {
+static NetStatResult initSingleOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, FoldStatsCdf &foldcumu) {
     const float64 fractionOfHandsToBeat = 1.0 / difficultyOpponents;
     return againstBestXOpponents(foldcumu, fractionOfHandsToBeat, 0.0, showdownOpponents).first;
 }
 
-PureStatResultGeom::PureStatResultGeom(const StatResult mean, const StatResult rank, const CoarseCommunityHistogram &outcomes, CallCumulationD &foldcumu, const ExpectedCallD &tableinfo)
+PureStatResultGeom::PureStatResultGeom(const StatResult mean, const StatResult rank, const CoarseCommunityHistogram &outcomes, FoldStatsCdf &foldcumu, const ExpectedCallD &tableinfo)
 :
 fDifficultyOpponents(tableinfo.handStrengthOfRound())
 ,

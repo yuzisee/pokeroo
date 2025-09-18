@@ -171,7 +171,7 @@ private:
     // Count the number of possible opponents, including hypothetical "fold and come back stronger" hands.
     // This accounts for the fact that if you make an overbet in a particular situation, opponents will find only to return to this same situation in the future but with a better hand.
     OpponentHandOpportunity & fOpposingHands; // All OPPONENT odds against ME.
-    CallCumulationD * const fFoldCumu; // OPPOSING hands (as faring against me)
+    FoldStatsCdf * const fFoldCumu; // OPPOSING hands (as faring against me)
 
     const playernumber_t fSplitOpponents;
 }
@@ -277,7 +277,7 @@ private:
     const struct NetStatResult fNet;
 
 public:
-    PureStatResultGeom(const StatResult mean, const StatResult rank, const CoarseCommunityHistogram &outcomes, CallCumulationD &foldcumu, const ExpectedCallD &tableinfo);
+    PureStatResultGeom(const StatResult mean, const StatResult rank, const CoarseCommunityHistogram &outcomes, FoldStatsCdf &foldcumu, const ExpectedCallD &tableinfo);
     virtual ~PureStatResultGeom() {}
 
     playernumber_t splitOpponents() const override final { return fShowdownOpponents; }

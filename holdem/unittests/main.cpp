@@ -130,8 +130,7 @@ namespace UnitTests {
 
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
+        statprob.core.foldcumu = CoreProbabilities::ReversePerspective(statprob.core.handcumu);
 
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
@@ -445,8 +444,7 @@ namespace UnitTests {
 
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
+        statprob.core.foldcumu = CoreProbabilities::ReversePerspective(statprob.core.handcumu);
 
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
@@ -457,7 +455,7 @@ namespace UnitTests {
         statprob.core.playerID = 0;
         statprob.core.statmean = detailPCT.mean;
 
-        FoldWaitLengthModel fw;
+        FoldWaitLengthModel<void, OppositionPerspective> fw;
         // From the opponent's point of view if he knows he's against a flush
         fw.setW( 0.0 ); // Their current hand does not pair the board so loses to an ace-high flush (but note there is a ~30% chance that they hit a pair other than a deuce and a ~4% chance of having one deuce)
         fw.meanConv = &(statprob.core.foldcumu);
@@ -494,10 +492,10 @@ namespace UnitTests {
         const float64 iveBeenReraisedTo = 190.0;
 
 
-        FoldWaitLengthModel fw;
+        FoldWaitLengthModel<void, void> fw;
 
         fw.setW( 0.75 ); // You have a decent hand, but it could be better and the re-raise was ridiculously enormous.
-        fw.meanConv = 0;
+        fw.meanConv = nullptr;
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 1000.0;
         fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
@@ -560,10 +558,10 @@ namespace UnitTests {
         const float64 iveBeenReraisedTo = 5000.0;
 
 
-        FoldWaitLengthModel fw;
+        FoldWaitLengthModel<void, void> fw;
 
         fw.setW(0.75); // You have a decent hand, but it could be better and the raise was large.
-        fw.meanConv = 0;
+        fw.meanConv = nullptr;
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 10000.0;
         fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
@@ -644,8 +642,7 @@ namespace UnitTests {
 
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
+        statprob.core.foldcumu = CoreProbabilities::ReversePerspective(statprob.core.handcumu);
 
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
@@ -708,8 +705,7 @@ namespace UnitTests {
 
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
+        statprob.core.foldcumu = CoreProbabilities::ReversePerspective(statprob.core.handcumu);
 
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
@@ -768,9 +764,7 @@ namespace UnitTests {
 
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
-
+        statprob.core.foldcumu = CoreProbabilities::ReversePerspective(statprob.core.handcumu);
 
         // TEST:
         const float64 xa = 0.3;
@@ -855,8 +849,7 @@ namespace UnitTests {
 
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
+        statprob.core.foldcumu = CoreProbabilities::ReversePerspective(statprob.core.handcumu);
 
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
@@ -885,8 +878,8 @@ namespace UnitTests {
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
           4.5, false, true
         };
-        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest(0.0, 1.0 /* denom */, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
-                                                                     ,hypothetical0, 4,0);
+        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest<void>(0.0, 1.0 /* denom */, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
+                                                                     ,hypothetical0, 4, nullptr);
         // tableinfo->RiskLoss(0, 2474, 4, 11.25, 0, 0) == 0.0
         HypotheticalBet hypothetical1 = {
           oppCPS,
@@ -894,8 +887,8 @@ namespace UnitTests {
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
           4.5, false, true
         };
-        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest(w_r_rank0, 1.0, 0.0 ,  0.31640625
-                                                                     ,hypothetical1, 4,0);
+        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest<void>(w_r_rank0, 1.0, 0.0 ,  0.31640625
+                                                                     ,hypothetical1, 4, nullptr);
 
         // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
         assert(w_r_rank0 <= w_r_rank1);
@@ -3747,8 +3740,7 @@ namespace RegressionTests {
 
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
+        statprob.core.foldcumu = CoreProbabilities::ReversePerspective(statprob.core.handcumu);
 
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);
@@ -4285,8 +4277,7 @@ namespace RegressionTests {
 
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,community,5);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
+        statprob.core.foldcumu = CoreProbabilities::ReversePerspective(statprob.core.handcumu);
 
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,community,5,0);
@@ -4300,10 +4291,10 @@ namespace RegressionTests {
 
         const float64 opponentsFacingThem = 1.0;
 
-        FoldWaitLengthModel waitLength;
+        FoldWaitLengthModel<void, void> waitLength;
         waitLength.meanConv =
         //(opponentsFacingThem > 1.0) ?
-        0
+        nullptr
         //: &(fCore.callcumu)
         ;
         // ( 1 / (x+1) )  ^ (1/x)
@@ -4463,8 +4454,7 @@ namespace RegressionTests {
 
         ///Compute CallStats
         StatsManager::QueryDefense(statprob.core.handcumu,withCommunity,communityToTest,cardsInCommunity);
-        statprob.core.foldcumu = statprob.core.handcumu;
-        statprob.core.foldcumu.ReversePerspective();
+        statprob.core.foldcumu = CoreProbabilities::ReversePerspective(statprob.core.handcumu);
 
         ///Compute CommunityCallStats
         StatsManager::QueryOffense(statprob.core.callcumu,withCommunity,communityToTest,cardsInCommunity,0);

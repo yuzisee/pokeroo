@@ -26,6 +26,7 @@
 //#include "stratSearch.h"
 
 #include "debug_flags.h"
+#include "inferentials.h"
 
 
 
@@ -49,7 +50,7 @@ public:
         void printBetGradient(std::ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * csrp) const;
         // ^^^ `.pRaise(…)` and `.pWin(…)` will update their respective caches, so it's not a *true* `const ExactCallD &` nor `const ExactCallBluffD &`
 
-        void printFoldGain(float64 raiseGain, CallCumulationD * e, ExpectedCallD & estat);
+        void printFoldGain(float64 raiseGain, CommunityStatsCdf * e, ExpectedCallD & estat);
 
 
 
@@ -75,7 +76,7 @@ public:
         void printCommon(const ExpectedCallD &tablestate);
 
         void setupPosition();
-        float64 solveGainModel(HoldemFunctionModel*, CallCumulationD* const e);
+        float64 solveGainModel(HoldemFunctionModel*);
 	public:
 
         void HardOpenLogFile();

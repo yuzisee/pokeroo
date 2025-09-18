@@ -167,25 +167,29 @@ CallCumulation::~CallCumulation()
 {
 }
 
-
-void CallCumulation::ReversePerspective()
+// Not to be confused with `StatResult.ReversedPerspective` which... TODO(from joseph): Shouldn't we call `StatResult.ReversedPerspective` from within here?
+FoldStatsCdf CoreProbabilities::ReversePerspective(const MatchupStatsCdf &source_cdf)
 {
+   FoldStatsCdf reversed_cdf;
+   reversed_cdf.cumulation = source_cdf.cumulation;
+
 //Originally, the incremental/marginal rank of hand #n is [n].repeated - [n-1].repeated
-    std::reverse(cumulation.begin(),cumulation.end());
+    std::reverse(reversed_cdf.cumulation.begin(),reversed_cdf.cumulation.end());
 //After reversing, you must calculate [n].repeated - [n+1].repeated
     vector<StatResult>::iterator target;
-    vector<StatResult>::iterator next_target = cumulation.begin();
+    vector<StatResult>::iterator next_target = reversed_cdf.cumulation.begin();
 
     (*next_target).pct = 1 - (*next_target).pct;
     (*next_target).wins = 1 - (*next_target).wins - (*next_target).splits;
     (*next_target).loss = 1 - (*next_target).loss - (*next_target).splits;
+    // TODO(from joseph): We can `next_target->ReversedPerspective()` right?
 
-    while( next_target != cumulation.end() )
+    while( next_target != reversed_cdf.cumulation.end() )
     {
         target = next_target;
         ++next_target;
 
-        if( next_target == cumulation.end() )
+        if( next_target == reversed_cdf.cumulation.end() )
         {
             (*target).repeated = 1;
             break;
@@ -200,12 +204,12 @@ void CallCumulation::ReversePerspective()
         }
     }
 
-
+    return reversed_cdf;
 
 }
 
 ///This function is the derivative of nearest_winPCT_given_rank by drank
-float64 CallCumulationD::inverseD(const float64 rank, const float64 mean) const
+template<typename T1, typename T2> float64 CallCumulationD<T1, T2>::inverseD(const float64 rank, const float64 mean) const
 {
     //f(x) = Pr_haveWinPCT_strictlyBetterThan(x-EPS), where f(x) is rarity, 1-f(x) is rank, x is winPCT
     //nearest_winPCT_given_rank(1 - Pr_haveWinPCT_strictlyBetterThan(x-EPS)) = x
@@ -260,7 +264,7 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
     }
     if( rank_toHave < low_rank )
     {
-        return cumulation[0].pct; //.pct is toHave -- if you haven't ReversedPerspective then that's the pct of the first hand dealt. See the bottom of CallStats::Analyze()
+        return cumulation[0].pct; //.pct is toHave -- if you haven't ReversePerspective()/ReversedPerspective() yet then that's the pct of the first hand dealt. See the bottom of CallStats::Analyze()
     }
     if( rank_toHave > cumulation[high_index-1].repeated )
     {
@@ -372,9 +376,13 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
 
 }
 
-float64 CallCumulationD::linearInterpolate(float64 x1, float64 y1, float64 x2, float64 y2, float64 x) const
+template<typename T1, typename T2> float64 CallCumulationD<T1, T2>::linearInterpolate(float64 x1, float64 y1, float64 x2, float64 y2, float64 x) const
 {
+  if (std::fabs(x1 - x2) < std::numeric_limits<float64>::epsilon()) {
+    return (y1 + y2) / 2.0;
+  } else {
     return ((x-x1)*y2 + (x2-x)*y1)/(x2-x1);
+  }
 }
 
 ///This function returns the probability of having winPCT_toHave or better
@@ -400,7 +408,7 @@ float64 CallCumulation::Pr_haveWinPCT_strictlyBetterThan(const float64 winPCT_to
 //.pct is YOUR chance to win if you have that outcome (in all cases, .pct is the genPCT() of that StatResult)
 //.repeated is the rank of that outcome (actually, of the next outcome better)
 //We return the "probability of having a worse hand" or "Pr{PCT < winpct_tohave}" but smoothly interpolated across the histogram.
-std::pair<float64, float64> CallCumulationD::Pr_haveWorsePCT_continuous(const float64 winPCT_toHave) const
+template<typename T1, typename T2> std::pair<float64, float64> CallCumulationD<T1, T2>::Pr_haveWorsePCT_continuous(const float64 winPCT_toHave) const
 {//However, we would like to piecewise linear interpolate, so the function is continuous.
     // This helps especially because the derivative is never zero anywhere, which won't confuse a solver.
 

@@ -315,8 +315,6 @@ public:
 
     vector<StatResult> cumulation;
 
-    virtual void ReversePerspective();
-
 
 	virtual float64 Pr_haveWinPCT_strictlyBetterThan(const float64 w_toHave) const;
 	virtual float64 nearest_winPCT_given_rank(const float64 rank); // for now is not `const` because it caches the result
@@ -349,6 +347,13 @@ public:
 }
 ;
 
+struct PlayerStrategyPerspective {};
+struct OppositionPerspective {};
+
+// This is the differentiable version of CallCumulation.
+// It's also strongly typed via templates into FoldStatsCdf / CallStatsCDf / CommunityStatsCdf to prevent accidentally mixing up callcumu vs.foldcumu vs. handcumu within CoreProbabilities.
+//   (We've had one too many bugs that stems from mixing these up)
+template<typename IsPlayerStrategyPerspective, typename IsOppositionPerspective>
 class CallCumulationD : public virtual CallCumulation
 {
 private:
@@ -387,8 +392,15 @@ public:
 
 }
 ;
+template class CallCumulationD<PlayerStrategyPerspective, void>;
+template class CallCumulationD<void, OppositionPerspective>;
+template class CallCumulationD<PlayerStrategyPerspective, OppositionPerspective>;
 
-class CallCumulationZero : public virtual CallCumulationD
+using MatchupStatsCdf = CallCumulationD<PlayerStrategyPerspective, void>;
+using FoldStatsCdf = CallCumulationD<void, OppositionPerspective>;
+using CommunityStatsCdf = CallCumulationD<PlayerStrategyPerspective, OppositionPerspective>;
+
+class CallCumulationZero : public virtual CallCumulationD<PlayerStrategyPerspective, OppositionPerspective>
 {
     virtual float64 pctWillCall(const float64 oddsFaced) const
     {return 0;}
@@ -397,7 +409,7 @@ class CallCumulationZero : public virtual CallCumulationD
 }
 ;
 
-class CallCumulationFlat : public virtual CallCumulationD
+class CallCumulationFlat : public virtual CallCumulationD<PlayerStrategyPerspective, OppositionPerspective>
 {
     virtual float64 pctWillCall(const float64 oddsFaced) const
     {return 1-oddsFaced;}
@@ -517,12 +529,16 @@ enum MeanOrRank {
 
 #define EPS_WIN_PCT (1.0 / 2118760.0 / 990.0)
 
+
+constexpr CallCumulationD<PlayerStrategyPerspective, OppositionPerspective> * EMPTY_DISTRIBUTION = nullptr;
+// ^^^ TODO(from joseph): Is this ever needed? Why not `CallCumulationFlat` instead, which I'm pretty sure is what they do in most cases
+
 struct CoreProbabilities {
     int8 playerID;
 
-    CallCumulationD handcumu; // CallStats (your odds of winning against each possible opponent)
-    CallCumulationD foldcumu; // CallStats, REVERSED PERSPECTIVE (each opposing hand's chance to win)
-    CallCumulationD callcumu; // CommunityCallStats (each hole cards' inherent probability of winning)
+    MatchupStatsCdf handcumu; // CallStats (your odds of winning against each possible opponent)
+    FoldStatsCdf foldcumu; // CallStats, REVERSED PERSPECTIVE (each opposing hand's chance to win)
+    CommunityStatsCdf callcumu; // CommunityCallStats (each hole cards' inherent probability of winning)
 	StatResult statmean; // (Your hole cards' current inherent probability of winning)
 
     CoreProbabilities() : playerID(-1) {}
@@ -565,6 +581,8 @@ struct CoreProbabilities {
     double getFractionOfOpponentsWhereMyWinrateIsAtLeast(double winrate) {
         return handcumu.Pr_haveWinPCT_strictlyBetterThan(winrate);
     }
+
+    static FoldStatsCdf ReversePerspective(const MatchupStatsCdf&);
 
     // TODO(from joseph_huang): Refactor this (or where it is used) to supply mean vs. rank when dealing with heads-up vs. multi-hand.
 }

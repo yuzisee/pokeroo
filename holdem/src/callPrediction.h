@@ -29,6 +29,7 @@
 #undef DEBUG_TRACE_DEXF
 
 #include "math_support.h"
+#include "inferentials.h"
 #include "callPredictionFunctions.h"
 #include "callSituation.h"
 
@@ -97,29 +98,25 @@ class ExactCallD : public IExf
         float64 *noRaiseChance_A;
         float64 *noRaiseChanceD_A;
 
+        template<typename T> float64 facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
+        template<typename T> float64 dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
 
-        float64 facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 n,  CallCumulationD * useMean) const;
-        float64 dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD * useMean) const;
-
-
-        float64 facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 n, CallCumulationD * useMean) const;
-        float64 dfacedOdds_dpot_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexf, CallCumulationD * useMean) const;
-
+        template<typename T> float64 facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 n, CallCumulationD<T, OppositionPerspective> * useMean) const;
+        template<typename T> float64 dfacedOdds_dpot_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexf, CallCumulationD<T, OppositionPerspective> * useMean) const;
 
         void query(const float64 betSize, const int32 callSteps);
     public:
 
     // By default, startingPoint == 0.0
     // When using this function for the purposes of nextNoRaise_A, you'll want to start at the previous value to avoid rounding errors.
-    static float64 facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD * useMean);
-
+    template<typename T> static float64 facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean);
 
 
     // CallCumulationD &choicecumu = statprob.core.callcumu;
     // CallCumulationD &raisecumu = statprob.core.foldcumu;
     //    ExactCallBluffD myDeterredCall(&tablestate, &choicecumu, &raisecumu);
     struct CoreProbabilities &fCore;
-    CallCumulationD * ed() const {
+    CommunityStatsCdf * ed() const {
         return &(fCore.callcumu);
     }
 #ifdef DEBUG_TRACE_EXACTCALL
@@ -174,7 +171,7 @@ class ExactCallBluffD
 {//NO ASSIGNMENT OPERATOR
     private:
 
-    float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD * useMean) const;
+    template<typename T> float64 facedOdds_Algb(const ChipPositionState & cps, float64 bet,float64 opponents,  CallCumulationD<T, OppositionPerspective> * useMean) const;
     float64 facedOddsND_Algb(const ChipPositionState & cps, float64 bet, float64 dpot, float64 w, float64 n) const;
 
         //topTwoOfThree returns the average of the top two values {a,b,c} through the 7th parameter.
@@ -189,8 +186,8 @@ class ExactCallBluffD
 
         const ExpectedCallD * const tableinfo;
 
-        CallCumulationD &fFoldCumu; // when they know your hand
-        CallCumulationD &fCallCumu; // when they _don't_ know your hand
+        FoldStatsCdf &fFoldCumu; // when they know your hand
+        CommunityStatsCdf &fCallCumu; // when they _don't_ know your hand
     protected:
 
         float64 allFoldChance;
@@ -233,7 +230,7 @@ class ExactCallBluffD
 
                             virtual float64 pWinD(const float64 betSize);
 
-            static float64 RiskPrice(const ExpectedCallD &tableinfo, CallCumulationD * foldcumu_caching);
+            static float64 RiskPrice(const ExpectedCallD &tableinfo, FoldStatsCdf * foldcumu_caching);
 
             ~ExactCallBluffD();
 
