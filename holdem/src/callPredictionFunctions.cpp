@@ -830,7 +830,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	// (1/y) * dy/dw =                          + dfw * ln(callIncrBase) + fw * 0
 	// (1/y) * dy/dw =                          + dfw * ln(callIncrBase)
 	//         dy/dw =                        y * dfw * ln(callIncrBase)
-		const float64 dL_dw = dfw*log1p(callIncrBase) * callGain;
+		const float64 dL_dw = dfw*std::log(callIncrBase) * callGain;
 		lastFD -= dL_dw;
 	}
 }
