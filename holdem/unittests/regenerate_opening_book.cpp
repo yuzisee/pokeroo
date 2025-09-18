@@ -41,7 +41,7 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
                 std::cout.flush(); // Flush for timestamping
 
             // struct CoreProbabilities statprob_core;
-            CallCumulationD statprob_core_handcumu;
+            MatchupStatsCdf statprob_core_handcumu;
             ///Compute CallStats
             StatsManager::QueryDefense(statprob_core_handcumu,withCommunity,CommunityPlus::EMPTY_COMPLUS,cardsInCommunity);
 
