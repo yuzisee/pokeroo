@@ -98,8 +98,7 @@ class ExactCallD : public IExf
         template<typename T> float64 dfacedOdds_call_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
 
         template<typename T> float64 facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 n, CallCumulationD<T, OppositionPerspective> * useMean) const;
-        template<typename T> float64 dfacedOdds_raise_dfacedBet_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexf, CallCumulationD<T, OppositionPerspective> * useMean, float64 dRiskLoss_pot) const;
-
+        template<typename T> static float64 dfacedOdds_raise_dfacedBet_GeomDEXF(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dw_dpot, CallCumulationD<T, OppositionPerspective> * useMean, float64 dRiskLoss_pot);
     public:
 
     // By default, startingPoint == 0.0

@@ -4611,26 +4611,26 @@ namespace RegressionTests {
           const playernumber_t N = tablestate_tableinfo.handsDealt();
           const float64 avgBlind = myTable.GetBlindValues().OpportunityPerHand(N);
 
+          const float mydexf = 1.0; // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
           std::vector<std::pair<float64, ValueAndSlope>> actual_noRaisePct_vs_betSize;
           // Mimic src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
-          const float mydexf = 1.0; // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
-          // To get a high P4 RiskLoss against P3, we want:
-          //  [FoldWaitLengthModel::FindBestLength]
-          //  → a high maxProfit, which means a high rawPCT (and/or low opponents)
-          //  → a high betSize
-          //  → a small amountSacrificePerHand, which means...
-          //    ... a large numHandsPerSameSituationFold, which means a very rare `rarity()`, which means
-          //      [ExpectedCallD::RiskLoss]
-          //      → a large N, which means a large `handsDealt()`
-          //    ... a small amountSacrificeVoluntary and small amountSacrificeForced, which means
-          //      [ExpectedCallD::RiskLoss]
-          //      → a small `avgBlind`
-          //      → a small ACTIVE pot (current round, players who haven't yet folded)
-          //      → a large rpAlreadyBet by P3
-          //      (and/or high player count)
-          // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
           for (float64 betSize = 2000.0; betSize < 4001.0; betSize += 100.0) {
             hypothetical.hypotheticalRaiseTo = betSize;
+            // To get a high P4 RiskLoss against P3, we want:
+            //  [FoldWaitLengthModel::FindBestLength]
+            //  → a high maxProfit, which means a high rawPCT (and/or low opponents)
+            //  → a high betSize
+            //  → a small amountSacrificePerHand, which means...
+            //    ... a large numHandsPerSameSituationFold, which means a very rare `rarity()`, which means
+            //      [ExpectedCallD::RiskLoss]
+            //      → a large N, which means a large `handsDealt()`
+            //    ... a small amountSacrificeVoluntary and small amountSacrificeForced, which means
+            //      [ExpectedCallD::RiskLoss]
+            //      → a small `avgBlind`
+            //      → a small ACTIVE pot (current round, players who haven't yet folded)
+            //      → a large rpAlreadyBet by P3
+            //      (and/or high player count)
+            // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
 
             const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
             assert((actual_RiskLoss.v < 0) && "Raising from 20 → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
