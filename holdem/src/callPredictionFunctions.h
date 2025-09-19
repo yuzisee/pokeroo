@@ -67,7 +67,6 @@ struct HypotheticalBet {
   float64 hypotheticalRaiseTo;
   const float64 hypotheticalRaiseAgainst;
   const float64 counderfactualFoldAbandon_raw; // This is the same as `bettorSituation.alreadyContributed` EXCEPT it includes any blinds you are on the hook for as well. In theory it's exactly `bettorSituation.alreadyBet`
-  const bool bCouldHaveChecked; // either because you're first to act OR because the only bet so far is equal to your blind bet
   const bool bWillGetCalled;
 
   // if you're _RE-RAISING_ this is the increase compared to the highest bet so far
@@ -104,6 +103,14 @@ struct HypotheticalBet {
 
   constexpr bool bMoreThanAllIn() const {
     return bettorSituation.bankroll < hypotheticalRaiseTo;
+  }
+
+  // either because you're first to act OR because the only bet so far is equal to your blind bet
+  constexpr bool bCouldHaveChecked() const {
+    //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+    const bool bOppCouldCheck = (hypotheticalRaiseAgainst == 0.0) || /*(betSize == callBet())*/(counderfactualFoldAbandon_raw == hypotheticalRaiseAgainst);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+    //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
+    return bOppCouldCheck;
   }
 }
 ;

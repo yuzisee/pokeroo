@@ -767,7 +767,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::configure_with(FacedOddsRaiseGe
   a.raisedPot = cps.pot + (hypotheticalRaise.bWillGetCalled ? (hypotheticalRaise.betIncrease()) : 0);
     a.raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     a.fold_bet = hypotheticalRaise.fold_bet();
-    a.bCheckPossible = hypotheticalRaise.bCouldHaveChecked;
+    a.bCheckPossible = hypotheticalRaise.bCouldHaveChecked();
     a.riskLoss = currentRiskLoss;
   a.bRaiseWouldBeCalled = hypotheticalRaise.bWillGetCalled;
 }
@@ -801,7 +801,8 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
     // dU_dw = U * dfw   *   ln{ 1.0 + (raiseTo + raisedPot) / (FG.waitLength.bankroll + raiseTo) }
     const float64 dU_dw = U * dfw*log1p((raisedPot+raiseTo)/(FG.waitLength.bankroll-raiseTo));
 
-    float64 excess = 1;
+    float64 excess = 1.0;
+    float64 dexcess_dw = 0.0;
 
     if( !bCheckPossible )
     {
@@ -821,6 +822,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
       //
       // Furthermore, `ExactCallD::dfacedOdds_dpot_GeomDEXF` has a `float64 A;` and a `float64 C;`  so are they related to these in some way?
         excess += FG.f(this->fold_bet) / FG.waitLength.bankroll;
+        dexcess_dw -= FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
     }
 
   const float64 callIncrLoss = 1 - this->fold_bet / FG.waitLength.bankroll;
@@ -850,7 +852,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
     lastFD = dU_dw;
     if( (!bCheckPossible) && FG.n > 0 && !bUseCall)
     {
-        lastFD -= FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
+        lastFD += dexcess_dw;
     }
 
 	if( bUseCall )

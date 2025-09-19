@@ -264,12 +264,12 @@ template<typename T> float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const Expected
     // dh/dpot = h * [ d/dpot { fw } ln((B + pot + ret)/(B - betSize))   + C ]
     const float64 C = fw/(cps.bankroll+cps.pot+retBet) ;
     // dh/dpot = h * [ ln((B + pot + ret)/(B - betSize)) * d/dpot { fw } + C ]
-    // dh/dpot = h * [ ln((B + pot + ret)/(B - betSize)) * fdw * d{w}/dpot  + C ]
+    // dh/dpot = h * [ ln((B + pot + ret)/(B - betSize)) * dfw * d{w}/dpot  + C ]
     // dh/dpot = h * [                                       A * d{w}/dpot  + C ]
     const float64 A = log1p( base_minus_1 ) * dfw;
     const float64 h_times_remaining = std::pow( (cps.bankroll+cps.pot+retBet)/(cps.bankroll-raiseto), fw ) * (cps.bankroll - raiseto);
 
-    const float64 applyRiskLossD = (hypothetical.bCouldHaveChecked || hypothetical.bWillGetCalled) ? dRiskLoss_pot : 0.0;
+    const float64 applyRiskLossD = (hypothetical.bCouldHaveChecked() || hypothetical.bWillGetCalled) ? dRiskLoss_pot : 0.0;
 
     //  lastF = Pr{opponent raises to `raiseTo` | potsize = pot}
     //  lastF =                            U  + applyRiskLoss                  - nonRaiseGain
@@ -288,7 +288,7 @@ template<typename T> float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const Expected
     // d/dpot { U + riskLoss / bankroll } = (                            fw * ((1 + base_minus_1)/((bankroll - raiseTo)/bankroll))^(fw-1) +             applyRiskLossD ) / bankroll
     //const float64 dUriskloss_dpot = (h_times_remaining*C + applyRiskLossD) / (h_times_remaining*A);
 
-    if(hypothetical.bCouldHaveChecked)
+    if(hypothetical.bCouldHaveChecked())
     {
         return (h_times_remaining*C + applyRiskLossD) / (h_times_remaining*A);
     }else
@@ -727,16 +727,11 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                   const bool bMyWouldCall = i < callSteps;
                   const float64 thisRaise = RaiseAmount(*tableinfo, betSize,i);
 
-                  //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
-                  const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
-                  //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
-
                   const struct HypotheticalBet oppRaise = {
                     oppCPS,
                     thisRaise,
                     betSize,
                     oppBetAlready,
-                    bOppCouldCheck,
                     bMyWouldCall
                   };
 

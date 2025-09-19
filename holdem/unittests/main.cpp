@@ -877,7 +877,7 @@ namespace UnitTests {
         HypotheticalBet hypothetical0 = {
           oppCPS, 6.75 + oppCPS.alreadyBet,
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
-          4.5, false, true
+          4.5, true
         };
         float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest<void>(0.0, 1.0 /* denom */, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
                                                                      ,hypothetical0, 4, nullptr);
@@ -886,7 +886,7 @@ namespace UnitTests {
           oppCPS,
           11.25 + oppCPS.alreadyBet,
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
-          4.5, false, true
+          4.5, true
         };
         float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest<void>(w_r_rank0, 1.0, 0.0 ,  0.31640625
                                                                      ,hypothetical1, 4, nullptr);
@@ -4585,7 +4585,6 @@ namespace RegressionTests {
             std::numeric_limits<float64>::signaling_NaN(),
             p3.ViewPlayer().GetBetSize(),
             cps.alreadyBet,
-            false,
             true
           };
 
