@@ -250,7 +250,7 @@ const Player * ExpectedCallD::ViewPlayer() const {
 //  + src/stratPosition.h has `DeterredGainStrategy` and `ImproveGainStrategy` which both have varying levels of ExactCallBluffD
 //  + src/stratPosition.cpp also creates StateModel objects in all three of ImproveGainStrategy::MakeBet & DeterredGainStrategy::MakeBet & PureGainStrategy::MakeBet
 //                          so do they all eventually call into RiskLoss?
-template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr, float64 * out_dPot) const
+ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * foldwait_length_distr) const
 {
     const float64 raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
@@ -258,7 +258,11 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
 
     const float64 avgBlind = table->GetBlindValues().OpportunityPerHand(N);
 
-    FoldGainModel<T, OppositionPerspective> FG(table->GetChipDenom()/2);
+    FoldGainModel<PlayerStrategyPerspective, OppositionPerspective> FG(table->GetChipDenom()/2);
+    // [!TIP]
+    // FoldGainModel needs _whose_ perspective?
+    //  * When used by StateModel::query (via `FoldOrCall::foldGain` method) it uses callcumu
+    //  * When used by RiskLoss it would use foldcumu if your opponent knows your hand, and callcumu if your opponent doesn't know your hand
     FG.waitLength.setMeanConv( foldwait_length_distr );
 
     if(foldwait_length_distr == 0)
@@ -283,42 +287,36 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
     FG.waitLength.prevPot = table->GetPrevPotSize();
     // We don't need FG.waitLength.betSize because FG.f() will set betSize;
 
-    //FG.dw_dbet = 0; //Again, we don't need this
-	float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced;
-		// ^^^ Given the hand strength, how much do you gain by folding against a bet of `raiseTo`?
-	float64 drisk;
+    //FG.dw_dbet = 0; // ← Again, we don't need this
 
-	if( riskLoss >= -std::numeric_limits<float64>::epsilon() ) {
-	  //If riskLoss > 0, then the opponent wins by folding (and thus loses by raising, and therefore doesn't raise).
-		riskLoss = 0;
+    // NOMINALLY FG.f( raiseTo ) is to lose `FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced` because all else being equal, if you fold you lose the money you put in.
+    const float64 nominalFoldChips = -FG.waitLength.amountSacrificeVoluntary - FG.waitLength.amountSacrificeForced;
+    const float64 trueFoldChipsEV = FG.f( raiseTo );
+    // ^^^ Given the hand strength, how much would someone gain by folding against a bet of `raiseTo`?
+
+    // INVARIANT: If `FG.f( raiseTo )` (i.e. "FoldGain") is positive, it means it is profitable to fold against `raiseTo`
+    //
+    ValueAndSlope riskLoss;
+    // In this case, `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂pot
+
+	if( nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV  ) {
+	  // If trueFoldChipsEV offers any benefit at all, then I could "win" by folding meaning it's overly risky for this opponent of mine to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
+		// As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
+    riskLoss.v = nominalFoldChips - trueFoldChipsEV;
+	} else {
+	  riskLoss.v = 0;
 	}
 
-	if(out_dPot != 0) {
-	  //If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
-    if( riskLoss < std::numeric_limits<float64>::epsilon() )
-    {
       // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
-      // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
-      //                                                                             ^^^ see `setAmountSacrificeVoluntary`
-      //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
-      const float64 d_riskLoss_d_pot = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1);
+      // d_riskLoss/d_pot = d/dpot { -FG.f( raiseTo ) }                           - d/dpot { FG.waitLength.amountSacrifice }
+      //                                                                              ^^^ see `setAmountSacrificeVoluntary`
+      //   d_pot/d_AmountSacrifice { -FG.f( raiseTo ) } * d_AmountSacrifice/d_pot - d/dpot { FG.waitLength.amountSacrifice }
       const float64 d_AmountSacrifice_d_pot = 1.0 / (handsIn()-1);
-      if (d_riskLoss_d_pot != 0.0 ) {
-       	drisk = d_riskLoss_d_pot + d_AmountSacrifice_d_pot;
-      } else {
-       	drisk = d_AmountSacrifice_d_pot;
-      }
-    } else {
-   		drisk = 0;
-   	}
-
-		*out_dPot = drisk;
-	}
+      const float64 d_riskLoss_d_pot = FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot;
+    	riskLoss.D_v = -d_riskLoss_d_pot - d_AmountSacrifice_d_pot;
 
 	return riskLoss;
 }
-template float64 ExpectedCallD::RiskLoss<PlayerStrategyPerspective>(const struct HypotheticalBet &, CallCumulationD<PlayerStrategyPerspective, OppositionPerspective> *, float64 *) const;
-template float64 ExpectedCallD::RiskLoss<void>(const struct HypotheticalBet &, CallCumulationD<void, OppositionPerspective> *, float64 *) const;
 
 MeanOrRank FoldOrCall::suggestMeanOrRank() const {
     if (suggestPlayerCount(fTable).inclAllIn() > 2) {
