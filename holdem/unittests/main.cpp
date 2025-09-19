@@ -9,6 +9,7 @@
 #include <ctime>
 #include <cassert>
 #include <limits>
+#include <algorithm>
 
 #include "../src/aiCache.h"
 namespace NamedTriviaDeckTests {
@@ -4581,16 +4582,19 @@ namespace RegressionTests {
 
           HypotheticalBet hypothetical = {
             cps,
-            3500.0,
+            std::numeric_limits<float64>::signaling_NaN(),
             p3.ViewPlayer().GetBetSize(),
             cps.alreadyBet,
             false,
             true
           };
 
+          const playernumber_t N = tablestate_tableinfo.handsDealt();
+          const float64 avgBlind = myTable.GetBlindValues().OpportunityPerHand(N);
+
+          std::vector<std::pair<float64, ValueAndSlope>> actual_noRaisePct_vs_betSize;
           // Mimic src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
-          // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
-          float64 dRiskLoss_pot =  std::numeric_limits<float64>::signaling_NaN();
+          const float mydexf = 1.0; // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
           // To get a high P4 RiskLoss against P3, we want:
           //  [FoldWaitLengthModel::FindBestLength]
           //  → a high maxProfit, which means a high rawPCT (and/or low opponents)
@@ -4606,10 +4610,73 @@ namespace RegressionTests {
           //      → a large rpAlreadyBet by P3
           //      (and/or high player count)
           // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
-          {
-            const float64 actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu), &dRiskLoss_pot);
-            assert((actual_RiskLoss < 0) && "Raising from 20 → 3500 is extreme on a table with 5 players. RiskLoss should be discouraging that." );
+          for (float64 betSize = 2000.0; betSize < 4001.0; betSize += 100.0) {
+            hypothetical.hypotheticalRaiseTo = betSize;
+
+            const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
+            assert((actual_RiskLoss.v < 0) && "Raising from 20 → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
+
+            FacedOddsRaiseGeom<void> actual(myTable.GetChipDenom());
+            FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss.v);
+            actual.FG.waitLength.load(cps, avgBlind);
+            actual.FG.waitLength.opponents = tablestate_tableinfo.handsToShowdownAgainst();
+            actual.FG.waitLength.meanConv = nullptr;
+            const float64 noRaisePct = actual.FindZero(0.0, 1.0, false);
+            const float64 dpot_dbetsize = 1.0 - noRaisePct;
+            const float64 d_noRaisePct_dpot = ExactCallD::dfacedOdds_dpot_GeomDEXF(tablestate_tableinfo, hypothetical, noRaisePct, actual.FG.waitLength.opponents, mydexf, EMPTY_DISTRIBUTION, actual_RiskLoss.D_v);
+            const float64 d_noRaisePct_dbetsize = dpot_dbetsize * d_noRaisePct_dpot;
+
+            actual_noRaisePct_vs_betSize.push_back( std::pair<float64, ValueAndSlope>( betSize , ValueAndSlope {
+              noRaisePct, d_noRaisePct_dbetsize
+            }));
           }
+
+          bool derivative_ok = true;
+
+          std::cout << "Δy/Δx≅\t";
+          float64 prev_x = std::numeric_limits<float64>::signaling_NaN();
+          float64 prev_y = std::numeric_limits<float64>::signaling_NaN();
+          float64 prev_dy = std::numeric_limits<float64>::signaling_NaN();
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            const float64 x = x_y_dy.first;
+            const float64 y = x_y_dy.second.v;
+            const float64 dy = x_y_dy.second.D_v;
+            if (std::isnan(prev_x) || std::isnan(prev_y)) {
+              std::cout << " ⏢";
+            } else {
+              const float64 expected_dy = (y - prev_y) / (x - prev_x);
+              std::cout << "   " << expected_dy;
+
+              if( (std::min(prev_dy, dy) <= expected_dy) && (expected_dy <= std::max(prev_dy, dy))) {
+                std::cout << "✓";
+              } else {
+                std::cout << "⚠⚠";
+                derivative_ok = false;
+              }
+            }
+            prev_x = x;
+            prev_y = y;
+            prev_dy = dy;
+          }
+          std::cout << std::endl;
+          std::cout << "dy";
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            std::cout << "   " << x_y_dy.second.D_v;
+          }
+          std::cout << std::endl;
+          std::cout << "y";
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            std::cout << "   " << x_y_dy.second.v;
+          }
+          std::cout << std::endl;
+          std::cout << "x";
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            std::cout << "   " << x_y_dy.first;
+          }
+          std::cout << std::endl;
+
+          assert(derivative_ok);
+
           // assert(dRiskLoss_pot >= 1.0 / (tablestate_tableinfo.handsIn()-1));
           // [!CAUTION]
           // (a) I haven't found a way to trigger `dRiskLoss_pot > 0.0` yet.
@@ -4622,11 +4689,10 @@ namespace RegressionTests {
 
           hypothetical.hypotheticalRaiseTo = 50.0;
           {
-            const float64 actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu), &dRiskLoss_pot);
-            assert((actual_RiskLoss == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
+            const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
+            assert((actual_RiskLoss.v == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
           }
         }
-
 }
 
 void print_lineseparator(const char* const separator_msg) {
