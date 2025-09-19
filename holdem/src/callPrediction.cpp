@@ -163,8 +163,16 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
 }
 */
 
-// useMean is a table metric here (see RiskLoss), so always use callcumu
-template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean) const
+// @param foldwait_length_distr A player who is choosing to raise would either...
+//   (i) wait until they have the best hand (rank)
+//   (ii) wait until they have a sufficient chance to win (callcumu)
+//   (ii) or, wait until *you* have a worse hand (foldcumu)
+// But we'd like to treat `foldwait_length_distr` as a table metric here (see RiskLoss), so we'd always use callcumu since they don't really have knowledge of your hand (and who is "you" even, really, considering the fact that whether they choose to raise or not also depends on other players at the table)
+// They're never "folding now so that next time they are in the same situation with the same community cards, they'll have more luck in the next cards that are dealt right after that"
+// so in that sense, callcumu is completely ridiculous
+//
+// @return How likely is the player `cps` to call vs. fold against a raise by `incrRaise`? We will calculate the winning percentages that make folding / calling / raising profitable.
+template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
 {
 
     const playernumber_t N = tableinfo->handsDealt();
@@ -173,15 +181,16 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct Hypot
 
     return facedOdds_raise_Geom_forTest( startingPoint
                                         ,tableinfo->table->GetChipDenom()
-                                        ,tableinfo->RiskLoss(hypothetical, useMean, 0)
+                                        ,tableinfo->RiskLoss(hypothetical, foldwait_length_distr, 0)
                                         ,avgBlind
                                         ,hypothetical
                                         ,opponents
-                                        ,useMean
+                                        ,foldwait_length_distr
                                         );
 }
 
-template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean)
+// @return at what win percentages is it profitable to raise to `a.raiseTo` i.e. `hypotheticalRaise.hypotheticalRaiseTo`
+template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, float64 riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr)
 {
   const struct ChipPositionState &cps = hypotheticalRaise.bettorSituation;
     if( hypotheticalRaise.hypotheticalRaiseTo >= cps.bankroll )
@@ -220,7 +229,7 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
     // We don't need to set w, because a.FindZero searches over w
     a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
-    a.FG.waitLength.meanConv = useMean;
+    a.FG.waitLength.meanConv = foldwait_length_distr;
 
     //a.FG.dw_dbet = 0; //We don't need this, unless we want the derivative of FG.f; Since we don't need any extrema or zeros of FG, we can set this to anything
 
@@ -240,7 +249,7 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
 
 
 //Here, dbetsize/dpot = 0
-template<typename T> float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexfy, CallCumulationD<T, OppositionPerspective> * useMean) const
+template<typename T> float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexfy, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
 {
   const struct ChipPositionState &cps = hypothetical.bettorSituation;
 
@@ -272,12 +281,12 @@ template<typename T> float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const struct H
     {
     //USE FG for riskLoss
         float64 dRiskLoss_pot = std::numeric_limits<float64>::signaling_NaN();
-        tableinfo->RiskLoss(hypothetical, useMean, &dRiskLoss_pot);
+        tableinfo->RiskLoss(hypothetical, foldwait_length_distr, &dRiskLoss_pot);
 
         FoldGainModel<T, OppositionPerspective> myFG(tableinfo->chipDenom());
 
     //USE myFG for F_a and F_b
-        myFG.waitLength.meanConv = useMean;
+        myFG.waitLength.meanConv = foldwait_length_distr;
         myFG.waitLength.setW(w);
         myFG.waitLength.load(cps, avgBlind);
         myFG.waitLength.opponents = opponents;
@@ -326,7 +335,7 @@ template<typename T> float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const struct H
 
 
 
-template<typename T> float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean) const
+template<typename T> float64 ExactCallD::facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
 {
 
     if( humanbet >= cps.bankroll )
@@ -346,13 +355,13 @@ template<typename T> float64 ExactCallD::facedOdds_call_Geom(const ChipPositionS
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
-    a.FG.waitLength.meanConv = useMean;
+    a.FG.waitLength.meanConv = foldwait_length_distr;
     //a.FG.dw_dbet = 0; //We don't need this, unless we want the derivative of FG.f; Since we don't need any extrema or zeros of FG, we can set this to anything
 
     return a.FindZero(0,1, false);
 }
 
-template<typename T> float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot_dhumanbet, float64 w, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean) const
+template<typename T> float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot_dhumanbet, float64 w, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
 {
     if( w <= 0 ) return 0;
 	if( humanbet >= cps.bankroll ) return 0;
@@ -366,7 +375,7 @@ template<typename T> float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPosi
     FG.waitLength.setW(w);
     FG.waitLength.load(cps, avgBlind);
     FG.waitLength.opponents = opponents;
-    FG.waitLength.meanConv = useMean;
+    FG.waitLength.meanConv = foldwait_length_distr;
     //FG.dw_dbet = 0; //Again, we don't need this
 
     const float64 wN_1 = std::pow(w,opponents-1);
@@ -384,10 +393,10 @@ template<typename T> float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPosi
     ;
 }
 
-// useMean must be from the perspective of ChipPositionState, if any.
+// foldwait_length_distr must be from the perspective of ChipPositionState, if any.
 // That's what the `template<typename T> … CallCumulationD<T, OppositionPerspective>` is for here.
 // Thus, it can't be handcumu but can be foldcumu or callcumu depending on how much information the opponent has.
-template<typename T> float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionState & cps, float64 betSize, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean) const
+template<typename T> float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionState & cps, float64 betSize, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
 {
     FacedOddsAlgb<T> a(tableinfo->chipDenom());
     a.pot = cps.pot;
@@ -398,11 +407,11 @@ template<typename T> float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionS
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
-    a.FG.waitLength.meanConv = useMean;
+    a.FG.waitLength.meanConv = foldwait_length_distr;
     //a.FG.dw_dbet = 0; //We don't need this...
 
     #if defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_SEARCH)
-		a.bTraceEnable = traceOut != 0 && useMean == 0;
+		a.bTraceEnable = traceOut != 0 && foldwait_length_distr == 0;
     #endif
 
     return a.FindZero(0,1, false);
@@ -429,7 +438,7 @@ float64 ExactCallBluffD::facedOddsND_Algb(const ChipPositionState & cps, float64
     FG.waitLength.load(cps, avgBlind);
     FG.waitLength.opponents = opponents;
     FG.waitLength.setW(w);
-//derivative of algebraic uses FG_a and FG_b which are independent of useMean
+//derivative of algebraic uses FG_a and FG_b which are independent of foldwait_length_distr
 
 
     return (
@@ -518,8 +527,11 @@ struct FacedOdds {
   }
 
   // TODO(from yuzisee): Raises are now Algb instead of Geom?
+  // @return the probability of this player (re)raising us
   void init_facedOdds_raise(ExactCallD & pr_call_pr_raiseby, const FacedOdds &prev_w_r, const struct HypotheticalBet& oppRaise) {
     const float64 opponents = pr_call_pr_raiseby.tableinfo->handsToShowdownAgainst();
+
+    // Is it possible to use OpponentHandOpportunity instead?
 
     this->pess = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.pess, opponents, (&pr_call_pr_raiseby.fCore.foldcumu));
     #ifdef ANTI_CHECK_PLAY
@@ -691,7 +703,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       {	//Can still call, at least
 
           // Assume that the "total pot" they can win is the current `this->totalexf` so far
-          ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit, prevPot);
+          const ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit, prevPot);
 
 			///=========================
 			///   1. Estimate noRaise
@@ -767,8 +779,8 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                           //   If you know you'd call (good hand), let the opponent raise the worse amount (smaller)
 
                                 const ValueAndSlope noraise = bMyWouldCall ?
-                                        ValueAndSlope::lesserOfTwo(noraisePess, noraiseMean) : // I would call. I want them to raise. (Adversarial is smaller)
-                                        ValueAndSlope::greaterOfTwo(noraisePess, noraiseMean) // I won't call. I want them not to raise. (Adversarial is larger)
+                                        ValueAndSlope::lesserOfTwo(noraisePess, noraiseMean) : // I would call. I want them to raise. (Adversarial is the smaller "no raise")
+                                        ValueAndSlope::greaterOfTwo(noraisePess, noraiseMean) // I won't call. I want them not to raise. (Adversarial is the larger "no raise")
                                     ;
 
                           nextNoRaise_A[i_step].v = (noraise.v + w_r_facedodds.rank)/2;
