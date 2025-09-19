@@ -84,7 +84,7 @@ class ExactCallD : public IExf
 
         const ExpectedCallD * const tableinfo;
 
-        static constexpr int32 OPPONENTS_ARE_ALWAYS_ALLOWED_TO_RAISE = -1;
+        static constexpr int32 OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE = -1;
     protected:
         float64 queryinput;
 		int32 querycallSteps;
@@ -101,12 +101,12 @@ class ExactCallD : public IExf
         void query(const float64 betSize, const int32 callSteps);
 
         template<typename T> float64 facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
-        template<typename T> float64 dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
+        template<typename T> float64 dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n, CallCumulationD<T, OppositionPerspective> * useMean) const;
 
         template<typename T> float64 facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 n, CallCumulationD<T, OppositionPerspective> * useMean, float64 riskLoss) const;
 
     public:
-        template<typename T> static float64 dfacedOdds_dpot_GeomDEXF(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexf, CallCumulationD<T, OppositionPerspective> * useMean, float64 dRiskLoss_pot);
+        template<typename T> static float64 dfacedOdds_dpot_GeomDEXF(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dw_dpot, CallCumulationD<T, OppositionPerspective> * useMean, float64 dRiskLoss_pot);
 
     // By default, startingPoint == 0.0
     // When using this function for the purposes of nextNoRaise_A, you'll want to start at the previous value to avoid rounding errors.
@@ -141,7 +141,7 @@ class ExactCallD : public IExf
 #endif
             {
                 queryinput = UNINITIALIZED_QUERY;
-                querycallSteps = OPPONENTS_ARE_ALWAYS_ALLOWED_TO_RAISE;
+                querycallSteps = OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE;
             }
 
             virtual ~ExactCallD();
