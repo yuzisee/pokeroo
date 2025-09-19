@@ -250,7 +250,7 @@ const Player * ExpectedCallD::ViewPlayer() const {
 //  + src/stratPosition.h has `DeterredGainStrategy` and `ImproveGainStrategy` which both have varying levels of ExactCallBluffD
 //  + src/stratPosition.cpp also creates StateModel objects in all three of ImproveGainStrategy::MakeBet & DeterredGainStrategy::MakeBet & PureGainStrategy::MakeBet
 //                          so do they all eventually call into RiskLoss?
-template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CallCumulationD<T, OppositionPerspective> * useMean, float64 * out_dPot) const
+template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr, float64 * out_dPot) const
 {
     const float64 raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
@@ -259,21 +259,24 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
     const float64 avgBlind = table->GetBlindValues().OpportunityPerHand(N);
 
     FoldGainModel<T, OppositionPerspective> FG(table->GetChipDenom()/2);
-    FG.waitLength.meanConv = useMean;
+    FG.waitLength.meanConv = foldwait_length_distr;
 
-    if(useMean == 0)
+    if(foldwait_length_distr == 0)
     {
-        FG.waitLength.setW( 1.0 - 1.0/N );
+        FG.waitLength.setW( 1.0 - 1.0/N ); // i.e. rarity() will be 1.0/N
     }else
     {
-        FG.waitLength.setW( useMean->nearest_winPCT_given_rank(1.0 - 1.0/N) );
+        FG.waitLength.setW( foldwait_length_distr->nearest_winPCT_given_rank(1.0 - 1.0/N) );
     }
 	FG.waitLength.amountSacrificeForced = avgBlind;
 
-	  // This is a weird "megaplayer" who represents all the other players combined
-		// It has, as a "bankroll" the entire rest of the chip stack
-		// It has, as a "sacrifice" the amount that everyone else has bet
+    // This is a weird "generic player" who represents all the other players combined
+    // It has, as a "bankroll" that splits the entire rest of the chip stack equally
+    // It has, as a "sacrifice" the average amount that everyone else has bet
+    //        ↑ it's been that way since https://github.com/yuzisee/pokeroo/blob/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7/holdem/src/callPrediction.cpp#L567
     FG.waitLength.setAmountSacrificeVoluntary( (table->GetPotSize() - stagnantPot() - hypotheticalRaise.bettorSituation.alreadyBet)/(handsIn()-1) );
+    // ^^^ If amountSacrificeVoluntary were for a single player it would be: that player's current bet size − that player's forced bet (e.g. blinds)
+
     FG.waitLength.bankroll = (allChips() - hypotheticalRaise.bettorSituation.bankroll)/(N-1);
     FG.waitLength.opponents = 1;
 
@@ -282,10 +285,16 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
 
     //FG.dw_dbet = 0; //Again, we don't need this
 	float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced;
+		// ^^^ Given the hand strength, how much do you gain by folding against a bet of `raiseTo`?
 	float64 drisk;
 
+	//If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
 	if( riskLoss < 0 )
-	{//If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
+	{
+    // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
+    // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
+    //                                                                             ^^^ see `setAmountSacrificeVoluntary`
+    //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
 		drisk = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / (handsIn()-1);
 		// TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
 	}else

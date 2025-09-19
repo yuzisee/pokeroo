@@ -54,19 +54,19 @@ struct ChipPositionState
     {}
 
     const float64 bankroll;
-    const float64 pot;
+    float64 pot;
     const float64 alreadyBet; // What is my bet so far, this round? (As I understand it, this is included in `pot`)
     const float64 alreadyContributed; // This is the same as `alreadyBet` (except it excludes any blinds, until you call or raise)
-    const float64 prevPot;
+    float64 prevPot;
 
 }
 ;
 
 struct HypotheticalBet {
   const struct ChipPositionState &bettorSituation;
-  const float64 hypotheticalRaiseTo;
+  float64 hypotheticalRaiseTo;
   const float64 hypotheticalRaiseAgainst;
-  const float64 counderfactualFoldAbandon_raw;
+  const float64 counderfactualFoldAbandon_raw; // This is the same as `bettorSituation.alreadyContributed` EXCEPT it includes any blinds you are on the hook for as well. In theory it's exactly `bettorSituation.alreadyBet`
   const bool bCouldHaveChecked; // either because you're first to act OR because the only bet so far is equal to your blind bet
   const bool bWillGetCalled;
 
@@ -146,8 +146,8 @@ public:
     CallCumulationD<T1, T2> (* meanConv); // Set to null if using RANK for payout simulation
 
     // Describe the situation
-    float64 amountSacrificeVoluntary;
-    float64 amountSacrificeForced;
+    float64 amountSacrificeVoluntary; // you're giving up this much money each time you reach this situation (and fold) again
+    float64 amountSacrificeForced; // you're giving up this much money each time you're dealt a new hand
     float64 bankroll;
     float64 opponents;
     float64 betSize; // if you do call, this is the amount you will win from this round
@@ -269,6 +269,9 @@ class FoldGainModel : public virtual ScalarFunctionModel
     virtual float64 fd(const float64 betSize, const float64 gain);
     virtual float64 F_a(const float64 betSize);
     virtual float64 F_b(const float64 betSize);
+
+    // "AmountSacrifice" is the number of chips you are effectively losing every time you fold
+    // See also `FoldWaitLengthModel::d_dC`
     virtual float64 dF_dAmountSacrifice(const float64 betSize);
 }
 ;

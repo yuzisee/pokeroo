@@ -443,6 +443,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBest
 
     // Assuming no cost to folding, what's the best hand we could end up with and how much would it win?
     float64 maxProfit = d_dbetSize( maxTurns[0] ) * betSize ;
+    // i.e. std::pow(rawPCT,opponents) * betSize;
     if ( maxProfit < amountSacrificePerFOLD )
     {
         // Can't even win back the cost of folding once, even if we automatically started with the best hand in maxTurns[0] hands.
@@ -450,9 +451,12 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBest
         return 0;
     }
 
-
-    // Dummy value to get the loop started.
-    //maxTurns[1] = std::numeric_limits<float64>::infinity();
+    // We will search from `1/rarity()` → `bankroll / amountSacrificePerHand`
+    //                                     ^^^ we'll start with maxTurns[0] is the entire bankroll
+    // We want to find the value of `n` that maximizes `this->f(n)`
+    // But if even you can fold the entire bankroll, you'd only win `maxProfit` below, so
+    //   we should really be searching only up to `maxProfit/amountSacrificePerHand`
+    // ...but then if that wins only $x (repeat)
 
     do
     {
@@ -468,7 +472,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBest
             // Break out of this loop and call FindMax() below.
             break;
         }
-
+        // `d_dbetSize( maxTurns[0] )` relates to the size of the final showdown after waiting `maxTurns[0]` hands
         maxProfit = d_dbetSize(  maxTurns[0] ) * betSize ;
 
         if ( maxProfit < amountSacrificePerFOLD )
@@ -479,6 +483,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBest
 
     }while( maxTurns[0] < maxTurns[1]/2 );
     // UNTIL: These two guys are reasonably close enough that a search makes sense.
+    // i.e if we aren't cutting the search space in half anymore with each iteration, move on to FindMax below
 
 #ifdef DEBUG_TRACE_SEARCH
     if (bTraceEnable) {
@@ -616,8 +621,14 @@ template<typename T1, typename T2> void FoldGainModel<T1, T2>::query( const floa
         lastFC = 0;
     }else
     {
-        lastFA = waitLength.d_dw( n );
-        lastFC = waitLength.d_dC( n );
+      // NOW, differentiate:
+      //   ∇ lastf = ∇ waitLength.f(n)
+        lastFA = waitLength.d_dw( n ); // differentiate `waitLength.f(n)` by ∂w
+        // lastFB was set earlier above ↑ differentiate `waitLength.f(n)` by ∂betSize
+        lastFC = waitLength.d_dC( n ); // differentiate `waitLength.f(n)` by ∂amountSacrifice
+        // dF/dAmountSacrifice = d/dAmountSacrifice {waitLength.f(n)}
+        //                    ~= d/dAmountSacrifice {-grossSacrifice(n)}
+        //                    ~= d/dAmountSacrifice {-n * amountSacrificePerHand};
     }
 
     // NOTE: dw_dbet == 0.0 so for now this part is simple.
@@ -816,6 +827,16 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 
 	if( bUseCall )
 	{
+	//          y =   callGain
+	//          y =   callIncrLoss * std::pow(callIncrBase,fw)
+	//       ln y = ln callIncrLoss + ln std::pow(callIncrBase,fw)
+	//       ln y = ln callIncrLoss + fw * ln(callIncrBase)
+	// d/dw { ln y } = d/dw { ln callIncrLoss } + d/dw { fw * ln(callIncrBase) }
+	// (1/y) * dy/dw = d/dw { ln callIncrLoss } + d/dw { fw * ln(callIncrBase) }
+	// (1/y) * dy/dw =                          + d/dw { fw * ln(callIncrBase) }
+	// (1/y) * dy/dw =                          + dfw * ln(callIncrBase) + fw * 0
+	// (1/y) * dy/dw =                          + dfw * ln(callIncrBase)
+	//         dy/dw =                        y * dfw * ln(callIncrBase)
 		const float64 dL_dw = dfw*log1p(callIncrBase) * callGain;
 		lastFD -= dL_dw;
 	}
