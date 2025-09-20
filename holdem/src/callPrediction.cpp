@@ -239,12 +239,13 @@ template<typename T> float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(con
 
 
 	const float64 retBet = hypothetical.bWillGetCalled ? (hypothetical.betIncrease()) : 0;
+	const float64 raisedPot = cps.pot+retBet;
 
     const int8 N = tbase.handsDealt();
     const float64 avgBlind = tbase.table->GetBlindValues().OpportunityPerHand(N);
 
     //The pot can't be zero, so base_minus_1 can't be 0, so base can't be 1, so log(base) can't be zero
-    const float64 base_minus_1 = (cps.pot+raiseto+retBet)/(cps.bankroll-raiseto);//base = (B+pot)/(B-betSize); = 1 + (pot+betSize)/(B-betSize);
+    const float64 base_minus_1 = (raisedPot+raiseto)/(cps.bankroll-raiseto); // base = (B+raisedPot)/(B-betSize) = 1 + (raisedPot+betSize)/(B-betSize);
     // ↑ corresponds to `callIncrBase` I guess?
 
     const float64 showdownOpponents = opponents - (hypothetical.bWillGetCalled ? 0 : 0.5); // matches `float64 showdownOpponents` of src/callPredictionFunctions.cpp#FacedOddsRaiseGeom<T>::query
@@ -272,25 +273,21 @@ template<typename T> float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(con
     const float64 applyRiskLossD = (hypothetical.bCouldHaveChecked() || hypothetical.bWillGetCalled) ? dRiskLoss_pot : 0.0;
 
     //  lastF = Pr{opponent raises to `raiseTo` | potsize = pot}
-    //  lastF =                            U  + applyRiskLoss                  - nonRaiseGain
-    //  lastF =                             U  +  riskLoss / bankroll           - nonRaiseGain
+    //  lastF =                  U  + applyRiskLoss                  - nonRaiseGain
+    //  lastF =                   U  +  riskLoss / bankroll           - nonRaiseGain
     // First, let's evaluate just the front part:
-    //                              d/dpot { U  +  riskLoss / bankroll }
-    //                             = d/dpot { U }  +  d/dpot { riskLoss / bankroll }
-    //                             = d/dpot { (1 + pot/bankroll)^fw * (1 - raiseTo/bankroll)^(1-fw)   +   (riskLoss / bankroll) }
-    //                              = d/dpot { (1 + pot/bankroll)^fw * (1 - raiseTo/bankroll)^(1-fw) }   +   d/dpot { (riskLoss / bankroll) }
-    //                              = ((1 - raiseTo/bankroll)^(1-fw)) * {d/dpot (1 + pot/bankroll)^fw}      +     (1/bankroll) * driskLoss/dpot
-    //                              = ((1 - raiseTo/bankroll)^(1-fw)) * fw * (1 + pot/bankroll)^(fw-1) * {d/dpot (1 + pot/bankroll)}  +  (1/bankroll) * driskLoss/dpot
-    //                              = ((1 - raiseTo/bankroll)^(1-fw)) * fw * (1 + pot/bankroll)^(fw-1) * {1 / bankroll)               +  (1/bankroll) * driskLoss/dpot
-    //                               = (1 - raiseTo/bankroll)^(1-fw)  * fw * (1 + base_minus_1)^(fw-1) * {1 / bankroll)               +  (1/bankroll) * driskLoss/dpot
-    //                               = ( (1 - raiseTo/bankroll)^(1-fw) * fw * (1 + base_minus_1)^(fw-1)                               +                 applyRiskLossD ) / bankroll
-    //                                    = (                            fw * ((1 + base_minus_1)/(1 - raiseTo/bankroll))^(fw-1)      +                 applyRiskLossD ) / bankroll
-    // d/dpot { U + riskLoss / bankroll } = (                            fw * ((1 + base_minus_1)/((bankroll - raiseTo)/bankroll))^(fw-1) +             applyRiskLossD ) / bankroll
-    //const float64 dUriskloss_dpot = (h_times_remaining*C + applyRiskLossD) / (h_times_remaining*A);
+    //                      d/dpot { U  +  riskLoss / bankroll }
+    //                     = d/dpot { U }  +  d/dpot { riskLoss / bankroll }
+    //                      = d/dpot { h * (1 - betSize/B) }   +   d/dpot { (riskLoss / bankroll) }
+    //                                    = (1 - betSize/B) * d/dpot { h }              +   d/dpot { (riskLoss / bankroll) }
+    //                                     = (1 - betSize/B) * ( h * [ A * dw_dpot + C ]) +  d/dpot { (riskLoss / bankroll) }
+    //                                   = (  (B - betSize ) * ( h * [ A * dw_dpot + C ])  +  d/dpot { riskLoss }  ) / bankroll
+    // d/dpot { U + riskLoss / bankroll } = (  (B - betSize )  * h * [ A * dw_dpot + C ]    +  d/dpot { riskLoss }  ) / bankroll
+    const float64 dUriskloss_dpot = (h_times_remaining * (A * dw_dpot + C) + applyRiskLossD) / cps.bankroll;
 
     if(hypothetical.bCouldHaveChecked())
     {
-        return (h_times_remaining*C + applyRiskLossD) / (h_times_remaining*A);
+        return dUriskloss_dpot;
     }else
     {
 
@@ -332,7 +329,8 @@ template<typename T> float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(con
         #endif
 
         // We are differentiating `FacedOddsRaiseGeom.f` but this time `∂{pot}` rather than `FacedOddsRaiseGeom.fd` which is `∂{w}`
-        return (h_times_remaining*C - myFG.F_b(faced_bet) - dRiskLoss_pot) / (myFG.F_a(faced_bet) - h_times_remaining*A);
+        return dUriskloss_dpot - myFG.F_a(faced_bet) * dw_dpot - myFG.F_b(faced_bet) / dexf;
+        // return (h_times_remaining*C - myFG.F_b(faced_bet) - dRiskLoss_pot) / (myFG.F_a(faced_bet) - h_times_remaining*A);
     }
 
 

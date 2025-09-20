@@ -4651,6 +4651,7 @@ namespace RegressionTests {
 
           bool derivative_ok = true;
 
+          std::vector<float64> dw_dpot;
           std::cout << "Δy/Δx≅\t";
           float64 prev_x = std::numeric_limits<float64>::signaling_NaN();
           float64 prev_y = std::numeric_limits<float64>::signaling_NaN();
@@ -4671,6 +4672,7 @@ namespace RegressionTests {
                 std::cout << "⚠⚠";
                 derivative_ok = false;
               }
+              dw_dpot.push_back(expected_dy / dy); // dy * actual_dw_dpot == expected_dy
             }
             prev_x = x;
             prev_y = y;
@@ -4692,7 +4694,11 @@ namespace RegressionTests {
             std::cout << "   " << x_y_dy.first;
           }
           std::cout << std::endl;
-
+          std::cout << "dpot_dw";
+          for (float64 &dexy_maybe : dw_dpot) {
+            std::cout << "   " << (1.0 / dexy_maybe);
+          }
+          std::cout << std::endl;
           assert(derivative_ok);
 
           // assert(dRiskLoss_pot >= 1.0 / (tablestate_tableinfo.handsIn()-1));
