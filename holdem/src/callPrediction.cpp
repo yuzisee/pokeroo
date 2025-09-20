@@ -206,6 +206,15 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
         }
     }
 
+    if (hypotheticalRaise.raiseBy() < std::numeric_limits<float64>::epsilon()) {
+      // We've already reached this raiseTo amount, so any cards would get us there (we got called, it's not even our turn)
+      if (RAREST_HAND_CHANCE < startingPoint) {
+        return startingPoint;
+      } else {
+        return RAREST_HAND_CHANCE;
+      }
+    }
+
     FacedOddsRaiseGeom<T> a(denom);
     FacedOddsRaiseGeom<T>::configure_with(a, hypotheticalRaise, riskLoss);
 
@@ -229,111 +238,21 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
 }
 
 //Here, dbetsize/dpot = 0
-template<typename T> float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dw_dpot, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr, float64 dRiskLoss_pot)
+float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 w, float64 dRiskLoss_dfacedBet)
 {
-  const struct ChipPositionState &cps = hypothetical.bettorSituation;
-
     if( w <= 0 ) return 0;
-    const float64 raiseto = hypothetical.hypotheticalRaiseTo;
-	if( hypothetical.bEffectivelyAllIn(tbase.chipDenom()) ) return 0;
+	  if( hypothetical.bEffectivelyAllIn(tbase.chipDenom()) ) return 0;
+		if( hypothetical.raiseBy() < std::numeric_limits<float64>::epsilon() ) return 0;
 
+	// The current value of w is given. The chance of raising is based on `1.0 - w`
+	// If facedBet is increased as high as `raiseTo`, the chance of "raising" reaches 100% (since we are already at that bet)
+	// We want to return ∆w / ∆facedBet
+	const float64 x1 = hypothetical.faced_bet();
+	const float64 x2 = hypothetical.hypotheticalRaiseTo;
+	const float64 y1 = w;
+	const float64 y2 = 0.0;
 
-	const float64 retBet = hypothetical.bWillGetCalled ? (hypothetical.betIncrease()) : 0;
-	const float64 raisedPot = cps.pot+retBet;
-
-    const int8 N = tbase.handsDealt();
-    const float64 avgBlind = tbase.table->GetBlindValues().OpportunityPerHand(N);
-
-    //The pot can't be zero, so base_minus_1 can't be 0, so base can't be 1, so log(base) can't be zero
-    const float64 base_minus_1 = (raisedPot+raiseto)/(cps.bankroll-raiseto); // base = (B+raisedPot)/(B-betSize) = 1 + (raisedPot+betSize)/(B-betSize);
-    // ↑ corresponds to `callIncrBase` I guess?
-
-    const float64 showdownOpponents = opponents - (hypothetical.bWillGetCalled ? 0 : 0.5); // matches `float64 showdownOpponents` of src/callPredictionFunctions.cpp#FacedOddsRaiseGeom<T>::query
-    const float64 wN_1 = std::pow(w,showdownOpponents-1);
-    float64 fw = wN_1 * w; // ← matches `float64 fw` of src/callPredictionFunctions.cpp#FacedOddsRaiseGeom<T>::query
-    float64 dfw = showdownOpponents * wN_1;
-
-    // let `h` = std::pow((B + pot + ret) / (B - betSize), fw)
-    // so that `U` = h * (1 - betSize/B)
-    // ln h = fw ln { (B + pot + ret)  /  (B - betSize) }
-    // ln h = fw ln(B + pot + ret)  −  fw ln(B - betSize)
-    // dh/dpot = h * [ d/dpot { fw ln(B + pot + ret)     −      fw ln(B - betSize) } ]
-    // dh/dpot = h * [ d/dpot { fw ln(B + pot + ret) } − d/dpot { fw ln(B - betSize) } ]
-    // dh/dpot = h * [ d/dpot { fw ln(B + pot + ret) } − ln(B - betSize) * d/dpot { fw } ]
-    // dh/dpot = h * [ d/dpot { fw } ln(B + pot + ret) + fw / (B + pot + ret) − ln(B - betSize) * d/dpot { fw } ]
-    // dh/dpot = h * [ d/dpot { fw } ln((B + pot + ret)/(B - betSize))  + fw / (B + pot + ret) ]
-    // dh/dpot = h * [ d/dpot { fw } ln((B + pot + ret)/(B - betSize))   + C ]
-    const float64 C = fw/(cps.bankroll+cps.pot+retBet) ;
-    // dh/dpot = h * [ ln((B + pot + ret)/(B - betSize)) * d/dpot { fw } + C ]
-    // dh/dpot = h * [ ln((B + pot + ret)/(B - betSize)) * dfw * d{w}/dpot  + C ]
-    // dh/dpot = h * [                                       A * d{w}/dpot  + C ]
-    const float64 A = log1p( base_minus_1 ) * dfw;
-    const float64 h_times_remaining = std::pow( (cps.bankroll+cps.pot+retBet)/(cps.bankroll-raiseto), fw ) * (cps.bankroll - raiseto);
-
-    const float64 applyRiskLossD = (hypothetical.bCouldHaveChecked() || hypothetical.bWillGetCalled) ? dRiskLoss_pot : 0.0;
-
-    //  lastF = Pr{opponent raises to `raiseTo` | potsize = pot}
-    //  lastF =                  U  + applyRiskLoss                  - nonRaiseGain
-    //  lastF =                   U  +  riskLoss / bankroll           - nonRaiseGain
-    // First, let's evaluate just the front part:
-    //                      d/dpot { U  +  riskLoss / bankroll }
-    //                     = d/dpot { U }  +  d/dpot { riskLoss / bankroll }
-    //                      = d/dpot { h * (1 - betSize/B) }   +   d/dpot { (riskLoss / bankroll) }
-    //                                    = (1 - betSize/B) * d/dpot { h }              +   d/dpot { (riskLoss / bankroll) }
-    //                                     = (1 - betSize/B) * ( h * [ A * dw_dpot + C ]) +  d/dpot { (riskLoss / bankroll) }
-    //                                   = (  (B - betSize ) * ( h * [ A * dw_dpot + C ])  +  d/dpot { riskLoss }  ) / bankroll
-    // d/dpot { U + riskLoss / bankroll } = (  (B - betSize )  * h * [ A * dw_dpot + C ]    +  d/dpot { riskLoss }  ) / bankroll
-    const float64 dUriskloss_dpot = (h_times_remaining * (A * dw_dpot + C) + applyRiskLossD) / cps.bankroll;
-
-    if(hypothetical.bCouldHaveChecked())
-    {
-        return dUriskloss_dpot;
-    }else
-    {
-
-        FoldGainModel<T, OppositionPerspective> myFG(tbase.chipDenom());
-
-    //USE myFG for F_a and F_b
-        myFG.waitLength.setMeanConv(foldwait_length_distr);
-        myFG.waitLength.setW(w);
-        myFG.waitLength.load(cps, avgBlind);
-        myFG.waitLength.opponents = opponents;
-        //myFG.dw_dbet = 0; //Again, we don't need this
-
-        // It seems to be that:
-        //  (i) The underlying `accumulateOneOpponentPossibleRaises` and thus `ExactCallD::query` is a search over ExactCallD::query's `betSize`
-        //      so when we take the derivative, we want to sample the derivative at the value of `betSize` corresponding to ExactCallD::query
-        //  (ii) The FoldGain of a position is based on the bet you're facing (and would consider folding against INSTEAD OF following through on HypotheticalBet)
-        //       Well, that bet you're facing is exactly `hypothetical.hypotheticalRaiseAgainst`
-        // and… well what do you know? These two (i) and (ii) are the same value.
-        const float64 faced_bet = hypothetical.hypotheticalRaiseAgainst;
-
-        #ifdef DEBUGASSERT
-          if (std::isnan(h_times_remaining) || std::isnan(C) || std::isnan(faced_bet) || std::isnan(A)) {
-            std::cerr << " h_times_remaining=" << h_times_remaining;
-            std::cerr << " C=" << C;
-            std::cerr << " faced_bet=" << faced_bet;
-            std::cerr << " A=" << A;
-            exit(1);
-          }
-
-          // The derivative `d/dbetSize myFG.f(betSize)`
-          //               = myFG.F_a(betSize) * dw/dbetSize + myFG.F_b(betSize)
-
-          if (std::isnan(myFG.F_b(faced_bet)) || std::isnan(myFG.F_a(faced_bet))) {
-            std::cerr << " myFG.F_a(" << faced_bet << ") = " << myFG.F_a(faced_bet) << std::endl;
-            std::cerr << "  … waitLength.d_dw( " << myFG.n << " ) = " << myFG.waitLength.d_dw( myFG.n ) << std::endl;
-            std::cerr << " myFG.F_b(" << faced_bet << ") = " << myFG.F_b(faced_bet) << std::endl;
-            exit(1);
-          }
-        #endif
-
-        // We are differentiating `FacedOddsRaiseGeom.f` but this time `∂{pot}` rather than `FacedOddsRaiseGeom.fd` which is `∂{w}`
-        return dUriskloss_dpot - myFG.F_a(faced_bet) * dw_dpot - myFG.F_b(faced_bet) / dexf;
-        // return (h_times_remaining*C - myFG.F_b(faced_bet) - dRiskLoss_pot) / (myFG.F_a(faced_bet) - h_times_remaining*A);
-    }
-
-
+	return (y2 - y1) / (x2 - x1);
 }
 
 // @return How likely is the player `cps` to call vs. fold against a raise to `humanbet`? We will calculate the winning percentages that make folding vs. calling profitable.
@@ -384,12 +303,33 @@ template<typename T> float64 ExactCallD::dfacedOdds_call_dbetSize_Geom(const Chi
     float64 fw = wN_1 * w;
     float64 dfw = opponents * wN_1;
 
+    // let `h` = std::pow((B + pot) / (B - betSize), fw)
     const float64 h = std::pow( (cps.bankroll+cps.pot)/(cps.bankroll-humanbet), fw );
+    // so that `U` = h * (1 - betSize/B)
+    // ln h = fw ln { (B + pot)  /  (B - betSize) }
+    // ln h = fw ln(B + pot)  −  fw ln(B - betSize)
+    // dh/dbetSize = h * [ d/dbetSize { fw ln(B + pot)     −          fw ln(B - betSize) } ]
+    // dh/dbetSize = h * [ d/dbetSize { fw ln(B + pot) } − d/dbetSize { fw ln(B - betSize) } ]
+    // dh/dbetSize = h * [ d/dbetSize { fw ln(B + pot) } − ln(B - betSize) * d/dbetSize { fw } + fw * d/dbetSize { ln(B - betSize) } ]
+    // dh/dbetSize = h * [ ln(B + pot) * d/dbetSize { fw } + fw * d/dbetSize { ln(B + pot) } − ln(B - betSize) * d/dbetSize { fw } + fw * d/dbetSize { ln(B - betSize) } ]
+    // dh/dbetSize = h * [ ln(B + pot) * d/dbetSize { fw } − ln(B - betSize) * d/dbetSize { fw } + fw * d/dbetSize { ln(B + pot) } + fw * d/dbetSize { ln(B - betSize) } ]
+    const float64 Cc = (  dpot_dhumanbet/(cps.bankroll+cps.pot) + 1/(cps.bankroll-humanbet)  ) * fw;
+    // dh/dbetSize = h * [ ln(B + pot) * d/dbetSize { fw } − ln(B - betSize) * d/dbetSize { fw } + Cc ]
+    // dh/dbetSize = h * [ ln((B + pot)/(B - betSize)) * d/dbetSize { fw }   + Cc ]
+    // dh/dbetSize = h * [ ln((B + pot)/(B - betSize)) * dfw * d{w}/dbetSize   + Cc ]
     const float64 A = dfw * log1p( base_minus_1 );
-    const float64 C = (  dpot_dhumanbet/(cps.bankroll+cps.pot) + 1/(cps.bankroll-humanbet)  ) * fw;
+    // dh/dbetSize = h * [                                 A * d{w}/dbetSize   + Cc ]
+    // We'll also need:
+    // ∇h = h * [ ln(B + pot) * ∇{ fw } − ln(B - betSize) * ∇{ fw } + fw * ∇{ ln(B + pot) } + fw * ∇{ ln(B - betSize) } ]
+    //    = h * [ ln(B + pot) * ∇{ fw } − ln(B - betSize) * ∇{ fw } + fw *    ln(B + pot)   + fw * dbetSize * ∂{ ln(B - betSize) }/∂betSize ]
 
+    // Define the curve that relates: w ↔ betSize across all w (across all betSize)
+    // From FacedOddsCallGeom<T>::query,
+    //   lastF = U - B - FG.f(outsidebet) = 0
+    // For all values of this curve, the derivatives also match (whenever the value of w & facedBet correspond)
+    //   ∇{h * (1 - betSize/B)}  +  ∇applyRiskLoss  -  ∇nonRaiseGain = 0
     return
-    (  (cps.bankroll*C-C*humanbet-1)*h - FG.F_b(humanbet)  )
+    (  (cps.bankroll*Cc-Cc*humanbet-1)*h - FG.F_b(humanbet)  )
      /
     (  FG.F_a(humanbet) - (cps.bankroll-humanbet)*h*A  )
     ;
@@ -758,13 +698,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                           FacedOdds w_r_facedodds; // TODO(from joseph): Rename to noraiseRank or, rename noraiseRankD to w_r_facedodds_D
                           w_r_facedodds.init_facedOdds_raise(*this, prev_w_r, oppRaise, riskLoss);
 
-                          const float64 noraiseRankD = (1.0 - w_r_facedodds.rank) * dfacedOdds_raise_dfacedBet_GeomDEXF(*tableinfo, oppRaise, w_r_facedodds.rank, opponents, totaldexf, EMPTY_DISTRIBUTION, riskLoss.D_v);
+                          const float64 noraiseRankD = (1.0 - w_r_facedodds.rank) * dfacedOdds_raise_dfacedBet_GeomDEXF(*tableinfo, oppRaise, w_r_facedodds.rank, riskLoss.D_v);
 
                           const ValueAndSlope noraisePess = {
                                   1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.pess - EPS_WIN_PCT)
                                   // ^^^ 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
                                   ,
-                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF(*tableinfo, oppRaise, w_r_facedodds.pess, opponents,totaldexf, (&fCore.foldcumu), riskLoss.D_v)
+                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF(*tableinfo, oppRaise, w_r_facedodds.pess, riskLoss.D_v)
                                   // ^^^ dpot/dbetsize * d/dpot nextNoRaise_A
                                   // since we are evaluating a single player at a time, their dpot/dbetsize is precisely the percentage chance that they raise
                                 };
@@ -772,7 +712,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                           const ValueAndSlope noraiseMean = {
                                   1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
                                   ,
-                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF(*tableinfo, oppRaise, w_r_facedodds.mean, opponents,totaldexf, (&fCore.callcumu), riskLoss.D_v)
+                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF(*tableinfo, oppRaise, w_r_facedodds.mean, riskLoss.D_v)
                                 };
 
                           //nextNoRaise_A[i_step].v = w_r_facedodds.rank;

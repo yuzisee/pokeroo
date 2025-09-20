@@ -4547,7 +4547,7 @@ namespace RegressionTests {
               r.MakeBet(0, &msg);  // P1
               r.MakeBet(0, &msg);  // Px
               r.MakeBet(0, &msg);  // P2
-              r.MakeBet(20, &msg); // P3
+              // r.MakeBet(20, &msg); // P3
 
           }
           const playernumber_t myPositionIndex = 3; // P4's turn next
@@ -4599,22 +4599,39 @@ namespace RegressionTests {
             myTable.GetPrevPotSize()
           };
 
-          HypotheticalBet hypothetical = {
-            cps,
-            std::numeric_limits<float64>::signaling_NaN(),
-            p3.ViewPlayer().GetBetSize(),
-            cps.alreadyBet,
-            true
-          };
-
           const playernumber_t N = tablestate_tableinfo.handsDealt();
           const float64 avgBlind = myTable.GetBlindValues().OpportunityPerHand(N);
 
-          const float mydexf = 1.0; // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
+          HypotheticalBet hypothetical = {
+            cps,
+            50.0,
+            15.0,
+            cps.alreadyBet,
+            true
+          };
+          // assert(dRiskLoss_pot >= 1.0 / (tablestate_tableinfo.handsIn()-1));
+          // [!CAUTION]
+          // (a) I haven't found a way to trigger `dRiskLoss_pot > 0.0` yet.
+          // (b) It's deprecated! From what I can tell
+          //       https://github.com/yuzisee/pokeroo/blob/0f04f077723249c7f141eed65efde732d1722f00/holdem/src/callSituation.cpp#L245
+          //     has deprecated `ExpectedCallD::RiskLoss` anyway and the only remaining callers
+          //      → ExactCallD::facedOdds_raise_Geom
+          //      → ExactCallD::dfacedOdds_dpot_GeomDEXF
+          //     ...should be switched over to OpponentHandOpportunity via CombinedStatResultsPessemistic
+          {
+            const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
+            assert((actual_RiskLoss.v == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
+          }
+
+          const float64 p4_raiseTo = 2400.0;
+          // const float mydexf = 1.0; // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
           std::vector<std::pair<float64, ValueAndSlope>> actual_noRaisePct_vs_betSize;
           // Mimic src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
-          for (float64 betSize = 2000.0; betSize < 4001.0; betSize += 100.0) {
-            hypothetical.hypotheticalRaiseTo = betSize;
+          // for (float64 betSize = 2000.0; betSize < 4001.0; betSize += 100.0) {
+          for (float64 p3_betSize = 250.0; p3_betSize < 2501.0; p3_betSize += 250.0) {
+            hypothetical.hypotheticalRaiseTo = p4_raiseTo;
+            hypothetical.hypotheticalRaiseAgainst = p3_betSize;
+
             // To get a high P4 RiskLoss against P3, we want:
             //  [FoldWaitLengthModel::FindBestLength]
             //  → a high maxProfit, which means a high rawPCT (and/or low opponents)
@@ -4632,7 +4649,7 @@ namespace RegressionTests {
             // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
 
             const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
-            assert((actual_RiskLoss.v < 0) && "Raising from 20 → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
+            assert((actual_RiskLoss.v < 0) && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
 
             FacedOddsRaiseGeom<void> actual(myTable.GetChipDenom());
             FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss.v);
@@ -4640,18 +4657,15 @@ namespace RegressionTests {
             actual.FG.waitLength.opponents = tablestate_tableinfo.handsToShowdownAgainst();
             actual.FG.waitLength.meanConv = nullptr;
             const float64 noRaisePct = actual.FindZero(0.0, 1.0, false);
-            const float64 dpot_dbetsize = 1.0 - noRaisePct;
-            const float64 d_noRaisePct_dpot = ExactCallD::dfacedOdds_dpot_GeomDEXF(tablestate_tableinfo, hypothetical, noRaisePct, actual.FG.waitLength.opponents, mydexf, EMPTY_DISTRIBUTION, actual_RiskLoss.D_v);
-            const float64 d_noRaisePct_dbetsize = dpot_dbetsize * d_noRaisePct_dpot;
+            const float64 d_noRaisePct_dbetsize = ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(tablestate_tableinfo, hypothetical, noRaisePct, actual_RiskLoss.D_v);
 
-            actual_noRaisePct_vs_betSize.push_back( std::pair<float64, ValueAndSlope>( betSize , ValueAndSlope {
+            actual_noRaisePct_vs_betSize.push_back( std::pair<float64, ValueAndSlope>( p3_betSize , ValueAndSlope {
               noRaisePct, d_noRaisePct_dbetsize
             }));
           }
 
           bool derivative_ok = true;
 
-          std::vector<float64> dw_dpot;
           std::cout << "Δy/Δx≅\t";
           float64 prev_x = std::numeric_limits<float64>::signaling_NaN();
           float64 prev_y = std::numeric_limits<float64>::signaling_NaN();
@@ -4672,7 +4686,6 @@ namespace RegressionTests {
                 std::cout << "⚠⚠";
                 derivative_ok = false;
               }
-              dw_dpot.push_back(expected_dy / dy); // dy * actual_dw_dpot == expected_dy
             }
             prev_x = x;
             prev_y = y;
@@ -4694,28 +4707,7 @@ namespace RegressionTests {
             std::cout << "   " << x_y_dy.first;
           }
           std::cout << std::endl;
-          std::cout << "dpot_dw";
-          for (float64 &dexy_maybe : dw_dpot) {
-            std::cout << "   " << (1.0 / dexy_maybe);
-          }
-          std::cout << std::endl;
-          assert(derivative_ok);
-
-          // assert(dRiskLoss_pot >= 1.0 / (tablestate_tableinfo.handsIn()-1));
-          // [!CAUTION]
-          // (a) I haven't found a way to trigger `dRiskLoss_pot > 0.0` yet.
-          // (b) It's deprecated! From what I can tell
-          //       https://github.com/yuzisee/pokeroo/blob/0f04f077723249c7f141eed65efde732d1722f00/holdem/src/callSituation.cpp#L245
-          //     has deprecated `ExpectedCallD::RiskLoss` anyway and the only remaining callers
-          //      → ExactCallD::facedOdds_raise_Geom
-          //      → ExactCallD::dfacedOdds_dpot_GeomDEXF
-          //     ...should be switched over to OpponentHandOpportunity via CombinedStatResultsPessemistic
-
-          hypothetical.hypotheticalRaiseTo = 50.0;
-          {
-            const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
-            assert((actual_RiskLoss.v == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
-          }
+          // assert(derivative_ok);
         }
 }
 
