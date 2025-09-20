@@ -9,6 +9,7 @@
 #include <ctime>
 #include <cassert>
 #include <limits>
+#include <algorithm>
 
 #include "../src/aiCache.h"
 namespace NamedTriviaDeckTests {
@@ -93,7 +94,7 @@ namespace UnitTests {
 
 
     // Test CoarseHistogramBin
-    void testRegression_024() {
+    void testUnit_024() {
 
         DeckLocation card;
 
@@ -156,7 +157,7 @@ namespace UnitTests {
 
 
     // Verify Householder QR
-    void testRegression_023() {
+    void testMatrixbase_023() {
         // Test matrix from http://www.cs.nthu.edu.tw/~cherung/teaching/2008cs3331/chap4%20example.pdf
 
         /*
@@ -186,7 +187,7 @@ namespace UnitTests {
     }
 
     // Verify RaiseRatio behaviour
-    void testRegression_020() {
+    void testUnit_020() {
         // Assume the following raise pattern:
 
         // $1 <-- mine.
@@ -216,7 +217,7 @@ namespace UnitTests {
 
     // Sanity check that GainModelGeom probabilities add up to 1.0
     // Take some known simple win percentages and measure the outcome.
-    void testRegression_016() {
+    void testUnit_016() {
         //GainModelGeom
         //GainModelNoRisk
 
@@ -323,7 +324,7 @@ namespace UnitTests {
 
     // Sanity check that GainModelNoRisk probabilities add up to 1.0
     // Take some known simple win percentages and measure the outcome.
-    void testRegression_015() {
+    void testUnit_015() {
         //GainModelGeom
         //GainModelNoRisk
 
@@ -396,7 +397,7 @@ namespace UnitTests {
 
     // Set up a simple situation (e.g. post-river) with FoldGainWaitLength and then FoldGainModel
     //  + make sure there is a bunch of pot money from previous rounds, to test whether past pot is correctly accounted for in winnings
-    void testRegression_010() {
+    void testUnit_010() {
 
         DeckLocation card;
 
@@ -482,7 +483,7 @@ namespace UnitTests {
 
     // Need a test to expose whether grossSacrifice is too large.
     //  + make sure there is a high voluntary but high rarity so that numHands is high but numFolds is still relatively low, to test that amountSacrificedVoluntary isn't overestimated.
-    void testRegression_010b() {
+    void testUnit_010b() {
 
 
         const float64 avgBlind = 0.5;
@@ -548,7 +549,7 @@ namespace UnitTests {
 
     // Need a test to expose whether grossSacrifice is too small.
     //  + make sure there is a high blind and high rarity so that numHands is high but numFolds is still relatively low, to test that amountSacrificedVoluntary isn't underestimated.
-    void testRegression_010c() {
+    void testUnit_010c() {
 
 
         const float64 avgBlind = 30.0; // Blinds are 40.0/20.0, heads-up. No antes
@@ -618,7 +619,7 @@ namespace UnitTests {
 
 
     // Test callcumu sanity checks
-    void testRegression_007c() {
+    void testUnit_007c() {
 
         DeckLocation card;
 
@@ -669,7 +670,7 @@ namespace UnitTests {
 
 
     // Test foldcumu sanity checks
-    void testRegression_007b() {
+    void testUnit_007b() {
 
         DeckLocation card;
 
@@ -728,7 +729,7 @@ namespace UnitTests {
 
 
     // Test oddsAgainstBestXHands derivative
-    void testRegression_007() {
+    void testUnit_007() {
 
         DeckLocation card;
 
@@ -798,7 +799,7 @@ namespace UnitTests {
      * (A) Worst could be based on handsDealt so that it is sufficiently pessimistic, if you think it's not pessimistic enough.
      * (B) Also you can cut a couple rank bots to make room for this
      */
-    void testRegression_003() {
+    void testUnit_003() {
 
         DeckLocation card;
 
@@ -870,13 +871,13 @@ namespace UnitTests {
         assert(0.95 <= statWorse.loss);
     }
 
-    void testRegression_002b() {
+    void testUnit_002b() {
         ChipPositionState oppCPS(2474,7.875,0,0, 0.0);
         // tableinfo->RiskLoss(0, 2474, 4, 6.75, 0, 0) = 0.0
         HypotheticalBet hypothetical0 = {
           oppCPS, 6.75 + oppCPS.alreadyBet,
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
-          4.5, false, true
+          4.5, true
         };
         float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest<void>(0.0, 1.0 /* denom */, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
                                                                      ,hypothetical0, 4, nullptr);
@@ -885,7 +886,7 @@ namespace UnitTests {
           oppCPS,
           11.25 + oppCPS.alreadyBet,
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
-          4.5, false, true
+          4.5, true
         };
         float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest<void>(w_r_rank0, 1.0, 0.0 ,  0.31640625
                                                                      ,hypothetical1, 4, nullptr);
@@ -893,7 +894,6 @@ namespace UnitTests {
         // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
         assert(w_r_rank0 <= w_r_rank1);
     }
-
 
 
 }
@@ -3466,7 +3466,7 @@ namespace RegressionTests {
     // 2013.08.30-19.58.15
     // Hand #11
     // Perspective, SpaceBot
-    void testRegression_002() {
+    void testHybrid_002() {
 
         /*
          BEGIN
@@ -4019,7 +4019,7 @@ namespace RegressionTests {
     }
 
     // Test OpposingHandOpportunity derivatives
-    void testRegression_008c() {
+    void testHybrid_008c() {
 
 
 
@@ -4369,7 +4369,7 @@ namespace RegressionTests {
 
 
     // Test OpposingHandOpportunity derivatives
-    void testRegression_008() {
+    void testHybrid_008() {
 
         /*
          Preflop
@@ -4491,6 +4491,205 @@ namespace RegressionTests {
         assert(dl == -dw);
     }
 
+
+        void testHybrid_drisk_handsIn() {
+
+          FixedReplayPlayerStrategy p1(std::vector<float64>{});
+          FixedReplayPlayerStrategy p2(std::vector<float64>{});
+          FixedReplayPlayerStrategy px(std::vector<float64>{});
+          FixedReplayPlayerStrategy p3(std::vector<float64>{});
+          FixedReplayPlayerStrategy p4(std::vector<float64>{});
+
+          BlindValues b;
+          b.SetSmallBigBlind(5.0);
+          HoldemArena myTable(b.GetSmallBlind(), true, true);
+          myTable.setSmallestChip(5.0);
+
+          myTable.ManuallyAddPlayer("P1", 600.0, &p1);
+          myTable.ManuallyAddPlayer("Px", 6000.0, &px);
+          myTable.ManuallyAddPlayer("P2", 3000.0, &p2); // dealer
+          myTable.ManuallyAddPlayer("P3", 18000.0, &p3);
+          myTable.ManuallyAddPlayer("P4", 24000.0, &p4);
+
+          const playernumber_t dealer = 2;
+
+          myTable.BeginInitialState(777);
+          myTable.BeginNewHands(std::cout, b, false, dealer);
+
+          myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
+
+          {
+              HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 , &(std::cout));
+
+              struct MinRaiseError msg;
+
+              // P3 small blind $5
+              // P4 big blind $10
+              r.MakeBet(0, &msg);  // P1
+              r.MakeBet(0, &msg);  // Px
+              r.MakeBet(0, &msg);  // P2
+              // r.MakeBet(20, &msg); // P3
+
+          }
+          const playernumber_t myPositionIndex = 3; // P4's turn next
+
+          DeckLocation card;
+
+              // Give P3 a bad hand, so they are more likely to fold (so that RiskLoss gives us an interesting result)
+              CommunityPlus handToTest; // 46x
+              card.SetByIndex(8);
+              handToTest.AddToHand(card);
+              card.SetByIndex(17);
+              handToTest.AddToHand(card);
+
+          /// BEGIN TEST, P4 to act
+
+              DistrShape detailPCT(DistrShape::newEmptyDistrShape());
+              CoreProbabilities core;
+
+              // Mimic src/stratPosition.cpp:PositionalStrategy::SeeCommunity
+              {
+              ///Compute CallStats
+              /*
+              StatsManager::QueryDefense(core.handcumu,withCommunity,onlyCommunity,cardsInCommunity);
+              core.foldcumu = core.handcumu;
+              core.foldcumu.ReversePerspective();
+              */
+
+              ///Compute CommunityCallStats
+              myTable.CachedQueryOffense(core.callcumu,CommunityPlus::EMPTY_COMPLUS, handToTest);
+
+              ///Compute WinStats
+              StatsManager::Query(&detailPCT,handToTest,CommunityPlus::EMPTY_COMPLUS, 0);
+
+              core.statmean = detailPCT.mean; // needed for statRanking()
+              }
+
+
+          // StatResultProbabilities statprob;
+          ExpectedCallD   tablestate_tableinfo(myPositionIndex, &myTable, core.statRanking().pct, detailPCT.mean.pct);
+
+          // Mimic src/callPrediction.cpp#ExactCallD::query
+
+          //const float64 totalexf = tablestate_tableinfo.table->GetPotSize() - tablestate_tableinfo.alreadyBet()  +  p4_betSize;
+          ChipPositionState cps = {
+            p4.ViewPlayer().GetMoney(),
+            myTable.GetPotSize(), // totalexf
+            p4.ViewPlayer().GetBetSize(),
+            p4.ViewPlayer().GetVoluntaryContribution(),
+            myTable.GetPrevPotSize()
+          };
+
+          const playernumber_t N = tablestate_tableinfo.handsDealt();
+          const float64 avgBlind = myTable.GetBlindValues().OpportunityPerHand(N);
+
+          HypotheticalBet hypothetical = {
+            cps,
+            50.0,
+            15.0,
+            cps.alreadyBet,
+            true
+          };
+          // assert(dRiskLoss_pot >= 1.0 / (tablestate_tableinfo.handsIn()-1));
+          // [!CAUTION]
+          // (a) I haven't found a way to trigger `dRiskLoss_pot > 0.0` yet.
+          // (b) It's deprecated! From what I can tell
+          //       https://github.com/yuzisee/pokeroo/blob/0f04f077723249c7f141eed65efde732d1722f00/holdem/src/callSituation.cpp#L245
+          //     has deprecated `ExpectedCallD::RiskLoss` anyway and the only remaining callers
+          //      → ExactCallD::facedOdds_raise_Geom
+          //      → ExactCallD::dfacedOdds_dpot_GeomDEXF
+          //     ...should be switched over to OpponentHandOpportunity via CombinedStatResultsPessemistic
+          {
+            const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
+            assert((actual_RiskLoss.v == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
+          }
+
+          const float64 p4_raiseTo = 2400.0;
+          // const float mydexf = 1.0; // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
+          std::vector<std::pair<float64, ValueAndSlope>> actual_noRaisePct_vs_betSize;
+          // Mimic src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
+          // for (float64 betSize = 2000.0; betSize < 4001.0; betSize += 100.0) {
+          for (float64 p3_betSize = 250.0; p3_betSize < 2501.0; p3_betSize += 250.0) {
+            hypothetical.hypotheticalRaiseTo = p4_raiseTo;
+            hypothetical.hypotheticalRaiseAgainst = p3_betSize;
+
+            // To get a high P4 RiskLoss against P3, we want:
+            //  [FoldWaitLengthModel::FindBestLength]
+            //  → a high maxProfit, which means a high rawPCT (and/or low opponents)
+            //  → a high betSize
+            //  → a small amountSacrificePerHand, which means...
+            //    ... a large numHandsPerSameSituationFold, which means a very rare `rarity()`, which means
+            //      [ExpectedCallD::RiskLoss]
+            //      → a large N, which means a large `handsDealt()`
+            //    ... a small amountSacrificeVoluntary and small amountSacrificeForced, which means
+            //      [ExpectedCallD::RiskLoss]
+            //      → a small `avgBlind`
+            //      → a small ACTIVE pot (current round, players who haven't yet folded)
+            //      → a large rpAlreadyBet by P3
+            //      (and/or high player count)
+            // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
+
+            const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
+            assert((actual_RiskLoss.v < 0) && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
+
+            FacedOddsRaiseGeom<void> actual(myTable.GetChipDenom());
+            FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss.v);
+            actual.FG.waitLength.load(cps, avgBlind);
+            actual.FG.waitLength.opponents = tablestate_tableinfo.handsToShowdownAgainst();
+            actual.FG.waitLength.meanConv = nullptr;
+            const float64 noRaisePct = actual.FindZero(0.0, 1.0, false);
+            const float64 d_noRaisePct_dbetsize = ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(tablestate_tableinfo, hypothetical, noRaisePct, actual_RiskLoss.D_v);
+
+            actual_noRaisePct_vs_betSize.push_back( std::pair<float64, ValueAndSlope>( p3_betSize , ValueAndSlope {
+              noRaisePct, d_noRaisePct_dbetsize
+            }));
+          }
+
+          bool derivative_ok = true;
+
+          std::cout << "Δy/Δx≅\t";
+          float64 prev_x = std::numeric_limits<float64>::signaling_NaN();
+          float64 prev_y = std::numeric_limits<float64>::signaling_NaN();
+          float64 prev_dy = std::numeric_limits<float64>::signaling_NaN();
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            const float64 x = x_y_dy.first;
+            const float64 y = x_y_dy.second.v;
+            const float64 dy = x_y_dy.second.D_v;
+            if (std::isnan(prev_x) || std::isnan(prev_y)) {
+              std::cout << " ⏢";
+            } else {
+              const float64 expected_dy = (y - prev_y) / (x - prev_x);
+              std::cout << "   " << expected_dy;
+
+              if( (std::min(prev_dy, dy) <= expected_dy) && (expected_dy <= std::max(prev_dy, dy))) {
+                std::cout << "✓";
+              } else {
+                std::cout << "⚠⚠";
+                derivative_ok = false;
+              }
+            }
+            prev_x = x;
+            prev_y = y;
+            prev_dy = dy;
+          }
+          std::cout << std::endl;
+          std::cout << "dy";
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            std::cout << "   " << x_y_dy.second.D_v;
+          }
+          std::cout << std::endl;
+          std::cout << "y";
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            std::cout << "   " << x_y_dy.second.v;
+          }
+          std::cout << std::endl;
+          std::cout << "x";
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            std::cout << "   " << x_y_dy.first;
+          }
+          std::cout << std::endl;
+          // assert(derivative_ok);
+        }
 }
 
 void print_lineseparator(const char* const separator_msg) {
@@ -4501,39 +4700,28 @@ void print_lineseparator(const char* const separator_msg) {
   std::cout << "────────────────────────────────────────────────────────────────────────────────" << endl;
 }
 
-// HOLDEMDB_PATH=/Users/joseph/pokeroo-run/lib/holdemdb /Users/joseph/Documents/pokeroo/holdem
-// /Users/joseph/Documents/pokeroo/holdem/unittests
-int main(int argc, const char * argv[])
-{
-    print_lineseparator(" * * * Begin unittests/main.cpp");
-
-    std::cout << "::group::Running... unit tests" << std::endl;
-
-    // Run all unit tests.
-    NamedTriviaDeckTests::testNamePockets();
+static void all_unit_tests() {
+  // Run all unit tests.
+  NamedTriviaDeckTests::testNamePockets();
 
 
-    UnitTests::testRegression_024();
-    UnitTests::testRegression_023();
-    UnitTests::testRegression_020();
+  UnitTests::testUnit_024();
+  UnitTests::testMatrixbase_023();
+  UnitTests::testUnit_020();
 
-    UnitTests::testRegression_016();
-    UnitTests::testRegression_015();
-    UnitTests::testRegression_010c();
-    UnitTests::testRegression_010b();
-    UnitTests::testRegression_010();
-    UnitTests::testRegression_007();
-    UnitTests::testRegression_007b();
-    UnitTests::testRegression_007c();
-    UnitTests::testRegression_002b();
-    UnitTests::testRegression_003();
+  UnitTests::testUnit_016();
+  UnitTests::testUnit_015();
+  UnitTests::testUnit_010c();
+  UnitTests::testUnit_010b();
+  UnitTests::testUnit_010();
+  UnitTests::testUnit_007();
+  UnitTests::testUnit_007b();
+  UnitTests::testUnit_007c();
+  UnitTests::testUnit_002b();
+  UnitTests::testUnit_003();
+}
 
-    std::cout << "::endgroup::" << std::endl;
-
-    print_lineseparator(" ↑↑↑ UNIT TESTS PASS, regressiontests next ↓↓↓");
-    std::cout << "::group::Running... logreplay tests" << std::endl;
-    // Regression tests
-
+static void all_regression_tests() {
     RegressionTests::testRegression_028();
     RegressionTests::testRegression_027();
     RegressionTests::testRegression_026();
@@ -4555,6 +4743,25 @@ int main(int argc, const char * argv[])
 
     RegressionTests::testRegression_005();
     RegressionTests::testRegression_019();
+}
+
+// HOLDEMDB_PATH=/Users/joseph/pokeroo-run/lib/holdemdb /Users/joseph/Documents/pokeroo/holdem
+// /Users/joseph/Documents/pokeroo/holdem/unittests
+int main(int argc, const char * argv[])
+{
+    print_lineseparator(" * * * Begin unittests/main.cpp");
+
+    std::cout << "::group::Running... unit tests" << std::endl;
+
+    all_unit_tests();
+
+    std::cout << "::endgroup::" << std::endl;
+
+    print_lineseparator(" ↑↑↑ UNIT TESTS PASS, regressiontests next ↓↓↓");
+    std::cout << "::group::Running... logreplay tests" << std::endl;
+    // Regression tests
+
+    all_regression_tests();
 
     std::cout << "::endgroup::" << std::endl;
 
@@ -4563,9 +4770,10 @@ int main(int argc, const char * argv[])
 
     // Regression/Unit hybrid
 
-    RegressionTests::testRegression_008c();
-    RegressionTests::testRegression_008();
-    RegressionTests::testRegression_002();
+    RegressionTests::testHybrid_008c();
+    RegressionTests::testHybrid_008();
+    RegressionTests::testHybrid_002();
+    RegressionTests::testHybrid_drisk_handsIn();
     std::cout << "::endgroup::" << std::endl;
 
     print_lineseparator(" ✓ ALL TESTS PASS ");
