@@ -36,6 +36,7 @@
 //#define REFINED_FACED_ODDS_RAISE_GEOM
 
 
+// ANTI_PRESSURE_FOLDGAIN enables the use of ExpectedCallD::RiskLoss, essentially
 #define ANTI_PRESSURE_FOLDGAIN
 #define CONSISTENT_AGG
 //#define PURE_BLUFF

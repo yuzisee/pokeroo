@@ -758,21 +758,13 @@ template<typename T> float64 FacedOddsAlgb<T>::fd( const float64 w, const float6
 template<typename T> void FacedOddsRaiseGeom<T>::configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, float64 currentRiskLoss) {
   const struct ChipPositionState &cps = hypotheticalRaise.bettorSituation;
 
-   a.pot = cps.pot + (hypotheticalRaise.bWillGetCalled ? (hypotheticalRaise.betIncrease()) : 0);
-   a.raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
-   a.fold_bet = hypotheticalRaise.fold_bet();
-   a.bCheckPossible = hypotheticalRaise.bCouldHaveChecked();
-   a.riskLoss = (hypotheticalRaise.bCouldHaveChecked()) ? 0 : currentRiskLoss;
-
-	if( hypotheticalRaise.bWillGetCalled )
-	{
-		a.callIncrLoss = 1 - hypotheticalRaise.fold_bet()/cps.bankroll;
-		a.callIncrBase = (cps.bankroll + cps.pot)/(cps.bankroll - hypotheticalRaise.fold_bet()); // = 1 + (pot - fold_bet) / (bankroll - fold_bet);
-	}else
-	{
-		a.callIncrLoss = 0;
-		a.callIncrBase = 0;
-	}
+  a.callPot = cps.pot;
+  a.raisedPot = cps.pot + (hypotheticalRaise.bWillGetCalled ? (hypotheticalRaise.betIncrease()) : 0);
+    a.raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
+    a.fold_bet = hypotheticalRaise.fold_bet();
+    a.bCheckPossible = hypotheticalRaise.bCouldHaveChecked();
+    a.riskLoss = currentRiskLoss;
+  a.bRaiseWouldBeCalled = hypotheticalRaise.bWillGetCalled;
 }
 
 struct ShowdownOpponents {
@@ -847,6 +839,9 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
         dexcess_dw -= FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
     }
 
+    const float64 callIncrLoss = 1 - this->fold_bet / FG.waitLength.bankroll;
+    const float64 callIncrBase = (FG.waitLength.bankroll + callPot)/(FG.waitLength.bankroll - this->fold_bet); // = 1 + (pot - fold_bet) / (bankroll - fold_bet);
+
   //We need to compare raising to the opportunity cost of calling/folding
 	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
 #ifdef REFINED_FACED_ODDS_RAISE_GEOM
@@ -881,7 +876,6 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 
     lastF = U - nonRaiseGain;
 #endif
-
 
     lastFD = dU_dw;
     if( (!bCheckPossible) && FG.n > 0 && !bUseCall)
