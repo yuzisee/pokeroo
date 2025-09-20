@@ -65,7 +65,7 @@ struct ChipPositionState
 struct HypotheticalBet {
   const struct ChipPositionState &bettorSituation;
   float64 hypotheticalRaiseTo;
-  const float64 hypotheticalRaiseAgainst;
+  float64 hypotheticalRaiseAgainst;
   const float64 counderfactualFoldAbandon_raw; // This is the same as `bettorSituation.alreadyContributed` EXCEPT it includes any blinds you are on the hook for as well. In theory it's exactly `bettorSituation.alreadyBet`
   const bool bWillGetCalled;
 

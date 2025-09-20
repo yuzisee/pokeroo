@@ -817,7 +817,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
       //              derivative of this section?
       //                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       //                                                           ↑ seems like `F_c` i.e. `lastFC`
-      //                                                          is the derivative of this sevtion?
+      //                                                          is the derivative of this section?
       //
       // So, is `lastFB` a.k.a. `F_b` the derivative of the last `-betSize` on the end, there?
       //
