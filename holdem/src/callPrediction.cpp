@@ -249,7 +249,7 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
 
 
 //Here, dbetsize/dpot = 0
-template<typename T> float64 ExactCallD::dfacedOdds_dpot_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexfy, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
+template<typename T> float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexfy, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
 {
   const struct ChipPositionState &cps = hypothetical.bettorSituation;
 
@@ -361,7 +361,7 @@ template<typename T> float64 ExactCallD::facedOdds_call_Geom(const ChipPositionS
     return a.FindZero(0,1, false);
 }
 
-template<typename T> float64 ExactCallD::dfacedOdds_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot_dhumanbet, float64 w, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
+template<typename T> float64 ExactCallD::dfacedOdds_call_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot_dhumanbet, float64 w, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
 {
     if( w <= 0 ) return 0;
 	if( humanbet >= cps.bankroll ) return 0;
@@ -755,18 +755,18 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                           FacedOdds w_r_facedodds; // TODO(from joseph): Rename to noraiseRank or, rename noraiseRankD to w_r_facedodds_D
                           w_r_facedodds.init_facedOdds_raise(*this, prev_w_r, oppRaise);
 
-                          const float64 noraiseRankD = dfacedOdds_dpot_GeomDEXF( oppRaise, w_r_facedodds.rank, opponents, totaldexf, EMPTY_DISTRIBUTION);
+                          const float64 noraiseRankD = dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.rank, opponents, totaldexf, EMPTY_DISTRIBUTION);
 
                                 const ValueAndSlope noraisePess = {
                                   1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
                                   ,
-                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppRaise, w_r_facedodds.pess, opponents,totaldexf, (&fCore.foldcumu))
+                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).second * dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.pess, opponents,totaldexf, (&fCore.foldcumu))
                                 };
 
                                 const ValueAndSlope noraiseMean = {
                                   1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
                                   ,
-                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).second * dfacedOdds_dpot_GeomDEXF( oppRaise, w_r_facedodds.mean, opponents,totaldexf, (&fCore.callcumu))
+                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).second * dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.mean, opponents,totaldexf, (&fCore.callcumu))
                                 };
 
                           //nextNoRaise_A[i_step].v = w_r_facedodds.rank;
@@ -901,7 +901,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
 
               nextdexf = nextexf + oppBetMake * (- ed()->Pr_haveWorsePCT_continuous(w - EPS_WIN_PCT).second)
-                                  * dfacedOdds_dbetSize_Geom(oppCPS,betSize,totaldexf,w, opponents, ed());
+                                  * dfacedOdds_call_dbetSize_Geom(oppCPS,betSize,totaldexf,w, opponents, ed());
 
               nextexf *= oppBetMake;
               if( oppBetAlready + nextexf > nearest )
@@ -1349,7 +1349,7 @@ float64 ExactCallD::exf(const float64 betSize)
 {
     // no callSteps because `.exf()` is for searching through E[callers], i.e. the number of players you'll meet in the showdown (and thus, we are assuming we want to find the optimal bet size to take us to the showdown -- in this part of the calculation, we won't be folding ourselves)
     // this usually happens during `StateModel::query` → `g_raised` → GainModelGeom/GainModelNoRisk → `.f` → `.g` → `espec.exf(…)`
-    query(betSize, OPPONENTS_ARE_ALWAYS_ALLOWED_TO_RAISE);
+    query(betSize, OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE);
 
     return totalexf*impliedFactor + (betSize - nearest);
 }
@@ -1357,7 +1357,7 @@ float64 ExactCallD::exf(const float64 betSize)
 float64 ExactCallD::dexf(const float64 betSize)
 {
 
-    query(betSize, OPPONENTS_ARE_ALWAYS_ALLOWED_TO_RAISE);
+    query(betSize, OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE);
 
 
     return totaldexf*impliedFactor;

@@ -795,7 +795,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
       //
       // So, is `lastFB` a.k.a. `F_b` the derivative of the last `-betSize` on the end, there?
       //
-      // Furthermore, `ExactCallD::dfacedOdds_dpot_GeomDEXF` has a `float64 A;` and a `float64 C;`  so are they related to these in some way?
+      // Furthermore, `ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF` has a `float64 A;` and a `float64 C;`  so are they related to these in some way?
         excess += FG.f(fold_bet) / FG.waitLength.bankroll;
     }
 
