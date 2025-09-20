@@ -781,7 +781,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 
     FG.waitLength.setW( w );
 //Fraction scale
-    const float64 showdownOpponents = FG.waitLength.opponents - (bRaiseWouldBeCalled ? 0 : 0.5); // TODO(from joseph): 0.5 is a Schrodinger's player, maybe fold vs. maybe not fold. If we know this hypothetical raise will push one player out FOR SURE !00% guaranteed, we could deduct a full 1.0 instead of 0.5 (but is that too obnixious?) Let's go with 0.5 for now.
+    const float64 showdownOpponents = FG.waitLength.opponents - (bRaiseWouldBeCalled ? 0 : 0.5); // TODO(from joseph): 0.5 is a Schrodinger's player, maybe fold vs. maybe not fold. If we know this hypothetical raise will push one player out FOR SURE !00% guaranteed, we could deduct a full 1.0 instead of 0.5 (but is that too obnoxious?) Let's go with 0.5 for now.
     const float64 fw = std::pow(w,showdownOpponents); // ← matches `float64 fw` of src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
     const float64 U = std::pow(1 + raisedPot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
 

@@ -84,6 +84,12 @@ struct HypotheticalBet {
     }
   }
 
+  // It seems to be that:
+  //  (i) The underlying `accumulateOneOpponentPossibleRaises` and thus `ExactCallD::query` is a search over ExactCallD::query's `betSize`
+  //      so when we take the derivative, we want to sample the derivative at the value of `betSize` corresponding to ExactCallD::query
+  //  (ii) The FoldGain of a position is based on the bet you're facing (and would consider folding against INSTEAD OF following through on HypotheticalBet)
+  //       Well, that bet you're facing is exactly `hypothetical.hypotheticalRaiseAgainst`
+  // and… well what do you know? These two (i) and (ii) are the same value.
   constexpr float64 faced_bet() const {
     if( hypotheticalRaiseAgainst > bettorSituation.bankroll )
     {
