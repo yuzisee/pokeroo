@@ -19,7 +19,7 @@ Overall theme
  + If we are betting all-in, we would prefer the larger player number (e.g. NumberAtTable vs. NumberFirstAction)
  + If we are betting small, we can go with the smaller player number (e.g. NumberInHand vs. NumberFirstAction)
 
-For now, consider using NumberFirstAction regardless of bet size.            
+For now, consider using NumberFirstAction regardless of bet size.
 
 In particular, we're looking at a bot in late position with, say, only one opponent, folding to any push.
 
@@ -91,10 +91,10 @@ So basically this is all live hands to determine how many ways to split the sunk
 const int8 N = handsDealt();
 
 
-==  ExactCallD::facedOdds_call_Geom and its derivative dfacedOdds_dbetSize_Geom
+==  ExactCallD::facedOdds_call_Geom and its derivative dfacedOdds_call_dbetSize_Geom
     Used by ExactCallD to determine E[callers] (and thus Pr{play})
 
-==  ExactCallD::facedOdds_raise_Geom and its derivative dfacedOdds_dpot_GeomDEXF
+==  ExactCallD::facedOdds_raise_Geom and its derivative dfacedOdds_raise_dfacedBet_GeomDEXF
     Similarly, ``opponent`` is used by ExactCallD to predict whether an opponent will profit more at a higher bet size based on his hand strength.
     ``N`` is used to determine how often the blinds come back
 
@@ -134,7 +134,7 @@ const int8 N = handsDealt();
 
 =====  HoldemArena::NumberStartedRoundInclAllIn()
 
-== ImproveGainStrategy::MakeBet's fullVersus and newVersus 
+== ImproveGainStrategy::MakeBet's fullVersus and newVersus
 This is just heuristic and not even used anyway.
 It's limited by callingPlayers which should be up to NumberInHand(), ultimately.
 But ignore for now.
@@ -153,7 +153,7 @@ Since this a counter that iterates over the number of players that could actuall
 
 == ImproveGainStrategy & DeterredGainStrategy's MakeBet
   const float64 awayFromDrawingHands = 1.0 / (ViewTable().NumberInHandInclAllIn() - 1);
-In general this is a scaling factor that slides between heads-up and not-heads up, so it probably doesn't need to be a value that is fixed during the round. 
+In general this is a scaling factor that slides between heads-up and not-heads up, so it probably doesn't need to be a value that is fixed during the round.
 
 =====  HoldemArena::NumberInHandExclAllIn()
 
