@@ -44,7 +44,6 @@ public:
 
     protected:
         static void printStateModel(std::ofstream &logF, float64 betSize, StateModel &choicemodel, const Player &me);
-        static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp);
 
         template< typename T >
         void printBetGradient(std::ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * csrp) const;

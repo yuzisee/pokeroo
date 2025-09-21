@@ -494,24 +494,59 @@ void PositionalStrategy::printStateModel(std::ofstream &logF, float64 displaybet
 
 }
 
-void PositionalStrategy::printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * csrp) {
+static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * const csrp) {
     if (csrp != 0) {
         logF << "\tW(" << csrp->getHandsToBeat(betSize) << "x)=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "o.w_s=(" << csrp->ViewShape(betSize).wins << "," << csrp->ViewShape(betSize).splits << ")";
     }
 }
 
 
+// TODO(from joseph): Do we need `betToCall` and `maxShowdown`? What about `tablestate.table.GetBetToCall()` and `tablestate.table.GetMaxShowdown()` directly?
+static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD & opp_callraise, const FoldOrCall &rF, const int32 firstFoldToRaise, const ExpectedCallD & tablestate, const float64 betToCall, const float64 maxShowdown, const std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *> printAllFold, std::ofstream &logF) {
+  #ifdef DEBUG_TRACE_PWIN
+    if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
+      printAllFold.first->traceOut = &logF;
+    }
+  #endif
+  int32 raiseStep;
+  float64 rAmount;
+  for(raiseStep = 0, rAmount = 0.0; rAmount < maxShowdown; ++raiseStep )
+  {
+    rAmount =  ExactCallD::RaiseAmount(tablestate, bet_this_amount,raiseStep);
+    logF << "OppRAISEChance";
+    switch (rF.suggestMeanOrRank()) {
+        case MEAN:
+            logF << "M";
+            break;
+        case RANK:
+            logF << "R";
+            break;
+    }
+    if( raiseStep >= firstFoldToRaise ) {  logF << " [F] ";  } else { logF << " [*] "; }
+
+    // Here, raiseStep is just the iterator. ExactCallD::RaiseAmount(bet_this_amount,raiseStep) is the amount, opp_callraise.pRaise(bet_this_amount,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
+    logF << opp_callraise.pRaise(bet_this_amount,raiseStep,firstFoldToRaise) << " @ $" << rAmount << " ($" << rF.predictedRaiseToThisRound(betToCall, bet_this_amount, rAmount) << " now)";
+
+    if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
+      // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
+      logF << "\tfold -- " // << "left"
+      << printAllFold.first->pWin(rAmount); //<< "  " << rr.pWin(rAmount) << " right";
+      printPessimisticWinPct(logF, rAmount, printAllFold.second);
+    }
+    logF << endl;
+  }
+
+  #ifdef DEBUG_TRACE_PWIN
+    if (printAllFold.first != nullptr) {
+      printAllFold.first->traceOut = nullptr;
+    }
+  #endif
+}
 
 template< typename T >
 void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp) const
 {
 #ifdef LOGPOSITION
-
-
-#ifdef DEBUG_TRACE_PWIN
-    opp_fold.traceOut = &logF;
-#endif
-
 
     int32 raiseStep = 0;
 
@@ -534,30 +569,8 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
         if (separatorBet != betToCall) {
             logF << std::endl << "Why didn't I call?" << std::endl;
         }
-        for(raiseStep = 0, orAmount = 0.0; orAmount < maxShowdown; ++raiseStep )
-        {
-            orAmount =  ExactCallD::RaiseAmount(tablestate, betToCall,raiseStep);
-            logF << "OppRAISEChance";
-            switch (rlF.suggestMeanOrRank()) {
-                case MEAN:
-                    logF << "M";
-                    break;
-                case RANK:
-                    logF << "R";
-                    break;
-            }
-            if( raiseStep >= firstFoldToRaise ) {  logF << " [F] ";  } else { logF << " [*] "; }
 
-            // Here, raiseStep is just the iterator. ExactCallD::RaiseAmount(betToCall,raiseStep) is the amount, opp_callraise.pRaise(betToCall,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
-            logF << opp_callraise.pRaise(betToCall,raiseStep,firstFoldToRaise) << " @ $" << orAmount << " ($" << rlF.predictedRaiseToThisRound(betToCall, betToCall, orAmount) << " now)";
-
-            // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
-            logF << "\tfold -- " // << "left"
-            << opp_fold.pWin(orAmount); //<< "  " << rr.pWin(orAmount) << " right";
-            printPessimisticWinPct(logF, orAmount, csrp);
-            logF << endl;
-
-        }
+        print_raise_chances_if_i(betToCall, opp_callraise, rlF, firstFoldToRaise, tablestate, betToCall, maxShowdown, std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *>(&opp_fold, csrp), logF);
     }
 
     logF << endl;
@@ -565,16 +578,10 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
     printPessimisticWinPct(logF, separatorBet, csrp);
     logF << endl;
 
-#ifdef DEBUG_TRACE_PWIN
-    opp_fold.traceOut = nullptr;
-#endif
-
     const float64 minNextRaiseTo = (separatorBet*2-betToCall);
     if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
 
     if (separatorBet != betToCall) {
-        logF << "\t--" << endl;
-        logF << "What am I expecting now, given my actual bet?" << endl;
 
 
         FoldOrCall rrF(*(tablestate.table), opp_callraise.fCore);
@@ -591,29 +598,9 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
 
         }
 
-
-        for(raiseStep = 0, mrAmount = 0.0; mrAmount < maxShowdown; ++raiseStep )
-        {
-            mrAmount =  ExactCallD::RaiseAmount(tablestate, separatorBet,raiseStep);
-            logF << "OppRAISEChance";
-            switch (rrF.suggestMeanOrRank()) {
-                case MEAN:
-                    logF << "M";
-                    break;
-                case RANK:
-                    logF << "R";
-                    break;
-            }
-            if( raiseStep >= firstFoldToRaise ) {  logF << " [F] ";  } else { logF << " [*] "; }
-
-            logF << opp_callraise.pRaise(separatorBet,raiseStep,firstFoldToRaise) << " @ $" << mrAmount << " ($" << rrF.predictedRaiseToThisRound(betToCall, separatorBet, mrAmount) << " now)";
-
-            /*
-             logF << "\tfold -- left" << rl.pWin(mrAmount) << "  " << rr.pWin(mrAmount) << " right";
-             printPessimisticWinPct(logF, mrAmount, csrp);
-             */
-            logF << endl;
-        }
+        logF << "\t--" << endl;
+        logF << "What am I expecting now, given my actual bet?" << endl;
+        print_raise_chances_if_i(separatorBet, opp_callraise, rrF, firstFoldToRaise, tablestate, betToCall, maxShowdown, std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *>(nullptr, nullptr), logF);
     }
 #endif // LOGPOSITION
 }
