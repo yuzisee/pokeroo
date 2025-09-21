@@ -1641,6 +1641,7 @@ namespace RegressionTests {
          Mona folds
          */
 
+         assert((myTable.GetPotSize() >= 17) && "h22 should have bet _something_ right?");
 
 
         DeckLocation myTurn;
@@ -2155,7 +2156,7 @@ namespace RegressionTests {
          Preflop
          (Pot: $0)
          (9 players)
-         [ActionBotV $1505]
+         [ActionBot18 $1505]
          [NormalBotV $1473.52]
          [TrapBotV $1473.52]
          [Nav $1450]
@@ -2191,7 +2192,7 @@ namespace RegressionTests {
         /*
 
 
-         ActionBotV posts SB of $5 ($5)
+         ActionBot18 posts SB of $5 ($5)
          NormalBotV posts BB of $10 ($15)
 
          */
@@ -2205,7 +2206,7 @@ namespace RegressionTests {
          ConservativeBotV folds
          SpaceBotV folds
          GearBotV calls $10 ($25)
-         ActionBotV calls $5 ($30)
+         ActionBot18 calls $5 ($30)
          NormalBotV checks
          */
 
@@ -2234,11 +2235,11 @@ namespace RegressionTests {
         /*
 
          (3 players)
-         [ActionBotV $1495]
+         [ActionBot18 $1495]
          [NormalBotV $1463.52]
          [GearBotV $1453]
 
-         ActionBotV checks
+         ActionBot18 checks
          NormalBotV checks
          GearBotV checks
 
@@ -2258,11 +2259,11 @@ namespace RegressionTests {
 
 
          (3 players)
-         [ActionBotV $1495]
+         [ActionBot18 $1495]
          [NormalBotV $1463.52]
          [GearBotV $1453]
 
-         ActionBotV checks
+         ActionBot18 checks
          NormalBotV checks
          GearBotV checks
          */
@@ -2274,28 +2275,21 @@ namespace RegressionTests {
 
          River:	4h 7d Tc Ad Ah  (Pot: $30)
          */
-
-
         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
-        assert(highbettor == 4);
-        // No all-fold; assert that the pot was increased at least. ActionBot18 has Jd Ac so that's trip Aces. You're really going to check down the river??
-        assert(myTable.GetPotSize() > 55);
-
-
         /*
 
          (3 players)
-         [ActionBotV $1495]
+         [ActionBot18 $1495]
          [NormalBotV $1463.52]
          [GearBotV $1453]
 
-         ActionBotV checks
+         ActionBot18 checks
          NormalBotV checks
          GearBotV checks
-
-
-
          */
+         assert(highbettor == 4);
+         // No all-fold; assert that the pot was increased at least. ActionBot18 has Jd Ac so that's trip Aces. You're really going to check down the river??
+         assert(myTable.GetPotSize() > 55);
     }
 
 
@@ -4235,7 +4229,11 @@ Playing as S
         if (highbet == -1) {
             // all-fold?
             assert(myTable.ViewPlayer(0)->GetBetSize() < 0); // SpaceBot should be the one that folded.
-            // If you see that Nav folded, raise Nav's pre-recorded bet to ensure he stays in the game.
+            // If you see that Nav folded, e.g.
+            //  * https://github.com/yuzisee/pokeroo/blob/0249e89e21f1762354cbb8148a70496c0a8fac40/holdem/unittests/main.cpp#L3988
+            //  *  `unittests_clang: unittests/main.cpp:3988: void RegressionTests::testRegression_009(): Assertion `myTable.ViewPlayer(0)->GetBetSize() < 0' failed.`
+            //  * https://github.com/yuzisee/pokeroo/actions/runs/17968568650/job/51105782057
+            // ...please raise Nav's pre-recorded bet to ensure he stays in the game.
         } else
         {
         /*
@@ -4970,19 +4968,20 @@ static void all_regression_tests() {
     RegressionTests::testRegression_022();
     RegressionTests::testImprovement_021();
 
-    RegressionTests::testRegression_006();
-    RegressionTests::testRegression_009();
-    RegressionTests::testRegression_004();
+    RegressionTests::testRegression_019();
+
     RegressionTests::testRegression_018();
     RegressionTests::testRegression_017();
-    RegressionTests::testRegression_011();
-    RegressionTests::testRegression_013a();
     RegressionTests::testRegression_014a();
+    RegressionTests::testRegression_013a();
     RegressionTests::testRegression_012();
-
+    RegressionTests::testRegression_011();
+    RegressionTests::testRegression_009();
+    RegressionTests::testRegression_006();
 
     RegressionTests::testRegression_005();
-    RegressionTests::testRegression_019();
+    RegressionTests::testRegression_004();
+
     RegressionTests::testRegression_FoldWaitLengthModel_d_dw_crash();
 }
 

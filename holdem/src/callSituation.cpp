@@ -291,13 +291,15 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
     FG.waitLength.prevPot = table->GetPrevPotSize();
     // We don't need FG.waitLength.betSize because FG.f() will set betSize;
 
-    //FG.dw_dbet = 0; //Again, we don't need this
+    //FG.dw_dbet = 0; // ← Again, we don't need this
+
     // NOMINALLY FG.f( raiseTo ) is to lose `FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced` because all else being equal, if you fold you lose the money you put in.
     const float64 nominalFoldChips = -FG.waitLength.amountSacrificeVoluntary - FG.waitLength.amountSacrificeForced;
     const float64 trueFoldChipsEV = FG.f( raiseTo );
     // ^^^ Given the hand strength, how much would someone gain by folding against a bet of `raiseTo`?
 
     // INVARIANT: If `FG.f( raiseTo )` (i.e. "FoldGain") is positive, it means it is profitable to fold against `raiseTo`
+      const float64 d_AmountSacrifice_d_pot = 1.0 / static_cast<float64>(handsIn()-1);
 
     const float64 riskLoss =
 			#ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
@@ -318,7 +320,7 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
 		const float64 dRiskLoss =
 		  #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
 				(nominalFoldChips < trueFoldChipsEV) ? (
-				  (FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
+				  FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot + d_AmountSacrifice_d_pot
 			#else
       (nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? (
        // If trueFoldChipsEV offers any benefit at all, then the player who made `faced_bet` could benefit more by folding, meaning it's not productive this opponent (the person doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
@@ -328,9 +330,10 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
          // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
          //                                                                             ^^^ see `setAmountSacrificeVoluntary`
          //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
-         -(FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
+         //-(FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
+         -FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot - d_AmountSacrifice_d_pot
          #endif
-         // In this case, `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂pot
+         // In this case, `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂facedBet
          // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
       )
       :

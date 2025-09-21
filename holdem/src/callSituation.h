@@ -28,6 +28,11 @@
 
 
 #define OLD_BROKEN_RISKLOSS_WRONG_SIGN
+// Current status:
+//  * `#define OLD_BROKEN_RISKLOSS_WRONG_SIGN` fails testRegression_022 when switching to the `(nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV)` condition
+//     ↑ According to the test, h22 is supposed to bet on the Flop. But when `trueFoldChipsEV` is too close to `nominalFoldChips` it will check instead?
+//  * `#undef OLD_BROKEN_RISKLOSS_WRONG_SIGN` fails testRegression_018
+//     ↑ ActionBot18 really shouldn't check down the river with trip Aces when there aren't any flushes or straights to be afraid of. Do they really think someone with pockets hit a full house?
 
 
 #define ANTI_PRESSURE_FOLDGAIN

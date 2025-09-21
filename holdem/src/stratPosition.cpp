@@ -623,8 +623,18 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
     const float64 minNextRaiseTo = (separatorBet*2-betToCall);
     if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
 
+    std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *> foldPrintConfig;
+    float64 alternativeBetToCompare;
+    logF << "\t--" << endl;
     if (separatorBet != betToCall) {
-
+      logF << "What am I expecting now, given my actual bet?" << endl;
+      alternativeBetToCompare = separatorBet;
+      foldPrintConfig = { nullptr, nullptr };
+    } else {
+      logF << "Why didn't I raise to " << tablestate.minRaiseTo() << " ? " << endl;
+      alternativeBetToCompare = tablestate.minRaiseTo();
+      foldPrintConfig = { &opp_fold, csrp };
+    }
 
         FoldOrCall rrF(*(tablestate.table), opp_callraise.fCore);
 
@@ -632,18 +642,16 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
         float64 mrAmount;
         for(raiseStep = 0, mrAmount = 0.0; mrAmount < maxShowdown; ++raiseStep )
         {
-            mrAmount = ExactCallD::RaiseAmount(tablestate, separatorBet,raiseStep);
+            mrAmount = ExactCallD::RaiseAmount(tablestate, alternativeBetToCompare,raiseStep);
 
-            const float64 oppRaisedPlayGain = m.g_raised(separatorBet,mrAmount);
-            if(StateModel::willFoldToReraise(mrAmount, oppRaisedPlayGain, rrF, tablestate, separatorBet))
+            const float64 oppRaisedPlayGain = m.g_raised(alternativeBetToCompare,mrAmount);
+            if(StateModel::willFoldToReraise(mrAmount, oppRaisedPlayGain, rrF, tablestate, alternativeBetToCompare))
             { break; /* We'd fold at this point. Stop incrementing */ } else {  firstFoldToRaise = raiseStep+1; }
 
         }
 
-        logF << "\t--" << endl;
-        logF << "What am I expecting now, given my actual bet?" << endl;
-        print_raise_chances_if_i(separatorBet, opp_callraise, rrF, firstFoldToRaise, tablestate, n_possible_1v1_outcomes, betToCall, maxShowdown, std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *>(nullptr, nullptr), logF);
-    }
+        print_raise_chances_if_i(alternativeBetToCompare, opp_callraise, rrF, firstFoldToRaise, tablestate, n_possible_1v1_outcomes, betToCall, maxShowdown, foldPrintConfig, logF);
+
 #endif // LOGPOSITION
 }
 
