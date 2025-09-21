@@ -61,6 +61,7 @@ jobs:
           echo 'clang++ --analyze OK'
         fi
     - name: Abort other jobs early if build is broken
+      if: failure()
       uses: andymckay/cancel-action@0.5
 
   automated_tests:
@@ -101,6 +102,7 @@ jobs:
         compression-level: 0
         retention-days: 5
     - name: Abort other jobs if tests failed anyway
+      if: failure()
       uses: andymckay/cancel-action@0.5
 
   self_test_db1:
