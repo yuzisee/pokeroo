@@ -33,6 +33,9 @@ jobs:
   automated_build:
     name: 'Build (see Makefile)'
     runs-on: 'ubuntu-24.04'
+    permissions:
+      actions: write
+      # ^^^ needed for `andymckay/cancel-action` I guess?
     timeout-minutes: 11
     # Installing ctags can take anywhere from 1 minute to 6+ minutes!!
     steps:
@@ -67,6 +70,9 @@ jobs:
   automated_tests:
     name: 'Test (see holdem/unittests/main.cpp)'
     runs-on: 'ubuntu-24.04'
+    permissions:
+      actions: write
+      # ^^^ needed for `andymckay/cancel-action` I guess?
     timeout-minutes: 12
     # We have to assume that apt-get calls can sometimes take 6+ minutes
     steps:
