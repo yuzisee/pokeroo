@@ -464,7 +464,7 @@ void PositionalStrategy::printFoldGain(float64 raiseGain, CommunityStatsCdf * e,
     float64 numfolds = xw * e->Pr_haveWinPCT_strictlyBetterThan(statprob.core.statmean.pct - EPS_WIN_PCT); // waitlength (in folds)
 
 
-    logFile << " by waiting " << xw << "hands(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
+    logFile << " by waiting " << xw << " hands(=" << numfolds << " folds)\tvs play:" << (raiseGain + foldgainVal);
     if( ViewPlayer().GetInvoluntaryContribution() > 0 ) logFile << "   ->assumes $" << ViewPlayer().GetInvoluntaryContribution() << " forced";
     logFile << endl;
 #endif // #ifdef LOGPOSITION
