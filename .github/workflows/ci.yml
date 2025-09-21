@@ -98,6 +98,20 @@ jobs:
         overwrite: true
         compression-level: 0
         retention-days: 5
+
+  self_test_fail_fast:
+    name: 'Wait for both build & test to complete and then check if one of them failed'
+    runs-on: 'ubuntu-24.04'
+    needs: [automated_build, automated_tests]
+    if: failure()
+    permissions:
+      actions: write
+      # ^^^ needed for `andymckay/cancel-action`
+    steps:
+    - name: "Abort other jobs (mostly `self_test_db*`) early, if either build or tests has failed"
+      if: failure()
+      uses: andymckay/cancel-action@0.5
+
   self_test_db1:
     name: Self-test AKx 22x JTS
     runs-on: 'ubuntu-24.04'
