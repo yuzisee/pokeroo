@@ -60,6 +60,8 @@ jobs:
         else
           echo 'clang++ --analyze OK'
         fi
+    - name: Abort other jobs early if build is broken
+      uses: andymckay/cancel-action@0.5
 
   automated_tests:
     name: 'Test (see holdem/unittests/main.cpp)'
@@ -98,6 +100,9 @@ jobs:
         overwrite: true
         compression-level: 0
         retention-days: 5
+    - name: Abort other jobs if tests failed anyway
+      uses: andymckay/cancel-action@0.5
+
   self_test_db1:
     name: Self-test AKx 22x JTS
     runs-on: 'ubuntu-24.04'
