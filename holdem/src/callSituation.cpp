@@ -284,7 +284,7 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
     // We don't need FG.waitLength.betSize because FG.f() will set betSize;
 
     //FG.dw_dbet = 0; //Again, we don't need this
-	float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced;
+	float64 riskLoss = - FG.f( raiseTo ) - FG.waitLength.amountSacrificeVoluntary - FG.waitLength.amountSacrificeForced;
 		// ^^^ Given the hand strength, how much do you gain by folding against a bet of `raiseTo`?
 	float64 drisk;
 
