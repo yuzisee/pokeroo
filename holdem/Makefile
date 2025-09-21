@@ -57,7 +57,8 @@ test:
 	date
 	g++ $(CXXFLAGS) -D RTTIASSERT -O3 -o bin/unittests_gcc_O3 -Isrc $(wildcard src/*.cpp) unittests/main.cpp
 	echo ~/pokeroo-run/lib/holdemdb/ > unittests/holdemdb.ini
-	cd unittests && ../bin/unittests_clang && ../bin/unittests_gcc_O3
+	mkdir -p /tmp/code_coverage.llvm
+	cd unittests && LLVM_PROFILE_FILE="/tmp/code_coverage.llvm/unittests.profraw" sh test_harness.sh ../bin/unittests_clang && sh test_harness.sh ../bin/unittests_gcc_O3
 
 # `-fno-exceptions -fno-rtti` maybe?
 db:
