@@ -530,7 +530,7 @@ struct FacedOdds {
   }
 
   // TODO(from yuzisee): Raises are now Algb instead of Geom?
-  // @return the probability of this player (re)raising us
+  // @return the win probability this opponent would need in order to justify (re)raising us to the amount of `oppRaise.hypotheticalRaiseTo`
   void init_facedOdds_raise(ExactCallD & pr_call_pr_raiseby, const FacedOdds &prev_w_r, const struct HypotheticalBet& oppRaise) {
     const float64 opponents = pr_call_pr_raiseby.tableinfo->handsToShowdownAgainst();
 
@@ -979,6 +979,31 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
   } // end if CanStillBet(pIndex)
 
+  // FINAL RESULT
+  //
+  // In order to compute
+  //                       noRaiseChance_A[i] = {\prod_"each player" (nextNoRaise_A)^moreBettingRoundsAhead}
+  // and
+  //             d/dbetSize noRaiseChance_A[i] = noRaiseChance_A[i] * \sum_"each player" {moreBettingRoundsAhead * (d/dbetSize nextNoRaise_A) / nextNoRaise_A}
+  //                                             ^^^^^^^^^^^^^^^^^^^^
+  //                                             this part happens at
+  //                                        the bottom of ExactCallD::query
+  //                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^...........................^^^^^^^^^^^^^^^^
+  //                                                                  this part happens at the bottom of accumulateOneOpponentPossibleRaises with
+  //                                                                       moreBettingRoundsAhead === oppRaiseChancesAware
+  //                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  //                                                                                                               `d/dbetSize nextNoRaise_A`
+  //                                                                                                        is converted from `d/dpot nextNoRaise_A`
+  //                                                                                                  by multiplying `dpot/dbetsize * d/dpot nextNoRaise_A`
+  //                                                                                                 alongside the `dfacedOdds_dpot_GeomDEXF(…)` calls above
+  // For completeness:
+  //                       ln(noRaiseChance_A[i]) = {\sum_"each player" moreBettingRoundsAhead * ln(nextNoRaise_A)}
+  //                     ∇ ln(noRaiseChance_A[i]) = ∇ {\sum_"each player" moreBettingRoundsAhead * ln(nextNoRaise_A)}
+  // (∇ noRaiseChance_A[i]) / noRaiseChance_A[i] = ∇ {\sum_"each player" moreBettingRoundsAhead * ln(nextNoRaise_A)}
+  // (∇ noRaiseChance_A[i]) / noRaiseChance_A[i] = \sum_"each player" ∇ {moreBettingRoundsAhead * ln(nextNoRaise_A)}
+  // (∇ noRaiseChance_A[i]) = noRaiseChance_A[i] * \sum_"each player" ∇ {moreBettingRoundsAhead * ln(nextNoRaise_A)}
+  // (∇ noRaiseChance_A[i]) = noRaiseChance_A[i] * \sum_"each player" {moreBettingRoundsAhead * ∇ ln(nextNoRaise_A)}
+  // (∇ noRaiseChance_A[i]) = noRaiseChance_A[i] * \sum_"each player" {moreBettingRoundsAhead * (∇ nextNoRaise_A) / nextNoRaise_A}
   for( size_t i_step=0;i_step<noRaiseArraySize_now;++i_step)
   {
       const int32 i = i_step;
@@ -1019,7 +1044,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       }
 #endif //DEBUGASSERT
 
-      noRaiseChance_A[i_step] *= noRaiseChance_adjust;
+      this->noRaiseChance_A[i_step] *= noRaiseChance_adjust;
       if( std::fabs(noRaiseChance_A[i_step]) <= std::numeric_limits<float64>::epsilon() ) //and nextNoRaiseD == 0
       {
           noRaiseChanceD_A[i_step] = 0;

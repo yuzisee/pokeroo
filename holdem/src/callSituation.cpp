@@ -250,7 +250,7 @@ const Player * ExpectedCallD::ViewPlayer() const {
 //  + src/stratPosition.h has `DeterredGainStrategy` and `ImproveGainStrategy` which both have varying levels of ExactCallBluffD
 //  + src/stratPosition.cpp also creates StateModel objects in all three of ImproveGainStrategy::MakeBet & DeterredGainStrategy::MakeBet & PureGainStrategy::MakeBet
 //                          so do they all eventually call into RiskLoss?
-template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr, float64 * out_dPot) const
+template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * foldwait_length_distr, float64 * out_dPot) const
 {
     const float64 raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
@@ -259,6 +259,12 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
     const float64 avgBlind = table->GetBlindValues().OpportunityPerHand(N);
 
     FoldGainModel<T, OppositionPerspective> FG(table->GetChipDenom()/2);
+    // [!TIP]
+    // FoldGainModel needs _whose_ perspective?
+    //  * When used by StateModel::query (via `FoldOrCall::foldGain` method) it uses callcumu to answer "should I fold?"
+    //  * When used by FacedOddsRaiseGeom/FacedOddsAlgb to answer "Will my opponent call?"/"Will my opponent Raise?" ...it would use foldcumu if your opponent knows your hand, and callcumu if your opponent doesn't know your hand
+    //  * When used by RiskLoss to answer "Will my opponent *raise*?" (depending on whether they think _I_ will fold to their raise), we go back to callcumu.
+    // and that's why we accept `CommunityStatsCdf` here and not just any `CallCumulationD`
     FG.waitLength.setMeanConv( foldwait_length_distr );
 
     if(foldwait_length_distr == 0)
