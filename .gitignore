@@ -2,6 +2,8 @@ holdem/objs/
 holdem/bin/
 holdem/lib/
 
+holdem/unittests/playlogs.actual
+
 tags
 
 **/.DS_Store
