@@ -33,9 +33,6 @@ jobs:
   automated_build:
     name: 'Build (see Makefile)'
     runs-on: 'ubuntu-24.04'
-    permissions:
-      actions: write
-      # ^^^ needed for `andymckay/cancel-action` I guess?
     timeout-minutes: 11
     # Installing ctags can take anywhere from 1 minute to 6+ minutes!!
     steps:
@@ -63,16 +60,10 @@ jobs:
         else
           echo 'clang++ --analyze OK'
         fi
-    - name: Abort other jobs early if build is broken
-      if: failure()
-      uses: andymckay/cancel-action@0.5
 
   automated_tests:
     name: 'Test (see holdem/unittests/main.cpp)'
     runs-on: 'ubuntu-24.04'
-    permissions:
-      actions: write
-      # ^^^ needed for `andymckay/cancel-action` I guess?
     timeout-minutes: 12
     # We have to assume that apt-get calls can sometimes take 6+ minutes
     steps:
@@ -107,7 +98,17 @@ jobs:
         overwrite: true
         compression-level: 0
         retention-days: 5
-    - name: Abort other jobs if tests failed anyway
+
+  self_test_fail_fast:
+    name: 'Wait for both build & test to complete and then check if one of them failed'
+    runs-on: 'ubuntu-24.04'
+    needs: [automated_build, automated_tests]
+    if: failure()
+    permissions:
+      actions: write
+      # ^^^ needed for `andymckay/cancel-action`
+    steps:
+    - name: "Abort other jobs (mostly `self_test_db*`) early, if either build or tests has failed"
       if: failure()
       uses: andymckay/cancel-action@0.5
 
