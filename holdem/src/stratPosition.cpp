@@ -508,14 +508,16 @@ static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, Combin
     }
 }
 
-// pWin() generally relies on FindZero as part of its calculation, so show the precision we know it has...
-static constexpr float64 PWIN_DISPLAY_PRECISION = PROBABILITY_SPACE_QUANTUM / 2.0; // ...with an extra factor of 2.0 to avoid any exact corner cases
-
 // TODO(from joseph): Do we need `betToCall` and `maxShowdown`? What about `tablestate.table.GetBetToCall()` and `tablestate.table.GetMaxShowdown()` directly?
 static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD & opp_callraise, const FoldOrCall &rF, const int32 firstFoldToRaise, const ExpectedCallD & tablestate, const float64 n_1v1_outcomes, const float64 betToCall, const float64 maxShowdown, const std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *> printAllFold, std::ofstream &logF) {
-  const float64 foldPrecision = PWIN_DISPLAY_PRECISION / tablestate.handsToShowdownAgainst();
+  // pWin() generally relies on FindZero as part of its calculation, so show the precision we know it has...
+  const float64 foldPrecision = DISPLAY_PROBABILITY_QUANTUM / tablestate.handsToShowdownAgainst();
   if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
     logF << "\"all fold\" precision will be " << foldPrecision << std::endl;
+
+    #ifdef DEBUG_TRACE_PWIN
+        printAllFold.first->traceOut = &logF;
+    #endif
   }
   int32 raiseStep;
   float64 rAmount;
@@ -559,6 +561,12 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD &
     }
     logF << endl;
   }
+
+  #ifdef DEBUG_TRACE_PWIN
+    if (printAllFold.first != nullptr) {
+      printAllFold.first->traceOut = nullptr;
+    }
+  #endif
 }
 
 template< typename T >

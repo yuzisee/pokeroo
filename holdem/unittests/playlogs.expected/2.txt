@@ -39,17 +39,290 @@ AgainstRaise(2.25)=0.997751 from -$2.25 @ 0.716268
  AgainstCall(4.5)=0.999374 from -$1.47728 @ 0.303454
 AgainstRaise(4.5)=0.995837 from -$4.5 @ 0.662543
         Push(4.5)=1.00018 from +$3.76267 @ 0.0340025
-"all fold" precision will be 0.000282805
+"all fold" precision will be 0.00113122
 OppRAISEChanceR [*] 0.284278 @ $4.5 ($2.25 now)	fold -- 0.0339367	W(26.0561×)=0.273817 L=0.680222 4×o.w_s=(0.642549,0.0254156)
-OppRAISEChanceR [F] 0.716268 @ $6.75 ($2.25 now)	fold -- 0.0975679	W(31.9263×)=0.264397 L=0.681465 4×o.w_s=(0.639211,0.0304725)
-OppRAISEChanceR [F] 0.566927 @ $11.25 ($2.25 now)	fold -- 0.311086	W(37.5686×)=0.261791 L=0.687703 4×o.w_s=(0.63943,0.0288313)
-OppRAISEChanceR [F] 0.397726 @ $20.25 ($2.91456 now)	fold -- 0.45362	W(46.5763×)=0.256673 L=0.693559 4×o.w_s=(0.638591,0.0289291)
-OppRAISEChanceR [F] 0.246042 @ $38.25 ($3.69833 now)	fold -- 0.563631	W(60.0779×)=0.248598 L=0.700944 4×o.w_s=(0.636847,0.0301115)
-OppRAISEChanceR [F] 0.137313 @ $74.25 ($4.78431 now)	fold -- 0.656957	W(80.5371×)=0.242736 L=0.715215 4×o.w_s=(0.637445,0.0259747)
-OppRAISEChanceR [F] 0.0704893 @ $146.25 ($5.71246 now)	fold -- 0.727376	W(110.189×)=0.232237 L=0.730297 4×o.w_s=(0.636314,0.0242429)
-OppRAISEChanceR [F] 0.0324596 @ $290.25 ($6.91524 now)	fold -- 0.781674	W(152.278×)=0.216855 L=0.749468 4×o.w_s=(0.633913,0.0232958)
-OppRAISEChanceR [F] 0.017782 @ $578.25 ($8.57921 now)	fold -- 0.825792	W(188.858×)=0.204536 L=0.766373 4×o.w_s=(0.632293,0.0213744)
-OppRAISEChanceR [F] 0 @ $717 ($8.83531 now)	fold -- 0.834842	W(206.484×)=0.198562 L=0.774436 4×o.w_s=(0.631456,0.0204525)
+OppRAISEChanceR [F] 0.716268 @ $6.75 ($2.25 now)	fold -- Begin Query
+allFoldChance is 1,  last multiplied by -1
+	Player 6 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.997519,0.987357,0.784976,0.949796)
+			using w_pess,w_mean = 0.784976 , 0.784976
+		Picked = (0.907376)
+allFoldChance is 0.907376,  last multiplied by 0.907376
+	Player 7 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.996585,0.978564,0.724287,0.949796)
+			using w_pess,w_mean = 0.724221 , 0.724221
+		Picked = (0.884216)
+allFoldChance is 0.802316,  last multiplied by 0.884216
+	Player 0 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.950781,0.820182,0.57912,0.949796)
+			using w_pess,w_mean = 0.579121 , 0.579121
+		Picked = (0.783033)
+allFoldChance is 0.62824,  last multiplied by 0.783033
+	Player 1 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.143079,0,0.323349,0.949796)
+			using w_pess,w_mean = 0.284255 , 0.284255
+		Picked = (0.155476)
+allFoldChance is 0.0976762,  last multiplied by 0.155476
+	Player 2 ignored
+allFoldChance is 0.0976762,  last multiplied by 0.155476
+	Player 3 ignored
+allFoldChance is 0.0976762,  last multiplied by 0.155476
+	Player 4 ignored
+0.0972851	W(31.9263×)=0.264397 L=0.681465 4×o.w_s=(0.639211,0.0304725)
+OppRAISEChanceR [F] 0.566927 @ $11.25 ($2.25 now)	fold -- Begin Query
+allFoldChance is 1,  last multiplied by -1
+	Player 6 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.998127,0.991495,0.805765,0.949796)
+			using w_pess,w_mean = 0.805765 , 0.805765
+		Picked = (0.915686)
+allFoldChance is 0.915686,  last multiplied by 0.915686
+	Player 7 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.996979,0.98161,0.749828,0.949796)
+			using w_pess,w_mean = 0.749848 , 0.749848
+		Picked = (0.893745)
+allFoldChance is 0.818389,  last multiplied by 0.893745
+	Player 0 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.951777,0.924913,0.682778,0.949796)
+			using w_pess,w_mean = 0.628683 , 0.628683
+		Picked = (0.852496)
+allFoldChance is 0.697673,  last multiplied by 0.852496
+	Player 1 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.77649,0.0883596,0.472405,0.949796)
+			using w_pess,w_mean = 0.366443 , 0.366443
+		Picked = (0.445751)
+allFoldChance is 0.310989,  last multiplied by 0.445751
+	Player 2 ignored
+allFoldChance is 0.310989,  last multiplied by 0.445751
+	Player 3 ignored
+allFoldChance is 0.310989,  last multiplied by 0.445751
+	Player 4 ignored
+0.311086	W(37.5686×)=0.261791 L=0.687703 4×o.w_s=(0.63943,0.0288313)
+OppRAISEChanceR [F] 0.397726 @ $20.25 ($2.91456 now)	fold -- Begin Query
+allFoldChance is 1,  last multiplied by -1
+	Player 6 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.998594,0.994505,0.820727,0.949796)
+			using w_pess,w_mean = 0.820947 , 0.820947
+		Picked = (0.921676)
+allFoldChance is 0.921676,  last multiplied by 0.921676
+	Player 7 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.997265,0.984061,0.773378,0.949796)
+			using w_pess,w_mean = 0.768445 , 0.768445
+		Picked = (0.902412)
+allFoldChance is 0.831731,  last multiplied by 0.902412
+	Player 0 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.953597,0.966002,0.788523,0.949796)
+			using w_pess,w_mean = 0.662835 , 0.662835
+		Picked = (0.897305)
+allFoldChance is 0.746317,  last multiplied by 0.897305
+	Player 1 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.902735,0.321909,0.598484,0.949796)
+			using w_pess,w_mean = 0.424198 , 0.439921
+		Picked = (0.607709)
+allFoldChance is 0.453544,  last multiplied by 0.607709
+	Player 2 ignored
+allFoldChance is 0.453544,  last multiplied by 0.607709
+	Player 3 ignored
+allFoldChance is 0.453544,  last multiplied by 0.607709
+	Player 4 ignored
+0.45362	W(46.5763×)=0.256673 L=0.693559 4×o.w_s=(0.638591,0.0289291)
+OppRAISEChanceR [F] 0.246042 @ $38.25 ($3.69833 now)	fold -- Begin Query
+allFoldChance is 1,  last multiplied by -1
+	Player 6 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.998877,0.996182,0.838936,0.949796)
+			using w_pess,w_mean = 0.83015 , 0.83015
+		Picked = (0.928305)
+allFoldChance is 0.928305,  last multiplied by 0.928305
+	Player 7 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.997443,0.986371,0.859848,0.949796)
+			using w_pess,w_mean = 0.780034 , 0.780034
+		Picked = (0.932005)
+allFoldChance is 0.865185,  last multiplied by 0.932005
+	Player 0 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.970886,0.971165,0.861514,0.949796)
+			using w_pess,w_mean = 0.68343 , 0.68343
+		Picked = (0.927399)
+allFoldChance is 0.802371,  last multiplied by 0.927399
+	Player 1 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.905363,0.506321,0.695558,0.949796)
+			using w_pess,w_mean = 0.459352 , 0.493699
+		Picked = (0.702414)
+allFoldChance is 0.563597,  last multiplied by 0.702414
+	Player 2 ignored
+allFoldChance is 0.563597,  last multiplied by 0.702414
+	Player 3 ignored
+allFoldChance is 0.563597,  last multiplied by 0.702414
+	Player 4 ignored
+0.563348	W(60.0779×)=0.248598 L=0.700944 4×o.w_s=(0.636847,0.0301115)
+OppRAISEChanceR [F] 0.137313 @ $74.25 ($4.78431 now)	fold -- Begin Query
+allFoldChance is 1,  last multiplied by -1
+	Player 6 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.999037,0.997087,0.902347,0.949796)
+			using w_pess,w_mean = 0.835338 , 0.835338
+		Picked = (0.949743)
+allFoldChance is 0.949743,  last multiplied by 0.949743
+	Player 7 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.997544,0.987676,0.911515,0.949796)
+			using w_pess,w_mean = 0.786577 , 0.786577
+		Picked = (0.949662)
+allFoldChance is 0.901935,  last multiplied by 0.949662
+	Player 0 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.984446,0.973604,0.912694,0.949796)
+			using w_pess,w_mean = 0.694839 , 0.694839
+		Picked = (0.945365)
+allFoldChance is 0.852658,  last multiplied by 0.945365
+	Player 1 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.908229,0.634885,0.767602,0.949796)
+			using w_pess,w_mean = 0.478912 , 0.528505
+		Picked = (0.770238)
+allFoldChance is 0.65675,  last multiplied by 0.770238
+	Player 2 ignored
+allFoldChance is 0.65675,  last multiplied by 0.770238
+	Player 3 ignored
+allFoldChance is 0.65675,  last multiplied by 0.770238
+	Player 4 ignored
+0.65724	W(80.5371×)=0.242736 L=0.715215 4×o.w_s=(0.637445,0.0259747)
+OppRAISEChanceR [F] 0.0704893 @ $146.25 ($5.71246 now)	fold -- Begin Query
+allFoldChance is 1,  last multiplied by -1
+	Player 6 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.999122,0.997569,0.938245,0.949796)
+			using w_pess,w_mean = 0.838102 , 0.838102
+		Picked = (0.96187)
+allFoldChance is 0.96187,  last multiplied by 0.96187
+	Player 7 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.997644,0.988369,0.941751,0.949796)
+			using w_pess,w_mean = 0.790053 , 0.790053
+		Picked = (0.959972)
+allFoldChance is 0.923368,  last multiplied by 0.959972
+	Player 0 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.988608,0.974693,0.945015,0.949796)
+			using w_pess,w_mean = 0.700859 , 0.70127
+		Picked = (0.956501)
+allFoldChance is 0.883203,  last multiplied by 0.956501
+	Player 1 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.910548,0.740702,0.820919,0.949796)
+			using w_pess,w_mean = 0.489254 , 0.55772
+		Picked = (0.824056)
+allFoldChance is 0.727809,  last multiplied by 0.824056
+	Player 2 ignored
+allFoldChance is 0.727809,  last multiplied by 0.824056
+	Player 3 ignored
+allFoldChance is 0.727809,  last multiplied by 0.824056
+	Player 4 ignored
+0.727376	W(110.189×)=0.232237 L=0.730297 4×o.w_s=(0.636314,0.0242429)
+OppRAISEChanceR [F] 0.0324596 @ $290.25 ($6.91524 now)	fold -- Begin Query
+allFoldChance is 1,  last multiplied by -1
+	Player 6 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.999166,0.997818,0.959463,0.949796)
+			using w_pess,w_mean = 0.839529 , 0.839529
+		Picked = (0.969026)
+allFoldChance is 0.969026,  last multiplied by 0.969026
+	Player 7 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.997699,0.988729,0.961318,0.949796)
+			using w_pess,w_mean = 0.791856 , 0.791856
+		Picked = (0.966614)
+allFoldChance is 0.936674,  last multiplied by 0.966614
+	Player 0 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.992345,0.975149,0.957653,0.949796)
+			using w_pess,w_mean = 0.703954 , 0.703966
+		Picked = (0.960866)
+allFoldChance is 0.900018,  last multiplied by 0.960866
+	Player 1 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.922406,0.82105,0.860818,0.949796)
+			using w_pess,w_mean = 0.502255 , 0.579407
+		Picked = (0.868091)
+allFoldChance is 0.781298,  last multiplied by 0.868091
+	Player 2 ignored
+allFoldChance is 0.781298,  last multiplied by 0.868091
+	Player 3 ignored
+allFoldChance is 0.781298,  last multiplied by 0.868091
+	Player 4 ignored
+0.781674	W(152.278×)=0.216855 L=0.749468 4×o.w_s=(0.633913,0.0232958)
+OppRAISEChanceR [F] 0.017782 @ $578.25 ($8.57921 now)	fold -- Begin Query
+allFoldChance is 1,  last multiplied by -1
+	Player 6 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.999188,0.997945,0.972651,0.949796)
+			using w_pess,w_mean = 0.840255 , 0.840255
+		Picked = (0.973464)
+allFoldChance is 0.973464,  last multiplied by 0.973464
+	Player 7 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.997728,0.988912,0.973865,0.949796)
+			using w_pess,w_mean = 0.792773 , 0.792775
+		Picked = (0.970858)
+allFoldChance is 0.945095,  last multiplied by 0.970858
+	Player 0 can still bet
+		Short stacked
+allFoldChance is 0.90553,  last multiplied by 0.958137
+	Player 1 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.950016,0.894183,0.891106,0.949796)
+			using w_pess,w_mean = 0.541054 , 0.6077
+		Picked = (0.911695)
+allFoldChance is 0.825567,  last multiplied by 0.911695
+	Player 2 ignored
+allFoldChance is 0.825567,  last multiplied by 0.911695
+	Player 3 ignored
+allFoldChance is 0.825567,  last multiplied by 0.911695
+	Player 4 ignored
+0.825792	W(188.858×)=0.204536 L=0.766373 4×o.w_s=(0.632293,0.0213744)
+OppRAISEChanceR [F] 0 @ $717 ($8.83531 now)	fold -- Begin Query
+allFoldChance is 1,  last multiplied by -1
+	Player 6 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.999193,0.99797,0.975691,0.949796)
+			using w_pess,w_mean = 0.840397 , 0.840397
+		Picked = (0.974486)
+allFoldChance is 0.974486,  last multiplied by 0.974486
+	Player 7 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.997733,0.988948,0.976677,0.949796)
+			using w_pess,w_mean = 0.792952 , 0.792952
+		Picked = (0.971807)
+allFoldChance is 0.947012,  last multiplied by 0.971807
+	Player 0 can still bet
+		Short stacked
+allFoldChance is 0.907401,  last multiplied by 0.958173
+	Player 1 can still bet
+		Can raise
+		WillFold (eaFold,meanFold,rankFold,eaRkFold) = (0.950502,0.910247,0.899011,0.949796)
+			using w_pess,w_mean = 0.565281 , 0.61628
+		Picked = (0.919685)
+allFoldChance is 0.834522,  last multiplied by 0.919685
+	Player 2 ignored
+allFoldChance is 0.834522,  last multiplied by 0.919685
+	Player 3 ignored
+allFoldChance is 0.834522,  last multiplied by 0.919685
+	Player 4 ignored
+0.834842	W(206.484×)=0.198562 L=0.774436 4×o.w_s=(0.631456,0.0204525)
 
 (Fixed at $2.25)	W(4×)=0.516847 L=0.445933 4×o.w_s=(0.674091,0.0118213)
 Guaranteed > $0 is in the pot for sure

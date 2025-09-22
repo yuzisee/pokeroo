@@ -1133,8 +1133,8 @@ void ExactCallBluffD::query(const float64 betSize)
 					#ifdef DEBUG_TRACE_PWIN
 						if( traceOut != 0 )
 						{
-						    *traceOut << "\t\tWillFold (eaFold,meanFold,rankFold,eaRkFold) = (" << eaFold << "," << meanFold << "," << rankFold << "," << eaRkFold << ")" << endl;
-						    *traceOut << "\t\t\tusing w_rank = " << w_rank << endl;
+						    *traceOut << "\t\tWillFold (eaFold,meanFold,rankFold,eaRkFold) = (" << eaFold.first << "," << meanFold.first << "," << rankFold << "," << eaRkFold << ")" << endl;
+						    *traceOut << "\t\t\tusing w_pess,w_mean = " << w_pess << " , " << w_mean << endl;
 						}
 
 					#endif

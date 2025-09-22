@@ -25,7 +25,7 @@
 
 
 //#define DEBUG_CALLPRED_FUNCTION
-#undef DEBUG_TRACE_PWIN
+#define DEBUG_TRACE_PWIN
 #undef DEBUG_TRACE_DEXF
 
 #include "math_support.h"
@@ -119,9 +119,6 @@ class ExactCallD : public IExf
     CommunityStatsCdf * ed() const {
         return &(fCore.callcumu);
     }
-#ifdef DEBUG_TRACE_EXACTCALL
-		std::ostream * traceOut;
-#endif
 
         ExactCallD(ExpectedCallD * const tbase //, CallCumulationD* data
                    ,
@@ -135,9 +132,6 @@ class ExactCallD : public IExf
         ,
         //ed(data)
         fCore(core)
-#ifdef DEBUG_TRACE_EXACTCALL
-					,traceOut(0)
-#endif
             {
                 queryinput = UNINITIALIZED_QUERY;
                 querycallSteps = OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE;
@@ -198,6 +192,9 @@ class ExactCallBluffD
         void query(const float64 betSize);
 
     public:
+#ifdef DEBUG_TRACE_EXACTCALL
+		std::ostream * traceOut;
+#endif
         float64 insuranceDeterrent;
 
         ExactCallBluffD( ExpectedCallD * const tbase, struct CoreProbabilities &core
@@ -208,6 +205,9 @@ class ExactCallBluffD
     tableinfo(tbase)
     ,
     fFoldCumu(core.foldcumu), fCallCumu(core.callcumu)
+    #ifdef DEBUG_TRACE_EXACTCALL
+					,traceOut(0)
+    #endif
     ,
     insuranceDeterrent(0)
                             {
