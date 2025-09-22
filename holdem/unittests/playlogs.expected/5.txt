@@ -189,6 +189,9 @@ allFoldChance is 1,  last multiplied by -1
 allFoldChance is 1,  last multiplied by -1
 	Player 4 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.376318,0.763903,0.833487,0.191429)
+			using w_mean = 0.576257
+		bottomThreeOfFour goes with = (0.443883)
 allFoldChance is 0.443883,  last multiplied by 0.443883
 	Player 5 ignored
 allFoldChance is 0.443883,  last multiplied by 0.443883
@@ -392,6 +395,9 @@ allFoldChance is 1,  last multiplied by -1
 allFoldChance is 1,  last multiplied by -1
 	Player 4 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.781852,0.84916,0.836606,0.812925)
+			using w_mean = 0.660569
+		bottomThreeOfFour goes with = (0.810461)
 allFoldChance is 0.810461,  last multiplied by 0.810461
 	Player 5 ignored
 allFoldChance is 0.810461,  last multiplied by 0.810461
@@ -564,6 +570,9 @@ allFoldChance is 1,  last multiplied by -1
 allFoldChance is 1,  last multiplied by -1
 	Player 4 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.780453,0.840439,0.814276,0.812925)
+			using w_mean = 0.650792
+		bottomThreeOfFour goes with = (0.802551)
 allFoldChance is 0.802551,  last multiplied by 0.802551
 	Player 5 ignored
 allFoldChance is 0.802551,  last multiplied by 0.802551
@@ -759,6 +768,9 @@ allFoldChance is 1,  last multiplied by -1
 allFoldChance is 1,  last multiplied by -1
 	Player 4 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.631732,0.873684,0.818609,0.590426)
+			using w_mean = 0.720694
+		bottomThreeOfFour goes with = (0.680255)
 allFoldChance is 0.680255,  last multiplied by 0.680255
 	Player 5 ignored
 allFoldChance is 0.680255,  last multiplied by 0.680255

@@ -283,12 +283,21 @@ OppRAISEChanceR [*] 0 @ $1502.5 ($31.9229 now)	fold -- Begin Query
 allFoldChance is 1,  last multiplied by -1
 	Player 8 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.998834,0.997737,0.964271,0.895918)
+			using w_mean = 0.839063
+		bottomThreeOfFour goes with = (0.952642)
 allFoldChance is 0.952642,  last multiplied by 0.952642
 	Player 0 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.997511,0.988523,0.964567,0.895918)
+			using w_mean = 0.790823
+		bottomThreeOfFour goes with = (0.949669)
 allFoldChance is 0.904695,  last multiplied by 0.949669
 	Player 1 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.991659,0.972481,0.9512,0.895918)
+			using w_mean = 0.702675
+		bottomThreeOfFour goes with = (0.939867)
 allFoldChance is 0.850293,  last multiplied by 0.939867
 	Player 2 ignored
 allFoldChance is 0.850293,  last multiplied by 0.939867
@@ -300,6 +309,9 @@ allFoldChance is 0.850293,  last multiplied by 0.939867
 allFoldChance is 0.850293,  last multiplied by 0.939867
 	Player 6 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.906647,0.771971,0.836571,0.895918)
+			using w_mean = 0.571418
+		bottomThreeOfFour goes with = (0.83482)
 0.709276	W(105.77×)=0.230242 L=0.731078 4×o.w_s=(0.635619,0.0251615)
 
 (Fixed at $10)	W(4×)=0.443759 L=0.502243 4×o.w_s=(0.664814,0.0193619)
@@ -561,11 +573,17 @@ OppRAISEChanceR [F] 0 @ $1492.5 ($50.1739 now)	fold -- Begin Query
 allFoldChance is 1,  last multiplied by -1
 	Player 8 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.681006,0.952144,0.963956,0.612245)
+			using w_mean = 0.787975
+		bottomThreeOfFour goes with = (0.748465)
 allFoldChance is 0.748465,  last multiplied by 0.748465
 	Player 0 ignored
 allFoldChance is 0.748465,  last multiplied by 0.748465
 	Player 1 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.668351,0.911647,0.951552,0.612245)
+			using w_mean = 0.766532
+		bottomThreeOfFour goes with = (0.730748)
 allFoldChance is 0.546939,  last multiplied by 0.730748
 	Player 2 ignored
 allFoldChance is 0.546939,  last multiplied by 0.730748
@@ -577,6 +595,9 @@ allFoldChance is 0.546939,  last multiplied by 0.730748
 allFoldChance is 0.546939,  last multiplied by 0.730748
 	Player 6 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.568847,0.852951,0.841742,0.612245)
+			using w_mean = 0.711781
+		bottomThreeOfFour goes with = (0.674278)
 0.369532	W(58.75×)=0.0354523 L=0.96356 3×o.w_s=(0.476956,0.00439076)
 
 (Fixed at $0)	W(3×)=0.142758 L=0.846096 3×o.w_s=(0.55382,0.0140534)
@@ -838,11 +859,17 @@ OppRAISEChanceR [F] 0 @ $1492.5 ($119.066 now)	fold -- Begin Query
 allFoldChance is 1,  last multiplied by -1
 	Player 8 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.993033,0.946486,0.963956,0.597518)
+			using w_mean = 0.837007
+		bottomThreeOfFour goes with = (0.835987)
 allFoldChance is 0.835987,  last multiplied by 0.835987
 	Player 0 ignored
 allFoldChance is 0.835987,  last multiplied by 0.835987
 	Player 1 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.983479,0.935184,0.951552,0.597518)
+			using w_mean = 0.831656
+		bottomThreeOfFour goes with = (0.828085)
 allFoldChance is 0.692268,  last multiplied by 0.828085
 	Player 2 ignored
 allFoldChance is 0.692268,  last multiplied by 0.828085
@@ -854,6 +881,9 @@ allFoldChance is 0.692268,  last multiplied by 0.828085
 allFoldChance is 0.692268,  last multiplied by 0.828085
 	Player 6 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.822935,0.838077,0.841742,0.597518)
+			using w_mean = 0.746088
+		bottomThreeOfFour goes with = (0.752844)
 0.52187	W(58.75×)=0.159091 L=0.840909 3×o.w_s=(0.541853,0)
 
 (Fixed at $0)	W(3×)=0.239196 L=0.760804 3×o.w_s=(0.620752,0)
@@ -1137,11 +1167,17 @@ OppRAISEChanceR [*] 0 @ $1492.5 ($1492.5 now)	fold -- Begin Query
 allFoldChance is 1,  last multiplied by -1
 	Player 8 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (1,0.965475,0.963956,0.999537)
+			using w_mean = 0.965906
+		bottomThreeOfFour goes with = (0.976323)
 allFoldChance is 0.976323,  last multiplied by 0.976323
 	Player 0 ignored
 allFoldChance is 0.976323,  last multiplied by 0.976323
 	Player 1 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (1,0.953246,0.951552,0.999537)
+			using w_mean = 0.953666
+		bottomThreeOfFour goes with = (0.968112)
 allFoldChance is 0.94519,  last multiplied by 0.968112
 	Player 2 ignored
 allFoldChance is 0.94519,  last multiplied by 0.968112
@@ -1153,6 +1189,9 @@ allFoldChance is 0.94519,  last multiplied by 0.968112
 allFoldChance is 0.94519,  last multiplied by 0.968112
 	Player 6 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (1,0.844635,0.841742,0.999537)
+			using w_mean = 0.844954
+		bottomThreeOfFour goes with = (0.895305)
 0.846154	W(58.75×)=1 L=0 3×o.w_s=(1,0)
 
 (Fixed at $21.582)	W(11.5×)=1 L=0 3×o.w_s=(1,0)

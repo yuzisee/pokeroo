@@ -57,6 +57,9 @@ allFoldChance is 0.818607,  last multiplied by 0.818607
 allFoldChance is 0.818607,  last multiplied by 0.818607
 	Player 6 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0,0,0.116089,0.803673)
+			using w_mean = 0.116089
+		bottomThreeOfFour goes with = (0.0386964)
 allFoldChance is 0.0316772,  last multiplied by 0.0386964
 	Player 7 ignored
 allFoldChance is 0.0316772,  last multiplied by 0.0386964
@@ -80,6 +83,9 @@ allFoldChance is 0.832657,  last multiplied by 0.832657
 allFoldChance is 0.832657,  last multiplied by 0.832657
 	Player 6 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0,0,0.127223,0.803673)
+			using w_mean = 0.127223
+		bottomThreeOfFour goes with = (0.0424076)
 allFoldChance is 0.035311,  last multiplied by 0.0424076
 	Player 7 ignored
 allFoldChance is 0.035311,  last multiplied by 0.0424076
@@ -103,6 +109,9 @@ allFoldChance is 0.832579,  last multiplied by 0.832579
 allFoldChance is 0.832579,  last multiplied by 0.832579
 	Player 6 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0,0,0.128404,0.803673)
+			using w_mean = 0.128404
+		bottomThreeOfFour goes with = (0.0428015)
 allFoldChance is 0.0356356,  last multiplied by 0.0428015
 	Player 7 ignored
 allFoldChance is 0.0356356,  last multiplied by 0.0428015
@@ -206,6 +215,9 @@ allFoldChance is 0.345714,  last multiplied by 0.345714
 allFoldChance is 0.345714,  last multiplied by 0.345714
 	Player 6 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0,0,0.102272,0.310374)
+			using w_mean = 0.102272
+		bottomThreeOfFour goes with = (0.0340908)
 allFoldChance is 0.0117857,  last multiplied by 0.0340908
 	Player 7 ignored
 allFoldChance is 0.0117857,  last multiplied by 0.0340908
@@ -229,6 +241,9 @@ allFoldChance is 0.452307,  last multiplied by 0.452307
 allFoldChance is 0.452307,  last multiplied by 0.452307
 	Player 6 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0,0,0.102272,0.310374)
+			using w_mean = 0.102272
+		bottomThreeOfFour goes with = (0.0340908)
 allFoldChance is 0.0154195,  last multiplied by 0.0340908
 	Player 7 ignored
 allFoldChance is 0.0154195,  last multiplied by 0.0340908

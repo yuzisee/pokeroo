@@ -317,6 +317,9 @@ allFoldChance is 1,  last multiplied by -1
 allFoldChance is 0.978354,  last multiplied by 0.978354
 	Player 8 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.99896,0.997945,0.972794,0.962041)
+			using w_mean = 0.840257
+		bottomThreeOfFour goes with = (0.977593)
 allFoldChance is 0.956432,  last multiplied by 0.977593
 	Player 0 can still bet
 		Can raise
@@ -352,6 +355,9 @@ allFoldChance is 1,  last multiplied by -1
 allFoldChance is 0.98116,  last multiplied by 0.98116
 	Player 8 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.99897,0.997998,0.972896,0.962041)
+			using w_mean = 0.840561
+		bottomThreeOfFour goes with = (0.977645)
 allFoldChance is 0.959226,  last multiplied by 0.977645
 	Player 0 can still bet
 		Can raise
@@ -381,15 +387,27 @@ OppRAISEChanceR [F] 0 @ $1507 ($9.98592 now)	fold -- Begin Query
 allFoldChance is 1,  last multiplied by -1
 	Player 7 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.999871,1,0.982234,0.962041)
+			using w_mean = 0.870332
+		bottomThreeOfFour goes with = (0.981382)
 allFoldChance is 0.981382,  last multiplied by 0.981382
 	Player 8 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.998972,0.998015,0.972929,0.962041)
+			using w_mean = 0.840658
+		bottomThreeOfFour goes with = (0.977662)
 allFoldChance is 0.959459,  last multiplied by 0.977662
 	Player 0 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.997551,0.990873,0.985641,0.962041)
+			using w_mean = 0.79368
+		bottomThreeOfFour goes with = (0.979518)
 allFoldChance is 0.939808,  last multiplied by 0.979518
 	Player 1 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.993365,0.97559,0.985049,0.962041)
+			using w_mean = 0.706572
+		bottomThreeOfFour goes with = (0.974227)
 allFoldChance is 0.915586,  last multiplied by 0.974227
 	Player 2 can still bet
 		Can raise

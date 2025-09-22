@@ -199,6 +199,9 @@ OppRAISEChanceR [*] 0.00226244 @ $1500 ($31.9083 now)	fold -- Begin Query
 allFoldChance is 1,  last multiplied by -1
 	Player 2 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.781194,0.817003,0.84709,0.739184)
+			using w_mean = 0.581691
+		bottomThreeOfFour goes with = (0.779127)
 allFoldChance is 0.779127,  last multiplied by 0.779127
 	Player 3 ignored
 allFoldChance is 0.779127,  last multiplied by 0.779127

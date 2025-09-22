@@ -227,9 +227,15 @@ OppRAISEChanceR [*] 0 @ $1500 ($31.9083 now)	fold -- Begin Query
 allFoldChance is 1,  last multiplied by -1
 	Player 1 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.954058,0.975228,0.951646,0.921224)
+			using w_mean = 0.704433
+		bottomThreeOfFour goes with = (0.942309)
 allFoldChance is 0.942309,  last multiplied by 0.942309
 	Player 2 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.950736,0.820704,0.846128,0.921224)
+			using w_mean = 0.579292
+		bottomThreeOfFour goes with = (0.862686)
 allFoldChance is 0.812917,  last multiplied by 0.862686
 	Player 3 ignored
 allFoldChance is 0.812917,  last multiplied by 0.862686
@@ -449,6 +455,9 @@ allFoldChance is 1,  last multiplied by -1
 allFoldChance is 1,  last multiplied by -1
 	Player 2 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.564551,0.840344,0.848992,0.530612)
+			using w_mean = 0.658652
+		bottomThreeOfFour goes with = (0.645169)
 allFoldChance is 0.645169,  last multiplied by 0.645169
 	Player 3 ignored
 allFoldChance is 0.645169,  last multiplied by 0.645169
@@ -668,6 +677,9 @@ allFoldChance is 1,  last multiplied by -1
 allFoldChance is 1,  last multiplied by -1
 	Player 2 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.881443,0.882888,0.848992,0.909574)
+			using w_mean = 0.740501
+		bottomThreeOfFour goes with = (0.871108)
 allFoldChance is 0.871108,  last multiplied by 0.871108
 	Player 3 ignored
 allFoldChance is 0.871108,  last multiplied by 0.871108
@@ -876,6 +888,9 @@ allFoldChance is 1,  last multiplied by -1
 allFoldChance is 1,  last multiplied by -1
 	Player 2 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.876507,0.844008,0.83929,0.798335)
+			using w_mean = 0.844059
+		bottomThreeOfFour goes with = (0.827211)
 allFoldChance is 0.827211,  last multiplied by 0.827211
 	Player 3 ignored
 allFoldChance is 0.827211,  last multiplied by 0.827211

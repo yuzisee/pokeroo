@@ -125,6 +125,9 @@ allFoldChance is 1,  last multiplied by -1
 allFoldChance is 1,  last multiplied by -1
 	Player 0 can still bet
 		Short stacked
+		WillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (0.646328,0.335238,0.676298,0.811837)
+			using w_mean = 0.442564
+		bottomThreeOfFour goes with = (0.552621)
 0.552036	W(6.5×)=0.340739 L=0.649797 1×o.w_s=(0.340739,0.00946363)
 
 (Fixed at $55)	W(1×)=0.569062 L=0.406369 1×o.w_s=(0.569062,0.0245692)

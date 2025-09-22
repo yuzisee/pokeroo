@@ -1201,13 +1201,23 @@ void ExactCallBluffD::query(const float64 betSize)
                     const float64 rankFold = w_rank;
                     const float64 eaRkFold = 1-tableinfo->handRarity;
 
+                    #ifdef DEBUG_TRACE_PWIN
+                    if( traceOut != 0 )
+                    {
+                      *traceOut << "\t\tWillFold-AllIn (eaFold,meanFold,rankFold,eaRkFold) = (" << eaFold.first << "," << meanFold.first << "," << rankFold << "," << eaRkFold << ")" << endl;
+                      *traceOut << "\t\t\tusing w_mean = " << w_mean << endl;
+                    }
+
+                    #endif
                     ///topTwoOfThree is on a player-by-player basis
                     bottomThreeOfFour(eaFold.first,meanFold.first,rankFold,eaRkFold,0,0,0,0,nextFold);
 //                    nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
 
-
                     //nextFold = (meanFold+rankFold+eaFold)/3;
                     //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
+                    #ifdef DEBUG_TRACE_PWIN
+                      if( traceOut != 0 ) *traceOut << "\t\tbottomThreeOfFour goes with = (" << nextFold << ")" << endl;
+                    #endif
 
                     if( nextFold > 1 ) nextFold = 1;
 
