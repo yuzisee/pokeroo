@@ -79,12 +79,13 @@ jobs:
       timeout-minutes: 5
       run: cd holdem && make test
     - name: Upload playlogs
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: regressiontest-${{ runner.name }}_${{ github.description }}.${{ github.sha }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_botlogs
         path: holdem/playlogs.*_unittests.tar.xz
         include-hidden-files: true
-        if-no-files-found: error
+        # if-no-files-found: warn by default
         overwrite: true
         compression-level: 0
         retention-days: 21
