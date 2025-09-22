@@ -1137,7 +1137,7 @@ void ExactCallBluffD::query(const float64 betSize)
 						if( traceOut != 0 )
 						{
 						    *traceOut << "\t\tWillFold (eaFold[" << eaFold.second << "],meanFold[" << meanFold.second << "],rankFold,eaRkFold) = (" << eaFold.first.v << "," << meanFold.first.v << "," << rankFold << "," << eaRkFold << ")" << endl;
-						    *traceOut << "\t\t\tusing w_rank = " << w_rank << endl;
+						    *traceOut << "\t\t\tusing w_pess, w_mean = " << w_pess << " , " << w_mean << endl;
 						}
 
 					#endif
@@ -1208,7 +1208,7 @@ void ExactCallBluffD::query(const float64 betSize)
                       if( traceOut != 0 )
                       {
                         *traceOut << "\t\tWillFold-AllIn (eaFold[" << eaFold.second << "],meanFold[" << meanFold.second << "],rankFold,eaRkFold) = (" << eaFold.first.v << "," << meanFold.first.v << "," << rankFold << "," << eaRkFold << ")" << endl;
-                        *traceOut << "\t\t\tusing w_rank = " << w_rank << endl;
+                        *traceOut << "\t\t\tusing w_mean = " << w_mean << endl;
                       }
                     #endif
 

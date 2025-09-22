@@ -117,7 +117,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT
     //              =    (dlookup(1.0 - 1.0/opponentInstances )) * {        opponentInstances^(-2) } * n * d_dw rarity
 
     // d_dw rarity = {
-    //                 - meanConv->Pr_haveWorsePCT_continuous( w ).second
+    //                 - meanConv->Pr_haveWorsePCT_continuous( w ).first.D_v
     //               ,
     //                 - 1
     //               }
