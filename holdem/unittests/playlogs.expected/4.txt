@@ -32,16 +32,16 @@ Choice Optimal 2
 Choice Fold 2
 f(2)=1.00006
 CALL 2
-FoldGain()R=0.999816 x 0(=0 folds)	vs play:0.999876
+FoldGain()R=0.999816 by waiting 0hands(=0 folds)	vs play:0.999876
  AgainstCall(2)=1.00063 from +$2.19943 @ 0.431709
 AgainstRaise(2)=0.999246 from -$2 @ 0.568291
         Push(2)=1 from $0 @ 0
  AgainstCall(4)=0.999677 from -$1.02055 @ 0.476993
 AgainstRaise(4)=0.998698 from -$4 @ 0.490346
         Push(4)=1.00007 from +$3.30754 @ 0.0326606
-OppRAISEChanceR [*] 0.287615 @ $4 ($2 now)	fold -- 0.0326606	W(38.4911x)=0.317925 L=0.661304 5o.w_s=(0.688789,0.00877377)
-OppRAISEChanceR [*] 0.287309 @ $6 ($2 now)	fold -- 0.100656	W(42.8954x)=0.302024 L=0.675289 5o.w_s=(0.686868,0.0100222)
-OppRAISEChanceR [F] 0.568291 @ $10 ($0 now)	fold -- 0.317926	W(50.5171x)=0.27487 L=0.699209 5o.w_s=(0.683301,0.0124271)
+OppRAISEChanceR [*] 0.287617 @ $4 ($2 now)	fold -- 0.0326606	W(38.4911x)=0.317925 L=0.661304 5o.w_s=(0.688789,0.00877377)
+OppRAISEChanceR [*] 0.287311 @ $6 ($2 now)	fold -- 0.100656	W(42.8954x)=0.302024 L=0.675289 5o.w_s=(0.686868,0.0100222)
+OppRAISEChanceR [F] 0.568291 @ $10 ($2 now)	fold -- 0.317926	W(50.5171x)=0.27487 L=0.699209 5o.w_s=(0.683301,0.0124271)
 OppRAISEChanceR [F] 0.398504 @ $18 ($2.59072 now)	fold -- 0.449608	W(62.6792x)=0.259804 L=0.71029 5o.w_s=(0.680715,0.0149959)
 OppRAISEChanceR [F] 0.246725 @ $34 ($3.28741 now)	fold -- 0.55436	W(80.5401x)=0.24395 L=0.71889 5o.w_s=(0.677177,0.019477)
 OppRAISEChanceR [F] 0.138213 @ $66 ($4.25272 now)	fold -- 0.648367	W(106.988x)=0.23131 L=0.733087 5o.w_s=(0.67566,0.0196258)
@@ -53,7 +53,7 @@ OppRAISEChanceR [F] 0 @ $1507 ($9.98592 now)	fold -- 0.867547	W(328.225x)=0.1479
 
 (Fixed at $2)	W(5x)=0.53412 L=0.426433 5o.w_s=(0.702778,0.010087)
 Guaranteed > $0 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 *
 Qs As Bet to call 5 (from 2) at 8 pot, 
@@ -73,15 +73,15 @@ CallStrength W(5m)=0.53412 L=0.426433 o.w_s=(0.53412,0.0394473)
  -  statranking algb RAW - 
 9 dealt, 8 opp. (round), 5 opp. assumed str., 1 opp. still in
 Choice Optimal 5
-Choice Fold 12
+Choice Fold 8
 f(5)=1.00162
 CALL 5
-FoldGain()R=0.998673 x 0(=0 folds)	vs play:1.00029
+FoldGain()R=0.998673 by waiting 0hands(=0 folds)	vs play:1.00029
  AgainstCall(5)=1.00065 from +$1.09228 @ 0.892138
 AgainstRaise(5)=0.999642 from -$5 @ 0.107862
         Push(5)=1 from $0 @ 0
- AgainstCall(8)=1.00049 from +$1.41533 @ 0.526565
-AgainstRaise(8)=0.998401 from -$5.08856 @ 0.473435
+ AgainstCall(8)=1.00049 from +$1.41533 @ 0.526564
+AgainstRaise(8)=0.998401 from -$5.08858 @ 0.473436
         Push(8)=1 from $0 @ 0
 OppRAISEChanceR [*] 0 @ $8 ($3 now)	fold -- 0	W(5x)=0.53412 L=0.426433 1o.w_s=(0.53412,0.0394473)
 OppRAISEChanceR [*] 0 @ $13 ($3 now)	fold -- 0.0617284	W(5x)=0.53412 L=0.426433 1o.w_s=(0.53412,0.0394473)
@@ -96,7 +96,7 @@ OppRAISEChanceR [F] 0 @ $1507 ($13.3134 now)	fold -- 0.945866	W(35.1667x)=0.3300
 
 (Fixed at $5)	W(5x)=0.53412 L=0.426433 1o.w_s=(0.53412,0.0394473)
 Guaranteed > $1 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 6d Jd Qc community
 *
@@ -127,15 +127,15 @@ CallStrength W(1m)=0.823647 L=0.168651 o.w_s=(0.823647,0.00770144)
  -  statranking algb RAW - 
 9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Choice Optimal 0
-Choice Fold 35
+Choice Fold 32
 f(0)=1.0089
 CALL 0
-FoldGain()M=0.996671 x 0(=0 folds)	vs play:1.00557
+FoldGain()M=0.996671 by waiting 0hands(=0 folds)	vs play:1.00557
  AgainstCall(0)=1.00557 from +$9.10248 @ 0.919189
 AgainstRaise(0)=1 from $0 @ 0.0808111
         Push(0)=1 from $0 @ 0
- AgainstCall(2)=1.00357 from +$10.4125 @ 0.515599
-AgainstRaise(2)=1.00029 from +$0.907585 @ 0.484401
+ AgainstCall(2)=1.00357 from +$10.4125 @ 0.515598
+AgainstRaise(2)=1.00029 from +$0.907575 @ 0.484402
         Push(2)=1 from $0 @ 0
 OppRAISEChanceM [*] 0 @ $2 ($2 now)	fold -- 0	W(1x)=0.823647 L=0.168651 1o.w_s=(0.823647,0.00770144)
 OppRAISEChanceM [*] 0 @ $4 ($2 now)	fold -- 0	W(1x)=0.823647 L=0.168651 1o.w_s=(0.823647,0.00770144)
@@ -151,7 +151,7 @@ OppRAISEChanceM [F] 0 @ $1502 ($17.5429 now)	fold -- 0.943459	W(33.1667x)=0.1628
 
 (Fixed at $0)	W(1x)=0.823647 L=0.168651 1o.w_s=(0.823647,0.00770144)
 Guaranteed > $11 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 6d Ts Jd Qc community
 *
@@ -182,18 +182,18 @@ CallStrength W(1m)=0.803667 L=0.180105 o.w_s=(0.803667,0.0162275)
  -  statranking algb RAW - 
 9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Choice Optimal 0
-Choice Fold 26
+Choice Fold 24
 f(0)=1.0083
 CALL 0
-FoldGain()M=0.996671 x 0(=0 folds)	vs play:1.00497
+FoldGain()M=0.996671 by waiting 0hands(=0 folds)	vs play:1.00497
  AgainstCall(0)=1.00497 from +$8.92959 @ 0.836555
 AgainstRaise(0)=1 from $0 @ 0.163445
         Push(0)=1 from $0 @ 0
  AgainstCall(2)=1.00355 from +$10.1767 @ 0.523767
-AgainstRaise(2)=0.999479 from -$1.64353 @ 0.476233
+AgainstRaise(2)=0.999479 from -$1.64354 @ 0.476233
         Push(2)=1 from $0 @ 0
 OppRAISEChanceM [*] 0 @ $2 ($2 now)	fold -- 2.53542e-18	W(1x)=0.803667 L=0.180105 1o.w_s=(0.803667,0.0162275)
-OppRAISEChanceM [*] 0 @ $4 ($0 now)	fold -- 2.53542e-18	W(1x)=0.803667 L=0.180105 1o.w_s=(0.803667,0.0162275)
+OppRAISEChanceM [*] 0 @ $4 ($2 now)	fold -- 2.53542e-18	W(1x)=0.803667 L=0.180105 1o.w_s=(0.803667,0.0162275)
 OppRAISEChanceM [*] 0 @ $8 ($3.1231 now)	fold -- 0.202594	W(1x)=0.803667 L=0.180105 1o.w_s=(0.803667,0.0162275)
 OppRAISEChanceM [*] 0 @ $16 ($4.74352 now)	fold -- 0.415175	W(5x)=0.413483 L=0.550615 1o.w_s=(0.413483,0.0359025)
 OppRAISEChanceM [F] 0.163445 @ $32 ($7.0612 now)	fold -- 0.670567	W(6.5x)=0.298891 L=0.654436 1o.w_s=(0.298891,0.0466733)
@@ -206,7 +206,7 @@ OppRAISEChanceM [F] 0 @ $1502 ($54.0134 now)	fold -- 0.933199	W(33.1667x)=0.0432
 
 (Fixed at $0)	W(1x)=0.803667 L=0.180105 1o.w_s=(0.803667,0.0162275)
 Guaranteed > $11 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 5h 6d Ts Jd Qc community
 *
@@ -226,43 +226,43 @@ CallStrength W(1m)=0.848485 L=0.145455 o.w_s=(0.848485,0.00606061)
  -  statranking algb RAW - 
 9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Choice Optimal 21
-Choice Fold 53
+Choice Fold 52
 f(10)=1.01425
 *MinRaise 20
 RAISETO 21
 
-FoldGain()M=0.996671 x 0(=0 folds)	vs play:1.01099
- AgainstCall(21)=1.00789 from +$24.1303 @ 0.49082
-AgainstRaise(21)=1.00311 from +$9.16677 @ 0.50918
+FoldGain()M=0.996671 by waiting 0hands(=0 folds)	vs play:1.01099
+ AgainstCall(21)=1.00789 from +$24.1303 @ 0.490814
+AgainstRaise(21)=1.00311 from +$9.16722 @ 0.509186
         Push(21)=1 from $0 @ 0
  AgainstCall(10)=1.01092 from +$16.397 @ 1
 AgainstRaise(10)=1 from $0 @ 0
         Push(10)=1 from $0 @ 0
 
 Why didn't I call?
-OppRAISEChanceM [*] 0 @ $20 ($0 now)	fold -- 0	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [*] 0 @ $30 ($0 now)	fold -- 0.126751	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [*] 0 @ $50 ($0 now)	fold -- 0.433692	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [F] 0 @ $90 ($0 now)	fold -- 0.621684	W(6x)=0.0909091 L=0.872727 1o.w_s=(0.0909091,0.0363636)
-OppRAISEChanceM [F] 0 @ $170 ($0 now)	fold -- 0.75308	W(7.83333x)=0 L=1 1o.w_s=(0,0)
-OppRAISEChanceM [F] 0 @ $330 ($0 now)	fold -- 0.827374	W(10.3333x)=0 L=1 1o.w_s=(0,0)
-OppRAISEChanceM [F] 0 @ $650 ($0 now)	fold -- 0.867441	W(14x)=0 L=1 1o.w_s=(0,0)
-OppRAISEChanceM [F] 0 @ $1290 ($0 now)	fold -- 0.893255	W(19.1667x)=0 L=1 1o.w_s=(0,0)
-OppRAISEChanceM [F] 0 @ $1502 ($0 now)	fold -- 0.896909	W(20.5x)=0 L=1 1o.w_s=(0,0)
+OppRAISEChanceM [*] 0 @ $20 ($10 now)	fold -- 0	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [*] 0 @ $30 ($20 now)	fold -- 0.126751	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [F] 0 @ $50 ($40 now)	fold -- 0.433692	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [F] 0 @ $90 ($80 now)	fold -- 0.621684	W(6x)=0.0909091 L=0.872727 1o.w_s=(0.0909091,0.0363636)
+OppRAISEChanceM [F] 0 @ $170 ($160 now)	fold -- 0.75308	W(7.83333x)=0 L=1 1o.w_s=(0,0)
+OppRAISEChanceM [F] 0 @ $330 ($320 now)	fold -- 0.827374	W(10.3333x)=0 L=1 1o.w_s=(0,0)
+OppRAISEChanceM [F] 0 @ $650 ($640 now)	fold -- 0.867441	W(14x)=0 L=1 1o.w_s=(0,0)
+OppRAISEChanceM [F] 0 @ $1290 ($1280 now)	fold -- 0.893255	W(19.1667x)=0 L=1 1o.w_s=(0,0)
+OppRAISEChanceM [F] 0 @ $1502 ($1492 now)	fold -- 0.896909	W(20.5x)=0 L=1 1o.w_s=(0,0)
 
 (Fixed at $21)	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
 	--
 What am I expecting now, given my actual bet?
-OppRAISEChanceM [*] 0.50918 @ $31 ($0 now)
-OppRAISEChanceM [*] 0.508295 @ $52 ($0 now)
-OppRAISEChanceM [F] 0.279467 @ $94 ($0 now)
-OppRAISEChanceM [F] 0.198659 @ $178 ($0 now)
-OppRAISEChanceM [F] 0.140017 @ $346 ($0 now)
-OppRAISEChanceM [F] 0.0680248 @ $682 ($0 now)
-OppRAISEChanceM [F] 0.0301143 @ $1354 ($0 now)
-OppRAISEChanceM [F] 0 @ $1502 ($0 now)
+OppRAISEChanceM [*] 0.509186 @ $31 ($10 now)
+OppRAISEChanceM [*] 0.508302 @ $52 ($31 now)
+OppRAISEChanceM [F] 0.279467 @ $94 ($73 now)
+OppRAISEChanceM [F] 0.198659 @ $178 ($157 now)
+OppRAISEChanceM [F] 0.140017 @ $346 ($325 now)
+OppRAISEChanceM [F] 0.0680248 @ $682 ($661 now)
+OppRAISEChanceM [F] 0.0301143 @ $1354 ($1333 now)
+OppRAISEChanceM [F] 0 @ $1502 ($1481 now)
 Guaranteed > $11 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 *
 Qs As Bet to call 32 (from 21) at 64 pot, 
@@ -270,111 +270,26 @@ CallStrength W(1m)=0.848485 L=0.145455 o.w_s=(0.848485,0.00606061)
 (MinRaise to $43) 	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
  -  statranking algb RAW - 
 9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
-Choice Optimal 43
+Choice Optimal 32
 Choice Fold 141
 f(32)=1.03852
-*MinRaise 43
-RAISETO 43
-
-FoldGain()M=0.98269 x 0(=0 folds)	vs play:1.02262
- AgainstCall(43)=1.01389 from +$39.597 @ 0.526925
-AgainstRaise(43)=1.00872 from +$27.6981 @ 0.473075
-        Push(43)=1 from $0 @ 0
+CALL 32
+FoldGain()M=0.98269 by waiting 0hands(=0 folds)	vs play:1.02121
  AgainstCall(32)=1.02121 from +$31.8636 @ 1
 AgainstRaise(32)=1 from $0 @ 0
         Push(32)=1 from $0 @ 0
+ AgainstCall(43)=1.01389 from +$39.597 @ 0.526914
+AgainstRaise(43)=0.998272 from -$5.48482 @ 0.473086
+        Push(43)=1 from $0 @ 0
+OppRAISEChanceM [*] 0 @ $43 ($11 now)	fold -- 0	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [*] 0 @ $75 ($43 now)	fold -- 0.0649121	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [F] 0 @ $118 ($86 now)	fold -- 0.35697	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [F] 0 @ $204 ($172 now)	fold -- 0.57676	W(5.83333x)=0.116162 L=0.848485 1o.w_s=(0.116162,0.0353535)
+OppRAISEChanceM [F] 0 @ $376 ($344 now)	fold -- 0.726907	W(7.33333x)=0 L=1 1o.w_s=(0,0)
+OppRAISEChanceM [F] 0 @ $720 ($688 now)	fold -- 0.822719	W(9.83333x)=0 L=1 1o.w_s=(0,0)
+OppRAISEChanceM [F] 0 @ $1408 ($1376 now)	fold -- 0.874162	W(13.3333x)=0 L=1 1o.w_s=(0,0)
+OppRAISEChanceM [F] 0 @ $1502 ($1470 now)	fold -- 0.877461	W(13.6667x)=0 L=1 1o.w_s=(0,0)
 
-Why didn't I call?
-OppRAISEChanceM [*] 0 @ $43 ($0 now)	fold -- 0	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [*] 0 @ $75 ($0 now)	fold -- 0.0649121	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [*] 0 @ $118 ($0 now)	fold -- 0.35697	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [F] 0 @ $204 ($0 now)	fold -- 0.57676	W(5.83333x)=0.116162 L=0.848485 1o.w_s=(0.116162,0.0353535)
-OppRAISEChanceM [F] 0 @ $376 ($0 now)	fold -- 0.726907	W(7.33333x)=0 L=1 1o.w_s=(0,0)
-OppRAISEChanceM [F] 0 @ $720 ($0 now)	fold -- 0.822719	W(9.83333x)=0 L=1 1o.w_s=(0,0)
-OppRAISEChanceM [F] 0 @ $1408 ($0 now)	fold -- 0.874162	W(13.3333x)=0 L=1 1o.w_s=(0,0)
-OppRAISEChanceM [F] 0 @ $1502 ($0 now)	fold -- 0.877461	W(13.6667x)=0 L=1 1o.w_s=(0,0)
-
-(Fixed at $43)	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-	--
-What am I expecting now, given my actual bet?
-OppRAISEChanceM [*] 0.473075 @ $54 ($0 now)
-OppRAISEChanceM [*] 0.471731 @ $86 ($0 now)
-OppRAISEChanceM [*] 0.469462 @ $140 ($0 now)
-OppRAISEChanceM [F] 0.250164 @ $248 ($0 now)
-OppRAISEChanceM [F] 0.176205 @ $464 ($0 now)
-OppRAISEChanceM [F] 0.107054 @ $896 ($0 now)
-OppRAISEChanceM [F] 0 @ $1502 ($0 now)
+(Fixed at $32)	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
 Guaranteed > $11 is in the pot for sure
-OppFoldChance% ...    0   d\0
-
-*
-Qs As Bet to call 54 (from 43) at 108 pot, 
-CallStrength W(1m)=0.848485 L=0.145455 o.w_s=(0.848485,0.00606061)
-(MinRaise to $65) 	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
- -  statranking algb RAW - 
-9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
-Choice Optimal 72
-Choice Fold 229
-f(54)=1.06347
-*MinRaise 65
-RAISETO 72
-
-FoldGain()M=0.968043 x 0(=0 folds)	vs play:1.033
- AgainstCall(72)=1.02118 from +$59.9848 @ 0.53025
-AgainstRaise(72)=1.01182 from +$37.8062 @ 0.46975
-        Push(72)=1 from $0 @ 0
- AgainstCall(54)=1.03151 from +$47.3303 @ 1
-AgainstRaise(54)=1 from $0 @ 0
-        Push(54)=1 from $0 @ 0
-
-Why didn't I call?
-OppRAISEChanceM [*] 0 @ $65 ($0 now)	fold -- 0	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [*] 0 @ $119 ($0 now)	fold -- 0.0368493	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [*] 0 @ $184 ($0 now)	fold -- 0.338953	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [F] 0 @ $314 ($0 now)	fold -- 0.54423	W(6x)=0.0909091 L=0.872727 1o.w_s=(0.0909091,0.0363636)
-OppRAISEChanceM [F] 0 @ $574 ($0 now)	fold -- 0.71662	W(7.16667x)=0 L=1 1o.w_s=(0,0)
-OppRAISEChanceM [F] 0 @ $1094 ($0 now)	fold -- 0.819346	W(9.66667x)=0 L=1 1o.w_s=(0,0)
-OppRAISEChanceM [F] 0 @ $1502 ($0 now)	fold -- 0.850027	W(11x)=0 L=1 1o.w_s=(0,0)
-
-(Fixed at $72)	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-	--
-What am I expecting now, given my actual bet?
-OppRAISEChanceM [*] 0.46975 @ $83 ($0 now)
-OppRAISEChanceM [*] 0.467489 @ $137 ($0 now)
-OppRAISEChanceM [*] 0.464011 @ $220 ($0 now)
-OppRAISEChanceM [F] 0.249433 @ $386 ($0 now)
-OppRAISEChanceM [F] 0.173888 @ $718 ($0 now)
-OppRAISEChanceM [F] 0.0984033 @ $1382 ($0 now)
-OppRAISEChanceM [F] 0 @ $1502 ($0 now)
-Guaranteed > $11 is in the pot for sure
-OppFoldChance% ...    0   d\0
-
-*
-Qs As Bet to call 347 (from 72) at 430 pot, 
-CallStrength W(1m)=0.848485 L=0.145455 o.w_s=(0.848485,0.00606061)
-(MinRaise to $622) 	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
- -  statranking algb RAW - 
-9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
-Choice Optimal 968
-Choice Fold 968
-f(347)=1.05802
-*MinRaise 622
-RAISETO 968
-
-FoldGain()M=1.11064 x 49.3333(=7.25624 folds)	vs play:1.44246
- AgainstCall(968)=1.20912 from +$689.9 @ 0.455275
-AgainstRaise(968)=1.17397 from +$883.233 @ 0.29585
-        Push(968)=1.05938 from +$358.34 @ 0.248875
- AgainstCall(347)=1.16865 from +$253.318 @ 1
-AgainstRaise(347)=1 from $0 @ 0
-        Push(347)=1 from $0 @ 0
-
-Why didn't I call?
-OppRAISEChanceM [*] 0 @ $622 ($0 now)	fold -- 0	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [*] 0 @ $969 ($0 now)	fold -- 0.249481	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-OppRAISEChanceM [F] 0 @ $1502 ($0 now)	fold -- 0.461933	W(5.16667x)=0.217172 L=0.751515 1o.w_s=(0.217172,0.0313131)
-
-(Fixed at $968)	W(1x)=0.848485 L=0.145455 1o.w_s=(0.848485,0.00606061)
-Guaranteed > $11 is in the pot for sure
-OppFoldChance% ...    0.248875   d\0.000514574
-if playstyle is Danger/Conservative, overall utility is 0.331828
+OppFoldChance% ...    0   ∇=0

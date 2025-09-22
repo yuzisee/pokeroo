@@ -33,7 +33,7 @@ Choice Fold 128
 f(108)=-2.0319
 raiseGain: f(128)=-2.0319
 CHECK/FOLD
-FoldGain()R=3.45147 x 55(=31.1592 folds)	vs play:0.419567
+FoldGain()R=3.45147 by waiting 55hands(=31.1592 folds)	vs play:0.419567
  AgainstCall(108)=1 from -$81.1731 @ 0
 AgainstRaise(108)=0.419567 from -$74.2955 @ 1
         Push(108)=1 from $0 @ 0
@@ -44,4 +44,4 @@ OppRAISEChanceR [*] 0 @ $128 ($20 now)	fold -- 0	W(30.6662x)=0.170737 L=0.809981
 
 (Fixed at $108)	W(43.0894x)=0.146467 L=0.845289 3o.w_s=(0.55668,0.010254)
 Guaranteed > $0 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0

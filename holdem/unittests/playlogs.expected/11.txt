@@ -32,16 +32,16 @@ Choice Optimal 10
 Choice Fold 10
 f(10)=0.996865
 CHECK/FOLD
-FoldGain()R=0.999074 x 0(=0 folds)	vs play:0.995939   ->assumes $5 forced
+FoldGain()R=0.999074 by waiting 0hands(=0 folds)	vs play:0.995939   ->assumes $5 forced
  AgainstCall(10)=1.00058 from +$2.82672 @ 0.305634
 AgainstRaise(10)=0.995366 from -$10 @ 0.694366
         Push(10)=1 from $0 @ 0
- AgainstCall(20)=1.00081 from +$4.34407 @ 0.27984
-AgainstRaise(20)=0.99038 from -$20 @ 0.72016
+ AgainstCall(20)=1.00081 from +$4.34407 @ 0.279822
+AgainstRaise(20)=0.99038 from -$20 @ 0.720178
         Push(20)=1 from $0 @ 0
 OppRAISEChanceR [*] 0.169246 @ $20 ($10 now)	fold -- 0	W(2x)=0.459014 L=0.519155 2o.w_s=(0.578635,0.0135998)
 OppRAISEChanceR [F] 0.694366 @ $30 ($10 now)	fold -- 0.0281866	W(8.3615x)=0.318911 L=0.67072 2o.w_s=(0.529247,0.00853524)
-OppRAISEChanceR [F] 0.553711 @ $50 ($0 now)	fold -- 0.100314	W(9.79594x)=0.302997 L=0.685773 2o.w_s=(0.522228,0.00958921)
+OppRAISEChanceR [F] 0.553711 @ $50 ($10 now)	fold -- 0.100314	W(9.79594x)=0.302997 L=0.685773 2o.w_s=(0.522228,0.00958921)
 OppRAISEChanceR [F] 0.374409 @ $90 ($12.9536 now)	fold -- 0.325489	W(17.2803x)=0.236531 L=0.747804 2o.w_s=(0.489156,0.0159383)
 OppRAISEChanceR [F] 0.230201 @ $170 ($16.437 now)	fold -- 0.462417	W(22.4468x)=0.218145 L=0.765014 2o.w_s=(0.478736,0.0181368)
 OppRAISEChanceR [F] 0.124457 @ $330 ($21.2636 now)	fold -- 0.577168	W(29.5402x)=0.20532 L=0.778226 2o.w_s=(0.471376,0.0185231)
@@ -51,4 +51,4 @@ OppRAISEChanceR [F] 0 @ $1500 ($31.9083 now)	fold -- 0.717866	W(42.7396x)=0.1850
 
 (Fixed at $10)	W(2x)=0.459014 L=0.519155 2o.w_s=(0.578635,0.0135998)
 Guaranteed > $0 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0

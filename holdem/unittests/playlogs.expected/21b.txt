@@ -45,7 +45,7 @@ f(0)=1.00138
 *MinRaise 2
 RAISETO 2
 
-FoldGain()R=0.99923 x 0(=0 folds)	vs play:1.00088
+FoldGain()R=0.99923 by waiting 0hands(=0 folds)	vs play:1.00088
  AgainstCall(2)=1.00129 from +$7.18577 @ 0.467369
 AgainstRaise(2)=0.99959 from -$2 @ 0.532631
         Push(2)=1 from $0 @ 0
@@ -68,9 +68,9 @@ OppRAISEChanceR [F] 0.0106234 @ $798 ($14.0969 now)	fold -- 0.537849	W(129.714x)
 (Fixed at $2)	W(11.1429x)=0.348109 L=0.646571 6o.w_s=(0.719648,0.00182164)
 	--
 What am I expecting now, given my actual bet?
-OppRAISEChanceR [*] 0.322321 @ $4 ($2 now)
-OppRAISEChanceR [*] 0.320058 @ $8 ($0 now)
-OppRAISEChanceR [*] 0.316157 @ $16 ($2.97255 now)
+OppRAISEChanceR [*] 0.32236 @ $4 ($2 now)
+OppRAISEChanceR [*] 0.320102 @ $8 ($2 now)
+OppRAISEChanceR [*] 0.316212 @ $16 ($2.97255 now)
 OppRAISEChanceR [F] 0.532631 @ $32 ($4.11876 now)
 OppRAISEChanceR [F] 0.333128 @ $64 ($5.63528 now)
 OppRAISEChanceR [F] 0.172184 @ $128 ($7.23628 now)
@@ -78,7 +78,7 @@ OppRAISEChanceR [F] 0.0855742 @ $256 ($9.36391 now)
 OppRAISEChanceR [F] 0.0297298 @ $512 ($12.0312 now)
 OppRAISEChanceR [F] 0.0224873 @ $798 ($14.0828 now)
 Guaranteed > $14 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 *
 2h Ah Bet to call 20 (from 2) at 56 pot, 
@@ -101,7 +101,7 @@ Choice Optimal 20
 Choice Fold 21
 f(20)=1.00015
 CALL 20
-FoldGain()R=0.99846 x 0(=0 folds)	vs play:0.998607
+FoldGain()R=0.99846 by waiting 0hands(=0 folds)	vs play:0.998607
  AgainstCall(20)=1.00038 from +$1.28532 @ 0.770296
 AgainstRaise(20)=0.998226 from -$20 @ 0.229704
         Push(20)=1 from $0 @ 0
@@ -118,7 +118,7 @@ OppRAISEChanceR [F] 0.00451977 @ $798 ($56.2461 now)	fold -- 0.663308	W(13.1057x
 
 (Fixed at $20)	W(6x)=0.385335 L=0.6118 2o.w_s=(0.556599,0.00206528)
 Guaranteed > $14 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 9c Ts Qh Kh community
 *
@@ -149,10 +149,10 @@ CallStrength W(2c)=0.320009 L=0.631693 o.w_s=(0.471563,0.0575099)
  -  stat_low geom SLIDERX - 
 8 dealt, 2 opp. (round), 2 opp. assumed str., 2 opp. still in
 Choice Optimal 0
-Choice Fold 73
+Choice Fold 72
 f(0)=1.01328
 CALL 0
-FoldGain()R=0.991466 x 0(=0 folds)	vs play:1.00475
+FoldGain()R=0.991466 by waiting 0hands(=0 folds)	vs play:1.00475
  AgainstCall(0)=1.00539 from +$25.7691 @ 0.54071
 AgainstRaise(0)=0.999358 from -$3.60188 @ 0.45929
         Push(0)=1 from $0 @ 0
@@ -160,7 +160,7 @@ AgainstRaise(0)=0.999358 from -$3.60188 @ 0.45929
 AgainstRaise(2)=0.999601 from -$2 @ 0.51427
         Push(2)=1 from $0 @ 0
 OppRAISEChanceR [*] 0.45929 @ $2 ($2 now)	fold -- 0	W(2x)=0.278371 L=0.715305 2o.w_s=(0.512174,0.0057852)
-OppRAISEChanceR [*] 0.458747 @ $4 ($0 now)	fold -- 0	W(2x)=0.278371 L=0.715305 2o.w_s=(0.512174,0.0057852)
+OppRAISEChanceR [*] 0.458747 @ $4 ($2 now)	fold -- 0	W(2x)=0.278371 L=0.715305 2o.w_s=(0.512174,0.0057852)
 OppRAISEChanceR [*] 0.425328 @ $8 ($3.1231 now)	fold -- 0	W(2x)=0.278371 L=0.715305 2o.w_s=(0.512174,0.0057852)
 OppRAISEChanceR [*] 0.42312 @ $16 ($4.74352 now)	fold -- 0	W(2x)=0.278371 L=0.715305 2o.w_s=(0.512174,0.0057852)
 OppRAISEChanceR [*] 0.415244 @ $32 ($7.0612 now)	fold -- 0.0118633	W(2x)=0.278371 L=0.715305 2o.w_s=(0.512174,0.0057852)
@@ -172,7 +172,7 @@ OppRAISEChanceR [F] 0.00451977 @ $778 ($38.4961 now)	fold -- 0.581206	W(14.4444x
 
 (Fixed at $0)	W(2x)=0.278371 L=0.715305 2o.w_s=(0.512174,0.0057852)
 Guaranteed > $74 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 4c 9c Ts Qh Kh community
 *
@@ -195,24 +195,24 @@ Choice Optimal 0
 Choice Fold 17
 f(0)=1.00659
 CALL 0
-FoldGain()R=0.991466 x 0(=0 folds)	vs play:0.998058
+FoldGain()R=0.991466 by waiting 0hands(=0 folds)	vs play:0.998058
  AgainstCall(0)=1.0005 from +$4.92027 @ 0.264101
 AgainstRaise(0)=0.997555 from -$8.56134 @ 0.735899
         Push(0)=1 from $0 @ 0
- AgainstCall(2)=0.999794 from -$2 @ 0.264965
-AgainstRaise(2)=0.9979 from -$7.36281 @ 0.735035
+ AgainstCall(2)=0.999794 from -$2 @ 0.264925
+AgainstRaise(2)=0.9979 from -$7.36214 @ 0.735075
         Push(2)=1 from $0 @ 0
-OppRAISEChanceR [*] 0.735899 @ $2 ($0 now)	fold -- 0	W(2x)=0 L=1 2o.w_s=(0,0)
-OppRAISEChanceR [*] 0.735519 @ $4 ($0 now)	fold -- 0	W(2x)=0 L=1 2o.w_s=(0,0)
-OppRAISEChanceR [*] 0.73476 @ $8 ($0 now)	fold -- 0	W(2x)=0 L=1 2o.w_s=(0,0)
-OppRAISEChanceR [*] 0.733242 @ $16 ($0 now)	fold -- 0	W(2x)=0 L=1 2o.w_s=(0,0)
-OppRAISEChanceR [*] 0.730205 @ $32 ($0 now)	fold -- 0.0310765	W(2x)=0 L=1 2o.w_s=(0,0)
-OppRAISEChanceR [F] 0.441524 @ $64 ($0 now)	fold -- 0.0801899	W(2x)=0 L=1 2o.w_s=(0,0)
-OppRAISEChanceR [F] 0.31381 @ $128 ($0 now)	fold -- 0.281026	W(12.2222x)=0 L=1 2o.w_s=(0,0)
-OppRAISEChanceR [F] 0.156405 @ $256 ($0 now)	fold -- 0.433401	W(13.5556x)=0 L=1 2o.w_s=(0,0)
-OppRAISEChanceR [F] 0.0317113 @ $512 ($0 now)	fold -- 0.43023	W(15.7778x)=0 L=1 2o.w_s=(0,0)
-OppRAISEChanceR [F] 0.00226244 @ $778 ($0 now)	fold -- 0.380319	W(14.4444x)=0 L=1 2o.w_s=(0,0)
+OppRAISEChanceR [*] 0.735899 @ $2 ($2 now)	fold -- 0	W(2x)=0 L=1 2o.w_s=(0,0)
+OppRAISEChanceR [*] 0.735519 @ $4 ($4 now)	fold -- 0	W(2x)=0 L=1 2o.w_s=(0,0)
+OppRAISEChanceR [*] 0.73476 @ $8 ($8 now)	fold -- 0	W(2x)=0 L=1 2o.w_s=(0,0)
+OppRAISEChanceR [*] 0.733242 @ $16 ($16 now)	fold -- 0	W(2x)=0 L=1 2o.w_s=(0,0)
+OppRAISEChanceR [*] 0.730205 @ $32 ($32 now)	fold -- 0.0310765	W(2x)=0 L=1 2o.w_s=(0,0)
+OppRAISEChanceR [F] 0.441524 @ $64 ($64 now)	fold -- 0.0801899	W(2x)=0 L=1 2o.w_s=(0,0)
+OppRAISEChanceR [F] 0.31381 @ $128 ($128 now)	fold -- 0.281026	W(12.2222x)=0 L=1 2o.w_s=(0,0)
+OppRAISEChanceR [F] 0.156405 @ $256 ($256 now)	fold -- 0.433401	W(13.5556x)=0 L=1 2o.w_s=(0,0)
+OppRAISEChanceR [F] 0.0317113 @ $512 ($512 now)	fold -- 0.43023	W(15.7778x)=0 L=1 2o.w_s=(0,0)
+OppRAISEChanceR [F] 0.00226244 @ $778 ($778 now)	fold -- 0.380319	W(14.4444x)=0 L=1 2o.w_s=(0,0)
 
 (Fixed at $0)	W(2x)=0 L=1 2o.w_s=(0,0)
 Guaranteed > $74 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
