@@ -500,6 +500,8 @@ static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, Combin
     }
 }
 
+// pWin() generally relies on FindZero as part of its calculation, so show the precision we know it has...
+static constexpr float64 PWIN_DISPLAY_PRECISION = PROBABILITY_SPACE_QUANTUM / 4.0; // ...with an extra 4.0 extra precision just as buffer
 
 // TODO(from joseph): Do we need `betToCall` and `maxShowdown`? What about `tablestate.table.GetBetToCall()` and `tablestate.table.GetMaxShowdown()` directly?
 static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD & opp_callraise, const FoldOrCall &rF, const int32 firstFoldToRaise, const ExpectedCallD & tablestate, const float64 betToCall, const float64 maxShowdown, const std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *> printAllFold, std::ofstream &logF) {
@@ -525,7 +527,7 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD &
     if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
       // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
       logF << "\tfold -- " // << "left"
-      << printAllFold.first->pWin(rAmount); //<< "  " << rr.pWin(rAmount) << " right";
+      << std::round(printAllFold.first->pWin(rAmount) / PWIN_DISPLAY_PRECISION) * PWIN_DISPLAY_PRECISION; //<< "  " << rr.pWin(orAmount) << " right";
       printPessimisticWinPct(logF, rAmount, printAllFold.second);
     }
     logF << endl;
@@ -552,7 +554,6 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
             if(StateModel::willFoldToReraise(orAmount, oppRaisedPlayGain, rlF, tablestate, betToCall))
             { break; /* We'd fold at this point. Stop incrementing */ } else {  firstFoldToRaise = raiseStep+1; }
         }
-
         ;
 
         if (separatorBet != betToCall) {

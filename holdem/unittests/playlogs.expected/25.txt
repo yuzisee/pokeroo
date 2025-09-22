@@ -32,7 +32,7 @@ Choice Optimal 74.2857
 Choice Fold 74.2857
 f(74.2857)=-1.14259
 CHECK/FOLD
-FoldGain()R=2.3311 by waiting 31.3333hands(=20.8463 folds)	vs play:0.188516
+FoldGain()R=2.3311 by waiting 31.3333 hands(=20.8463 folds)	vs play:0.188516
  AgainstCall(74.2857)=0.188516 from -$60.2817 @ 1
 AgainstRaise(74.2857)=1 from $0 @ 0
         Push(74.2857)=1 from $0 @ 0
