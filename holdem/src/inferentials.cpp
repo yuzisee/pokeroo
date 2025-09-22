@@ -239,7 +239,7 @@ template<typename T1, typename T2> float64 CallCumulationD<T1, T2>::inverseD(con
     //nearest_winPCT_given_rank'(rank) = 1 / f'(nearest_winPCT_given_rank(rank)-EPS)
 
     //Since mean == nearest_winPCT_given_rank( rank )
-    return 1.0 / Pr_haveWorsePCT_continuous( mean ).second;
+    return 1.0 / Pr_haveWorsePCT_continuous( mean ).first.D_v;
 }
 
 //How this works:
@@ -408,7 +408,7 @@ float64 CallCumulation::Pr_haveWinPCT_strictlyBetterThan(const float64 winPCT_to
 //.pct is YOUR chance to win if you have that outcome (in all cases, .pct is the genPCT() of that StatResult)
 //.repeated is the rank of that outcome (actually, of the next outcome better)
 //We return the "probability of having a worse hand" or "Pr{PCT < winpct_tohave}" but smoothly interpolated across the histogram.
-template<typename T1, typename T2> std::pair<float64, float64> CallCumulationD<T1, T2>::Pr_haveWorsePCT_continuous(const float64 winPCT_toHave) const
+template<typename T1, typename T2> std::pair<ValueAndSlope, char> CallCumulationD<T1, T2>::Pr_haveWorsePCT_continuous(const float64 winPCT_toHave) const
 {//However, we would like to piecewise linear interpolate, so the function is continuous.
     // This helps especially because the derivative is never zero anywhere, which won't confuse a solver.
 
@@ -489,21 +489,21 @@ template<typename T1, typename T2> std::pair<float64, float64> CallCumulationD<T
     if (maxsize == 1) {
         // All outcomes constant
         if (cumulation[0].pct < winPCT_toHave) {
-            return std::pair<float64, float64>(1.0, 0.0);
+            return std::pair<ValueAndSlope, char>(ValueAndSlope{1.0, 0.0}, 'c'); // 'c', for constant
         } else if (winPCT_toHave < cumulation[0].pct) {
-            return std::pair<float64, float64>(0.0, 0.0);
+            return std::pair<ValueAndSlope, char>(ValueAndSlope{0.0, 0.0}, 'c'); // 'c', for constant
         } else {
-            return std::pair<float64, float64>(0.5, 0.0);
+            return std::pair<ValueAndSlope, char>(ValueAndSlope{0.5, 0.0}, 'c'); // 'c', for constant
         }
     }
 
     if( firstBetterThan == maxsize )
     {//All hands meet criteria
-        return std::pair<float64, float64>(1.0, 0.0);
+        return std::pair<ValueAndSlope, char>(ValueAndSlope{1.0, 0.0}, 'o'); // 'o', for out-of-bounds
     }
     if (firstBetterThan == 0) {
         //No hands meet criteria
-        return std::pair<float64, float64>(0.0, 0.0);
+        return std::pair<ValueAndSlope, char>(ValueAndSlope{0.0, 0.0}, 'o'); // 'o', for out-of-bounds
     }
 //These boundaries form a region with start and end.
     // Okay we lie somewhere between firstBetterThan and firstBetterThan-1
@@ -549,8 +549,7 @@ template<typename T1, typename T2> std::pair<float64, float64> CallCumulationD<T
             const float64 rise = (cumulation[firstBetterThan].repeated - prevRepeated)/2.0;
             const float64 run = cumulation[firstBetterThan].pct - cumulation[firstBetterThan-1].pct;
 
-
-        return std::pair<float64, float64> (horizontalMidpointRepeated, rise/run);
+        return std::pair<ValueAndSlope, char>(ValueAndSlope{horizontalMidpointRepeated, rise/run}, 'm'); // 'm', for midpoint
     }
 
 
@@ -569,11 +568,10 @@ template<typename T1, typename T2> std::pair<float64, float64> CallCumulationD<T
     }
 #endif
 
-
-    return std::pair<float64, float64> (result
-                                        ,
-                                        slope
-                                        );
+    return std::pair<ValueAndSlope, char>(ValueAndSlope{result
+                                                        ,
+                                                        slope
+                                                        }, 'r'); // 'r', for result
 }
 
 

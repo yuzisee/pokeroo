@@ -117,13 +117,13 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT
     //              =    (dlookup(1.0 - 1.0/opponentInstances )) * {        opponentInstances^(-2) } * n * d_dw rarity
 
     // d_dw rarity = {
-    //                 - meanConv->Pr_haveWorsePCT_continuous( w ).second
+    //                 - meanConv->Pr_haveWorsePCT_continuous( w ).first.D_v
     //               ,
     //                 - 1
     //               }
     // Depending on meanConv
 
-    const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).second);
+    const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).first.D_v);
 
     if (opponentInstances < 1.0) {
         // n is too low, so we're stuck right now
@@ -190,7 +190,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dw( co
     const float64 d_dw_getRawPCT = d_rawPCT_d_w(n, rawPCT);
     const float64 d_PW_d_w = 2.0 * opponents * std::pow(rawPCT, opponents - 1) * d_dw_getRawPCT;
 
-    const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).second);
+    const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).first.D_v);
 
     // d_dw rarity = {
     //                 - meanConv->Pr_haveWorsePCT_continuous( w ).second
@@ -283,7 +283,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::rarity( 
     if( meanConv == 0 ){cacheRarity = 1-w;}
     // In MEAN mode, if you have a strong hand (e.g. w = 0.65) you may get something this strong every 10 hands or so,
     // e.g. ...
-    else{cacheRarity= 1.0 - meanConv->Pr_haveWorsePCT_continuous(w).first;}
+    else{cacheRarity= 1.0 - meanConv->Pr_haveWorsePCT_continuous(w).first.v;}
 
     if( cacheRarity < 1.0/RAREST_HAND_CHANCE ){ cacheRarity = 1.0/RAREST_HAND_CHANCE; }
     return cacheRarity;

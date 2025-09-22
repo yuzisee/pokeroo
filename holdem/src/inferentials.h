@@ -25,6 +25,7 @@
 #include <vector>
 #include <utility>
 #include "portability.h"
+#include "math_support.h"
 
 #define DEFAULT_TIE_SCALE_FACTOR 0.5
 
@@ -362,7 +363,7 @@ private:
 public:
 
     // Actual and Derivative of {1.0-Pr_haveWinPct_strictlyBetterThan}
-    virtual std::pair<float64, float64> Pr_haveWorsePCT_continuous(const float64 w_toHave) const;
+    virtual std::pair<ValueAndSlope, char> Pr_haveWorsePCT_continuous(const float64 w_toHave) const;
 
     // derivative of nearestWinPctGivenRank
 	virtual float64 inverseD(const float64, const float64 mean) const;
