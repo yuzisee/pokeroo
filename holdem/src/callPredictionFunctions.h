@@ -46,7 +46,8 @@
 // Ideally this would be 50 * 49 or something.
 #define RAREST_HAND_CHANCE 221.0
 
-constexpr float64 PROBABILITY_SPACE_QUANTUM = 0.5/RAREST_HAND_CHANCE;
+constexpr float64 SEARCH_SPACE_PROBABILITY_QUANTUM = 0.25/RAREST_HAND_CHANCE;
+constexpr float64 DISPLAY_PROBABILITY_QUANTUM = 1.0/RAREST_HAND_CHANCE;
 
 struct ChipPositionState
 {
@@ -296,7 +297,7 @@ class FacedOddsCallGeom : public virtual ScalarFunctionModel
 
 
     FoldGainModel<T, OppositionPerspective> FG;
-    FacedOddsCallGeom(float64 myQuantum) : ScalarFunctionModel(PROBABILITY_SPACE_QUANTUM), lastW(-1), FG(myQuantum/2) {}
+    FacedOddsCallGeom(float64 myQuantum) : ScalarFunctionModel(SEARCH_SPACE_PROBABILITY_QUANTUM), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 }
@@ -319,7 +320,7 @@ class FacedOddsAlgb : public virtual ScalarFunctionModel
 
 
     FoldGainModel<T, OppositionPerspective> FG;
-    FacedOddsAlgb(float64 myQuantum) : ScalarFunctionModel(PROBABILITY_SPACE_QUANTUM), lastW(-1), FG(myQuantum/2) {}
+    FacedOddsAlgb(float64 myQuantum) : ScalarFunctionModel(SEARCH_SPACE_PROBABILITY_QUANTUM), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 }
@@ -346,7 +347,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     bool bCheckPossible;
 
     FoldGainModel<T, OppositionPerspective> FG;
-    FacedOddsRaiseGeom(float64 myQuantum) : ScalarFunctionModel(PROBABILITY_SPACE_QUANTUM), lastW(-1), FG(myQuantum/2) {}
+    FacedOddsRaiseGeom(float64 myQuantum) : ScalarFunctionModel(SEARCH_SPACE_PROBABILITY_QUANTUM), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 }

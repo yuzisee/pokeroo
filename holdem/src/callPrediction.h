@@ -120,9 +120,9 @@ class ExactCallD : public IExf
     CommunityStatsCdf * ed() const {
         return &(fCore.callcumu);
     }
-    #ifdef DEBUG_TRACE_DEXF
-                   std::ostream * traceOut;
-    #endif
+#ifdef DEBUG_TRACE_DEXF
+		std::ostream * traceOut;
+#endif
 
         ExactCallD(ExpectedCallD * const tbase //, CallCumulationD* data
                    ,
@@ -136,10 +136,9 @@ class ExactCallD : public IExf
         ,
         //ed(data)
         fCore(core)
-        #ifdef DEBUG_TRACE_DEXF
-                                               ,traceOut(0)
-        #endif
-
+#ifdef DEBUG_TRACE_DEXF
+					,traceOut(0)
+#endif
             {
                 queryinput = UNINITIALIZED_QUERY;
                 querycallSteps = OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE;

@@ -36,7 +36,7 @@ FoldGain()R=2.3311 by waiting 31.3333 hands(=20.8463 folds)	vs play:0.188516
  AgainstCall(74.2857)=0.188516 from -$60.2817 @ 1
 AgainstRaise(74.2857)=1 from $0 @ 0
         Push(74.2857)=1 from $0 @ 0
-"all fold" precision will be 0.000282805
+"all fold" precision will be 0.00113122
 OppRAISEChanceR [*] 0 @ $74.2857 ($0 now)	fold -- 0.0	W(27.3118×)=0.174392 L=0.811652 4×o.w_s=(0.629392,0.0122303)
 
 (Fixed at $74.2857)	W(27.3118×)=0.174392 L=0.811652 4×o.w_s=(0.629392,0.0122303)
