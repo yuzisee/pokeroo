@@ -32,7 +32,7 @@ Choice Optimal 55
 Choice Fold 55
 f(55)=1.00634
 CALL 55
-FoldGain()R=0.999148 x 0(=0 folds)	vs play:1.00549   ->assumes $10 forced
+FoldGain()R=0.999148 by waiting 0hands(=0 folds)	vs play:1.00549   ->assumes $10 forced
  AgainstCall(55)=1.00549 from +$8.94816 @ 1
 AgainstRaise(55)=1 from $0 @ 0
         Push(55)=1 from $0 @ 0
@@ -47,4 +47,4 @@ OppRAISEChanceR [*] 0 @ $810 ($75.1599 now)	fold -- 0.552611	W(6.5x)=0.340739 L=
 
 (Fixed at $55)	W(1x)=0.569062 L=0.406369 1o.w_s=(0.569062,0.0245692)
 Guaranteed > $0 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0

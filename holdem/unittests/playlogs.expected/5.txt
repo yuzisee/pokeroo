@@ -32,7 +32,7 @@ Choice Optimal 10.125
 Choice Fold 10.125
 f(10.125)=0.994545
 CHECK/FOLD
-FoldGain()R=0.998972 x 0(=0 folds)	vs play:0.993516   ->assumes $10.125 forced
+FoldGain()R=0.998972 by waiting 0hands(=0 folds)	vs play:0.993516   ->assumes $10.125 forced
  AgainstCall(10.125)=0.999879 from -$3.15133 @ 0.0573914
 AgainstRaise(10.125)=0.993636 from -$10.125 @ 0.942609
         Push(10.125)=1 from $0 @ 0
@@ -41,7 +41,7 @@ AgainstRaise(20.25)=0.986508 from -$20.25 @ 0.999399
         Push(20.25)=1 from $0 @ 0
 OppRAISEChanceR [F] 0.942609 @ $20.25 ($10.125 now)	fold -- 0	W(5x)=0.250518 L=0.699512 1o.w_s=(0.250518,0.0499708)
 OppRAISEChanceR [F] 0.772416 @ $30.375 ($10.125 now)	fold -- 0.0512821	W(5x)=0.250518 L=0.699512 1o.w_s=(0.250518,0.0499708)
-OppRAISEChanceR [F] 0.450624 @ $50.625 ($0 now)	fold -- 0.0638095	W(5x)=0.250518 L=0.699512 1o.w_s=(0.250518,0.0499708)
+OppRAISEChanceR [F] 0.450624 @ $50.625 ($10.125 now)	fold -- 0.0638095	W(5x)=0.250518 L=0.699512 1o.w_s=(0.250518,0.0499708)
 OppRAISEChanceR [F] 0.301465 @ $91.125 ($13.1155 now)	fold -- 0.145469	W(5.44444x)=0.244095 L=0.702933 1o.w_s=(0.244095,0.0529715)
 OppRAISEChanceR [F] 0.170371 @ $172.125 ($16.6425 now)	fold -- 0.216502	W(7.11111x)=0.235335 L=0.720126 1o.w_s=(0.235335,0.0445394)
 OppRAISEChanceR [F] 0.0905299 @ $334.125 ($21.5294 now)	fold -- 0.388676	W(9.61111x)=0.225141 L=0.739964 1o.w_s=(0.225141,0.0348948)
@@ -51,7 +51,7 @@ OppRAISEChanceR [F] 0 @ $1500 ($32.1966 now)	fold -- 0.443846	W(14.0556x)=0.2060
 
 (Fixed at $10.125)	W(5x)=0.250518 L=0.699512 1o.w_s=(0.250518,0.0499708)
 Guaranteed > $5.0625 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 4h 5h Kd community
 *
@@ -85,12 +85,12 @@ Choice Optimal 0
 Choice Fold 9
 f(0)=1.00493
 CALL 0
-FoldGain()M=0.998965 x 0(=0 folds)	vs play:1.00389   ->assumes $10.125 forced
+FoldGain()M=0.998965 by waiting 0hands(=0 folds)	vs play:1.00389   ->assumes $10.125 forced
  AgainstCall(0)=1.00389 from +$15.8633 @ 0.366943
 AgainstRaise(0)=1 from $0 @ 0.633057
         Push(0)=1 from $0 @ 0
- AgainstCall(10.125)=1.00306 from +$18.2724 @ 0.25085
-AgainstRaise(10.125)=0.994905 from -$10.125 @ 0.74915
+ AgainstCall(10.125)=1.00306 from +$18.2724 @ 0.250831
+AgainstRaise(10.125)=0.994904 from -$10.125 @ 0.749169
         Push(10.125)=1 from $0 @ 0
 OppRAISEChanceM [*] 0.474943 @ $10.125 ($10.125 now)	fold -- 0	W(1x)=0.611482 L=0.358084 1o.w_s=(0.611482,0.0304338)
 OppRAISEChanceM [*] 0.474101 @ $20.25 ($10.125 now)	fold -- 0.0811808	W(1x)=0.611482 L=0.358084 1o.w_s=(0.611482,0.0304338)
@@ -104,7 +104,7 @@ OppRAISEChanceM [F] 0 @ $1489.88 ($50.4768 now)	fold -- 0.810447	W(15.3333x)=0.1
 
 (Fixed at $0)	W(1x)=0.611482 L=0.358084 1o.w_s=(0.611482,0.0304338)
 Guaranteed > $25.3125 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 *
 5c 7d Bet to call 18 (from 0) at 43.3125 pot, 
@@ -127,7 +127,7 @@ Choice Optimal 18
 Choice Fold 22.5
 f(18)=1.00735
 CALL 18
-FoldGain()M=0.998965 x 0(=0 folds)	vs play:1.00631   ->assumes $10.125 forced
+FoldGain()M=0.998965 by waiting 0hands(=0 folds)	vs play:1.00631   ->assumes $10.125 forced
  AgainstCall(18)=1.00979 from +$20.4245 @ 0.715787
 AgainstRaise(18)=0.996551 from -$18 @ 0.284213
         Push(18)=1 from $0 @ 0
@@ -145,7 +145,7 @@ OppRAISEChanceM [F] 0 @ $1489.88 ($71.2981 now)	fold -- 0.802551	W(10.6667x)=0.1
 
 (Fixed at $18)	W(1x)=0.611482 L=0.358084 1o.w_s=(0.611482,0.0304338)
 Guaranteed > $25.3125 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 4h 5h Kd Ah community
 *
@@ -179,7 +179,7 @@ Choice Optimal 0
 Choice Fold 40.5
 f(0)=1.02618
 CALL 0
-FoldGain()M=0.987771 x 0(=0 folds)	vs play:1.01395   ->assumes $10.125 forced
+FoldGain()M=0.987771 by waiting 0hands(=0 folds)	vs play:1.01395   ->assumes $10.125 forced
  AgainstCall(0)=1.01167 from +$31.3146 @ 0.551156
 AgainstRaise(0)=1.00225 from +$7.39165 @ 0.448844
         Push(0)=1 from $0 @ 0
@@ -187,7 +187,7 @@ AgainstRaise(0)=1.00225 from +$7.39165 @ 0.448844
 AgainstRaise(10.125)=0.995873 from -$10.125 @ 0.599158
         Push(10.125)=1 from $0 @ 0
 OppRAISEChanceM [*] 0.448844 @ $10.125 ($10.125 now)	fold -- 0	W(1x)=0.492556 L=0.47108 1o.w_s=(0.492556,0.0363636)
-OppRAISEChanceM [*] 0.448002 @ $20.25 ($0 now)	fold -- 0	W(1x)=0.492556 L=0.47108 1o.w_s=(0.492556,0.0363636)
+OppRAISEChanceM [*] 0.448002 @ $20.25 ($10.125 now)	fold -- 0	W(1x)=0.492556 L=0.47108 1o.w_s=(0.492556,0.0363636)
 OppRAISEChanceM [*] 0.44277 @ $40.5 ($15.8107 now)	fold -- 0.0392775	W(1x)=0.492556 L=0.47108 1o.w_s=(0.492556,0.0363636)
 OppRAISEChanceM [*] 0.438953 @ $81 ($24.0141 now)	fold -- 0.287809	W(1x)=0.492556 L=0.47108 1o.w_s=(0.492556,0.0363636)
 OppRAISEChanceM [F] 0.33439 @ $162 ($35.7473 now)	fold -- 0.474098	W(6.16667x)=0.0337652 L=0.966235 1o.w_s=(0.0337652,0)
@@ -198,7 +198,7 @@ OppRAISEChanceM [F] 0 @ $1471.88 ($118.823 now)	fold -- 0.680255	W(10.6667x)=0.0
 
 (Fixed at $0)	W(1x)=0.492556 L=0.47108 1o.w_s=(0.492556,0.0363636)
 Guaranteed > $61.3125 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0
 
 *
 5c 7d Bet to call 805.5 (from 0) at 866.812 pot, 
@@ -222,7 +222,7 @@ Choice Fold 1471.88
 f(805.5)=0.552341
 raiseGain: f(1471.88)=0.552341
 CHECK/FOLD
-FoldGain()M=1.31314 x 36.6667(=15.0177 folds)	vs play:0.865478   ->assumes $10.125 forced
+FoldGain()M=1.31314 by waiting 36.6667hands(=15.0177 folds)	vs play:0.865478   ->assumes $10.125 forced
  AgainstCall(805.5)=1 from $0 @ 0
 AgainstRaise(805.5)=0.865478 from -$198 @ 1
         Push(805.5)=1 from $0 @ 0
@@ -233,4 +233,4 @@ OppRAISEChanceM [*] 0 @ $1471.88 ($666.375 now)	fold -- 0	W(1x)=0.492556 L=0.471
 
 (Fixed at $805.5)	W(1x)=0.492556 L=0.47108 1o.w_s=(0.492556,0.0363636)
 Guaranteed > $61.3125 is in the pot for sure
-OppFoldChance% ...    0   d\0
+OppFoldChance% ...    0   ∇=0

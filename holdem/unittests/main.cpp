@@ -9,7 +9,6 @@
 #include <ctime>
 #include <cassert>
 #include <limits>
-#include <algorithm>
 
 #include "../src/aiCache.h"
 namespace NamedTriviaDeckTests {
