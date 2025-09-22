@@ -123,7 +123,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT
     //               }
     // Depending on meanConv
 
-    const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).second);
+    const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).first.D_v);
 
     if (opponentInstances < 1.0) {
         // n is too low, so we're stuck right now
@@ -190,7 +190,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dw( co
     const float64 d_dw_getRawPCT = d_rawPCT_d_w(n, rawPCT);
     const float64 d_PW_d_w = 2.0 * opponents * std::pow(rawPCT, opponents - 1) * d_dw_getRawPCT;
 
-    const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).second);
+    const float64 d_rarity_d_w = ( meanConv == 0 ) ? (-1) : (-meanConv->Pr_haveWorsePCT_continuous( w ).first.D_v);
 
     // d_dw rarity = {
     //                 - meanConv->Pr_haveWorsePCT_continuous( w ).second
