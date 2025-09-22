@@ -1,0 +1,55 @@
+
+==========#1==========
+Playing as ~
+*
+(M) 64.6024%
+(M.w) 63.4889%
+(M.s) 2.22694%
+(M.l) 34.2841%
+(Better All-in) 91.7959%
+(Re.s) 0.244898%
+(Better Mean Rank) 94.9796%
+(Ra.s) 0.244898%
+
+*
+Td Ad Bet to call 2.25 (from 0) at 3.375 pot, 
+Community outcomes (stdev = 0.14636 pcts , avgdev = 0.129032 pcts ), kurtosis = -1.02255
+0.340367 pct: least helpful community
+0.412595 pct: 546 / 19600 (2.78571%)
+0.498904 pct: 5052 / 19600 (25.7755%)
+0.571119 pct: 5187 / 19600 (26.4643%)
+0.646024 pct (mean): mean- 0.571071   mean+ 0.428929 (skew 0.445807 tail right) 
+0.681026 pct: 2345 / 19600 (11.9643%)
+0.764932 pct: 2631 / 19600 (13.4235%)
+0.851818 pct: 3027 / 19600 (15.4439%)
+0.943276 pct: 812 / 19600 (4.14286%)
+1 pct: most helpful community
+CallStrength W(4r)=0.706276 L=0.286146 o.w_s=(0.916735,0.00244898)
+(MinRaise to $4.5) 	W(26.0561x)=0.273817 L=0.680222 4o.w_s=(0.642549,0.0254156)
+ -  statrelation geom RAW - 
+8 dealt, 7 opp. (round), 4 opp. assumed str., 4 opp. still in
+Choice Optimal 2.25
+Choice Fold 2.25
+f(2.25)=0.998954
+CHECK/FOLD
+FoldGain()R=0.999522 x 0(=0 folds)	vs play:0.998476
+ AgainstCall(2.25)=1.00073 from +$1.83715 @ 0.283732
+AgainstRaise(2.25)=0.997751 from -$2.25 @ 0.716268
+        Push(2.25)=1 from $0 @ 0
+ AgainstCall(4.5)=0.999374 from -$1.47728 @ 0.303454
+AgainstRaise(4.5)=0.995837 from -$4.5 @ 0.662543
+        Push(4.5)=1.00018 from +$3.76267 @ 0.0340025
+OppRAISEChanceR [*] 0.284276 @ $4.5 ($2.25 now)	fold -- 0.0340025	W(26.0561x)=0.273817 L=0.680222 4o.w_s=(0.642549,0.0254156)
+OppRAISEChanceR [F] 0.716268 @ $6.75 ($2.25 now)	fold -- 0.0976762	W(31.9263x)=0.264397 L=0.681465 4o.w_s=(0.639211,0.0304725)
+OppRAISEChanceR [F] 0.566927 @ $11.25 ($0 now)	fold -- 0.311071	W(37.5686x)=0.261791 L=0.687703 4o.w_s=(0.63943,0.0288313)
+OppRAISEChanceR [F] 0.397726 @ $20.25 ($2.91456 now)	fold -- 0.453702	W(46.5763x)=0.256673 L=0.693559 4o.w_s=(0.638591,0.0289291)
+OppRAISEChanceR [F] 0.246042 @ $38.25 ($3.69833 now)	fold -- 0.563528	W(60.0779x)=0.248598 L=0.700944 4o.w_s=(0.636847,0.0301115)
+OppRAISEChanceR [F] 0.137313 @ $74.25 ($4.78431 now)	fold -- 0.656894	W(80.5371x)=0.242736 L=0.715215 4o.w_s=(0.637445,0.0259747)
+OppRAISEChanceR [F] 0.0704893 @ $146.25 ($5.71246 now)	fold -- 0.727415	W(110.189x)=0.232237 L=0.730297 4o.w_s=(0.636314,0.0242429)
+OppRAISEChanceR [F] 0.0324596 @ $290.25 ($6.91524 now)	fold -- 0.781574	W(152.278x)=0.216855 L=0.749468 4o.w_s=(0.633913,0.0232958)
+OppRAISEChanceR [F] 0.017782 @ $578.25 ($8.57921 now)	fold -- 0.825696	W(188.858x)=0.204536 L=0.766373 4o.w_s=(0.632293,0.0213744)
+OppRAISEChanceR [F] 0 @ $717 ($8.83531 now)	fold -- 0.834797	W(206.484x)=0.198562 L=0.774436 4o.w_s=(0.631456,0.0204525)
+
+(Fixed at $2.25)	W(4x)=0.516847 L=0.445933 4o.w_s=(0.674091,0.0118213)
+Guaranteed > $0 is in the pot for sure
+OppFoldChance% ...    0   d\0

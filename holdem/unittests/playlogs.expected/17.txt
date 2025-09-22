@@ -1,0 +1,216 @@
+
+==========#17==========
+Playing as ~
+*
+(M) 60.984%
+(M.w) 59.3867%
+(M.s) 3.19457%
+(M.l) 37.4188%
+(Better All-in) 88.3673%
+(Re.s) 0.244898%
+(Better Mean Rank) 89.5918%
+(Ra.s) 0.244898%
+
+*
+7h Ah Bet to call 10 (from 0) at 25 pot, 
+Community outcomes (stdev = 0.146186 pcts , avgdev = 0.126373 pcts ), kurtosis = -0.67018
+0.34343 pct: least helpful community
+0.400516 pct: 645 / 19600 (3.29082%)
+0.48564 pct: 7824 / 19600 (39.9184%)
+0.568835 pct: 3192 / 19600 (16.2857%)
+0.60984 pct (mean): mean- 0.588827   mean+ 0.411173 (skew 0.674055 tail right) 
+0.680334 pct: 3569 / 19600 (18.2092%)
+0.762663 pct: 1254 / 19600 (6.39796%)
+0.843879 pct: 2463 / 19600 (12.5663%)
+0.943631 pct: 653 / 19600 (3.33163%)
+0.999966 pct: most helpful community
+CallStrength W(4r)=0.640764 L=0.352192 o.w_s=(0.894694,0.00244898)
+(MinRaise to $20) 	W(10.0135x)=0.298369 L=0.638504 4o.w_s=(0.643705,0.0316376)
+ -  stat_high algb SLIDERX - 
+9 dealt, 8 opp. (round), 4 opp. assumed str., 4 opp. still in
+Choice Optimal 10
+Choice Fold 15
+f(10)=1.04333
+CALL 10
+FoldGain()R=0.999076 x 0(=0 folds)	vs play:1.0424
+ AgainstCall(10)=1.00668 from +$12.8346 @ 0.781563
+AgainstRaise(10)=1.03573 from +$245.744 @ 0.218437
+        Push(10)=1 from $0 @ 0
+ AgainstCall(20)=0.999419 from -$2.03122 @ 0.429645
+AgainstRaise(20)=0.992408 from -$20 @ 0.570355
+        Push(20)=1 from $0 @ 0
+OppRAISEChanceR [*] 0.218437 @ $20 ($10 now)	fold -- 0	W(10.0135x)=0.298369 L=0.638504 4o.w_s=(0.643705,0.0316376)
+OppRAISEChanceR [*] 0.217566 @ $30 ($10 now)	fold -- 0.0205248	W(28.6987x)=0.2702 L=0.682846 4o.w_s=(0.641701,0.0262255)
+OppRAISEChanceR [*] 0.215827 @ $50 ($0 now)	fold -- 0.0615692	W(32.8853x)=0.263693 L=0.683109 4o.w_s=(0.639261,0.0300552)
+OppRAISEChanceR [*] 0.212364 @ $90 ($12.9536 now)	fold -- 0.237627	W(44.8494x)=0.257115 L=0.692756 4o.w_s=(0.638603,0.0290795)
+OppRAISEChanceR [*] 0.205486 @ $170 ($16.437 now)	fold -- 0.428447	W(56.7244x)=0.249078 L=0.699534 4o.w_s=(0.636752,0.0305695)
+OppRAISEChanceR [*] 0.191847 @ $330 ($21.2636 now)	fold -- 0.57367	W(75.3652x)=0.241705 L=0.713451 4o.w_s=(0.636632,0.0276718)
+OppRAISEChanceR [*] 0.161104 @ $650 ($25.3887 now)	fold -- 0.628125	W(100.437x)=0.232412 L=0.728359 4o.w_s=(0.63595,0.0252868)
+OppRAISEChanceR [*] 0.0947106 @ $1290 ($30.7344 now)	fold -- 0.721347	W(138.386x)=0.216672 L=0.747024 4o.w_s=(0.633233,0.0250044)
+OppRAISEChanceR [*] 0 @ $1502.5 ($31.9229 now)	fold -- 0.709794	W(105.77x)=0.230242 L=0.731078 4o.w_s=(0.635619,0.0251615)
+
+(Fixed at $10)	W(4x)=0.443759 L=0.502243 4o.w_s=(0.664814,0.0193619)
+Guaranteed > $0 is in the pot for sure
+OppFoldChance% ...    0   d\0
+
+3h 8c Kd community
+*
+(M) 50.842%
+(M.w) 49.3952%
+(M.s) 2.8936%
+(M.l) 47.7112%
+(Better All-in) 55.5042%
+(Re.s) 0.185014%
+(Better Mean Rank) 61.2245%
+(Ra.s) 0%
+
+*
+7h Ah Bet to call 0 (from 0) at 45 pot, 
+Community outcomes (stdev = 0.122116 pcts , avgdev = 0.0938032 pcts ), kurtosis = 1.87681
+0.40717 pct: least helpful community
+0.416571 pct: 24 / 47 (51.0638%)
+0.50842 pct (mean): mean- 0.510638   mean+ 0.489362 (skew 1.52556 tail right) 
+0.525613 pct: 7 / 47 (14.8936%)
+0.544499 pct: 8 / 47 (17.0213%)
+0.650011 pct: 4 / 47 (8.51064%)
+0.67881 pct: 1 / 47 (2.12766%)
+0.769514 pct: 0 / 47 (0%)
+0.861294 pct: 3 / 47 (6.38298%)
+0.868336 pct: most helpful community
+CallStrength W(3r)=0.229496 L=0.770504 o.w_s=(0.612245,0)
+(MinRaise to $10) 	W(7.5x)=0.111284 L=0.888337 3o.w_s=(0.543055,0.000614881)
+ -  stat_high algb SLIDERX - 
+9 dealt, 3 opp. (round), 3 opp. assumed str., 3 opp. still in
+Choice Optimal 0
+Choice Fold 15
+f(0)=1.01061
+CALL 0
+FoldGain()R=0.9933 x 0(=0 folds)	vs play:1.00391
+ AgainstCall(0)=1.00391 from +$10.3273 @ 0.564564
+AgainstRaise(0)=1 from $0 @ 0.435436
+        Push(0)=1 from $0 @ 0
+ AgainstCall(10)=0.99974 from -$1.20328 @ 0.322117
+AgainstRaise(10)=0.995458 from -$10 @ 0.677883
+        Push(10)=1 from $0 @ 0
+OppRAISEChanceR [*] 0.257096 @ $10 ($10 now)	fold -- 0	W(7.5x)=0.111284 L=0.888337 3o.w_s=(0.543055,0.000614881)
+OppRAISEChanceR [*] 0.256202 @ $20 ($10 now)	fold -- 0.012954	W(11.5x)=0.088502 L=0.910918 3o.w_s=(0.529223,0.00115411)
+OppRAISEChanceR [*] 0.25164 @ $40 ($11.4744 now)	fold -- 0.103218	W(20x)=0.047898 L=0.951093 3o.w_s=(0.493537,0.00344206)
+OppRAISEChanceR [F] 0.435436 @ $80 ($15.7323 now)	fold -- 0.238349	W(25.75x)=0.0442445 L=0.954456 3o.w_s=(0.488763,0.00473832)
+OppRAISEChanceR [F] 0.254748 @ $160 ($21.1531 now)	fold -- 0.367048	W(32x)=0.0415814 L=0.956804 3o.w_s=(0.484906,0.00619701)
+OppRAISEChanceR [F] 0.14129 @ $320 ($28.5992 now)	fold -- 0.436458	W(41.25x)=0.0391491 L=0.959647 3o.w_s=(0.482091,0.00489226)
+OppRAISEChanceR [F] 0.0582375 @ $640 ($36.4064 now)	fold -- 0.487974	W(55.75x)=0.0360663 L=0.962996 3o.w_s=(0.477964,0.0041068)
+OppRAISEChanceR [F] 0.0174075 @ $1280 ($46.9694 now)	fold -- 0.540276	W(76.25x)=0.0323403 L=0.966729 3o.w_s=(0.472065,0.00448555)
+OppRAISEChanceR [F] 0 @ $1492.5 ($50.1739 now)	fold -- 0.368791	W(58.75x)=0.0354523 L=0.96356 3o.w_s=(0.476956,0.00439076)
+
+(Fixed at $0)	W(3x)=0.142758 L=0.846096 3o.w_s=(0.55382,0.0140534)
+Guaranteed > $45 is in the pot for sure
+OppFoldChance% ...    0   d\0
+
+3h 8c Jh Kd community
+*
+(M) 54.3204%
+(M.w) 52.7361%
+(M.s) 3.16864%
+(M.l) 44.0953%
+(Better All-in) 46.087%
+(Re.s) 0%
+(Better Mean Rank) 59.7518%
+(Ra.s) 0%
+
+*
+7h Ah Bet to call 0 (from 0) at 45 pot, 
+Community outcomes (stdev = 0.257674 pcts , avgdev = 0.22167 pcts ), kurtosis = -0.849645
+0.315657 pct: least helpful community
+0.340476 pct: 21 / 46 (45.6522%)
+0.459091 pct: 10 / 46 (21.7391%)
+0.543204 pct (mean): mean- 0.673913   mean+ 0.326087 (skew 0.920966 tail right) 
+0.585859 pct: 3 / 46 (6.52174%)
+0.657828 pct: 0 / 46 (0%)
+0.755592 pct: 0 / 46 (0%)
+0.848485 pct: 3 / 46 (6.52174%)
+0.993715 pct: 9 / 46 (19.5652%)
+1 pct: most helpful community
+CallStrength W(3r)=0.21333 L=0.78667 o.w_s=(0.597518,0)
+(MinRaise to $10) 	W(7.5x)=0.20224 L=0.79776 3o.w_s=(0.586979,0)
+ -  stat_high algb SLIDERX - 
+9 dealt, 3 opp. (round), 3 opp. assumed str., 3 opp. still in
+Choice Optimal 0
+Choice Fold 20
+f(0)=1.01158
+CALL 0
+FoldGain()R=0.9933 x 0(=0 folds)	vs play:1.00488
+ AgainstCall(0)=1.00488 from +$9.59986 @ 0.757927
+AgainstRaise(0)=1 from $0 @ 0.242073
+        Push(0)=1 from $0 @ 0
+ AgainstCall(10)=1.00194 from +$6.16843 @ 0.470341
+AgainstRaise(10)=0.996451 from -$10 @ 0.529659
+        Push(10)=1 from $0 @ 0
+OppRAISEChanceR [*] 0.146415 @ $10 ($10 now)	fold -- 0	W(7.5x)=0.20224 L=0.79776 3o.w_s=(0.586979,0)
+OppRAISEChanceR [*] 0.145983 @ $20 ($0 now)	fold -- 0.0313433	W(11.5x)=0.183333 L=0.816667 3o.w_s=(0.568086,0)
+OppRAISEChanceR [*] 0.145123 @ $40 ($15.6155 now)	fold -- 0.0840301	W(20x)=0.172596 L=0.827404 3o.w_s=(0.556771,0)
+OppRAISEChanceR [F] 0.242073 @ $80 ($23.7176 now)	fold -- 0.211548	W(25.75x)=0.169944 L=0.830056 3o.w_s=(0.553905,0)
+OppRAISEChanceR [F] 0.141087 @ $160 ($35.306 now)	fold -- 0.318018	W(32x)=0.167062 L=0.832938 3o.w_s=(0.550756,0)
+OppRAISEChanceR [F] 0.0737651 @ $320 ($51.7964 now)	fold -- 0.372956	W(41.25x)=0.162796 L=0.837204 3o.w_s=(0.546028,0)
+OppRAISEChanceR [F] 0.0337058 @ $640 ($75.2992 now)	fold -- 0.463405	W(55.75x)=0.159091 L=0.840909 3o.w_s=(0.541853,0)
+OppRAISEChanceR [F] 0.00998458 @ $1280 ($109.464 now)	fold -- 0.519463	W(76.25x)=0.159091 L=0.840909 3o.w_s=(0.541853,0)
+OppRAISEChanceR [F] 0 @ $1492.5 ($119.066 now)	fold -- 0.521859	W(58.75x)=0.159091 L=0.840909 3o.w_s=(0.541853,0)
+
+(Fixed at $0)	W(3x)=0.239196 L=0.760804 3o.w_s=(0.620752,0)
+Guaranteed > $45 is in the pot for sure
+OppFoldChance% ...    0   d\0
+
+3h 4h 8c Jh Kd community
+*
+(M) 100%
+(M.w) 100%
+(M.s) 0%
+(M.l) 0%
+(Better All-in) 100%
+(Re.s) 0%
+(Better Mean Rank) 99.9537%
+(Ra.s) 0.0925069%
+
+*
+7h Ah Bet to call 0 (from 0) at 45 pot, 
+CallStrength W(3r)=0.997227 L=0 o.w_s=(0.999075,0.000925069)
+(MinRaise to $10) 	W(7.5x)=1 L=0 3o.w_s=(1,0)
+ -  stat_high algb SLIDERX - 
+9 dealt, 3 opp. (round), 3 opp. assumed str., 3 opp. still in
+Choice Optimal 21.582
+Choice Fold 1487.5
+f(0)=1.15546
+*MinRaise 10
+RAISETO 21.582
+
+FoldGain()R=0.9933 x 0(=0 folds)	vs play:1.34499
+ AgainstCall(21.582)=1.01928 from +$85.4488 @ 0.336768
+AgainstRaise(21.582)=1.31996 from +$997.731 @ 0.478619
+        Push(21.582)=1.00575 from +$46.4822 @ 0.184613
+ AgainstCall(0)=1.024 from +$44.9376 @ 0.797021
+AgainstRaise(0)=1.12476 from +$917.368 @ 0.202979
+        Push(0)=1 from $0 @ 0
+
+Why didn't I call?
+OppRAISEChanceR [*] 0.202979 @ $10 ($0 now)	fold -- 0.0159996	W(7.5x)=1 L=0 3o.w_s=(1,0)
+OppRAISEChanceR [*] 0.202547 @ $20 ($0 now)	fold -- 0.17462	W(11.5x)=1 L=0 3o.w_s=(1,0)
+OppRAISEChanceR [*] 0.196599 @ $40 ($0 now)	fold -- 0.329773	W(20x)=1 L=0 3o.w_s=(1,0)
+OppRAISEChanceR [*] 0.194887 @ $80 ($0 now)	fold -- 0.50802	W(25.75x)=1 L=0 3o.w_s=(1,0)
+OppRAISEChanceR [*] 0.186409 @ $160 ($0 now)	fold -- 0.662255	W(32x)=1 L=0 3o.w_s=(1,0)
+OppRAISEChanceR [*] 0.174634 @ $320 ($0 now)	fold -- 0.75918	W(41.25x)=1 L=0 3o.w_s=(1,0)
+OppRAISEChanceR [*] 0.151131 @ $640 ($0 now)	fold -- 0.823149	W(55.75x)=1 L=0 3o.w_s=(1,0)
+OppRAISEChanceR [*] 0.0869139 @ $1280 ($0 now)	fold -- 0.864641	W(76.25x)=1 L=0 3o.w_s=(1,0)
+OppRAISEChanceR [*] 0 @ $1492.5 ($0 now)	fold -- 0.846546	W(58.75x)=1 L=0 3o.w_s=(1,0)
+
+(Fixed at $21.582)	W(11.5x)=1 L=0 3o.w_s=(1,0)
+	--
+What am I expecting now, given my actual bet?
+OppRAISEChanceR [*] 0.478619 @ $43.1641 ($0 now)
+OppRAISEChanceR [*] 0.47506 @ $86.3281 ($0 now)
+OppRAISEChanceR [*] 0.457881 @ $172.656 ($0 now)
+OppRAISEChanceR [*] 0.433137 @ $345.312 ($0 now)
+OppRAISEChanceR [*] 0.370238 @ $690.625 ($0 now)
+OppRAISEChanceR [*] 0.196193 @ $1381.25 ($0 now)
+OppRAISEChanceR [*] 0 @ $1492.5 ($0 now)
+Guaranteed > $45 is in the pot for sure
+OppFoldChance% ...    0.184613   d\0.00585547
+if playstyle is Danger/Conservative, overall utility is 0.351685
