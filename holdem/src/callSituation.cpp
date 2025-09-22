@@ -266,7 +266,7 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
         FG.waitLength.setW( 1.0 - 1.0/N ); // i.e. rarity() will be 1.0/N
     }else
     {
-        FG.waitLength.setW( foldwait_length_distr->nearest_winPCT_given_rank(1.0 - 1.0/N) );
+        FG.waitLength.setW( foldwait_length_distr->nearest_winPCT_given_rank(1.0 - 1.0/N).first );
     }
 	FG.waitLength.amountSacrificeForced = avgBlind;
 

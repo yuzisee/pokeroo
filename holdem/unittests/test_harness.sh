@@ -46,7 +46,7 @@ if test -z "$(ls -A playlogs.expected/)"; then
   ls -la
   find playlogs.actual
   exit 66 # 65 would be EX_DATAERR, 78 would be EX_CONFIG. We went with 66 EX_NOINPUT
-elif diff -U 5 -rw playlogs.expected/ playlogs.actual/; then
+elif diff -U 8 -rw playlogs.expected/ playlogs.actual/; then
   echo 'PLAYLOGS MATCH ✅'
 else
   DIFF_CMD_EXIT_CODE=$?

@@ -21,6 +21,7 @@
 
 #include "callPredictionFunctions.h"
 #include "inferentials.h"
+#include "math_support.h"
 #include "portability.h"
 
 #include <iostream>
@@ -123,7 +124,10 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT
     }
 }
 
-static float64 compute_d_dbetSize( const float64 n, const float64 rawPCT, const float64 opponents ) {
+// Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
+// @returns a value between −1.0 and +1.0
+// Your profit per betSize. If it's positive, you make money the more betSize gets. If negative you lose money the more betSize gets.
+static float64 compute_dE_dbetSize( const float64 n, const float64 rawPCT, const float64 opponents ) {
   #ifdef INLINE_INTEGER_POWERS
             float64 intOpponents = std::round(opponents);
             if( intOpponents == opponents )
@@ -140,12 +144,9 @@ static float64 compute_d_dbetSize( const float64 n, const float64 rawPCT, const 
             }//end if intOpponents == opponents , else
   #endif
 
-
-            // Your profit per betSize. If it's positive, you make money the more betSize gets. If negative you lose money the more betSize gets.
             return (2*cached_d_dbetSize) - 1;
 }
 
-// Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
 // Return value is between -1.0 and +1.0
 // Will memoize while searching
 template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dbetSize( const float64 n )
@@ -155,15 +156,15 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dbetSi
       return cached_d_dbetSize.output_d_dbetSize;
   }
 
-  const float64 d_dbetSize = compute_d_dbetSize(n, getRawPCT(n), opponents);
+  const float64 d_dbetSize_result = compute_dE_dbetSize(n, getRawPCT(n), opponents);
 
   if (cached_d_dbetSize.b_assume_w_is_constant) {
     // We're in `b_assume_w_is_constant` mode, so cache this value to avoid recomputing it right away
     cached_d_dbetSize.input_n = n;
-    cached_d_dbetSize.output_d_dbetSize = d_dbetSize;
+    cached_d_dbetSize.output_d_dbetSize = d_dbetSize_result;
   }
 
-  return d_dbetSize;
+  return d_dbetSize_result;
 }
 
 
@@ -281,7 +282,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::rarity( 
 template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::lookup( const float64 rank ) const
 {
     if( meanConv == 0 ) return rank;
-    return meanConv->nearest_winPCT_given_rank(rank);
+    return meanConv->nearest_winPCT_given_rank(rank).first;
 }
 
 template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::dlookup( const float64 rank, const float64 lookupped ) const
@@ -334,7 +335,19 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::f( const
 #endif // DEBUGASSERT
 
   #ifdef DEBUG_TRACE_PWIN
-			if(traceEnable != nullptr) *traceEnable << "\t\t\t\t FoldWaitLengthModel(n=" << n << ", bSearching=" << cached_d_dbetSize.b_assume_w_is_constant << ") compares remainingbet=" << remainingbet << " vs. betSize=" << betSize << " ↦ " << lastF << " based on (winShowdown)" << winShowdown << " ⋅ " << PW << "(PW)" << std::endl;
+			if(traceEnable != nullptr) {
+			  *traceEnable << "\t\t\t\t FoldWaitLengthModel(n=" << n << ", bSearching=" << cached_d_dbetSize.b_assume_w_is_constant << ") compares remainingbet=" << remainingbet << " vs. betSize=" << betSize << " ↦ " << lastF << " based on (winShowdown)" << winShowdown << " ⋅ " << PW << "(PW) vs. expected PW=";
+					const float64 reproduce_rawPct = getRawPCT(n);
+				*traceEnable << compute_dE_dbetSize(n, reproduce_rawPct, opponents);
+				if (meanConv == nullptr) {
+			     *traceEnable << " from " << reproduce_rawPct << "^" << opponents << std::endl;
+				} else {
+				  const std::pair<ValueAndSlope, char> reproduce_one_minus_rarity = meanConv->Pr_haveWorsePCT_continuous(w);
+				  const float64 reproduce_rarity = 1.0 - reproduce_one_minus_rarity.first.v;
+				  const std::pair<float64, char> reproduce_pct = meanConv->nearest_winPCT_given_rank(1.0 - 1.0 / n / reproduce_rarity);
+          *traceEnable << " on lookup 1:" << rarity() << " ∈ meanConv->Pr_haveWorsePCT_continuous(w) = " << reproduce_one_minus_rarity.first.v << "[" << reproduce_one_minus_rarity.second << "]  ▶  [" << reproduce_pct.second << "]" << reproduce_pct.first << " = " << reproduce_rawPct << "^" << opponents << std::endl;
+				}
+			}
 	#endif
 
     return lastF;
@@ -485,7 +498,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBest
     this->resetCaches(); // will also clear b_assume_w_is_constant so nothing to worry about, carry on
     #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
         if(this->traceEnable != nullptr) {
-          *traceEnable << "FindMax DONE! FoldWaitLengthModel::FindBestLength bestN=" << bestN << std::endl;
+          *traceEnable << "\t\t\t\tFindMax DONE! FoldWaitLengthModel::FindBestLength bestN=" << bestN << std::endl;
         }
     #endif
     return bestN;
@@ -557,7 +570,7 @@ template<typename T1, typename T2> void FoldGainModel<T1, T2>::query( const floa
             waitLength.traceEnable = this->traceEnable;
           n = waitLength.FindBestLength();
             waitLength.traceEnable = nullptr;
-            *traceEnable << "└─> FoldGainModel: gain_ref = FoldWaitLengthModel::f(n=" << n << ")" << std::endl;
+            *traceEnable << "\t\t\t└─> FoldGainModel: gain_ref = FoldWaitLengthModel::f(n=" << n << ")" << std::endl;
           } else
         #endif
         {

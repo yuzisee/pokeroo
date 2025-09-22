@@ -1116,7 +1116,7 @@ void ExactCallBluffD::query(const float64 betSize)
                 float64 w_rank = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,EMPTY_DISTRIBUTION);
                 float64 w_mean = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,&fCallCumu);
            			#if defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_ZERO)
-                    if( traceOut != 0 ) { *traceOut << std::endl << "─────────── ↑ FindZero:w_pess(fCallCumu) // FindZero:w_mean(fFoldCumu) ↓ ───────────" << std::endl << std::endl; }
+                    if( traceOut != 0 ) { *traceOut << std::endl << "─────────── ↑ " << w_mean << " = FindZero:w_mean(fCallCumu) // FindZero:w_pess(fFoldCumu) ↓ ───────────" << std::endl << std::endl; }
 						    #endif
                 float64 w_pess = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,&fFoldCumu);
                 if( nLinear <= 0 )
@@ -1408,7 +1408,7 @@ float64 ExactCallBluffD::RiskPrice(const ExpectedCallD &tableinfo, FoldStatsCdf 
     //   + distinguish between (information given to opponent)
     // ef() is pessimistic
     // NOTE: below that opponents = 1, so RANK is not necessary here.
-    FG.waitLength.setW( foldcumu_caching->nearest_winPCT_given_rank(1.0 - 1.0/Ne) ); //If you're past the flop, we need definitely consider only the true number of opponents
+    FG.waitLength.setW( foldcumu_caching->nearest_winPCT_given_rank(1.0 - 1.0/Ne).first ); //If you're past the flop, we need definitely consider only the true number of opponents
     FG.waitLength.amountSacrificeVoluntary = estSacrifice; //rarity() already implies the Ne
 	FG.waitLength.amountSacrificeForced = 0; //estSacrifice*rarity() already implies a forced avgBlinds
     FG.waitLength.bankroll = maxStack;
