@@ -78,6 +78,16 @@ jobs:
     - name: Must pass unit tests
       timeout-minutes: 5
       run: cd holdem && make test
+    - name: Upload playlogs
+      uses: actions/upload-artifact@v4
+      with:
+        name: regressiontest-${{ runner.name }}_${{ github.description }}.${{ github.sha }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_botlogs
+        path: holdem/playlogs.*_unittests.tar.xz
+        include-hidden-files: true
+        if-no-files-found: error
+        overwrite: true
+        compression-level: 0
+        retention-days: 21
     - name: We need llvm-profdata
       run: sudo apt-get update && sudo apt-get install -y llvm
       # echo /Library/Developer/CommandLineTools/usr/bin/llvm-{profdata,cov}
@@ -100,7 +110,7 @@ jobs:
         retention-days: 5
 
   self_test_fail_fast:
-    name: 'Wait for both build & test to complete and then check if one of them failed'
+    name: 'Wait for both build & test to complete. If either has failed, abort everything else.'
     runs-on: 'ubuntu-24.04'
     needs: [automated_build, automated_tests]
     if: failure()

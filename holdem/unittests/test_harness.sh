@@ -4,16 +4,15 @@
 # cd unittests && sh test_harness.sh ../bin/unittest_clang
 
 set -u
-
 set -e
-
-set -x
 
 # Clean up any old files, if they exist
 mkdir -p playlogs.old
 echo 'CLEANUP start'
 ls -1 playlogs.expected/ | xargs -I @ sh -c "test '!' -f '@' || mv -v '@' 'playlogs.old/@'"
 # ^^^ there's no `set -o pipefail` (it's not portable anyway) so this succeeds even if there is nothing to move
+
+set -x
 
 # Set up the playlogs comparison folder for actual output
 mkdir -p playlogs.actual
@@ -22,6 +21,15 @@ find playlogs.actual/ -iname '*.txt' -exec rm -v '{}' '+'
 # Run the command given!
 # e.g. if you invoked `sh test_harness.sh echo hello world` the line below will print "hello world" to the console
 "$@"
+
+# If running as part of Github Actions, also make a downloadable archive of the results
+if test "${GITHUB_ACTIONS+y}" '=' 'y'; then
+  # INVARIANT: If you get here, $GITHUB_ACTIONS is defined. (Since we're using `set -u` above, we need to perform this check before trying to read the value of $GITHUB_ACTIONS)
+  if test "$GITHUB_ACTIONS" '=' 'true'; then
+    # INVARIANT: If you get here, $GITHUB_ACTIONS is defined AND set to "true". (This is the value you'll have inside any Github Actions runner that is executing a Github Actions job)
+    tar -cv *.txt | xz -vv -z -9 -e > "../playlogs.$(basename $1)-${RUNNER_NAME}-$(hostname)_${GITHUB_SHA}.${GITHUB_HEAD_REF}_unittests.tar.xz"
+  fi
+fi
 
 # Grab the "actual" playlogs file corresponding to each "expected" playlogs file
 cd playlogs.expected/
