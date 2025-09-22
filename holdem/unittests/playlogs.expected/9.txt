@@ -25,7 +25,7 @@ Community outcomes (stdev = 0.14636 pcts , avgdev = 0.129032 pcts ), kurtosis = 
 0.943276 pct: 812 / 19600 (4.14286%)
 1 pct: most helpful community
 CallStrength W(2r)=0.899788 L=0.0955602 o.w_s=(0.948571,0.00244898)
-(MinRaise to $4.5) 	W(2x)=0.584864 L=0.394172 2o.w_s=(0.615642,0.0109363)
+(MinRaise to $4.5) 	W(2×)=0.584864 L=0.394172 2×o.w_s=(0.615642,0.0109363)
  -  statranking algb RAW - 
 8 dealt, 7 opp. (round), 2 opp. assumed str., 2 opp. still in
 Choice Optimal 2.25
@@ -39,18 +39,19 @@ AgainstRaise(2.25)=0.998224 from -$2.25 @ 0.565906
  AgainstCall(4.5)=1.0012 from +$1.86736 @ 0.459677
 AgainstRaise(4.5)=0.996881 from -$4.5 @ 0.496946
         Push(4.5)=1.00023 from +$3.76267 @ 0.0433774
-OppRAISEChanceR [*] 0.291366 @ $4.5 ($2.25 now)	fold -- 0.043552	W(2x)=0.584864 L=0.394172 2o.w_s=(0.615642,0.0109363)
-OppRAISEChanceR [*] 0.291187 @ $6.75 ($2.25 now)	fold -- 0.121606	W(13.8679x)=0.34671 L=0.62639 2o.w_s=(0.537505,0.0204622)
-OppRAISEChanceR [F] 0.565906 @ $11.25 ($2.25 now)	fold -- 0.38009	W(16.3444x)=0.322409 L=0.64664 2o.w_s=(0.526688,0.0247009)
-OppRAISEChanceR [F] 0.398316 @ $20.25 ($2.91456 now)	fold -- 0.545249	W(20.8999x)=0.284129 L=0.6778 2o.w_s=(0.508078,0.0329694)
-OppRAISEChanceR [F] 0.24974 @ $38.25 ($3.69833 now)	fold -- 0.651018	W(27.1633x)=0.271822 L=0.680456 2o.w_s=(0.500147,0.0421297)
-OppRAISEChanceR [F] 0.141715 @ $74.25 ($4.78431 now)	fold -- 0.727941	W(36.4573x)=0.262341 L=0.686644 2o.w_s=(0.494699,0.0459641)
-OppRAISEChanceR [F] 0.0748289 @ $146.25 ($5.71246 now)	fold -- 0.787896	W(49.9179x)=0.25453 L=0.695282 2o.w_s=(0.490829,0.0462149)
-OppRAISEChanceR [F] 0.0372745 @ $290.25 ($6.91524 now)	fold -- 0.835407	W(69.5617x)=0.245738 L=0.70799 2o.w_s=(0.487007,0.0438758)
-OppRAISEChanceR [F] 0.0172469 @ $578.25 ($8.57921 now)	fold -- 0.881222	W(96.9589x)=0.237122 L=0.723958 2o.w_s=(0.483973,0.0382101)
-OppRAISEChanceR [F] 0 @ $717 ($8.83531 now)	fold -- 0.88914	W(107.863x)=0.233129 L=0.729247 2o.w_s=(0.48207,0.0374461)
+"all fold" precision will be 0.000565611
+OppRAISEChanceR [*] 0.291366 @ $4.5 ($2.25 now)	fold -- 0.043552	W(2×)=0.584864 L=0.394172 2×o.w_s=(0.615642,0.0109363)
+OppRAISEChanceR [*] 0.291187 @ $6.75 ($2.25 now)	fold -- 0.121606	W(13.8679×)=0.34671 L=0.62639 2×o.w_s=(0.537505,0.0204622)
+OppRAISEChanceR [F] 0.565906 @ $11.25 ($2.25 now)	fold -- 0.38009	W(16.3444×)=0.322409 L=0.64664 2×o.w_s=(0.526688,0.0247009)
+OppRAISEChanceR [F] 0.398316 @ $20.25 ($2.91456 now)	fold -- 0.545249	W(20.8999×)=0.284129 L=0.6778 2×o.w_s=(0.508078,0.0329694)
+OppRAISEChanceR [F] 0.24974 @ $38.25 ($3.69833 now)	fold -- 0.651018	W(27.1633×)=0.271822 L=0.680456 2×o.w_s=(0.500147,0.0421297)
+OppRAISEChanceR [F] 0.141715 @ $74.25 ($4.78431 now)	fold -- 0.727941	W(36.4573×)=0.262341 L=0.686644 2×o.w_s=(0.494699,0.0459641)
+OppRAISEChanceR [F] 0.0748289 @ $146.25 ($5.71246 now)	fold -- 0.787896	W(49.9179×)=0.25453 L=0.695282 2×o.w_s=(0.490829,0.0462149)
+OppRAISEChanceR [F] 0.0372745 @ $290.25 ($6.91524 now)	fold -- 0.835407	W(69.5617×)=0.245738 L=0.70799 2×o.w_s=(0.487007,0.0438758)
+OppRAISEChanceR [F] 0.0172469 @ $578.25 ($8.57921 now)	fold -- 0.881222	W(96.9589×)=0.237122 L=0.723958 2×o.w_s=(0.483973,0.0382101)
+OppRAISEChanceR [F] 0 @ $717 ($8.83531 now)	fold -- 0.88914	W(107.863×)=0.233129 L=0.729247 2×o.w_s=(0.48207,0.0374461)
 
-(Fixed at $2.25)	W(2x)=0.584864 L=0.394172 2o.w_s=(0.615642,0.0109363)
+(Fixed at $2.25)	W(2×)=0.584864 L=0.394172 2×o.w_s=(0.615642,0.0109363)
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -68,7 +69,7 @@ Community outcomes (stdev = 0.14636 pcts , avgdev = 0.129032 pcts ), kurtosis = 
 0.943276 pct: 812 / 19600 (4.14286%)
 1 pct: most helpful community
 CallStrength W(2m)=0.584864 L=0.394172 o.w_s=(0.584864,0.0209636)
-(MinRaise to $7.75) 	W(2x)=0.584864 L=0.394172 1o.w_s=(0.584864,0.0209636)
+(MinRaise to $7.75) 	W(2×)=0.584864 L=0.394172 1×o.w_s=(0.584864,0.0209636)
  -  statranking algb RAW - 
 8 dealt, 7 opp. (round), 2 opp. assumed str., 1 opp. still in
 Choice Optimal 5
@@ -82,17 +83,18 @@ AgainstRaise(5)=0.998502 from -$5 @ 0.214847
  AgainstCall(7.75)=1.00205 from +$2.81739 @ 0.52149
 AgainstRaise(7.75)=0.996322 from -$5.511 @ 0.47851
         Push(7.75)=1 from $0 @ 0
-OppRAISEChanceR [*] 0 @ $7.75 ($2.75 now)	fold -- 0	W(2x)=0.584864 L=0.394172 1o.w_s=(0.584864,0.0209636)
-OppRAISEChanceR [*] 0 @ $12.75 ($2.75 now)	fold -- 0.0463801	W(2x)=0.584864 L=0.394172 1o.w_s=(0.584864,0.0209636)
-OppRAISEChanceR [*] 0 @ $20.5 ($3.09571 now)	fold -- 0.114253	W(2x)=0.584864 L=0.394172 1o.w_s=(0.584864,0.0209636)
-OppRAISEChanceR [*] 0 @ $36 ($3.96513 now)	fold -- 0.454186	W(5.88889x)=0.463859 L=0.483647 1o.w_s=(0.463859,0.0524939)
-OppRAISEChanceR [F] 0.214847 @ $67 ($5.09297 now)	fold -- 0.617647	W(7.88889x)=0.412257 L=0.51902 1o.w_s=(0.412257,0.0687231)
-OppRAISEChanceR [F] 0.121396 @ $129 ($6.24818 now)	fold -- 0.746606	W(10.5556x)=0.353328 L=0.56365 1o.w_s=(0.353328,0.0830226)
-OppRAISEChanceR [F] 0.0642443 @ $253 ($7.78246 now)	fold -- 0.799208	W(14.3333x)=0.341953 L=0.630403 1o.w_s=(0.341953,0.0276437)
-OppRAISEChanceR [F] 0.0317016 @ $501 ($9.2433 now)	fold -- 0.891403	W(19.6667x)=0.292063 L=0.671489 1o.w_s=(0.292063,0.0364472)
-OppRAISEChanceR [F] 0 @ $717 ($10.1989 now)	fold -- 0.914593	W(23.2222x)=0.279135 L=0.679495 1o.w_s=(0.279135,0.0413695)
+"all fold" precision will be 0.00113122
+OppRAISEChanceR [*] 0 @ $7.75 ($2.75 now)	fold -- 0.0	W(2×)=0.584864 L=0.394172 1×o.w_s=(0.584864,0.0209636)
+OppRAISEChanceR [*] 0 @ $12.75 ($2.75 now)	fold -- 0.0463801	W(2×)=0.584864 L=0.394172 1×o.w_s=(0.584864,0.0209636)
+OppRAISEChanceR [*] 0 @ $20.5 ($3.09571 now)	fold -- 0.114253	W(2×)=0.584864 L=0.394172 1×o.w_s=(0.584864,0.0209636)
+OppRAISEChanceR [*] 0 @ $36 ($3.96513 now)	fold -- 0.45362	W(5.88889×)=0.463859 L=0.483647 1×o.w_s=(0.463859,0.0524939)
+OppRAISEChanceR [F] 0.214847 @ $67 ($5.09297 now)	fold -- 0.617647	W(7.88889×)=0.412257 L=0.51902 1×o.w_s=(0.412257,0.0687231)
+OppRAISEChanceR [F] 0.121396 @ $129 ($6.24818 now)	fold -- 0.746606	W(10.5556×)=0.353328 L=0.56365 1×o.w_s=(0.353328,0.0830226)
+OppRAISEChanceR [F] 0.0642443 @ $253 ($7.78246 now)	fold -- 0.799774	W(14.3333×)=0.341953 L=0.630403 1×o.w_s=(0.341953,0.0276437)
+OppRAISEChanceR [F] 0.0317016 @ $501 ($9.2433 now)	fold -- 0.891403	W(19.6667×)=0.292063 L=0.671489 1×o.w_s=(0.292063,0.0364472)
+OppRAISEChanceR [F] 0 @ $717 ($10.1989 now)	fold -- 0.914027	W(23.2222×)=0.279135 L=0.679495 1×o.w_s=(0.279135,0.0413695)
 
-(Fixed at $5)	W(2x)=0.584864 L=0.394172 1o.w_s=(0.584864,0.0209636)
+(Fixed at $5)	W(2×)=0.584864 L=0.394172 1×o.w_s=(0.584864,0.0209636)
 Guaranteed > $2.25 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -121,7 +123,7 @@ Community outcomes (stdev = 0.160198 pcts , avgdev = 0.146417 pcts ), kurtosis =
 0.984495 pct: 12 / 47 (25.5319%)
 0.993237 pct: most helpful community
 CallStrength W(1m)=0.733938 L=0.248009 o.w_s=(0.733938,0.0180529)
-(MinRaise to $25) 	W(1x)=0.733938 L=0.248009 1o.w_s=(0.733938,0.0180529)
+(MinRaise to $25) 	W(1×)=0.733938 L=0.248009 1×o.w_s=(0.733938,0.0180529)
  -  statranking algb RAW - 
 8 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Choice Optimal 12.5
@@ -135,15 +137,16 @@ AgainstRaise(12.5)=0.998696 from -$12.5 @ 0.0742785
  AgainstCall(25)=1.0162 from +$21.2495 @ 0.54265
 AgainstRaise(25)=0.990506 from -$14.78 @ 0.45735
         Push(25)=1 from $0 @ 0
-OppRAISEChanceM [*] 0 @ $25 ($12.5 now)	fold -- 0	W(1x)=0.733938 L=0.248009 1o.w_s=(0.733938,0.0180529)
-OppRAISEChanceM [*] 0 @ $37.5 ($12.5 now)	fold -- 0.0673077	W(1x)=0.733938 L=0.248009 1o.w_s=(0.733938,0.0180529)
-OppRAISEChanceM [*] 0 @ $62.5 ($14.3863 now)	fold -- 0.272624	W(5x)=0.486346 L=0.504758 1o.w_s=(0.486346,0.00889562)
-OppRAISEChanceM [*] 0 @ $112.5 ($19.7278 now)	fold -- 0.425905	W(6.16667x)=0.473495 L=0.515534 1o.w_s=(0.473495,0.0109713)
-OppRAISEChanceM [*] 0 @ $212.5 ($26.4414 now)	fold -- 0.688914	W(8x)=0.459863 L=0.526345 1o.w_s=(0.459863,0.0137919)
-OppRAISEChanceM [F] 0.0742785 @ $412.5 ($34.7524 now)	fold -- 0.783937	W(10.6667x)=0.44256 L=0.53905 1o.w_s=(0.44256,0.0183893)
-OppRAISEChanceM [F] 0 @ $712 ($43.1763 now)	fold -- 0.854072	W(13.5x)=0.431801 L=0.555016 1o.w_s=(0.431801,0.0131822)
+"all fold" precision will be 0.00113122
+OppRAISEChanceM [*] 0 @ $25 ($12.5 now)	fold -- 0.0	W(1×)=0.733938 L=0.248009 1×o.w_s=(0.733938,0.0180529)
+OppRAISEChanceM [*] 0 @ $37.5 ($12.5 now)	fold -- 0.0678733	W(1×)=0.733938 L=0.248009 1×o.w_s=(0.733938,0.0180529)
+OppRAISEChanceM [*] 0 @ $62.5 ($14.3863 now)	fold -- 0.272624	W(5×)=0.486346 L=0.504758 1×o.w_s=(0.486346,0.00889562)
+OppRAISEChanceM [*] 0 @ $112.5 ($19.7278 now)	fold -- 0.426471	W(6.16667×)=0.473495 L=0.515534 1×o.w_s=(0.473495,0.0109713)
+OppRAISEChanceM [*] 0 @ $212.5 ($26.4414 now)	fold -- 0.688914	W(8×)=0.459863 L=0.526345 1×o.w_s=(0.459863,0.0137919)
+OppRAISEChanceM [F] 0.0742785 @ $412.5 ($34.7524 now)	fold -- 0.783937	W(10.6667×)=0.44256 L=0.53905 1×o.w_s=(0.44256,0.0183893)
+OppRAISEChanceM [F] 0 @ $712 ($43.1763 now)	fold -- 0.854072	W(13.5×)=0.431801 L=0.555016 1×o.w_s=(0.431801,0.0131822)
 
-(Fixed at $12.5)	W(1x)=0.733938 L=0.248009 1o.w_s=(0.733938,0.0180529)
+(Fixed at $12.5)	W(1×)=0.733938 L=0.248009 1×o.w_s=(0.733938,0.0180529)
 Guaranteed > $12.25 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -172,7 +175,7 @@ Community outcomes (stdev = 0.207281 pcts , avgdev = 0.18486 pcts ), kurtosis = 
 0.970478 pct: 11 / 46 (23.913%)
 0.971717 pct: most helpful community
 CallStrength W(1m)=0.620026 L=0.315349 o.w_s=(0.620026,0.0646245)
-(MinRaise to $98) 	W(1x)=0.620026 L=0.315349 1o.w_s=(0.620026,0.0646245)
+(MinRaise to $98) 	W(1×)=0.620026 L=0.315349 1×o.w_s=(0.620026,0.0646245)
  -  statranking algb RAW - 
 8 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Choice Optimal 49
@@ -186,12 +189,13 @@ AgainstRaise(49)=0.98053 from -$49 @ 0.277941
  AgainstCall(98)=1.02659 from +$54.158 @ 0.343397
 AgainstRaise(98)=0.90801 from -$98 @ 0.656603
         Push(98)=1 from $0 @ 0
-OppRAISEChanceM [*] 0 @ $98 ($49 now)	fold -- 0	W(1x)=0.620026 L=0.315349 1o.w_s=(0.620026,0.0646245)
-OppRAISEChanceM [*] 0 @ $147 ($49 now)	fold -- 0.131222	W(1x)=0.620026 L=0.315349 1o.w_s=(0.620026,0.0646245)
-OppRAISEChanceM [F] 0.277941 @ $245 ($76.5159 now)	fold -- 0.257353	W(5x)=0.243083 L=0.756917 1o.w_s=(0.243083,1.11022e-16)
-OppRAISEChanceM [F] 0.11961 @ $441 ($116.242 now)	fold -- 0.602376	W(6.33333x)=0.223057 L=0.776943 1o.w_s=(0.223057,0)
-OppRAISEChanceM [F] 0 @ $699.5 ($155.708 now)	fold -- 0.703054	W(7.66667x)=0.206397 L=0.793603 1o.w_s=(0.206397,1.11022e-16)
+"all fold" precision will be 0.00113122
+OppRAISEChanceM [*] 0 @ $98 ($49 now)	fold -- 0.0	W(1×)=0.620026 L=0.315349 1×o.w_s=(0.620026,0.0646245)
+OppRAISEChanceM [*] 0 @ $147 ($49 now)	fold -- 0.131222	W(1×)=0.620026 L=0.315349 1×o.w_s=(0.620026,0.0646245)
+OppRAISEChanceM [F] 0.277941 @ $245 ($76.5159 now)	fold -- 0.256787	W(5×)=0.243083 L=0.756917 1×o.w_s=(0.243083,0)
+OppRAISEChanceM [F] 0.11961 @ $441 ($116.242 now)	fold -- 0.60181	W(6.33333×)=0.223057 L=0.776943 1×o.w_s=(0.223057,0)
+OppRAISEChanceM [F] 0 @ $699.5 ($155.708 now)	fold -- 0.70362	W(7.66667×)=0.206397 L=0.793603 1×o.w_s=(0.206397,0)
 
-(Fixed at $49)	W(1x)=0.620026 L=0.315349 1o.w_s=(0.620026,0.0646245)
+(Fixed at $49)	W(1×)=0.620026 L=0.315349 1×o.w_s=(0.620026,0.0646245)
 Guaranteed > $37.25 is in the pot for sure
 OppFoldChance% ...    0   ∇=0

@@ -25,7 +25,7 @@ Community outcomes (stdev = 0.178195 pcts , avgdev = 0.158877 pcts ), kurtosis =
 0.940948 pct: 590 / 19600 (3.0102%)
 0.999955 pct: most helpful community
 CallStrength W(1m)=0.569062 L=0.406369 o.w_s=(0.569062,0.0245692)
-(MinRaise to $100) 	W(1x)=0.569062 L=0.406369 1o.w_s=(0.569062,0.0245692)
+(MinRaise to $100) 	W(1×)=0.569062 L=0.406369 1×o.w_s=(0.569062,0.0245692)
  -  stat_low geom SLIDERX - 
 9 dealt, 8 opp. (round), 1 opp. assumed str., 1 opp. still in
 Choice Optimal 55
@@ -39,12 +39,13 @@ AgainstRaise(55)=1 from $0 @ 0
  AgainstCall(100)=1.0044 from +$13.3464 @ 0.538229
 AgainstRaise(100)=0.971187 from -$100 @ 0.461771
         Push(100)=1 from $0 @ 0
-OppRAISEChanceR [*] 0 @ $100 ($45 now)	fold -- 0	W(1x)=0.569062 L=0.406369 1o.w_s=(0.569062,0.0245692)
-OppRAISEChanceR [*] 0 @ $155 ($45 now)	fold -- 0.053733	W(1x)=0.569062 L=0.406369 1o.w_s=(0.569062,0.0245692)
-OppRAISEChanceR [*] 0 @ $255 ($46.9084 now)	fold -- 0.155543	W(5.33333x)=0.356636 L=0.634716 1o.w_s=(0.356636,0.00864828)
-OppRAISEChanceR [*] 0 @ $455 ($60.5831 now)	fold -- 0.446267	W(6.83333x)=0.336669 L=0.653749 1o.w_s=(0.336669,0.00958146)
-OppRAISEChanceR [*] 0 @ $810 ($75.1599 now)	fold -- 0.552602	W(6.5x)=0.340739 L=0.649797 1o.w_s=(0.340739,0.00946363)
+"all fold" precision will be 0.00113122
+OppRAISEChanceR [*] 0 @ $100 ($45 now)	fold -- 0.0	W(1×)=0.569062 L=0.406369 1×o.w_s=(0.569062,0.0245692)
+OppRAISEChanceR [*] 0 @ $155 ($45 now)	fold -- 0.0542986	W(1×)=0.569062 L=0.406369 1×o.w_s=(0.569062,0.0245692)
+OppRAISEChanceR [*] 0 @ $255 ($46.9084 now)	fold -- 0.156109	W(5.33333×)=0.356636 L=0.634716 1×o.w_s=(0.356636,0.00864828)
+OppRAISEChanceR [*] 0 @ $455 ($60.5831 now)	fold -- 0.445701	W(6.83333×)=0.336669 L=0.653749 1×o.w_s=(0.336669,0.00958146)
+OppRAISEChanceR [*] 0 @ $810 ($75.1599 now)	fold -- 0.553167	W(6.5×)=0.340739 L=0.649797 1×o.w_s=(0.340739,0.00946363)
 
-(Fixed at $55)	W(1x)=0.569062 L=0.406369 1o.w_s=(0.569062,0.0245692)
+(Fixed at $55)	W(1×)=0.569062 L=0.406369 1×o.w_s=(0.569062,0.0245692)
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0

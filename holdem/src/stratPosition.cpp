@@ -494,17 +494,29 @@ void PositionalStrategy::printStateModel(std::ofstream &logF, float64 displaybet
 
 }
 
-static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * const csrp) {
+static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * const csrp, const float64 n_1v1_outcomes) {
     if (csrp != 0) {
-        logF << "\tW(" << csrp->getHandsToBeat(betSize) << "x)=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "o.w_s=(" << csrp->ViewShape(betSize).wins << "," << csrp->ViewShape(betSize).splits << ")";
+        const StatResult & showdown1v1 = csrp->ViewShape(betSize);
+        // const float64 stable_splits = std::round(showdown1v1.splits * n_1v1_outcomes * 2) / n_1v1_outcomes;
+        // const float64 stable_splits = (showdown1v1.splits < std::sqrt(std::numeric_limits<float64>::epsilon())) ? 0.0 : showdown1v1.splits;
+        const float64 stable_splits = (showdown1v1.splits < (0.25 / n_1v1_outcomes)) ? 0.0 : showdown1v1.splits;
+        // At` betSize` we predict we would need a hand good enough to beat this many players
+        //                ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+        logF << "\tW(" << csrp->getHandsToBeat(betSize) << "×)=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "×o.w_s=(" << showdown1v1.wins << "," << stable_splits << ")";
+        //                                                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        //                                                                                             This is the _actual_ number of people you would be in the showdown with
     }
 }
 
 // pWin() generally relies on FindZero as part of its calculation, so show the precision we know it has...
-static constexpr float64 PWIN_DISPLAY_PRECISION = PROBABILITY_SPACE_QUANTUM / 4.0; // ...with an extra 4.0 extra precision just as buffer
+static constexpr float64 PWIN_DISPLAY_PRECISION = PROBABILITY_SPACE_QUANTUM / 2.0; // ...with an extra factor of 2.0 to avoid any exact corner cases
 
 // TODO(from joseph): Do we need `betToCall` and `maxShowdown`? What about `tablestate.table.GetBetToCall()` and `tablestate.table.GetMaxShowdown()` directly?
-static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD & opp_callraise, const FoldOrCall &rF, const int32 firstFoldToRaise, const ExpectedCallD & tablestate, const float64 betToCall, const float64 maxShowdown, const std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *> printAllFold, std::ofstream &logF) {
+static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD & opp_callraise, const FoldOrCall &rF, const int32 firstFoldToRaise, const ExpectedCallD & tablestate, const float64 n_1v1_outcomes, const float64 betToCall, const float64 maxShowdown, const std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *> printAllFold, std::ofstream &logF) {
+  const float64 foldPrecision = PWIN_DISPLAY_PRECISION / tablestate.handsToShowdownAgainst();
+  if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
+    logF << "\"all fold\" precision will be " << foldPrecision << std::endl;
+  }
   int32 raiseStep;
   float64 rAmount;
   for(raiseStep = 0, rAmount = 0.0; rAmount < maxShowdown; ++raiseStep )
@@ -524,11 +536,26 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD &
     // Here, raiseStep is just the iterator. ExactCallD::RaiseAmount(bet_this_amount,raiseStep) is the amount, opp_callraise.pRaise(bet_this_amount,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
     logF << opp_callraise.pRaise(bet_this_amount,raiseStep,firstFoldToRaise) << " @ $" << rAmount << " ($" << rF.predictedRaiseToThisRound(betToCall, bet_this_amount, rAmount) << " now)";
 
+    // ↑ ABOVE is the probability of the opponents raising me
+    // ↓ BELOW is the probability of the opponents folding if I raise
+
+    // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
     if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
-      // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
-      logF << "\tfold -- " // << "left"
-      << std::round(printAllFold.first->pWin(rAmount) / PWIN_DISPLAY_PRECISION) * PWIN_DISPLAY_PRECISION; //<< "  " << rr.pWin(orAmount) << " right";
-      printPessimisticWinPct(logF, rAmount, printAllFold.second);
+      logF << "\tfold -- "; // << "left"
+      const float64 allFoldPr = printAllFold.first->pWin(rAmount);
+      if (allFoldPr < foldPrecision) {
+        logF << "0.0";
+      } else {
+        const float64 anyNonFoldPr = 1.0 - allFoldPr;
+        if (anyNonFoldPr < foldPrecision) {
+          logF << "1.0";
+        } else {
+          const float64 allFoldPr_rounded = 1.0 - std::round(anyNonFoldPr / foldPrecision) * foldPrecision;
+          logF << allFoldPr_rounded; //<< "  " << rr.pWin(orAmount) << " right";
+        }
+      }
+
+      printPessimisticWinPct(logF, rAmount, printAllFold.second, n_1v1_outcomes);
     }
     logF << endl;
   }
@@ -538,6 +565,8 @@ template< typename T >
 void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp) const
 {
 #ifdef LOGPOSITION
+
+    const float64 n_possible_1v1_outcomes = this->detailPCT.n * this->statprob.core.handcumu.cumulation.size();
 
     int32 raiseStep = 0;
 
@@ -560,12 +589,12 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
             logF << std::endl << "Why didn't I call?" << std::endl;
         }
 
-        print_raise_chances_if_i(betToCall, opp_callraise, rlF, firstFoldToRaise, tablestate, betToCall, maxShowdown, std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *>(&opp_fold, csrp), logF);
+        print_raise_chances_if_i(betToCall, opp_callraise, rlF, firstFoldToRaise, tablestate, n_possible_1v1_outcomes, betToCall, maxShowdown, std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *>(&opp_fold, csrp), logF);
     }
 
     logF << endl;
     logF << "(Fixed at $" << separatorBet << ")";
-    printPessimisticWinPct(logF, separatorBet, csrp);
+    printPessimisticWinPct(logF, separatorBet, csrp, n_possible_1v1_outcomes);
     logF << endl;
 
     const float64 minNextRaiseTo = (separatorBet*2-betToCall);
@@ -590,7 +619,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
 
         logF << "\t--" << endl;
         logF << "What am I expecting now, given my actual bet?" << endl;
-        print_raise_chances_if_i(separatorBet, opp_callraise, rrF, firstFoldToRaise, tablestate, betToCall, maxShowdown, std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *>(nullptr, nullptr), logF);
+        print_raise_chances_if_i(separatorBet, opp_callraise, rrF, firstFoldToRaise, tablestate, n_possible_1v1_outcomes, betToCall, maxShowdown, std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *>(nullptr, nullptr), logF);
     }
 #endif // LOGPOSITION
 }
@@ -1384,7 +1413,7 @@ float64 PureGainStrategy::MakeBet()
     // leftCS.ViewShape() is your "implied" win rate against a single opponent (i.e. the generalized hand strength of your current situation)
     const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
     logFile << "(MinRaise to $" << minRaiseTo << ") ";
-    printPessimisticWinPct(logFile, minRaiseTo, &csrp);
+    printPessimisticWinPct(logFile, minRaiseTo, &csrp, detailPCT.n * statprob.core.handcumu.cumulation.size());
     logFile << endl;
 
 	if( bGamble == 0 )
