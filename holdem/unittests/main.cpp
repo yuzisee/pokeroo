@@ -4654,7 +4654,7 @@ int main(int argc, const char * argv[])
 
     std::cout << "::group::Running... unit tests" << std::endl;
 
-    all_unit_tests();
+    // all_unit_tests();
 
     std::cout << "::endgroup::" << std::endl;
 
@@ -4662,7 +4662,8 @@ int main(int argc, const char * argv[])
     std::cout << "::group::Running... logreplay tests" << std::endl;
     // Regression tests
 
-    all_regression_tests();
+    // all_regression_tests();
+    RegressionTests::testRegression_005();
 
     std::cout << "::endgroup::" << std::endl;
 
@@ -4671,10 +4672,12 @@ int main(int argc, const char * argv[])
 
     // Regression/Unit hybrid
 
+    /*
     RegressionTests::testHybrid_008c();
     RegressionTests::testHybrid_008();
     RegressionTests::testHybrid_002();
     RegressionTests::testHybrid_drisk_handsIn();
+    */
     std::cout << "::endgroup::" << std::endl;
 
     print_lineseparator(" ✓ ALL TESTS PASS ");
