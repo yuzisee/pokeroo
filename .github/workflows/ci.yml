@@ -109,7 +109,6 @@ jobs:
       # ^^^ needed for `andymckay/cancel-action`
     steps:
     - name: "Abort other jobs (mostly `self_test_db*`) early, if either build or tests has failed"
-      if: failure()
       uses: andymckay/cancel-action@0.5
 
   self_test_db1:
