@@ -763,13 +763,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                                 const ValueAndSlope noraisePess = {
                                   1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
                                   ,
-                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).second * dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.pess, opponents,totaldexf, (&fCore.foldcumu))
+                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.pess, opponents,totaldexf, (&fCore.foldcumu))
                                 };
 
                                 const ValueAndSlope noraiseMean = {
                                   1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
                                   ,
-                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).second * dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.mean, opponents,totaldexf, (&fCore.callcumu))
+                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.mean, opponents,totaldexf, (&fCore.callcumu))
                                 };
 
                           //nextNoRaise_A[i_step].v = w_r_facedodds.rank;
@@ -903,7 +903,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
               nextexf = ed()->Pr_haveWinPCT_strictlyBetterThan(w - EPS_WIN_PCT);
 
 
-              nextdexf = nextexf + oppBetMake * (- ed()->Pr_haveWorsePCT_continuous(w - EPS_WIN_PCT).second)
+              nextdexf = nextexf + oppBetMake * (- ed()->Pr_haveWorsePCT_continuous(w - EPS_WIN_PCT).first.D_v)
                                   * dfacedOdds_call_dbetSize_Geom(oppCPS,betSize,totaldexf,w, opponents, ed());
 
               nextexf *= oppBetMake;
@@ -1125,9 +1125,9 @@ void ExactCallBluffD::query(const float64 betSize)
                     //float64 oppCommitted = stagnantPot() - table->ViewPlayer(pIndex)->GetContribution();
                     //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
                     //ea-> is if they know your hand
-                    std::pair<float64,float64> eaFold = fFoldCumu.Pr_haveWorsePCT_continuous(w_pess); // (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
+                    std::pair<ValueAndSlope, char> eaFold = fFoldCumu.Pr_haveWorsePCT_continuous(w_pess); // (1 - ef()->Pr_haveWinPCT_orbetter_continuous( w_mean ));// *(1 - oppCommitted);
                     //e-> is if they don't know your hand
-                    std::pair<float64,float64> meanFold = fCallCumu.Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
+                    std::pair<ValueAndSlope, char> meanFold = fCallCumu.Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
                     //w is if they don't know your hand
                     const float64 rankFold = w_rank;
                     //handRarity is based on if they know your hand
@@ -1136,7 +1136,7 @@ void ExactCallBluffD::query(const float64 betSize)
 					#ifdef DEBUG_TRACE_PWIN
 						if( traceOut != 0 )
 						{
-						    *traceOut << "\t\tWillFold (eaFold,meanFold,rankFold,eaRkFold) = (" << eaFold.first << "," << meanFold.first << "," << rankFold << "," << eaRkFold << ")" << endl;
+						    *traceOut << "\t\tWillFold (eaFold[" << eaFold.second << "],meanFold[" << meanFold.second << "],rankFold,eaRkFold) = (" << eaFold.first.v << "," << meanFold.first.v << "," << rankFold << "," << eaRkFold << ")" << endl;
 						    *traceOut << "\t\t\tusing w_rank = " << w_rank << endl;
 						}
 
@@ -1146,14 +1146,14 @@ void ExactCallBluffD::query(const float64 betSize)
 
 
                     const float64 rankFoldPartial = dw_dbetSize_rank;
-                    meanFold.second *= dw_dbetSize_mean;
-                    eaFold.second *= dw_dbetSize_pess;
+                    meanFold.first.D_v *= dw_dbetSize_mean;
+                    eaFold.first.D_v *= dw_dbetSize_pess;
                     const float64 eaRkFoldPartial = 0;
 
                     ///topTwoOfThree is on a player-by-player basis
                     // [!NOTE]
                     // This next line DOES write to `nextFold`
-                    nextFoldPartial = bottomThreeOfFour(eaFold.first,meanFold.first,rankFold,eaRkFold,eaFold.second,meanFold.second,rankFoldPartial,eaRkFoldPartial,nextFold);
+                    nextFoldPartial = bottomThreeOfFour(eaFold.first.v,meanFold.first.v,rankFold,eaRkFold,eaFold.first.D_v,meanFold.first.D_v,rankFoldPartial,eaRkFoldPartial,nextFold);
                     ///topTwoOfThree is on a player-by-player basis
                     //nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
                     //nextFoldPartial=(eaFoldPartial+meanFoldPartial+rankFoldPartial+eaRkFoldPartial)/4;
@@ -1199,18 +1199,28 @@ void ExactCallBluffD::query(const float64 betSize)
 
                     //float64 oppCommitted = table->ViewPlayer(pIndex)->GetContribution();
                     //oppCommitted = oppCommitted / (oppCommitted + oppBankRoll);
-                    std::pair<float64, float64> eaFold = fFoldCumu.Pr_haveWorsePCT_continuous(w_mean); //(1 - ef()->Pr_haveWorsePCT_continuous( w_mean ));//*(1 - oppCommitted);
-                    std::pair<float64, float64> meanFold = fCallCumu.Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
+                    std::pair<ValueAndSlope, char> eaFold = fFoldCumu.Pr_haveWorsePCT_continuous(w_mean); //(1 - ef()->Pr_haveWorsePCT_continuous( w_mean ));//*(1 - oppCommitted);
+                    std::pair<ValueAndSlope, char> meanFold = fCallCumu.Pr_haveWorsePCT_continuous(w_mean); //1 - ed()->Pr_haveWinPCT_orbetter( w_mean );
                     const float64 rankFold = w_rank;
                     const float64 eaRkFold = 1-tableinfo->handRarity;
 
-                    ///topTwoOfThree is on a player-by-player basis
-                    bottomThreeOfFour(eaFold.first,meanFold.first,rankFold,eaRkFold,0,0,0,0,nextFold);
-//                    nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
+                    #ifdef DEBUG_TRACE_PWIN
+                      if( traceOut != 0 )
+                      {
+                        *traceOut << "\t\tWillFold-AllIn (eaFold[" << eaFold.second << "],meanFold[" << meanFold.second << "],rankFold,eaRkFold) = (" << eaFold.first.v << "," << meanFold.first.v << "," << rankFold << "," << eaRkFold << ")" << endl;
+                        *traceOut << "\t\t\tusing w_rank = " << w_rank << endl;
+                      }
+                    #endif
 
+                    ///topTwoOfThree is on a player-by-player basis
+                    bottomThreeOfFour(eaFold.first.v,meanFold.first.v,rankFold,eaRkFold,0,0,0,0,nextFold);
+//                    nextFold = (eaFold+meanFold+rankFold+eaRkFold)/4;
 
                     //nextFold = (meanFold+rankFold+eaFold)/3;
                     //nextFold = sqrt((eaFold*eaFold+rankFold*rankFold)/2);
+                    #ifdef DEBUG_TRACE_PWIN
+                      if( traceOut != 0 ) *traceOut << "\t\tbottomThreeOfFour goes with = (" << nextFold << ")" << endl;
+                    #endif
 
                     if( nextFold > 1 ) nextFold = 1;
 

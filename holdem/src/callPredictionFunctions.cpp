@@ -283,7 +283,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::rarity( 
     if( meanConv == 0 ){cacheRarity = 1-w;}
     // In MEAN mode, if you have a strong hand (e.g. w = 0.65) you may get something this strong every 10 hands or so,
     // e.g. ...
-    else{cacheRarity= 1.0 - meanConv->Pr_haveWorsePCT_continuous(w).first;}
+    else{cacheRarity= 1.0 - meanConv->Pr_haveWorsePCT_continuous(w).first.v;}
 
     if( cacheRarity < 1.0/RAREST_HAND_CHANCE ){ cacheRarity = 1.0/RAREST_HAND_CHANCE; }
     return cacheRarity;
