@@ -49,7 +49,7 @@ float64 fd_yr;
         y = yr; dy = fd_yr;
 
 #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable) std::cout << "\t\t\tbNoRange" << std::flush;
+        if(traceEnable != nullptr) std::cout << "\t\t\tbNoRange" << std::flush;
 #endif
 
     }else
@@ -71,7 +71,7 @@ float64 fd_yr;
             y = yr; dy = fd_yr;
 
 #ifdef DEBUG_TRACE_SEARCH
-            if(bTraceEnable) std::cout << "\t\t\tbMax" << std::flush;
+            if(traceEnable != nullptr) std::cout << "\t\t\tbMax" << std::flush;
 #endif
         }
         else if( slider <= 0 )
@@ -82,7 +82,7 @@ float64 fd_yr;
             y = yl; dy = fd_yl;
 
 #ifdef DEBUG_TRACE_SEARCH
-            if(bTraceEnable) std::cout << "\t\t\tbMin" << std::flush;
+            if(traceEnable != nullptr) std::cout << "\t\t\tbMin" << std::flush;
 #endif
         }
         else
@@ -117,8 +117,8 @@ float64 fd_yr;
                     dy = fd_yl*(1-slider) - yl*autoSlope   +   fd_yr*slider + yr*autoSlope;
 
 #ifdef DEBUG_TRACE_SEARCH
-                    if(bTraceEnable) std::cout << "\t\t\t y(" << x << ") = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
-                    if(bTraceEnable) std::cout << "\t\t\t dy = " << fd_yl << " * " << (1-slider) << " - " <<  yl << " * " << autoSlope << " + " <<  fd_yr << " * " << slider << " + " <<  yr << " * " << autoSlope << std::endl;
+                    if(traceEnable != nullptr) std::cout << "\t\t\t y(" << x << ") = " << yl << " * " << (1-slider) << " + " <<  yr << " * " << slider << std::endl;
+                    if(traceEnable != nullptr) std::cout << "\t\t\t dy = " << fd_yl << " * " << (1-slider) << " - " <<  yl << " * " << autoSlope << " + " <<  fd_yr << " * " << slider << " + " <<  yr << " * " << autoSlope << std::endl;
 #endif // DEBUG_TRACE_SEARCH
 #ifdef TRANSFORMED_AUTOSCALES
                 }
@@ -546,7 +546,7 @@ void StateModel::query( const float64 betSize )
 #endif // DEBUGASSERT
 
 #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable)
+        if(traceEnable != nullptr)
         {
             std::cout << "\t\t(oppRaiseChance[" << i << "] , cur, highest) = " << oppRaisedChance_A[i].v  << " , "  << newRaisedChance << " , " << lastuptoRaisedChance << std::endl;
         }
@@ -644,7 +644,7 @@ void StateModel::query( const float64 betSize )
      struct AggregatedState gainCombined = table_spec.stateCombiner.combinedContributionOf(outcomePush, outcomeCalled, blendedRaises);
 
 #ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable)
+    if(traceEnable != nullptr)
     {
       // https://github.com/yuzisee/pokeroo/commit/ecec2a0e4f8d119a01f310fef9ce4e4652c3ce58
         std::cout << "\t\t (gainWithFold*gainNormal*gainRaised) = " << gainCombined.contribution.v << std::endl;

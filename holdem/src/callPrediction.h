@@ -22,11 +22,12 @@
 #define HOLDEM_CallPredict
 
 
-
+// #define DEBUG_TRACE_PWIN
+// #define DEBUG_TRACE_DEXF
+// ^^^ Enable if you need to trace through a specific search (usually you'll set `.traceOut = &logF` or whatever output sink, near where the issue occurs)
+// ^^^ Disable (e.g. You can explicitly `#undef DEBUG_TRACE_PWIN`) if you don't want `.github/workflows/ci.yml` to test with it
 
 //#define DEBUG_CALLPRED_FUNCTION
-#undef DEBUG_TRACE_PWIN
-#undef DEBUG_TRACE_DEXF
 
 #include "math_support.h"
 #include "inferentials.h"
@@ -119,9 +120,9 @@ class ExactCallD : public IExf
     CommunityStatsCdf * ed() const {
         return &(fCore.callcumu);
     }
-#ifdef DEBUG_TRACE_EXACTCALL
-		std::ostream * traceOut;
-#endif
+    #ifdef DEBUG_TRACE_DEXF
+                   std::ostream * traceOut;
+    #endif
 
         ExactCallD(ExpectedCallD * const tbase //, CallCumulationD* data
                    ,
@@ -135,9 +136,10 @@ class ExactCallD : public IExf
         ,
         //ed(data)
         fCore(core)
-#ifdef DEBUG_TRACE_EXACTCALL
-					,traceOut(0)
-#endif
+        #ifdef DEBUG_TRACE_DEXF
+                                               ,traceOut(0)
+        #endif
+
             {
                 queryinput = UNINITIALIZED_QUERY;
                 querycallSteps = OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE;
@@ -194,20 +196,23 @@ class ExactCallBluffD
         float64 allFoldChanceD;
 
         float64 queryinputbluff;
-
         void query(const float64 betSize);
 
     public:
+#ifdef DEBUG_TRACE_EXACTCALL
+		std::ostream * traceOut;
+#endif
+
         float64 insuranceDeterrent;
 
-        ExactCallBluffD( ExpectedCallD * const tbase, struct CoreProbabilities &core
-
-                        //, CallCumulationD* data, CallCumulationD* foldData*
-                        )
+        ExactCallBluffD( ExpectedCallD * const tbase, struct CoreProbabilities &core )
     :
     tableinfo(tbase)
     ,
     fFoldCumu(core.foldcumu), fCallCumu(core.callcumu)
+    #ifdef DEBUG_TRACE_EXACTCALL
+					,traceOut(0)
+    #endif
     ,
     insuranceDeterrent(0)
                             {

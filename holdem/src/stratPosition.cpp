@@ -508,6 +508,9 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
 #ifdef LOGPOSITION
 
 
+#ifdef DEBUG_TRACE_PWIN
+    opp_fold.traceOut = &logF;
+#endif
 
 
     int32 raiseStep = 0;
@@ -561,6 +564,10 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
     logF << "(Fixed at $" << separatorBet << ")";
     printPessimisticWinPct(logF, separatorBet, csrp);
     logF << endl;
+
+#ifdef DEBUG_TRACE_PWIN
+    opp_fold.traceOut = nullptr;
+#endif
 
     const float64 minNextRaiseTo = (separatorBet*2-betToCall);
     if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
