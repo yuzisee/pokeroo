@@ -176,7 +176,7 @@ OppFoldChance% ...    0   ∇=0
 *
 Jd Ac Bet to call 0 (from 0) at 30 pot, 
 CallStrength W(2r)=0.942272 L=0.0518355 o.w_s=(0.970707,0.0030303)
-(MinRaise to $10) 	W(2×)=0.941414 L=0.0525253 2×o.w_s=(0.695956,0)
+(MinRaise to $10) 	W(2×)=0.941414 L=0.0525253 2×o.w_s=(0.695956,0.00223661)
  -  statrelation geom RAW - 
 9 dealt, 2 opp. (round), 2 opp. assumed str., 2 opp. still in
 Choice Optimal 10
@@ -195,17 +195,17 @@ AgainstRaise(0)=1.00518 from +$16.1702 @ 0.480416
 
 Why didn't I call?
 "all fold" precision will be 0.00226244
-OppRAISEChanceR [*] 0.480416 @ $10 ($10 now)	fold -- 0.0	W(2×)=0.941414 L=0.0525253 2×o.w_s=(0.695956,0)
-OppRAISEChanceR [*] 0.47958 @ $20 ($20 now)	fold -- 0.187783	W(8.88889×)=0.739618 L=0.233446 2×o.w_s=(0.652809,0)
-OppRAISEChanceR [*] 0.477909 @ $40 ($40 now)	fold -- 0.477376	W(14.2222×)=0.583389 L=0.373513 2×o.w_s=(0.61245,0)
-OppRAISEChanceR [*] 0.474573 @ $80 ($80 now)	fold -- 0.626697	W(17.5556×)=0.485746 L=0.461055 2×o.w_s=(0.582602,0)
-OppRAISEChanceR [F] 0.101246 @ $160 ($160 now)	fold -- 0.723982	W(22.4444×)=0.342536 L=0.58945 2×o.w_s=(0.528575,0)
+OppRAISEChanceR [*] 0.480416 @ $10 ($10 now)	fold -- 0.0	W(2×)=0.941414 L=0.0525253 2×o.w_s=(0.695956,0.00223661)
+OppRAISEChanceR [*] 0.47958 @ $20 ($20 now)	fold -- 0.187783	W(8.88889×)=0.739618 L=0.233446 2×o.w_s=(0.652809,0.011781)
+OppRAISEChanceR [*] 0.477909 @ $40 ($40 now)	fold -- 0.477376	W(14.2222×)=0.583389 L=0.373513 2×o.w_s=(0.61245,0.0222192)
+OppRAISEChanceR [*] 0.474573 @ $80 ($80 now)	fold -- 0.626697	W(17.5556×)=0.485746 L=0.461055 2×o.w_s=(0.582602,0.0310744)
+OppRAISEChanceR [F] 0.101246 @ $160 ($160 now)	fold -- 0.723982	W(22.4444×)=0.342536 L=0.58945 2×o.w_s=(0.528575,0.050102)
 OppRAISEChanceR [F] 0.0640703 @ $320 ($320 now)	fold -- 0.789593	W(29.7778×)=0.127722 L=0.782043 2×o.w_s=(0.393645,0.120586)
 OppRAISEChanceR [F] 0.0346024 @ $640 ($640 now)	fold -- 0.841629	W(40.4444×)=0 L=1 2×o.w_s=(0,0)
 OppRAISEChanceR [F] 0.0115416 @ $1280 ($1280 now)	fold -- 0.871041	W(55.7778×)=0 L=1 2×o.w_s=(0,0)
 OppRAISEChanceR [F] 0 @ $1495 ($1495 now)	fold -- 0.859729	W(43.1111×)=0 L=1 2×o.w_s=(0,0)
 
-(Fixed at $10)	W(2×)=0.941414 L=0.0525253 2×o.w_s=(0.695956,0)
+(Fixed at $10)	W(2×)=0.941414 L=0.0525253 2×o.w_s=(0.695956,0.00223661)
 	--
 What am I expecting now, given my actual bet?
 OppRAISEChanceR [*] 0.478528 @ $20 ($10 now)

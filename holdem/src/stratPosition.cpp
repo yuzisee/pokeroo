@@ -496,10 +496,11 @@ void PositionalStrategy::printStateModel(std::ofstream &logF, float64 displaybet
 
 static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * const csrp, const float64 n_1v1_outcomes) {
     if (csrp != 0) {
+        const float64 safety_rounding = (n_1v1_outcomes < RAREST_HAND_CHANCE) ? RAREST_HAND_CHANCE : n_1v1_outcomes;
         const StatResult & showdown1v1 = csrp->ViewShape(betSize);
         // const float64 stable_splits = std::round(showdown1v1.splits * n_1v1_outcomes * 2) / n_1v1_outcomes;
         // const float64 stable_splits = (showdown1v1.splits < std::sqrt(std::numeric_limits<float64>::epsilon())) ? 0.0 : showdown1v1.splits;
-        const float64 stable_splits = (showdown1v1.splits < (0.25 / n_1v1_outcomes)) ? 0.0 : showdown1v1.splits;
+        const float64 stable_splits = (showdown1v1.splits < (0.25 / safety_rounding)) ? 0.0 : showdown1v1.splits;
         // At` betSize` we predict we would need a hand good enough to beat this many players
         //                ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         logF << "\tW(" << csrp->getHandsToBeat(betSize) << "×)=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "×o.w_s=(" << showdown1v1.wins << "," << stable_splits << ")";
@@ -607,7 +608,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
 
     logF << endl;
     logF << "(Fixed at $" << separatorBet << ")";
-    printPessimisticWinPct(logF, separatorBet, csrp, n_possible_1v1_outcomes);
+    printPessimisticWinPct(logF, separatorBet, csrp,  n_possible_1v1_outcomes);
     logF << endl;
 
     const float64 minNextRaiseTo = (separatorBet*2-betToCall);

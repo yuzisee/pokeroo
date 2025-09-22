@@ -226,7 +226,7 @@ OppFoldChance% ...    0   ∇=0
 *
 Qs As Bet to call 10 (from 0) at 21 pot, 
 CallStrength W(1m)=0.848485 L=0.145455 o.w_s=(0.848485,0.00606061)
-(MinRaise to $20) 	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0)
+(MinRaise to $20) 	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
  -  statranking algb RAW - 
 9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Choice Optimal 21
@@ -245,17 +245,17 @@ AgainstRaise(10)=1 from $0 @ 0
 
 Why didn't I call?
 "all fold" precision will be 0.00452489
-OppRAISEChanceM [*] 0 @ $20 ($10 now)	fold -- 0.0	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0)
-OppRAISEChanceM [*] 0 @ $30 ($20 now)	fold -- 0.126697	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0)
-OppRAISEChanceM [F] 0 @ $50 ($40 now)	fold -- 0.434389	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0)
-OppRAISEChanceM [F] 0 @ $90 ($80 now)	fold -- 0.61991	W(6×)=0.0909091 L=0.872727 1×o.w_s=(0.0909091,0)
+OppRAISEChanceM [*] 0 @ $20 ($10 now)	fold -- 0.0	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [*] 0 @ $30 ($20 now)	fold -- 0.126697	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [F] 0 @ $50 ($40 now)	fold -- 0.434389	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [F] 0 @ $90 ($80 now)	fold -- 0.61991	W(6×)=0.0909091 L=0.872727 1×o.w_s=(0.0909091,0.0363636)
 OppRAISEChanceM [F] 0 @ $170 ($160 now)	fold -- 0.751131	W(7.83333×)=0 L=1 1×o.w_s=(0,0)
 OppRAISEChanceM [F] 0 @ $330 ($320 now)	fold -- 0.828054	W(10.3333×)=0 L=1 1×o.w_s=(0,0)
 OppRAISEChanceM [F] 0 @ $650 ($640 now)	fold -- 0.868778	W(14×)=0 L=1 1×o.w_s=(0,0)
 OppRAISEChanceM [F] 0 @ $1290 ($1280 now)	fold -- 0.891403	W(19.1667×)=0 L=1 1×o.w_s=(0,0)
 OppRAISEChanceM [F] 0 @ $1502 ($1492 now)	fold -- 0.895928	W(20.5×)=0 L=1 1×o.w_s=(0,0)
 
-(Fixed at $21)	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0)
+(Fixed at $21)	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
 	--
 What am I expecting now, given my actual bet?
 OppRAISEChanceM [*] 0.509186 @ $31 ($10 now)
@@ -272,7 +272,7 @@ OppFoldChance% ...    0   ∇=0
 *
 Qs As Bet to call 32 (from 21) at 64 pot, 
 CallStrength W(1m)=0.848485 L=0.145455 o.w_s=(0.848485,0.00606061)
-(MinRaise to $43) 	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0)
+(MinRaise to $43) 	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
  -  statranking algb RAW - 
 9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Choice Optimal 32
@@ -287,15 +287,15 @@ AgainstRaise(32)=1 from $0 @ 0
 AgainstRaise(43)=0.998272 from -$5.48482 @ 0.473086
         Push(43)=1 from $0 @ 0
 "all fold" precision will be 0.00452489
-OppRAISEChanceM [*] 0 @ $43 ($11 now)	fold -- 0.0	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0)
-OppRAISEChanceM [*] 0 @ $75 ($43 now)	fold -- 0.0633484	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0)
-OppRAISEChanceM [F] 0 @ $118 ($86 now)	fold -- 0.357466	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0)
-OppRAISEChanceM [F] 0 @ $204 ($172 now)	fold -- 0.574661	W(5.83333×)=0.116162 L=0.848485 1×o.w_s=(0.116162,0)
+OppRAISEChanceM [*] 0 @ $43 ($11 now)	fold -- 0.0	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [*] 0 @ $75 ($43 now)	fold -- 0.0633484	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [F] 0 @ $118 ($86 now)	fold -- 0.357466	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
+OppRAISEChanceM [F] 0 @ $204 ($172 now)	fold -- 0.574661	W(5.83333×)=0.116162 L=0.848485 1×o.w_s=(0.116162,0.0353535)
 OppRAISEChanceM [F] 0 @ $376 ($344 now)	fold -- 0.728507	W(7.33333×)=0 L=1 1×o.w_s=(0,0)
 OppRAISEChanceM [F] 0 @ $720 ($688 now)	fold -- 0.823529	W(9.83333×)=0 L=1 1×o.w_s=(0,0)
 OppRAISEChanceM [F] 0 @ $1408 ($1376 now)	fold -- 0.873303	W(13.3333×)=0 L=1 1×o.w_s=(0,0)
 OppRAISEChanceM [F] 0 @ $1502 ($1470 now)	fold -- 0.877828	W(13.6667×)=0 L=1 1×o.w_s=(0,0)
 
-(Fixed at $32)	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0)
+(Fixed at $32)	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
 Guaranteed > $11 is in the pot for sure
 OppFoldChance% ...    0   ∇=0

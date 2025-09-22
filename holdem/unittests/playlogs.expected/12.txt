@@ -176,7 +176,7 @@ OppFoldChance% ...    0   ∇=0
 *
 Ts Ah Bet to call 10 (from 0) at 35 pot, 
 CallStrength W(1m)=0.79596 L=0.19798 o.w_s=(0.79596,0.00606061)
-(MinRaise to $20) 	W(1×)=0.79596 L=0.19798 1×o.w_s=(0.79596,0)
+(MinRaise to $20) 	W(1×)=0.79596 L=0.19798 1×o.w_s=(0.79596,0.00606061)
  -  stat_high algb SLIDERX - 
 9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Choice Optimal 10
@@ -191,8 +191,8 @@ AgainstRaise(10)=1 from $0 @ 0
 AgainstRaise(20)=0.999011 from -$3.04737 @ 0.483493
         Push(20)=1 from $0 @ 0
 "all fold" precision will be 0.00452489
-OppRAISEChanceM [*] 0 @ $20 ($10 now)	fold -- 0.0	W(1×)=0.79596 L=0.19798 1×o.w_s=(0.79596,0)
-OppRAISEChanceM [*] 0 @ $30 ($20 now)	fold -- 0.20362	W(1×)=0.79596 L=0.19798 1×o.w_s=(0.79596,0)
+OppRAISEChanceM [*] 0 @ $20 ($10 now)	fold -- 0.0	W(1×)=0.79596 L=0.19798 1×o.w_s=(0.79596,0.00606061)
+OppRAISEChanceM [*] 0 @ $30 ($20 now)	fold -- 0.20362	W(1×)=0.79596 L=0.19798 1×o.w_s=(0.79596,0.00606061)
 OppRAISEChanceM [*] 0 @ $50 ($40 now)	fold -- 0.452489	W(5.66667×)=0 L=1 1×o.w_s=(0,0)
 OppRAISEChanceM [*] 0 @ $90 ($80 now)	fold -- 0.61991	W(6.66667×)=0 L=1 1×o.w_s=(0,0)
 OppRAISEChanceM [F] 0 @ $170 ($160 now)	fold -- 0.710407	W(8.33333×)=0 L=1 1×o.w_s=(0,0)
@@ -201,6 +201,6 @@ OppRAISEChanceM [F] 0 @ $650 ($640 now)	fold -- 0.81448	W(14.8333×)=0 L=1 1×o.
 OppRAISEChanceM [F] 0 @ $1290 ($1280 now)	fold -- 0.841629	W(20.3333×)=0 L=1 1×o.w_s=(0,0)
 OppRAISEChanceM [F] 0 @ $1490 ($1480 now)	fold -- 0.828054	W(15.6667×)=0 L=1 1×o.w_s=(0,0)
 
-(Fixed at $10)	W(1×)=0.79596 L=0.19798 1×o.w_s=(0.79596,0)
+(Fixed at $10)	W(1×)=0.79596 L=0.19798 1×o.w_s=(0.79596,0.00606061)
 Guaranteed > $25 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
