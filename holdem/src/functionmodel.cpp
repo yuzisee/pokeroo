@@ -734,7 +734,7 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
     if( betSize > estat->callBet()+adjQuantum && betSize < estat->minRaiseTo()-adjQuantum )
     {
 #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable) std::cout << "\t\t\tWithin minraise, reevaluate... @ " << estat->callBet() << " and " << estat->minRaiseTo() << " instead of " << betSize << std::endl;
+        if(traceEnable != nullptr) std::cout << "\t\t\tWithin minraise, reevaluate... @ " << estat->callBet() << " and " << estat->minRaiseTo() << " instead of " << betSize << std::endl;
 #endif
 
 
@@ -761,7 +761,7 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
     if( exf < minexf - fracQuantum )
     {
 #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable) std::cout << "\t\t\tvery low exf for now: " << exf << " < " << minexf << std::endl;
+        if(traceEnable != nullptr) std::cout << "\t\t\tvery low exf for now: " << exf << " < " << minexf << std::endl;
 #endif
 
         dexf = 0.0;
@@ -782,13 +782,13 @@ float64 GainModelGeom::gd(const float64 betSize, const float64 y)
 
 
 #ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable && betSize < estat->callBet()) std::cout << "\t\t\tbetSize would be a fold!" << betSize << std::endl;
+    if((traceEnable != nullptr) && betSize < estat->callBet()) std::cout << "\t\t\tbetSize would be a fold!" << betSize << std::endl;
 #endif
 
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable) std::cout << "\t\t\t\tGainModelGeom::gd → hdx(…,dexf = " << dexf << std::endl;
+        if(traceEnable != nullptr) std::cout << "\t\t\t\tGainModelGeom::gd → hdx(…,dexf = " << dexf << std::endl;
     #endif
     return hdx(x, betSize, exf, dexf, f_pot, dx, fOutcome, y) * estat->betFraction(1.0);
 
@@ -886,7 +886,7 @@ float64 GainModelGeom::fd(const float64 betSize, const float64 y)
     const float64 betVal = gd(betSize, y);
 
 #ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable) std::cout << "\t\tfd figures " << betVal << std::endl;
+    if(traceEnable != nullptr) std::cout << "\t\tfd figures " << betVal << std::endl;
 #endif
 
     return betVal;
@@ -932,7 +932,7 @@ float64 GainModelNoRisk::g(float64 betSize)
     if( betSize < estat->callBet() && betSize < estat->maxBet() ) return 0.0; ///"Negative raise" means betting less than the minimum call = FOLD
 
     #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable)
+        if(traceEnable != nullptr)
         {
           const StatResult & inShape = fOutcome.ViewShape(betSize);
             std::cout << "\t\t\t(t_w,t_s,t_l) " << inShape.wins << "," << inShape.splits << "," << inShape.loss << std::endl;
@@ -1059,7 +1059,7 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
     if( betSize > estat->callBet()+adjQuantum && betSize < estat->minRaiseTo() - adjQuantum )
     {
 #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable) std::cout << "\t\t\tWithin minraise, reevaluate... @ " << estat->callBet() << " and " << estat->minRaiseTo() << " instead of " << betSize << std::endl;
+        if(traceEnable != nullptr) std::cout << "\t\t\tWithin minraise, reevaluate... @ " << estat->callBet() << " and " << estat->minRaiseTo() << " instead of " << betSize << std::endl;
 #endif
 
         const float64 splitDist = gd(estat->callBet(),y)*(estat->minRaiseTo()-betSize)+gd(estat->minRaiseTo(),y)*(estat->callBet()-betSize);
@@ -1083,13 +1083,13 @@ float64 GainModelNoRisk::gd(float64 betSize, const float64 y)
 
 
 #ifdef DEBUG_TRACE_SEARCH
-    if(bTraceEnable && betSize < estat->callBet()) std::cout << "\t\t\tbetSize would be a fold!" << betSize << std::endl;
+    if((traceEnable != nullptr) && betSize < estat->callBet()) std::cout << "\t\t\tbetSize would be a fold!" << betSize << std::endl;
 #endif
     if( betSize < estat->callBet() ) return 1; ///"Negative raise" means betting less than the minimum call = FOLD
 
     //     dh/dx * dx/dbetSize
     #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable) std::cout << "\t\t\t\tGainModelNoRisk::gd → hdx(…,dexf = " << dexf << std::endl;
+        if(traceEnable != nullptr) std::cout << "\t\t\t\tGainModelNoRisk::gd → hdx(…,dexf = " << dexf << std::endl;
     #endif
     return hdx(x, betSize, exf, dexf, fOutcome, y) * estat->betFraction(1.0);
 

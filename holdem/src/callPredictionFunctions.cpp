@@ -486,18 +486,18 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBest
     // i.e if we aren't cutting the search space in half anymore with each iteration, move on to FindMax below
 
 #ifdef DEBUG_TRACE_SEARCH
-    if (bTraceEnable) {
+    if(traceEnable != nullptr) {
       std::cerr << "ScalarFunctionModel::FindMax(" << (1/rarity()) <<  "," << ceil(maxTurns[0] + 1) << ") is next" << std::endl;
     }
 #endif
     bSearching = true;
     const float64 bestN = FindMax(1/rarity(), ceil(maxTurns[0] + 1) );
     #ifdef DEBUG_TRACE_SEARCH
-        if (bTraceEnable) { std::cerr << "bestN = " << bestN << std::endl; }
+        if(traceEnable != nullptr) { std::cerr << "bestN = " << bestN << std::endl; }
     #endif
     bSearching = false;
 #ifdef DEBUG_TRACE_SEARCH
-    if (bTraceEnable) {
+    if(traceEnable != nullptr) {
       std::cerr << "FoldWaitLengthModel::FindBestLength ALL CLEAR" << std::endl;
     }
 #endif
@@ -721,20 +721,20 @@ template<typename T> void FacedOddsAlgb<T>::query( const float64 w )
     const float64 U = (pot + betSize)*fw;
 
     #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable)
+        if(traceEnable != nullptr)
         {
-             std::cout << "\t\t\t faceOddsAlgb.FG.waitLength.SEARCH!" << std::endl;
+             *traceEnable << "\t\t\t faceOddsAlgb.FG.waitLength.SEARCH!" << std::endl;
              //FG.waitLength.bTraceEnable = true;
-             FG.bTraceEnable = true;
+             FG.traceEnable = this->traceEnable;
         }
     #endif
 
     lastF = U - betSize - FG.f(betSize);
 
     #ifdef DEBUG_TRACE_SEARCH
-        if(bTraceEnable)
+        if(traceEnable != nullptr)
         {
-             std::cout << "\t\t\t faceOddsAlgb(U,betSize,FG.f,FG.n) = (" << U << " , " << betSize << " , " << FG.f(betSize) << " , " << FG.n << ")" << std::endl;
+             *traceEnable << "\t\t\t faceOddsAlgb(U,betSize,FG.f,FG.n) = (" << U << " , " << betSize << " , " << FG.f(betSize) << " , " << FG.n << ")" << std::endl;
         }
     #endif
 

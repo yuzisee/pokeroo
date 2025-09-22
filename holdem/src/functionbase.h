@@ -75,12 +75,12 @@ class ScalarFunctionModel : public IFunctionDifferentiable
     float64 getQuantum() const override final { return quantum; }
 
     #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
-    bool bTraceEnable;
+    std::ostream * traceEnable;
     #endif
 
     ScalarFunctionModel(float64 step) : quantum(step)
     #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
-    ,bTraceEnable(false)
+    ,traceEnable(nullptr)
     #endif
     {};
 	virtual float64 FindMax(float64,float64) ;

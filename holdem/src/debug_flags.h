@@ -72,7 +72,7 @@
 #define SEATS_AT_TABLE 10
 
 /* functionbase.h Debugging */
-#undef DEBUG_TRACE_ZERO
+// #define DEBUG_TRACE_ZERO
 // #define DEBUG_TRACE_SEARCH
 // ^^^ Enable if you need to trace through a specific search (usually you'll set `bTraceEnable = true` near where the issue occurs)
-// ^^^ Disable (i.e. You can explicitly `#undef DEBUG_TRACE_SEARCH`) if you don't want `.github/workflows/ci.yml` to test with it
+// ^^^ Disable (e.g. You can explicitly `#undef DEBUG_TRACE_SEARCH`) if you don't want `.github/workflows/ci.yml` to test with it
