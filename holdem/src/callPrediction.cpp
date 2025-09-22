@@ -411,7 +411,10 @@ template<typename T> float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionS
     //a.FG.dw_dbet = 0; //We don't need this...
 
     #if defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_SEARCH)
-		a.bTraceEnable = traceOut != 0 && foldwait_length_distr == 0;
+      if (foldwait_length_distr == nullptr) { a.traceEnable = traceOut; }
+    #endif
+    #if defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_ZERO)
+      if (foldwait_length_distr != nullptr) { a.traceEnable = traceOut; }
     #endif
 
     return a.FindZero(0,1, false);
@@ -1133,7 +1136,7 @@ void ExactCallBluffD::query(const float64 betSize)
 					#ifdef DEBUG_TRACE_PWIN
 						if( traceOut != 0 )
 						{
-						    *traceOut << "\t\tWillFold (eaFold,meanFold,rankFold,eaRkFold) = (" << eaFold << "," << meanFold << "," << rankFold << "," << eaRkFold << ")" << endl;
+						    *traceOut << "\t\tWillFold (eaFold,meanFold,rankFold,eaRkFold) = (" << eaFold.first << "," << meanFold.first << "," << rankFold << "," << eaRkFold << ")" << endl;
 						    *traceOut << "\t\t\tusing w_rank = " << w_rank << endl;
 						}
 
