@@ -334,7 +334,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::f( const
 			if(traceEnable != nullptr) {
 			  *traceEnable << "\t\t\t\t FoldWaitLengthModel(n=" << n << ", bSearching=" << cached_d_dbetSize.b_assume_w_is_constant << ") compares remainingbet=" << remainingbet << " vs. betSize=" << betSize << " ↦ " << lastF << " based on (winShowdown)" << winShowdown << " ⋅ " << PW << "(PW) vs. expected PW=";
 					const float64 reproduce_rawPct = getRawPCT(n);
-				*traceEnable << compute_dE_dbetSize(n, reproduce_rawPct, opponents);
+				*traceEnable << compute_dE_dbetSize(reproduce_rawPct, opponents);
 				if (meanConv == nullptr) {
 			     *traceEnable << " from " << reproduce_rawPct << "^" << opponents << std::endl;
 				} else {
