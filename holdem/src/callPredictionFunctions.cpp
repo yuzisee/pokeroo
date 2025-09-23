@@ -124,6 +124,9 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT
     }
 }
 
+// Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
+// @returns a value between −1.0 and +1.0
+// Your profit per betSize. If it's positive, you make money the more betSize gets. If negative you lose money the more betSize gets.
 static float64 compute_dE_dbetSize( const float64 rawPCT, const float64 opponents ) {
   #ifdef INLINE_INTEGER_POWERS
             float64 intOpponents = std::round(opponents);
@@ -141,12 +144,9 @@ static float64 compute_dE_dbetSize( const float64 rawPCT, const float64 opponent
             }//end if intOpponents == opponents , else
   #endif
 
-
-            // Your profit per betSize. If it's positive, you make money the more betSize gets. If negative you lose money the more betSize gets.
             return (2*cached_d_dbetSize) - 1;
 }
 
-// Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
 // Return value is between -1.0 and +1.0
 // Will memoize while searching
 template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dbetSize( const float64 n )
@@ -338,7 +338,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::f( const
 			if(traceEnable != nullptr) {
 			  *traceEnable << "\t\t\t\t FoldWaitLengthModel(n=" << n << ", bSearching=" << cached_d_dbetSize.b_assume_w_is_constant << ") compares remainingbet=" << remainingbet << " vs. betSize=" << betSize << " ↦ " << lastF << " based on (winShowdown)" << winShowdown << " ⋅ " << PW << "(PW) vs. expected PW=";
 					const float64 reproduce_rawPct = getRawPCT(n);
-				*traceEnable << compute_dE_dbetSize(n, reproduce_rawPct, opponents);
+				*traceEnable << compute_dE_dbetSize(reproduce_rawPct, opponents);
 				if (meanConv == nullptr) {
 			     *traceEnable << " from " << reproduce_rawPct << "^" << opponents << std::endl;
 				} else {
