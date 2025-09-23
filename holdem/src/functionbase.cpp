@@ -501,7 +501,7 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
                     }
                     if( fabs(dyn) < DBL_EPSILON )
                     {
-                        return yn;
+                        return xn;
                     }
 
                     if( dyb*signDir > 0 && dyn*signDir < 0 )
