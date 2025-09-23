@@ -21,6 +21,22 @@
 #ifndef HOLDEM_BaseClasses
 #define HOLDEM_BaseClasses
 
+#define FASTPATH_NCHOOSEP_IMPL \
+  switch (p) { \
+	   case 0: { return 1; } \
+     case 1: { return n; } \
+     case 2: { return n * (n - 1) / 2; } \
+     case 3: \
+       if (n == 50) { return 19600; } \
+       break; \
+     case  5: \
+       if (n == 48) { return 1712304; } \
+       break; \
+	}
+	// case 4:
+  //   std::cerr << "No speedup for n=4 yet, regardless of p " << p << std::endl;
+  //   break;
+
 #include "debug_flags.h"
 #include "portability.h"
 
@@ -134,27 +150,20 @@ public:
 
 	static uint8 cleanz(const uint32);
 
+	  template<typename T> static int32 constexpr nchoosep_selftest(const int32 n, int32 p) {
+			FASTPATH_NCHOOSEP_IMPL
+
+	    std::cerr << "nchoosep( " << n << " , " << p << " )" << std::endl;
+        #if defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND)
+          throw std::runtime_error("I thought we only ever hit these nchoosep cases...");
+        #else
+          exit(1);
+        #endif
+	  }
 	  template<typename T> static int32 constexpr nchoosep(const int32 n, int32 p) {
-			switch (p) {
-	      case 0: { return 1; }
-        case 1: { return n; }
-        case 2: { return n * (n - 1) / 2; }
-        case  3:
-          if (n == 50) { return 19600; }
-          break;
-        // case 4:
-        //   std::cerr << "No speedup for n=4 yet, regardless of p " << p << std::endl;
-        //   break;
-        case  5:
-          if (n == 48) { return 1712304; }
-          break;
-			}
-      std::cerr << "nchoosep( " << n << " , " << p << " )" << std::endl;
-      #if defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND)
-        throw std::runtime_error("I thought we only ever hit these nchoosep cases...");
-      #else
-        exit(1);
-      #endif
+      FASTPATH_NCHOOSEP_IMPL
+
+      return nchoosep_slow<T>(n, p);
 		}
 
 		template<typename T>
@@ -162,13 +171,15 @@ public:
         {
 			if( (n-p) < p ) p = n-p;/* OPTIMIZATION INCLUDED LATER */
 
-            T r = 1;
+			      // int32 can fit only up to `12!` factorial if calculating pure factorials
+			      // https://stackoverflow.com/questions/36559371/efficiently-calculate-factorial-in-32-bit-machine
+            int64_t r = 1;
             for(int32 factorial=0;factorial < p;++factorial)
             {
                 r*=(n-factorial);
                 r/= factorial+1;
             }
-            return r;
+            return static_cast<T>(r);
         }
 }
 ;

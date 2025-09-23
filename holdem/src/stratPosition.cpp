@@ -547,7 +547,9 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD &
     if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
       logF << "\tfold -- "; // << "left"
       const float64 allFoldPr = printAllFold.first->pWin(rAmount);
+      #ifdef DEBUG_TRACE_PWIN
       logF << " ⎌⟂ ";
+      #endif
       if (allFoldPr < foldPrecision) {
         logF << "0.0";
       } else {

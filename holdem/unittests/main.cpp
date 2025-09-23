@@ -93,14 +93,14 @@ namespace UnitTests {
 
 
     void testUnit_nchoosep() {
-      assert(HoldemUtil::nchoosep<float64>(45, 0) == HoldemUtil::nchoosep_slow<float64>(45, 0));
-      assert(HoldemUtil::nchoosep<float64>(46, 1) == HoldemUtil::nchoosep_slow<float64>(46, 1));
-      assert(HoldemUtil::nchoosep<float64>(47, 1) == HoldemUtil::nchoosep_slow<float64>(47, 1));
-      assert(HoldemUtil::nchoosep<float64>(50, 3) == HoldemUtil::nchoosep_slow<float64>(50, 3));
+      assert(HoldemUtil::nchoosep_selftest<float64>(45, 0) == HoldemUtil::nchoosep_slow<float64>(45, 0));
+      assert(HoldemUtil::nchoosep_selftest<float64>(46, 1) == HoldemUtil::nchoosep_slow<float64>(46, 1));
+      assert(HoldemUtil::nchoosep_selftest<float64>(47, 1) == HoldemUtil::nchoosep_slow<float64>(47, 1));
+      assert(HoldemUtil::nchoosep_selftest<float64>(50, 3) == HoldemUtil::nchoosep_slow<float64>(50, 3));
 
-      assert(HoldemUtil::nchoosep<float64>(45, 2) == HoldemUtil::nchoosep_slow<float64>(45, 2));
-      assert(HoldemUtil::nchoosep<float64>(48, 5) == HoldemUtil::nchoosep_slow<float64>(48, 5));
-      assert(static_cast<int32>(HoldemUtil::nchoosep<float64>(48, 5)) == HoldemUtil::nchoosep_slow<int32>(48, 5));
+      assert(HoldemUtil::nchoosep_selftest<float64>(45, 2) == HoldemUtil::nchoosep_slow<float64>(45, 2));
+      assert(HoldemUtil::nchoosep_selftest<float64>(48, 5) == HoldemUtil::nchoosep_slow<float64>(48, 5));
+      assert(static_cast<int32>(HoldemUtil::nchoosep_selftest<float64>(48, 5)) == HoldemUtil::nchoosep_slow<int32>(48, 5));
     }
 
 
