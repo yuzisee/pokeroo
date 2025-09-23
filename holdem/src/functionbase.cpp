@@ -501,7 +501,7 @@ float64 ScalarFunctionModel::FindTurningPoint(float64 x1, float64 y1, float64 xb
                     }
                     if( fabs(dyn) < DBL_EPSILON )
                     {
-                        return yn;
+                        return xn;
                     }
 
                     if( dyb*signDir > 0 && dyn*signDir < 0 )
@@ -656,7 +656,7 @@ float64 ScalarFunctionModel::bisectionStep(float64 x1, float64 x2) const
 
 float64 ScalarFunctionModel::regularfalsiStep(float64 x1, float64 y1, float64 x2, float64 y2) const
 {//A single step from the method of False Positions
-    if (y2 == y1) {
+    if (std::fabs(y2 - y1) <= std::numeric_limits<float64>::epsilon()) {
         return bisectionStep(x1, x2);
     }
 
@@ -682,20 +682,20 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuant
     float64 y2 = f(x2);
 
     // See unittests/main.cpp#testRegression_028
-    if (y1 == 0) {
+    if (fabs(y1) <= std::numeric_limits<float64>::epsilon()) {
       return x1;
     }
-    if (y2 == 0) {
+    if (fabs(y2) <= std::numeric_limits<float64>::epsilon()) {
       return x2;
     }
 
-    if( y1 > 0 && y2 > 0 ) //x1*x2 > 0
+    if( y1 > 0 && y2 > 0 ) //y1*y2 > 0
     {
         if( y1 > y2 ) return x2;
         return x1;
     }
 
-    if( y1 < 0 && y2 < 0 ) //x1*x2 > 0
+    if( y1 < 0 && y2 < 0 ) //y1*y2 > 0
     {
         if( y1 > y2 ) return x1;
         return x2;
@@ -773,7 +773,7 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuant
             if(traceEnable != nullptr) *traceEnable << "\t\tSelected <xb,yb> = <" << xb << "," << yb << ">" << std::endl;
         #endif
 
-        if( fabs(yb) < DBL_EPSILON ) {
+        if( fabs(yb) <= DBL_EPSILON ) {
             break;
             // this returns xb.
         }
