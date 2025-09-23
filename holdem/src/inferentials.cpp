@@ -18,17 +18,21 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <limits>
 #include <stdlib.h>
 #include <math.h>
 #include <algorithm>
 #include "inferentials.h"
 
-//#include <iostream>
-
+#undef NEAREST_WINPCT_UNREALISTIC
 #define SMOOTHED_CALLCUMULATION_D
 #define ACCELERATE_SEARCH_MINIMUM 64
 //const float64 CallCumulation::tiefactor = DEFAULT_TIE_SCALE_FACTOR;
 
+
+#ifdef DEBUGASSERT
+  #include <iostream>
+#endif
 
 DistrShape DistrShape::newEmptyDistrShape() {
     StatResult dummy;
@@ -252,16 +256,31 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
     size_t high_index = maxsize - 1;
     size_t low_index = 0;
 
+    #ifdef DEBUGASSERT
+      if (maxsize == 0) {
+        std::cerr << "Uninitialized CallCumulation? FWIW you tried to query " << rank_toHave << " but it's not going to work";
+        exit(1);
+      }
+    #else
+      if (maxsize == 0) { return 0.5; }
+    #endif
+
     float64 high_rank, low_rank;
 
     low_rank = cumulation[0].repeated;
     high_rank = cumulation[high_index].repeated;
 
 //Early returns
+    #ifdef NEAREST_WINPCT_UNREALISTIC
     if( rank_toHave < 0 )
     {//Closer to rank 0 than the smallest positive rank
-        return 0;
+       if(cumulation[0].pct <= cumulation[high_index].pct) {
+         return 0.0;
+       } else {
+         return 1.0;
+       }
     }
+    #endif
     if( rank_toHave < low_rank )
     {
         return cumulation[0].pct; //.pct is toHave -- if you haven't ReversePerspective()/ReversedPerspective() yet then that's the pct of the first hand dealt. See the bottom of CallStats::Analyze()
@@ -270,10 +289,19 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
     {
         return cumulation[high_index].pct; //.pct is toHave.
     }
+    // It wasn't possible to trigger the codepath below anyway, since you would have returned already from the above `if` statement
+    /*
+    #ifdef NEAREST_WINPCT_UNREALISTIC
     if( rank_toHave > high_rank ) //Greater than 1??
     {
-        return 1;
+      if(cumulation[0].pct <= cumulation[high_index].pct) {
+        return 1.0;
+      } else {
+        return 0.0;
+      }
     }
+    #endif
+    */
 
     bool bFloor = true;
     size_t guess_index;
@@ -505,6 +533,7 @@ template<typename T1, typename T2> std::pair<ValueAndSlope, char> CallCumulation
         //No hands meet criteria
         return std::pair<ValueAndSlope, char>(ValueAndSlope{0.0, 0.0}, 'o'); // 'o', for out-of-bounds
     }
+
 //These boundaries form a region with start and end.
     // Okay we lie somewhere between firstBetterThan and firstBetterThan-1
     float64 prevKeypointPct;// = std::numeric_limits<float64>::quiet_NaN();
@@ -561,14 +590,17 @@ template<typename T1, typename T2> std::pair<ValueAndSlope, char> CallCumulation
     const float64 result = horizontalMidpointRepeated + slope * (winPCT_toHave - horizontalMidpointPCT);
 
 #ifdef DEBUGASSERT
-    if( !(0.0 <= result && result <= 1.0) )
+    if( !(-std::numeric_limits<float64>::epsilon() <= result && result <= 1.0 + std::numeric_limits<float64>::epsilon()) )
     {
-        std::cout << "INVALID result in Pr_haveWorsePCT_continuous! " << result;
+        std::cout.precision(std::numeric_limits<float64>::max_digits10 - 2);
+        //std::cout << std::setprecision(std::numeric_limits<float64>::max_digits10 - 2);
+        std::cout << "INVALID result in Pr_haveWorsePCT_continuous! " << result << std::endl;
+        std::cout << horizontalMidpointRepeated << " + " << slope << " * (" << winPCT_toHave << " − " << horizontalMidpointPCT << ")";
         exit(1);
     }
 #endif
 
-    return std::pair<ValueAndSlope, char>(ValueAndSlope{result
+    return std::pair<ValueAndSlope, char>(ValueAndSlope{(result < 0.0) ? 0.0 : ((result > 1.0) ? 1.0 : result)
                                                         ,
                                                         slope
                                                         }, 'r'); // 'r', for result
