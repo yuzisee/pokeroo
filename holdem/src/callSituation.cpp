@@ -20,6 +20,7 @@
 
 #include "callSituation.h"
 #include "inferentials.h"
+#include "math_support.h"
 
 
 ExpectedCallD::~ExpectedCallD()
@@ -243,14 +244,14 @@ const Player * ExpectedCallD::ViewPlayer() const {
     return table->ViewPlayer(playerID);
 }
 
-// DEPRECATED: Use OpponentHandOpportunity and CombinedStatResultsPessemistic instead.
+// DEPRECATED: Use OpponentHandOpportunity from CombinedStatResultsPessemistic instead.
 // TODO: Let's say riskLoss is a table metric. In that case, if you use mean it's callcumu always.
 // At the time of this writing...
 //  + src/stratFear.h:ScalarPWinFunction uses ExactCallBluffD but it's inconclusive.
 //  + src/stratPosition.h has `DeterredGainStrategy` and `ImproveGainStrategy` which both have varying levels of ExactCallBluffD
 //  + src/stratPosition.cpp also creates StateModel objects in all three of ImproveGainStrategy::MakeBet & DeterredGainStrategy::MakeBet & PureGainStrategy::MakeBet
 //                          so do they all eventually call into RiskLoss?
-template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * foldwait_length_distr, float64 * out_dPot) const
+ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * foldwait_length_distr) const
 {
     const float64 raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
@@ -258,7 +259,7 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
 
     const float64 avgBlind = table->GetBlindValues().OpportunityPerHand(N);
 
-    FoldGainModel<T, OppositionPerspective> FG(table->GetChipDenom()/2);
+    FoldGainModel<PlayerStrategyPerspective, OppositionPerspective> FG(table->GetChipDenom()/2);
     // [!TIP]
     // FoldGainModel needs _whose_ perspective?
     //  * When used by StateModel::query (via `FoldOrCall::foldGain` method) it uses callcumu to answer "should I fold?"
@@ -274,7 +275,7 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
     {
         FG.waitLength.setW( foldwait_length_distr->nearest_winPCT_given_rank(1.0 - 1.0/N) );
     }
-	FG.waitLength.amountSacrificeForced = avgBlind;
+    FG.waitLength.amountSacrificeForced = avgBlind;
 
     // This is a weird "generic player" who represents all the other players combined
     // It has, as a "bankroll" that splits the entire rest of the chip stack equally
@@ -291,33 +292,34 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
 
     //FG.dw_dbet = 0; //Again, we don't need this
 	float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced;
-		// ^^^ Given the hand strength, how much do you gain by folding against a bet of `raiseTo`?
-	float64 drisk;
+	// ^^^ Given the hand strength, how much do you gain by folding against a bet of `raiseTo`?
 
-	//If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
-	if( riskLoss < 0 )
-	{
-    // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
-    // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
-    //                                                                             ^^^ see `setAmountSacrificeVoluntary`
-    //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
-		drisk = FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / (handsIn()-1);
-		// TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
-	}else
-    {//If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
-		riskLoss = 0;
-		drisk = 0;
-	}
+	// INVARIANT: If `FG.f( raiseTo )` (i.e. "FoldGain") is positive, it means it is profitable to fold against `raiseTo`
+	return (
+	  ( riskLoss < 0 ) ? (
+      //If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
+	    ValueAndSlope {
+	      riskLoss,
+	  	  // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
+        // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
+        //                                                                             ^^^ see `setAmountSacrificeVoluntary`
+        //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
+        FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / (handsIn()-1)
+        // In this case, `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂pot
+        // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
+	    }
+	  ) : (
+      //If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
+	    ValueAndSlope { 0, 0 }
+	  )
+	)
+	;
 
-	if(out_dPot != 0)
-	{
-		*out_dPot = drisk;
-	}
-
-	return riskLoss;
+	// https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
+      // d_riskLoss/d_pot = d/dpot { -FG.f( raiseTo ) }                           - d/dpot { FG.waitLength.amountSacrifice }
+      //                                                                              ^^^ see `setAmountSacrificeVoluntary`
+      //   d_pot/d_AmountSacrifice { -FG.f( raiseTo ) } * d_AmountSacrifice/d_pot - d/dpot { FG.waitLength.amountSacrifice }
 }
-template float64 ExpectedCallD::RiskLoss<PlayerStrategyPerspective>(const struct HypotheticalBet &, CallCumulationD<PlayerStrategyPerspective, OppositionPerspective> *, float64 *) const;
-template float64 ExpectedCallD::RiskLoss<void>(const struct HypotheticalBet &, CallCumulationD<void, OppositionPerspective> *, float64 *) const;
 
 MeanOrRank FoldOrCall::suggestMeanOrRank() const {
     if (suggestPlayerCount(fTable).inclAllIn() > 2) {

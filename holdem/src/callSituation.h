@@ -22,8 +22,9 @@
 #define HOLDEM_ArenaSituations
 
 #include "arena.h"
-#include "callPredictionFunctions.h"
+#include "math_support.h"
 #include "inferentials.h"
+#include "callPredictionFunctions.h"
 
 //#define DEBUG_EXFDEXF
 
@@ -77,7 +78,7 @@ public:
      * Since making a small bet does not allow an average opponent to profit via his/her opportunity cost of folding, your ``RiskLoss`` remains zero as long as your bet is suffciently small compared to an average opponent's opportunity.
      * The value returned by the RiskLoss function is used as a deterrent for raising too high.
      */
-    template<typename T> float64 RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CallCumulationD<T, OppositionPerspective> * useMean, float64 * out_dPot = 0) const;
+    ValueAndSlope RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * useMean) const;
     virtual float64 PushGain() const;
 
     virtual uint8 OppRaiseOpportunities(int8 oppID) const;
