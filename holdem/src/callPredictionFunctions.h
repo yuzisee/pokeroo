@@ -110,7 +110,7 @@ struct HypotheticalBet {
   // either because you're first to act OR because the only bet so far is equal to your blind bet
   constexpr bool bCouldHaveChecked() const {
     //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
-    const bool bOppCouldCheck = (hypotheticalRaiseAgainst == 0.0) || /*(betSize == callBet())*/(counderfactualFoldAbandon_raw == hypotheticalRaiseAgainst);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+    const bool bOppCouldCheck = (hypotheticalRaiseAgainst == 0.0) || /*(betSize == callBet())*/(counterfactualFoldAbandon_raw == hypotheticalRaiseAgainst);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
     //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
     return bOppCouldCheck;
   }
@@ -385,4 +385,5 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 ;
 
 #endif
+
 
