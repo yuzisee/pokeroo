@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <utility>
+#include "debug_flags.h"
 #include "portability.h"
 #include "math_support.h"
 

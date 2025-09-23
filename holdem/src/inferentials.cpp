@@ -23,13 +23,15 @@
 #include <algorithm>
 #include "inferentials.h"
 
-//#include <iostream>
-
 #undef NEAREST_WINPCT_UNREALISTIC
 #define SMOOTHED_CALLCUMULATION_D
 #define ACCELERATE_SEARCH_MINIMUM 64
 //const float64 CallCumulation::tiefactor = DEFAULT_TIE_SCALE_FACTOR;
 
+
+#ifdef DEBUGASSERT
+  #include <iostream>
+#endif
 
 DistrShape DistrShape::newEmptyDistrShape() {
     StatResult dummy;
@@ -255,12 +257,12 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
 
     #ifdef DEBUGASSERT
       if (maxsize == 0) {
-        std::cerr << "Uninitialized CallCumulation? FWIW you tried to query " << rank_toHave << " but it's not going to work" << result;
+        std::cerr << "Uninitialized CallCumulation? FWIW you tried to query " << rank_toHave << " but it's not going to work";
         exit(1);
       }
       if (high_index == low_index) {
         std::cerr << "Uninformative CallCumulation? FWIW you tried to query " << rank_toHave << " but there's no information in here: ";
-        StatsManager::holdemCtoJSON(std::cerr, *this);
+        // StatsManager::holdemCtoJSON(std::cerr, *this);
         exit(1);
       }
     #else
