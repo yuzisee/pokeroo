@@ -62,7 +62,7 @@ struct HypotheticalBet {
   const struct ChipPositionState &bettorSituation;
   float64 hypotheticalRaiseTo;
   float64 hypotheticalRaiseAgainst;
-  const float64 counderfactualFoldAbandon_raw; // This is the same as `bettorSituation.alreadyContributed` EXCEPT it includes any blinds you are on the hook for as well. In theory it's exactly `bettorSituation.alreadyBet`
+  const float64 counterfactualFoldAbandon_raw; // This is the same as `bettorSituation.alreadyContributed` EXCEPT it includes any blinds you are on the hook for as well. In theory it's exactly `bettorSituation.alreadyBet`
   const bool bWillGetCalled;
 
   // if you're _RE-RAISING_ this is the increase compared to the highest bet so far
@@ -76,11 +76,11 @@ struct HypotheticalBet {
   }
 
   constexpr float64 fold_bet() const {
-    if( counderfactualFoldAbandon_raw > bettorSituation.bankroll )
+    if( counterfactualFoldAbandon_raw > bettorSituation.bankroll )
     {
       return bettorSituation.bankroll;
     } else {
-      return counderfactualFoldAbandon_raw;
+      return counterfactualFoldAbandon_raw;
     }
   }
 
@@ -385,3 +385,4 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 ;
 
 #endif
+
