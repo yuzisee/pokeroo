@@ -21,6 +21,7 @@
 #include "functionbase.h"
 #include <cmath>
 #include <float.h>
+#include <limits>
 
 #if defined(SINGLETURNINGPOINT) || defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
 #include <iostream>
@@ -116,31 +117,30 @@ float64 ScalarFunctionModel::searchStep(float64 x1, float64 y1, float64 x2, floa
 
 float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 {
-        #ifdef DEBUG_TRACE_SEARCH
-            if(traceEnable != nullptr) std::cout << "\t\t\t(x1,y1)=" << x1 << std::flush;
-        #endif
     const float64 y1 = f(x1);
-        #ifdef DEBUG_TRACE_SEARCH
+        #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
             if(traceEnable != nullptr)
-            {  std::cout <<","<< y1 << endl;
-               std::cout << "\t\t\t(x2,y2)=" << x2 << std::flush; }
+            {
+              *traceEnable << "\t\t\tFindMax(x1,y1)=" << x1 << std::flush;
+              *traceEnable <<","<< y1 << endl;
+               *traceEnable << "\t\t\t(x2,y2)=" << x2 << std::flush; }
         #endif
     const float64 y2 = f(x2);
-        #ifdef DEBUG_TRACE_SEARCH
-            if(traceEnable != nullptr) std::cout <<","<< y2 << endl;
+        #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
+            if(traceEnable != nullptr) *traceEnable <<","<< y2 << endl;
         #endif
 
     const float64 xb = bisectionStep(x1,x2);
     const float64 yb = f(xb);
 
 
-        #ifdef DEBUG_TRACE_SEARCH
+        #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
 			if(traceEnable != nullptr)
 			{
-				std::streamsize olprec = std::cout.precision();
-				std::cout.precision(16);
-				std::cout << "\t\t\t(xb,yb)=" << xb <<","<< yb << endl;
-				std::cout.precision(olprec);
+				std::streamsize olprec = traceEnable->precision();
+				traceEnable->precision(std::numeric_limits<float64>::max_digits10 - 2);
+				*traceEnable << "\t\t\t(xb,yb)=" << xb <<","<< yb << endl;
+				traceEnable->precision(olprec);
 			}
         #endif
 
@@ -169,11 +169,11 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 			        	y1b = f(x1b);
 			        	y2b = f(x2b);
 
-					      #ifdef DEBUG_TRACE_SEARCH
+								#if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
                   if(traceEnable != nullptr) {
-                    std::cout << "\t\t\tMore than one maximum?" << endl;
-                    std::cout << "\t\t\t\tx<" << x1 << ",\t" << x1b << ",\t" << x1b_outer << ",\t" << x2b << ",\t" << x2b_outer << ",\t" << x2b << ",\t" << x2 << ">" << endl;
-                    std::cout << "\t\t\t\ty<" << y1 << ",\t" << y1b << ",\t __ ,\t" << y2b << ",\t __ ,\t" << y2b << ",\t" << y2 << ">" << endl;
+                    *traceEnable << "\t\t\tMore than one maximum?" << endl;
+                    *traceEnable << "\t\t\t\tx<" << x1 << ",\t" << x1b << ",\t_" << x1b_outer << "_,\t" << x2b << ",\t_" << x2b_outer << "_,\t" << x2b << ",\t" << x2 << ">" << endl;
+                    *traceEnable << "\t\t\t\ty<" << y1 << ",\t" << y1b << ",\t ____ ,\t" << y2b << ",\t ____ ,\t" << y2b << ",\t" << y2 << ">" << endl;
                   }
                 #endif
 
@@ -182,8 +182,8 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 	                float64 leftmax = std::round(FindMax(x1,x1b_outer)/quantum)*quantum;
 	                float64 rightmax = std::round(FindMax(x2b_outer,x2)/quantum)*quantum;
 
-         					#ifdef DEBUG_TRACE_SEARCH
-                      if(traceEnable != nullptr) std::cout << "\t\t  <leftmax , rightmax> = < " << leftmax << " , " << rightmax << " >" << endl;
+									#if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
+                      if(traceEnable != nullptr) *traceEnable << "\t\t  <leftmax , rightmax> = < " << leftmax << " , " << rightmax << " >" << endl;
                   #endif
 
                     // Clean up rounding error before querying.
@@ -194,8 +194,8 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
                         rightmax = x2;
                     }
 
-               					#ifdef DEBUG_TRACE_SEARCH
-                            if(traceEnable != nullptr) std::cout << "\t\t  CONCLUSION = Max{ " << f(leftmax) << " , " << f(rightmax) << " }" << endl;
+                        #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
+                            if(traceEnable != nullptr) *traceEnable << "\t\t  CONCLUSION = Max{ " << f(leftmax) << " , " << f(rightmax) << " }" << endl;
                         #endif
 
                     // Now compare the recursive results to each other...
@@ -208,18 +208,18 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 	        #endif // SINGLETURNINGPOINT, else
 	    }
 
-        #ifdef DEBUG_TRACE_SEARCH
-            if(traceEnable != nullptr) std::cout << "\t\t  Reduced to (xb,yb)=" << xb <<","<< yb << endl;
+				#if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
+            if(traceEnable != nullptr) *traceEnable << "\t\t  Reduced to (xb,yb)=" << xb <<","<< yb << endl;
         #endif
 
         return std::round(xb/quantum)*quantum;
     }
-        #ifdef DEBUG_TRACE_SEARCH
-            if(traceEnable != nullptr) std::cout << "\t\t  FindTurningPoint" << endl;
+	      #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
+            if(traceEnable != nullptr) *traceEnable << "\t\t  FindTurningPoint" << endl;
         #endif
   float64 local_max = FindTurningPoint(x1, y1, xb, yb, x2, y2, 1);
-  #ifdef DEBUG_TRACE_SEARCH
-      if(traceEnable != nullptr) std::cout << "\t\t\tFindMax returns " << local_max << endl;
+  #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
+      if(traceEnable != nullptr) *traceEnable << "\t\t\tFindMax returns " << local_max << endl;
   #endif
   return local_max;
 }
@@ -660,6 +660,15 @@ float64 ScalarFunctionModel::regularfalsiStep(float64 x1, float64 y1, float64 x2
         return bisectionStep(x1, x2);
     }
 
+  // Assume: y(x) = y1 + (∆y/∆x) * (x - x1)
+  // Solve          y1 + (∆y/∆x) * (x - x1) = 0
+  // Solve          y1 + (y2 - y1)/(x2 - x1) * (x - x1) = 0
+  // Solve               (y2 - y1)/(x2 - x1) * (x - x1) = - y1
+  // Solve                                     (x - x1) = - y1 * (x2 - x1) / (y2 - y1)
+  //     x = x1 - y1 * (x2 - x1) / (y2 - y1)
+  //     x = (x1 * (y2 - y1) - y1 * (x2 - x1)) / (y2 - y1)
+  //     x = (x1*y2 - x1*y1 - y1*x2 + y1*x1) / (y2 - y1)
+  //     x = (x1*y2         - y1*x2        ) / (y2 - y1)
 
 	return (x1*y2 - x2*y1)/(y2 - y1);
 }
@@ -710,55 +719,55 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuant
 	int8 stepMode = 0;
     while( x2 - x1 > quantum )
     {
+		  const float64 projfd = fd(xb,yb);
+		  if( fabs(projfd) > DBL_EPSILON )
+		  {
+				// INVARIANT: We have a useful derivative, so try Newton's Method
 
-		const float64 projfd = fd(xb,yb);
-		if( fabs(projfd) > DBL_EPSILON )
-		{
-			const float64 xn = newtonStep(xb,yb,projfd);
+		  	const float64 xn = newtonStep(xb,yb,projfd);
 
+		  	#ifdef DEBUG_TRACE_ZERO
+		  		if(traceEnable != nullptr) *traceEnable << "\t\tPossible xn " << xn << std::endl;
+		  	#endif
 
-			#ifdef DEBUG_TRACE_ZERO
-				if(traceEnable != nullptr) *traceEnable << "\t\tPossible xn " << xn << std::endl;
-			#endif
+		  	bool bNewtonValid = xn < x2 - quantum/2 && xn > x1 + quantum/2;
 
-			bool bNewtonValid = xn < x2 - quantum/2 && xn > x1 + quantum/2;
+		  	if(bNewtonValid)
+		  	{
+		  		const float64 yn = f(xn);
+		  		///Possible shortcut
+		  		if( IsDifferentSign(yb,yn) ) //different signs
+		  		{
+		  			if( xb < xn )
+		  			{
+		  				x1 = xb;
+		  				y1 = yb;
+		  				x2 = xn;
+		  				y2 = yn;
+		  			}else{
+		  				x1 = xn;
+		  				y1 = yn;
+		  				x2 = xb;
+		  				y2 = yb;
+		  			}
 
-			if(bNewtonValid)
-			{
-				const float64 yn = f(xn);
-				///Possible shortcut
-				if( IsDifferentSign(yb,yn) ) //different signs
-				{
-					if( xb < xn )
-					{
-						x1 = xb;
-						y1 = yb;
-						x2 = xn;
-						y2 = yn;
-					}else{
-						x1 = xn;
-						y1 = yn;
-						x2 = xb;
-						y2 = yb;
-					}
+		  			#ifdef DEBUG_TRACE_ZERO
+		  				if(traceEnable != nullptr) *traceEnable << "\t\t\t Shortcut! Switch to xn and xb: new (x1,x2) ↦ (y1,y2) = (" << x1 << "," << x2 << ") ↦ ( " << y1 << " , " << y2 << " )"<< std::endl;
+		  			#endif
 
-					#ifdef DEBUG_TRACE_ZERO
-						if(traceEnable != nullptr) *traceEnable << "\t\t\t Shortcut! Switch to xn and xb: new (x1,x2) = (" << x1 << "," << x2 << ")" << std::endl;
-					#endif
+		  			xb = regularfalsiStep(x1,y1,x2,y2);
+		  			yb = f(xb);
+		  		}else if(fabs(yn) < fabs(yb)) //Newton is closer than False Position
+		  		{//No shortcut
+		  			xb = xn;
+		  			yb = yn;
 
-					xb = regularfalsiStep(x1,y1,x2,y2);
-					yb = f(xb);
-				}else if(fabs(yn) < fabs(yb)) //Newton is closer than False Position
-				{//No shortcut
-					xb = xn;
-					yb = yn;
-
-					#ifdef DEBUG_TRACE_ZERO
-						if(traceEnable != nullptr) *traceEnable << "\t\t\t No shortcut" << std::endl;
-					#endif
-				}
-			}///Otherwise we stay with xb and yb which is false position or bisection
-		}///Newton couldn't have been valid.
+		  			#ifdef DEBUG_TRACE_ZERO
+		  				if(traceEnable != nullptr) *traceEnable << "\t\t\t No shortcut" << std::endl;
+		  			#endif
+		  		}
+		  	}///Otherwise we stay with xb and yb which is false position or bisection
+		  } /// Didn't have a useful derivative, so we couldn't attempt Newton's Method
 
         #ifdef DEBUG_TRACE_ZERO
             if(traceEnable != nullptr) *traceEnable << "\t\tSelected <xb,yb> = <" << xb << "," << yb << ">" << std::endl;
@@ -780,15 +789,15 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuant
             x2 = xb;
         }
 
-		++stepMode;
-		stepMode%=2;
-		if( stepMode == 0 )
-		{
-			xb = bisectionStep(x1,x2);
-		}else
-		{
-	        xb = regularfalsiStep(x1,y1,x2,y2);
-		}
+        ++stepMode;
+        stepMode%=2;
+        if( stepMode == 0 )
+        {
+          xb = bisectionStep(x1,x2);
+        }else
+        {
+          xb = regularfalsiStep(x1,y1,x2,y2);
+        }
         yb = f(xb);
 
         #ifdef DEBUG_TRACE_ZERO
@@ -800,7 +809,14 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuant
     }
 
     #ifdef DEBUG_TRACE_ZERO
-        if(traceEnable != nullptr) *traceEnable << "Done. f(" << std::round(xb/quantum)*quantum << ") is zero" << endl;
+        if(traceEnable != nullptr) {
+          if (bRoundToQuantum) {
+            *traceEnable << "Done. f(" << std::round(xb/quantum)*quantum << ") is zero after bRoundToQuantum ⌊" << quantum << "⌉ as requested";
+          } else {
+            *traceEnable << "Done. f(" << xb << ") is zero";
+          }
+          *traceEnable << endl;
+        }
     #endif
 
     if (bRoundToQuantum) {

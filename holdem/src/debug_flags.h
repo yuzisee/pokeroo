@@ -72,6 +72,7 @@
 #define SEATS_AT_TABLE 10
 
 /* functionbase.h Debugging */
+// #define DEBUG_TRACE_PWIN
 // #define DEBUG_TRACE_ZERO
 // #define DEBUG_TRACE_SEARCH
 // ^^^ Enable if you need to trace through a specific search (usually you'll set `.traceEnable = std::cout` or whatever output stream, near where the issue occurs)

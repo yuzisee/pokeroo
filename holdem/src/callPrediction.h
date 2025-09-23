@@ -22,13 +22,6 @@
 #define HOLDEM_CallPredict
 
 
-// #define DEBUG_TRACE_PWIN
-// #define DEBUG_TRACE_DEXF
-// ^^^ Enable if you need to trace through a specific search (usually you'll set `.traceOut = &logF` or whatever output sink, near where the issue occurs)
-// ^^^ Disable (e.g. You can explicitly `#undef DEBUG_TRACE_PWIN`) if you don't want `.github/workflows/ci.yml` to test with it
-
-//#define DEBUG_CALLPRED_FUNCTION
-
 #include "math_support.h"
 #include "inferentials.h"
 #include "callPredictionFunctions.h"
