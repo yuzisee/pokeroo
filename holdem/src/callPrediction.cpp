@@ -1116,7 +1116,7 @@ void ExactCallBluffD::query(const float64 betSize)
                 float64 w_rank = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,EMPTY_DISTRIBUTION);
                 float64 w_mean = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,&fCallCumu);
            			#if defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_ZERO)
-                    if( traceOut != 0 ) { *traceOut << std::endl << "─────────── ↑ FindZero:w_pess(fCallCumu) // FindZero:w_mean(fFoldCumu) ↓ ───────────" << std::endl << std::endl; }
+                    if( traceOut != 0 ) { *traceOut << std::endl << "─────────── ↑ " << w_mean << " = FindZero:w_mean(fCallCumu) // FindZero:w_pess(fFoldCumu) ↓ ───────────" << std::endl << std::endl; }
 						    #endif
                 float64 w_pess = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,&fFoldCumu);
                 if( nLinear <= 0 )

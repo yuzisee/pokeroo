@@ -28,7 +28,7 @@
 
 static inline constexpr float64 cleanpow(float64 b, float64 x)
 {
-    if( b < DBL_EPSILON ) return 0;
+    if( b <= DBL_EPSILON ) return 0;
     //if( b > 1 ) return 1;
     return std::pow(b,x);
 }
@@ -112,8 +112,9 @@ static std::pair<struct NetStatResult, float64> againstBestXOpponents(FoldStatsC
     }
 #endif // DEBUGASSERT
 
-
-    if (fSplitOpponents > 1) {
+    if (fSplitShape.splits <= std::numeric_limits<float64>::epsilon()) {
+        fSplitShape.splits = 0.0;
+    } else if (fSplitOpponents > 1) {
         float64 splitTotal = 0.0;
         for( int8 i=1;i<=fSplitOpponents;++i )
         {//Split with i
@@ -182,9 +183,7 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
         std::cerr << "NaN encountered in fHandsToBeat" << endl;
         exit(1);
     }
-#endif // DEBUGASSERT
 
-#ifdef DEBUGASSERT
     if (fractionOfHandsToBeat_dbetSize != fractionOfHandsToBeat_dbetSize) {
         std::cerr << "NaN encountered in fractionOfHandsToBeat_dbetSize" << endl;
         exit(1);
