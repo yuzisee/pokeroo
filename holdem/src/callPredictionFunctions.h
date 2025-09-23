@@ -110,6 +110,16 @@ struct HypotheticalBet {
 }
 ;
 
+struct DBetSizeCache {
+  bool b_assume_w_is_constant = false;
+  float64 input_n = std::numeric_limits<float64>::signaling_NaN();
+  float64 output_d_dbetSize = std::numeric_limits<float64>::signaling_NaN();
+
+  constexpr bool bHasCachedValueFor(const float64 n) const {
+    return (b_assume_w_is_constant && (input_n == n) && !std::isnan(output_d_dbetSize));
+  }
+};
+
 // [!WARNING]
 // This template is instantiated at the bottom of src/callPredictionFunctions.cpp to avoid linker errors
 template<typename T1, typename T2>
@@ -117,8 +127,6 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 {
     private:
     float64 cacheRarity;
-    float64 lastdBetSizeN;
-    float64 lastRawPCT;
     protected:
     float64 getRawPCT(const float64 n);
     float64 d_rawPCT_d_n(const float64 n, const float64 rawPCT);
@@ -138,9 +146,7 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
     float64 lookup(const float64 rank) const;
     float64 dlookup(const float64 rank, const float64 mean) const;
 
-    float64 cached_d_dbetSize;
-    bool bSearching;
-
+    struct DBetSizeCache cached_d_dbetSize;
 
     // Describe the hand they would be folding
     float64 w;                    // Set to RANK if meanConv is null. Set to MEAN_winpct if using *meanConv
@@ -160,14 +166,14 @@ public:
 
     // NOTE: quantum is 1/3rd of a hand. We don't need more precision than that when evaluating f(n).
     FoldWaitLengthModel() : ScalarFunctionModel(1.0/3.0),
-    cacheRarity(std::numeric_limits<float64>::signaling_NaN()), lastdBetSizeN(std::numeric_limits<float64>::signaling_NaN()), lastRawPCT(std::numeric_limits<float64>::signaling_NaN()), cached_d_dbetSize(std::numeric_limits<float64>::signaling_NaN()), bSearching(false),
+    cacheRarity(std::numeric_limits<float64>::signaling_NaN()),
     w(std::numeric_limits<float64>::signaling_NaN()), meanConv(nullptr), amountSacrificeVoluntary(std::numeric_limits<float64>::signaling_NaN()), amountSacrificeForced(std::numeric_limits<float64>::signaling_NaN()), bankroll(std::numeric_limits<float64>::signaling_NaN()), opponents(std::numeric_limits<float64>::signaling_NaN()), betSize(std::numeric_limits<float64>::signaling_NaN()), prevPot(std::numeric_limits<float64>::signaling_NaN())
     {}
 
     /*
     // NOTE: Although this is the copy constructor, it doesn't copy caches. This lets you clone a configuration and re-evaluate it.
     FoldWaitLengthModel(const FoldWaitLengthModel & o) : ScalarFunctionModel(1.0/3.0),
-        cacheRarity(std::numeric_limits<float64>::signaling_NaN()), lastdBetSizeN(std::numeric_limits<float64>::signaling_NaN()), lastRawPCT(std::numeric_limits<float64>::signaling_NaN()), cached_d_dbetSize(std::numeric_limits<float64>::signaling_NaN()), bSearching(false),
+        cacheRarity(std::numeric_limits<float64>::signaling_NaN()), lastdBetSizeN(std::numeric_limits<float64>::signaling_NaN()), lastRawPCT(std::numeric_limits<float64>::signaling_NaN()), cached_d_dbetSize(std::numeric_limits<float64>::signaling_NaN()),
         w(o.w), meanConv(o.meanConv), amountSacrificeVoluntary(o.amountSacrificeVoluntary), amountSacrificeForced(o.amountSacrificeForced), bankroll(o.bankroll), opponents(o.opponents), betSize(o.betSize), prevPot(o.prevPot)
     {};
     */
@@ -175,20 +181,17 @@ public:
 
     const FoldWaitLengthModel & operator= ( const FoldWaitLengthModel & o ) = delete;
     void resetCaches() {
+      this->cached_d_dbetSize.b_assume_w_is_constant = false;
+      this->cached_d_dbetSize.input_n = std::numeric_limits<float64>::signaling_NaN();
+      this->cached_d_dbetSize.output_d_dbetSize = std::numeric_limits<float64>::signaling_NaN();
+
       this->cacheRarity = std::numeric_limits<float64>::signaling_NaN();
-      this->lastdBetSizeN = std::numeric_limits<float64>::signaling_NaN();
-      this -> lastRawPCT = std::numeric_limits<float64>::signaling_NaN();
-      this->cached_d_dbetSize = std::numeric_limits<float64>::signaling_NaN();
-      this->bSearching = false;
     }
     void copyFrom_withCaches ( const FoldWaitLengthModel & o ) {
       this->copyFrom_noCaches(o);
 
       this->cacheRarity = o.cacheRarity;
-      this->lastdBetSizeN = o.lastdBetSizeN;
-      this -> lastRawPCT = o.lastRawPCT;
       this->cached_d_dbetSize = o.cached_d_dbetSize;
-      this->bSearching = o.bSearching;
     }
     void copyFrom_noCaches ( const FoldWaitLengthModel & o ) {
       this->w = o.w;
@@ -225,8 +228,6 @@ public:
 
     void setW(float64 neww);
     float64 getW() const;
-
-    float64 get_cached_d_dbetSize() const { return cached_d_dbetSize; }
 
 }
 ;
