@@ -123,7 +123,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT
     }
 }
 
-static float64 compute_d_dbetSize( const float64 n, const float64 rawPCT, const float64 opponents ) {
+static float64 compute_dE_dbetSize( const float64 rawPCT, const float64 opponents ) {
   #ifdef INLINE_INTEGER_POWERS
             float64 intOpponents = std::round(opponents);
             if( intOpponents == opponents )
@@ -155,15 +155,15 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dbetSi
       return cached_d_dbetSize.output_d_dbetSize;
   }
 
-  const float64 d_dbetSize = compute_d_dbetSize(n, getRawPCT(n), opponents);
+  const float64 dE_dbetSize = compute_dE_dbetSize(getRawPCT(n), opponents);
 
   if (cached_d_dbetSize.b_assume_w_is_constant) {
     // We're in `b_assume_w_is_constant` mode, so cache this value to avoid recomputing it right away
     cached_d_dbetSize.input_n = n;
-    cached_d_dbetSize.output_d_dbetSize = d_dbetSize;
+    cached_d_dbetSize.output_d_dbetSize = dE_dbetSize;
   }
 
-  return d_dbetSize;
+  return dE_dbetSize;
 }
 
 
@@ -485,7 +485,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBest
     this->resetCaches(); // will also clear b_assume_w_is_constant so nothing to worry about, carry on
     #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
         if(this->traceEnable != nullptr) {
-          *traceEnable << "FindMax DONE! FoldWaitLengthModel::FindBestLength bestN=" << bestN << std::endl;
+          *traceEnable << "\t\t\t\tFindMax DONE! FoldWaitLengthModel::FindBestLength bestN=" << bestN << std::endl;
         }
     #endif
     return bestN;
@@ -557,7 +557,7 @@ template<typename T1, typename T2> void FoldGainModel<T1, T2>::query( const floa
             waitLength.traceEnable = this->traceEnable;
           n = waitLength.FindBestLength();
             waitLength.traceEnable = nullptr;
-            *traceEnable << "└─> FoldGainModel: gain_ref = FoldWaitLengthModel::f(n=" << n << ")" << std::endl;
+            *traceEnable << "\t\t\t└─> FoldGainModel: gain_ref = FoldWaitLengthModel::f(n=" << n << ")" << std::endl;
           } else
         #endif
         {

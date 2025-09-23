@@ -28,7 +28,7 @@
 
 static inline constexpr float64 cleanpow(float64 b, float64 x)
 {
-    if( b < DBL_EPSILON ) return 0;
+    if( b <= DBL_EPSILON ) return 0;
     //if( b > 1 ) return 1;
     return std::pow(b,x);
 }
@@ -112,8 +112,9 @@ static std::pair<struct NetStatResult, float64> againstBestXOpponents(FoldStatsC
     }
 #endif // DEBUGASSERT
 
-
-    if (fSplitOpponents > 1) {
+    if (fSplitShape.splits <= std::numeric_limits<float64>::epsilon()) {
+        fSplitShape.splits = 0.0;
+    } else if (fSplitOpponents > 1) {
         float64 splitTotal = 0.0;
         for( int8 i=1;i<=fSplitOpponents;++i )
         {//Split with i
@@ -182,9 +183,7 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
         std::cerr << "NaN encountered in fHandsToBeat" << endl;
         exit(1);
     }
-#endif // DEBUGASSERT
 
-#ifdef DEBUGASSERT
     if (fractionOfHandsToBeat_dbetSize != fractionOfHandsToBeat_dbetSize) {
         std::cerr << "NaN encountered in fractionOfHandsToBeat_dbetSize" << endl;
         exit(1);
@@ -830,7 +829,7 @@ float64 GainModelGeom::hdx(float64 betFraction, float64 betSize, float64 exf, fl
      //       d sav / sav = C * sav_root^(C-2) *  ( - 1.0 dx + ( 1.0 dx + dexf * dragCalls) / (i+1))
      //
      const float64 sav_root = ( base -x + ( x + f_pot + exf_live * dragCalls) / (i+1));
-     const float64 C = HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i);
+     const float64 C = HoldemUtil::nchoosep_slow<float64>(fOutcome.splitOpponents(),i)*pow(splitShape.wins,fOutcome.splitOpponents()-i)*pow(splitShape.splits,i);
 
 
      savd += C * (-1.0 + (1.0 + dexf * dragCalls) / (i+1)) / sav_root;
@@ -1107,7 +1106,7 @@ float64 GainModelNoRisk::hdx(float64 betFraction, float64 betSize, float64 exf, 
     /*
      for(int8 i=1;i<=e_call;++i)
      {
-     const float64 C = HoldemUtil::nchoosep<float64>(fOutcome.splitOpponents(),i)
+     const float64 C = HoldemUtil::nchoosep_slow<float64>(fOutcome.splitOpponents(),i)
      *pow(splitShape.wins,fOutcome.splitOpponents()-i)
      *pow(splitShape.splits,i);
 

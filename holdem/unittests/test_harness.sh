@@ -53,3 +53,5 @@ else
   echo 'System test failed during: ' "$*" 1>&2
   exit $DIFF_CMD_EXIT_CODE
 fi
+
+# cd "$(git rev-parse --show-toplevel)/holdem" && mv unittests/*.txt /tmp; clang++ -Wall -g -D RTTIASSERT -fprofile-instr-generate -fcoverage-mapping -o bin/unittests_clang src/ai.cpp src/aiCache.cpp src/aiInformation.cpp src/arenaEvents.cpp src/arenaFlow.cpp src/arenaInterface.cpp src/arenaLogic.cpp src/arenaManagement.cpp src/arenaSave.cpp src/blinds.cpp src/BluffGainInc.cpp src/callPrediction.cpp src/callPredictionFunctions.cpp src/callRarity.cpp src/callSituation.cpp src/engine_base.cpp src/engine.cpp src/evenShowdown.cpp src/functionbase.cpp src/functionmodel.cpp src/holdem2.cpp src/holdemutil.cpp src/inferentials.cpp src/randomDeck.cpp src/stratCombined.cpp src/stratFear.cpp src/stratHistory.cpp src/stratPosition.cpp unittests/main.cpp && cd unittests && ../bin/unittests_clang && mv -v *.txt playlogs.expected

@@ -92,8 +92,20 @@ namespace UnitTests {
     }
 
 
+    void testUnit_nchoosep() {
+      assert(HoldemUtil::nchoosep_selftest<float64>(45, 0) == HoldemUtil::nchoosep_slow<float64>(45, 0));
+      assert(HoldemUtil::nchoosep_selftest<float64>(46, 1) == HoldemUtil::nchoosep_slow<float64>(46, 1));
+      assert(HoldemUtil::nchoosep_selftest<float64>(47, 1) == HoldemUtil::nchoosep_slow<float64>(47, 1));
+      assert(HoldemUtil::nchoosep_selftest<float64>(50, 3) == HoldemUtil::nchoosep_slow<float64>(50, 3));
+
+      assert(HoldemUtil::nchoosep_selftest<float64>(45, 2) == HoldemUtil::nchoosep_slow<float64>(45, 2));
+      assert(HoldemUtil::nchoosep_selftest<float64>(48, 5) == HoldemUtil::nchoosep_slow<float64>(48, 5));
+      assert(static_cast<int32>(HoldemUtil::nchoosep_selftest<float64>(48, 5)) == HoldemUtil::nchoosep_slow<int32>(48, 5));
+    }
+
+
     // Test CoarseHistogramBin
-    void testUnit_024() {
+    void testUnit_CoarseHistogramBin() {
 
         DeckLocation card;
 
@@ -151,7 +163,8 @@ namespace UnitTests {
 
         PositionalStrategy::printCommunityOutcomes(std::cout, a, detailPCT);
 
-
+        assert(detailPCT.mean.pct < 0.49);
+        assert(0.48 < detailPCT.mean.pct);
     }
 
 
@@ -4612,7 +4625,8 @@ static void all_unit_tests() {
   NamedTriviaDeckTests::testNamePockets();
 
 
-  UnitTests::testUnit_024();
+  UnitTests::testUnit_nchoosep();
+  UnitTests::testUnit_CoarseHistogramBin();
   UnitTests::testMatrixbase_023();
   UnitTests::testUnit_020();
 
