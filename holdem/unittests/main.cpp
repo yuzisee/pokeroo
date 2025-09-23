@@ -9,6 +9,7 @@
 #include <ctime>
 #include <cassert>
 #include <limits>
+#include <algorithm>
 
 #include "../src/aiCache.h"
 namespace NamedTriviaDeckTests {
@@ -895,7 +896,7 @@ namespace UnitTests {
         HypotheticalBet hypothetical0 = {
           oppCPS, 6.75 + oppCPS.alreadyBet,
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
-          4.5, false, true
+          4.5, true
         };
         float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest<void>(0.0, 1.0 /* denom */, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
                                                                      ,hypothetical0, 4, nullptr);
@@ -904,7 +905,7 @@ namespace UnitTests {
           oppCPS,
           11.25 + oppCPS.alreadyBet,
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
-          4.5, false, true
+          4.5, true
         };
         float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest<void>(w_r_rank0, 1.0, 0.0 ,  0.31640625
                                                                      ,hypothetical1, 4, nullptr);
@@ -4510,106 +4511,204 @@ namespace RegressionTests {
     }
 
 
-    void testHybrid_drisk_handsIn() {
+        void testHybrid_drisk_handsIn() {
 
-      FixedReplayPlayerStrategy p1(std::vector<float64>{});
-      FixedReplayPlayerStrategy p2(std::vector<float64>{});
-      FixedReplayPlayerStrategy px(std::vector<float64>{});
-      FixedReplayPlayerStrategy p3(std::vector<float64>{});
-      FixedReplayPlayerStrategy p4(std::vector<float64>{});
+          FixedReplayPlayerStrategy p1(std::vector<float64>{});
+          FixedReplayPlayerStrategy p2(std::vector<float64>{});
+          FixedReplayPlayerStrategy px(std::vector<float64>{});
+          FixedReplayPlayerStrategy p3(std::vector<float64>{});
+          FixedReplayPlayerStrategy p4(std::vector<float64>{});
 
-      BlindValues b;
-      b.SetSmallBigBlind(5.0);
-      HoldemArena myTable(b.GetSmallBlind(), true, true);
-      myTable.setSmallestChip(5.0);
+          BlindValues b;
+          b.SetSmallBigBlind(5.0);
+          HoldemArena myTable(b.GetSmallBlind(), true, true);
+          myTable.setSmallestChip(5.0);
 
-      myTable.ManuallyAddPlayer("P1", 600.0, &p1);
-      myTable.ManuallyAddPlayer("Px", 6000.0, &px);
-      myTable.ManuallyAddPlayer("P2", 3000.0, &p2); // dealer
-      myTable.ManuallyAddPlayer("P3", 18000.0, &p3);
-      myTable.ManuallyAddPlayer("P4", 24000.0, &p4);
+          myTable.ManuallyAddPlayer("P1", 600.0, &p1);
+          myTable.ManuallyAddPlayer("Px", 6000.0, &px);
+          myTable.ManuallyAddPlayer("P2", 3000.0, &p2); // dealer
+          myTable.ManuallyAddPlayer("P3", 18000.0, &p3);
+          myTable.ManuallyAddPlayer("P4", 24000.0, &p4);
 
-      const playernumber_t dealer = 2;
+          const playernumber_t dealer = 2;
 
-      myTable.BeginInitialState(777);
-      myTable.BeginNewHands(std::cout, b, false, dealer);
+          myTable.BeginInitialState(777);
+          myTable.BeginNewHands(std::cout, b, false, dealer);
 
-      myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
+          myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
 
-      {
-          HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 , &(std::cout));
-
-          struct MinRaiseError msg;
-
-          // P3 small blind $5
-          // P4 big blind $10
-          r.MakeBet(0, &msg);  // P1
-          r.MakeBet(0, &msg);  // Px
-          r.MakeBet(0, &msg);  // P2
-          // r.MakeBet(20, &msg); // P3
-
-      }
-      const playernumber_t myPositionIndex = 3; // P4's turn next
-
-      DeckLocation card;
-
-          // Give P3 a bad hand, so they are more likely to fold (so that RiskLoss gives us an interesting result)
-          CommunityPlus handToTest; // 46x
-          card.SetByIndex(8);
-          handToTest.AddToHand(card);
-          card.SetByIndex(17);
-          handToTest.AddToHand(card);
-
-      /// BEGIN TEST, P4 to act
-
-          DistrShape detailPCT(DistrShape::newEmptyDistrShape());
-          CoreProbabilities core;
-
-          // Mimic src/stratPosition.cpp:PositionalStrategy::SeeCommunity
           {
-          ///Compute CallStats
-          /*
-          StatsManager::QueryDefense(core.handcumu,withCommunity,onlyCommunity,cardsInCommunity);
-          core.foldcumu = core.handcumu;
-          core.foldcumu.ReversePerspective();
-          */
+              HoldemArenaBetting r( &myTable, CommunityPlus::EMPTY_COMPLUS, 0 , &(std::cout));
 
-          ///Compute CommunityCallStats
-          myTable.CachedQueryOffense(core.callcumu,CommunityPlus::EMPTY_COMPLUS, handToTest);
+              struct MinRaiseError msg;
 
-          ///Compute WinStats
-          StatsManager::Query(&detailPCT,handToTest,CommunityPlus::EMPTY_COMPLUS, 0);
+              // P3 small blind $5
+              // P4 big blind $10
+              r.MakeBet(0, &msg);  // P1
+              r.MakeBet(0, &msg);  // Px
+              r.MakeBet(0, &msg);  // P2
+              // r.MakeBet(20, &msg); // P3
 
-          core.statmean = detailPCT.mean; // needed for statRanking()
+          }
+          const playernumber_t myPositionIndex = 3; // P4's turn next
+
+          DeckLocation card;
+
+              // Give P3 a bad hand, so they are more likely to fold (so that RiskLoss gives us an interesting result)
+              CommunityPlus handToTest; // 46x
+              card.SetByIndex(8);
+              handToTest.AddToHand(card);
+              card.SetByIndex(17);
+              handToTest.AddToHand(card);
+
+          /// BEGIN TEST, P4 to act
+
+              DistrShape detailPCT(DistrShape::newEmptyDistrShape());
+              CoreProbabilities core;
+
+              // Mimic src/stratPosition.cpp:PositionalStrategy::SeeCommunity
+              {
+              ///Compute CallStats
+              /*
+              StatsManager::QueryDefense(core.handcumu,withCommunity,onlyCommunity,cardsInCommunity);
+              core.foldcumu = core.handcumu;
+              core.foldcumu.ReversePerspective();
+              */
+
+              ///Compute CommunityCallStats
+              myTable.CachedQueryOffense(core.callcumu,CommunityPlus::EMPTY_COMPLUS, handToTest);
+
+              ///Compute WinStats
+              StatsManager::Query(&detailPCT,handToTest,CommunityPlus::EMPTY_COMPLUS, 0);
+
+              core.statmean = detailPCT.mean; // needed for statRanking()
+              }
+
+
+          // StatResultProbabilities statprob;
+          ExpectedCallD   tablestate_tableinfo(myPositionIndex, &myTable, core.statRanking().pct, detailPCT.mean.pct);
+
+          // Mimic src/callPrediction.cpp#ExactCallD::query
+
+          //const float64 totalexf = tablestate_tableinfo.table->GetPotSize() - tablestate_tableinfo.alreadyBet()  +  p4_betSize;
+          ChipPositionState cps = {
+            p4.ViewPlayer().GetMoney(),
+            myTable.GetPotSize(), // totalexf
+            p4.ViewPlayer().GetBetSize(),
+            p4.ViewPlayer().GetVoluntaryContribution(),
+            myTable.GetPrevPotSize()
+          };
+
+          const playernumber_t N = tablestate_tableinfo.handsDealt();
+          const float64 avgBlind = myTable.GetBlindValues().OpportunityPerHand(N);
+
+          HypotheticalBet hypothetical = {
+            cps,
+            50.0,
+            15.0,
+            cps.alreadyBet,
+            true
+          };
+          // assert(dRiskLoss_pot >= 1.0 / (tablestate_tableinfo.handsIn()-1));
+          // [!CAUTION]
+          // (a) I haven't found a way to trigger `dRiskLoss_pot > 0.0` yet.
+          // (b) It's deprecated! From what I can tell
+          //       https://github.com/yuzisee/pokeroo/blob/0f04f077723249c7f141eed65efde732d1722f00/holdem/src/callSituation.cpp#L245
+          //     has deprecated `ExpectedCallD::RiskLoss` anyway and the only remaining callers
+          //      → ExactCallD::facedOdds_raise_Geom
+          //      → ExactCallD::dfacedOdds_dpot_GeomDEXF
+          //     ...should be switched over to OpponentHandOpportunity via CombinedStatResultsPessemistic
+          {
+            const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
+            assert((actual_RiskLoss.v == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
           }
 
+          const float64 p4_raiseTo = 2400.0;
+          // const float mydexf = 1.0; // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
+          std::vector<std::pair<float64, ValueAndSlope>> actual_noRaisePct_vs_betSize;
+          // Mimic src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
+          // for (float64 betSize = 2000.0; betSize < 4001.0; betSize += 100.0) {
+          for (float64 p3_betSize = 250.0; p3_betSize < 2501.0; p3_betSize += 250.0) {
+            hypothetical.hypotheticalRaiseTo = p4_raiseTo;
+            hypothetical.hypotheticalRaiseAgainst = p3_betSize;
 
-      // StatResultProbabilities statprob;
-      ExpectedCallD   tablestate_tableinfo(myPositionIndex, &myTable, core.statRanking().pct, detailPCT.mean.pct);
+            // To get a high P4 RiskLoss against P3, we want:
+            //  [FoldWaitLengthModel::FindBestLength]
+            //  → a high maxProfit, which means a high rawPCT (and/or low opponents)
+            //  → a high betSize
+            //  → a small amountSacrificePerHand, which means...
+            //    ... a large numHandsPerSameSituationFold, which means a very rare `rarity()`, which means
+            //      [ExpectedCallD::RiskLoss]
+            //      → a large N, which means a large `handsDealt()`
+            //    ... a small amountSacrificeVoluntary and small amountSacrificeForced, which means
+            //      [ExpectedCallD::RiskLoss]
+            //      → a small `avgBlind`
+            //      → a small ACTIVE pot (current round, players who haven't yet folded)
+            //      → a large rpAlreadyBet by P3
+            //      (and/or high player count)
+            // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
 
-      // Mimic src/callPrediction.cpp#ExactCallD::query
+            const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
+            assert((actual_RiskLoss.v < 0) && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
 
-      //const float64 totalexf = tablestate_tableinfo.table->GetPotSize() - tablestate_tableinfo.alreadyBet()  +  p4_betSize;
-      ChipPositionState cps = {
-        p4.ViewPlayer().GetMoney(),
-        myTable.GetPotSize(), // totalexf
-        p4.ViewPlayer().GetBetSize(),
-        p4.ViewPlayer().GetVoluntaryContribution(),
-        myTable.GetPrevPotSize()
-      };
+            FacedOddsRaiseGeom<void> actual(myTable.GetChipDenom());
+            FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss.v);
+            actual.FG.waitLength.load(cps, avgBlind);
+            actual.FG.waitLength.opponents = tablestate_tableinfo.handsToShowdownAgainst();
+            actual.FG.waitLength.meanConv = nullptr;
+            const float64 noRaisePct = actual.FindZero(0.0, 1.0, false);
+            const float64 d_noRaisePct_dbetsize = ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(tablestate_tableinfo, hypothetical, noRaisePct, actual_RiskLoss.D_v);
 
-      const playernumber_t N = tablestate_tableinfo.handsDealt();
-      const float64 avgBlind = myTable.GetBlindValues().OpportunityPerHand(N);
+            actual_noRaisePct_vs_betSize.push_back( std::pair<float64, ValueAndSlope>( p3_betSize , ValueAndSlope {
+              noRaisePct, d_noRaisePct_dbetsize
+            }));
+          }
 
-      HypotheticalBet hypothetical = {
-        cps,
-        50.0,
-        15.0,
-        cps.alreadyBet,
-        false,
-        true
-      };
-    } // end testHybrid_drisk_handsIn
+          bool derivative_ok = true;
+
+          std::cout << "Δy/Δx≅\t";
+          float64 prev_x = std::numeric_limits<float64>::signaling_NaN();
+          float64 prev_y = std::numeric_limits<float64>::signaling_NaN();
+          float64 prev_dy = std::numeric_limits<float64>::signaling_NaN();
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            const float64 x = x_y_dy.first;
+            const float64 y = x_y_dy.second.v;
+            const float64 dy = x_y_dy.second.D_v;
+            if (std::isnan(prev_x) || std::isnan(prev_y)) {
+              std::cout << " ⏢";
+            } else {
+              const float64 expected_dy = (y - prev_y) / (x - prev_x);
+              std::cout << "   " << expected_dy;
+
+              if( (std::min(prev_dy, dy) <= expected_dy) && (expected_dy <= std::max(prev_dy, dy))) {
+                std::cout << "✓";
+              } else {
+                std::cout << "⚠⚠";
+                derivative_ok = false;
+              }
+            }
+            prev_x = x;
+            prev_y = y;
+            prev_dy = dy;
+          }
+          std::cout << std::endl;
+          std::cout << "dy";
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            std::cout << "   " << x_y_dy.second.D_v;
+          }
+          std::cout << std::endl;
+          std::cout << "y";
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            std::cout << "   " << x_y_dy.second.v;
+          }
+          std::cout << std::endl;
+          std::cout << "x";
+          for (std::pair<float64, ValueAndSlope> &x_y_dy : actual_noRaisePct_vs_betSize) {
+            std::cout << "   " << x_y_dy.first;
+          }
+          std::cout << std::endl;
+          // assert(derivative_ok);
+        }
 }
 
 void print_lineseparator(const char* const separator_msg) {
