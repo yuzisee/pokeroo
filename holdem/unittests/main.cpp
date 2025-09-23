@@ -4906,7 +4906,7 @@ Playing as S
         }));
       }
 
-      assert(print_x_y_dy_derivative_ok(actual_noRaisePct_vs_betSize, 0.00001) > 0.75);
+      assert(UnitTests::print_x_y_dy_derivative_ok(actual_noRaisePct_vs_betSize, 0.00001) > 0.75);
     } // end testHybrid_drisk_handsIn
 }
 
