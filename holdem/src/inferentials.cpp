@@ -25,6 +25,7 @@
 
 //#include <iostream>
 
+#undef NEAREST_WINPCT_UNREALISTIC
 #define SMOOTHED_CALLCUMULATION_D
 #define ACCELERATE_SEARCH_MINIMUM 64
 //const float64 CallCumulation::tiefactor = DEFAULT_TIE_SCALE_FACTOR;
@@ -252,16 +253,37 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
     size_t high_index = maxsize - 1;
     size_t low_index = 0;
 
+    #ifdef DEBUGASSERT
+      if (maxsize == 0) {
+        std::cerr << "Uninitialized CallCumulation? FWIW you tried to query " << rank_toHave << " but it's not going to work" << result;
+        exit(1);
+      }
+      if (high_index == low_index) {
+        std::cerr << "Uninformative CallCumulation? FWIW you tried to query " << rank_toHave << " but there's no information in here: ";
+        StatsManager::holdemCtoJSON(std::cerr, *this);
+        exit(1);
+      }
+    #else
+      if (maxsize == 0) { return 0.5; }
+      if (high_index == low_index) { return cumulation[0].pct; }
+    #endif
+
     float64 high_rank, low_rank;
 
     low_rank = cumulation[0].repeated;
     high_rank = cumulation[high_index].repeated;
 
 //Early returns
+    #ifdef NEAREST_WINPCT_UNREALISTIC
     if( rank_toHave < 0 )
     {//Closer to rank 0 than the smallest positive rank
-        return 0;
+       if(cumulation[0].pct <= cumulation[high_index].pct) {
+         return 0.0;
+       } else {
+         return 1.0;
+       }
     }
+    #endif
     if( rank_toHave < low_rank )
     {
         return cumulation[0].pct; //.pct is toHave -- if you haven't ReversePerspective()/ReversedPerspective() yet then that's the pct of the first hand dealt. See the bottom of CallStats::Analyze()
@@ -270,10 +292,19 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
     {
         return cumulation[high_index].pct; //.pct is toHave.
     }
+    // It wasn't possible to trigger the codepath below anyway, since you would have returned already from the above `if` statement
+    /*
+    #ifdef NEAREST_WINPCT_UNREALISTIC
     if( rank_toHave > high_rank ) //Greater than 1??
     {
-        return 1;
+      if(cumulation[0].pct <= cumulation[high_index].pct) {
+        return 1.0;
+      } else {
+        return 0.0;
+      }
     }
+    #endif
+    */
 
     bool bFloor = true;
     size_t guess_index;

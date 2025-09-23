@@ -59,8 +59,10 @@ template<typename T1, typename T2> bool FoldWaitLengthModel<T1, T2>::has_same_ca
 template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::getRawPCT(const float64 n) {
     const float64 opponentInstances = n * rarity(); // After waiting n hands, the opponent will put you in this situation opponentInstances times.
     // The winPCT you would have if you had the best hand you would wait for out of opponentInstances hands.
-    const float64 rawPCT = ( opponentInstances < 1 ) ? 0 : lookup(1.0-1.0/(opponentInstances));
-
+    const float64 rawPCT = lookup(
+      ( opponentInstances < 1 ) ? 0 : (1.0-1.0/(opponentInstances))
+    );
+    // Typically, FoldWaitLengthModel runs FindMax starting from `n=1/rarity()` so `n * rarity()` can get awfully close to 1.0 and due to IEEE floating point inaccuracies, you might clip below 0 right away
 
 #ifdef DEBUGASSERT
     if(rawPCT < 0.0) {
