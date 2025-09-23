@@ -458,7 +458,7 @@ namespace UnitTests {
         FoldWaitLengthModel<void, OppositionPerspective> fw;
         // From the opponent's point of view if he knows he's against a flush
         fw.setW( 0.0 ); // Their current hand does not pair the board so loses to an ace-high flush (but note there is a ~30% chance that they hit a pair other than a deuce and a ~4% chance of having one deuce)
-        fw.meanConv = &(statprob.core.foldcumu);
+        fw.setMeanConv( &(statprob.core.foldcumu) );
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 1000.0;
         fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
@@ -495,7 +495,7 @@ namespace UnitTests {
         FoldWaitLengthModel<void, void> fw;
 
         fw.setW( 0.75 ); // You have a decent hand, but it could be better and the re-raise was ridiculously enormous.
-        fw.meanConv = nullptr;
+        fw.setMeanConv( nullptr );
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 1000.0;
         fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
@@ -561,7 +561,7 @@ namespace UnitTests {
         FoldWaitLengthModel<void, void> fw;
 
         fw.setW(0.75); // You have a decent hand, but it could be better and the raise was large.
-        fw.meanConv = nullptr;
+        fw.setMeanConv( nullptr );
         fw.amountSacrificeForced = avgBlind;
         fw.bankroll = 10000.0;
         fw.setAmountSacrificeVoluntary(myConstributionToPastPot + myBetThisRound - avgBlind);
@@ -4291,11 +4291,11 @@ namespace RegressionTests {
         const float64 opponentsFacingThem = 1.0;
 
         FoldWaitLengthModel<void, void> waitLength;
-        waitLength.meanConv =
-        //(opponentsFacingThem > 1.0) ?
-        nullptr
-        //: &(fCore.callcumu)
-        ;
+        waitLength.setMeanConv(
+          //(opponentsFacingThem > 1.0) ?
+          nullptr
+          //: &(fCore.callcumu)
+        );
         // ( 1 / (x+1) )  ^ (1/x)
         const Player * const normalBot = myTable.ViewPlayer(5);
         waitLength.bankroll = normalBot->GetMoney();

@@ -144,8 +144,8 @@ class FoldWaitLengthModel : public virtual ScalarFunctionModel
 
     // Describe the hand they would be folding
     float64 w;                    // Set to RANK if meanConv is null. Set to MEAN_winpct if using *meanConv
-public:
     CallCumulationD<T1, T2> (* meanConv); // Set to null if using RANK for payout simulation
+public:
 
     // Describe the situation
     float64 amountSacrificeVoluntary; // you're giving up this much money each time you reach this situation (and fold) again
@@ -220,6 +220,7 @@ public:
         amountSacrificeVoluntary = (amount < 0) ? 0.0 : amount;
     }
 
+    void setMeanConv(CallCumulationD<T1, T2> * new_meanConv);
     void setW(float64 neww);
     float64 getW() const;
 
