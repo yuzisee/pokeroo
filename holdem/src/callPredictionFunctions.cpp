@@ -62,9 +62,8 @@ template<typename T1, typename T2> bool FoldWaitLengthModel<T1, T2>::has_same_ca
 {
     return (
          (o.cacheRarity == cacheRarity)
-        && (o.lastdBetSizeN == lastdBetSizeN)
-        && (o.lastRawPCT == lastRawPCT)
-        && (o.cached_d_dbetSize == cached_d_dbetSize)
+        && (o.cached_d_dbetSize.input_n == cached_d_dbetSize.input_n)
+        && (o.cached_d_dbetSize.output_d_dbetSize == cached_d_dbetSize.output_d_dbetSize)
     );
 }
 
@@ -133,48 +132,47 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT
     }
 }
 
-// Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
-// Return value is between -1.0 and +1.0
-// Will memoize while searching
-template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dbetSize( const float64 n )
-{
-
-
-    if( lastdBetSizeN != n || !bSearching )
-    {
-        const float64 rawPCT = getRawPCT(n);
-
-
-        if( rawPCT != lastRawPCT || !bSearching )
-        {
-#ifdef INLINE_INTEGER_POWERS
+static float64 compute_d_dbetSize( const float64 n, const float64 rawPCT, const float64 opponents ) {
+  #ifdef INLINE_INTEGER_POWERS
             float64 intOpponents = std::round(opponents);
             if( intOpponents == opponents )
             {
                 cached_d_dbetSize = std::pow(rawPCT,static_cast<uint8>(intOpponents));
             }else
             {//opponents isn't an even integer
-#endif
+  #endif
 
                 // Your showdown chance of winning, given the opponent count.
-                cached_d_dbetSize = std::pow(rawPCT,opponents);
+               const float64 cached_d_dbetSize = std::pow(rawPCT,opponents);
 
-#ifdef INLINE_INTEGER_POWERS
+  #ifdef INLINE_INTEGER_POWERS
             }//end if intOpponents == opponents , else
-#endif
+  #endif
 
 
             // Your profit per betSize. If it's positive, you make money the more betSize gets. If negative you lose money the more betSize gets.
-            cached_d_dbetSize = (2*cached_d_dbetSize) - 1;
-            lastRawPCT = rawPCT;
-        }
-        lastdBetSizeN = n;
-    }else
-    {
-        return cached_d_dbetSize;
-    }
+            return (2*cached_d_dbetSize) - 1;
+}
 
-    return cached_d_dbetSize;
+// Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
+// Return value is between -1.0 and +1.0
+// Will memoize while searching
+template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dbetSize( const float64 n )
+{
+  if (cached_d_dbetSize.bHasCachedValueFor(n) ) {
+      // We have a cached value, and we asked to cache it.
+      return cached_d_dbetSize.output_d_dbetSize;
+  }
+
+  const float64 d_dbetSize = compute_d_dbetSize(n, getRawPCT(n), opponents);
+
+  if (cached_d_dbetSize.b_assume_w_is_constant) {
+    // We're in `b_assume_w_is_constant` mode, so cache this value to avoid recomputing it right away
+    cached_d_dbetSize.input_n = n;
+    cached_d_dbetSize.output_d_dbetSize = d_dbetSize;
+  }
+
+  return d_dbetSize;
 }
 
 
@@ -418,9 +416,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::fd( cons
 
 template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBestLength()
 {
-    cacheRarity = -1;
-    lastdBetSizeN = -1;
-    lastRawPCT = -1;
+    this->resetCaches();
 
     quantum = (1.0/3.0); // Get to the number of hands played.
 
@@ -490,12 +486,13 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBest
       std::cerr << "ScalarFunctionModel::FindMax(" << (1/rarity()) <<  "," << ceil(maxTurns[0] + 1) << ") is next" << std::endl;
     }
 #endif
-    bSearching = true;
+    this->resetCaches();
+    this->cached_d_dbetSize.b_assume_w_is_constant = true;
     const float64 bestN = FindMax(1/rarity(), ceil(maxTurns[0] + 1) );
     #ifdef DEBUG_TRACE_SEARCH
         if(traceEnable != nullptr) { std::cerr << "bestN = " << bestN << std::endl; }
     #endif
-    bSearching = false;
+    this->resetCaches();
 #ifdef DEBUG_TRACE_SEARCH
     if(traceEnable != nullptr) {
       std::cerr << "FoldWaitLengthModel::FindBestLength ALL CLEAR" << std::endl;
@@ -571,7 +568,7 @@ template<typename T1, typename T2> void FoldGainModel<T1, T2>::query( const floa
         #endif
 
 		const float64 gain_ref = waitLength.f(n);
-		const float64 FB_ref = waitLength.get_cached_d_dbetSize();
+		const float64 FB_ref = waitLength.d_dbetSize(n);
 /*
 		const float64 m_restored = std::round(n*waitLength.rarity());
 		const float64 n_restored = m_restored/waitLength.rarity();
