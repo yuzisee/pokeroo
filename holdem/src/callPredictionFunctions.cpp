@@ -333,9 +333,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::f( const
         //TODO: This-round dead-pot size is not considered!!!!!
     }
 
-
     const float64 lastF = winShowdown*PW - grossSacrifice(n);
-
 
 #ifdef DEBUGASSERT
     if(std::isnan(lastF)) {
@@ -343,6 +341,10 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::f( const
         exit(1);
     }
 #endif // DEBUGASSERT
+
+  #ifdef DEBUG_TRACE_PWIN
+			if(traceEnable != nullptr) *traceEnable << "\t\t\t\t FoldWaitLengthModel(n=" << n << ", bSearching=" << bSearching << ") compares remainingbet=" << remainingbet << " vs. betSize=" << betSize << " ↦ " << lastF << " based on (winShowdown)" << winShowdown << " ⋅ " << PW << "(PW)" << std::endl;
+	#endif
 
     return lastF;
 }
@@ -481,23 +483,20 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::FindBest
     // UNTIL: These two guys are reasonably close enough that a search makes sense.
     // i.e if we aren't cutting the search space in half anymore with each iteration, move on to FindMax below
 
-#ifdef DEBUG_TRACE_SEARCH
-    if(traceEnable != nullptr) {
-      std::cerr << "ScalarFunctionModel::FindMax(" << (1/rarity()) <<  "," << ceil(maxTurns[0] + 1) << ") is next" << std::endl;
+#if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
+    if(this->traceEnable != nullptr) {
+      *traceEnable << "ScalarFunctionModel::FindMax(" << (1/rarity()) <<  "," << ceil(maxTurns[0] + 1) << ") is next" << std::endl;
     }
 #endif
     this->resetCaches();
     this->cached_d_dbetSize.b_assume_w_is_constant = true;
     const float64 bestN = FindMax(1/rarity(), ceil(maxTurns[0] + 1) );
-    #ifdef DEBUG_TRACE_SEARCH
-        if(traceEnable != nullptr) { std::cerr << "bestN = " << bestN << std::endl; }
+    this->resetCaches(); // will also clear b_assume_w_is_constant so nothing to worry about, carry on
+    #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_ZERO)
+        if(this->traceEnable != nullptr) {
+          *traceEnable << "FindMax DONE! FoldWaitLengthModel::FindBestLength bestN=" << bestN << std::endl;
+        }
     #endif
-    this->resetCaches();
-#ifdef DEBUG_TRACE_SEARCH
-    if(traceEnable != nullptr) {
-      std::cerr << "FoldWaitLengthModel::FindBestLength ALL CLEAR" << std::endl;
-    }
-#endif
     return bestN;
 }
 
@@ -555,17 +554,18 @@ template<typename T1, typename T2> void FoldGainModel<T1, T2>::query( const floa
         return;
     }else
     {
-        #ifdef DEBUG_TRACE_SEARCH
-          std::cerr << "FoldGainModel's FoldWaitLengthModel::FindBestLength " << betSize << std::endl;
-          // waitLength.bTraceEnable = true;
+        #if defined(DEBUG_TRACE_SEARCH) || (defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_ZERO))
+          if (this->traceEnable != nullptr) {
+            *traceEnable << "\t\t\tFoldGainModel's FoldWaitLengthModel::FindBestLength $" << betSize << "⛁ will call FindMax(nₘᵢₙ,nₘₐₓ) [!NOTE] " << waitLength.get_cached_d_dbetSize() << " currently cached" << std::endl;
+            waitLength.traceEnable = this->traceEnable;
+          n = waitLength.FindBestLength();
+            waitLength.traceEnable = nullptr;
+            *traceEnable << "└─> FoldGainModel: gain_ref = FoldWaitLengthModel::f(n=" << n << ")" << std::endl;
+          } else
         #endif
-
-        n = waitLength.FindBestLength();
-
-        #ifdef DEBUG_TRACE_SEARCH
-          // waitLength.bTraceEnable = false;
-          std::cerr << "FoldGainModel's FoldWaitLengthModel::f " << betSize << std::endl;
-        #endif
+        {
+          n = waitLength.FindBestLength();
+        }
 
 		const float64 gain_ref = waitLength.f(n);
 		const float64 FB_ref = waitLength.d_dbetSize(n);
@@ -717,10 +717,10 @@ template<typename T> void FacedOddsAlgb<T>::query( const float64 w )
     const float64 fw = std::pow(w,FG.waitLength.opponents);
     const float64 U = (pot + betSize)*fw;
 
-    #ifdef DEBUG_TRACE_SEARCH
+    #ifdef DEBUG_TRACE_PWIN
         if(traceEnable != nullptr)
         {
-             *traceEnable << "\t\t\t faceOddsAlgb.FG.waitLength.SEARCH!" << std::endl;
+             *traceEnable << "\t\t\t faceOddsAlgb.FG.waitLength.setW(" << w << ") & SEARCH!" << std::endl;
              //FG.waitLength.bTraceEnable = true;
              FG.traceEnable = this->traceEnable;
         }
@@ -728,10 +728,10 @@ template<typename T> void FacedOddsAlgb<T>::query( const float64 w )
 
     lastF = U - betSize - FG.f(betSize);
 
-    #ifdef DEBUG_TRACE_SEARCH
+    #ifdef DEBUG_TRACE_PWIN
         if(traceEnable != nullptr)
         {
-             *traceEnable << "\t\t\t faceOddsAlgb(U,betSize,FG.f,FG.n) = (" << U << " , " << betSize << " , " << FG.f(betSize) << " , " << FG.n << ")" << std::endl;
+             *traceEnable << "\t\t\t⎯⎯▸ faceOddsAlgb:" << w << "(U − betSize − FG.f, FG.n) = (" << U << " − " << betSize << " − " << FG.f(betSize) << " , " << FG.n << ")" << std::endl;
         }
     #endif
 

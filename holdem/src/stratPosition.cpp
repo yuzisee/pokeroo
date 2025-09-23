@@ -520,11 +520,7 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD &
         printAllFold.first->traceOut = &logF;
     #endif
   }
-  #ifdef DEBUG_TRACE_PWIN
-    if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
-      printAllFold.first->traceOut = &logF;
-    }
-  #endif
+
   int32 raiseStep;
   float64 rAmount;
   for(raiseStep = 0, rAmount = 0.0; rAmount < maxShowdown; ++raiseStep )

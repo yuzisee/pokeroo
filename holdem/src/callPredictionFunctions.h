@@ -23,23 +23,17 @@
 #define HOLDEM_OpponentFunctions
 
 
+// #define DEBUG_TRACE_DEXF
+// ^^^ Enable if you need to trace through a specific search (usually you'll set `.traceOut = &logF` or whatever output sink, near where the issue occurs)
+// ^^^ Disable (i.e. You can explicitly `#undef DEBUG_TRACE_DEXF`) if you don't want `.github/workflows/ci.yml` to test with it
+
+
 #include "functionbase.h"
 #include "inferentials.h"
 #include "portability.h"
-
-
+#include <cmath>
 
 #define SACRIFICE_COMMITTED
-
-
-
-/*
-#ifndef log1p
-#define log1p( _X_ ) log( (_X_) + 1 )
-#endif
-*/
-
-#include <cmath>
 
 // The probability of being dealt, e.g. two aces: 1 in 221
 // HOWEVER, when used as a proxy for callcumulation, it might be too low because there is "same suit as you" as well as "different suits as you" optionality.

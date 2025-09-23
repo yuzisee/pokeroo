@@ -1078,7 +1078,12 @@ void ExactCallBluffD::query(const float64 betSize)
 		#ifdef DEBUG_TRACE_PWIN
 		if( traceOut != 0 )
 		{
-			*traceOut << "allFoldChance is " << allFoldChance << ",  last multiplied by " << nextFold << endl;
+			*traceOut << "allFoldChance is " << allFoldChance;
+			if (nextFold == -1) {
+	      *traceOut << " ← INIT" << endl;
+			} else {
+			  *traceOut << ",  last multiplied by " << nextFold << endl;
+			}
 			*traceOut << "\tPlayer " << (int)pIndex;
 		}
 		#endif
@@ -1110,6 +1115,9 @@ void ExactCallBluffD::query(const float64 betSize)
                 // TODO(from yuzisee): Since this is Pr{opponentFold}, do we use Algb still? See updated PureGainStrategy.
                 float64 w_rank = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,EMPTY_DISTRIBUTION);
                 float64 w_mean = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,&fCallCumu);
+           			#if defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_ZERO)
+                    if( traceOut != 0 ) { *traceOut << std::endl << "─────────── ↑ FindZero:w_pess(fCallCumu) // FindZero:w_mean(fFoldCumu) ↓ ───────────" << std::endl << std::endl; }
+						    #endif
                 float64 w_pess = facedOdds_Algb(opporigCPS,oppBetMake,nLinear,&fFoldCumu);
                 if( nLinear <= 0 )
                 {
@@ -1136,8 +1144,9 @@ void ExactCallBluffD::query(const float64 betSize)
 					#ifdef DEBUG_TRACE_PWIN
 						if( traceOut != 0 )
 						{
-						    *traceOut << "\t\tWillFold (eaFold[" << eaFold.second << "],meanFold[" << meanFold.second << "],rankFold,eaRkFold) = (" << eaFold.first.v << "," << meanFold.first.v << "," << rankFold << "," << eaRkFold << ")" << endl;
-						    *traceOut << "\t\t\tusing w_pess, w_mean = " << w_pess << " , " << w_mean << endl;
+						    *traceOut << "\t\tWillFold";
+								*traceOut << " (eaFold[" << eaFold.second << "/" << eaFold.first.D_v << "],meanFold[" << meanFold.second << "/" << meanFold.first.D_v << "],rankFold,eaRkFold) = (" << eaFold.first.v << "," << meanFold.first.v << "," << rankFold << "," << eaRkFold << ")" << endl;
+						    *traceOut << "\t\t\tusing w_pess,w_mean = " << w_pess << " , " << w_mean << endl;
 						}
 
 					#endif
@@ -1172,7 +1181,7 @@ void ExactCallBluffD::query(const float64 betSize)
             {///Opponent would be all-in to call this bet
 
 				#ifdef DEBUG_TRACE_PWIN
-					if( traceOut != 0 ) *traceOut << "\t\tShort stacked" << endl;
+					if( traceOut != 0 ) *traceOut << "\t\tShort stacked (proposed bet " << betSize << " is less than bankroll: " << oppBankRoll << ")" << endl;
 				#endif
 
                 const float64 oldpot = tableinfo->table->GetPrevPotSize();
@@ -1207,7 +1216,8 @@ void ExactCallBluffD::query(const float64 betSize)
                     #ifdef DEBUG_TRACE_PWIN
                       if( traceOut != 0 )
                       {
-                        *traceOut << "\t\tWillFold-AllIn (eaFold[" << eaFold.second << "],meanFold[" << meanFold.second << "],rankFold,eaRkFold) = (" << eaFold.first.v << "," << meanFold.first.v << "," << rankFold << "," << eaRkFold << ")" << endl;
+                        *traceOut << "\t\tWillFold-AllIn";
+                        *traceOut << " (eaFold[" << eaFold.second << "/" << eaFold.first.D_v << "],meanFold[" << meanFold.second << "/" << meanFold.first.D_v << "],rankFold,eaRkFold) = (" << eaFold.first.v << "," << meanFold.first.v << "," << rankFold << "," << eaRkFold << ")" << endl;
                         *traceOut << "\t\t\tusing w_mean = " << w_mean << endl;
                       }
                     #endif
@@ -1222,6 +1232,9 @@ void ExactCallBluffD::query(const float64 betSize)
                       if( traceOut != 0 ) *traceOut << "\t\tbottomThreeOfFour goes with = (" << nextFold << ")" << endl;
                     #endif
 
+          #ifdef DEBUG_TRACE_PWIN
+						if( traceOut != 0 ) *traceOut << "\t\tbottomThreeOfFour goes with = (" << nextFold << ")" << endl;
+					#endif
                     if( nextFold > 1 ) nextFold = 1;
 
                 }
