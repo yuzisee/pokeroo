@@ -172,7 +172,7 @@ float64 ExactCallBluffD::bottomTwoOfThree(float64 a, float64 b, float64 c, float
 // so in that sense, callcumu is completely ridiculous
 //
 // @return How likely is the player `cps` to call vs. fold against a raise by `incrRaise`? We will calculate the winning percentages that make folding / calling / raising profitable.
-template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
+template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr, float64 riskLoss) const
 {
 
     const playernumber_t N = tableinfo->handsDealt();
@@ -181,7 +181,7 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct Hypot
 
     return facedOdds_raise_Geom_forTest( startingPoint
                                         ,tableinfo->table->GetChipDenom()
-                                        ,tableinfo->RiskLoss(hypothetical, foldwait_length_distr, 0)
+                                        ,riskLoss
                                         ,avgBlind
                                         ,hypothetical
                                         ,opponents
@@ -249,7 +249,7 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
 
 
 //Here, dbetsize/dpot = 0
-template<typename T> float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexfy, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
+template<typename T> float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexfy, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr, const float64 dRiskLoss_pot) const
 {
   const struct ChipPositionState &cps = hypothetical.bettorSituation;
 
@@ -280,8 +280,6 @@ template<typename T> float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(con
     }else
     {
     //USE FG for riskLoss
-        float64 dRiskLoss_pot = std::numeric_limits<float64>::signaling_NaN();
-        tableinfo->RiskLoss(hypothetical, foldwait_length_distr, &dRiskLoss_pot);
 
         FoldGainModel<T, OppositionPerspective> myFG(tableinfo->chipDenom());
 
@@ -301,12 +299,6 @@ template<typename T> float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(con
         const float64 faced_bet = hypothetical.hypotheticalRaiseAgainst;
 
         #ifdef DEBUGASSERT
-          if (std::isnan(dRiskLoss_pot)) {
-            std::cerr << "dRiskLoss_pot failed to initialize, please unit test tableinfo->RiskLoss("
-              << cps.alreadyBet << " , " << cps.bankroll << " , " << opponents << " , " << raiseto << " , … , &dRiskLoss_pot)" << std::endl;
-            exit(1);
-          }
-
           if (std::isnan(h_times_remaining) || std::isnan(C) || std::isnan(dexfy) || std::isnan(faced_bet) || std::isnan(A)) {
             std::cerr << " h_times_remaining=" << h_times_remaining;
             std::cerr << " C=" << C;
@@ -530,13 +522,13 @@ struct FacedOdds {
   }
 
   // TODO(from yuzisee): Raises are now Algb instead of Geom?
-  // @return the probability of this player (re)raising us
-  void init_facedOdds_raise(ExactCallD & pr_call_pr_raiseby, const FacedOdds &prev_w_r, const struct HypotheticalBet& oppRaise) {
+  // @return the win probability this opponent would need in order to justify (re)raising us to the amount of `oppRaise.hypotheticalRaiseTo`
+  void init_facedOdds_raise(ExactCallD & pr_call_pr_raiseby, const FacedOdds &prev_w_r, const struct HypotheticalBet& oppRaise, const ValueAndSlope &riskLoss) {
     const float64 opponents = pr_call_pr_raiseby.tableinfo->handsToShowdownAgainst();
 
     // Is it possible to use OpponentHandOpportunity instead?
 
-    this->pess = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.pess, opponents, (&pr_call_pr_raiseby.fCore.foldcumu));
+    this->pess = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.pess, opponents, (&pr_call_pr_raiseby.fCore.foldcumu), riskLoss.v);
     #ifdef ANTI_CHECK_PLAY
     if( oppRaise.bCouldHaveChecked )
     {
@@ -545,8 +537,8 @@ struct FacedOdds {
     } else
     #endif
     {
-      this->mean = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.mean, opponents, (&pr_call_pr_raiseby.fCore.callcumu));
-      this->rank = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.rank, opponents, EMPTY_DISTRIBUTION);
+      this->mean = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.mean, opponents, (&pr_call_pr_raiseby.fCore.callcumu), riskLoss.v);
+      this->rank = pr_call_pr_raiseby.facedOdds_raise_Geom(oppRaise,prev_w_r.rank, opponents, EMPTY_DISTRIBUTION, riskLoss.v);
     }
   }
 
@@ -755,21 +747,31 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                       {
 
                          if (prev_w_r.assert_not_nan()) {
-                          FacedOdds w_r_facedodds; // TODO(from joseph): Rename to noraiseRank or, rename noraiseRankD to w_r_facedodds_D
-                          w_r_facedodds.init_facedOdds_raise(*this, prev_w_r, oppRaise);
+                          const ValueAndSlope riskLoss = tableinfo->RiskLoss(oppRaise, &fCore.callcumu);
 
-                          const float64 noraiseRankD = dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.rank, opponents, totaldexf, EMPTY_DISTRIBUTION);
+                          #ifdef DEBUGASSERT
+                          if (std::isnan(riskLoss.D_v)) {
+                            std::cerr << "dRiskLoss_pot failed to initialize, please unit test tableinfo->RiskLoss("
+                              << oppCPS.alreadyBet << " , " << oppCPS.bankroll << " , " << opponents << " , " << oppRaise.hypotheticalRaiseAgainst << " , … , &dRiskLoss_pot)" << std::endl;
+                            exit(1);
+                          }
+                          #endif
+
+                          FacedOdds w_r_facedodds; // TODO(from joseph): Rename to noraiseRank or, rename noraiseRankD to w_r_facedodds_D
+                          w_r_facedodds.init_facedOdds_raise(*this, prev_w_r, oppRaise, riskLoss);
+
+                          const float64 noraiseRankD = dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.rank, opponents, totaldexf, EMPTY_DISTRIBUTION, riskLoss.D_v);
 
                                 const ValueAndSlope noraisePess = {
                                   1.0 - fCore.foldcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.pess - EPS_WIN_PCT)  // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_pess)
                                   ,
-                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.pess, opponents,totaldexf, (&fCore.foldcumu))
+                                  fCore.foldcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.pess - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.pess, opponents,totaldexf, (&fCore.foldcumu), riskLoss.D_v)
                                 };
 
                                 const ValueAndSlope noraiseMean = {
                                   1.0 - fCore.callcumu.Pr_haveWinPCT_strictlyBetterThan(w_r_facedodds.mean - EPS_WIN_PCT) // 1 - ed()->Pr_haveWinPCT_orbetter(w_r_mean)
                                   ,
-                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.mean, opponents,totaldexf, (&fCore.callcumu))
+                                  fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF( oppRaise, w_r_facedodds.mean, opponents,totaldexf, (&fCore.callcumu), riskLoss.D_v)
                                 };
 
                           //nextNoRaise_A[i_step].v = w_r_facedodds.rank;
@@ -979,6 +981,31 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
   } // end if CanStillBet(pIndex)
 
+  // FINAL RESULT
+  //
+  // In order to compute
+  //                       noRaiseChance_A[i] = {\prod_"each player" (nextNoRaise_A)^moreBettingRoundsAhead}
+  // and
+  //             d/dbetSize noRaiseChance_A[i] = noRaiseChance_A[i] * \sum_"each player" {moreBettingRoundsAhead * (d/dbetSize nextNoRaise_A) / nextNoRaise_A}
+  //                                             ^^^^^^^^^^^^^^^^^^^^
+  //                                             this part happens at
+  //                                        the bottom of ExactCallD::query
+  //                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^...........................^^^^^^^^^^^^^^^^
+  //                                                                  this part happens at the bottom of accumulateOneOpponentPossibleRaises with
+  //                                                                       moreBettingRoundsAhead === oppRaiseChancesAware
+  //                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  //                                                                                                               `d/dbetSize nextNoRaise_A`
+  //                                                                                                        is converted from `d/dpot nextNoRaise_A`
+  //                                                                                                  by multiplying `dpot/dbetsize * d/dpot nextNoRaise_A`
+  //                                                                                                 alongside the `dfacedOdds_dpot_GeomDEXF(…)` calls above
+  // For completeness:
+  //                       ln(noRaiseChance_A[i]) = {\sum_"each player" moreBettingRoundsAhead * ln(nextNoRaise_A)}
+  //                     ∇ ln(noRaiseChance_A[i]) = ∇ {\sum_"each player" moreBettingRoundsAhead * ln(nextNoRaise_A)}
+  // (∇ noRaiseChance_A[i]) / noRaiseChance_A[i] = ∇ {\sum_"each player" moreBettingRoundsAhead * ln(nextNoRaise_A)}
+  // (∇ noRaiseChance_A[i]) / noRaiseChance_A[i] = \sum_"each player" ∇ {moreBettingRoundsAhead * ln(nextNoRaise_A)}
+  // (∇ noRaiseChance_A[i]) = noRaiseChance_A[i] * \sum_"each player" ∇ {moreBettingRoundsAhead * ln(nextNoRaise_A)}
+  // (∇ noRaiseChance_A[i]) = noRaiseChance_A[i] * \sum_"each player" {moreBettingRoundsAhead * ∇ ln(nextNoRaise_A)}
+  // (∇ noRaiseChance_A[i]) = noRaiseChance_A[i] * \sum_"each player" {moreBettingRoundsAhead * (∇ nextNoRaise_A) / nextNoRaise_A}
   for( size_t i_step=0;i_step<noRaiseArraySize_now;++i_step)
   {
       const int32 i = i_step;
@@ -1019,7 +1046,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       }
 #endif //DEBUGASSERT
 
-      noRaiseChance_A[i_step] *= noRaiseChance_adjust;
+      this->noRaiseChance_A[i_step] *= noRaiseChance_adjust;
       if( std::fabs(noRaiseChance_A[i_step]) <= std::numeric_limits<float64>::epsilon() ) //and nextNoRaiseD == 0
       {
           noRaiseChanceD_A[i_step] = 0;

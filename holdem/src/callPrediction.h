@@ -92,13 +92,13 @@ class ExactCallD : public IExf
         float64 *noRaiseChance_A;
         float64 *noRaiseChanceD_A;
 
+        void query(const float64 betSize, const int32 callSteps);
+
         template<typename T> float64 facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
         template<typename T> float64 dfacedOdds_call_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
 
-        template<typename T> float64 facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 n, CallCumulationD<T, OppositionPerspective> * useMean) const;
-        template<typename T> float64 dfacedOdds_raise_dfacedBet_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexf, CallCumulationD<T, OppositionPerspective> * useMean) const;
-
-        void query(const float64 betSize, const int32 callSteps);
+        template<typename T> float64 facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 n, CallCumulationD<T, OppositionPerspective> * useMean, float64 riskLoss) const;
+        template<typename T> float64 dfacedOdds_raise_dfacedBet_GeomDEXF(const struct HypotheticalBet & hypothetical, float64 w, float64 opponents, float64 dexf, CallCumulationD<T, OppositionPerspective> * useMean, const float64 dRiskLoss) const;
     public:
 
     // By default, startingPoint == 0.0

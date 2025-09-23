@@ -758,9 +758,6 @@ template<typename T> float64 FacedOddsAlgb<T>::fd( const float64 w, const float6
 // lastF = U - nonRaiseGain
 //       = std::pow(1 + pot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw)   −   nonRaiseGain
 //         ^^^ "win the pot if you win the showdown"     * ^^^ "lose your entire raiseTo if you lose the showdown" −   nonRaiseGain
-//
-// If you haven't bet yet (i.e. bCheckPossible == true)
-// nonRaiseGain = 1 - riskLoss / FG.waitLength.bankroll
 template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 {
     if( lastW == w ) return;

@@ -337,7 +337,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     float64 pot;
     float64 raiseTo;
     float64 fold_bet; // if I "fold" instead of `raiseTo`, what bet can we get back to just by waiting?
-    float64 riskLoss;
+    float64 riskLoss; // This is an adjustment being made by `ExpectedCallD::RiskLoss` and if it's negative it means the HypotheticalBet under consideration is taking too much risk
 	float64 callIncrLoss;
 	float64 callIncrBase;
     bool bCheckPossible;
