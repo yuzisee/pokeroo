@@ -749,11 +749,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                          if (prev_w_r.assert_not_nan()) {
                           const ValueAndSlope riskLoss = tableinfo->RiskLoss(oppRaise, &fCore.callcumu);
 
+                          #ifdef DEBUGASSERT
                           if (std::isnan(riskLoss.D_v)) {
                             std::cerr << "dRiskLoss_pot failed to initialize, please unit test tableinfo->RiskLoss("
                               << oppCPS.alreadyBet << " , " << oppCPS.bankroll << " , " << opponents << " , " << oppRaise.hypotheticalRaiseAgainst << " , … , &dRiskLoss_pot)" << std::endl;
                             exit(1);
                           }
+                          #endif
 
                           FacedOdds w_r_facedodds; // TODO(from joseph): Rename to noraiseRank or, rename noraiseRankD to w_r_facedodds_D
                           w_r_facedodds.init_facedOdds_raise(*this, prev_w_r, oppRaise, riskLoss);
