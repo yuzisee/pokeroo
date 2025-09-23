@@ -343,7 +343,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::f( const
 #endif // DEBUGASSERT
 
   #ifdef DEBUG_TRACE_PWIN
-			if(traceEnable != nullptr) *traceEnable << "\t\t\t\t FoldWaitLengthModel(n=" << n << ", bSearching=" << bSearching << ") compares remainingbet=" << remainingbet << " vs. betSize=" << betSize << " ↦ " << lastF << " based on (winShowdown)" << winShowdown << " ⋅ " << PW << "(PW)" << std::endl;
+			if(traceEnable != nullptr) *traceEnable << "\t\t\t\t FoldWaitLengthModel(n=" << n << ", bSearching=" << cached_d_dbetSize.b_assume_w_is_constant << ") compares remainingbet=" << remainingbet << " vs. betSize=" << betSize << " ↦ " << lastF << " based on (winShowdown)" << winShowdown << " ⋅ " << PW << "(PW)" << std::endl;
 	#endif
 
     return lastF;
@@ -556,7 +556,7 @@ template<typename T1, typename T2> void FoldGainModel<T1, T2>::query( const floa
     {
         #if defined(DEBUG_TRACE_SEARCH) || (defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_ZERO))
           if (this->traceEnable != nullptr) {
-            *traceEnable << "\t\t\tFoldGainModel's FoldWaitLengthModel::FindBestLength $" << betSize << "⛁ will call FindMax(nₘᵢₙ,nₘₐₓ) [!NOTE] " << waitLength.get_cached_d_dbetSize() << " currently cached" << std::endl;
+            *traceEnable << "\t\t\tFoldGainModel's FoldWaitLengthModel::FindBestLength $" << betSize << "⛁ will call FindMax(nₘᵢₙ,nₘₐₓ)" << std::endl;
             waitLength.traceEnable = this->traceEnable;
           n = waitLength.FindBestLength();
             waitLength.traceEnable = nullptr;
