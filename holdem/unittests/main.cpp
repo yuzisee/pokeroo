@@ -1809,13 +1809,9 @@ P0 calls $14.2857 ($60)
         myTable.BeginInitialState(21);
         myTable.BeginNewHands(std::cout, b, false, dealer);
 
-        /*
-
-         All-limp except one.
-
-         */
-
-
+        std::cout << " ―――――――" << std::endl;
+        std::cout << "|excerpt| All-limp except one\t→\tNow, skip ahead to the flop …" << std::endl;
+        std::cout << " ―――――――" << std::endl;
 
         myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
 
@@ -1892,12 +1888,12 @@ P0 calls $14.2857 ($60)
          Andrew checks
          Mona checks
          h21 checks
-         Nav bets $50
-         Sam calls $50
+         Nav bets $20
+         Sam calls $20
          Laily folds
          Andrew folds
          Mona folds
-         h21 calls $50
+         h21 calls $20
          */
 
 
@@ -1906,7 +1902,7 @@ P0 calls $14.2857 ($60)
         myTurn.SetByIndex(32);
         /*
 
-         Turn:	9c Qh Kh 10s   (Pot: $164)
+         Turn:	9c Qh Kh 10s   (Pot: $74)
          */
 
 
@@ -1928,18 +1924,14 @@ P0 calls $14.2857 ($60)
         myRiver.SetByIndex(10);
 
         /*
-         River:	9c Qh Kh 10s 4c  (Pot: $164)
+         River:	9c Qh Kh 10s 4c  (Pot: $74)
          */
 
+        const float64 potBeforeRiver = myTable.GetPotSize();
         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
-        (void)highbettor; // -Wunused-variable
-        //assert(highbettor == 4);
-
-        // No all-fold; assert that the pot was increased at least.
-        //assert(myTable.GetPotSize() > 55);
-
-
-
+        if (myTable.GetPotSize() != potBeforeRiver) {
+          assert((highbettor != 0) && "h22 should not be the one leading with a bet here...");
+        }
     }
 
 
@@ -2094,7 +2086,7 @@ P0 calls $14.2857 ($60)
          [Nav]
          [Sam]
 
-         h21 checks
+         h21 checks (with Ah 2h)
          Nav checks
          Sam checks
 
@@ -2107,13 +2099,11 @@ P0 calls $14.2857 ($60)
          River:	9c Qh Kh 10s 4c  (Pot: $164)
          */
 
-        const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
-        (void)highbettor; // -Wunused-variable
-        //assert(highbettor == 4);
-
-        // No all-fold; assert that the pot was increased at least.
-        //assert(myTable.GetPotSize() > 55);
-
+         const float64 potBeforeRiver = myTable.GetPotSize();
+         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
+         if (myTable.GetPotSize() != potBeforeRiver) {
+           assert((highbettor != 0) && "Not sure about this, but I suppose you didn't hit anything so even if you're ~$50 committed into a $160+ pot.");
+         }
 
     }
 
