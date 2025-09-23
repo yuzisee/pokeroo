@@ -123,7 +123,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT
     }
 }
 
-static float64 compute_dE_dbetSize( const float64 n, const float64 rawPCT, const float64 opponents ) {
+static float64 compute_dE_dbetSize( const float64 rawPCT, const float64 opponents ) {
   #ifdef INLINE_INTEGER_POWERS
             float64 intOpponents = std::round(opponents);
             if( intOpponents == opponents )
@@ -155,7 +155,7 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dbetSi
       return cached_d_dbetSize.output_d_dbetSize;
   }
 
-  const float64 dE_dbetSize = compute_dE_dbetSize(n, getRawPCT(n), opponents);
+  const float64 dE_dbetSize = compute_dE_dbetSize(getRawPCT(n), opponents);
 
   if (cached_d_dbetSize.b_assume_w_is_constant) {
     // We're in `b_assume_w_is_constant` mode, so cache this value to avoid recomputing it right away

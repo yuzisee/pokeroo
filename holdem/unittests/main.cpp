@@ -163,7 +163,8 @@ namespace UnitTests {
 
         PositionalStrategy::printCommunityOutcomes(std::cout, a, detailPCT);
 
-
+        assert(detailPCT.mean.pct < 0.49);
+        assert(0.48 < detailPCT.mean.pct);
     }
 
 
