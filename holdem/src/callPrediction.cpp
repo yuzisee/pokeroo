@@ -398,7 +398,7 @@ template<typename T> float64 ExactCallD::dfacedOdds_call_dbetSize_Geom(const Chi
 // Thus, it can't be handcumu but can be foldcumu or callcumu depending on how much information the opponent has.
 template<typename T> float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionState & cps, float64 betSize, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr) const
 {
-    FacedOddsAlgb<T> a(tableinfo->chipDenom()); // `chipDenom()` is the quantum used by the FoldGainModel it contains, but the top-level FacedOddsAlgb's `FindZero` below will use `0.5/RAREST_HAND_CHANCE` (see src/callPredictionFunctions.h#FacedOddsAlgb to learn more)
+    FacedOddsAlgb<T> a(tableinfo->chipDenom()); // `chipDenom()` is the quantum used by the FoldGainModel it contains, but the top-level FacedOddsAlgb's `FindZero` below will use `SEARCH_SPACE_PROBABILITY_QUANTUM` (see src/callPredictionFunctions.h#FacedOddsAlgb to learn more)
     a.pot = cps.pot;
     //a.alreadyBet = cps.alreadyBet; //just for the books?
     a.betSize = betSize;
