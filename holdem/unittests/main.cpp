@@ -1568,7 +1568,11 @@ namespace RegressionTests {
 
         // You have top two pair. One of your
 
-        assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1); // ASSERT: PureGainStrategy should not fold with top two pair, right?
+        if (myTable.PlayRound_Turn(myFlop, myTurn, std::cout) == -1) {
+          // ORIGINALLY: Assert → PureGainStrategy should not fold with top two pair, right?
+          // NOWAWDAYS: In later versions of the code, the bot is more tight-aggressive in this situation so it's not an issue anymore
+          return;
+        }
         /*
 
          (3 players)
@@ -1821,8 +1825,9 @@ namespace RegressionTests {
 
 
 
-    // Hand played live
-    void testRegression_021() {
+    // Hand played live:
+    // OBJECTIVE: We should be playing value hands when we have a large stack.
+    void testImprovement_021() {
 
 
 
@@ -1895,7 +1900,9 @@ namespace RegressionTests {
 
 
         assert(myTable.PlayRound_BeginHand(std::cout) != -1);
-        assert(myTable.IsInHand(0)); // play value hands you have a large stack.
+        // TODO(from yuzisee): We need to track distribution of flops to identify drawing hands.
+        // assert(myTable.IsInHand(0)); // play value hands you have a large stack.
+
         // If you win you will win a lot since winning hands only have a high win percentage
         // and losing hands have a low win percentage
         // This is based on:
@@ -4648,8 +4655,8 @@ static void all_regression_tests() {
     RegressionTests::testRegression_026();
     RegressionTests::testRegression_025();
     RegressionTests::testRegression_021b();
-    //RegressionTests::testRegression_022(); // In later versions of the code, the bot is more tight-aggressive in this situation so it's not an issue anymore
-//    RegressionTests::testRegression_021(); // TODO(from yuzisee): We need to track distribution of flops to identify drawing hands.
+    RegressionTests::testRegression_022();
+    RegressionTests::testImprovement_021();
 
     RegressionTests::testRegression_006();
     RegressionTests::testRegression_009();
