@@ -673,10 +673,10 @@ float64 ScalarFunctionModel::FindZero(float64 x1, float64 x2, bool bRoundToQuant
     float64 y2 = f(x2);
 
     // See unittests/main.cpp#testRegression_028
-    if (y1 == 0) {
+    if (fabs(y1) <= std::numeric_limits<float64>::epsilon()) {
       return x1;
     }
-    if (y2 == 0) {
+    if (fabs(y2) <= std::numeric_limits<float64>::epsilon()) {
       return x2;
     }
 
