@@ -28,19 +28,6 @@
 
 #undef INLINE_INTEGER_POWERS
 
-/*
-const FoldWaitLengthModel & FoldWaitLengthModel::operator= ( const FoldWaitLengthModel & o )
-{
-    this->amountSacrificeVoluntary = o.amountSacrificeVoluntary;
-	this->amountSacrificeForced = o.amountSacrificeForced;
-    this->bankroll = o.bankroll;
-    this->betSize = o.betSize;
-    this->opponents = o.opponents;
-    this->w = o.w;
-    this->meanConv = o.meanConv;
-    return *this;
-}
- */
 
 // This is used by `FoldGainModel::query` to determine whether we can return cached values vs. whether we need to recompute.
 // TODO(from joseph): Find a way to determine whether the cached values are stale or not...
@@ -57,13 +44,15 @@ template<typename T1, typename T2> bool FoldWaitLengthModel<T1, T2>::has_same_in
         && (o.meanConv == meanConv)
     );
 }
-
+// [!CAUTION]
+// `.meanConv` appears in BOTH `has_same_inputs` and `has_same_cached_output_values` (!!!)
 template<typename T1, typename T2> bool FoldWaitLengthModel<T1, T2>::has_same_cached_output_values ( const FoldWaitLengthModel<T1, T2> & o ) const
 {
     return (
          (o.cacheRarity == cacheRarity)
         && (o.cached_d_dbetSize.input_n == cached_d_dbetSize.input_n)
         && (o.cached_d_dbetSize.output_d_dbetSize == cached_d_dbetSize.output_d_dbetSize)
+        && (o.meanConv == meanConv)
     );
 }
 
@@ -513,10 +502,16 @@ template<typename T1, typename T2> void FoldWaitLengthModel<T1, T2>::load(const 
     prevPot = cps.prevPot;
 }
 
-// Rarity depends on cached_d_dBetSize, so we have to clear the cache if we are updating w
+// Rarity depends on `meanConv` so we have to clear the cache if we are updating meanConv
+template<typename T1, typename T2> void FoldWaitLengthModel<T1, T2>::setMeanConv(CallCumulationD<T1, T2> * new_meanConv) {
+    cacheRarity = std::numeric_limits<float64>::signaling_NaN();
+    this->meanConv = new_meanConv;
+}
+
+// Rarity depends on `w`, so we have to clear the cache if we are updating w
 template<typename T1, typename T2> void FoldWaitLengthModel<T1, T2>::setW(float64 neww) {
     cacheRarity = std::numeric_limits<float64>::signaling_NaN();
-    w = neww;
+    this->w = neww;
 }
 
 template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::getW() const {

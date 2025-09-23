@@ -229,7 +229,7 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
     // We don't need to set w, because a.FindZero searches over w
     a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
-    a.FG.waitLength.meanConv = foldwait_length_distr;
+    a.FG.waitLength.setMeanConv(foldwait_length_distr);
 
     //a.FG.dw_dbet = 0; //We don't need this, unless we want the derivative of FG.f; Since we don't need any extrema or zeros of FG, we can set this to anything
 
@@ -286,7 +286,7 @@ template<typename T> float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(con
         FoldGainModel<T, OppositionPerspective> myFG(tableinfo->chipDenom());
 
     //USE myFG for F_a and F_b
-        myFG.waitLength.meanConv = foldwait_length_distr;
+        myFG.waitLength.setMeanConv(foldwait_length_distr);
         myFG.waitLength.setW(w);
         myFG.waitLength.load(cps, avgBlind);
         myFG.waitLength.opponents = opponents;
@@ -355,7 +355,7 @@ template<typename T> float64 ExactCallD::facedOdds_call_Geom(const ChipPositionS
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
-    a.FG.waitLength.meanConv = foldwait_length_distr;
+    a.FG.waitLength.setMeanConv(foldwait_length_distr);
     //a.FG.dw_dbet = 0; //We don't need this, unless we want the derivative of FG.f; Since we don't need any extrema or zeros of FG, we can set this to anything
 
     return a.FindZero(0,1, false);
@@ -375,7 +375,7 @@ template<typename T> float64 ExactCallD::dfacedOdds_call_dbetSize_Geom(const Chi
     FG.waitLength.setW(w);
     FG.waitLength.load(cps, avgBlind);
     FG.waitLength.opponents = opponents;
-    FG.waitLength.meanConv = foldwait_length_distr;
+    FG.waitLength.setMeanConv(foldwait_length_distr);
     //FG.dw_dbet = 0; //Again, we don't need this
 
     const float64 wN_1 = std::pow(w,opponents-1);
@@ -407,7 +407,7 @@ template<typename T> float64 ExactCallBluffD::facedOdds_Algb(const ChipPositionS
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
     a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
-    a.FG.waitLength.meanConv = foldwait_length_distr;
+    a.FG.waitLength.setMeanConv(foldwait_length_distr);
     //a.FG.dw_dbet = 0; //We don't need this...
 
     #if defined(DEBUG_TRACE_PWIN) && defined(DEBUG_TRACE_SEARCH)
@@ -1414,7 +1414,7 @@ float64 ExactCallBluffD::RiskPrice(const ExpectedCallD &tableinfo, FoldStatsCdf 
     FG.waitLength.bankroll = maxStack;
     FG.waitLength.opponents = 1;
     FG.waitLength.prevPot = tableinfo.table->GetPrevPotSize();
-    FG.waitLength.meanConv = foldcumu_caching;
+    FG.waitLength.setMeanConv(foldcumu_caching);
     const float64 riskprice = FG.FindZero(tableinfo.table->GetMinRaise() + tableinfo.callBet(),maxStack/2, true);
 
 
@@ -1542,10 +1542,11 @@ void OpponentHandOpportunity::query(const float64 betSize) {
                 // I guess technically this is mean but they know what you have, so pessimistically we're talking about them trying to beat only you.
                 // The problem is, we usually talk about being pessimistic to prevent overbets when _you_ have a good hand.
                 // In that case, e_opp would be counter-productive. Let's consider callcumu or even rank here instead.
-                FG.waitLength.meanConv =
-                //(opponentsFacingThem > 1.0) ?
-                nullptr
-                //: &(fCore.callcumu)
+                FG.waitLength.setMeanConv(
+                  //(opponentsFacingThem > 1.0) ?
+                  nullptr
+                  //: &(fCore.callcumu)
+                )
                 ;
                 // ( 1 / (x+1) )  ^ (1/x)
                 FG.waitLength.bankroll = fTable.ViewPlayer(pIndex)->GetMoney();

@@ -70,7 +70,7 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
     switch (meanOrRank) {
         case MEAN:
             // Since ExactCallD::ed() returns fCore.callcumu
-            FG.waitLength.meanConv = &(fCore.callcumu); //  &(fCore.____); // Which *e is this usually called with?
+            FG.waitLength.setMeanConv(  &(fCore.callcumu)  ); //  &(fCore.____); // Which *e is this usually called with?
             // One vote for: ea.ed from BluffGainInc's oppRaisedMyFoldGain
             // One vote for: ea.ed from BluffGainInc's "y -= myFoldGain"
 
@@ -78,7 +78,7 @@ float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const f
             // One vote for: core.statmean.pct from statProbability constructor of ExpectedCallD
             break;
         case RANK:
-            FG.waitLength.meanConv = EMPTY_DISTRIBUTION;
+            FG.waitLength.setMeanConv( EMPTY_DISTRIBUTION );
             FG.waitLength.setW( fCore.statRanking().pct ); //fCore.callcumu.Pr_haveWinPCT_orbetter(fCore.statmean.pct); // rankW; // When called with e is 0, what is the rank -- how do we get that from fCore?
             // One vote for: const float64 rarity3 = core.callcumu.Pr_haveWinPCT_orbetter(core.statmean.pct); from StatResultProbabilities::Process_FoldCallMean
 
@@ -259,7 +259,7 @@ template<typename T> float64 ExpectedCallD::RiskLoss(const struct HypotheticalBe
     const float64 avgBlind = table->GetBlindValues().OpportunityPerHand(N);
 
     FoldGainModel<T, OppositionPerspective> FG(table->GetChipDenom()/2);
-    FG.waitLength.meanConv = foldwait_length_distr;
+    FG.waitLength.setMeanConv( foldwait_length_distr );
 
     if(foldwait_length_distr == 0)
     {
