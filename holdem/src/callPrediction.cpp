@@ -207,24 +207,7 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
     }
 
     FacedOddsRaiseGeom<T> a(denom);
-
-	a.pot = cps.pot + (hypotheticalRaise.bWillGetCalled ? (hypotheticalRaise.betIncrease()) : 0);
-    a.raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
-    a.fold_bet = hypotheticalRaise.fold_bet();
-    a.bCheckPossible = hypotheticalRaise.bCouldHaveChecked;
-    a.riskLoss = (hypotheticalRaise.bCouldHaveChecked) ? 0 : riskLoss;
-
-	if( hypotheticalRaise.bWillGetCalled )
-	{
-		a.callIncrLoss = 1 - hypotheticalRaise.fold_bet()/cps.bankroll;
-		a.callIncrBase = (cps.bankroll + cps.pot)/(cps.bankroll - hypotheticalRaise.fold_bet()); // = 1 + (pot - fold_bet) / (bankroll - fold_bet);
-	}else
-	{
-		a.callIncrLoss = 0;
-		a.callIncrBase = 0;
-	}
-
-
+    FacedOddsRaiseGeom<T>::configure_with(a, hypotheticalRaise, riskLoss);
 
     // We don't need to set w, because a.FindZero searches over w
     a.FG.waitLength.load(cps, avgBlind);
@@ -657,16 +640,11 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                   const bool bMyWouldCall = i < callSteps;
                   const float64 thisRaise = RaiseAmount(*tableinfo, betSize,i);
 
-                  //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
-                  const bool bOppCouldCheck = (betSize == 0) || /*(betSize == callBet())*/(oppBetAlready == betSize);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
-                  //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
-
                   const struct HypotheticalBet oppRaise = {
                     oppCPS,
                     thisRaise,
                     betSize,
                     oppBetAlready,
-                    bOppCouldCheck,
                     bMyWouldCall
                   };
 

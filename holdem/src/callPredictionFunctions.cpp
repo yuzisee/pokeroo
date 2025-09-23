@@ -755,6 +755,27 @@ template<typename T> void FacedOddsAlgb<T>::query( const float64 w )
 template<typename T> float64 FacedOddsAlgb<T>::f( const float64 w ) { query(w);  return lastF; }
 template<typename T> float64 FacedOddsAlgb<T>::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
 
+template<typename T> void FacedOddsRaiseGeom<T>::configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, float64 currentRiskLoss) {
+  const struct ChipPositionState &cps = hypotheticalRaise.bettorSituation;
+
+   a.pot = cps.pot + (hypotheticalRaise.bWillGetCalled ? (hypotheticalRaise.betIncrease()) : 0);
+   a.raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
+   a.fold_bet = hypotheticalRaise.fold_bet();
+   a.bCheckPossible = hypotheticalRaise.bCouldHaveChecked();
+   a.riskLoss = (hypotheticalRaise.bCouldHaveChecked()) ? 0 : currentRiskLoss;
+
+	if( hypotheticalRaise.bWillGetCalled )
+	{
+		a.callIncrLoss = 1 - hypotheticalRaise.fold_bet()/cps.bankroll;
+		a.callIncrBase = (cps.bankroll + cps.pot)/(cps.bankroll - hypotheticalRaise.fold_bet()); // = 1 + (pot - fold_bet) / (bankroll - fold_bet);
+	}else
+	{
+		a.callIncrLoss = 0;
+		a.callIncrBase = 0;
+	}
+}
+
+
 // lastF = U - nonRaiseGain
 //       = std::pow(1 + pot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw)   −   nonRaiseGain
 //         ^^^ "win the pot if you win the showdown"     * ^^^ "lose your entire raiseTo if you lose the showdown" −   nonRaiseGain
@@ -842,3 +863,6 @@ template<typename T1, typename T2> FoldWaitLengthModel<T1, T2>::~FoldWaitLengthM
 template class FoldWaitLengthModel<void, void>;
 template class FoldWaitLengthModel<void, OppositionPerspective>;
 template class FoldWaitLengthModel<PlayerStrategyPerspective, OppositionPerspective>;
+
+template class FacedOddsRaiseGeom<void>;
+template class FacedOddsRaiseGeom<PlayerStrategyPerspective>;

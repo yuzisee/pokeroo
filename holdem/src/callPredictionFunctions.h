@@ -61,9 +61,8 @@ struct ChipPositionState
 struct HypotheticalBet {
   const struct ChipPositionState &bettorSituation;
   float64 hypotheticalRaiseTo;
-  const float64 hypotheticalRaiseAgainst;
+  float64 hypotheticalRaiseAgainst;
   const float64 counderfactualFoldAbandon_raw; // This is the same as `bettorSituation.alreadyContributed` EXCEPT it includes any blinds you are on the hook for as well. In theory it's exactly `bettorSituation.alreadyBet`
-  const bool bCouldHaveChecked; // either because you're first to act OR because the only bet so far is equal to your blind bet
   const bool bWillGetCalled;
 
   // if you're _RE-RAISING_ this is the increase compared to the highest bet so far
@@ -85,6 +84,12 @@ struct HypotheticalBet {
     }
   }
 
+  // It seems to be that:
+  //  (i) The underlying `accumulateOneOpponentPossibleRaises` and thus `ExactCallD::query` is a search over ExactCallD::query's `betSize`
+  //      so when we take the derivative, we want to sample the derivative at the value of `betSize` corresponding to ExactCallD::query
+  //  (ii) The FoldGain of a position is based on the bet you're facing (and would consider folding against INSTEAD OF following through on HypotheticalBet)
+  //       Well, that bet you're facing is exactly `hypothetical.hypotheticalRaiseAgainst`
+  // and… well what do you know? These two (i) and (ii) are the same value.
   constexpr float64 faced_bet() const {
     if( hypotheticalRaiseAgainst > bettorSituation.bankroll )
     {
@@ -101,6 +106,14 @@ struct HypotheticalBet {
   constexpr bool bMoreThanAllIn() const {
     return bettorSituation.bankroll < hypotheticalRaiseTo;
   }
+
+  // either because you're first to act OR because the only bet so far is equal to your blind bet
+  constexpr bool bCouldHaveChecked() const {
+    //If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+    const bool bOppCouldCheck = (hypotheticalRaiseAgainst == 0.0) || /*(betSize == callBet())*/(counderfactualFoldAbandon_raw == hypotheticalRaiseAgainst);//If oppBetAlready == betSize AND table->CanRaise(pIndex, playerID), the player must be in the blind. Otherwise,  table->CanRaise(pIndex, playerID) wouldn't hold
+    //The other possibility is that your only chance to raise is in later rounds. This is the main force of bWouldCheck.
+    return bOppCouldCheck;
+  }
 }
 ;
 
@@ -114,6 +127,10 @@ struct DBetSizeCache {
   }
 };
 
+// [!TIP]
+// Read `FoldGainModel` instead. As far as I can tell it's the only code that uses this class.
+// Essentially, `FoldWaitLengthModel` is only a helper computation used by the broader FoldGainModel below.
+//
 // [!WARNING]
 // This template is instantiated at the bottom of src/callPredictionFunctions.cpp to avoid linker errors
 template<typename T1, typename T2>
@@ -228,11 +245,23 @@ public:
 ;
 
 
-// NOTE:
-// You never use FoldGainModel or FoldWaitLengthModel with handcumu.
-// If it's an opponent against you that knows your hand, they use foldcumu.
-// If it's you, you use callcumu.
-// If it's an opponent that doesn't know your hand, you use callcumu.
+// Q: You don't use FoldGainModel or FoldWaitLengthModel with handcumu, I don't think??
+// Scenario: "Will my opponent *raise*?"
+//   >>> ExpectedCallD::RiskLoss
+//   If the opponent's raise decision depends on whether they think *you* will fold against their raise, your only choice is to use callcumu
+// Scenario: "Will my opponent call?"
+//   >>> ExactCallD::facedOdds_call_Geom
+//   (requirements are same as "Will my opponent fold?" below)
+// Scenario: "Will my opponent fold?"
+//   >>> ExactCallBluffD::pWin (via FacedOddsAlgb)
+//   If it's an opponent against you that knows your hand, they use foldcumu; e.g. "opponent folds until they get a hand that can catch you"
+//   If it's an opponent against you that *doesn't* know your hand, they use callcumu.
+// Scenario: "Should I fold?"
+//   >>> FoldOrCall::foldGain
+//   If you're heads-up, I… SUPPOSE you could use handcumu, e.g. "fold until their hand gets worse"
+//      ^^^ but this doesn't really make sense because in order to reach the same situation again their hand would have to be just as good
+//   If it's an opponent that doesn't know your hand, you use callcumu, e.g. "fold until my hand gets better"
+//   OR use rank (nullptr a.k.a. EMPTY_DISTRIBUTION) i.e. "fold until my hand gets better AND their hand gets worse"
 template<typename T1, typename T2>
 class FoldGainModel : public virtual ScalarFunctionModel
 {
@@ -325,6 +354,9 @@ template class FacedOddsAlgb<PlayerStrategyPerspective>;
 template class FacedOddsAlgb<void>;
 
 //How much/likely would they raise or reraise?
+//
+// [!WARNING]
+// This template is instantiated at the bottom of src/callPredictionFunctions.cpp to avoid linker errors
 template<typename T>
 class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 {
@@ -346,9 +378,10 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     FacedOddsRaiseGeom(float64 myQuantum) : ScalarFunctionModel(SEARCH_SPACE_PROBABILITY_QUANTUM), lastW(-1), FG(myQuantum/2) {}
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
+
+    // This populates everything EXCEPT for `this->FG.waitLength`
+    static void configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, float64 currentRiskLoss);
 }
 ;
-template class FacedOddsRaiseGeom<void>;
-template class FacedOddsRaiseGeom<PlayerStrategyPerspective>;
 
 #endif
