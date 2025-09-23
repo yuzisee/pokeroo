@@ -139,13 +139,14 @@ public:
         {
 			if( (n-p) < p ) p = n-p;/* OPTIMIZATION INCLUDED LATER */
 
-            T r = 1;
-            for(int32 factorial=0;factorial < p;++factorial)
-            {
+			      // int32 can fit only up to `12!` factorial if calculating pure factorials
+						// https://stackoverflow.com/questions/36559371/efficiently-calculate-factorial-in-32-bit-machine
+            int64_t r = 1;
+            for(int32 factorial=0;factorial < p;++factorial) {
                 r*=(n-factorial);
                 r/= factorial+1;
             }
-            return r;
+            return static_cast<T>(r);
         }
 }
 ;

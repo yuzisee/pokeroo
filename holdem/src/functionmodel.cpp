@@ -20,15 +20,15 @@
 
 #include <iostream>
 #include <float.h>
+#include <limits>
 
 #include "functionmodel.h"
 #include "inferentials.h"
 #include "portability.h"
 
-
 static inline constexpr float64 cleanpow(float64 b, float64 x)
 {
-    if( b < DBL_EPSILON ) return 0;
+    if( b <= DBL_EPSILON ) return 0;
     //if( b > 1 ) return 1;
     return std::pow(b,x);
 }
@@ -58,6 +58,10 @@ static NetStatResult allNaN() {
 }
 CombinedStatResultsPessimistic::CombinedStatResultsPessimistic(OpponentHandOpportunity & opponentHandOpportunity, CoreProbabilities & core)
 :
+#ifdef DEBUG_AGAINSTXOPPONENTS
+traceDebug(nullptr)
+,
+#endif
 fLastBetSize(std::numeric_limits<float64>::signaling_NaN())
 ,
 fNet(allNaN())
@@ -72,7 +76,11 @@ fSplitOpponents(opponentHandOpportunity.fTable.NumberInHand().inclAllIn() - 1)
 {}
 
 
-static std::pair<struct NetStatResult, float64> againstBestXOpponents(FoldStatsCdf & fOppCumu, float64 fractionOfHandsToBeat, float64 fractionOfHandsToBeat_dbetSize, playernumber_t fSplitOpponents) {
+static std::pair<struct NetStatResult, float64> againstBestXOpponents(FoldStatsCdf & fOppCumu, float64 fractionOfHandsToBeat, float64 fractionOfHandsToBeat_dbetSize, playernumber_t fSplitOpponents
+#ifdef DEBUG_AGAINSTXOPPONENTS
+  , std::ofstream * logF
+#endif
+) {
     std::pair<struct NetStatResult, float64> result;
 
     const std::pair<StatResult, float64> bestXOpponents = fOppCumu.bestXHands(fractionOfHandsToBeat);
@@ -103,7 +111,9 @@ static std::pair<struct NetStatResult, float64> againstBestXOpponents(FoldStatsC
     fSplitShape.wins = cleanpow(fWinProb, 1.0 / fSplitOpponents);
     fSplitShape.splits = 1.0 - fSplitShape.loss - fSplitShape.wins;
 
-
+    #ifdef DEBUG_AGAINSTXOPPONENTS
+      if(logF != nullptr) { *logF << "\t\t showdownResults = (W: " << fWinProb << " , L: " << fLoseProb << " )  ↚  (w: " << fSplitShape.wins << " , s: " << fSplitShape.splits << " , l: " << fSplitShape.loss << ") = fSplitShape before normalizating" <<  std::endl; }
+    #endif
 
 #ifdef DEBUGASSERT
     if ((showdownResults.loss != showdownResults.loss) || (showdownResults.wins != showdownResults.wins) || (showdownResults.splits != showdownResults.splits)) {
@@ -112,12 +122,17 @@ static std::pair<struct NetStatResult, float64> againstBestXOpponents(FoldStatsC
     }
 #endif // DEBUGASSERT
 
-
-    if (fSplitOpponents > 1) {
+    if (fSplitShape.splits <= std::numeric_limits<float64>::epsilon()) {
+        fSplitShape.splits = 0.0;
+    } else if (fSplitOpponents > 1) {
         float64 splitTotal = 0.0;
         for( int8 i=1;i<=fSplitOpponents;++i )
         {//Split with i
-            splitTotal += HoldemUtil::nchoosep<float64>(fSplitOpponents,i)*std::pow(fSplitShape.wins,fSplitOpponents-i)*std::pow(fSplitShape.splits,i);
+          const float64 multisplit_adjustment = HoldemUtil::nchoosep<float64>(fSplitOpponents,i)*std::pow(fSplitShape.wins,fSplitOpponents-i)*std::pow(fSplitShape.splits,i);
+            splitTotal += multisplit_adjustment;
+            #ifdef DEBUG_AGAINSTXOPPONENTS
+              if(logF != nullptr) { *logF << "\t\t\t Multi-split adjustment +" << multisplit_adjustment << " from " << static_cast<int>(fSplitOpponents) << "_C_" << static_cast<int>(i) << "=" << HoldemUtil::nchoosep<int32>(fSplitOpponents,i) << " way(s) to win against nₐ=" << static_cast<int>(fSplitOpponents-i)  << " → (w^(nₐ))⋅(s^nₛ) = " << std::pow(fSplitShape.wins,fSplitOpponents-i) << " ⋅ " << std::pow(fSplitShape.splits,i) << " while splitting against nₛ=" << static_cast<int>(i) << std::endl; }
+            #endif
         }
 
         ///Normalize, total split possibilities must add up to showdownResults.split
@@ -132,6 +147,9 @@ static std::pair<struct NetStatResult, float64> againstBestXOpponents(FoldStatsC
             fSplitShape.loss -= (fSplitShape.wins + fSplitShape.splits) * (rescaleSplitWin - 1.0); // Subtract any excess that would be created (e.g. if rescaleSplitWin > 1.0)
             fSplitShape.wins *= rescaleSplitWin;
             fSplitShape.splits *= rescaleSplitWin;
+            #ifdef DEBUG_AGAINSTXOPPONENTS
+              if(logF != nullptr) { *logF << "\t\t\t Multi-split rescale factor " << rescaleSplitWin << " due to " << splitTotal << "% split combinations ∴ w: " << fSplitShape.wins << " , s: " << fSplitShape.splits << " , l: " << fSplitShape.loss << std::endl; }
+            #endif
         }
     }
     fSplitShape.forceRenormalize();
@@ -144,16 +162,23 @@ static std::pair<struct NetStatResult, float64> againstBestXOpponents(FoldStatsC
     }
 #endif // DEBUGASSERT
 
-
     if(   (1 - fSplitShape.splits <= DBL_EPSILON)  || (fSplitShape.loss + fSplitShape.wins <= DBL_EPSILON)
        || (1 - showdownResults.splits <= DBL_EPSILON)  || (showdownResults.loss + showdownResults.wins <= DBL_EPSILON)
        )
     {
+      #ifdef DEBUG_AGAINSTXOPPONENTS
+        if(logF != nullptr) { *logF << "\t\t fSplitShape=(w: " << fSplitShape.wins << " , s: " << fSplitShape.splits << " , l: " << fSplitShape.loss << ") BOUNDARY" << std::endl; }
+      #endif
         fLoseProb = 0.0;
         fWinProb = 0.0;
         f_d_WinProb_dbetSize = 0.0;
         fSplitShape.wins = 1.0; //You need wins to split, and shape is only used to split so this okay
     }
+    #ifdef DEBUG_AGAINSTXOPPONENTS
+    else {
+      if(logF != nullptr) { *logF << "\t\t fSplitShape=(w: " << fSplitShape.wins << " , s: " << fSplitShape.splits << " , l: " << fSplitShape.loss << ") Renormalized" << std::endl; }
+    }
+    #endif
 
 
 #ifdef DEBUGASSERT
@@ -182,9 +207,7 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
         std::cerr << "NaN encountered in fHandsToBeat" << endl;
         exit(1);
     }
-#endif // DEBUGASSERT
 
-#ifdef DEBUGASSERT
     if (fractionOfHandsToBeat_dbetSize != fractionOfHandsToBeat_dbetSize) {
         std::cerr << "NaN encountered in fractionOfHandsToBeat_dbetSize" << endl;
         exit(1);
@@ -193,8 +216,15 @@ void CombinedStatResultsPessimistic::query(float64 betSize) {
 
     const float64 fractionOfHandsToBeat = 1.0 / fHandsToBeat; // If you have to beat N hands, expect the worst to be one of the worst 1/Nth
 
+    #ifdef DEBUG_AGAINSTXOPPONENTS
+      if(traceDebug != nullptr) { *traceDebug << "\t\t on betSize $" << betSize << "⛃ againstBestXOpponents(fFoldCumu, " << fHandsToBeat << "⁻¹ = " << fractionOfHandsToBeat << " , " << fractionOfHandsToBeat_dbetSize << " , " << static_cast<int>(fSplitOpponents) << ")" << std::endl; }
+    #endif
 
-    std::pair<struct NetStatResult, float64> result = againstBestXOpponents(*fFoldCumu, fractionOfHandsToBeat, fractionOfHandsToBeat_dbetSize, fSplitOpponents);
+    std::pair<struct NetStatResult, float64> result = againstBestXOpponents(*fFoldCumu, fractionOfHandsToBeat, fractionOfHandsToBeat_dbetSize, fSplitOpponents
+      #ifdef DEBUG_AGAINSTXOPPONENTS
+      , traceDebug
+      #endif
+    );
     fNet = result.first;
     f_d_WinProb_dbetSize = result.second;
     f_d_LoseProb_dbetSize = -f_d_WinProb_dbetSize;
@@ -376,7 +406,11 @@ static NetStatResult initMultiOpponent(playernumber_t difficultyOpponents, playe
 
 static NetStatResult initSingleOpponent(playernumber_t difficultyOpponents, playernumber_t showdownOpponents, FoldStatsCdf &foldcumu) {
     const float64 fractionOfHandsToBeat = 1.0 / difficultyOpponents;
-    return againstBestXOpponents(foldcumu, fractionOfHandsToBeat, 0.0, showdownOpponents).first;
+    return againstBestXOpponents(foldcumu, fractionOfHandsToBeat, 0.0, showdownOpponents
+      #ifdef DEBUG_AGAINSTXOPPONENTS
+      , nullptr
+      #endif
+    ).first;
 }
 
 PureStatResultGeom::PureStatResultGeom(const StatResult mean, const StatResult rank, const CoarseCommunityHistogram &outcomes, FoldStatsCdf &foldcumu, const ExpectedCallD &tableinfo)

@@ -497,6 +497,9 @@ void PositionalStrategy::printStateModel(std::ofstream &logF, float64 displaybet
 static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * const csrp, const float64 n_1v1_outcomes) {
     if (csrp != 0) {
         const float64 safety_rounding = (n_1v1_outcomes < RAREST_HAND_CHANCE) ? RAREST_HAND_CHANCE : n_1v1_outcomes;
+        #ifdef DEBUG_AGAINSTXOPPONENTS
+          csrp->traceDebug = &logF;
+        #endif
         const StatResult & showdown1v1 = csrp->ViewShape(betSize);
         // const float64 stable_splits = std::round(showdown1v1.splits * n_1v1_outcomes * 2) / n_1v1_outcomes;
         // const float64 stable_splits = (showdown1v1.splits < std::sqrt(std::numeric_limits<float64>::epsilon())) ? 0.0 : showdown1v1.splits;
@@ -506,6 +509,9 @@ static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, Combin
         logF << "\tW(" << csrp->getHandsToBeat(betSize) << "×)=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "×o.w_s=(" << showdown1v1.wins << "," << stable_splits << ")";
         //                                                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         //                                                                                             This is the _actual_ number of people you would be in the showdown with
+        #ifdef DEBUG_AGAINSTXOPPONENTS
+          csrp->traceDebug = nullptr;
+        #endif
     }
 }
 
@@ -547,6 +553,7 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD &
     if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
       logF << "\tfold -- "; // << "left"
       const float64 allFoldPr = printAllFold.first->pWin(rAmount);
+      logF << " ⎌⟂ ";
       if (allFoldPr < foldPrecision) {
         logF << "0.0";
       } else {

@@ -197,7 +197,11 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
                     }
 
                         #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
-                            if(traceEnable != nullptr) *traceEnable << "\t\t  CONCLUSION = Max{ " << f(leftmax) << " , " << f(rightmax) << " }" << endl;
+                            if(traceEnable != nullptr) {
+                              const float64 conclusion_left = f(leftmax);
+                              const float64 conclusion_right = f(rightmax);
+                              *traceEnable << "\t\t  CONCLUSION = Max{ " << conclusion_left << " , " << conclusion_right << " }" << endl;
+                            }
                         #endif
 
                     // Now compare the recursive results to each other...

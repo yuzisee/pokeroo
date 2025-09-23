@@ -21,12 +21,18 @@
 #ifndef HOLDEM_GainModels
 #define HOLDEM_GainModels
 
+
+#define DEBUG_AGAINSTXOPPONENTS
+
+
 #include "functionbase.h"
 #include "inferentials.h"
 #include "callPrediction.h"
 #include <math.h>
 
-
+#ifdef DEBUG_AGAINSTXOPPONENTS
+#include <iostream>
+#endif
 
 #define DEFAULT_EPS_STEP 0.001
 
@@ -154,6 +160,10 @@ public:
     virtual float64 get_d_WinProb_dbetSize(float64 betSize) override { query(betSize); return f_d_WinProb_dbetSize; }
 
     virtual float64 getHandsToBeat(float64 betSize) { query(betSize); return fHandsToBeat; }
+
+    #ifdef DEBUG_AGAINSTXOPPONENTS
+    std::ofstream * traceDebug;
+    #endif
 
 private:
     void query(float64 betSize);
