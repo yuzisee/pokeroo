@@ -150,9 +150,9 @@ public:
 
 	static uint8 cleanz(const uint32);
 
-    template<typename T> static int32 constexpr nchoosep_selftest(const int32 n, int32 p);
+    template<typename T> static T constexpr nchoosep_selftest(const int32 n, int32 p);
 
-	  template<typename T> static int32 constexpr nchoosep(const int32 n, int32 p) {
+	  template<typename T> static T constexpr nchoosep(const int32 n, int32 p) {
       FASTPATH_NCHOOSEP_IMPL
 
       return nchoosep_slow<T>(n, p);

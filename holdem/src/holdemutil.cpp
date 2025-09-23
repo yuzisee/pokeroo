@@ -135,7 +135,7 @@ uint8 HoldemUtil::cleanz(const uint32 j)
 	}
 }
 
-template<typename T> int32 constexpr HoldemUtil::nchoosep_selftest(const int32 n, int32 p) {
+template<typename T> T constexpr HoldemUtil::nchoosep_selftest(const int32 n, int32 p) {
 			FASTPATH_NCHOOSEP_IMPL
 
 	    std::cerr << "nchoosep( " << n << " , " << p << " )" << std::endl;
@@ -146,9 +146,9 @@ template<typename T> int32 constexpr HoldemUtil::nchoosep_selftest(const int32 n
      #endif
 	  }
 
-template int32 HoldemUtil::nchoosep_selftest<int64_t>(const int32, int32);
+template int64_t HoldemUtil::nchoosep_selftest<int64_t>(const int32, int32);
 template int32 HoldemUtil::nchoosep_selftest<int32>(const int32, int32);
-template int32 HoldemUtil::nchoosep_selftest<float64>(const int32, int32);
+template float64 HoldemUtil::nchoosep_selftest<float64>(const int32, int32);
 
 void HandPlus::DisplayHand(std::ostream& logFile) const
 {
