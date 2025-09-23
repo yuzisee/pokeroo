@@ -466,6 +466,12 @@ namespace UnitTests {
         fw.betSize = iveBeenReraisedTo;
         fw.prevPot = pastPot;
 
+        /*
+        for(float64 x=3; x < 40.0 ; x += 1.0) {
+          std::cout << "Test fw.f(" << x << ") = " << fw.f(x) << std::endl;
+        }
+        */
+
         //    TEST:
         // Since w == 0.0, we have numHands === numOpportunities here. We'll add a separate test to test w > 0.0
         assert(fw.f(16) < 0); // Profit of waiting 15 hands is... probably too much. You're burning at ~200 chips to win what? ~100?

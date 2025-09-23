@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <limits>
 #include <stdlib.h>
 #include <math.h>
 #include <algorithm>
@@ -260,14 +261,8 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
         std::cerr << "Uninitialized CallCumulation? FWIW you tried to query " << rank_toHave << " but it's not going to work";
         exit(1);
       }
-      if (high_index == low_index) {
-        std::cerr << "Uninformative CallCumulation? FWIW you tried to query " << rank_toHave << " but there's no information in here: ";
-        // StatsManager::holdemCtoJSON(std::cerr, *this);
-        exit(1);
-      }
     #else
       if (maxsize == 0) { return 0.5; }
-      if (high_index == low_index) { return cumulation[0].pct; }
     #endif
 
     float64 high_rank, low_rank;
@@ -538,6 +533,7 @@ template<typename T1, typename T2> std::pair<ValueAndSlope, char> CallCumulation
         //No hands meet criteria
         return std::pair<ValueAndSlope, char>(ValueAndSlope{0.0, 0.0}, 'o'); // 'o', for out-of-bounds
     }
+
 //These boundaries form a region with start and end.
     // Okay we lie somewhere between firstBetterThan and firstBetterThan-1
     float64 prevKeypointPct;// = std::numeric_limits<float64>::quiet_NaN();
@@ -594,14 +590,17 @@ template<typename T1, typename T2> std::pair<ValueAndSlope, char> CallCumulation
     const float64 result = horizontalMidpointRepeated + slope * (winPCT_toHave - horizontalMidpointPCT);
 
 #ifdef DEBUGASSERT
-    if( !(0.0 <= result && result <= 1.0) )
+    if( !(-std::numeric_limits<float64>::epsilon() <= result && result <= 1.0 + std::numeric_limits<float64>::epsilon()) )
     {
-        std::cout << "INVALID result in Pr_haveWorsePCT_continuous! " << result;
+        std::cout.precision(std::numeric_limits<float64>::max_digits10 - 2);
+        //std::cout << std::setprecision(std::numeric_limits<float64>::max_digits10 - 2);
+        std::cout << "INVALID result in Pr_haveWorsePCT_continuous! " << result << std::endl;
+        std::cout << horizontalMidpointRepeated << " + " << slope << " * (" << winPCT_toHave << " − " << horizontalMidpointPCT << ")";
         exit(1);
     }
 #endif
 
-    return std::pair<ValueAndSlope, char>(ValueAndSlope{result
+    return std::pair<ValueAndSlope, char>(ValueAndSlope{(result < 0.0) ? 0.0 : ((result > 1.0) ? 1.0 : result)
                                                         ,
                                                         slope
                                                         }, 'r'); // 'r', for result
