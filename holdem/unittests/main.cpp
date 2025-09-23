@@ -1413,6 +1413,7 @@ P0 calls $14.2857 ($60)
         myFlop.AddToHand(card);
 
 
+        i4.resetNextBetSequence({i4.ViewPlayer().GetMoney(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()});
 
         // Gear checks
         // P0 checks
@@ -2100,7 +2101,7 @@ P0 calls $14.2857 ($60)
          */
 
         DeckLocation myRiver;
-        myRiver.SetByIndex(49);
+        myRiver.SetByIndex(10);
 
         /*
          River:	9c Qh Kh 10s 4c  (Pot: $164)
@@ -2608,6 +2609,9 @@ P0 calls $14.2857 ($60)
          All fold! NormalBotV wins $705
          */
         assert (myTable.PlayRound_BeginHand(std::cout) != -1); // assert that everyone folded
+
+        assert((botToTest->ViewPlayer().GetBetSize() < 150) && "Raising more than 10× the pot seems a little irresponsible?");
+        // assert ((myTable.GetLivePotSize() < 150)
 
     }
 

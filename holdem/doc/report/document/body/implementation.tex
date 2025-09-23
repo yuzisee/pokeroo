@@ -112,7 +112,7 @@ Although this representation is unable to store hands with four-of-a-kind, it wi
 \begin{table}[htb]
 \captionsetup{position=top}
 \caption[Cardset Bitfield]{Each integer in the cardset array represents a separate suit.
-In this example, index 0, 1, 2, and 3 represent space, hearts, clubs, and diamonds, respectively.
+In this example, index 0, 1, 2, and 3 represent spades, hearts, clubs, and diamonds, respectively.
 The set of cards represented by (3080, 8, 8193, 14) is Q\xs{} J\xs{} 3\xs{} 4\xh{} A\xc{} 4\xd{} 3\xd{} 2\xd{}.
 Bits 14 and higher are unused.}
 \begin{small}
@@ -157,7 +157,7 @@ The `cardset' bitfield efficiently determines whether a certain card is containe
 The `valueset' bitfield efficiently determines how many cards of a certain value are contained in the hand.
 Furthermore, the ordinality of the `valueset' bitfield is very similar to what is required for tiebreaking.
 
-%For the purposes of strength calculation, 
+%For the purposes of strength calculation,
 
 \subsection{Strength Calculation}
 \label{sec:StrengthCalculation}
@@ -230,7 +230,7 @@ However, in game situations, hand strength is always relative to the opponent's 
 Thus, given the hole cards of a specific player, the decision engine calculates the joint distribution of community cards and opposing hole cards.
 A player might also choose to better position him/herself for the next betting round, rather than to achieve the greatest outright showdown utility.
 For this reason, it is often desirable to distinguish between the immediately upcoming community cards, and future community cards.
-%to condition the distribution on the specific community cards that will be dealt between the current betting round 
+%to condition the distribution on the specific community cards that will be dealt between the current betting round
 The calculation of such distributions entail a very large runtime complexity.
 
 The most computationally expensive distributions to calculate are for the `Pre-flop' betting round.
@@ -298,7 +298,7 @@ Because the initial cards contained symmetric spades and hearts, you can safely 
 In this particular example, the exploration algorithm avoids exploring all paths where the hearts cardset integer exceeds the spades cardset integer.
 
 %At this point, spades has a larger cardset integer than hearts unless a heart larger than 3\xh{} is added to the hand.
-%Instead, 
+%Instead,
 %Exploiting such symmetries further reduces the branching factor.
 
 For the pre-flop case in particular, combining the optimizations described above improves computation speed by 400\%.
@@ -315,7 +315,7 @@ This runtime complexity is then improved even further once applying the symmetry
 
 One additional runtime complexity reduction is to assume that the probabilities of winning against each opponent are independent.
 This is not the case in general: Two opponents cannot simultaneously hold any of the same hole cards.
-%If one opponent has weak cards, since the next opponent will not simultaneously hold those cards the distribution of possible hands 
+%If one opponent has weak cards, since the next opponent will not simultaneously hold those cards the distribution of possible hands
 That is, knowledge of the hole cards of one opponent affects the distribution of hole cards of another opponent.
 However, when the number of opponents is small, this assumption should be relatively safe.
 
