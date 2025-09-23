@@ -1025,9 +1025,6 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
         0
         :
         (
-          (oppRaiseChancesAware <= std::numeric_limits<float64>::epsilon()) ?
-          1.0
-          :
           std::pow(nextNoRaise_A[i_step].v,oppRaiseChancesAware)
         );
 
