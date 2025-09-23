@@ -1976,7 +1976,7 @@ namespace RegressionTests {
          */
 
         DeckLocation myRiver;
-        myRiver.SetByIndex(49);
+        myRiver.SetByIndex(10);
 
         /*
          River:	9c Qh Kh 10s 4c  (Pot: $164)
