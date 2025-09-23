@@ -1796,11 +1796,11 @@ namespace RegressionTests {
          */
 
         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
-        (void)highbettor; // -Wunused-variable
-        //assert(highbettor == 4);
+        // (void)highbettor; // -Wunused-variable
+        assert(highbettor == 4);
 
         // No all-fold; assert that the pot was increased at least.
-        //assert(myTable.GetPotSize() > 55);
+        assert(myTable.GetPotSize() > 55);
 
 
         /*
