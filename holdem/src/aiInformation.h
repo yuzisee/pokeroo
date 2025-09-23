@@ -87,6 +87,7 @@ protected:
 
     virtual void fillMyWins(StatResult ** table);
 
+    // TODO(from joseph): Mark as `override` if they are overriding...
     virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
     virtual void showProgressUpdate() const;
     virtual void setCurrentGroupOcc(const float64 occ);

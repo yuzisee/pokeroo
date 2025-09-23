@@ -25,7 +25,7 @@ Community outcomes (stdev = 0.181089 pcts , avgdev = 0.160279 pcts ), kurtosis =
 0.927531 pct: 425 / 19600 (2.16837%)
 0.999905 pct: most helpful community
 CallStrength W(5c)=0.0684157 L=0.82511 o.w_s=(0.29575,0.0415674)
-(MinRaise to $212) 	W(35.7103x)=0.160343 L=0.824556 3o.w_s=(0.560073,0.0170585)
+(MinRaise to $212) 	W(35.7103×)=0.160343 L=0.824556 3×o.w_s=(0.560073,0.0170585)
  -  statranking algb RAW - 
 7 dealt, 6 opp. (round), 5 opp. assumed str., 3 opp. still in
 Choice Optimal 128
@@ -33,15 +33,16 @@ Choice Fold 128
 f(108)=-2.0319
 raiseGain: f(128)=-2.0319
 CHECK/FOLD
-FoldGain()R=3.45147 by waiting 55hands(=31.1592 folds)	vs play:0.419567
+FoldGain()R=3.45147 by waiting 55 hands(=31.1592 folds)	vs play:0.419567
  AgainstCall(108)=1 from -$81.1731 @ 0
 AgainstRaise(108)=0.419567 from -$74.2955 @ 1
         Push(108)=1 from $0 @ 0
  AgainstCall(128)=0.419567 from -$74.2955 @ 1
 AgainstRaise(128)=1 from $0 @ 0
         Push(128)=1 from $0 @ 0
-OppRAISEChanceR [*] 0 @ $128 ($20 now)	fold -- 0	W(30.6662x)=0.170737 L=0.809981 3o.w_s=(0.562909,0.0204386)
+"all fold" precision will be 0.0015083
+OppRAISEChanceR [*] 0 @ $128 ($20 now)	fold -- 0.0	W(30.6662×)=0.170737 L=0.809981 3×o.w_s=(0.562909,0.0204386)
 
-(Fixed at $108)	W(43.0894x)=0.146467 L=0.845289 3o.w_s=(0.55668,0.010254)
+(Fixed at $108)	W(43.0894×)=0.146467 L=0.845289 3×o.w_s=(0.55668,0.010254)
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
