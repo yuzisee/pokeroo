@@ -1023,20 +1023,19 @@ namespace RegressionTests {
               return bets[0];
             }
             if(bets.size() == 2) {
-              if (bets[0] == bets[1]) return proceedWithBet(0);
+              if (bets[0] == bets[1]) return proceedWithBet(bets[0]);
               // Let it loop around if it's the same bet twice (shorthand, but more readable when skimming a testcase)
-              if (std::isnan(bets[0]) && std::isnan(bets[1])) return proceedWithBet(0);
+              if (std::isnan(bets[0]) && std::isnan(bets[1])) return proceedWithBet(bets[0]);
               // [!TIP]
               // We nee this extra case because `NaN != NaN` is always true, but `NaN == NaN` is always false
             }
-            return proceedWithBet(i);
+            assert(i < bets.size()); // the point of a FixedReplayPlayerStrategy is to replay a fixed sequence of actions
+            ++i;
+            return proceedWithBet(bets[i-1]);
         }
 
     private:
-        float64 proceedWithBet(size_t i) {
-          assert(i < bets.size()); // the point of a FixedReplayPlayerStrategy is to replay a fixed sequence of actions
-          const float64 myBet = bets[i];
-          ++i;
+        float64 proceedWithBet(const float64 myBet) const {
           if (myBet == myBet) {
               return myBet;
           } else {
@@ -3018,8 +3017,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const float64 arr[] = {11.25, 80.0, 30.0, 125.0};
-        const std::vector<float64> nA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
+        const std::vector<float64> nA = {11.25, 80.0, 30.0, 125.0};
         FixedReplayPlayerStrategy gS(foldOnly);
 
         FixedReplayPlayerStrategy nS(nA);

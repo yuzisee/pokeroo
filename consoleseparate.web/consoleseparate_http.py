@@ -267,6 +267,7 @@ class ConsoleSeparateController(http.server.BaseHTTPRequestHandler):
                 return
 
             user_entry_stdin = stdin_payload[0]
+            print('Received: ' + repr(stdin_payload))
 
             if user_entry_stdin:
                # Send the command to `self.server._console_app` and simulate a long-poll that waits for a response

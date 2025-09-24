@@ -430,6 +430,9 @@ static std::string testPlay(std::string gameId, char headsUp = 'G', std::ostream
 
     uint32 blindIncrFreq = 40;
     uint32 tokenRandomizer;
+    // 1000 chips with 10/20 blinds to practise a friendly cash game
+    // 1500 chips with 5/10 blinds to practise a larger MTT
+    // increase blinds every 15 hands or so to simulate a sit-and-go
     const float64 startingMoney= 1000;
     if( headsUp == 'L' )
     {
