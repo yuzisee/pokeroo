@@ -64,7 +64,7 @@ OppRAISEChanceR [*] 0.355853 @ $330 ($20.9801 now)
 OppRAISEChanceR [F] 0.0705007 @ $650 ($25.2628 now)
 OppRAISEChanceR [F] 0 @ $810 ($26.8734 now)
 Guaranteed > $0 is in the pot for sure
-OppFoldChance% ...    0.347449   ∇=0.0140668
+OppFoldChance% ...    0.347449   ∇=0.020921
 if playstyle is Danger/Conservative, overall utility is 0.0210555
 
 *

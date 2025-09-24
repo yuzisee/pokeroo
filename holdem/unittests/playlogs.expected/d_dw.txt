@@ -1,0 +1,217 @@
+
+==========#14==========
+Playing as ~
+*
+(Better All-in) 94.0816%
+(Re.s) 0.0816327%
+(Better Mean Rank) 91.4694%
+(Ra.s) 0.0816327%
+
+*
+6c 6d Bet to call 10 (from 0) at 15 pot, 
+Worst.handsCompeting = 9
+(Worst) 39.3586%
+(P.w) 38.6947%
+(P.s) 1.32768%
+(P.l) 59.9776%
+Worst.handsCompeting = 1
+(Worst) 82.9847%
+(P.w) 82.7047%
+(P.s) 0.559915%
+(P.l) 16.7353%
+ -  SpaceRank  - 
+9 dealt, 8 opp. (round), 5 opp. assumed str., 5 opp. still in
+Act(0%) or React(100%)? 0.00116279, pct 0.919918 ... 0.829847 ... 0.393586
+Choice Optimal 10
+Choice Fold 50
+f(10)=1.01738
+CALL 10
+FoldGain()R=0.998385 by waiting 0 hands(=0 folds)	vs play:1.01576
+ AgainstCall(10)=1.00577 from $1.00794 @ 0.726998
+AgainstRaise(10)=1.00994 from $1.03689 @ 0.273002
+        Push(10)=1 from $1 @ 0
+"riskprice"... 80(based on scaler 80)
+oppFoldChance is first 1.89687e-12, when betting b_min=17.5
+Against(10)Geom=2.00794
+Against(10)Algb=2.00008
+OppRAISEChanceR [*] 0.273002 @ $20 ($10 now)
+OppRAISEChanceR [*] 0.270534 @ $30 ($10 now)
+OppRAISEChanceR [*] 0.265622 @ $50 ($10 now)
+OppRAISEChanceR [*] 0.255812 @ $90 ($12.9536 now)
+OppRAISEChanceR [*] 0.235278 @ $170 ($16.437 now)
+OppRAISEChanceR [*] 0.194689 @ $330 ($21.2636 now)
+OppRAISEChanceR [F] 0.0413054 @ $650 ($25.3887 now)
+OppRAISEChanceR [F] 0 @ $860 ($27.6233 now)
+
+(Fixed at $10)
+Guaranteed > $0 is in the pot for sure
+OppFoldChance% ...    0   ∇=0
+
+7c 8h Qh community
+*
+(Better All-in) 60.9621%
+(Re.s) 0%
+(Better Mean Rank) 56.0374%
+(Ra.s) 0%
+
+*
+6c 6d Bet to call 0 (from 0) at 45 pot, 
+Worst.handsCompeting = 9
+(Worst) 9.47762%
+(P.w) 9.07773%
+(P.s) 0.799765%
+(P.l) 90.1225%
+Worst.handsCompeting = 1
+(Worst) 45.5841%
+(P.w) 44.9427%
+(P.s) 1.28288%
+(P.l) 53.7744%
+ -  SpaceRank  - 
+9 dealt, 3 opp. (round), 3 opp. assumed str., 3 opp. still in
+Act(0%) or React(100%)? 0.0176471, pct 0.57679 ... 0.455841 ... 0.0947762
+Choice Optimal 0
+Choice Fold 20
+f(0)=1.01586
+CALL 0
+FoldGain()R=0.988235 by waiting 0 hands(=0 folds)	vs play:1.0041
+ AgainstCall(0)=1.0041 from $1.00995 @ 0.413068
+AgainstRaise(0)=1 from $1 @ 0.586932
+        Push(0)=1 from $1 @ 0
+"riskprice"... 65(based on scaler 65)
+oppFoldChance is first 9.26453e-08, when betting b_min=10
+Against(0)Geom=2.00995
+Against(0)Algb=2.00502
+OppRAISEChanceR [*] 0.485645 @ $10 ($10 now)
+OppRAISEChanceR [*] 0.483359 @ $20 ($10 now)
+OppRAISEChanceR [F] 0.586932 @ $40 ($11.4744 now)
+OppRAISEChanceR [F] 0.417413 @ $80 ($15.7323 now)
+OppRAISEChanceR [F] 0.226002 @ $160 ($21.1531 now)
+OppRAISEChanceR [F] 0.0970593 @ $320 ($28.5992 now)
+OppRAISEChanceR [F] 0.033469 @ $640 ($36.4064 now)
+OppRAISEChanceR [F] 0 @ $850 ($40.782 now)
+
+(Fixed at $0)
+Guaranteed > $45 is in the pot for sure
+OppFoldChance% ...    0   ∇=0
+
+7c 8h 8d Qh community
+*
+(Better All-in) 64.9275%
+(Re.s) 0.193237%
+(Better Mean Rank) 64.7163%
+(Ra.s) 0%
+
+*
+6c 6d Bet to call 0 (from 0) at 45 pot, 
+Worst.handsCompeting = 9
+(Worst) 3.51779%
+(P.w) 3.51779%
+(P.s) 0%
+(P.l) 96.4822%
+Worst.handsCompeting = 1
+(Worst) 32.766%
+(P.w) 32.766%
+(P.s) 0%
+(P.l) 67.234%
+ -  SpaceRank  - 
+9 dealt, 3 opp. (round), 3 opp. assumed str., 3 opp. still in
+Act(0%) or React(100%)? 0.0176471, pct 0.647867 ... 0.32766 ... 0.0351779
+Choice Optimal 0
+Choice Fold 25
+f(0)=1.01914
+CALL 0
+FoldGain()R=0.988235 by waiting 0 hands(=0 folds)	vs play:1.00738
+ AgainstCall(0)=1.00752 from $1.01413 @ 0.534392
+AgainstRaise(0)=0.999856 from $0.99969 @ 0.465608
+        Push(0)=1 from $1 @ 0
+"riskprice"... 55(based on scaler 55)
+oppFoldChance is first 9.26453e-08, when betting b_min=10
+Against(0)Geom=2.01413
+Against(0)Algb=2.00186
+OppRAISEChanceR [*] 0.465608 @ $10 ($10 now)
+OppRAISEChanceR [*] 0.463278 @ $20 ($10 now)
+OppRAISEChanceR [*] 0.458643 @ $40 ($15.6155 now)
+OppRAISEChanceR [F] 0.403175 @ $80 ($23.7176 now)
+OppRAISEChanceR [F] 0.177184 @ $160 ($35.306 now)
+OppRAISEChanceR [F] 0.0804698 @ $320 ($51.7964 now)
+OppRAISEChanceR [F] 0.0254446 @ $640 ($75.2992 now)
+OppRAISEChanceR [F] 0 @ $850 ($87.7046 now)
+
+(Fixed at $0)
+Guaranteed > $45 is in the pot for sure
+OppFoldChance% ...    0   ∇=0
+
+7c 8h 8d Qh community
+*
+(Better All-in) 64.9275%
+(Re.s) 0.193237%
+(Better Mean Rank) 64.7163%
+(Ra.s) 0%
+
+*
+6c 6d Bet to call 485 (from 0) at 530 pot, 
+Worst.handsCompeting = 9
+(Worst) 3.51779%
+(P.w) 3.51779%
+(P.s) 0%
+(P.l) 96.4822%
+Worst.handsCompeting = 1
+(Worst) 32.766%
+(P.w) 32.766%
+(P.s) 0%
+(P.l) 67.234%
+ -  SpaceRank  - 
+9 dealt, 3 opp. (round), 3 opp. assumed str., 3 opp. still in
+Act(0%) or React(100%)? 0.0176471, pct 0.647867 ... 0.32766 ... 0.0351779
+Choice Optimal 850
+Choice Fold 850
+f(485)=-0.710368
+raiseGain: f(850)=-0.710368
+CHECK/FOLD
+FoldGain()R=2.18356 by waiting 99 hands(=34.9309 folds)	vs play:0.473188
+ AgainstCall(485)=1 from $1 @ 0
+AgainstRaise(485)=0.473188 from $0.473188 @ 1
+        Push(485)=1 from $1 @ 0
+"riskprice"... 970(based on scaler 850)
+oppFoldChance is first 9.26453e-08, when betting b_min=850
+Against(485)Geom=1.62174
+Against(485)Algb=1.47319
+OppRAISEChanceR [*] 0 @ $850 ($365 now)
+
+(Fixed at $485)
+Guaranteed > $45 is in the pot for sure
+OppFoldChance% ...    0   ∇=0
+
+*
+6c 6d Bet to call 485 (from -2) at 1720 pot, 
+Worst.handsCompeting = 9
+(Worst) 3.51779%
+(P.w) 3.51779%
+(P.s) 0%
+(P.l) 96.4822%
+Worst.handsCompeting = 1
+(Worst) 18.7558%
+(P.w) 18.7558%
+(P.s) 5.55112e-15%
+(P.l) 81.2442%
+ -  SpaceRank  - 
+9 dealt, 2 opp. (round), 2 opp. assumed str., 2 opp. still in
+Act(0%) or React(100%)? 0.713529, pct 0.648219 ... 0.187558 ... 0.0351779
+Choice Optimal 850
+Choice Fold 850
+f(485)=-1.63727
+raiseGain: f(850)=-1.63727
+CHECK/FOLD
+FoldGain()R=3.15804 by waiting 132.667 hands(=46.8097 folds)	vs play:0.520767
+ AgainstCall(485)=1 from $1 @ 0
+AgainstRaise(485)=0.520767 from $0.520767 @ 1
+        Push(485)=1 from $1 @ 0
+"riskprice"... 4500(based on scaler 850)
+oppFoldChance is first 2.04746e-05, when betting b_min=850
+Against(485)Geom=1.97598
+Against(485)Algb=1.52077
+OppRAISEChanceR [*] 0 @ $850 ($365 now)
+
+(Fixed at $485)
+Guaranteed > $1235 is in the pot for sure
+OppFoldChance% ...    0   ∇=0
