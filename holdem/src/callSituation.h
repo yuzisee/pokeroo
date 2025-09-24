@@ -26,7 +26,9 @@
 #include "inferentials.h"
 #include "callPredictionFunctions.h"
 
-//#define DEBUG_EXFDEXF
+
+#define OLD_BROKEN_RISKLOSS_WRONG_SIGN
+
 
 #define ANTI_PRESSURE_FOLDGAIN
 #define CONSISTENT_AGG

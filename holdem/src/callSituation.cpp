@@ -23,6 +23,7 @@
 #include "math_support.h"
 
 
+
 ExpectedCallD::~ExpectedCallD()
 {
 }
@@ -299,10 +300,14 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
     // INVARIANT: If `FG.f( raiseTo )` (i.e. "FoldGain") is positive, it means it is profitable to fold against `raiseTo`
 
     const float64 riskLoss =
-      (std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? (
+			#ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
+			(trueFoldChipsEV < nominalFoldChips) ? ( trueFoldChipsEV - nominalFoldChips
+      // (nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? ( trueFoldChipsEV - nominalFoldChips
+			#else
+			(std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? ( -trueFoldChipsEV
 			  // If trueFoldChipsEV is *strictly profitable*, then the player who made `faced_bet` could "win" by folding, meaning it's overly risky for this person (doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
-				// As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
-		    - trueFoldChipsEV
+        // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
+      #endif
 			)
 			:
 			(
@@ -311,6 +316,10 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
 		;
 
 		const float64 dRiskLoss =
+		  #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
+				(nominalFoldChips < trueFoldChipsEV) ? (
+				  (FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
+			#else
       (nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? (
        // If trueFoldChipsEV offers any benefit at all, then the player who made `faced_bet` could benefit more by folding, meaning it's not productive this opponent (the person doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
        // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
@@ -320,6 +329,7 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
          //                                                                             ^^^ see `setAmountSacrificeVoluntary`
          //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
          -(FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
+         #endif
          // In this case, `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂pot
          // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
       )

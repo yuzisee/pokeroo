@@ -54,7 +54,7 @@ namespace NamedTriviaDeckTests {
 #include "../src/stratPosition.h"
 namespace UnitTests {
 
-    static bool print_x_y_dy_derivative_ok(const std::vector<std::pair<float64, ValueAndSlope>> &actual, float64 derivative_margin) {
+    static float64 print_x_y_dy_derivative_ok(const std::vector<std::pair<float64, ValueAndSlope>> &actual, float64 derivative_margin) {
       int derivative_ok = 0;
 
       std::cout << "Δy/Δx≅\t";
@@ -1574,7 +1574,22 @@ namespace RegressionTests {
 
         /*
 
-         All-limp
+        ============================New Hand #22========================
+        BEGIN 1
+
+        Preflop
+        (Pot: $0)
+        (8 players)
+	[h22 $500]
+	[Nav $500]
+	[Sam $500]
+	[Laily $500]
+	[Joyce $500]
+	[Andrew $500]
+	[Badr $500]
+	[Mona $500]
+
+	    * * * ALL LIMP * * *
 
          */
         assert(myTable.PlayRound_BeginHand(std::cout) != -1);
@@ -1607,7 +1622,7 @@ namespace RegressionTests {
 
 
          (8 players)
-         [Joseph]
+         [h22]
          [Nav]
          [Sam]
          [Laily]
@@ -1616,7 +1631,7 @@ namespace RegressionTests {
          [Badr]
          [Mona]
 
-         Joseph bets $x (limp / small bet)
+         h22 bets $x (limp / small bet)
          Nav calls $x
          Sam folds
          Laily folds
@@ -1645,14 +1660,14 @@ namespace RegressionTests {
         /*
 
          (3 players)
-         [Joseph]
+         [h22]
          [Nav]
          [Andrew]
 
-         Joseph bets (e.g. $40) or doesn't bet (check)
+         h22 bets (e.g. $40) or doesn't bet (check)
          Nav check/folds
          Andrew raise to $100
-         Joseph call if already $40 comitted, and fold otherwise
+         h22 call if already $40 comitted, and fold otherwise
 
          */
 
@@ -1663,15 +1678,15 @@ namespace RegressionTests {
          River:	Ac Qd 2h 2d 3s  (Pot: $234)
          */
 
-        // const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
-        //assert(highbettor == 4);
+        const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
+        assert(highbettor == 4);
         // No all-fold; assert that the pot was increased at least.
-        //assert(myTable.GetPotSize() > 55);
+        assert(myTable.GetPotSize() > 55);
 
 
         /*
 
-         Joseph bet $140
+         h22 bet $140
          Andrew call
 
 
@@ -4891,7 +4906,11 @@ Playing as S
         // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
 
         const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
-        assert((actual_RiskLoss.v < 0) && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
+        #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
+        assert((std::fabs(actual_RiskLoss.v) <= std::numeric_limits<float64>::epsilon()) && "In the OLD_BROKEN_RISKLOSS_WRONG_SIGN it returns 0.0 when the raiseTo is too extreme (and of course also a positive value if it's a small & safe raiseTo)");
+        #else
+        assert((std::fabs(actual_RiskLoss.v) / 6.0 > std::numeric_limits<float64>::epsilon()) && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
+        #endif
 
         FacedOddsRaiseGeom<void> actual(myTable.GetChipDenom());
         FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss.v);
@@ -4906,7 +4925,9 @@ Playing as S
         }));
       }
 
-      assert(UnitTests::print_x_y_dy_derivative_ok(actual_noRaisePct_vs_betSize, 0.00001) > 0.75);
+      const float64 reasonableDerivatives = UnitTests::print_x_y_dy_derivative_ok(actual_noRaisePct_vs_betSize, 0.0009);
+      std::cout << "actual_noRaisePct_vs_betSize derivatives correct " << (reasonableDerivatives * 100.0) << "% of the time" << std::endl;
+      assert(reasonableDerivatives > 0.75);
     } // end testHybrid_drisk_handsIn
 }
 
