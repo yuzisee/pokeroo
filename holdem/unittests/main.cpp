@@ -1027,7 +1027,7 @@ namespace RegressionTests {
               // Let it loop around if it's the same bet twice (shorthand, but more readable when skimming a testcase)
               if (std::isnan(bets[0]) && std::isnan(bets[1])) return proceedWithBet(bets[0]);
               // [!TIP]
-              // We nee this extra case because `NaN != NaN` is always true, but `NaN == NaN` is always false
+              // We need this extra case because `NaN != NaN` is always true, but `NaN == NaN` is always false
             }
             assert(i < bets.size()); // the point of a FixedReplayPlayerStrategy is to replay a fixed sequence of actions
             ++i;
@@ -4060,7 +4060,7 @@ TrapBotV checks
   r.MakeBet(485, &msg); // TrapBot bets 485
 
   const float64 actual = bot.MakeBet();
-  assert(!std::isnan(actual) && "should not crash: src/callPredictionFunctions.cpp#FoldWaitLengthModel::d_dw");
+  assert(std::isfinite(actual) && "should not crash: src/callPredictionFunctions.cpp#FoldWaitLengthModel::d_dw");
 
                        /*
 Playing as S
