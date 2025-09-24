@@ -1502,6 +1502,7 @@ float64 PureGainStrategy::MakeBet()
 
     const float64 bestBet = solveGainModel(&choicemodel);
 
+
 #ifdef LOGPOSITION
 
   #ifdef DEBUG_TRACE_DEXF

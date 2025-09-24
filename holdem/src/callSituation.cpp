@@ -23,6 +23,7 @@
 #include "math_support.h"
 
 
+
 ExpectedCallD::~ExpectedCallD()
 {
 }
@@ -291,34 +292,55 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
     // We don't need FG.waitLength.betSize because FG.f() will set betSize;
 
     //FG.dw_dbet = 0; //Again, we don't need this
-	float64 riskLoss = FG.f( raiseTo ) + FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced;
-	// ^^^ Given the hand strength, how much do you gain by folding against a bet of `raiseTo`?
+    // NOMINALLY FG.f( raiseTo ) is to lose `FG.waitLength.amountSacrificeVoluntary + FG.waitLength.amountSacrificeForced` because all else being equal, if you fold you lose the money you put in.
+    const float64 nominalFoldChips = -FG.waitLength.amountSacrificeVoluntary - FG.waitLength.amountSacrificeForced;
+    const float64 trueFoldChipsEV = FG.f( raiseTo );
+    // ^^^ Given the hand strength, how much would someone gain by folding against a bet of `raiseTo`?
 
-	// INVARIANT: If `FG.f( raiseTo )` (i.e. "FoldGain") is positive, it means it is profitable to fold against `raiseTo`
-	return (
-	  ( riskLoss < 0 ) ? (
-      //If riskLoss < 0, then expect the opponent to reraise you, since facing it will hurt you
-	    ValueAndSlope {
-	      riskLoss,
-	  	  // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
-        // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
-        //                                                                             ^^^ see `setAmountSacrificeVoluntary`
-        //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
-        FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / (handsIn()-1)
-        // In this case, `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂pot
-        // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
-	    }
-	  ) : (
-      //If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
-	    ValueAndSlope { 0, 0 }
-	  )
-	)
-	;
+    // INVARIANT: If `FG.f( raiseTo )` (i.e. "FoldGain") is positive, it means it is profitable to fold against `raiseTo`
 
-	// https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
-      // d_riskLoss/d_pot = d/dpot { -FG.f( raiseTo ) }                           - d/dpot { FG.waitLength.amountSacrifice }
-      //                                                                              ^^^ see `setAmountSacrificeVoluntary`
-      //   d_pot/d_AmountSacrifice { -FG.f( raiseTo ) } * d_AmountSacrifice/d_pot - d/dpot { FG.waitLength.amountSacrifice }
+    const float64 riskLoss =
+			#ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
+			(trueFoldChipsEV < nominalFoldChips) ? ( trueFoldChipsEV - nominalFoldChips
+      // (nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? ( trueFoldChipsEV - nominalFoldChips
+			#else
+			(std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? ( -trueFoldChipsEV
+			  // If trueFoldChipsEV is *strictly profitable*, then the player who made `faced_bet` could "win" by folding, meaning it's overly risky for this person (doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
+        // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
+      #endif
+			)
+			:
+			(
+			  0.0
+			)
+		;
+
+		const float64 dRiskLoss =
+		  #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
+				(nominalFoldChips < trueFoldChipsEV) ? (
+				  (FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
+			#else
+      (nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? (
+       // If trueFoldChipsEV offers any benefit at all, then the player who made `faced_bet` could benefit more by folding, meaning it's not productive this opponent (the person doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
+       // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
+
+       // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
+         // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
+         //                                                                             ^^^ see `setAmountSacrificeVoluntary`
+         //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
+         -(FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
+         #endif
+         // In this case, `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂pot
+         // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
+      )
+      :
+      (
+        0.0
+      )
+    ;
+
+	return (ValueAndSlope { riskLoss, dRiskLoss });
+
 }
 
 MeanOrRank FoldOrCall::suggestMeanOrRank() const {
