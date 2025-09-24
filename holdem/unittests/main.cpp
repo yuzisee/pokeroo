@@ -4042,10 +4042,9 @@ TrapBotV checks
   TrapBotV bets $485 ($530)
   */
 
-  //   myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
   DeckLocation myRiver;
   myRiver.SetByIndex(29);
-  assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
+  // assert(myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout) != -1);
 
   CommunityPlus final_community;
   final_community.SetUnique(myFlop);

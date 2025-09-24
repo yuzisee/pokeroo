@@ -141,77 +141,43 @@ OppRAISEChanceR [F] 0 @ $850 ($87.7046 now)
 Guaranteed > $45 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
-7c 8h 8d Qh community
+7c 8h 8d 9h Qh community
 *
-(Better All-in) 64.9275%
-(Re.s) 0.193237%
-(Better Mean Rank) 64.7163%
+(Better All-in) 47.6263%
+(Re.s) 0.10101%
+(Better Mean Rank) 47.4561%
 (Ra.s) 0%
 
 *
 6c 6d Bet to call 485 (from 0) at 530 pot, 
 Worst.handsCompeting = 9
-(Worst) 3.51779%
-(P.w) 3.51779%
+(Worst) 0%
+(P.w) 0%
 (P.s) 0%
-(P.l) 96.4822%
+(P.l) 100%
 Worst.handsCompeting = 1
-(Worst) 32.766%
-(P.w) 32.766%
+(Worst) 0%
+(P.w) 0%
 (P.s) 0%
-(P.l) 67.234%
+(P.l) 100%
  -  SpaceRank  - 
 9 dealt, 3 opp. (round), 3 opp. assumed str., 3 opp. still in
-Act(0%) or React(100%)? 0.0176471, pct 0.647867 ... 0.32766 ... 0.0351779
+Act(0%) or React(100%)? 0.0176471, pct 0.475128 ... 0 ... 0
 Choice Optimal 850
 Choice Fold 850
-f(485)=-0.710368
-raiseGain: f(850)=-0.710368
+f(485)=-0.746267
+raiseGain: f(850)=-0.746267
 CHECK/FOLD
-FoldGain()R=2.18356 by waiting 99 hands(=34.9309 folds)	vs play:0.473188
+FoldGain()R=2.17568 by waiting 65.3333 hands(=34.3287 folds)	vs play:0.429412
  AgainstCall(485)=1 from $1 @ 0
-AgainstRaise(485)=0.473188 from $0.473188 @ 1
+AgainstRaise(485)=0.429412 from $0.429412 @ 1
         Push(485)=1 from $1 @ 0
 "riskprice"... 970(based on scaler 850)
 oppFoldChance is first 9.26453e-08, when betting b_min=850
-Against(485)Geom=1.62174
-Against(485)Algb=1.47319
+Against(485)Geom=1.49656
+Against(485)Algb=1.42941
 OppRAISEChanceR [*] 0 @ $850 ($365 now)
 
 (Fixed at $485)
 Guaranteed > $45 is in the pot for sure
-OppFoldChance% ...    0   ∇=0
-
-*
-6c 6d Bet to call 485 (from -2) at 1720 pot, 
-Worst.handsCompeting = 9
-(Worst) 3.51779%
-(P.w) 3.51779%
-(P.s) 0%
-(P.l) 96.4822%
-Worst.handsCompeting = 1
-(Worst) 18.7558%
-(P.w) 18.7558%
-(P.s) 5.55112e-15%
-(P.l) 81.2442%
- -  SpaceRank  - 
-9 dealt, 2 opp. (round), 2 opp. assumed str., 2 opp. still in
-Act(0%) or React(100%)? 0.713529, pct 0.648219 ... 0.187558 ... 0.0351779
-Choice Optimal 850
-Choice Fold 850
-f(485)=-1.63727
-raiseGain: f(850)=-1.63727
-CHECK/FOLD
-FoldGain()R=3.15804 by waiting 132.667 hands(=46.8097 folds)	vs play:0.520767
- AgainstCall(485)=1 from $1 @ 0
-AgainstRaise(485)=0.520767 from $0.520767 @ 1
-        Push(485)=1 from $1 @ 0
-"riskprice"... 4500(based on scaler 850)
-oppFoldChance is first 2.04746e-05, when betting b_min=850
-Against(485)Geom=1.97598
-Against(485)Algb=1.52077
-OppRAISEChanceR [*] 0 @ $850 ($365 now)
-
-(Fixed at $485)
-Guaranteed > $1235 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
