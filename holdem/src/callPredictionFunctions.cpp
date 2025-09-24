@@ -857,7 +857,9 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	)
 	;
 
+	// TODO(from joseph): Idea → if it's the _final_ betting round, we can still use FoldWaitGainModel, right?
 	const float64 applyRiskLoss = (bCheckPossible || bRaiseWouldBeCalled) ? riskLoss : 0.0;
+	// And then you should still set bUseCall accordingly, in that case
 
 	// Raise only if (U + riskLoss) is better than `nonRaiseGain`
    lastF = U + applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain;

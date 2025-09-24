@@ -9,7 +9,7 @@ make
 * creates executable bin/holdem.exe on Windows?
 * creates executable e.g. bin/holdem.x86_64 on Linux
 
-## Pre-calulate the database
+## Pre-calculate the database
 ```sh
 mkdir -vp ~/pokeroo-run/lib
 cd holdem

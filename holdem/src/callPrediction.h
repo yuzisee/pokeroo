@@ -45,14 +45,21 @@ public:
 }
 ;
 
+// At the time of this writing, we are used by:
+//  * GainModelGeom
+//  * GainModelNoRisk
+// which, in turn, are used by all three of:
+//  + ImproveGainStrategy (Normal, Trap, Action)
+//  + DeterredGainStrategy, and PureGainStrategy
 class IExf {
 public:
     static constexpr float64 UNINITIALIZED_QUERY = -1;
 
     virtual ~IExf() {}
 
-
+    // E[x]
     virtual float64 exf(const float64 betSize) = 0;
+    // d/dbetsize E[x]
     virtual float64 dexf(const float64 betSize) = 0;
 
 }
