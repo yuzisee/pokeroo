@@ -296,11 +296,13 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
     #endif
     if( rank_toHave < low_rank )
     {
-        return cumulation[0].pct; //.pct is toHave -- if you haven't ReversePerspective()/ReversedPerspective() yet then that's the pct of the first hand dealt. See the bottom of CallStats::Analyze()
+        //.pct is toHave -- if you haven't ReversePerspective()/ReversedPerspective() yet then that's the pct of the first hand dealt. See the bottom of CallStats::Analyze()
+        return cumulation[0].pct;
     }
     if( rank_toHave > cumulation[high_index-1].repeated )
     {
-        return cumulation[high_index].pct; //.pct is toHave.
+        //.pct is toHave.
+        return cumulation[high_index].pct;
     }
     // It wasn't possible to trigger the codepath below anyway, since you would have returned already from the above `if` statement
     /*
