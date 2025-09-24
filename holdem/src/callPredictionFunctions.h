@@ -23,8 +23,9 @@
 #define HOLDEM_OpponentFunctions
 
 
-// #define DEBUG_TRACE_DEXF
-// ^^^ Enable if you need to trace through a specific search (usually you'll set `.traceOut = &logF` or whatever output sink, near where the issue occurs)
+// #define DEBUG_TRACE_DEXF 2
+// ^^^ Define if you need to trace through a specific search
+//     For example, if you are debugging `PureGainStrategy bot("abc.txt", 2)` you will want to `#define DEBUG_TRACE_DEXF 2`
 // ^^^ Disable (i.e. You can explicitly `#undef DEBUG_TRACE_DEXF`) if you don't want `.github/workflows/ci.yml` to test with it
 
 
@@ -385,5 +386,3 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 ;
 
 #endif
-
-

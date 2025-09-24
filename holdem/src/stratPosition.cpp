@@ -1493,15 +1493,23 @@ float64 PureGainStrategy::MakeBet()
 
     HoldemFunctionModel& choicemodel = ap_aggressive;
 
+    #if defined(DEBUG_TRACE_DEXF) && defined(LOGPOSITION)
+      if (bGamble == DEBUG_TRACE_DEXF) {
+        logFile << "SOLVING E[x] for bGamble=" << static_cast<int>(bGamble) << std::endl;
+        pr_opponentcallraise.traceOut_dexf = &logFile;
+      }
+    #endif
 
     const float64 bestBet = solveGainModel(&choicemodel);
 
 #ifdef LOGPOSITION
 
+  #ifdef DEBUG_TRACE_DEXF
+    logFile << "└─> bGamble " << static_cast<int>(bGamble) << "'s result: $" << bestBet << "⛂" << std::endl;
+    pr_opponentcallraise.traceOut_dexf = nullptr;
+  #endif
 
-
-
-#ifdef VERBOSE_STATEMODEL_INTERFACE
+  #ifdef VERBOSE_STATEMODEL_INTERFACE
     const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
     printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
@@ -1521,8 +1529,7 @@ float64 PureGainStrategy::MakeBet()
             printStateModel(logFile, displayMinRaise, ap_aggressive, ViewPlayer());
         }
     }
-
-#endif
+  #endif // VERBOSE_STATEMODEL_INTERFACE
 
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {
@@ -1532,7 +1539,6 @@ float64 PureGainStrategy::MakeBet()
          */
 
     }
-
 
     printBetGradient< StateModel >
     (logFile, pr_opponentcallraise, ea, ap_aggressive, tablestate, displaybet, &csrp);
@@ -1545,6 +1551,7 @@ float64 PureGainStrategy::MakeBet()
     {
         logFile << "if playstyle is Danger/Conservative, overall utility is " << choicemodel.f(displaybet) << endl;
     }
+
 
 #endif // LOGPOSITION
 

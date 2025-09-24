@@ -51,7 +51,7 @@ jobs:
         set -e
         # It seems that `clang++ --analyze` creates a lot of `*.plist` files?
         clang++ -Wl,-z,defs -o /dev/null -Werror -D NO_LOG_FILES -I../src ../src/*.cpp ../appsrc/*.cpp
-        clang++ --analyze -Werror -D DEBUG_TRACE_ZERO -D DEBUG_TRACE_SEARCH -D DEBUG_TRACE_DEXF -D DEBUG_TRACE_PWIN ../src/*.cpp ../libsrc/interfaceC.cpp 2> static_analysis_errors.txt || cat static_analysis_errors.txt
+        clang++ --analyze -Werror -D DEBUG_TRACE_ZERO -D DEBUG_TRACE_SEARCH -D DEBUG_TRACE_DEXF=999 -D DEBUG_TRACE_PWIN ../src/*.cpp ../libsrc/interfaceC.cpp 2> static_analysis_errors.txt || cat static_analysis_errors.txt
         # EX_DATAERR
         if test -s static_analysis_errors.txt; then
           echo "clang++ --analyze ← generated warnings even though they that don't fall under -Werror"

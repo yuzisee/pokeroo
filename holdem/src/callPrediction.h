@@ -28,14 +28,9 @@
 #include "callSituation.h"
 
 #if defined(DEBUG_TRACE_PWIN) || defined(DEBUG_TRACE_DEXF)
-#define DEBUG_TRACE_EXACTCALL
-#else
-#undef DEBUG_TRACE_EXACTCALL
-#endif
-
-#ifdef DEBUG_TRACE_EXACTCALL
 #include <iostream>
 #endif
+
 
 // All values should be expressed as a fraction of your bankroll (so that Geom and Algb can be compared directly)
 // 1.0 is "no change"
@@ -114,7 +109,7 @@ class ExactCallD : public IExf
         return &(fCore.callcumu);
     }
 #ifdef DEBUG_TRACE_DEXF
-		std::ostream * traceOut;
+		std::ostream * traceOut_dexf;
 #endif
 
         ExactCallD(ExpectedCallD * const tbase //, CallCumulationD* data
@@ -130,7 +125,7 @@ class ExactCallD : public IExf
         //ed(data)
         fCore(core)
 #ifdef DEBUG_TRACE_DEXF
-					,traceOut(0)
+					,traceOut_dexf(0)
 #endif
             {
                 queryinput = UNINITIALIZED_QUERY;
@@ -191,7 +186,7 @@ class ExactCallBluffD
         void query(const float64 betSize);
 
     public:
-#ifdef DEBUG_TRACE_EXACTCALL
+#ifdef DEBUG_TRACE_PWIN
 		std::ostream * traceOut;
 #endif
 
@@ -202,7 +197,7 @@ class ExactCallBluffD
     tableinfo(tbase)
     ,
     fFoldCumu(core.foldcumu), fCallCumu(core.callcumu)
-    #ifdef DEBUG_TRACE_EXACTCALL
+    #ifdef DEBUG_TRACE_PWIN
 					,traceOut(0)
     #endif
     ,
