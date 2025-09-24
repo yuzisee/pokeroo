@@ -40,20 +40,32 @@
 void HoldemArena::UnserializeRoundStart(std::istream & fileLoadState, std::string botStorageDir, std::string gameId)
 {
 
+  // e.g.
+  /*
+  9
+  0x1083109376:~_Player
+  0x1082843136:S_NormalBotV
+  0x1080868864:T_SpaceBotV
+  0x1084111872:M_MultiBotV
+  0x1083068416:D_GearBotV
+  0x1083109376:C_ActionBotV
+  0x1083088896:A_TrapBotV
+  0x1083200512:N_ConservativeBotV
+  0x1083129856:G_DangerBotV
+  n14@4^0x1075052544:4dAd9d9sQdJsQs8s3c9c6c6dAc4cKd6h7hAh7cQh8h8d9hKsTh2c5h4hTs2sJd5cKc2d4s5dTc7d7s5sQcAs6s8c3dJhTdKh3h3s2hJc
+  fold
+   */
 int16 numericValue;
 
-
-
-            fileLoadState >> numericValue;
+            fileLoadState >> numericValue; // e.g. 9
 
 	    playernumber_t playersToLoad = static_cast<int8>(numericValue);
 
             fileLoadState.ignore(1,'\n');
 
-
             for( int8 i=0;i<playersToLoad;++i )
             {
-                float64 pMoney = HoldemUtil::ReadFloat64( fileLoadState );
+                float64 pMoney = HoldemUtil::ReadFloat64( fileLoadState ); // e.g. 0x1083109376:
 
                 char botType;
                 fileLoadState >> botType;

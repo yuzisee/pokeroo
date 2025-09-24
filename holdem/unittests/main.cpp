@@ -54,6 +54,53 @@ namespace NamedTriviaDeckTests {
 #include "../src/stratPosition.h"
 namespace UnitTests {
 
+    static bool print_x_y_dy_derivative_ok(const std::vector<std::pair<float64, ValueAndSlope>> &actual, float64 derivative_margin) {
+      int derivative_ok = 0;
+
+      std::cout << "Δy/Δx≅\t";
+      float64 prev_x = std::numeric_limits<float64>::signaling_NaN();
+      float64 prev_y = std::numeric_limits<float64>::signaling_NaN();
+      float64 prev_dy = std::numeric_limits<float64>::signaling_NaN();
+      for (const std::pair<float64, ValueAndSlope> &x_y_dy : actual) {
+        const float64 x = x_y_dy.first;
+        const float64 y = x_y_dy.second.v;
+        const float64 dy = x_y_dy.second.D_v;
+        if (std::isnan(prev_x) || std::isnan(prev_y)) {
+          std::cout << " ⏢";
+        } else {
+          const float64 expected_dy = (y - prev_y) / (x - prev_x);
+          std::cout << "   " << expected_dy;
+
+          if( (std::min(prev_dy, dy) - derivative_margin <= expected_dy) && (expected_dy <= derivative_margin + std::max(prev_dy, dy))) {
+            std::cout << "✓";
+            derivative_ok += 1;
+          } else {
+            std::cout << "⚠⚠";
+          }
+        }
+        prev_x = x;
+        prev_y = y;
+        prev_dy = dy;
+      }
+      std::cout << std::endl;
+      std::cout << "dy";
+      for (const std::pair<float64, ValueAndSlope> &x_y_dy : actual) {
+        std::cout << "   " << x_y_dy.second.D_v;
+      }
+      std::cout << std::endl;
+      std::cout << "y";
+      for (const std::pair<float64, ValueAndSlope> &x_y_dy : actual) {
+        std::cout << "   " << x_y_dy.second.v;
+      }
+      std::cout << std::endl;
+      std::cout << "x";
+      for (const std::pair<float64, ValueAndSlope> &x_y_dy : actual) {
+        std::cout << "   " << x_y_dy.first;
+      }
+      std::cout << std::endl;
+
+      return derivative_ok / static_cast<float64>(actual.size() - 1);
+    }
 
     class FixedStatResult : public ICombinedStatResults {
     public:
@@ -637,7 +684,7 @@ namespace UnitTests {
 
 
     // Test callcumu sanity checks
-    void testUnit_007c() {
+    void testUnit_callcumu() {
 
         DeckLocation card;
 
@@ -645,11 +692,8 @@ namespace UnitTests {
 
         card.SetByIndex(47);
         withCommunity.AddToHand(card);
-
         card.SetByIndex(51);
         withCommunity.AddToHand(card);
-
-
 
 
         CommunityPlus communityToTest;
@@ -684,6 +728,18 @@ namespace UnitTests {
         assert(actualWinPct < 0.8); // Such a hand has about a 65% chance to win? Even aces have only 70 something right?
         assert(0.6457 < actualWinPct);
 
+        // Test slopes at the boundaries of `Pr_haveWorsePCT_continuous`
+        std::vector<std::pair<float64, ValueAndSlope>> actual_Pr_haveWorsePCT_low;
+        std::vector<std::pair<float64, ValueAndSlope>> actual_Pr_haveWorsePCT_high;
+        for(float64 w = 0.0; w < 0.2; w += 0.01) {
+            ValueAndSlope actual_low = statprob.core.callcumu.Pr_haveWorsePCT_continuous(0.3+w).first;
+            actual_Pr_haveWorsePCT_low.push_back({0.3+w, actual_low});
+
+            ValueAndSlope actual_high = statprob.core.callcumu.Pr_haveWorsePCT_continuous(0.6+w).first;
+            actual_Pr_haveWorsePCT_high.push_back({0.6+w, actual_high});
+        }
+        assert(print_x_y_dy_derivative_ok(actual_Pr_haveWorsePCT_low, 2.0) > 0.75);
+        assert(print_x_y_dy_derivative_ok(actual_Pr_haveWorsePCT_high, 0.02) > 0.6);
     }
 
 
@@ -955,26 +1011,39 @@ namespace RegressionTests {
 
         virtual void SeeCommunity(const Hand&, const int8) {};
 
-
-        virtual float64 MakeBet() {
-            assert(i < bets.size()); // the point of a FixedReplayPlayerStrategy is to replay a fixed sequence of actions
-            const float64 myBet = bets[i];
-            ++i;
-            if (myBet == myBet) {
-                return myBet;
-            } else {
-                // it's nan, which means CALL
-                return ViewTable().GetBetToCall();
-            }
-        }
-
         virtual void SeeOppHand(const int8, const Hand&) {};
 
         virtual void SeeAction(const HoldemAction&) {};
 
         virtual void FinishHand() {};
 
+        virtual float64 MakeBet() {
+            if(bets.size() == 1) {
+              //: Let it loop around if `bets.size() == 1`
+              return bets[0];
+            }
+            if(bets.size() == 2) {
+              if (bets[0] == bets[1]) return proceedWithBet(bets[0]);
+              // Let it loop around if it's the same bet twice (shorthand, but more readable when skimming a testcase)
+              if (std::isnan(bets[0]) && std::isnan(bets[1])) return proceedWithBet(bets[0]);
+              // [!TIP]
+              // We need this extra case because `NaN != NaN` is always true, but `NaN == NaN` is always false
+            }
+            assert(i < bets.size()); // the point of a FixedReplayPlayerStrategy is to replay a fixed sequence of actions
+            ++i;
+            return proceedWithBet(bets[i-1]);
+        }
+
     private:
+        float64 proceedWithBet(const float64 myBet) const {
+          if (myBet == myBet) {
+              return myBet;
+          } else {
+              // it's nan, which means CALL
+              return ViewTable().GetBetToCall();
+          }
+        }
+
         const std::vector<float64> bets; // a list of predetermined bets
         size_t i; // the index of the next bet to make
     }
@@ -2948,8 +3017,7 @@ namespace RegressionTests {
         myTable.setSmallestChip(5.0);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const float64 arr[] = {11.25, 80.0, 30.0, 125.0};
-        const std::vector<float64> nA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
+        const std::vector<float64> nA = {11.25, 80.0, 30.0, 125.0};
         FixedReplayPlayerStrategy gS(foldOnly);
 
         FixedReplayPlayerStrategy nS(nA);
@@ -3844,6 +3912,171 @@ namespace RegressionTests {
 
         assert(0 < actual);
     }
+    void testRegression_FoldWaitLengthModel_d_dw_crash() {
+
+      DeckLocation card;
+      CommunityPlus withCommunity; // 6c 6d
+
+      card.SetByIndex(18);
+      withCommunity.AddToHand(card);
+
+      card.SetByIndex(19);
+      withCommunity.AddToHand(card);
+
+                     const playernumber_t dealer = 8;
+
+                     BlindValues bl;
+                     bl.SetSmallBigBlind(5.0);
+
+                     HoldemArena myTable(bl.GetSmallBlind(), true, true);
+                     myTable.setSmallestChip(5.0);
+      /*
+
+      Blinds increased to 5/10
+      BEGIN 5
+
+
+      Preflop
+      (Pot: $0)
+      (9 players)
+	[ActionBotV $990]
+	[TrapBotV $980]
+	[ConservativeBotV $1045]
+	[DangerBotV $1000]
+	[Player $990]
+	[NormalBotV $860]
+	[SpaceBotV $230]
+	[MultiBotV $1935]
+	[GearBotV $970] ← dealer
+       */
+               // Compare `savegame` with src/arenaManagement.cpp#HoldemArena::UnserializeRoundStart
+               DeterredGainStrategy bot("d_dw.txt", 2);
+               PlayerStrategy * const botToTest = &bot;
+
+               const std::vector<float64> callSeq = {  std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN() };
+
+               FixedReplayPlayerStrategy callOnly(callSeq);
+               FixedReplayPlayerStrategy fS(  std::vector<float64>{0.0, 0.0}  ); // foldOnly
+               FixedReplayPlayerStrategy trapS(std::vector<float64> { std::numeric_limits<float64>::signaling_NaN(), 0, 0, 485 }); // 485 on the river
+
+               myTable.ManuallyAddPlayer("ActionBotV", 990.0, &fS);
+               myTable.ManuallyAddPlayer("TrapBotV", 980.0, &trapS); // big blind
+               myTable.ManuallyAddPlayer("CV", 1045.0, &fS);
+               myTable.ManuallyAddPlayer("DV", 1000.0, &fS);
+               myTable.ManuallyAddPlayer("P5", 990.0, &fS);
+               myTable.ManuallyAddPlayer("NormalBotV", 860.0, botToTest); // 6c 6d
+               myTable.ManuallyAddPlayer("SpaceBotV", 230.0, &callOnly);
+               myTable.ManuallyAddPlayer("Multi", 1935.0, &fS);
+               myTable.ManuallyAddPlayer("Gear", 970.0, &callOnly);
+               bot.StoreDealtHand(withCommunity);
+
+               myTable.BeginInitialState(14);
+               myTable.BeginNewHands(std::cout, bl, false, dealer);
+
+/*
+ActionBotV posts SB of $5 ($5)
+TrapBotV posts BB of $10 ($15)
+ConservativeBotV folds
+DangerBotV folds
+Player folds
+NormalBotV calls $10 ($25)
+SpaceBotV calls $10 ($35)
+MultiBotV folds
+GearBotV calls $10 ($45)
+ActionBotV folds
+TrapBotV checks
+ */
+
+ assert(myTable.PlayRound_BeginHand(std::cout) != -1);
+
+ CommunityPlus myFlop;
+
+ card.SetByIndex(22);
+ myFlop.AddToHand(card);
+
+ card.SetByIndex(25);
+ myFlop.AddToHand(card);
+
+ card.SetByIndex(41);
+ myFlop.AddToHand(card);
+
+ /*
+ Flop:	7c 8h Qh    (Pot: $45)
+ (4 players)
+	[TrapBotV $970]
+	[NormalBotV $850]
+	[SpaceBotV $220]
+	[GearBotV $960]
+
+ TrapBotV checks
+ NormalBotV checks
+ SpaceBotV checks
+ GearBotV checks
+ */
+ assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
+/*
+ Turn:	7c 8h Qh 8d   (Pot: $45)
+ (4 players)
+	[TrapBotV $970]
+	[NormalBotV $850]
+	[SpaceBotV $220]
+	[GearBotV $960]
+
+ TrapBotV checks
+ NormalBotV checks
+ SpaceBotV checks
+ GearBotV checks
+  */
+  DeckLocation myTurn;
+  myTurn.SetByIndex(27);
+  assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
+
+  /*
+  River:	7c 8h Qh 8d 9h  (Pot: $45)
+  (4 players)
+	[TrapBotV $970]
+	[NormalBotV $850]
+	[SpaceBotV $220]
+	[GearBotV $960]
+
+  TrapBotV bets $485 ($530)
+  */
+
+  DeckLocation myRiver;
+  myRiver.SetByIndex(29);
+  // assert(myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout) != -1);
+
+  CommunityPlus final_community;
+  final_community.SetUnique(myFlop);
+  final_community.AddToHand(myTurn);
+  final_community.AddToHand(myRiver);
+
+  myTable.PrepBettingRound(false,0);  //no rounds remaining, it's the river now
+  HoldemArenaBetting r( &myTable, final_community, 5 , &(std::cout));
+
+  struct MinRaiseError msg;
+
+  r.MakeBet(485, &msg); // TrapBot bets 485
+
+  const float64 actual = bot.MakeBet();
+  assert(std::isfinite(actual) && "should not crash: src/callPredictionFunctions.cpp#FoldWaitLengthModel::d_dw");
+
+                       /*
+Playing as S
+⋮
+7c 8h 8d 9h Qh community
+*
+(Better All-in) 47.6263%
+(Re.s) 0.10101%
+(Better Mean Rank) 47.4561%
+(Ra.s) 0%
+
+*
+6c 6d Bet to call 485 (from 0) at 530 pot,
+                        */
+
+
+    }
 
 
     // 2013.08.30-19.58.15
@@ -4643,7 +4876,7 @@ static void all_unit_tests() {
   UnitTests::testUnit_010();
   UnitTests::testUnit_007();
   UnitTests::testUnit_007b();
-  UnitTests::testUnit_007c();
+  UnitTests::testUnit_callcumu();
   UnitTests::testUnit_002b();
   UnitTests::testUnit_003();
 }
@@ -4670,6 +4903,7 @@ static void all_regression_tests() {
 
     RegressionTests::testRegression_005();
     RegressionTests::testRegression_019();
+    RegressionTests::testRegression_FoldWaitLengthModel_d_dw_crash();
 }
 
 // HOLDEMDB_PATH=/Users/joseph/pokeroo-run/lib/holdemdb /Users/joseph/Documents/pokeroo/holdem

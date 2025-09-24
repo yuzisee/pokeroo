@@ -212,7 +212,7 @@ OppRAISEChanceR [*] 0.73476 @ $8 ($8 now)	fold -- 0.0	W(2×)=0 L=1 2×o.w_s=(0,0
 OppRAISEChanceR [*] 0.733242 @ $16 ($16 now)	fold -- 0.0	W(2×)=0 L=1 2×o.w_s=(0,0)
 OppRAISEChanceR [*] 0.730205 @ $32 ($32 now)	fold -- 0.0316742	W(2×)=0 L=1 2×o.w_s=(0,0)
 OppRAISEChanceR [F] 0.441524 @ $64 ($64 now)	fold -- 0.0791855	W(2×)=0 L=1 2×o.w_s=(0,0)
-OppRAISEChanceR [F] 0.31381 @ $128 ($128 now)	fold -- 0.280543	W(12.2222×)=0 L=1 2×o.w_s=(0,0)
+OppRAISEChanceR [F] 0.31381 @ $128 ($128 now)	fold -- 0.382353	W(12.2222×)=0 L=1 2×o.w_s=(0,0)
 OppRAISEChanceR [F] 0.156405 @ $256 ($256 now)	fold -- 0.432127	W(13.5556×)=0 L=1 2×o.w_s=(0,0)
 OppRAISEChanceR [F] 0.0317113 @ $512 ($512 now)	fold -- 0.429864	W(15.7778×)=0 L=1 2×o.w_s=(0,0)
 OppRAISEChanceR [F] 0.00226244 @ $778 ($778 now)	fold -- 0.38009	W(14.4444×)=0 L=1 2×o.w_s=(0,0)

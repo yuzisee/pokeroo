@@ -407,8 +407,6 @@ void WinStats::initW(const int8 cardsInCommunity)
 
 void CallStats::Analyze()
 {
-
-
 	for(int32 k=0;k<statCount;++k)
 	{
 		myWins[k].genPCT();
@@ -421,10 +419,8 @@ void CallStats::Analyze()
 	    #endif
 	}
 
-
 	sort(myWins,myWins+statCount);//Ascending by default
                                 //  http://www.ddj.com/dept/cpp/184403792
-
 
 //populate cumulation
 	int32 count=1;
