@@ -54,6 +54,53 @@ namespace NamedTriviaDeckTests {
 #include "../src/stratPosition.h"
 namespace UnitTests {
 
+    static bool print_x_y_dy_derivative_ok(const std::vector<std::pair<float64, ValueAndSlope>> &actual, float64 derivative_margin) {
+      int derivative_ok = 0;
+
+      std::cout << "Δy/Δx≅\t";
+      float64 prev_x = std::numeric_limits<float64>::signaling_NaN();
+      float64 prev_y = std::numeric_limits<float64>::signaling_NaN();
+      float64 prev_dy = std::numeric_limits<float64>::signaling_NaN();
+      for (const std::pair<float64, ValueAndSlope> &x_y_dy : actual) {
+        const float64 x = x_y_dy.first;
+        const float64 y = x_y_dy.second.v;
+        const float64 dy = x_y_dy.second.D_v;
+        if (std::isnan(prev_x) || std::isnan(prev_y)) {
+          std::cout << " ⏢";
+        } else {
+          const float64 expected_dy = (y - prev_y) / (x - prev_x);
+          std::cout << "   " << expected_dy;
+
+          if( (std::min(prev_dy, dy) - derivative_margin <= expected_dy) && (expected_dy <= derivative_margin + std::max(prev_dy, dy))) {
+            std::cout << "✓";
+            derivative_ok += 1;
+          } else {
+            std::cout << "⚠⚠";
+          }
+        }
+        prev_x = x;
+        prev_y = y;
+        prev_dy = dy;
+      }
+      std::cout << std::endl;
+      std::cout << "dy";
+      for (const std::pair<float64, ValueAndSlope> &x_y_dy : actual) {
+        std::cout << "   " << x_y_dy.second.D_v;
+      }
+      std::cout << std::endl;
+      std::cout << "y";
+      for (const std::pair<float64, ValueAndSlope> &x_y_dy : actual) {
+        std::cout << "   " << x_y_dy.second.v;
+      }
+      std::cout << std::endl;
+      std::cout << "x";
+      for (const std::pair<float64, ValueAndSlope> &x_y_dy : actual) {
+        std::cout << "   " << x_y_dy.first;
+      }
+      std::cout << std::endl;
+
+      return derivative_ok / static_cast<float64>(actual.size() - 1);
+    }
 
     class FixedStatResult : public ICombinedStatResults {
     public:
@@ -637,7 +684,7 @@ namespace UnitTests {
 
 
     // Test callcumu sanity checks
-    void testUnit_007c() {
+    void testUnit_callcumu() {
 
         DeckLocation card;
 
@@ -645,11 +692,8 @@ namespace UnitTests {
 
         card.SetByIndex(47);
         withCommunity.AddToHand(card);
-
         card.SetByIndex(51);
         withCommunity.AddToHand(card);
-
-
 
 
         CommunityPlus communityToTest;
@@ -684,6 +728,18 @@ namespace UnitTests {
         assert(actualWinPct < 0.8); // Such a hand has about a 65% chance to win? Even aces have only 70 something right?
         assert(0.6457 < actualWinPct);
 
+        // Test slopes at the boundaries of `Pr_haveWorsePCT_continuous`
+        std::vector<std::pair<float64, ValueAndSlope>> actual_Pr_haveWorsePCT_low;
+        std::vector<std::pair<float64, ValueAndSlope>> actual_Pr_haveWorsePCT_high;
+        for(float64 w = 0.0; w < 0.2; w += 0.01) {
+            ValueAndSlope actual_low = statprob.core.callcumu.Pr_haveWorsePCT_continuous(0.3+w).first;
+            actual_Pr_haveWorsePCT_low.push_back({0.3+w, actual_low});
+
+            ValueAndSlope actual_high = statprob.core.callcumu.Pr_haveWorsePCT_continuous(0.6+w).first;
+            actual_Pr_haveWorsePCT_high.push_back({0.6+w, actual_high});
+        }
+        assert(print_x_y_dy_derivative_ok(actual_Pr_haveWorsePCT_low, 2.0) > 0.75);
+        assert(print_x_y_dy_derivative_ok(actual_Pr_haveWorsePCT_high, 0.02) > 0.6);
     }
 
 
@@ -4006,7 +4062,7 @@ TrapBotV checks
   r.MakeBet(485, &msg); // TrapBot bets 485
 
   const float64 actual = bot.MakeBet();
-  assert(!std::isnan(actual)); // also should not crash
+  assert(!std::isnan(actual) && "should not crash: src/callPredictionFunctions.cpp#FoldWaitLengthModel::d_dw");
 
                        /*
 Playing as S
@@ -4824,7 +4880,7 @@ static void all_unit_tests() {
   UnitTests::testUnit_010();
   UnitTests::testUnit_007();
   UnitTests::testUnit_007b();
-  UnitTests::testUnit_007c();
+  UnitTests::testUnit_callcumu();
   UnitTests::testUnit_002b();
   UnitTests::testUnit_003();
 }

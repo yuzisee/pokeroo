@@ -242,8 +242,21 @@ template<typename T1, typename T2> float64 CallCumulationD<T1, T2>::inverseD(con
     //f'(nearest_winPCT_given_rank(rank)-EPS) * nearest_winPCT_given_rank'(rank) = 1
     //nearest_winPCT_given_rank'(rank) = 1 / f'(nearest_winPCT_given_rank(rank)-EPS)
 
+    const std::pair<ValueAndSlope, char> reciprocal = Pr_haveWorsePCT_continuous( mean ); // ∂rank / ∂nearest_winPCT_given_rank
+
+    #ifdef DEBUGASSERT
+    if (reciprocal.first.D_v <= std::numeric_limits<float64>::epsilon()) {
+      std::cerr << "Unnormalized [" << reciprocal.second << "] CallCumulationD::inverseD( " << rank << "ᵘⁿᵘˢᵉᵈ, " << mean << ")" << std::endl; // ⁱᵍⁿᵒʳᵉᵈ
+      exit(1);
+    }
+    if (std::isnan(reciprocal.first.D_v)) {
+      std::cerr << "Bug[" << reciprocal.second << "] in Pr_haveWorsePCT_continuous(" << mean << ") please fix ⚠" << std::endl;
+      exit(1);
+    }
+    #endif
+
     //Since mean == nearest_winPCT_given_rank( rank )
-    return 1.0 / Pr_haveWorsePCT_continuous( mean ).first.D_v;
+    return 1.0 / reciprocal.first.D_v;
 }
 
 //How this works:
@@ -527,11 +540,17 @@ template<typename T1, typename T2> std::pair<ValueAndSlope, char> CallCumulation
 
     if( firstBetterThan == maxsize )
     {//All hands meet criteria
-        return std::pair<ValueAndSlope, char>(ValueAndSlope{1.0, 0.0}, 'o'); // 'o', for out-of-bounds
+        const StatResult &xy2 = cumulation[maxsize-1];
+        const StatResult &xy1 = cumulation[maxsize-2];
+        const float64 end_slope = (xy2.repeated - xy1.repeated) / (xy2.pct - xy1.pct);
+        return std::pair<ValueAndSlope, char>(ValueAndSlope{1.0, end_slope}, 'o'); // 'o', for out-of-bounds
     }
     if (firstBetterThan == 0) {
         //No hands meet criteria
-        return std::pair<ValueAndSlope, char>(ValueAndSlope{0.0, 0.0}, 'o'); // 'o', for out-of-bounds
+        const StatResult &xy2 = cumulation[1];
+        const StatResult &xy1 = cumulation[0];
+        const float64 start_slope = (xy2.repeated - xy1.repeated) / (xy2.pct - xy1.pct);
+        return std::pair<ValueAndSlope, char>(ValueAndSlope{0.0, start_slope}, 'o'); // 'o', for out-of-bounds
     }
 
 //These boundaries form a region with start and end.
