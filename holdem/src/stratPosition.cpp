@@ -1502,10 +1502,6 @@ float64 PureGainStrategy::MakeBet()
 
     const float64 bestBet = solveGainModel(&choicemodel);
 
-    #ifdef DEBUG_TRACE_DEXF
-      logFile << "└─> bGamble " << static_cast<int>(bGamble) << "'s result: $" << bestBet << "⛂" << std::endl;
-      pr_opponentcallraise.traceOut_dexf = nullptr;
-    #endif
 
 #ifdef LOGPOSITION
 
