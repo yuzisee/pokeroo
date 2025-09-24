@@ -20,7 +20,13 @@ find playlogs.actual/ -iname '*.txt' -exec rm -v '{}' '+'
 
 # Run the command given!
 # e.g. if you invoked `sh test_harness.sh echo hello world` the line below will print "hello world" to the console
-"$@"
+if "$@"; then
+  echo 'Proceeding to check playlogs…'
+  TEST_FAILURE_EXIT_CODE=0
+else
+  TEST_FAILURE_EXIT_CODE=$?
+  echo 1>&2 '⚠️ Tests crashed or assertion failed'
+fi
 
 # If running as part of Github Actions, also make a downloadable archive of the results
 if test "${GITHUB_ACTIONS+y}" '=' 'y'; then
@@ -31,12 +37,16 @@ if test "${GITHUB_ACTIONS+y}" '=' 'y'; then
   fi
 fi
 
-# Grab the "actual" playlogs file corresponding to each "expected" playlogs file
-cd playlogs.expected/
-# ls -1 playlogs.expected/ | xargs -I @ mv -v @ playlogs.actual/@
-find . -iname '*.txt' -exec mv -v ../'{}' ../playlogs.actual/ ';'
-# ^^^ The `ls -1 … | xargs` version is simpler, but we need this script to be strict, even without `set -o pipefail` so this is the best we can come up with.
-cd ..
+if test "$TEST_FAILURE_EXIT_CODE" '=' 0; then
+  # Grab the "actual" playlogs file corresponding to each "expected" playlogs file
+  cd playlogs.expected/
+  # ls -1 playlogs.expected/ | xargs -I @ mv -v @ playlogs.actual/@
+  find . -iname '*.txt' -exec mv -v ../'{}' ../playlogs.actual/ ';'
+  # ^^^ The `ls -1 … | xargs` version is simpler, but we need this script to be strict, even without `set -o pipefail` so this is the best we can come up with.
+  cd ..
+else
+  exit $TEST_FAILURE_EXIT_CODE
+fi
 
 # COMPARE!
 if test -z "$(ls -A playlogs.expected/)"; then

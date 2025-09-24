@@ -2263,7 +2263,7 @@ namespace RegressionTests {
 
         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
         assert(highbettor == 4);
-        // No all-fold; assert that the pot was increased at least.
+        // No all-fold; assert that the pot was increased at least. ActionBot18 has Jd Ac so that's trip Aces. You're really going to check down the river??
         assert(myTable.GetPotSize() > 55);
 
 
@@ -4110,7 +4110,8 @@ Playing as S
 
         std::vector<float64> bbOnly; bbOnly.push_back(b.GetBigBlind()); bbOnly.push_back(0.0); bbOnly.push_back(0.0); bbOnly.push_back(0.0); bbOnly.push_back(0.0);
         const std::vector<float64> foldOnly(1, 0.0);
-        static const float64 arr[] = {5.0, 12.5, 49.0, 100.0, 228.0, 459.0, 495.0};
+        // static const float64 arr[] = {5.0, 12.5, 49.0, 100.0, 228.0, 459.0, 495.0};
+        static const float64 arr[] = {5.0, 12.5, 49.0, std::numeric_limits<float64>::signaling_NaN(), 228.0, 459.0, 495.0};
         const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
 
         FixedReplayPlayerStrategy cS(foldOnly);
@@ -4219,6 +4220,7 @@ Playing as S
         if (highbet == -1) {
             // all-fold?
             assert(myTable.ViewPlayer(0)->GetBetSize() < 0); // SpaceBot should be the one that folded.
+            // If you see that Nav folded, raise Nav's pre-recorded bet to ensure he stays in the game.
         } else
         {
         /*

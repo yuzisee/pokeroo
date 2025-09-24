@@ -498,7 +498,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     this->totaldexf = mydexf;
 
     #ifdef DEBUG_TRACE_DEXF
-            if( traceOut != 0 ) *traceOut << "Begin Query with mydexf " << mydexf << endl;
+            if( traceOut_dexf != 0 ) *traceOut_dexf << "\tBegin Query(betSize=" << betSize << ",callSteps=" << callSteps << ") with myexf=" << myexf << "  mydexf=" << mydexf << " ⇒ initialize to " << this->totalexf << " +" << this->totaldexf << "∂betSize" << endl;
     #endif
 
     this->noRaiseArraySize = 0;
@@ -535,13 +535,15 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     while( pIndex != tableinfo->playerID )
     {
       #ifdef DEBUG_TRACE_DEXF
-		  if( traceOut != 0 )
+		  if( traceOut_dexf != 0 )
 		  {
-		  	*traceOut << endl << "totaldexf is " << totaldexf << " overdexf is " << overdexf << endl;
-		  	*traceOut << "\tPlayer " << (int)pIndex;
+		  	*traceOut_dexf << endl << "\t\ttotalexf/totaldexf is " << this->totalexf << " +Δ" << this->totaldexf << " overexf/overdexf is " << overexf << " +∆" << overdexf << endl;
+		  	*traceOut_dexf << "\t\t↓ Player " << (int)pIndex;
 		  }
 		  #endif
 
+				// [!NOTE]
+				// This writes to `this->totalexf` and `this->totaldexf`
         this->accumulateOneOpponentPossibleRaises(pIndex, nextNoRaise_A, noRaiseArraySize_now, betSize, callSteps, &overexf, &overdexf);
 
         tableinfo->table->incrIndex(pIndex);
@@ -551,14 +553,14 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     delete [] nextNoRaise_A;
 
     #ifdef DEBUG_TRACE_DEXF
-    if( traceOut != 0 )  *traceOut << endl << "Final is " << totaldexf;
+    if( traceOut_dexf != 0 )  *traceOut_dexf << endl << "Final is " << this->totalexf << " +∂" << this->totaldexf;
     #endif
 
-    this->totalexf = totalexf - myexf - overexf;
-    this->totaldexf = totaldexf - mydexf - overdexf;
+    this->totalexf = this->totalexf - myexf - overexf;
+    this->totaldexf = this->totaldexf - mydexf - overdexf;
 
     #ifdef DEBUG_TRACE_DEXF
-    if( traceOut != 0 )  *traceOut << " adjusted to " << totaldexf << " by mydexf=" << mydexf << " and overdexf=" << overdexf << endl;
+    if( traceOut_dexf != 0 )  *traceOut_dexf << " adjusted to " << this->totalexf << "/" << this->totaldexf << " by myᵈexf=" << myexf << "∕" << mydexf << " and overᵈexf=" << overexf << "∕" << overdexf << endl;
     #endif
 
     if( totalexf < 0 ) this->totalexf = 0; //Due to rounding error in overexf?
@@ -800,7 +802,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 				//To understand the above, consider that totalexf includes already made bets
 
           #ifdef DEBUG_TRACE_DEXF
-          if( traceOut != 0 )  *traceOut << " to bet " << oppBetMake << "more";
+          if( traceOut_dexf != 0 )  *traceOut_dexf << " to bet " << oppBetMake << "more";
           #endif
 
           if( oppBetMake <= std::numeric_limits<float64>::epsilon() )
@@ -809,7 +811,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
               nextdexf = 1;
 
               #ifdef DEBUG_TRACE_DEXF
-              if( traceOut != 0 )  *traceOut << " ALREADY CALLED" << endl ;
+              if( traceOut_dexf != 0 )  *traceOut_dexf << " ALREADY CALLED" << endl ;
               #endif
           }else
           {
@@ -832,7 +834,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
               }
 
               #ifdef DEBUG_TRACE_DEXF
-              //if( traceOut != 0 )  *traceOut << " nextdexf=" << nextdexf << endl;
+              //if( traceOut_dexf != 0 )  *traceOut_dexf << " nextdexf=" << nextdexf << endl;
               #endif
 
           }
@@ -858,7 +860,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
           nextdexf = 0;
 
               #ifdef DEBUG_TRACE_DEXF
-              if( traceOut != 0 )  *traceOut << " Is ALL IN" << endl;
+              if( traceOut_dexf != 0 )  *traceOut_dexf << " Is ALL IN" << endl;
               #endif
 
 				//Obviously the opponent won't raise...  ie. NoRaise = 100%
@@ -874,7 +876,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       this->totalexf += nextexf;
 
               #ifdef DEBUG_TRACE_DEXF
-              //if( traceOut != 0 )  *traceOut << "totaldexf was " << totaldexf;
+              //if( traceOut_dexf != 0 )  *traceOut_dexf << "totaldexf was " << totaldexf;
               #endif
 
       //lastdexf = nextdexf;
@@ -882,10 +884,10 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
 
               #ifdef DEBUG_TRACE_DEXF
-              //if( traceOut != 0 )  *traceOut << " is " << totaldexf << ",  last added " << nextdexf << endl;
-              //if( traceOut != 0 )  *traceOut << " is " << totaldexf << endl;
-              //if( traceOut != 0 )  *traceOut << " last added " << nextdexf << endl;
-              //if( traceOut != 0 )  *traceOut << endl;
+              //if( traceOut_dexf != 0 )  *traceOut_dexf << " is " << totaldexf << ",  last added " << nextdexf << endl;
+              //if( traceOut_dexf != 0 )  *traceOut_dexf << " is " << totaldexf << endl;
+              //if( traceOut_dexf != 0 )  *traceOut_dexf << " last added " << nextdexf << endl;
+              //if( traceOut_dexf != 0 )  *traceOut_dexf << endl;
               #endif
 
 
