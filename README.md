@@ -13,6 +13,7 @@ make
 ```sh
 mkdir -vp ~/pokeroo-run/lib
 cd holdem
+mv -v bin/holdem* ~/pokeroo-run/lib/holdem
 unzip "$(make echoreleasearchive | tail -n 1)" -d ~/pokeroo-run/lib/holdemdb/ # or, unzip a specific archive such as holdemdb_clang.zip, OR regenerate the files fresh (see `regenerate_opening_book` below)
 
 cd "$(git rev-parse --show-toplevel)"

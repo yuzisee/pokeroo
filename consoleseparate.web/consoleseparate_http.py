@@ -203,7 +203,7 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
       var userEntryEl = document.getElementById('stdin-user-entry');
       userEntryEl.focus();
 
-      userEntryEl.addEventListener('keydown', function(keyboard_event) {
+      userEntryEl.addEventListener('keyup', function(keyboard_event) {
           if (keyboard_event.keyCode === 13) {
               document.getElementById('stderr-history').textContent += document.getElementById('appendable-label-stderr').textContent + ' ⌨' + keyboard_event.target.value;
               document.getElementById('appendable-label-stderr').textContent = '';
@@ -452,7 +452,7 @@ class ConsoleSeparateWebview(socketserver.ThreadingTCPServer):
     def render_text(new_text: str) -> str:
         # txt = new_text.replace('\r','')
         if POKER_REPLACE:
-            return re.sub(r'\b[2-9TJQKA][cdhs]\b', lambda m: m.group(0).replace('s', u'\u2664').replace('h', u'\u2661').replace('c', u'\u2663').replace('d', u'\u2662'), new_text)
+            return re.sub(r'\b[2-9TJQKA][cdhs]\b', lambda m: m.group(0).replace('s', u'\u2660').replace('h', u'\u2661').replace('c', u'\u2663').replace('d', u'\u2662'), new_text)
         else:
             return new_text
 

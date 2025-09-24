@@ -955,26 +955,40 @@ namespace RegressionTests {
 
         virtual void SeeCommunity(const Hand&, const int8) {};
 
-
-        virtual float64 MakeBet() {
-            assert(i < bets.size()); // the point of a FixedReplayPlayerStrategy is to replay a fixed sequence of actions
-            const float64 myBet = bets[i];
-            ++i;
-            if (myBet == myBet) {
-                return myBet;
-            } else {
-                // it's nan, which means CALL
-                return ViewTable().GetBetToCall();
-            }
-        }
-
         virtual void SeeOppHand(const int8, const Hand&) {};
 
         virtual void SeeAction(const HoldemAction&) {};
 
         virtual void FinishHand() {};
 
+        virtual float64 MakeBet() {
+            if(bets.size() == 1) {
+              //: Let it loop around if `bets.size() == 1`
+              return bets[0];
+            }
+            if(bets.size() == 2) {
+              if (bets[0] == bets[1]) return proceedWithBet(0);
+              // Let it loop around if it's the same bet twice (shorthand, but more readable when skimming a testcase)
+              if (std::isnan(bets[0]) && std::isnan(bets[1])) return proceedWithBet(0);
+              // [!TIP]
+              // We nee this extra case because `NaN != NaN` is always true, but `NaN == NaN` is always false
+            }
+            return proceedWithBet(i);
+        }
+
     private:
+        float64 proceedWithBet(size_t i) {
+          assert(i < bets.size()); // the point of a FixedReplayPlayerStrategy is to replay a fixed sequence of actions
+          const float64 myBet = bets[i];
+          ++i;
+          if (myBet == myBet) {
+              return myBet;
+          } else {
+              // it's nan, which means CALL
+              return ViewTable().GetBetToCall();
+          }
+        }
+
         const std::vector<float64> bets; // a list of predetermined bets
         size_t i; // the index of the next bet to make
     }
@@ -3844,6 +3858,172 @@ namespace RegressionTests {
 
         assert(0 < actual);
     }
+    void testRegression_FoldWaitLengthModel_d_dw_crash() {
+
+      DeckLocation card;
+      CommunityPlus withCommunity; // 6c 6d
+
+      card.SetByIndex(18);
+      withCommunity.AddToHand(card);
+
+      card.SetByIndex(19);
+      withCommunity.AddToHand(card);
+
+                     const playernumber_t dealer = 8;
+
+                     BlindValues bl;
+                     bl.SetSmallBigBlind(5.0);
+
+                     HoldemArena myTable(bl.GetSmallBlind(), true, true);
+                     myTable.setSmallestChip(5.0);
+      /*
+
+      Blinds increased to 5/10
+      BEGIN 5
+
+
+      Preflop
+      (Pot: $0)
+      (9 players)
+	[ActionBotV $990]
+	[TrapBotV $980]
+	[ConservativeBotV $1045]
+	[DangerBotV $1000]
+	[Player $990]
+	[NormalBotV $860]
+	[SpaceBotV $230]
+	[MultiBotV $1935]
+	[GearBotV $970] ← dealer
+       */
+               // Compare `savegame` with src/arenaManagement.cpp#HoldemArena::UnserializeRoundStart
+               DeterredGainStrategy bot("d_dw.txt", 2);
+               PlayerStrategy * const botToTest = &bot;
+
+               const std::vector<float64> callSeq = {  std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN() };
+
+               FixedReplayPlayerStrategy callOnly(callSeq);
+               FixedReplayPlayerStrategy fS(  std::vector<float64>{0.0, 0.0}  ); // foldOnly
+               FixedReplayPlayerStrategy trapS(std::vector<float64> { std::numeric_limits<float64>::signaling_NaN(), 0, 0, 485 }); // 485 on the river
+
+               myTable.ManuallyAddPlayer("ActionBotV", 990.0, &fS);
+               myTable.ManuallyAddPlayer("TrapBotV", 980.0, &trapS); // big blind
+               myTable.ManuallyAddPlayer("CV", 1045.0, &fS);
+               myTable.ManuallyAddPlayer("DV", 1000.0, &fS);
+               myTable.ManuallyAddPlayer("P5", 990.0, &fS);
+               myTable.ManuallyAddPlayer("NormalBotV", 860.0, botToTest); // 6c 6d
+               myTable.ManuallyAddPlayer("SpaceBotV", 230.0, &callOnly);
+               myTable.ManuallyAddPlayer("Multi", 1935.0, &fS);
+               myTable.ManuallyAddPlayer("Gear", 970.0, &callOnly);
+               bot.StoreDealtHand(withCommunity);
+
+               myTable.BeginInitialState(14);
+               myTable.BeginNewHands(std::cout, bl, false, dealer);
+
+/*
+ActionBotV posts SB of $5 ($5)
+TrapBotV posts BB of $10 ($15)
+ConservativeBotV folds
+DangerBotV folds
+Player folds
+NormalBotV calls $10 ($25)
+SpaceBotV calls $10 ($35)
+MultiBotV folds
+GearBotV calls $10 ($45)
+ActionBotV folds
+TrapBotV checks
+ */
+
+ assert(myTable.PlayRound_BeginHand(std::cout) != -1);
+
+ CommunityPlus myFlop;
+
+ card.SetByIndex(22);
+ myFlop.AddToHand(card);
+
+ card.SetByIndex(25);
+ myFlop.AddToHand(card);
+
+ card.SetByIndex(41);
+ myFlop.AddToHand(card);
+
+ /*
+ Flop:	7c 8h Qh    (Pot: $45)
+ (4 players)
+	[TrapBotV $970]
+	[NormalBotV $850]
+	[SpaceBotV $220]
+	[GearBotV $960]
+
+ TrapBotV checks
+ NormalBotV checks
+ SpaceBotV checks
+ GearBotV checks
+ */
+ assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
+/*
+ Turn:	7c 8h Qh 8d   (Pot: $45)
+ (4 players)
+	[TrapBotV $970]
+	[NormalBotV $850]
+	[SpaceBotV $220]
+	[GearBotV $960]
+
+ TrapBotV checks
+ NormalBotV checks
+ SpaceBotV checks
+ GearBotV checks
+  */
+  DeckLocation myTurn;
+  myTurn.SetByIndex(27);
+  assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
+
+  /*
+  River:	7c 8h Qh 8d 9h  (Pot: $45)
+  (4 players)
+	[TrapBotV $970]
+	[NormalBotV $850]
+	[SpaceBotV $220]
+	[GearBotV $960]
+
+  TrapBotV bets $485 ($530)
+  */
+
+  //   myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
+  DeckLocation myRiver;
+  myRiver.SetByIndex(29);
+  assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
+
+  CommunityPlus final_community;
+  final_community.SetUnique(myFlop);
+  final_community.AddToHand(myTurn);
+  final_community.AddToHand(myRiver);
+
+  myTable.PrepBettingRound(false,0);  //no rounds remaining, it's the river now
+  HoldemArenaBetting r( &myTable, final_community, 5 , &(std::cout));
+
+  struct MinRaiseError msg;
+
+  r.MakeBet(485, &msg); // TrapBot bets 485
+
+  const float64 actual = bot.MakeBet();
+  assert(!std::isnan(actual)); // also should not crash
+
+                       /*
+Playing as S
+⋮
+7c 8h 8d 9h Qh community
+*
+(Better All-in) 47.6263%
+(Re.s) 0.10101%
+(Better Mean Rank) 47.4561%
+(Ra.s) 0%
+
+*
+6c 6d Bet to call 485 (from 0) at 530 pot,
+                        */
+
+
+    }
 
 
     // 2013.08.30-19.58.15
@@ -4671,6 +4851,7 @@ static void all_regression_tests() {
 
     RegressionTests::testRegression_005();
     RegressionTests::testRegression_019();
+    RegressionTests::testRegression_FoldWaitLengthModel_d_dw_crash();
 }
 
 // HOLDEMDB_PATH=/Users/joseph/pokeroo-run/lib/holdemdb /Users/joseph/Documents/pokeroo/holdem

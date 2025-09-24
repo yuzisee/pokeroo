@@ -430,7 +430,7 @@ static std::string testPlay(std::string gameId, char headsUp = 'G', std::ostream
 
     uint32 blindIncrFreq = 40;
     uint32 tokenRandomizer;
-    const float64 startingMoney= 1500;
+    const float64 startingMoney= 1000;
     if( headsUp == 'L' )
     {
         #ifdef AUTOEXTRATOKEN
