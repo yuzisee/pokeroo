@@ -119,15 +119,17 @@ float64 ScalarFunctionModel::FindMax(float64 x1, float64 x2)
 {
     const float64 y1 = f(x1);
         #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
-            if(traceEnable != nullptr)
-            {
+            if(traceEnable != nullptr) {
               *traceEnable << "\t\t\tFindMax(x1,y1)=" << x1 << std::flush;
               *traceEnable <<","<< y1 << endl;
-               *traceEnable << "\t\t\t(x2,y2)=" << x2 << std::flush; }
+            }
         #endif
     const float64 y2 = f(x2);
         #if defined(DEBUG_TRACE_SEARCH) || defined(DEBUG_TRACE_PWIN)
-            if(traceEnable != nullptr) *traceEnable <<","<< y2 << endl;
+            if(traceEnable != nullptr) {
+              *traceEnable << "\t\t\t(x2,y2)=" << x2 << std::flush;
+              *traceEnable <<","<< y2 << endl;
+            }
         #endif
 
     const float64 xb = bisectionStep(x1,x2);
