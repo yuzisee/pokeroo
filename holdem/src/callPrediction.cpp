@@ -938,7 +938,14 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
 
       //At this point, each nextNoRaise is 100% unless otherwise adjusted.
-      const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step].v < std::numeric_limits<float64>::epsilon()) ? 0 : std::pow(nextNoRaise_A[i_step].v,oppRaiseChancesAware);
+      const float64 noRaiseChance_adjust =
+        (nextNoRaise_A[i_step].v <= std::numeric_limits<float64>::epsilon())
+        ?
+        0
+        :
+        (
+          std::pow(nextNoRaise_A[i_step].v,oppRaiseChancesAware)
+        );
 
 
 #ifdef DEBUGASSERT

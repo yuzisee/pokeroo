@@ -304,9 +304,9 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
         // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
         //                                                                             ^^^ see `setAmountSacrificeVoluntary`
         //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
-        FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / (handsIn()-1)
-        // In this case, `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂pot
+        FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1)
         // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
+		// TODO(from joseph): Isn't it way simpler for `riskLoss.D_v` to be ∂{riskLoss.v}/∂betsize
 	    }
 	  ) : (
       //If riskLoss > 0, then the opponent loses by raising, and therefore doesn't.
@@ -314,6 +314,7 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
 	  )
 	)
 	;
+
 
 	// https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
       // d_riskLoss/d_pot = d/dpot { -FG.f( raiseTo ) }                           - d/dpot { FG.waitLength.amountSacrifice }
