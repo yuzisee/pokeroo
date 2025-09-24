@@ -149,11 +149,11 @@ float64 ConsoleStepStrategy::MakeBet()
 
 		if (std::cin.peek() == '\n') { std::cin.get(); }
 		std::cout << "Press [Enter] to continue…" << std::flush;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    while (true) {
-      if (std::cin.get() == 13) { break; }
-    }
-    std::cin.sync();
+    	while (true) {
+      		if (std::cin.get() == 13) { break; }
+    	}
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    	std::cin.sync();
 	}
 	return ConsoleStrategy::MakeBet();
 }
