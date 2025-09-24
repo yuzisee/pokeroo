@@ -1502,16 +1502,14 @@ float64 PureGainStrategy::MakeBet()
 
     const float64 bestBet = solveGainModel(&choicemodel);
 
-    #ifdef DEBUG_TRACE_DEXF
-      logFile << "└─> bGamble " << static_cast<int>(bGamble) << "'s result: $" << bestBet << "⛂" << std::endl;
-      pr_opponentcallraise.traceOut_dexf = nullptr;
-    #endif
-
 #ifdef LOGPOSITION
 
+  #ifdef DEBUG_TRACE_DEXF
+    logFile << "└─> bGamble " << static_cast<int>(bGamble) << "'s result: $" << bestBet << "⛂" << std::endl;
+    pr_opponentcallraise.traceOut_dexf = nullptr;
+  #endif
 
-
-#ifdef VERBOSE_STATEMODEL_INTERFACE
+  #ifdef VERBOSE_STATEMODEL_INTERFACE
     const float64 displaybet = (bestBet < betToCall) ? betToCall : bestBet;
 
     printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
@@ -1531,8 +1529,7 @@ float64 PureGainStrategy::MakeBet()
             printStateModel(logFile, displayMinRaise, ap_aggressive, ViewPlayer());
         }
     }
-
-#endif
+  #endif // VERBOSE_STATEMODEL_INTERFACE
 
     //if( bestBet < betToCall + ViewTable().GetChipDenom() )
     {

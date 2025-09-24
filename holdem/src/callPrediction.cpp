@@ -802,7 +802,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 				//To understand the above, consider that totalexf includes already made bets
 
           #ifdef DEBUG_TRACE_DEXF
-          if( traceOut_dexf != 0 )  *traceOut_dexf << " to bet " << oppBetMake << "more";
+          if( traceOut_dexf != 0 )  *traceOut_dexf << " to bet $" << oppBetMake << " more";
           #endif
 
           if( oppBetMake <= std::numeric_limits<float64>::epsilon() )
