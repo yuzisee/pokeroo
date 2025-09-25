@@ -123,6 +123,9 @@ template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_rawPCT
     }
 }
 
+// Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
+// @returns a value between −1.0 and +1.0
+// Your profit per betSize. If it's positive, you make money the more betSize gets. If negative you lose money the more betSize gets.
 static float64 compute_dE_dbetSize( const float64 rawPCT, const float64 opponents ) {
   #ifdef INLINE_INTEGER_POWERS
             float64 intOpponents = std::round(opponents);
@@ -140,14 +143,11 @@ static float64 compute_dE_dbetSize( const float64 rawPCT, const float64 opponent
             }//end if intOpponents == opponents , else
   #endif
 
-
-            // Your profit per betSize. If it's positive, you make money the more betSize gets. If negative you lose money the more betSize gets.
             return (2*cached_d_dbetSize) - 1;
 }
 
-// Your EV (win - loss) as a fraction, based on expected winPCT of the 1.0 - 1.0/n rank hand.
 // Return value is between -1.0 and +1.0
-// Will memoize while searching
+// Can be memoized using `.b_assume_w_is_constant`
 template<typename T1, typename T2> float64 FoldWaitLengthModel<T1, T2>::d_dbetSize( const float64 n )
 {
   if (cached_d_dbetSize.bHasCachedValueFor(n) ) {
@@ -845,9 +845,25 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
 #ifdef REFINED_FACED_ODDS_RAISE_GEOM
   const float64 callGain = std::pow(callIncrLoss, 1 - fw) * std::pow(callIncrBase,fw);
-	const bool bUseCall = ( callGain > excess );
 
-	const float64 nonRaiseGain = (bUseCall ?
+
+	// TODO(from joseph): Idea → if it's the _final_ betting round, we can still use FoldWaitGainModel, right?
+	const float64 applyRiskLoss = (bCheckPossible || bRaiseWouldBeCalled) ? riskLoss : 0.0;
+	// And then you should still set bUseCall accordingly, in that case
+
+#else
+  const float64 applyRiskLoss =  (bCheckPossible) ? 0 : riskLoss;
+
+	const float64 callGain =
+	  bRaiseWouldBeCalled ? (
+			callIncrLoss * std::pow(callIncrBase,fw)
+		) : 0;
+
+
+#endif
+
+  bool bUseCall = ( callGain > excess );
+  const float64 nonRaiseGain = (bUseCall ?
 	  (   //calling is more profitable than folding
 	  	callGain
 	  ) : (
@@ -857,28 +873,8 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	)
 	;
 
-	const float64 applyRiskLoss = (bCheckPossible || bRaiseWouldBeCalled) ? riskLoss : 0.0;
-
-	// Raise only if (U + riskLoss) is better than `nonRaiseGain`
-   lastF = U + applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain;
-#else
-  const float64 applyRiskLoss =  (bCheckPossible) ? 0 : riskLoss;
-	float64 nonRaiseGain = excess - applyRiskLoss / FG.waitLength.bankroll;
-
-	bool bUseCall = false;
-	const float64 callGain =
-	  bRaiseWouldBeCalled ? (
-			callIncrLoss * std::pow(callIncrBase,fw)
-		) : 0;
-
-	if( callGain > nonRaiseGain )
-	{   //calling is more profitable than folding
-		nonRaiseGain = callGain;
-		bUseCall = true;
-	}//else, folding (opportunity cost) is more profitable than calling (expected value)
-
-    lastF = U - nonRaiseGain;
-#endif
+// Raise only if (U + riskLoss) is better than `nonRaiseGain`
+  lastF = U + applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain;
 
     lastFD = dU_dw;
     if( (!bCheckPossible) && FG.n > 0 && !bUseCall)
