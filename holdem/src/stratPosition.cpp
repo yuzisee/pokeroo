@@ -629,11 +629,11 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
     if (separatorBet != betToCall) {
       logF << "What am I expecting now, given my actual bet?" << endl;
       alternativeBetToCompare = separatorBet;
-      foldPrintConfig = { nullptr, nullptr };
+      foldPrintConfig = std::make_pair( nullptr, nullptr );
     } else {
       logF << "Why didn't I raise to $" << tablestate.minRaiseTo() << "?" << endl;
       alternativeBetToCompare = tablestate.minRaiseTo();
-      foldPrintConfig = { &opp_fold, csrp };
+      foldPrintConfig = std::make_pair( &opp_fold, csrp );
     }
 
         FoldOrCall rrF(*(tablestate.table), opp_callraise.fCore);

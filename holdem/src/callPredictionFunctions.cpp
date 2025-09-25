@@ -681,7 +681,7 @@ template<typename T> void FacedOddsCallGeom<T>::query( const float64 w )
     lastF = U - B - FG.f(outsidebet);
 
     const float64 dfw = FG.waitLength.opponents*std::pow(w,FG.waitLength.opponents-1);
-    const float64 dU_dw = dfw*log1p((pot+outsidebet)/(B-outsidebet)) * U;
+    const float64 dU_dw = dfw*std::log1p((pot+outsidebet)/(B-outsidebet)) * U;
 
 
     lastFD = dU_dw;
@@ -780,11 +780,11 @@ struct ShowdownOpponents {
   const float64 raisedPot;
 
   // @return matches `float64 fw` of src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
-  constexpr float64 fw(const float64 w) const {
+  inline float64 fw(const float64 w) const {
     return std::pow(w,showdownOpponents);
   }
 
-  constexpr float64 dfw(const float64 w) const {
+  inline float64 dfw(const float64 w) const {
     return showdownOpponents * std::pow(w,showdownOpponents-1);
   }
 }
@@ -818,9 +818,10 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
     // dU_dw = U * dfw   *   ln{  (1 + raisedPot/FG.waitLength.bankroll)  / (1 - raiseTo/FG.waitLength.bankroll)  }
     // dU_dw = U * dfw   *   ln{ (1 - raiseTo/FG.waitLength.bankroll + raiseTo/FG.waitLength.bankroll + raisedPot/FG.waitLength.bankroll) / (1 - raiseTo/FG.waitLength.bankroll) }
     // dU_dw = U * dfw   *   ln{ 1.0 + (raiseTo/FG.waitLength.bankroll + raisedPot/FG.waitLength.bankroll) / (1 - raiseTo/FG.waitLength.bankroll) }
-    // dU_dw = U * dfw   *   ln{ 1.0 + (raiseTo + raisedPot) / (FG.waitLength.bankroll + raiseTo) }
+    // dU_dw = U * dfw   *   ln{ 1.0 + (raiseTo/FG.waitLength.bankroll + raisedPot/FG.waitLength.bankroll) * FG.waitLength.bankroll / (FG.waitLength.bankroll - raiseTo)  }
+    // dU_dw = U * dfw   *   ln{ 1.0 + (raiseTo + raisedPot) / (FG.waitLength.bankroll - raiseTo) }
     const float64 dfw = showdown_opponents.dfw(w);
-    const float64 dU_dw = U * dfw*log1p((showdown_opponents.raisedPot+raiseTo)/(FG.waitLength.bankroll-raiseTo));
+    const float64 dU_dw = U * dfw*std::log1p((showdown_opponents.raisedPot+raiseTo)/(FG.waitLength.bankroll-raiseTo));
 
     float64 excess = 1.0;
     float64 dexcess_dw = 0.0;
@@ -901,9 +902,9 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	// (1/y) * dy/dw =    dfw * (ln(callIncrBase) - ln(callIncrLoss))
 	//         dy/dw = y * dfw * (ln(callIncrBase) - ln(callIncrLoss))
 	#ifdef REFINED_FACED_ODDS_RAISE_GEOM
-		const float64 dL_dw = callGain * dfw * (std::log(callIncrBase) - log(callIncrLoss));
+		const float64 dL_dw = callGain * dfw * (std::log(callIncrBase) - std::log(callIncrLoss));
 	#else
-		const float64 dL_dw = dfw*log1p(callIncrBase) * callGain;
+		const float64 dL_dw = dfw*std::log1p(callIncrBase) * callGain;
 	#endif
 		lastFD -= dL_dw;
 	}

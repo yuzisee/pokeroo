@@ -98,7 +98,7 @@ float64 fd_yr;
             if( AUTOSCALE_TYPE == LOGARITHMIC_AUTOSCALE )
             {
 
-				const float64 rightWeight = log1p(slider)/log(2.0);
+				const float64 rightWeight = std::log1p(slider)/std::log(2.0);
                 const float64 leftWeight = 1 - rightWeight;
 
                 y = yl*leftWeight+yr*rightWeight;

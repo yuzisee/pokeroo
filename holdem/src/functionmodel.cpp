@@ -869,12 +869,12 @@ float64 GainModelGeom::hdx(float64 betFraction, float64 betSize, float64 exf, fl
      //     d_dbetSize fOutcome.getWinProb(betSize) log{base+exf}
      //     {d_dbetSize fOutcome.getWinProb(betSize)} log{base+exf} + fOutcome.getWinProb(betSize) d_dbetSize log{base+exf}
      //     fOutcome.get_d_WinProb_dbetSize(betSize) log{base+exf} + fOutcome.getWinProb(betSize) dexf/{base+exf}
-     fOutcome.get_d_WinProb_dbetSize(betSize) * log(base + exf) / dx + fOutcome.getWinProb(betSize) * dexf / (base + exf)
+     fOutcome.get_d_WinProb_dbetSize(betSize) * std::log(base + exf) / dx + fOutcome.getWinProb(betSize) * dexf / (base + exf)
      //     d_dbetSize log{const float64 loseGain = pow(base-x , fOutcome.getLoseProb(betSize));}
      //     d_dbetSize fOutcome.getLoseProb(betSize) log{base-x}
      //     {d_dbetSize fOutcome.getLoseProb(betSize)} log{base-x} + fOutcome.getLoseProb(betSize) d_dbetSize log{base-x}
      //     fOutcome.get_d_LoseProb_dbetSize(betSize) log{base-x} + fOutcome.getLoseProb(betSize) (-dx)/(base-x)
-     + fOutcome.get_d_LoseProb_dbetSize(betSize) * log(base-x) / dx + fOutcome.getLoseProb(betSize) * (-1.0) / (base-x)
+     + fOutcome.get_d_LoseProb_dbetSize(betSize) * std::log(base-x) / dx + fOutcome.getLoseProb(betSize) * (-1.0) / (base-x)
 
      + savd
      );
