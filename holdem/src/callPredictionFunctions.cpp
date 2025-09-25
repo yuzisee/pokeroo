@@ -21,6 +21,7 @@
 
 #include "callPredictionFunctions.h"
 #include "inferentials.h"
+#include "math_support.h"
 #include "portability.h"
 
 #include <iostream>
@@ -801,7 +802,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
       raisedPot
     };
     const float64 fw = showdown_opponents.fw(w);
-    const float64 U = std::pow(1 + showdown_opponents.raisedPot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
+    const float64 dfw = showdown_opponents.dfw(w);
     // ln(U) = ln{  std::pow(1 + raisedPot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw)  }
     // ln(U) =            fw * ln{ 1 + raisedPot/FG.waitLength.bankroll } + (1−fw)* ln{ 1 - raiseTo/FG.waitLength.bankroll }
     // dU_dw = U * d_dw { fw * ln( 1 + raisedPot/FG.waitLength.bankroll )  −  fw * ln ( 1 - raiseTo/FG.waitLength.bankroll ) }
@@ -811,11 +812,11 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
     // dU_dw = U * dfw   *   ln{ 1.0 + (raiseTo/FG.waitLength.bankroll + raisedPot/FG.waitLength.bankroll) / (1 - raiseTo/FG.waitLength.bankroll) }
     // dU_dw = U * dfw   *   ln{ 1.0 + (raiseTo/FG.waitLength.bankroll + raisedPot/FG.waitLength.bankroll) * FG.waitLength.bankroll / (FG.waitLength.bankroll - raiseTo)  }
     // dU_dw = U * dfw   *   ln{ 1.0 + (raiseTo + raisedPot) / (FG.waitLength.bankroll - raiseTo) }
-    const float64 dfw = showdown_opponents.dfw(w);
+    const float64 U = std::pow(1 + showdown_opponents.raisedPot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
     const float64 dU_dw = U * dfw*std::log1p((showdown_opponents.raisedPot+raiseTo)/(FG.waitLength.bankroll-raiseTo));
+    const ValueAndSlope U_by_w = {U, dU_dw};
 
-    float64 excess = 1.0;
-    float64 dexcess_dw = 0.0;
+    ValueAndSlope excess_by_w = {1.0, 0.0};
 
     if( !bCheckPossible )
     {
@@ -834,8 +835,8 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
       // So, is `lastFB` a.k.a. `F_b` the derivative of the last `-betSize` on the end, there?
       //
       // Furthermore, `ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF` has a `float64 A;` and a `float64 C;`  so are they related to these in some way?
-        excess += FG.f(fold_bet) / FG.waitLength.bankroll;
-        dexcess_dw -= FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
+        excess_by_w.v += FG.f(fold_bet) / FG.waitLength.bankroll;
+        excess_by_w.D_v += FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
     }
 
     const float64 callIncrLoss = 1 - this->fold_bet / FG.waitLength.bankroll;
@@ -859,52 +860,52 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 			callIncrLoss * std::pow(callIncrBase,fw)
 		) : 0;
 
-
 #endif
 
-  bool bUseCall = ( callGain > excess );
-  const float64 nonRaiseGain = (bUseCall ?
+  bool bUseCall = ( callGain > excess_by_w.v );
+  const ValueAndSlope nonRaiseGain = (bUseCall ?
 	  (   //calling is more profitable than folding
-	  	callGain
+	  	ValueAndSlope {
+				callGain,
+				//          y =   callGain
+				//          y =   std::pow(callIncrLoss, 1 - fw)  *  std::pow(callIncrBase,fw)
+				//       ln y = ln std::pow(callIncrLoss,1-fw)  + ln std::pow(callIncrBase,fw)
+				//       ln y =          (1-fw) * ln callIncrLoss  +  fw * ln(callIncrBase)
+				// d/dw { ln y } = d/dw { (1-fw) * ln callIncrLoss } + d/dw { fw * ln(callIncrBase) }
+				// (1/y) * dy/dw = (ln callIncrLoss) * d/dw { 1-fw } + ln(callIncrBase) * d/dw { fw }
+				// (1/y) * dy/dw = (ln callIncrLoss) * dfw * (-1)    + ln(callIncrBase) * dfw
+				// (1/y) * dy/dw =  ln(callIncrBase) * dfw    - (ln callIncrLoss) * dfw
+				// (1/y) * dy/dw =    dfw * (ln(callIncrBase) - ln(callIncrLoss))
+				//         dy/dw = y * dfw * (ln(callIncrBase) - ln(callIncrLoss))
+				#ifdef REFINED_FACED_ODDS_RAISE_GEOM
+					/*const float64 dL_dw =*/ callGain * dfw * (std::log(callIncrBase) - std::log(callIncrLoss))
+				#else
+					/*const float64 dL_dw =*/ dfw*std::log1p(callIncrBase) * callGain
+				#endif
+			}
 	  ) : (
 	    //else, folding (opportunity cost) is more profitable than calling (expected value)
-	  	excess
+	  	excess_by_w
 	  )
 	)
 	;
 
 // Raise only if (U + riskLoss) is better than `nonRaiseGain`
-  lastF = U + applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain;
+  lastF_by_w = U_by_w;
+  lastF_by_w.v += applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain.v;
 
-    lastFD = dU_dw;
     if( (!bCheckPossible) && FG.n > 0 && !bUseCall)
     {
-        lastFD += dexcess_dw;
+      lastF_by_w.D_v -= nonRaiseGain.D_v;
+    }
+    if (bUseCall) {
+      lastF_by_w.D_v -= nonRaiseGain.D_v;
     }
 
-	if( bUseCall )
-	{
-	//          y =   callGain
-	//          y =   std::pow(callIncrLoss, 1 - fw)  *  std::pow(callIncrBase,fw)
-	//       ln y = ln std::pow(callIncrLoss,1-fw)  + ln std::pow(callIncrBase,fw)
-	//       ln y =          (1-fw) * ln callIncrLoss  +  fw * ln(callIncrBase)
-	// d/dw { ln y } = d/dw { (1-fw) * ln callIncrLoss } + d/dw { fw * ln(callIncrBase) }
-	// (1/y) * dy/dw = (ln callIncrLoss) * d/dw { 1-fw } + ln(callIncrBase) * d/dw { fw }
-	// (1/y) * dy/dw = (ln callIncrLoss) * dfw * (-1)    + ln(callIncrBase) * dfw
-	// (1/y) * dy/dw =  ln(callIncrBase) * dfw    - (ln callIncrLoss) * dfw
-	// (1/y) * dy/dw =    dfw * (ln(callIncrBase) - ln(callIncrLoss))
-	//         dy/dw = y * dfw * (ln(callIncrBase) - ln(callIncrLoss))
-	#ifdef REFINED_FACED_ODDS_RAISE_GEOM
-		const float64 dL_dw = callGain * dfw * (std::log(callIncrBase) - std::log(callIncrLoss));
-	#else
-		const float64 dL_dw = dfw*std::log1p(callIncrBase) * callGain;
-	#endif
-		lastFD -= dL_dw;
-	}
 }
 
-template<typename T> float64 FacedOddsRaiseGeom<T>::f( const float64 w ) { query(w);  return lastF; }
-template<typename T> float64 FacedOddsRaiseGeom<T>::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
+template<typename T> float64 FacedOddsRaiseGeom<T>::f( const float64 w ) { query(w);  return lastF_by_w.v; }
+template<typename T> float64 FacedOddsRaiseGeom<T>::fd( const float64 w, const float64 excessU ) { query(w);  return lastF_by_w.D_v; }
 
 template<typename T1, typename T2> FoldGainModel<T1, T2>::~FoldGainModel(){}
 template<typename T1, typename T2> FoldWaitLengthModel<T1, T2>::~FoldWaitLengthModel(){}

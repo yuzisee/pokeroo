@@ -364,8 +364,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 {
     protected:
     float64 lastW;
-    float64 lastF;
-    float64 lastFD;
+    ValueAndSlope lastF_by_w;
     void query( const float64 w );
     public:
     float64 raisedPot;
