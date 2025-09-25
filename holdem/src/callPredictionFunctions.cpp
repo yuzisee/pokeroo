@@ -775,6 +775,20 @@ template<typename T> void FacedOddsRaiseGeom<T>::configure_with(FacedOddsRaiseGe
 	}
 }
 
+struct ShowdownOpponents {
+  const float64 showdownOpponents;
+  const float64 raisedPot;
+
+  // @return matches `float64 fw` of src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
+  constexpr float64 fw(const float64 w) const {
+    return std::pow(w,showdownOpponents);
+  }
+
+  constexpr float64 dfw(const float64 w) const {
+    return showdownOpponents * std::pow(w,showdownOpponents-1);
+  }
+}
+;
 
 // lastF = U - nonRaiseGain
 //       = std::pow(1 + pot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw)   −   nonRaiseGain
@@ -786,10 +800,30 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 
     FG.waitLength.setW( w );
 //Fraction scale
-    const float64 fw = std::pow(w,FG.waitLength.opponents);
+    const struct ShowdownOpponents showdown_opponents = {
+      #ifdef REFINED_FACED_ODDS_RAISE_GEOM
+        FG.waitLength.opponents - (bRaiseWouldBeCalled ? 0 : 0.5), // TODO(from joseph): 0.5 is a Schrodinger's player, maybe fold vs. maybe not fold. If we know this hypothetical raise will push one player out FOR SURE !00% guaranteed, we could deduct a full 1.0 instead of 0.5 (but is that too obnoxious?) Let's go with 0.5 for now.
+        raisedPot
+      #else
+        FG.waitLength.opponents,
+        pot
+      #endif
+    };
+    const float64 fw = showdown_opponents.fw(w);
+    const float64 U = std::pow(1 + showdown_opponents.raisedPot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
+    // ln(U) = ln{  std::pow(1 + raisedPot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw)  }
+    // ln(U) =            fw * ln{ 1 + raisedPot/FG.waitLength.bankroll } + (1−fw)* ln{ 1 - raiseTo/FG.waitLength.bankroll }
+    // dU_dw = U * d_dw { fw * ln( 1 + raisedPot/FG.waitLength.bankroll )  −  fw * ln ( 1 - raiseTo/FG.waitLength.bankroll ) }
+    // dU_dw = U * dfw  *  (  ln( 1 + raisedPot/FG.waitLength.bankroll )    −    ln ( 1 - raiseTo/FG.waitLength.bankroll )  )
+    // dU_dw = U * dfw   *   ln{  (1 + raisedPot/FG.waitLength.bankroll)  / (1 - raiseTo/FG.waitLength.bankroll)  }
+    // dU_dw = U * dfw   *   ln{ (1 - raiseTo/FG.waitLength.bankroll + raiseTo/FG.waitLength.bankroll + raisedPot/FG.waitLength.bankroll) / (1 - raiseTo/FG.waitLength.bankroll) }
+    // dU_dw = U * dfw   *   ln{ 1.0 + (raiseTo/FG.waitLength.bankroll + raisedPot/FG.waitLength.bankroll) / (1 - raiseTo/FG.waitLength.bankroll) }
+    // dU_dw = U * dfw   *   ln{ 1.0 + (raiseTo + raisedPot) / (FG.waitLength.bankroll + raiseTo) }
+    const float64 dfw = showdown_opponents.dfw(w);
+    const float64 dU_dw = U * dfw*log1p((showdown_opponents.raisedPot+raiseTo)/(FG.waitLength.bankroll-raiseTo));
 
-    const float64 U = std::pow(1 + pot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
-    float64 excess = 1;
+    float64 excess = 1.0;
+    float64 dexcess_dw = 0.0;
 
     if( !bCheckPossible )
     {
@@ -800,56 +834,77 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
       // 2 * betSize * (1.0 - 1.0 / n_hands_to_wait)^N_opponents - n_hands_to_wait * betSacrifice - betSize
       // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       //       ↑ seems like `F_a` i.e. `lastFA` is the
-      //              derivative of this sevtion?
+      //              derivative of this section?
       //                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       //                                                           ↑ seems like `F_c` i.e. `lastFC`
-      //                                                          is the derivative of this sevtion?
+      //                                                          is the derivative of this section?
       //
       // So, is `lastFB` a.k.a. `F_b` the derivative of the last `-betSize` on the end, there?
       //
       // Furthermore, `ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF` has a `float64 A;` and a `float64 C;`  so are they related to these in some way?
         excess += FG.f(fold_bet) / FG.waitLength.bankroll;
+        dexcess_dw -= FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
     }
 
+  //We need to compare raising to the opportunity cost of calling/folding
+	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
+#ifdef REFINED_FACED_ODDS_RAISE_GEOM
+  const float64 callGain = std::pow(callIncrLoss, 1 - fw) * std::pow(callIncrBase,fw);
+	const bool bUseCall = ( callGain > excess );
+
+	const float64 nonRaiseGain = (bUseCall ?
+	  (   //calling is more profitable than folding
+	  	callGain
+	  ) : (
+	    //else, folding (opportunity cost) is more profitable than calling (expected value)
+	  	excess
+	  )
+	)
+	;
+
+	const float64 applyRiskLoss = (bCheckPossible || bRaiseWouldBeCalled) ? riskLoss : 0.0;
+
+	// Raise only if (U + riskLoss) is better than `nonRaiseGain`
+   lastF = U + applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain;
+#else
 	float64 nonRaiseGain = excess - riskLoss / FG.waitLength.bankroll;
 
 	bool bUseCall = false;
 	const float64 callGain = callIncrLoss * std::pow(callIncrBase,fw);
 
-	//We need to compare raising to the opportunity cost of calling/folding
-	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
 	if( callGain > nonRaiseGain )
 	{   //calling is more profitable than folding
 		nonRaiseGain = callGain;
 		bUseCall = true;
 	}//else, folding (opportunity cost) is more profitable than calling (expected value)
 
-
     lastF = U - nonRaiseGain;
+#endif
 
-
-    const float64 dfw = FG.waitLength.opponents*std::pow(w,FG.waitLength.opponents-1);
-    const float64 dU_dw = dfw*log1p((pot+raiseTo)/(FG.waitLength.bankroll-raiseTo)) * U;
 
     lastFD = dU_dw;
     if( (!bCheckPossible) && FG.n > 0 && !bUseCall)
     {
-        lastFD -= FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
+        lastFD += dexcess_dw;
     }
 
 	if( bUseCall )
 	{
 	//          y =   callGain
-	//          y =   callIncrLoss * std::pow(callIncrBase,fw)
-	//       ln y = ln callIncrLoss + ln std::pow(callIncrBase,fw)
-	//       ln y = ln callIncrLoss + fw * ln(callIncrBase)
-	// d/dw { ln y } = d/dw { ln callIncrLoss } + d/dw { fw * ln(callIncrBase) }
-	// (1/y) * dy/dw = d/dw { ln callIncrLoss } + d/dw { fw * ln(callIncrBase) }
-	// (1/y) * dy/dw =                          + d/dw { fw * ln(callIncrBase) }
-	// (1/y) * dy/dw =                          + dfw * ln(callIncrBase) + fw * 0
-	// (1/y) * dy/dw =                          + dfw * ln(callIncrBase)
-	//         dy/dw =                        y * dfw * ln(callIncrBase)
+	//          y =   std::pow(callIncrLoss, 1 - fw)  *  std::pow(callIncrBase,fw)
+	//       ln y = ln std::pow(callIncrLoss,1-fw)  + ln std::pow(callIncrBase,fw)
+	//       ln y =          (1-fw) * ln callIncrLoss  +  fw * ln(callIncrBase)
+	// d/dw { ln y } = d/dw { (1-fw) * ln callIncrLoss } + d/dw { fw * ln(callIncrBase) }
+	// (1/y) * dy/dw = (ln callIncrLoss) * d/dw { 1-fw } + ln(callIncrBase) * d/dw { fw }
+	// (1/y) * dy/dw = (ln callIncrLoss) * dfw * (-1)    + ln(callIncrBase) * dfw
+	// (1/y) * dy/dw =  ln(callIncrBase) * dfw    - (ln callIncrLoss) * dfw
+	// (1/y) * dy/dw =    dfw * (ln(callIncrBase) - ln(callIncrLoss))
+	//         dy/dw = y * dfw * (ln(callIncrBase) - ln(callIncrLoss))
+	#ifdef REFINED_FACED_ODDS_RAISE_GEOM
+		const float64 dL_dw = callGain * dfw * (std::log(callIncrBase) - log(callIncrLoss));
+	#else
 		const float64 dL_dw = dfw*log1p(callIncrBase) * callGain;
+	#endif
 		lastFD -= dL_dw;
 	}
 }
