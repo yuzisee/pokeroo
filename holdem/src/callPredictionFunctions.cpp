@@ -845,9 +845,25 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
 #ifdef REFINED_FACED_ODDS_RAISE_GEOM
   const float64 callGain = std::pow(callIncrLoss, 1 - fw) * std::pow(callIncrBase,fw);
-	const bool bUseCall = ( callGain > excess );
 
-	const float64 nonRaiseGain = (bUseCall ?
+
+	// TODO(from joseph): Idea → if it's the _final_ betting round, we can still use FoldWaitGainModel, right?
+	const float64 applyRiskLoss = (bCheckPossible || bRaiseWouldBeCalled) ? riskLoss : 0.0;
+	// And then you should still set bUseCall accordingly, in that case
+
+#else
+  const float64 applyRiskLoss =  (bCheckPossible) ? 0 : riskLoss;
+
+	const float64 callGain =
+	  bRaiseWouldBeCalled ? (
+			callIncrLoss * std::pow(callIncrBase,fw)
+		) : 0;
+
+
+#endif
+
+  bool bUseCall = ( callGain > excess );
+  const float64 nonRaiseGain = (bUseCall ?
 	  (   //calling is more profitable than folding
 	  	callGain
 	  ) : (
@@ -857,30 +873,8 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	)
 	;
 
-	// TODO(from joseph): Idea → if it's the _final_ betting round, we can still use FoldWaitGainModel, right?
-	const float64 applyRiskLoss = (bCheckPossible || bRaiseWouldBeCalled) ? riskLoss : 0.0;
-	// And then you should still set bUseCall accordingly, in that case
-
-	// Raise only if (U + riskLoss) is better than `nonRaiseGain`
-   lastF = U + applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain;
-#else
-  const float64 applyRiskLoss =  (bCheckPossible) ? 0 : riskLoss;
-	float64 nonRaiseGain = excess - applyRiskLoss / FG.waitLength.bankroll;
-
-	bool bUseCall = false;
-	const float64 callGain =
-	  bRaiseWouldBeCalled ? (
-			callIncrLoss * std::pow(callIncrBase,fw)
-		) : 0;
-
-	if( callGain > nonRaiseGain )
-	{   //calling is more profitable than folding
-		nonRaiseGain = callGain;
-		bUseCall = true;
-	}//else, folding (opportunity cost) is more profitable than calling (expected value)
-
-    lastF = U - nonRaiseGain;
-#endif
+// Raise only if (U + riskLoss) is better than `nonRaiseGain`
+  lastF = U + applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain;
 
     lastFD = dU_dw;
     if( (!bCheckPossible) && FG.n > 0 && !bUseCall)
