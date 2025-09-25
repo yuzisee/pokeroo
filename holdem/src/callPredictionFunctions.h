@@ -355,7 +355,7 @@ class FacedOddsAlgb : public virtual ScalarFunctionModel
 template class FacedOddsAlgb<PlayerStrategyPerspective>;
 template class FacedOddsAlgb<void>;
 
-//How much/likely would they raise or reraise?
+// How much/likely would they raise or reraise?
 //
 // [!WARNING]
 // This template is instantiated at the bottom of src/callPredictionFunctions.cpp to avoid linker errors
@@ -368,12 +368,12 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     float64 lastFD;
     void query( const float64 w );
     public:
-    float64 pot;
+    float64 raisedPot;
+    float64 callPot;
     float64 raiseTo;
     float64 fold_bet; // if I "fold" instead of `raiseTo`, what bet can we get back to just by waiting?
     float64 riskLoss; // This is an adjustment being made by `ExpectedCallD::RiskLoss` and if it's negative it means the HypotheticalBet under consideration is taking too much risk
-	float64 callIncrLoss;
-	float64 callIncrBase;
+	  bool bRaiseWouldBeCalled; // If this is `true`, at least *one* person will cause the raise (you won't get an all-fold situation)
     bool bCheckPossible;
 
     FoldGainModel<T, OppositionPerspective> FG;
