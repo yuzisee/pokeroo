@@ -32,7 +32,7 @@ Choice Optimal 10
 Choice Fold 10
 f(10)=0.996865
 CHECK/FOLD
-FoldGain()R=0.999074 by waiting 0 hands(=0 folds)	vs play:0.995939   ->assumes $5 forced
+FoldGainᵣ()=0.999074 by waiting 0 hands(=0 folds)	vs play:0.995939   ->assumes $5 forced
  AgainstCall(10)=1.00058 from +$2.82672 @ 0.305634
 AgainstRaise(10)=0.995366 from -$10 @ 0.694366
         Push(10)=1 from $0 @ 0

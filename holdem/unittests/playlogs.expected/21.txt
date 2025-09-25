@@ -32,7 +32,7 @@ Choice Optimal 2
 Choice Fold 2
 f(2)=0.999358
 CHECK/FOLD
-FoldGain()R=0.999883 by waiting 0 hands(=0 folds)	vs play:0.999241
+FoldGainᵣ()=0.999883 by waiting 0 hands(=0 folds)	vs play:0.999241
  AgainstCall(2)=0.999928 from -$1.74469 @ 0.107108
 AgainstRaise(2)=0.999313 from -$2 @ 0.892892
         Push(2)=1 from $0 @ 0

@@ -32,7 +32,7 @@ Choice Optimal 10.125
 Choice Fold 10.125
 f(10.125)=0.994545
 CHECK/FOLD
-FoldGain()R=0.998972 by waiting 0 hands(=0 folds)	vs play:0.993516   ->assumes $10.125 forced
+FoldGainᵣ()=0.998972 by waiting 0 hands(=0 folds)	vs play:0.993516   ->assumes $10.125 forced
  AgainstCall(10.125)=0.999879 from -$3.15133 @ 0.0573914
 AgainstRaise(10.125)=0.993636 from -$10.125 @ 0.942609
         Push(10.125)=1 from $0 @ 0
@@ -97,7 +97,7 @@ Choice Optimal 0
 Choice Fold 9
 f(0)=1.00493
 CALL 0
-FoldGain()M=0.998965 by waiting 0 hands(=0 folds)	vs play:1.00389   ->assumes $10.125 forced
+FoldGainₘ()=0.998965 by waiting 0 hands(=0 folds)	vs play:1.00389   ->assumes $10.125 forced
  AgainstCall(0)=1.00389 from +$15.8633 @ 0.366943
 AgainstRaise(0)=1 from $0 @ 0.633057
         Push(0)=1 from $0 @ 0
@@ -151,7 +151,7 @@ Choice Optimal 18
 Choice Fold 22.5
 f(18)=1.00735
 CALL 18
-FoldGain()M=0.998965 by waiting 0 hands(=0 folds)	vs play:1.00631   ->assumes $10.125 forced
+FoldGainₘ()=0.998965 by waiting 0 hands(=0 folds)	vs play:1.00631   ->assumes $10.125 forced
  AgainstCall(18)=1.00979 from +$20.4245 @ 0.715787
 AgainstRaise(18)=0.996551 from -$18 @ 0.284213
         Push(18)=1 from $0 @ 0
@@ -214,7 +214,7 @@ Choice Optimal 0
 Choice Fold 40.5
 f(0)=1.02618
 CALL 0
-FoldGain()M=0.987771 by waiting 0 hands(=0 folds)	vs play:1.01395   ->assumes $10.125 forced
+FoldGainₘ()=0.987771 by waiting 0 hands(=0 folds)	vs play:1.01395   ->assumes $10.125 forced
  AgainstCall(0)=1.01167 from +$31.3146 @ 0.551156
 AgainstRaise(0)=1.00225 from +$7.39165 @ 0.448844
         Push(0)=1 from $0 @ 0
@@ -269,7 +269,7 @@ Choice Fold 1471.88
 f(805.5)=0.552341
 raiseGain: f(1471.88)=0.552341
 CHECK/FOLD
-FoldGain()M=1.31314 by waiting 36.6667 hands(=15.0177 folds)	vs play:0.865478   ->assumes $10.125 forced
+FoldGainₘ()=1.31314 by waiting 36.6667 hands(=15.0177 folds)	vs play:0.865478   ->assumes $10.125 forced
  AgainstCall(805.5)=1 from $0 @ 0
 AgainstRaise(805.5)=0.865478 from -$198 @ 1
         Push(805.5)=1 from $0 @ 0

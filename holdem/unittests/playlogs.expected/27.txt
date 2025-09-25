@@ -33,7 +33,7 @@ Choice Fold 128
 f(108)=-2.0319
 raiseGain: f(128)=-2.0319
 CHECK/FOLD
-FoldGain()R=3.45147 by waiting 55 hands(=31.1592 folds)	vs play:0.419567
+FoldGainᵣ()=3.45147 by waiting 55 hands(=31.1592 folds)	vs play:0.419567
  AgainstCall(108)=1 from -$81.1731 @ 0
 AgainstRaise(108)=0.419567 from -$74.2955 @ 1
         Push(108)=1 from $0 @ 0
