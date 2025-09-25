@@ -795,11 +795,10 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
     const struct ShowdownOpponents showdown_opponents = {
       #ifdef REFINED_FACED_ODDS_RAISE_GEOM
         FG.waitLength.opponents - (bRaiseWouldBeCalled ? 0 : 0.5), // TODO(from joseph): 0.5 is a Schrodinger's player, maybe fold vs. maybe not fold. If we know this hypothetical raise will push one player out FOR SURE !00% guaranteed, we could deduct a full 1.0 instead of 0.5 (but is that too obnoxious?) Let's go with 0.5 for now.
-        raisedPot
       #else
         FG.waitLength.opponents,
-        pot
       #endif
+      raisedPot
     };
     const float64 fw = showdown_opponents.fw(w);
     const float64 U = std::pow(1 + showdown_opponents.raisedPot/FG.waitLength.bankroll  , fw)*std::pow(1 - raiseTo/FG.waitLength.bankroll  , 1 - fw);
@@ -863,10 +862,14 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	// Raise only if (U + riskLoss) is better than `nonRaiseGain`
    lastF = U + applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain;
 #else
-	float64 nonRaiseGain = excess - riskLoss / FG.waitLength.bankroll;
+  const float64 applyRiskLoss =  (bCheckPossible) ? 0 : riskLoss;
+	float64 nonRaiseGain = excess - applyRiskLoss / FG.waitLength.bankroll;
 
 	bool bUseCall = false;
-	const float64 callGain = callIncrLoss * std::pow(callIncrBase,fw);
+	const float64 callGain =
+	  bRaiseWouldBeCalled ? (
+			callIncrLoss * std::pow(callIncrBase,fw)
+		) : 0;
 
 	if( callGain > nonRaiseGain )
 	{   //calling is more profitable than folding

@@ -228,7 +228,7 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
     return a.FindZero(startingPoint,1.0, false);
 }
 // ↑ the template above gets generated intelligently because it's needed when `facedOdds_raise_Geom` is called, but during unit tests GCC might choose to inline or optimize away, so explicitly ask for any versions we are unit testing, just in case ↓
-template double ExactCallD::facedOdds_raise_Geom_forTest<void>( double, double, double, double, const HypotheticalBet&, double, CallCumulationD<void, OppositionPerspective>*);
+template float64 ExactCallD::facedOdds_raise_Geom_forTest<void>( float64, float64, float64, float64, const HypotheticalBet&, float64, CallCumulationD<void, OppositionPerspective>*);
 
 float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 w, float64 dRiskLoss_dfacedBet)
 {
