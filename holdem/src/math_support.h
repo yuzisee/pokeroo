@@ -75,6 +75,14 @@ struct ValueAndSlope {
     };
   }
 
+  constexpr ValueAndSlope operator+(const ValueAndSlope &a) const {
+    float64 addition_sum_v = this->v + a.v;
+    float64 addition_sum_d_v = this->D_v + a.D_v;
+    return ValueAndSlope{
+      addition_sum_v, addition_sum_d_v
+    };
+  }
+
   static constexpr ValueAndSlope sum3(const ValueAndSlope &a, const ValueAndSlope &b, const ValueAndSlope &c) {
     float64 addition_sum_v = a.v + b.v + c.v;
     float64 addition_sum_d_v = a.D_v + b.D_v + c.D_v;
