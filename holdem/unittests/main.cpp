@@ -1034,6 +1034,13 @@ namespace RegressionTests {
             return proceedWithBet(bets[i-1]);
         }
 
+        void assertMyPositionIndex(playernumber_t pIndex) {
+          if (pIndex != this->myPositionIndex) {
+            std::cerr << "Expecting WhoIsNext to be " << static_cast<int>(pIndex) << " but I'm " << static_cast<int>(this->myPositionIndex) << std::endl;
+            assert(pIndex == myPositionIndex);
+          }
+        }
+
     private:
         float64 proceedWithBet(const float64 myBet) const {
           if (myBet == myBet) {
@@ -1046,6 +1053,20 @@ namespace RegressionTests {
 
         const std::vector<float64> bets; // a list of predetermined bets
         size_t i; // the index of the next bet to make
+    }
+    ;
+    class MultitestPureGainStrategy : public PureGainStrategy
+    {
+    public:
+        MultitestPureGainStrategy(const std::string &logfilename, int8 riskymode) : PureGainStrategy(logfilename, riskymode) {}
+
+        void bGamble_alternate(int8 new_bGamble) {
+          this->bGamble = new_bGamble;
+        }
+
+        void extra_logline(std::string extra_msg, int extra_num) {
+          this->logFile << extra_msg << extra_num << std::endl;
+        }
     }
     ;
 
@@ -3036,8 +3057,8 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy cS(foldOnly);
         FixedReplayPlayerStrategy sS(foldOnly);
 
-
-        PureGainStrategy bot("6.txt", 2);
+        int8 bGambleToTest = 2;
+        MultitestPureGainStrategy bot("6.txt", bGambleToTest);
         PlayerStrategy * const botToTest = &bot;
 
         myTable.ManuallyAddPlayer("GearBotV", 1488.75, &gS);
@@ -3110,12 +3131,73 @@ namespace RegressionTests {
          ActionBotV calls $68.75 ($188.125)
          */
 
-        playernumber_t highBet = myTable.PlayRound_Flop(myFlop, std::cout);
-        if (highBet == -1) {
-            // All fold. In this case, make sure ActionBot folded.
-            assert(botToTest->ViewPlayer().GetBetSize() < nS.ViewPlayer().GetBetSize());
+
+          myTable.PrepBettingRound(false,2); //turn, river remaining
+          HoldemArenaBetting r( &myTable, myFlop, 3 , &(std::cout));
+
+          // playernumber_t highBet = myTable.PlayRound_Flop(myFlop, std::cout);
+          struct MinRaiseError msg;
+
+          assert((r.WhoIsNext() == 1) && "ActionBot is playernumber_t 1");
+          r.MakeBet(bot.MakeBet(), &msg); // ActionBot takes their action
+
+          nS.assertMyPositionIndex(r.WhoIsNext()); // Should be NormalBot to bet
+          r.MakeBet(nS.MakeBet(), &msg); // NormalBot raises (to 80.0) according to the pre-scripted `std::vector<float64> nA`
+
+          if (r.bBetState != 'b') {
+            // Round over. NormalBotV must have folded! (Did ActionBot raise higher than 80.0?)
+            // This is acceptable (still, not ideal; why do this with a drawing hand?)
+            // Anywho, for now let's return.
             return;
-        }
+          }
+
+          const std::vector<int8> all_bGamble_vals = {0, 1, 2, 3, 4};
+          int pass_count = 0;
+          int fail_count = 0;
+          for (const int8 &try_bGamble : all_bGamble_vals) {
+            bot.bGamble_alternate(try_bGamble);
+            assert((r.WhoIsNext() == 1) && "ActionBot is playernumber_t 1");
+            bot.extra_logline("Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=", try_bGamble);
+            const float64 actual = myTable.GetBetDecision(1);
+            if (actual < myTable.GetBetToCall()) {
+              std::cout << "bGamble " << static_cast<int>(try_bGamble) << " would have folded ✔" << std::endl;
+              pass_count += 1;
+            } else {
+              std::cout << "bGamble " << static_cast<int>(try_bGamble) << " would have";
+              if (actual == myTable.GetBetToCall()) {
+                std::cout << "called" << std::endl;
+              } else {
+                std::cout << " bet $" << actual << std::endl;
+              }
+              fail_count += 1;
+            }
+          }
+
+          bot.bGamble_alternate(bGambleToTest); // This was the original setting
+          r.MakeBet(bot.MakeBet(), &msg); // NormalBotV takes their actual action
+
+          if (r.bBetState != 'b') {
+            const playernumber_t highBet = r.playerCalled;
+            // You (ActionBot) either called or folded.
+            if (highBet == -1) {
+                // All fold. In this case, double-check that it was ActionBot who folded, which means we were able to successfully avoid the trap
+                const bool success_by_push = (botToTest->ViewPlayer().GetBetSize() < nS.ViewPlayer().GetBetSize());
+                assert(success_by_push);
+                return;
+            }
+          } else {
+            // You (ActionBot) must have **raised** because the round is still going? Also not ideal. This is very risky with only a drawing hand.
+            nS.assertMyPositionIndex(r.WhoIsNext()); // Should be NormalBot to bet
+            r.MakeBet(myTable.GetBetToCall(), &msg); // NormalBot responds by calling so we can move on to the next round.
+            //
+          }
+
+
+          // If we're still playing, it means NormalBotV raised, and ActionBot called.
+          // That's not what we want ActionBot to do, but see if the majority of bGamble settings did the right thing.
+          const bool success_by_callfold = (all_bGamble_vals.size() < pass_count * 2);
+          assert(success_by_callfold);
+
         /*
          Turn:	Jc Ks Ah 9d   (Pot: $188.125)
          */

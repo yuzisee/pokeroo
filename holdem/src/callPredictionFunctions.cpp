@@ -877,8 +877,13 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 				// (1/y) * dy/dw =  ln(callIncrBase) * dfw    - (ln callIncrLoss) * dfw
 				// (1/y) * dy/dw =    dfw * (ln(callIncrBase) - ln(callIncrLoss))
 				//         dy/dw = y * dfw * (ln(callIncrBase) - ln(callIncrLoss))
+				//         dy/dw = y * dfw * (ln(callIncrBase/callIncrLoss))
+				//         dy/dw = y * dfw * (ln(1 + callIncrBase/callIncrLoss - 1))
+				//         dy/dw = y * dfw * (ln1p(callIncrBase/callIncrLoss - 1))
+				//         dy/dw = y * dfw * (ln1p((callIncrBase-callIncrLoss)/callIncrLoss))
 				#ifdef REFINED_FACED_ODDS_RAISE_GEOM
-					/*const float64 dL_dw =*/ callGain * dfw * (std::log(callIncrBase) - std::log(callIncrLoss))
+					callGain * dfw * stable_ln_div(callIncrBase, callIncrLoss)
+					// We use the `std::log1p(…) formulation to ensure numerical stability in the extreme case when `callIncrBase` could be quite large whereas `callIncrLoss` could be quite small
 				#else
 					/*const float64 dL_dw =*/ dfw*std::log1p(callIncrBase) * callGain
 				#endif
