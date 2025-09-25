@@ -631,7 +631,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
       alternativeBetToCompare = separatorBet;
       foldPrintConfig = { nullptr, nullptr };
     } else {
-      logF << "Why didn't I raise to " << tablestate.minRaiseTo() << " ? " << endl;
+      logF << "Why didn't I raise to $" << tablestate.minRaiseTo() << "?" << endl;
       alternativeBetToCompare = tablestate.minRaiseTo();
       foldPrintConfig = { &opp_fold, csrp };
     }

@@ -100,5 +100,9 @@ OppRAISEChanceR [*] 0 @ $710 ($345 now)	fold -- 0.0	W(1×)=0.821173 L=0.17326 1�
 OppRAISEChanceR [F] 0 @ $810 ($345 now)	fold -- 0.0180995	W(1×)=0.821173 L=0.17326 1×o.w_s=(0.821173,0.00556689)
 
 (Fixed at $365)	W(1×)=0.821173 L=0.17326 1×o.w_s=(0.821173,0.00556689)
+	--
+Why didn't I raise to $710?
+"all fold" precision will be 0.00452489
+OppRAISEChanceR [F] 0 @ $810 ($100 now)	fold -- 0.0180995	W(1×)=0.821173 L=0.17326 1×o.w_s=(0.821173,0.00556689)
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
