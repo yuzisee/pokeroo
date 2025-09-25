@@ -51,6 +51,17 @@ OppRAISEChanceR [*] 0.124907 @ $1290 ($30.7344 now)	fold -- 0.821267	W(72.6629×
 OppRAISEChanceR [*] 0 @ $1500 ($31.9083 now)	fold -- 0.80543	W(55.6304×)=0.209012 L=0.741422 2×o.w_s=(0.46523,0.0522319)
 
 (Fixed at $10)	W(2×)=0.561519 L=0.416731 2×o.w_s=(0.60919,0.0116866)
+	--
+Why didn't I raise to $20?
+"all fold" precision will be 0.00226244
+OppRAISEChanceR [*] 0.295343 @ $30 ($10 now)	fold -- 0.113122	W(14.2584×)=0.305986 L=0.665384 2×o.w_s=(0.519997,0.0237833)
+OppRAISEChanceR [*] 0.291345 @ $50 ($10 now)	fold -- 0.350679	W(17.1653×)=0.275843 L=0.690488 2×o.w_s=(0.50502,0.0299336)
+OppRAISEChanceR [F] 0.485152 @ $90 ($12.3624 now)	fold -- 0.545249	W(21.7497×)=0.240719 L=0.718537 2×o.w_s=(0.485521,0.0394833)
+OppRAISEChanceR [F] 0.30817 @ $170 ($15.9653 now)	fold -- 0.649321	W(28.465×)=0.226455 L=0.721413 2×o.w_s=(0.474999,0.0518442)
+OppRAISEChanceR [F] 0.171852 @ $330 ($20.9801 now)	fold -- 0.721719	W(38.2132×)=0.218307 L=0.729595 2×o.w_s=(0.470244,0.0531115)
+OppRAISEChanceR [F] 0.0815786 @ $650 ($25.2628 now)	fold -- 0.780543	W(52.3465×)=0.211044 L=0.73962 2×o.w_s=(0.466525,0.0516684)
+OppRAISEChanceR [F] 0.024716 @ $1290 ($30.6585 now)	fold -- 0.821267	W(72.6629×)=0.202428 L=0.751763 2×o.w_s=(0.462057,0.0496177)
+OppRAISEChanceR [F] 0 @ $1500 ($31.8495 now)	fold -- 0.80543	W(55.6304×)=0.209012 L=0.741422 2×o.w_s=(0.46523,0.0522319)
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -105,6 +116,17 @@ OppRAISEChanceM [F] 0.00840271 @ $1280 ($46.9694 now)	fold -- 0.746606	W(31.6667
 OppRAISEChanceM [F] 0 @ $1490 ($50.1358 now)	fold -- 0.647059	W(24.3333×)=0.0583887 L=0.93977 1×o.w_s=(0.0583887,0.00184173)
 
 (Fixed at $0)	W(1×)=0.483481 L=0.503199 1×o.w_s=(0.483481,0.0133201)
+	--
+Why didn't I raise to $10?
+"all fold" precision will be 0.00452489
+OppRAISEChanceM [*] 0.478557 @ $20 ($10 now)	fold -- 0.393665	W(6.66667×)=0.12192 L=0.865914 1×o.w_s=(0.12192,0.0121661)
+OppRAISEChanceM [F] 0.839261 @ $40 ($10 now)	fold -- 0.506787	W(7.83333×)=0.114017 L=0.874455 1×o.w_s=(0.114017,0.0115283)
+OppRAISEChanceM [F] 0.479662 @ $80 ($14.8627 now)	fold -- 0.552036	W(9.66667×)=0.105061 L=0.884136 1×o.w_s=(0.105061,0.0108031)
+OppRAISEChanceM [F] 0.261025 @ $160 ($20.5938 now)	fold -- 0.61086	W(12.5×)=0.0932727 L=0.896963 1×o.w_s=(0.0932727,0.00976462)
+OppRAISEChanceM [F] 0.140988 @ $320 ($28.1764 now)	fold -- 0.674208	W(16.6667×)=0.0791414 L=0.9135 1×o.w_s=(0.0791414,0.00735882)
+OppRAISEChanceM [F] 0.0607053 @ $640 ($36.1814 now)	fold -- 0.723982	W(22.8333×)=0.0624735 L=0.935579 1×o.w_s=(0.0624735,0.00194778)
+OppRAISEChanceM [F] 0.0181607 @ $1280 ($46.8195 now)	fold -- 0.746606	W(31.6667×)=0.0533768 L=0.946623 1×o.w_s=(0.0533768,0)
+OppRAISEChanceM [F] 0 @ $1490 ($49.9833 now)	fold -- 0.647059	W(24.3333×)=0.0583887 L=0.93977 1×o.w_s=(0.0583887,0.00184173)
 Guaranteed > $25 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -159,6 +181,17 @@ OppRAISEChanceM [*] 0 @ $1280 ($109.464 now)	fold -- 0.891403	W(31.6667×)=0 L=1
 OppRAISEChanceM [*] 0 @ $1490 ($118.956 now)	fold -- 0.868778	W(24.3333×)=0 L=1 1×o.w_s=(0,0)
 
 (Fixed at $0)	W(1×)=0.763614 L=0.230984 1×o.w_s=(0.763614,0.00540184)
+	--
+Why didn't I raise to $10?
+"all fold" precision will be 0.00452489
+OppRAISEChanceM [*] 0.464854 @ $20 ($10 now)	fold -- 0.547511	W(6.66667×)=0.164324 L=0.799663 1×o.w_s=(0.164324,0.0360123)
+OppRAISEChanceM [F] 0.510441 @ $40 ($13.0278 now)	fold -- 0.665158	W(7.83333×)=0.0763212 L=0.881364 1×o.w_s=(0.0763212,0.0423144)
+OppRAISEChanceM [F] 0.382074 @ $80 ($21.9235 now)	fold -- 0.719457	W(9.66667×)=0.0510613 L=0.948939 1×o.w_s=(0.0510613,0)
+OppRAISEChanceM [F] 0.228247 @ $160 ($34.0475 now)	fold -- 0.773756	W(12.5×)=0.0212451 L=0.978755 1×o.w_s=(0.0212451,0)
+OppRAISEChanceM [F] 0.120931 @ $320 ($50.9079 now)	fold -- 0.819005	W(16.6667×)=0.00559947 L=0.994401 1×o.w_s=(0.00559947,0)
+OppRAISEChanceM [F] 0.0538701 @ $640 ($74.6651 now)	fold -- 0.864253	W(22.8333×)=0 L=1 1×o.w_s=(0,0)
+OppRAISEChanceM [F] 0.0139055 @ $1280 ($108.997 now)	fold -- 0.891403	W(31.6667×)=0 L=1 1×o.w_s=(0,0)
+OppRAISEChanceM [F] 0 @ $1490 ($118.517 now)	fold -- 0.868778	W(24.3333×)=0 L=1 1×o.w_s=(0,0)
 Guaranteed > $25 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -202,5 +235,16 @@ OppRAISEChanceM [F] 0 @ $1290 ($1280 now)	fold -- 0.841629	W(20.3333×)=0 L=1 1�
 OppRAISEChanceM [F] 0 @ $1490 ($1480 now)	fold -- 0.828054	W(15.6667×)=0 L=1 1×o.w_s=(0,0)
 
 (Fixed at $10)	W(1×)=0.79596 L=0.19798 1×o.w_s=(0.79596,0.00606061)
+	--
+Why didn't I raise to $20?
+"all fold" precision will be 0.00452489
+OppRAISEChanceM [*] 0.483493 @ $30 ($10 now)	fold -- 0.20362	W(1×)=0.79596 L=0.19798 1×o.w_s=(0.79596,0.00606061)
+OppRAISEChanceM [F] 0.341965 @ $50 ($30 now)	fold -- 0.452489	W(5.66667×)=0 L=1 1×o.w_s=(0,0)
+OppRAISEChanceM [F] 0.317057 @ $90 ($70 now)	fold -- 0.61991	W(6.66667×)=0 L=1 1×o.w_s=(0,0)
+OppRAISEChanceM [F] 0.235534 @ $170 ($150 now)	fold -- 0.710407	W(8.33333×)=0 L=1 1×o.w_s=(0,0)
+OppRAISEChanceM [F] 0.148528 @ $330 ($310 now)	fold -- 0.773756	W(11×)=0 L=1 1×o.w_s=(0,0)
+OppRAISEChanceM [F] 0.0699571 @ $650 ($630 now)	fold -- 0.81448	W(14.8333×)=0 L=1 1×o.w_s=(0,0)
+OppRAISEChanceM [F] 0.0211501 @ $1290 ($1270 now)	fold -- 0.841629	W(20.3333×)=0 L=1 1×o.w_s=(0,0)
+OppRAISEChanceM [F] 0 @ $1490 ($1470 now)	fold -- 0.828054	W(15.6667×)=0 L=1 1×o.w_s=(0,0)
 Guaranteed > $25 is in the pot for sure
 OppFoldChance% ...    0   ∇=0

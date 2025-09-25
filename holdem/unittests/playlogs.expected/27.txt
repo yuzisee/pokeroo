@@ -44,5 +44,9 @@ AgainstRaise(128)=1 from $0 @ 0
 OppRAISEChanceR [*] 0 @ $128 ($20 now)	fold -- 0.0	W(30.6662×)=0.170737 L=0.809981 3×o.w_s=(0.562909,0.0204386)
 
 (Fixed at $108)	W(43.0894×)=0.146467 L=0.845289 3×o.w_s=(0.55668,0.010254)
+	--
+Why didn't I raise to $212?
+"all fold" precision will be 0.0015083
+OppRAISEChanceR [*] 0 @ $128 ($-84 now)	fold -- 0.0	W(30.6662×)=0.170737 L=0.809981 3×o.w_s=(0.562909,0.0204386)
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0

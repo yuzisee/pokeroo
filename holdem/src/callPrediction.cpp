@@ -230,7 +230,7 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
 // ↑ the template above gets generated intelligently because it's needed when `facedOdds_raise_Geom` is called, but during unit tests GCC might choose to inline or optimize away, so explicitly ask for any versions we are unit testing, just in case ↓
 template double ExactCallD::facedOdds_raise_Geom_forTest<void>( double, double, double, double, const HypotheticalBet&, double, CallCumulationD<void, OppositionPerspective>*);
 
-float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 w, const float64 dRiskLoss_pot)
+float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 w, float64 dRiskLoss_dfacedBet)
 {
   if( w <= 0 ) return 0;
   if( hypothetical.bEffectivelyAllIn(tbase.chipDenom()) ) return 0;
@@ -297,7 +297,7 @@ template<typename T> float64 ExactCallD::dfacedOdds_call_dbetSize_Geom(const Chi
     float64 dfw = opponents * wN_1;
 
     const float64 h = std::pow( (cps.bankroll+cps.pot)/(cps.bankroll-humanbet), fw );
-    const float64 A = dfw * log1p( base_minus_1 );
+    const float64 A = dfw * std::log1p( base_minus_1 );
     const float64 C = (  dpot_dhumanbet/(cps.bankroll+cps.pot) + 1/(cps.bankroll-humanbet)  ) * fw;
 
     return

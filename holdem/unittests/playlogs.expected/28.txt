@@ -49,6 +49,15 @@ OppRAISEChanceR [*] 0.0654124 @ $132 ($8.50545 now)	fold -- 0.496983	W(83.4286×
 OppRAISEChanceR [*] 0.00677709 @ $204 ($9.38976 now)	fold -- 0.531674	W(77.1429×)=0.201874 L=0.760555 6×o.w_s=(0.701087,0.0202296)
 
 (Fixed at $4)	W(6×)=0.485968 L=0.464946 6×o.w_s=(0.722227,0.011676)
+	--
+Why didn't I raise to $8?
+"all fold" precision will be 0.000754148
+OppRAISEChanceR [*] 0.25089 @ $12 ($4 now)	fold -- 0.0837104	W(48.1981×)=0.241344 L=0.732627 6×o.w_s=(0.70801,0.0121896)
+OppRAISEChanceR [F] 0.618494 @ $20 ($4 now)	fold -- 0.242836	W(56.9524×)=0.22284 L=0.748125 6×o.w_s=(0.705438,0.0145479)
+OppRAISEChanceR [F] 0.414238 @ $36 ($4.94494 now)	fold -- 0.395928	W(69.8419×)=0.208966 L=0.756596 6×o.w_s=(0.702671,0.018095)
+OppRAISEChanceR [F] 0.198396 @ $68 ($6.38612 now)	fold -- 0.485671	W(84.9464×)=0.195925 L=0.764843 6×o.w_s=(0.699909,0.0216188)
+OppRAISEChanceR [F] 0.0880786 @ $132 ($8.39204 now)	fold -- 0.496983	W(83.4286×)=0.196658 L=0.763974 6×o.w_s=(0.699984,0.0216155)
+OppRAISEChanceR [F] 0.0248488 @ $204 ($9.32985 now)	fold -- 0.531674	W(77.1429×)=0.201874 L=0.760555 6×o.w_s=(0.701087,0.0202296)
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -84,6 +93,10 @@ AgainstRaise(210)=1 from $0 @ 0
 OppRAISEChanceR [*] 0 @ $204 ($46 now)	fold -- 0.0	W(6×)=0.485968 L=0.464946 2×o.w_s=(0.583244,0.028747)
 
 (Fixed at $158)	W(6×)=0.485968 L=0.464946 2×o.w_s=(0.583244,0.028747)
+	--
+Why didn't I raise to $312?
+"all fold" precision will be 0.00226244
+OppRAISEChanceR [*] 0 @ $204 ($-108 now)	fold -- 0.0	W(6×)=0.485968 L=0.464946 2×o.w_s=(0.583244,0.028747)
 Guaranteed > $6 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -134,6 +147,13 @@ OppRAISEChanceR [*] 0.017518 @ $32 ($6.29291 now)	fold -- 0.0	W(2×)=0.236818 L=
 OppRAISEChanceR [*] 0 @ $52 ($7.73332 now)	fold -- 0.0	W(2×)=0.236818 L=0.745313 2×o.w_s=(0.488769,0.0181053)
 
 (Fixed at $0)	W(2×)=0.236818 L=0.745313 2×o.w_s=(0.488769,0.0181053)
+	--
+Why didn't I raise to $4?
+"all fold" precision will be 0.00226244
+OppRAISEChanceR [*] 0.0240661 @ $8 ($4 now)	fold -- 0.0	W(2×)=0.236818 L=0.745313 2×o.w_s=(0.488769,0.0181053)
+OppRAISEChanceR [*] 0.0220875 @ $16 ($4 now)	fold -- 0.0	W(2×)=0.236818 L=0.745313 2×o.w_s=(0.488769,0.0181053)
+OppRAISEChanceR [*] 0.0174334 @ $32 ($5.94509 now)	fold -- 0.0	W(2×)=0.236818 L=0.745313 2×o.w_s=(0.488769,0.0181053)
+OppRAISEChanceR [*] 0 @ $52 ($7.48841 now)	fold -- 0.0	W(2×)=0.236818 L=0.745313 2×o.w_s=(0.488769,0.0181053)
 Guaranteed > $480 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -184,6 +204,13 @@ OppRAISEChanceR [*] 0.0670401 @ $32 ($9.48705 now)	fold -- 0.0	W(2×)=0.0826965 
 OppRAISEChanceR [*] 0 @ $52 ($13.4348 now)	fold -- 0.0	W(2×)=0.0826965 L=0.917303 2×o.w_s=(0.28757,0)
 
 (Fixed at $0)	W(2×)=0.0826965 L=0.917303 2×o.w_s=(0.28757,0)
+	--
+Why didn't I raise to $4?
+"all fold" precision will be 0.00226244
+OppRAISEChanceR [*] 0.0735882 @ $8 ($4 now)	fold -- 0.0	W(2×)=0.0826965 L=0.917303 2×o.w_s=(0.28757,0)
+OppRAISEChanceR [*] 0.0716095 @ $16 ($5.2111 now)	fold -- 0.0	W(2×)=0.0826965 L=0.917303 2×o.w_s=(0.28757,0)
+OppRAISEChanceR [*] 0.0669555 @ $32 ($8.76939 now)	fold -- 0.0	W(2×)=0.0826965 L=0.917303 2×o.w_s=(0.28757,0)
+OppRAISEChanceR [*] 0 @ $52 ($11.9839 now)	fold -- 0.0	W(2×)=0.0826965 L=0.917303 2×o.w_s=(0.28757,0)
 Guaranteed > $480 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -223,5 +250,12 @@ OppRAISEChanceR [*] 0.355907 @ $32 ($32 now)	fold -- 0.0	W(2×)=0 L=1 2×o.w_s=(
 OppRAISEChanceR [*] 0 @ $52 ($52 now)	fold -- 0.0	W(2×)=0 L=1 2×o.w_s=(0,0)
 
 (Fixed at $0)	W(2×)=0 L=1 2×o.w_s=(0,0)
+	--
+Why didn't I raise to $4?
+"all fold" precision will be 0.00226244
+OppRAISEChanceR [*] 0.362455 @ $8 ($4 now)	fold -- 0.0	W(2×)=0 L=1 2×o.w_s=(0,0)
+OppRAISEChanceR [*] 0.360476 @ $16 ($12 now)	fold -- 0.0	W(2×)=0 L=1 2×o.w_s=(0,0)
+OppRAISEChanceR [*] 0.355822 @ $32 ($28 now)	fold -- 0.0	W(2×)=0 L=1 2×o.w_s=(0,0)
+OppRAISEChanceR [F] 0 @ $52 ($48 now)	fold -- 0.0	W(2×)=0 L=1 2×o.w_s=(0,0)
 Guaranteed > $480 is in the pot for sure
 OppFoldChance% ...    0   ∇=0

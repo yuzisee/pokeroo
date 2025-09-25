@@ -44,6 +44,15 @@ OppRAISEChanceR [F] 0.0413054 @ $650 ($25.3887 now)
 OppRAISEChanceR [F] 0 @ $860 ($27.6233 now)
 
 (Fixed at $10)
+	--
+Why didn't I raise to $20?
+OppRAISEChanceR [*] 0.268293 @ $30 ($10 now)
+OppRAISEChanceR [*] 0.263468 @ $50 ($10 now)
+OppRAISEChanceR [*] 0.253823 @ $90 ($12.3624 now)
+OppRAISEChanceR [*] 0.233609 @ $170 ($15.9653 now)
+OppRAISEChanceR [*] 0.193824 @ $330 ($20.9801 now)
+OppRAISEChanceR [F] 0.0564175 @ $650 ($25.2628 now)
+OppRAISEChanceR [F] 0 @ $860 ($27.4959 now)
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -91,6 +100,15 @@ OppRAISEChanceR [F] 0.033469 @ $640 ($36.4064 now)
 OppRAISEChanceR [F] 0 @ $850 ($40.782 now)
 
 (Fixed at $0)
+	--
+Why didn't I raise to $10?
+OppRAISEChanceR [*] 0.629244 @ $20 ($10 now)
+OppRAISEChanceR [*] 0.625408 @ $40 ($10 now)
+OppRAISEChanceR [F] 0.613795 @ $80 ($14.8627 now)
+OppRAISEChanceR [F] 0.374659 @ $160 ($20.5938 now)
+OppRAISEChanceR [F] 0.169832 @ $320 ($28.1764 now)
+OppRAISEChanceR [F] 0.0652055 @ $640 ($36.1814 now)
+OppRAISEChanceR [F] 0 @ $850 ($40.5865 now)
 Guaranteed > $45 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -138,6 +156,15 @@ OppRAISEChanceR [F] 0.0254446 @ $640 ($75.2992 now)
 OppRAISEChanceR [F] 0 @ $850 ($87.7046 now)
 
 (Fixed at $0)
+	--
+Why didn't I raise to $10?
+OppRAISEChanceR [*] 0.607407 @ $20 ($10 now)
+OppRAISEChanceR [*] 0.603423 @ $40 ($13.0278 now)
+OppRAISEChanceR [F] 0.598617 @ $80 ($21.9235 now)
+OppRAISEChanceR [F] 0.396313 @ $160 ($34.0475 now)
+OppRAISEChanceR [F] 0.146924 @ $320 ($50.9079 now)
+OppRAISEChanceR [F] 0.0609848 @ $640 ($74.6651 now)
+OppRAISEChanceR [F] 0 @ $850 ($87.1477 now)
 Guaranteed > $45 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -179,5 +206,8 @@ Against(485)Algb=1.42941
 OppRAISEChanceR [*] 0 @ $850 ($365 now)
 
 (Fixed at $485)
+	--
+Why didn't I raise to $970?
+OppRAISEChanceR [*] 0 @ $850 ($-120 now)
 Guaranteed > $45 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
