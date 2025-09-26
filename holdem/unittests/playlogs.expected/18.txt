@@ -18,12 +18,16 @@ Community outcomes (stdev = 0.149149 pcts , avgdev = 0.131309 pcts ), kurtosis =
 0.419158 pct: 506 / 19600 (2.58163%)
 0.504877 pct: 6816 / 19600 (34.7755%)
 0.580865 pct: 5210 / 19600 (26.5816%)
-0.635633 pct (mean): mean- 0.647194   mean+ 0.352806 (skew 0.595307 tail right) 
+0.635633 pct (mean): mean- 1.83442 ↑:↓ 1.0 mean+ (skew 0.595307 tail right)
 0.669955 pct: 930 / 19600 (4.7449%)
 0.781 pct: 1671 / 19600 (8.52551%)
 0.85014 pct: 3883 / 19600 (19.8112%)
 0.941024 pct: 584 / 19600 (2.97959%)
 0.999972 pct: most helpful community
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=51.0333% split=3.63064%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=53.947% split=2.83232%
+Matchup outcome against top ½ hands: my chance to win=57.279% split=2.03305%
+Matchup outcome against an unknown hand: my chance to win=62.5352% split=2.05617%
 CallStrength W(2r)=0.838906 L=0.156601 o.w_s=(0.915918,0.00244898)
 (MinRaise to $20) 	W(2×)=0.57279 L=0.406879 2×o.w_s=(0.612466,0.0107746)
  -  statrelation geom RAW - 
@@ -82,13 +86,17 @@ Community outcomes (stdev = 0.136181 pcts , avgdev = 0.0962478 pcts ), kurtosis 
 0.377481 pct: least helpful community
 0.415985 pct: 18 / 47 (38.2979%)
 0.48446 pct: 14 / 47 (29.7872%)
-0.516625 pct (mean): mean- 0.680851   mean+ 0.319149 (skew 1.61486 tail right) 
+0.516625 pct (mean): mean- 2.13333 ↑:↓ 1.0 mean+ (skew 1.61486 tail right)
 0.549732 pct: 9 / 47 (19.1489%)
 0.626411 pct: 0 / 47 (0%)
 0.697534 pct: 0 / 47 (0%)
 0.768656 pct: 0 / 47 (0%)
 0.843936 pct: 6 / 47 (12.766%)
 0.87534 pct: most helpful community
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=18.3122% split=0.448892%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=20.0616% split=0.336669%
+Matchup outcome against top ½ hands: my chance to win=25.8473% split=1.88116%
+Matchup outcome against an unknown hand: my chance to win=51.0441% split=1.23679%
 CallStrength W(2r)=0.316341 L=0.671048 o.w_s=(0.562442,0.0111008)
 (MinRaise to $10) 	W(2×)=0.258473 L=0.722716 2×o.w_s=(0.499737,0.017866)
  -  statrelation geom RAW - 
@@ -148,12 +156,16 @@ Community outcomes (stdev = 0.0392543 pcts , avgdev = 0.0290686 pcts ), kurtosis
 0.815354 pct: 5 / 46 (10.8696%)
 0.842857 pct: 14 / 46 (30.4348%)
 0.865197 pct: 11 / 46 (23.913%)
-0.867874 pct (mean): mean- 0.543478   mean+ 0.456522 (skew 1.17158 tail right) 
+0.867874 pct (mean): mean- 1.19048 ↑:↓ 1.0 mean+ (skew 1.17158 tail right)
 0.883655 pct: 11 / 46 (23.913%)
 0.9136 pct: 0 / 46 (0%)
 0.937049 pct: 0 / 46 (0%)
 0.961616 pct: 5 / 46 (10.8696%)
 0.972222 pct: most helpful community
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=61.8467% split=2.31884%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=68.5441% split=1.73913%
+Matchup outcome against top ½ hands: my chance to win=75.5248% split=1.15942%
+Matchup outcome against an unknown hand: my chance to win=86.4976% split=0.57971%
 CallStrength W(2r)=0.856743 L=0.132492 o.w_s=(0.925604,0.0057971)
 (MinRaise to $10) 	W(2×)=0.755248 L=0.233158 2×o.w_s=(0.657929,0.00503087)
  -  statrelation geom RAW - 
@@ -208,6 +220,10 @@ OppFoldChance% ...    0   ∇=0
 
 *
 Jd Ac Bet to call 0 (from 0) at 30 pot, 
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=88.2828% split=1.21212%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=91.2121% split=0.909091%
+Matchup outcome against top ½ hands: my chance to win=94.1414% split=0.606061%
+Matchup outcome against an unknown hand: my chance to win=97.0707% split=0.30303%
 CallStrength W(2r)=0.942272 L=0.0518355 o.w_s=(0.970707,0.0030303)
 (MinRaise to $10) 	W(2×)=0.941414 L=0.0525253 2×o.w_s=(0.695956,0.00223661)
  -  statrelation geom RAW - 

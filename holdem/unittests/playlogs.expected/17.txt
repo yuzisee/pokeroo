@@ -18,12 +18,18 @@ Community outcomes (stdev = 0.146186 pcts , avgdev = 0.126373 pcts ), kurtosis =
 0.400516 pct: 645 / 19600 (3.29082%)
 0.48564 pct: 7824 / 19600 (39.9184%)
 0.568835 pct: 3192 / 19600 (16.2857%)
-0.60984 pct (mean): mean- 0.588827   mean+ 0.411173 (skew 0.674055 tail right) 
+0.60984 pct (mean): mean- 1.43206 ↑:↓ 1.0 mean+ (skew 0.674055 tail right)
 0.680334 pct: 3569 / 19600 (18.2092%)
 0.762663 pct: 1254 / 19600 (6.39796%)
 0.843879 pct: 2463 / 19600 (12.5663%)
 0.943631 pct: 653 / 19600 (3.33163%)
 0.999966 pct: most helpful community
+Matchup outcome against top ⅙ᵗʰ hands: my chance to win=37.351% split=7.87839%
+Matchup outcome against top ⅕ᵗʰ hands: my chance to win=40.7633% split=6.63938%
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=44.3759% split=5.39983%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=47.9574% split=4.88467%
+Matchup outcome against top ½ hands: my chance to win=52.115% split=4.82212%
+Matchup outcome against an unknown hand: my chance to win=59.3867% split=3.19457%
 CallStrength W(4r)=0.640764 L=0.352192 o.w_s=(0.894694,0.00244898)
 (MinRaise to $20) 	W(10.0135×)=0.298369 L=0.638504 4×o.w_s=(0.643705,0.0316376)
  -  stat_high algb SLIDERX - 
@@ -81,7 +87,7 @@ OppFoldChance% ...    0   ∇=0
 Community outcomes (stdev = 0.122116 pcts , avgdev = 0.0938032 pcts ), kurtosis = 1.87681
 0.40717 pct: least helpful community
 0.416571 pct: 24 / 47 (51.0638%)
-0.50842 pct (mean): mean- 0.510638   mean+ 0.489362 (skew 1.52556 tail right) 
+0.50842 pct (mean): mean- 1.04348 ↑:↓ 1.0 mean+ (skew 1.52556 tail right)
 0.525613 pct: 7 / 47 (14.8936%)
 0.544499 pct: 8 / 47 (17.0213%)
 0.650011 pct: 4 / 47 (8.51064%)
@@ -89,6 +95,11 @@ Community outcomes (stdev = 0.122116 pcts , avgdev = 0.0938032 pcts ), kurtosis 
 0.769514 pct: 0 / 47 (0%)
 0.861294 pct: 3 / 47 (6.38298%)
 0.868336 pct: most helpful community
+Matchup outcome against top ⅕ᵗʰ hands: my chance to win=12.7202% split=0.0252292%
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=13.4207% split=0.0201833%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=14.2758% split=1.11457%
+Matchup outcome against top ½ hands: my chance to win=20.3426% split=5.7872%
+Matchup outcome against an unknown hand: my chance to win=49.3952% split=2.8936%
 CallStrength W(3r)=0.229496 L=0.770504 o.w_s=(0.612245,0)
 (MinRaise to $10) 	W(7.5×)=0.111284 L=0.888337 3×o.w_s=(0.543055,0.000614881)
  -  stat_high algb SLIDERX - 
@@ -147,13 +158,18 @@ Community outcomes (stdev = 0.257674 pcts , avgdev = 0.22167 pcts ), kurtosis = 
 0.315657 pct: least helpful community
 0.340476 pct: 21 / 46 (45.6522%)
 0.459091 pct: 10 / 46 (21.7391%)
-0.543204 pct (mean): mean- 0.673913   mean+ 0.326087 (skew 0.920966 tail right) 
+0.543204 pct (mean): mean- 2.06667 ↑:↓ 1.0 mean+ (skew 0.920966 tail right)
 0.585859 pct: 3 / 46 (6.52174%)
 0.657828 pct: 0 / 46 (0%)
 0.755592 pct: 0 / 46 (0%)
 0.848485 pct: 3 / 46 (6.52174%)
 0.993715 pct: 9 / 46 (19.5652%)
 1 pct: most helpful community
+Matchup outcome against top ⅕ᵗʰ hands: my chance to win=21.816% split=0%
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=22.8019% split=0%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=23.9196% split=0%
+Matchup outcome against top ½ hands: my chance to win=25.7554% split=0.527009%
+Matchup outcome against an unknown hand: my chance to win=52.7361% split=3.16864%
 CallStrength W(3r)=0.21333 L=0.78667 o.w_s=(0.597518,0)
 (MinRaise to $10) 	W(7.5×)=0.20224 L=0.79776 3×o.w_s=(0.586979,0)
  -  stat_high algb SLIDERX - 
@@ -208,6 +224,11 @@ OppFoldChance% ...    0   ∇=0
 
 *
 7h Ah Bet to call 0 (from 0) at 45 pot, 
+Matchup outcome against top ⅕ᵗʰ hands: my chance to win=100% split=0%
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=100% split=0%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=100% split=0%
+Matchup outcome against top ½ hands: my chance to win=100% split=0%
+Matchup outcome against an unknown hand: my chance to win=100% split=0%
 CallStrength W(3r)=0.997227 L=0 o.w_s=(0.999075,0.000925069)
 (MinRaise to $10) 	W(7.5×)=1 L=0 3×o.w_s=(1,0)
  -  stat_high algb SLIDERX - 

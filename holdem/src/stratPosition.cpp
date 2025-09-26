@@ -1344,13 +1344,13 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
             if (distrPct.skew() < 0) {
                 logF << "(skew " << distrPct.skew() << " tail left) ";
             }
-            if (distrPct.improve() <= 0.5) {
-              logF << "mean- " << (distrPct.improve() / (1.0 - distrPct.improve())) << " ↑ ↕ ↓ 1.0 mean+";
+            if (distrPct.improve() <= 0.0) {
+              logF << "mean- " << ((1.0 - distrPct.improve()) / (distrPct.improve() + 1.0)) << " ↑:↓ 1.0 mean+";
             } else {
-              logF << "mean- 1.0 ↑ ↕ ↓ " << ((1.0 - distrPct.improve()) / distrPct.improve()) << " mean+";
+              logF << "mean- 1.0 ↑:↓ " << ((1.0 + distrPct.improve()) / (1.0 - distrPct.improve())) << " mean+";
             }
             if (distrPct.skew() > 0) {
-                logF << " (skew " << distrPct.skew() << " tail right) ";
+                logF << " (skew " << distrPct.skew() << " tail right)";
             }
             logF << "\n";
         }

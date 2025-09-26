@@ -18,12 +18,16 @@ Community outcomes (stdev = 0.14636 pcts , avgdev = 0.129032 pcts ), kurtosis = 
 0.412595 pct: 546 / 19600 (2.78571%)
 0.498904 pct: 5052 / 19600 (25.7755%)
 0.571119 pct: 5187 / 19600 (26.4643%)
-0.646024 pct (mean): mean- 0.571071   mean+ 0.428929 (skew 0.445807 tail right) 
+0.646024 pct (mean): mean- 1.33139 ↑:↓ 1.0 mean+ (skew 0.445807 tail right)
 0.681026 pct: 2345 / 19600 (11.9643%)
 0.764932 pct: 2631 / 19600 (13.4235%)
 0.851818 pct: 3027 / 19600 (15.4439%)
 0.943276 pct: 812 / 19600 (4.14286%)
 1 pct: most helpful community
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=51.6847% split=3.722%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=54.8669% split=2.90566%
+Matchup outcome against top ½ hands: my chance to win=58.4864% split=2.09636%
+Matchup outcome against an unknown hand: my chance to win=63.4889% split=2.22694%
 CallStrength W(2r)=0.899788 L=0.0955602 o.w_s=(0.948571,0.00244898)
 (MinRaise to $4.5) 	W(2×)=0.584864 L=0.394172 2×o.w_s=(0.615642,0.0109363)
  -  statranking algb RAW - 
@@ -74,12 +78,16 @@ Community outcomes (stdev = 0.14636 pcts , avgdev = 0.129032 pcts ), kurtosis = 
 0.412595 pct: 546 / 19600 (2.78571%)
 0.498904 pct: 5052 / 19600 (25.7755%)
 0.571119 pct: 5187 / 19600 (26.4643%)
-0.646024 pct (mean): mean- 0.571071   mean+ 0.428929 (skew 0.445807 tail right) 
+0.646024 pct (mean): mean- 1.33139 ↑:↓ 1.0 mean+ (skew 0.445807 tail right)
 0.681026 pct: 2345 / 19600 (11.9643%)
 0.764932 pct: 2631 / 19600 (13.4235%)
 0.851818 pct: 3027 / 19600 (15.4439%)
 0.943276 pct: 812 / 19600 (4.14286%)
 1 pct: most helpful community
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=51.6847% split=3.722%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=54.8669% split=2.90566%
+Matchup outcome against top ½ hands: my chance to win=58.4864% split=2.09636%
+Matchup outcome against an unknown hand: my chance to win=63.4889% split=2.22694%
 CallStrength W(2m)=0.584864 L=0.394172 o.w_s=(0.584864,0.0209636)
 (MinRaise to $7.75) 	W(2×)=0.584864 L=0.394172 1×o.w_s=(0.584864,0.0209636)
  -  statranking algb RAW - 
@@ -140,12 +148,15 @@ Community outcomes (stdev = 0.160198 pcts , avgdev = 0.146417 pcts ), kurtosis =
 0.609355 pct: 22 / 47 (46.8085%)
 0.671334 pct: 7 / 47 (14.8936%)
 0.736496 pct: 0 / 47 (0%)
-0.742964 pct (mean): mean- 0.617021   mean+ 0.382979 (skew 0.649812 tail right) 
+0.742964 pct (mean): mean- 1.61111 ↑:↓ 1.0 mean+ (skew 0.649812 tail right)
 0.771981 pct: 3 / 47 (6.38298%)
 0.850603 pct: 0 / 47 (0%)
 0.894759 pct: 3 / 47 (6.38298%)
 0.984495 pct: 12 / 47 (25.5319%)
 0.993237 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=51.6883% split=0.655117%
+Matchup outcome against top ½ hands: my chance to win=57.9149% split=2.15195%
+Matchup outcome against an unknown hand: my chance to win=73.3938% split=1.80529%
 CallStrength W(1m)=0.733938 L=0.248009 o.w_s=(0.733938,0.0180529)
 (MinRaise to $25) 	W(1×)=0.733938 L=0.248009 1×o.w_s=(0.733938,0.0180529)
  -  statranking algb RAW - 
@@ -201,12 +212,15 @@ Community outcomes (stdev = 0.207281 pcts , avgdev = 0.18486 pcts ), kurtosis = 
 0.469481 pct: 21 / 46 (45.6522%)
 0.602525 pct: 7 / 46 (15.2174%)
 0.631313 pct: 3 / 46 (6.52174%)
-0.652339 pct (mean): mean- 0.673913   mean+ 0.326087 (skew 0.613932 tail right) 
+0.652339 pct (mean): mean- 2.06667 ↑:↓ 1.0 mean+ (skew 0.613932 tail right)
 0.715404 pct: 0 / 46 (0%)
 0.788636 pct: 0 / 46 (0%)
 0.840404 pct: 4 / 46 (8.69565%)
 0.970478 pct: 11 / 46 (23.913%)
 0.971717 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=27.8261% split=0%
+Matchup outcome against top ½ hands: my chance to win=32.4111% split=12.9249%
+Matchup outcome against an unknown hand: my chance to win=62.0026% split=6.46245%
 CallStrength W(1m)=0.620026 L=0.315349 o.w_s=(0.620026,0.0646245)
 (MinRaise to $98) 	W(1×)=0.620026 L=0.315349 1×o.w_s=(0.620026,0.0646245)
  -  statranking algb RAW - 

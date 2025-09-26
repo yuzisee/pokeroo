@@ -17,13 +17,20 @@ Community outcomes (stdev = 0.196862 pcts , avgdev = 0.174265 pcts ), kurtosis =
 0.169245 pct: least helpful community
 0.236586 pct: 9068 / 19600 (46.2653%)
 0.337397 pct: 2651 / 19600 (13.5255%)
-0.40512 pct (mean): mean- 0.597296   mean+ 0.402704 (skew 0.776058 tail right) 
+0.40512 pct (mean): mean- 1.48321 ↑:↓ 1.0 mean+ (skew 0.776058 tail right)
 0.444483 pct: 1446 / 19600 (7.37755%)
 0.601874 pct: 3354 / 19600 (17.1122%)
 0.67161 pct: 2281 / 19600 (11.6378%)
 0.830648 pct: 354 / 19600 (1.80612%)
 0.926331 pct: 446 / 19600 (2.27551%)
 0.999893 pct: most helpful community
+Matchup outcome against top ⅐ᵗʰ hands: my chance to win=23.607% split=4.453%
+Matchup outcome against top ⅙ᵗʰ hands: my chance to win=24.0563% split=5.008%
+Matchup outcome against top ⅕ᵗʰ hands: my chance to win=25.0518% split=4.99708%
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=26.7197% split=4.26322%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=28.6411% split=3.47917%
+Matchup outcome against top ½ hands: my chance to win=31.0318% split=2.82187%
+Matchup outcome against an unknown hand: my chance to win=37.6747% split=5.67457%
 CallStrength W(5m)=0.250518 L=0.699512 o.w_s=(0.250518,0.0499708)
 (MinRaise to $20.25) 	W(5×)=0.250518 L=0.699512 1×o.w_s=(0.250518,0.0499708)
  -  statrelation geom RAW - 
@@ -82,13 +89,16 @@ Community outcomes (stdev = 0.0912999 pcts , avgdev = 0.0578413 pcts ), kurtosis
 0.510738 pct: least helpful community
 0.542957 pct: 10 / 47 (21.2766%)
 0.60766 pct: 27 / 47 (57.4468%)
-0.626699 pct (mean): mean- 0.723404   mean+ 0.276596 (skew 1.982 tail right) 
+0.626699 pct (mean): mean- 2.61538 ↑:↓ 1.0 mean+ (skew 1.982 tail right)
 0.635214 pct: 3 / 47 (6.38298%)
 0.7275 pct: 3 / 47 (6.38298%)
 0.784361 pct: 0 / 47 (0%)
 0.832279 pct: 2 / 47 (4.25532%)
 0.932883 pct: 2 / 47 (4.25532%)
 0.936375 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=27.9478% split=8.35254%
+Matchup outcome against top ½ hands: my chance to win=42.5001% split=5.59246%
+Matchup outcome against an unknown hand: my chance to win=61.1482% split=3.04338%
 CallStrength W(1m)=0.611482 L=0.358084 o.w_s=(0.611482,0.0304338)
 (MinRaise to $10.125) 	W(1×)=0.611482 L=0.358084 1×o.w_s=(0.611482,0.0304338)
  -  statrelation geom RAW - 
@@ -136,13 +146,16 @@ Community outcomes (stdev = 0.0912999 pcts , avgdev = 0.0578413 pcts ), kurtosis
 0.510738 pct: least helpful community
 0.542957 pct: 10 / 47 (21.2766%)
 0.60766 pct: 27 / 47 (57.4468%)
-0.626699 pct (mean): mean- 0.723404   mean+ 0.276596 (skew 1.982 tail right) 
+0.626699 pct (mean): mean- 2.61538 ↑:↓ 1.0 mean+ (skew 1.982 tail right)
 0.635214 pct: 3 / 47 (6.38298%)
 0.7275 pct: 3 / 47 (6.38298%)
 0.784361 pct: 0 / 47 (0%)
 0.832279 pct: 2 / 47 (4.25532%)
 0.932883 pct: 2 / 47 (4.25532%)
 0.936375 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=27.9478% split=8.35254%
+Matchup outcome against top ½ hands: my chance to win=42.5001% split=5.59246%
+Matchup outcome against an unknown hand: my chance to win=61.1482% split=3.04338%
 CallStrength W(1m)=0.611482 L=0.358084 o.w_s=(0.611482,0.0304338)
 (MinRaise to $36) 	W(1×)=0.611482 L=0.358084 1×o.w_s=(0.611482,0.0304338)
  -  statrelation geom RAW - 
@@ -200,12 +213,15 @@ Community outcomes (stdev = 0.148102 pcts , avgdev = 0.101045 pcts ), kurtosis =
 0.306566 pct: 8 / 46 (17.3913%)
 0.449206 pct: 7 / 46 (15.2174%)
 0.503319 pct: 21 / 46 (45.6522%)
-0.510738 pct (mean): mean- 0.717391   mean+ 0.282609 (skew 0.942503 tail right) 
+0.510738 pct (mean): mean- 2.53846 ↑:↓ 1.0 mean+ (skew 0.942503 tail right)
 0.556566 pct: 1 / 46 (2.17391%)
 0.654545 pct: 5 / 46 (10.8696%)
 0.773341 pct: 0 / 46 (0%)
 0.874495 pct: 4 / 46 (8.69565%)
 0.903535 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=7.19368% split=0%
+Matchup outcome against top ½ hands: my chance to win=17.7646% split=7.27273%
+Matchup outcome against an unknown hand: my chance to win=49.2556% split=3.63636%
 CallStrength W(1m)=0.492556 L=0.47108 o.w_s=(0.492556,0.0363636)
 (MinRaise to $10.125) 	W(1×)=0.492556 L=0.47108 1×o.w_s=(0.492556,0.0363636)
  -  statrelation geom RAW - 
@@ -254,12 +270,15 @@ Community outcomes (stdev = 0.148102 pcts , avgdev = 0.101045 pcts ), kurtosis =
 0.306566 pct: 8 / 46 (17.3913%)
 0.449206 pct: 7 / 46 (15.2174%)
 0.503319 pct: 21 / 46 (45.6522%)
-0.510738 pct (mean): mean- 0.717391   mean+ 0.282609 (skew 0.942503 tail right) 
+0.510738 pct (mean): mean- 2.53846 ↑:↓ 1.0 mean+ (skew 0.942503 tail right)
 0.556566 pct: 1 / 46 (2.17391%)
 0.654545 pct: 5 / 46 (10.8696%)
 0.773341 pct: 0 / 46 (0%)
 0.874495 pct: 4 / 46 (8.69565%)
 0.903535 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=7.19368% split=0%
+Matchup outcome against top ½ hands: my chance to win=17.7646% split=7.27273%
+Matchup outcome against an unknown hand: my chance to win=49.2556% split=3.63636%
 CallStrength W(1m)=0.492556 L=0.47108 o.w_s=(0.492556,0.0363636)
 (MinRaise to $1611) 	W(1×)=0.492556 L=0.47108 1×o.w_s=(0.492556,0.0363636)
  -  statrelation geom RAW - 
