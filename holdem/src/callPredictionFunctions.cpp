@@ -1006,7 +1006,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 
   // Raise only if (U + riskLoss) is better than `nonRaiseGain`
     this->lastF_by_w = U_by_w - nonRaiseGain;
-    this->lastF_by_w.v += applyRiskLoss / FG.waitLength.bankroll;
+    this->lastF_by_w.v += applyRiskLoss / FG.waitLength.bankroll; // dRiskLoss_dW is zero??? (Presumably yes, because whether your opponents fold isn't impacted by whether you end up winning. They can't see your cards.)
 
 		// ∂lastF/∂facedBet = ∂U/∂facedBet + (1 / FG.waitLength.bankroll) * ∂applyRiskLoss/∂facedBet - d_nonRaiseGain_dfacedBet
     this->dLastF_by_facedBet = dU_dfacedBet + d_applyRiskLoss_dbetSize / FG.waitLength.bankroll - d_nonRaiseGain_dfacedBet;
