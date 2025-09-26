@@ -854,8 +854,10 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
   //  = FG.waitLength.bankroll - this->fold_bet + this->pot
   // If you lose the hand by calling, you'll end up with
   //   `FG.waitLength.bankroll - this->faced_bet`
-  const float64 callIncrLoss = (FG.waitLength.bankroll - this->faced_bet) / (FG.waitLength.bankroll - this->fold_bet);
-  const float64 callIncrBase = (FG.waitLength.bankroll - this->fold_bet + callPot)/(FG.waitLength.bankroll - this->fold_bet);
+  const float64 callWin = (FG.waitLength.bankroll - this->fold_bet + callPot);
+  const float64 callLoss = (FG.waitLength.bankroll - this->faced_bet);
+  const float64 callIncrLoss = callLoss / (FG.waitLength.bankroll - this->fold_bet);
+  const float64 callIncrBase = callWin / (FG.waitLength.bankroll - this->fold_bet);
   const float64 callGain = std::pow(callIncrLoss, 1 - fw) * std::pow(callIncrBase,fw);
 
 
