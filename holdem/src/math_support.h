@@ -101,6 +101,14 @@ struct ValueAndSlope {
     };
   }
 
+  constexpr ValueAndSlope operator-(const ValueAndSlope &a) const {
+    float64 subtraction_diff_v = this->v - a.v;
+    float64 subtraction_diff_d_v = this->D_v - a.D_v;
+    return ValueAndSlope{
+      subtraction_diff_v, subtraction_diff_d_v
+    };
+  }
+
   static ValueAndSlope constexpr lesserOfTwo(const ValueAndSlope &a, const ValueAndSlope &b) {
     if (a.v < b.v) {
       return a;
