@@ -18,12 +18,21 @@ Community outcomes (stdev = 0.171713 pcts , avgdev = 0.146549 pcts ), kurtosis =
 0.306756 pct: 2163 / 19600 (11.0357%)
 0.3863 pct: 7605 / 19600 (38.801%)
 0.49343 pct: 2172 / 19600 (11.0816%)
-0.510192 pct (mean): mean- 0.576122   mean+ 0.423878 (skew 0.754229 tail right) 
+0.510192 pct (mean): mean- 1.35917 ↑:↓ 1.0 mean+ (skew 0.754229 tail right)
 0.59981 pct: 3962 / 19600 (20.2143%)
 0.741888 pct: 1869 / 19600 (9.53571%)
 0.815853 pct: 1203 / 19600 (6.13776%)
 0.930051 pct: 626 / 19600 (3.19388%)
 0.999938 pct: most helpful community
+Matchup outcome against top ⅑ᵗʰ hands: my chance to win=26.9424% split=3.31648%
+Matchup outcome against top ⅛ᵗʰ hands: my chance to win=27.5033% split=3.39928%
+Matchup outcome against top ⅐ᵗʰ hands: my chance to win=28.1335% split=3.51722%
+Matchup outcome against top ⅙ᵗʰ hands: my chance to win=29.1084% split=3.41772%
+Matchup outcome against top ⅕ᵗʰ hands: my chance to win=30.2075% split=3.41911%
+Matchup outcome against top ¼ᵗʰ hands: my chance to win=31.6449% split=3.10434%
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=33.436% split=2.67487%
+Matchup outcome against top ½ hands: my chance to win=35.966% split=6.81113%
+Matchup outcome against an unknown hand: my chance to win=48.9384% split=4.16167%
 CallStrength W(7m)=0.281335 L=0.683493 o.w_s=(0.281335,0.0351722)
 (MinRaise to $22.5) 	W(7×)=0.281335 L=0.683493 1×o.w_s=(0.281335,0.0351722)
  -  statrelation geom RAW - 
@@ -81,7 +90,7 @@ Jc Ks Ah community
 Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis = 3.30048
 0.434497 pct: least helpful community
 0.446391 pct: 24 / 47 (51.0638%)
-0.530936 pct (mean): mean- 0.553191   mean+ 0.446809 (skew 1.96034 tail right) 
+0.530936 pct (mean): mean- 1.2381 ↑:↓ 1.0 mean+ (skew 1.96034 tail right)
 0.549805 pct: 14 / 47 (29.7872%)
 0.591063 pct: 5 / 47 (10.6383%)
 0.671992 pct: 0 / 47 (0%)
@@ -89,6 +98,9 @@ Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis 
 0.807703 pct: 0 / 47 (0%)
 0.897011 pct: 4 / 47 (8.51064%)
 0.909486 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=18.8426% split=2.86519%
+Matchup outcome against top ½ hands: my chance to win=20.4087% split=14.0118%
+Matchup outcome against an unknown hand: my chance to win=48.6948% split=8.7976%
 CallStrength W(1m)=0.486948 L=0.425076 o.w_s=(0.486948,0.087976)
 (MinRaise to $11.25) 	W(1×)=0.486948 L=0.425076 1×o.w_s=(0.486948,0.087976)
  -  statrelation geom RAW - 
@@ -129,14 +141,14 @@ OppRAISEChanceM [F] 0.0317148 @ $1440 ($52.672 now)	fold -- 0.764706	W(20×)=0.0
 OppRAISEChanceM [F] 0.00677199 @ $2228.75 ($61.3092 now)	fold -- 0.728507	W(17.5×)=0.0728305 L=0.81669 1×o.w_s=(0.0728305,0.11048)
 Guaranteed > $28.125 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
-Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=0
 
+↓ ─── Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=0
 *
 3c Qc Bet to call 80 (from 0) at 108.125 pot, 
 Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis = 3.30048
 0.434497 pct: least helpful community
 0.446391 pct: 24 / 47 (51.0638%)
-0.530936 pct (mean): mean- 0.553191   mean+ 0.446809 (skew 1.96034 tail right) 
+0.530936 pct (mean): mean- 1.2381 ↑:↓ 1.0 mean+ (skew 1.96034 tail right)
 0.549805 pct: 14 / 47 (29.7872%)
 0.591063 pct: 5 / 47 (10.6383%)
 0.671992 pct: 0 / 47 (0%)
@@ -144,6 +156,9 @@ Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis 
 0.807703 pct: 0 / 47 (0%)
 0.897011 pct: 4 / 47 (8.51064%)
 0.909486 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=18.8426% split=2.86519%
+Matchup outcome against top ½ hands: my chance to win=20.4087% split=14.0118%
+Matchup outcome against an unknown hand: my chance to win=48.6948% split=8.7976%
 CallStrength W(1m)=0.486948 L=0.425076 o.w_s=(0.486948,0.087976)
 (MinRaise to $160) 	W(1×)=0.486948 L=0.425076 1×o.w_s=(0.486948,0.087976)
  -  statranking algb RAW - 
@@ -178,14 +193,14 @@ OppRAISEChanceM [F] 0.242647 @ $1360 ($164.75 now)	fold -- 0.656109	W(8.5×)=0.1
 OppRAISEChanceM [F] 0.00677199 @ $2228.75 ($204.689 now)	fold -- 0.651584	W(7.83333×)=0.123913 L=0.820583 1×o.w_s=(0.123913,0.0555043)
 Guaranteed > $28.125 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
-Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=1
 
+↓ ─── Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=1
 *
 3c Qc Bet to call 80 (from 0) at 108.125 pot, 
 Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis = 3.30048
 0.434497 pct: least helpful community
 0.446391 pct: 24 / 47 (51.0638%)
-0.530936 pct (mean): mean- 0.553191   mean+ 0.446809 (skew 1.96034 tail right) 
+0.530936 pct (mean): mean- 1.2381 ↑:↓ 1.0 mean+ (skew 1.96034 tail right)
 0.549805 pct: 14 / 47 (29.7872%)
 0.591063 pct: 5 / 47 (10.6383%)
 0.671992 pct: 0 / 47 (0%)
@@ -193,6 +208,9 @@ Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis 
 0.807703 pct: 0 / 47 (0%)
 0.897011 pct: 4 / 47 (8.51064%)
 0.909486 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=18.8426% split=2.86519%
+Matchup outcome against top ½ hands: my chance to win=20.4087% split=14.0118%
+Matchup outcome against an unknown hand: my chance to win=48.6948% split=8.7976%
 CallStrength W(1m)=0.486948 L=0.425076 o.w_s=(0.486948,0.087976)
 (MinRaise to $160) 	W(1×)=0.486948 L=0.425076 1×o.w_s=(0.486948,0.087976)
  -  detailPCT  - 
@@ -227,14 +245,14 @@ OppRAISEChanceM [F] 0.242647 @ $1360 ($164.75 now)	fold -- 0.656109	W(8.5×)=0.1
 OppRAISEChanceM [F] 0.00677199 @ $2228.75 ($204.689 now)	fold -- 0.651584	W(7.83333×)=0.123913 L=0.820583 1×o.w_s=(0.123913,0.0555043)
 Guaranteed > $28.125 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
-Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=2
 
+↓ ─── Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=2
 *
 3c Qc Bet to call 80 (from 0) at 108.125 pot, 
 Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis = 3.30048
 0.434497 pct: least helpful community
 0.446391 pct: 24 / 47 (51.0638%)
-0.530936 pct (mean): mean- 0.553191   mean+ 0.446809 (skew 1.96034 tail right) 
+0.530936 pct (mean): mean- 1.2381 ↑:↓ 1.0 mean+ (skew 1.96034 tail right)
 0.549805 pct: 14 / 47 (29.7872%)
 0.591063 pct: 5 / 47 (10.6383%)
 0.671992 pct: 0 / 47 (0%)
@@ -242,6 +260,9 @@ Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis 
 0.807703 pct: 0 / 47 (0%)
 0.897011 pct: 4 / 47 (8.51064%)
 0.909486 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=18.8426% split=2.86519%
+Matchup outcome against top ½ hands: my chance to win=20.4087% split=14.0118%
+Matchup outcome against an unknown hand: my chance to win=48.6948% split=8.7976%
 CallStrength W(1m)=0.486948 L=0.425076 o.w_s=(0.486948,0.087976)
 (MinRaise to $160) 	W(1×)=0.486948 L=0.425076 1×o.w_s=(0.486948,0.087976)
  -  statrelation geom RAW - 
@@ -276,14 +297,14 @@ OppRAISEChanceM [F] 0.242647 @ $1360 ($164.75 now)	fold -- 0.656109	W(8.5×)=0.1
 OppRAISEChanceM [F] 0.00677199 @ $2228.75 ($204.689 now)	fold -- 0.651584	W(7.83333×)=0.123913 L=0.820583 1×o.w_s=(0.123913,0.0555043)
 Guaranteed > $28.125 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
-Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=3
 
+↓ ─── Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=3
 *
 3c Qc Bet to call 80 (from 0) at 108.125 pot, 
 Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis = 3.30048
 0.434497 pct: least helpful community
 0.446391 pct: 24 / 47 (51.0638%)
-0.530936 pct (mean): mean- 0.553191   mean+ 0.446809 (skew 1.96034 tail right) 
+0.530936 pct (mean): mean- 1.2381 ↑:↓ 1.0 mean+ (skew 1.96034 tail right)
 0.549805 pct: 14 / 47 (29.7872%)
 0.591063 pct: 5 / 47 (10.6383%)
 0.671992 pct: 0 / 47 (0%)
@@ -291,6 +312,9 @@ Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis 
 0.807703 pct: 0 / 47 (0%)
 0.897011 pct: 4 / 47 (8.51064%)
 0.909486 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=18.8426% split=2.86519%
+Matchup outcome against top ½ hands: my chance to win=20.4087% split=14.0118%
+Matchup outcome against an unknown hand: my chance to win=48.6948% split=8.7976%
 CallStrength W(1m)=0.486948 L=0.425076 o.w_s=(0.486948,0.087976)
 (MinRaise to $160) 	W(1×)=0.486948 L=0.425076 1×o.w_s=(0.486948,0.087976)
  -  stat_low geom SLIDERX - 
@@ -325,14 +349,14 @@ OppRAISEChanceM [F] 0.242647 @ $1360 ($164.75 now)	fold -- 0.656109	W(8.5×)=0.1
 OppRAISEChanceM [F] 0.00677199 @ $2228.75 ($204.689 now)	fold -- 0.651584	W(7.83333×)=0.123913 L=0.820583 1×o.w_s=(0.123913,0.0555043)
 Guaranteed > $28.125 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
-Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=4
 
+↓ ─── Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=4
 *
 3c Qc Bet to call 80 (from 0) at 108.125 pot, 
 Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis = 3.30048
 0.434497 pct: least helpful community
 0.446391 pct: 24 / 47 (51.0638%)
-0.530936 pct (mean): mean- 0.553191   mean+ 0.446809 (skew 1.96034 tail right) 
+0.530936 pct (mean): mean- 1.2381 ↑:↓ 1.0 mean+ (skew 1.96034 tail right)
 0.549805 pct: 14 / 47 (29.7872%)
 0.591063 pct: 5 / 47 (10.6383%)
 0.671992 pct: 0 / 47 (0%)
@@ -340,6 +364,9 @@ Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis 
 0.807703 pct: 0 / 47 (0%)
 0.897011 pct: 4 / 47 (8.51064%)
 0.909486 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=18.8426% split=2.86519%
+Matchup outcome against top ½ hands: my chance to win=20.4087% split=14.0118%
+Matchup outcome against an unknown hand: my chance to win=48.6948% split=8.7976%
 CallStrength W(1m)=0.486948 L=0.425076 o.w_s=(0.486948,0.087976)
 (MinRaise to $160) 	W(1×)=0.486948 L=0.425076 1×o.w_s=(0.486948,0.087976)
  -  stat_high algb SLIDERX - 
@@ -380,7 +407,7 @@ OppFoldChance% ...    0   ∇=0
 Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis = 3.30048
 0.434497 pct: least helpful community
 0.446391 pct: 24 / 47 (51.0638%)
-0.530936 pct (mean): mean- 0.553191   mean+ 0.446809 (skew 1.96034 tail right) 
+0.530936 pct (mean): mean- 1.2381 ↑:↓ 1.0 mean+ (skew 1.96034 tail right)
 0.549805 pct: 14 / 47 (29.7872%)
 0.591063 pct: 5 / 47 (10.6383%)
 0.671992 pct: 0 / 47 (0%)
@@ -388,6 +415,9 @@ Community outcomes (stdev = 0.125559 pcts , avgdev = 0.0865001 pcts ), kurtosis 
 0.807703 pct: 0 / 47 (0%)
 0.897011 pct: 4 / 47 (8.51064%)
 0.909486 pct: most helpful community
+Matchup outcome against top ⅓ʳᵈ hands: my chance to win=18.8426% split=2.86519%
+Matchup outcome against top ½ hands: my chance to win=20.4087% split=14.0118%
+Matchup outcome against an unknown hand: my chance to win=48.6948% split=8.7976%
 CallStrength W(1m)=0.486948 L=0.425076 o.w_s=(0.486948,0.087976)
 (MinRaise to $160) 	W(1×)=0.486948 L=0.425076 1×o.w_s=(0.486948,0.087976)
  -  statrelation geom RAW - 

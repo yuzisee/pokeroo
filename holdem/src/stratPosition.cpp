@@ -21,7 +21,9 @@
 #include "stratPosition.h"
 #include "arena.h"
 #include "callPrediction.h"
+#include "callRarity.h"
 #include "inferentials.h"
+#include "portability.h"
 #include "stratFear.h"
 
 #include <math.h>
@@ -1342,9 +1344,13 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
             if (distrPct.skew() < 0) {
                 logF << "(skew " << distrPct.skew() << " tail left) ";
             }
-            logF << "mean- " << (0.5 - 0.5*distrPct.improve()) << "   mean+ " << (0.5 + 0.5*distrPct.improve());
+            if (distrPct.improve() <= 0.0) {
+              logF << "mean- " << ((1.0 - distrPct.improve()) / (distrPct.improve() + 1.0)) << " ↑:↓ 1.0 mean+";
+            } else {
+              logF << "mean- 1.0 ↑:↓ " << ((1.0 + distrPct.improve()) / (1.0 - distrPct.improve())) << " mean+";
+            }
             if (distrPct.skew() > 0) {
-                logF << " (skew " << distrPct.skew() << " tail right) ";
+                logF << " (skew " << distrPct.skew() << " tail right)";
             }
             logF << "\n";
         }
@@ -1355,7 +1361,57 @@ void PositionalStrategy::printCommunityOutcomes(std::ostream &logF, const Coarse
         ++k;
     }
     logF << distrPct.best.pct << " pct: most helpful community\n";
+}
 
+// static void print1v1Outcomes(std::ostream &logF, const MatchupStatsCdf &matchups, const playernumber_t maxNumOpponents) {
+static void print1v1Outcomes(std::ostream &logF, const StatResultProbabilities &matchups, const playernumber_t maxNumOpponents) {
+  for (playernumber_t section = maxNumOpponents; section >= 1; section -= 1) {
+    logF << "Matchup outcome against ";
+    if (section == 1) {
+      logF << "an unknown hand: ";
+    } else {
+      switch(section) {
+        case 2:
+          logF << "top ½";
+        break;
+        case 3:
+          logF << "top ⅓ʳᵈ";
+        break;
+        case 4:
+          logF << "top ¼ᵗʰ";
+        break;
+        case 5:
+          logF << "top ⅕ᵗʰ";
+        break;
+        case 6:
+          logF << "top ⅙ᵗʰ";
+        break;
+        case 7:
+          logF << "top ⅐ᵗʰ";
+        break;
+        case 8:
+          logF << "top ⅛ᵗʰ";
+        break;
+        case 9:
+          logF << "top ⅑ᵗʰ";
+        break;
+        case 10:
+          logF << "top ⅒ᵗʰ";
+        break;
+        case 11:
+          logF << "top ¹⁄₁₁ᵗʰ";
+        break;
+        default:
+          logF << "top 1/" << static_cast<int>(section) << "ᵗʰ";
+          break;
+      }
+
+      logF << " hands: ";
+    }
+    StatResultProbabilities::logfileAppendPercentages(logF, true ,nullptr,"my chance to win="," split=",nullptr, matchups.statworse(section), false);
+    logF << std::endl;
+
+  }
 }
 
 
@@ -1414,6 +1470,7 @@ float64 PureGainStrategy::MakeBet()
 
 #ifdef LOGPOSITION
     printCommunityOutcomes(logFile, outcomes, detailPCT);
+    print1v1Outcomes(logFile, statprob, ViewTable().NumberAtFirstActionOfRound().inclAllIn() + 1);
     char statResultMode;
     if (tablestate.handsToShowdownAgainst() > 1) {
         CoarseCommunityHistogram rankComparison(DistrShape::newEmptyDistrShape(), left);

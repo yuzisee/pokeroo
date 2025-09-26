@@ -373,7 +373,6 @@ class HoldemArena
         mutable CommunityCallStats *communityBuffer;
     #endif
 
-        void PrintPositions(std::ostream& o);
 		void broadcastHand(const Hand&,const int8 broadcaster);
 		void broadcastCurrentMove(const HoldemAction &action);
 		void defineSidePotsFor(Player&, const playernumber_t);
@@ -393,6 +392,7 @@ class HoldemArena
 
 	public:
 
+	void PrintPositions(std::ostream& o);
 
 //===========================
 //   Marshalling Functions
