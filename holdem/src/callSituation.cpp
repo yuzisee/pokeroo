@@ -260,7 +260,9 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
 
     const float64 avgBlind = table->GetBlindValues().OpportunityPerHand(N);
 
-    FoldGainModel<PlayerStrategyPerspective, OppositionPerspective> FG(table->GetChipDenom()/2);
+    const float64 comparisonCutoff = table->GetChipDenom()/2;
+
+    FoldGainModel<PlayerStrategyPerspective, OppositionPerspective> FG(comparisonCutoff);
     // [!TIP]
     // FoldGainModel needs _whose_ perspective?
     //  * When used by StateModel::query (via `FoldOrCall::foldGain` method) it uses callcumu to answer "should I fold?"
@@ -303,10 +305,10 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
 
     const float64 riskLoss =
 			#ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
-			(trueFoldChipsEV < nominalFoldChips) ? ( trueFoldChipsEV - nominalFoldChips
-      // (nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? ( trueFoldChipsEV - nominalFoldChips
+			(trueFoldChipsEV + comparisonCutoff < nominalFoldChips) ? ( trueFoldChipsEV - nominalFoldChips
+      // (nominalFoldChips comparisonCutoff < trueFoldChipsEV) ? ( trueFoldChipsEV - nominalFoldChips
 			#else
-			(std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? ( -trueFoldChipsEV
+			(comparisonCutoff < trueFoldChipsEV) ? ( -trueFoldChipsEV
 			  // If trueFoldChipsEV is *strictly profitable*, then the player who made `faced_bet` could "win" by folding, meaning it's overly risky for this person (doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
         // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
       #endif
@@ -319,10 +321,10 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
 
 		const float64 dRiskLoss =
 		  #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
-				(trueFoldChipsEV < nominalFoldChips) ? (
+				(trueFoldChipsEV + comparisonCutoff < nominalFoldChips) ? (
 				  FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot + d_AmountSacrifice_d_pot
 			#else
-      (nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? (
+      (nominalFoldChips + comparisonCutoff < trueFoldChipsEV) ? (
        // If trueFoldChipsEV offers any benefit at all, then the player who made `faced_bet` could benefit more by folding, meaning it's not productive this opponent (the person doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
        // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
 
