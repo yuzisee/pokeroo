@@ -319,7 +319,7 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
 
 		const float64 dRiskLoss =
 		  #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
-				(nominalFoldChips < trueFoldChipsEV) ? (
+				(trueFoldChipsEV < nominalFoldChips) ? (
 				  FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot + d_AmountSacrifice_d_pot
 			#else
       (nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV) ? (
