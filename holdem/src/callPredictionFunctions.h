@@ -371,6 +371,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     float64 callPot;
     float64 raiseTo;
     float64 fold_bet; // if I "fold" instead of `raiseTo`, what bet can we get back to just by waiting?
+    float64 faced_bet; // if I "call", I increase my bet **to** `faced_bet` (i.e. increase my bet **by** `faced_bet - fold_bet`)
     float64 riskLoss; // This is an adjustment being made by `ExpectedCallD::RiskLoss` and if it's negative it means the HypotheticalBet under consideration is taking too much risk
 	  bool bRaiseWouldBeCalled; // If this is `true`, at least *one* person will cause the raise (you won't get an all-fold situation)
     bool bCheckPossible;

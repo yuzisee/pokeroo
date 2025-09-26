@@ -1034,7 +1034,7 @@ namespace RegressionTests {
             return proceedWithBet(bets[i-1]);
         }
 
-        void assertMyPositionIndex(playernumber_t pIndex) {
+        void assertMyPositionIndex(playernumber_t pIndex) const {
           if (pIndex != this->myPositionIndex) {
             std::cerr << "Expecting WhoIsNext to be " << static_cast<int>(pIndex) << " but I'm " << static_cast<int>(this->myPositionIndex) << std::endl;
             assert(pIndex == myPositionIndex);

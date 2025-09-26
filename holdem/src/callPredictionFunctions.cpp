@@ -763,6 +763,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::configure_with(FacedOddsRaiseGe
   a.raisedPot = cps.pot + (hypotheticalRaise.bWillGetCalled ? (hypotheticalRaise.betIncrease()) : 0);
     a.raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     a.fold_bet = hypotheticalRaise.fold_bet();
+    a.faced_bet = hypotheticalRaise.faced_bet();
     a.bCheckPossible = hypotheticalRaise.bCouldHaveChecked();
     a.riskLoss = currentRiskLoss;
   a.bRaiseWouldBeCalled = hypotheticalRaise.bWillGetCalled;
@@ -839,12 +840,22 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
         excess_by_w.D_v += FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
     }
 
-    const float64 callIncrLoss = 1 - this->fold_bet / FG.waitLength.bankroll;
-    const float64 callIncrBase = (FG.waitLength.bankroll + callPot)/(FG.waitLength.bankroll - this->fold_bet); // = 1 + (pot - fold_bet) / (bankroll - fold_bet);
-
   //We need to compare raising to the opportunity cost of calling/folding
 	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
 #ifdef REFINED_FACED_ODDS_RAISE_GEOM
+  // If we were to _call_ instead of raising to `raiseTo`, what would our Geom gain be?
+  // Your current bankroll (i.e. the maximum that `raiseTo - fold_bet` could be) is:
+  //   `FG.waitLength.bankroll - this->fold_bet`
+  // If you win the hand by calling, you'll get everything in the pot:
+  //  + Bankroll after calling: `FG.waitLength.bankroll - this->faced_bet`
+  //  + You get back all the chips you put in, before this: `this->fold_bet`
+  //  + You also get back all the new chips you're putting in to call the bet: `faced_bet - fold_bet`
+  //  + You also get back everyone else's (where previous round chips are considered "someone else's") chips that are in the pot: `this->pot - this->fold_bet`
+  //  = FG.waitLength.bankroll - this->fold_bet + this->pot
+  // If you lose the hand by calling, you'll end up with
+  //   `FG.waitLength.bankroll - this->faced_bet`
+  const float64 callIncrLoss = (FG.waitLength.bankroll - this->faced_bet) / (FG.waitLength.bankroll - this->fold_bet);
+  const float64 callIncrBase = (FG.waitLength.bankroll - this->fold_bet + callPot)/(FG.waitLength.bankroll - this->fold_bet);
   const float64 callGain = std::pow(callIncrLoss, 1 - fw) * std::pow(callIncrBase,fw);
 
 
@@ -853,6 +864,8 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	// And then you should still set bUseCall accordingly, in that case
 
 #else
+  const float64 callIncrLoss = 1 - this->fold_bet / FG.waitLength.bankroll;
+  const float64 callIncrBase = (FG.waitLength.bankroll + callPot)/(FG.waitLength.bankroll - this->fold_bet); // = 1 + (pot + fold_bet) / (bankroll - fold_bet);
   const float64 applyRiskLoss =  (bCheckPossible) ? 0 : riskLoss;
 
 	const float64 callGain =
