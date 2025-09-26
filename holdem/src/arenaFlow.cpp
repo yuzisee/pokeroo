@@ -411,7 +411,7 @@ int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop, std::ostream &gamel
 
 	PrepBettingRound(false,2); //turn, river remaining
 
-    return PlayRound(flop,3, gamelog);
+    return PlayRound(flop,3, gamelog); // `HoldemArena::PlayRound is implemented in src/arenaLogic.cpp`
 }
 
 int8 HoldemArena::PlayRound_Turn(const CommunityPlus & flop, const DeckLocation & turn, std::ostream &gamelog)

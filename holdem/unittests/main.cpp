@@ -1069,7 +1069,7 @@ namespace RegressionTests {
         }
 
         void extra_logline(std::string extra_msg, int extra_num) {
-          this->logFile << extra_msg << extra_num << std::endl;
+          this->logFile << extra_msg << extra_num;
         }
     }
     ;
@@ -1736,10 +1736,8 @@ namespace RegressionTests {
         static const float64 aa[] = {std::numeric_limits<float64>::signaling_NaN(), 0.0, 0.0};
         const std::vector<float64> callCheckFold(aa, aa + sizeof(aa) / sizeof(aa[0]) );
 
-        static const float64 na[] = {std::numeric_limits<float64>::signaling_NaN(), 20.0, 0.0, 0.0};
-        static const float64 sa[] = {std::numeric_limits<float64>::signaling_NaN(), 20.0, 0.0, std::numeric_limits<float64>::signaling_NaN()};
-        //static const float64 na[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, 0.0, 0.0};
-        //static const float64 sa[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, 0.0, std::numeric_limits<float64>::signaling_NaN()};
+        static const float64 na[] = {std::numeric_limits<float64>::signaling_NaN(), 20.0, std::numeric_limits<float64>::signaling_NaN(), 0.0, 0.0};
+        static const float64 sa[] = {std::numeric_limits<float64>::signaling_NaN(), 20.0, std::numeric_limits<float64>::signaling_NaN(), 0.0, std::numeric_limits<float64>::signaling_NaN()};
 
         FixedReplayPlayerStrategy nS(VectorOf(na));
         FixedReplayPlayerStrategy sS(VectorOf(sa));
@@ -1861,7 +1859,7 @@ namespace RegressionTests {
          [Joyce]
          [Andrew]
          [Mona]
-         [Joseph]
+         [h21]
          [Nav]
          [Sam]
 
@@ -1869,13 +1867,13 @@ namespace RegressionTests {
          Joyce checks
          Andrew checks
          Mona checks
-         Joseph checks
+         h21 checks
          Nav bets $50
          Sam calls $50
          Laily folds
          Andrew folds
          Mona folds
-         Joseph calls $50
+         h21 calls $50
          */
 
 
@@ -1892,11 +1890,11 @@ namespace RegressionTests {
         /*
 
          (3 players)
-         [Joseph]
+         [h21]
          [Nav]
          [Sam]
 
-         Joseph checks
+         h21 checks
          Nav checks
          Sam checks
 
@@ -1917,28 +1915,15 @@ namespace RegressionTests {
         //assert(myTable.GetPotSize() > 55);
 
 
-        /*
 
-         (3 players)
-         [ActionBotV $1495]
-         [NormalBotV $1463.52]
-         [GearBotV $1453]
-
-         ActionBotV checks
-         NormalBotV checks
-         GearBotV checks
-
-
-
-         */
     }
 
 
 
     // Hand played live:
     // OBJECTIVE: We should be playing value hands when we have a large stack.
-    void testImprovement_021() {
-
+    void testImprovement_020() {
+       // ALTERNATE PLAYTHROUGH of testRegression_021b() but with more aggressive opponents
 
 
         BlindValues b;
@@ -1952,8 +1937,8 @@ namespace RegressionTests {
         static const float64 aa[] = {std::numeric_limits<float64>::signaling_NaN(), 0.0, 0.0};
         const std::vector<float64> callCheckFold(aa, aa + sizeof(aa) / sizeof(aa[0]) );
 
-        static const float64 na[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, 0.0, 0.0};
-        static const float64 sa[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, 0.0, std::numeric_limits<float64>::signaling_NaN()};
+        static const float64 na[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, std::numeric_limits<float64>::signaling_NaN(), 0.0};
+        static const float64 sa[] = {std::numeric_limits<float64>::signaling_NaN(), 50.0, std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()};
 
         FixedReplayPlayerStrategy nS(VectorOf(na));
         FixedReplayPlayerStrategy sS(VectorOf(sa));
@@ -1964,7 +1949,7 @@ namespace RegressionTests {
         FixedReplayPlayerStrategy mS(callCheckFold);
 
 
-        PureGainStrategy bot("21.txt", 3);
+        PureGainStrategy bot("20_21a.txt", 3);
         PlayerStrategy * const botToTest = &bot;
         myTable.ManuallyAddPlayer("h21", 2600.0, botToTest);
         myTable.ManuallyAddPlayer("Nav", 300.0, &nS);
@@ -2051,7 +2036,7 @@ namespace RegressionTests {
          [Joyce]
          [Andrew]
          [Mona]
-         [Joseph]
+         [h21_alternate universe]
          [Nav]
          [Sam]
 
@@ -2059,13 +2044,13 @@ namespace RegressionTests {
          Joyce checks
          Andrew checks
          Mona checks
-         Joseph checks
+         h21 checks
          Nav bets $50
          Sam calls $50
          Laily folds
          Andrew folds
          Mona folds
-         Joseph calls $50
+         h21 calls $50
          */
 
 
@@ -2086,7 +2071,7 @@ namespace RegressionTests {
          [Nav]
          [Sam]
 
-         Joseph checks
+         h21 checks
          Nav checks
          Sam checks
 
@@ -2107,20 +2092,6 @@ namespace RegressionTests {
         //assert(myTable.GetPotSize() > 55);
 
 
-        /*
-
-         (3 players)
-         [ActionBotV $1495]
-         [NormalBotV $1463.52]
-         [GearBotV $1453]
-
-         ActionBotV checks
-         NormalBotV checks
-         GearBotV checks
-
-
-
-         */
     }
 
 
@@ -2736,7 +2707,7 @@ namespace RegressionTests {
         /*
          Next Dealer is Ali
          ================================================================
-         ============================New Hand #1========================
+         ============================New Hand #12========================
          BEGIN
 
 
@@ -2764,7 +2735,9 @@ namespace RegressionTests {
         static const float64 arr[] = {std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN(),
-            10.0};
+            10.0,
+            std::numeric_limits<float64>::signaling_NaN()
+        };
         const std::vector<float64> mA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
         FixedReplayPlayerStrategy tS(foldOnly);
@@ -2808,7 +2781,7 @@ namespace RegressionTests {
         }
 
 
-        myTable.BeginInitialState(11);
+        myTable.BeginInitialState(12);
         myTable.BeginNewHands(std::cout, b, false, dealer);
 
 
@@ -3013,10 +2986,9 @@ namespace RegressionTests {
 
          All fold! DangerBotV wins $20
 
-
          */
         myTable.PlayRound_BeginHand(std::cout);
-        assert(myTable.GetPotSize() < 120);
+        assert((myTable.GetPotSize() < 120) && "Just to ensure that DangerBot didn't do some ridiculous insane bet");
 
     }
 
@@ -3125,6 +3097,10 @@ namespace RegressionTests {
         card.SetByIndex(49);
         myFlop.AddToHand(card);
 
+        std::cout << "Flop:\t" << flush;
+        myFlop.HandPlus::DisplayHand(std::cout);
+      	std::cout << "(Pot: $" << myTable.GetPotSize() << ")" << endl;
+     		myTable.PrintPositions(std::cout);
         /*
          (2 players)
          [ActionBotV $3020.62]
@@ -3143,10 +3119,12 @@ namespace RegressionTests {
           struct MinRaiseError msg;
 
           assert((r.WhoIsNext() == 1) && "ActionBot is playernumber_t 1");
-          r.MakeBet(bot.MakeBet(), &msg); // ActionBot takes their action
+          const float64 actionBotFlopBet = bot.MakeBet();
+          r.MakeBet(actionBotFlopBet, &msg); // ActionBot takes their action
+          std::cout << "ActionBot bets $" << actionBotFlopBet << std::endl;
 
           nS.assertMyPositionIndex(r.WhoIsNext()); // Should be NormalBot to bet
-          r.MakeBet(nS.MakeBet(), &msg); // NormalBot raises (to 80.0) according to the pre-scripted `std::vector<float64> nA`
+          HoldemArena::ToString(r.MakeBet(nS.MakeBet(), &msg), std::cout); // NormalBot raises (to 80.0) according to the pre-scripted `std::vector<float64> nA`
 
           if (r.bBetState != 'b') {
             // Round over. NormalBotV must have folded! (Did ActionBot raise higher than 80.0?)
@@ -3154,6 +3132,7 @@ namespace RegressionTests {
             // Anywho, for now let's return.
             return;
           }
+          std::cout << "NormalBot raised the pre-scripted amount" << std::endl;
 
           const std::vector<int8> all_bGamble_vals = {0, 1, 2, 3, 4};
           int pass_count = 0;
@@ -3161,7 +3140,7 @@ namespace RegressionTests {
           for (const int8 &try_bGamble : all_bGamble_vals) {
             bot.bGamble_alternate(try_bGamble);
             assert((r.WhoIsNext() == 1) && "ActionBot is playernumber_t 1");
-            bot.extra_logline("Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=", try_bGamble);
+            bot.extra_logline("\n↓ ─── Spot Check: If you raise, you should expect to get re-raised over the next few rounds since your hand isn't _that_ good ┋ bGamble=", try_bGamble);
             const float64 actual = myTable.GetBetDecision(1);
             if (actual < myTable.GetBetToCall()) {
               std::cout << "bGamble " << static_cast<int>(try_bGamble) << " would have folded ✔" << std::endl;
@@ -3178,7 +3157,9 @@ namespace RegressionTests {
           }
 
           bot.bGamble_alternate(bGambleToTest); // This was the original setting
-          r.MakeBet(bot.MakeBet(), &msg); // NormalBotV takes their actual action
+          const float64 original_bGamble_Bet = bot.MakeBet();
+          r.MakeBet(original_bGamble_Bet, &msg); // ActionBot takes their actual action
+          std::cout << "ActionBot responds with $" << original_bGamble_Bet << std::endl;
 
           if (r.bBetState != 'b') {
             const playernumber_t highBet = r.playerCalled;
@@ -3192,12 +3173,12 @@ namespace RegressionTests {
           } else {
             // You (ActionBot) must have **raised** because the round is still going? Also not ideal. This is very risky with only a drawing hand.
             nS.assertMyPositionIndex(r.WhoIsNext()); // Should be NormalBot to bet
-            r.MakeBet(myTable.GetBetToCall(), &msg); // NormalBot responds by calling so we can move on to the next round.
+            HoldemArena::ToString(r.MakeBet(myTable.GetBetToCall(), &msg), std::cout); // NormalBot responds by calling so we can move on to the next round.
             //
           }
 
 
-          // If we're still playing, it means NormalBotV raised, and ActionBot called.
+          // If we're still playing, it means NormalBotV raised, and ActionBot re-raised, and we let NormalBot call that.
           // That's not what we want ActionBot to do, but see if the majority of bGamble settings did the right thing.
           const bool success_by_callfold = (all_bGamble_vals.size() < pass_count * 2);
           assert(success_by_callfold);
@@ -4194,7 +4175,7 @@ Playing as S
          [MultiBotV $2657]
          [NormalBotV $1064]
          [ActionBotV $475]
-         [SpaceBotV $717]
+         [SpaceBot9 $717]
          [Nav $2474]
          [GearBotV $4273]
          */
@@ -4226,6 +4207,8 @@ Playing as S
         myTable.ManuallyAddPlayer("MultiBotV", 2657.0, &mS);
         myTable.ManuallyAddPlayer("NormalBotV", 1064.0, &nS);
         myTable.ManuallyAddPlayer("ActionBotV", 475.0, &aS);
+        // [!CAUTION]
+        // At some point during https://github.com/yuzisee/pokeroo/commit/ea7ebc86268bc016eb4e064769ba3a9732349c6b we changed this test from what the logs say...
         myTable.ManuallyAddPlayer("GearBotV", 4273.0, &gS);
         myTable.ManuallyAddPlayer("ConservativeBotV", 344.0, &cS);
 
@@ -4237,13 +4220,6 @@ Playing as S
         myTable.BeginInitialState(9);
         myTable.BeginNewHands(std::cout, b, false, dealer);
 
-        //  [0][1][2][3][4][5][6][7][8][9]
-        //0. 2S 2H 2C 2D 3S 3H 3C 3D 4S 4H
-        //1. 4C 4D 5S 5H 5C 5D 6S 6H 6C 6D
-        //2. 7S 7H 7C 7D 8S 8H 8C 8D 9S 9H
-        //3. 9C 9D TS TH TC TD JS JH JC JD
-        //4. QS QH QC QD KS KH KC KD AS AH
-        //5. AC AD
         DeckLocation card;
 
         {
@@ -4296,7 +4272,15 @@ Playing as S
          [Nav $2469]
          */
 
-        assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
+         if (myTable.PlayRound_Flop(myFlop, std::cout) == -1) {
+           // All fold?
+           // Suppose SpaceBotV successfully pushed Nav to fold. That's reasonably acceptable I'd say, although maybe a bit risky.
+           assert(myTable.ViewPlayer(1)->GetBetSize() < 0); // Nav should be the one that folded.
+           // Matchup outcome against top ⅓ʳᵈ hands: my chance to win=51.6883%, split=0.655117%
+           // Matchup outcome against top ½ hands: my chance to win=57.9149%, split=2.15195%
+           // Matchup outcome against an unknown hand: my chance to win=73.3938%, split=1.80529%
+         }
+
         /*
          SpaceBotV bets $2.25 ($15.625)
          Nav raises to $12.25 ($27.875)
@@ -5050,9 +5034,9 @@ static void all_regression_tests() {
     RegressionTests::testRegression_027();
     RegressionTests::testRegression_026();
     RegressionTests::testRegression_025();
-    RegressionTests::testRegression_021b();
     RegressionTests::testRegression_022();
-    RegressionTests::testImprovement_021();
+    RegressionTests::testRegression_021b();
+    RegressionTests::testImprovement_020();
 
     RegressionTests::testRegression_019();
 

@@ -40,7 +40,7 @@ class PositionalStrategy : virtual public PlayerStrategy
 {
 public:
     static void printCommunityOutcomes(std::ostream &logF, const CoarseCommunityHistogram &h, const DistrShape &distrPct);
-
+    // ^^^ public because we sometimes call this from unit tests also
 
     protected:
         static void printStateModel(std::ofstream &logF, float64 betSize, StateModel &choicemodel, const Player &me);
