@@ -34,7 +34,7 @@ f(10)=1.01947
 *MinRaise 20
 RAISETO 20
 
-FoldGain()R=0.998285 by waiting 0 hands(=0 folds)	vs play:1.01934   ->assumes $5 forced
+FoldGainᵣ()=0.998285 by waiting 0 hands(=0 folds)	vs play:1.01934   ->assumes $5 forced
  AgainstCall(20)=1.00311 from +$12.8156 @ 0.197736
 AgainstRaise(20)=1.01122 from +$20.1184 @ 0.454814
         Push(20)=1.00491 from +$11.4893 @ 0.347449
@@ -88,7 +88,7 @@ Choice Optimal 365
 Choice Fold 460
 f(365)=1.31048
 CALL 365
-FoldGain()R=0.981481 by waiting 0 hands(=0 folds)	vs play:1.29196   ->assumes $5 forced
+FoldGainᵣ()=0.981481 by waiting 0 hands(=0 folds)	vs play:1.29196   ->assumes $5 forced
  AgainstCall(365)=1.29196 from +$236.488 @ 1
 AgainstRaise(365)=1 from $0 @ 0
         Push(365)=1 from $0 @ 0

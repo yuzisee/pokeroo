@@ -32,7 +32,7 @@ Choice Optimal 2.25
 Choice Fold 2.25
 f(2.25)=0.998954
 CHECK/FOLD
-FoldGain()R=0.999522 by waiting 0 hands(=0 folds)	vs play:0.998476
+FoldGainᵣ()=0.999522 by waiting 0 hands(=0 folds)	vs play:0.998476
  AgainstCall(2.25)=1.00073 from +$1.83715 @ 0.283732
 AgainstRaise(2.25)=0.997751 from -$2.25 @ 0.716268
         Push(2.25)=1 from $0 @ 0

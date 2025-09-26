@@ -542,7 +542,6 @@ HoldemAction HoldemArenaBetting::MakeBet(float64 betSize, struct MinRaiseError *
 				}
                     randRem /= curIndex - myPot;
 
-
 			}
 			else if( PlayerAllIn(withP) > 0 )
 			{   ///If you are going all in with LESS money than to call
@@ -553,13 +552,9 @@ HoldemAction HoldemArenaBetting::MakeBet(float64 betSize, struct MinRaiseError *
                     randRem *= (myBetSum)/(curIndex+2.5);
 			}
 
-
-
-
-        do
+    do
 		{
 		    incrPlayerNumber(*(p[curIndex]));
-
 
             if(readyToFinish())
             {

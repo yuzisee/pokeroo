@@ -32,7 +32,7 @@ Choice Optimal 55
 Choice Fold 55
 f(55)=1.00634
 CALL 55
-FoldGain()R=0.999148 by waiting 0 hands(=0 folds)	vs play:1.00549   ->assumes $10 forced
+FoldGainᵣ()=0.999148 by waiting 0 hands(=0 folds)	vs play:1.00549   ->assumes $10 forced
  AgainstCall(55)=1.00549 from +$8.94816 @ 1
 AgainstRaise(55)=1 from $0 @ 0
         Push(55)=1 from $0 @ 0

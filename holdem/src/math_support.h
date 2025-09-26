@@ -13,6 +13,16 @@
 #include <cmath>
 #include <limits>
 
+// @return ln(a/b) = ln(a) - ln(b)
+constexpr float64 stable_ln_div(float64 a, float64 b) {
+  const float64 delta = (a - b) / b;                     // = r−1
+  if (std::fabs(delta) <= std::sqrt(std::numeric_limits<float64>::epsilon())) {
+    // at roughly √ε at least half the mantissa is retained after subtraction, so the log1p approach is 5~6 decimal digits more accurate
+    return std::log1p(delta);                   // best accuracy
+  } else {
+    return std::log(a) - std::log(b);
+  }
+}
 
 struct ValueAndSlope {
   float64 v;

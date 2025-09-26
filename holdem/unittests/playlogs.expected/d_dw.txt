@@ -26,7 +26,7 @@ Choice Optimal 10
 Choice Fold 50
 f(10)=1.01738
 CALL 10
-FoldGain()R=0.998385 by waiting 0 hands(=0 folds)	vs play:1.01576
+FoldGainᵣ()=0.998385 by waiting 0 hands(=0 folds)	vs play:1.01576
  AgainstCall(10)=1.00577 from $1.00794 @ 0.726998
 AgainstRaise(10)=1.00994 from $1.03689 @ 0.273002
         Push(10)=1 from $1 @ 0
@@ -82,7 +82,7 @@ Choice Optimal 0
 Choice Fold 20
 f(0)=1.01586
 CALL 0
-FoldGain()R=0.988235 by waiting 0 hands(=0 folds)	vs play:1.0041
+FoldGainᵣ()=0.988235 by waiting 0 hands(=0 folds)	vs play:1.0041
  AgainstCall(0)=1.0041 from $1.00995 @ 0.413068
 AgainstRaise(0)=1 from $1 @ 0.586932
         Push(0)=1 from $1 @ 0
@@ -138,7 +138,7 @@ Choice Optimal 0
 Choice Fold 25
 f(0)=1.01914
 CALL 0
-FoldGain()R=0.988235 by waiting 0 hands(=0 folds)	vs play:1.00738
+FoldGainᵣ()=0.988235 by waiting 0 hands(=0 folds)	vs play:1.00738
  AgainstCall(0)=1.00752 from $1.01413 @ 0.534392
 AgainstRaise(0)=0.999856 from $0.99969 @ 0.465608
         Push(0)=1 from $1 @ 0
@@ -195,7 +195,7 @@ Choice Fold 850
 f(485)=-0.746267
 raiseGain: f(850)=-0.746267
 CHECK/FOLD
-FoldGain()R=2.17568 by waiting 65.3333 hands(=34.3287 folds)	vs play:0.429412
+FoldGainᵣ()=2.17568 by waiting 65.3333 hands(=34.3287 folds)	vs play:0.429412
  AgainstCall(485)=1 from $1 @ 0
 AgainstRaise(485)=0.429412 from $0.429412 @ 1
         Push(485)=1 from $1 @ 0

@@ -450,16 +450,16 @@ void PositionalStrategy::printFoldGain(float64 raiseGain, CommunityStatsCdf * e,
     std::pair<float64, float64> foldgainVal_xw = foldGainCalculator.myFoldGainAndWaitlength(foldGainCalculator.suggestMeanOrRank());
     const float64 &foldgainVal = foldgainVal_xw.first; // gain
     const float64 &xw = foldgainVal_xw.second; // waitlength (in total hands dealt)
-    logFile << "FoldGain()";
+    logFile << "FoldGain";
     switch (foldGainCalculator.suggestMeanOrRank()) {
         case MEAN:
-            logFile << "M";
+            logFile << "ₘ";
             break;
         case RANK:
-            logFile << "R";
+            logFile << "ᵣ";
             break;
     }
-    logFile << "=" << foldgainVal;
+    logFile << "()=" << foldgainVal;
 
     float64 numfolds = xw * e->Pr_haveWinPCT_strictlyBetterThan(statprob.core.statmean.pct - EPS_WIN_PCT); // waitlength (in folds)
 

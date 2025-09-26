@@ -32,7 +32,7 @@ Choice Optimal 2.25
 Choice Fold 3
 f(2.25)=1.00071
 CALL 2.25
-FoldGain()R=0.999522 by waiting 0 hands(=0 folds)	vs play:1.00023
+FoldGainᵣ()=0.999522 by waiting 0 hands(=0 folds)	vs play:1.00023
  AgainstCall(2.25)=1.00201 from +$3.32088 @ 0.434094
 AgainstRaise(2.25)=0.998224 from -$2.25 @ 0.565906
         Push(2.25)=1 from $0 @ 0
@@ -88,7 +88,7 @@ Choice Optimal 5
 Choice Fold 10
 f(5)=1.00415
 CALL 5
-FoldGain()R=0.996862 by waiting 0 hands(=0 folds)	vs play:1.00101
+FoldGainᵣ()=0.996862 by waiting 0 hands(=0 folds)	vs play:1.00101
  AgainstCall(5)=1.00251 from +$2.29299 @ 0.785153
 AgainstRaise(5)=0.998502 from -$5 @ 0.214847
         Push(5)=1 from $0 @ 0
@@ -154,7 +154,7 @@ Choice Optimal 12.5
 Choice Fold 711
 f(12.5)=1.02545
 CALL 12.5
-FoldGain()M=0.992978 by waiting 0 hands(=0 folds)	vs play:1.01843
+FoldGainₘ()=0.992978 by waiting 0 hands(=0 folds)	vs play:1.01843
  AgainstCall(12.5)=1.01973 from +$15.1754 @ 0.925721
 AgainstRaise(12.5)=0.998696 from -$12.5 @ 0.0742785
         Push(12.5)=1 from $0 @ 0
@@ -215,7 +215,7 @@ Choice Optimal 49
 Choice Fold 49
 f(49)=0.993131
 CHECK/FOLD
-FoldGain()M=1.02789 by waiting 21.6667 hands(=4.72518 folds)	vs play:1.02102
+FoldGainₘ()=1.02789 by waiting 21.6667 hands(=4.72518 folds)	vs play:1.02102
  AgainstCall(49)=1.04049 from +$39.2288 @ 0.722059
 AgainstRaise(49)=0.98053 from -$49 @ 0.277941
         Push(49)=1 from $0 @ 0
