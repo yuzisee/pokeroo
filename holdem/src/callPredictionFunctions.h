@@ -355,6 +355,50 @@ class FacedOddsAlgb : public virtual ScalarFunctionModel
 template class FacedOddsAlgb<PlayerStrategyPerspective>;
 template class FacedOddsAlgb<void>;
 
+// The key factors that influence "RiskLoss"
+struct RiskLoss {
+  float64 comparisonCutoff;
+  float64 nominalFoldChips;
+  float64 trueFoldChipsEV;
+  float64 d_trueFoldChipsEV_dpot;
+
+  // This is an adjustment being made by `ExpectedCallD::RiskLoss` and if it's negative it means the HypotheticalBet under consideration is taking too much risk
+  constexpr ValueAndSlope riskLoss_adjustment_for_raising_too_much() const {
+    ValueAndSlope riskLossAdjustment_by_pot = {
+      (comparisonCutoff < trueFoldChipsEV) ? ( -trueFoldChipsEV
+			  // If trueFoldChipsEV is *strictly profitable*, then the player who made `faced_bet` could "win" by folding, meaning it's overly risky for this person (doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
+        // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
+			)
+			: ( 0.0 )
+			,
+
+			(nominalFoldChips + comparisonCutoff < trueFoldChipsEV) ? (
+        // If trueFoldChipsEV offers any benefit at all, then the player who made `faced_bet` could benefit more by folding, meaning it's not productive this opponent (the person doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
+        // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
+          -d_trueFoldChipsEV_dpot
+      )
+      : ( 0.0 )
+    };
+
+    return riskLossAdjustment_by_pot;
+  }
+
+  constexpr ValueAndSlope old_broken_riskloss_wrong_sign() const {
+    #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
+      if (trueFoldChipsEV + comparisonCutoff < nominalFoldChips) {
+    #else
+      if (nominalFoldChips + comparisonCutoff < trueFoldChipsEV) {
+    #endif
+        ValueAndSlope riskLoss_by_pot = {
+          trueFoldChipsEV - nominalFoldChips, d_trueFoldChipsEV_dpot
+        };
+        return riskLoss_by_pot;
+      }
+    return ValueAndSlope{0.0, 0.0};
+  }
+}
+;
+
 // How much/likely would they raise or reraise?
 //
 // [!WARNING]

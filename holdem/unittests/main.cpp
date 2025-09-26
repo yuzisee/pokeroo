@@ -947,7 +947,7 @@ namespace UnitTests {
 
     void testUnit_002b() {
         ChipPositionState oppCPS(2474,7.875,0,0, 0.0);
-        // tableinfo->RiskLoss(0, 2474, 4, 6.75, 0, 0) = 0.0
+        // tableinfo->RiskLossHeuristic(0, 2474, 4, 6.75, 0, 0) = 0.0
         HypotheticalBet hypothetical0 = {
           oppCPS, 6.75 + oppCPS.alreadyBet,
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
@@ -955,7 +955,7 @@ namespace UnitTests {
         };
         float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest<void>(0.0, 1.0 /* denom */, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
                                                                      ,hypothetical0, 4, nullptr);
-        // tableinfo->RiskLoss(0, 2474, 4, 11.25, 0, 0) == 0.0
+        // tableinfo->RiskLossHeuristic(0, 2474, 4, 11.25, 0, 0) == 0.0
         HypotheticalBet hypothetical1 = {
           oppCPS,
           11.25 + oppCPS.alreadyBet,
@@ -4956,12 +4956,12 @@ Playing as S
       //      → ExactCallD::dfacedOdds_dpot_GeomDEXF
       //     ...should be switched over to OpponentHandOpportunity via CombinedStatResultsPessemistic
       {
-        const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
+        const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu));
         assert((actual_RiskLoss.v == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
       }
 
       const float64 p4_raiseTo = 2400.0;
-      // const float mydexf = 1.0; // tablestate_tableinfo.RiskLoss(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
+      // const float mydexf = 1.0; // tablestate_tableinfo.RiskLossHeuristic(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
       std::vector<std::pair<float64, ValueAndSlope>> actual_noRaisePct_vs_betSize;
       // Mimic src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
       // for (float64 betSize = 2000.0; betSize < 4001.0; betSize += 100.0) {
@@ -4985,7 +4985,7 @@ Playing as S
         //      (and/or high player count)
         // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
 
-        const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLoss(hypothetical, (&core.callcumu));
+        const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu));
         #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
         assert((std::fabs(actual_RiskLoss.v) <= std::numeric_limits<float64>::epsilon()) && "In the OLD_BROKEN_RISKLOSS_WRONG_SIGN it returns 0.0 when the raiseTo is too extreme (and of course also a positive value if it's a small & safe raiseTo)");
         #else

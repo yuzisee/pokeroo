@@ -252,7 +252,7 @@ const Player * ExpectedCallD::ViewPlayer() const {
 //  + src/stratPosition.h has `DeterredGainStrategy` and `ImproveGainStrategy` which both have varying levels of ExactCallBluffD
 //  + src/stratPosition.cpp also creates StateModel objects in all three of ImproveGainStrategy::MakeBet & DeterredGainStrategy::MakeBet & PureGainStrategy::MakeBet
 //                          so do they all eventually call into RiskLoss?
-ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * foldwait_length_distr) const
+struct ValueAndSlope ExpectedCallD::RiskLossHeuristic(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * foldwait_length_distr) const
 {
     const float64 raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
@@ -301,50 +301,22 @@ ValueAndSlope ExpectedCallD::RiskLoss(const struct HypotheticalBet & hypothetica
     // ^^^ Given the hand strength, how much would someone gain by folding against a bet of `raiseTo`?
 
     // INVARIANT: If `FG.f( raiseTo )` (i.e. "FoldGain") is positive, it means it is profitable to fold against `raiseTo`
-      const float64 d_AmountSacrifice_d_pot = 1.0 / static_cast<float64>(handsIn()-1);
 
-    const float64 riskLoss =
-			#ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
-			(trueFoldChipsEV + comparisonCutoff < nominalFoldChips) ? ( trueFoldChipsEV - nominalFoldChips
-      // (nominalFoldChips comparisonCutoff < trueFoldChipsEV) ? ( trueFoldChipsEV - nominalFoldChips
-			#else
-			(comparisonCutoff < trueFoldChipsEV) ? ( -trueFoldChipsEV
-			  // If trueFoldChipsEV is *strictly profitable*, then the player who made `faced_bet` could "win" by folding, meaning it's overly risky for this person (doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
-        // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
-      #endif
-			)
-			:
-			(
-			  0.0
-			)
-		;
+  const float64 d_AmountSacrifice_d_pot = 1.0 / static_cast<float64>(handsIn()-1);
 
-		const float64 dRiskLoss =
-		  #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
-				(trueFoldChipsEV + comparisonCutoff < nominalFoldChips) ? (
-				  FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot + d_AmountSacrifice_d_pot
-			#else
-      (nominalFoldChips + comparisonCutoff < trueFoldChipsEV) ? (
-       // If trueFoldChipsEV offers any benefit at all, then the player who made `faced_bet` could benefit more by folding, meaning it's not productive this opponent (the person doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
-       // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
-
-       // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
-         // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
-         //                                                                             ^^^ see `setAmountSacrificeVoluntary`
-         //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
-         //-(FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
-         -FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot - d_AmountSacrifice_d_pot
-         #endif
-         // In this case, `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂facedBet
-         // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
-      )
-      :
-      (
-        0.0
-      )
-    ;
-
-	return (ValueAndSlope { riskLoss, dRiskLoss });
+	return (RiskLoss{
+	comparisonCutoff
+    nominalFoldChips,
+    // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
+    trueFoldChipsEV,
+    // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
+    //                                                                             ^^^ see `setAmountSacrificeVoluntary`
+    //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
+    //-(FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
+    FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot + d_AmountSacrifice_d_pot }),
+    // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
+    // In this case, doesn't `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂facedBet though?
+	}).old_broken_riskloss_wrong_sign();
 
 }
 
