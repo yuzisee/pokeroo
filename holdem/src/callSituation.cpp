@@ -305,7 +305,7 @@ struct ValueAndSlope ExpectedCallD::RiskLossHeuristic(const struct HypotheticalB
   const float64 d_AmountSacrifice_d_pot = 1.0 / static_cast<float64>(handsIn()-1);
 
 	return (RiskLoss{
-	comparisonCutoff
+	  comparisonCutoff,
     nominalFoldChips,
     // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
     trueFoldChipsEV,
@@ -313,7 +313,7 @@ struct ValueAndSlope ExpectedCallD::RiskLossHeuristic(const struct HypotheticalB
     //                                                                             ^^^ see `setAmountSacrificeVoluntary`
     //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
     //-(FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
-    FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot + d_AmountSacrifice_d_pot }),
+    FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot + d_AmountSacrifice_d_pot
     // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
     // In this case, doesn't `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂facedBet though?
 	}).old_broken_riskloss_wrong_sign();
