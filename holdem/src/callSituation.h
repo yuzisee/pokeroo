@@ -26,15 +26,6 @@
 #include "inferentials.h"
 #include "callPredictionFunctions.h"
 
-#define OLD_BROKEN_RISKLOSS_WRONG_SIGN
-// Current status:
-//  * `#define OLD_BROKEN_RISKLOSS_WRONG_SIGN` fails testRegression_022 when switching to the `(nominalFoldChips + std::numeric_limits<float64>::epsilon() < trueFoldChipsEV)` condition
-//     ↑ According to the test, h22 is supposed to bet on the Flop. But when `trueFoldChipsEV` is too close to `nominalFoldChips` it will check instead?
-//  * `#undef OLD_BROKEN_RISKLOSS_WRONG_SIGN` fails testRegression_018
-//     ↑ ActionBot18 really shouldn't check down the river with trip Aces when there aren't any flushes or straights to be afraid of. Do they really think someone with pockets hit a full house?
-
-//#define REFINED_FACED_ODDS_RAISE_GEOM
-
 
 // ANTI_PRESSURE_FOLDGAIN enables the use of ExactCallD, essentially
 #define ANTI_PRESSURE_FOLDGAIN
@@ -87,7 +78,7 @@ public:
      * Since making a small bet does not allow an average opponent to profit via his/her opportunity cost of folding, your ``RiskLoss`` remains zero as long as your bet is suffciently small compared to an average opponent's opportunity.
      * The value returned by the RiskLoss function is used as a deterrent for raising too high.
      */
-    ValueAndSlope RiskLoss(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * useMean) const;
+    ValueAndSlope RiskLossHeuristic(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * useMean) const;
     virtual float64 PushGain() const;
 
     virtual uint8 OppRaiseOpportunities(int8 oppID) const;

@@ -666,11 +666,11 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                       {
 
                          if (prev_w_r.assert_not_nan()) {
-                          const ValueAndSlope riskLoss = tableinfo->RiskLoss(oppRaise, &fCore.callcumu);
+                          const ValueAndSlope riskLoss = tableinfo->RiskLossHeuristic(oppRaise, &fCore.callcumu);
 
                           #ifdef DEBUGASSERT
                           if (std::isnan(riskLoss.D_v)) {
-                            std::cerr << "dRiskLoss_pot failed to initialize, please unit test tableinfo->RiskLoss("
+                            std::cerr << "dRiskLoss_pot failed to initialize, please unit test tableinfo->RiskLossHeuristic("
                               << oppCPS.alreadyBet << " , " << oppCPS.bankroll << " , " << opponents << " , " << oppRaise.hypotheticalRaiseAgainst << " , … , &dRiskLoss_pot)" << std::endl;
                             exit(1);
                           }
