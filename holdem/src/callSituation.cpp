@@ -20,8 +20,6 @@
 
 #include "callSituation.h"
 #include "inferentials.h"
-#include "math_support.h"
-
 
 
 ExpectedCallD::~ExpectedCallD()
