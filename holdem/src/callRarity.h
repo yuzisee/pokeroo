@@ -46,13 +46,13 @@ class StatResultProbabilities
 private:
 ///Equations, Logging, etc.
 
-    static void logfileAppendPercentage(std::ostream &logFile, const char * label, const float64 vpct, const bool newLine)
+    static void logfileAppendPercentage(std::ostream &logFile, const char * label, const float64 vpct, const bool bMultiline)
     {
-      if (newLine) { logFile << "("; }
+      if (bMultiline) { logFile << "("; }
       logFile << label;
-      if (newLine) { logFile << ") "; }
+      if (bMultiline) { logFile << ") "; }
       logFile << vpct * 100 << "%";
-      if (newLine) {
+      if (bMultiline) {
         logFile << std::endl;
       }
     }
@@ -60,14 +60,14 @@ private:
 //protected:
 // TODO(from jdhuang)
 public:
-static void logfileAppendPercentages(std::ostream &logFile, const bool bWrite, const char * label, const char * label_w, const char * label_s, const char * label_l, const StatResult vpcts, const bool newLine)
+static void logfileAppendPercentages(std::ostream &logFile, const bool bWrite, const char * label, const char * label_w, const char * label_s, const char * label_l, const StatResult vpcts, const bool bMultiline)
 {
     if(bWrite)
     {
-        if( label ) logfileAppendPercentage(logFile, label,vpcts.pct, newLine);
-        if( label_w ) logfileAppendPercentage(logFile, label_w,vpcts.wins, newLine);
-        if( label_s ) logfileAppendPercentage(logFile, label_s,vpcts.splits, newLine);
-        if( label_l ) logfileAppendPercentage(logFile, label_l,vpcts.loss, newLine);
+        if( label ) logfileAppendPercentage(logFile, label,vpcts.pct, bMultiline);
+        if( label_w ) logfileAppendPercentage(logFile, label_w,vpcts.wins, bMultiline);
+        if( label_s ) logfileAppendPercentage(logFile, label_s,vpcts.splits, bMultiline);
+        if( label_l ) logfileAppendPercentage(logFile, label_l,vpcts.loss, bMultiline);
     }
 }
 

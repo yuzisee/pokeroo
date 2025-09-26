@@ -1068,7 +1068,7 @@ namespace RegressionTests {
           this->bGamble = new_bGamble;
         }
 
-        void extra_logline(std::string extra_msg, int extra_num) {
+        void extra_logline(const std::string &extra_msg, int extra_num) {
           this->logFile << extra_msg << extra_num;
         }
     }
