@@ -42,6 +42,7 @@
 #include "inferentials.h"
 #include "portability.h"
 #include <cmath>
+#include <limits>
 
 #define SACRIFICE_COMMITTED
 
@@ -370,6 +371,10 @@ struct RiskLoss {
   float64 trueFoldChipsEV;
   float64 d_trueFoldChipsEV_dpot;
 
+  constexpr bool any_nan() const {
+    return std::isnan(comparisonCutoff) || std::isnan(nominalFoldChips) || std::isnan(trueFoldChipsEV) || std::isnan(d_trueFoldChipsEV_dpot);
+  }
+
   // This is an adjustment being made by `ExpectedCallD::RiskLoss` and if it's negative it means the HypotheticalBet under consideration is taking too much risk
   constexpr ValueAndSlope riskLoss_adjustment_for_raising_too_much() const {
     ValueAndSlope riskLossAdjustment_by_pot = {
@@ -400,6 +405,7 @@ struct RiskLoss {
         ValueAndSlope riskLoss_by_pot = {
           trueFoldChipsEV - nominalFoldChips, d_trueFoldChipsEV_dpot
         };
+
         return riskLoss_by_pot;
       }
     return ValueAndSlope{0.0, 0.0};
@@ -424,17 +430,21 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     float64 raiseTo;
     float64 fold_bet; // if I "fold" instead of `raiseTo`, what bet can we get back to just by waiting?
     float64 faced_bet; // if I "call", I increase my bet **to** `faced_bet` (i.e. increase my bet **by** `faced_bet - fold_bet`)
-    float64 riskLoss; // This is an adjustment being made by `ExpectedCallD::RiskLoss` and if it's negative it means the HypotheticalBet under consideration is taking too much risk
+    struct RiskLoss riskLoss;
 	  bool bRaiseWouldBeCalled; // If this is `true`, at least *one* person will cause the raise (you won't get an all-fold situation)
     bool bCheckPossible;
 
     FoldGainModel<T, OppositionPerspective> FG;
-    FacedOddsRaiseGeom(float64 myQuantum) : ScalarFunctionModel(SEARCH_SPACE_PROBABILITY_QUANTUM), lastW(-1), FG(myQuantum/2) {}
+    FacedOddsRaiseGeom(float64 myQuantum) : ScalarFunctionModel(SEARCH_SPACE_PROBABILITY_QUANTUM), lastW(-1),
+      riskLoss(RiskLoss{std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()}),
+      FG(myQuantum/2)
+    {}
+
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 
     // This populates everything EXCEPT for `this->FG.waitLength`
-    static void configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, float64 currentRiskLoss);
+    static void configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, const struct RiskLoss &currentRiskLoss);
 }
 ;
 

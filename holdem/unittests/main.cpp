@@ -946,6 +946,10 @@ namespace UnitTests {
     }
 
     void testUnit_002b() {
+        struct RiskLoss riskLoss0 = {
+          0.125, 0.0, 0.0, 0.0
+        };
+
         ChipPositionState oppCPS(2474,7.875,0,0, 0.0);
         // tableinfo->RiskLossHeuristic(0, 2474, 4, 6.75, 0, 0) = 0.0
         HypotheticalBet hypothetical0 = {
@@ -953,7 +957,7 @@ namespace UnitTests {
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
           4.5, true
         };
-        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest<void>(0.0, 1.0 /* denom */, 0.0 /* RiskLoss */ , 0.31640625 /* avgBlind */
+        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest<void>(0.0, 1.0 /* denom */, riskLoss0 , 0.31640625 /* avgBlind */
                                                                      ,hypothetical0, 4, nullptr);
         // tableinfo->RiskLossHeuristic(0, 2474, 4, 11.25, 0, 0) == 0.0
         HypotheticalBet hypothetical1 = {
@@ -962,7 +966,7 @@ namespace UnitTests {
           std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
           4.5, true
         };
-        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest<void>(w_r_rank0, 1.0, 0.0 ,  0.31640625
+        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest<void>(w_r_rank0, 1.0, riskLoss0 ,  0.31640625
                                                                      ,hypothetical1, 4, nullptr);
 
         // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
@@ -4956,8 +4960,8 @@ Playing as S
       //      → ExactCallD::dfacedOdds_dpot_GeomDEXF
       //     ...should be switched over to OpponentHandOpportunity via CombinedStatResultsPessemistic
       {
-        const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu));
-        assert((actual_RiskLoss.v == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
+        const struct RiskLoss actual_RiskLoss = tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu));
+        assert((actual_RiskLoss.old_broken_riskloss_wrong_sign().v == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
       }
 
       const float64 p4_raiseTo = 2400.0;
@@ -4985,20 +4989,20 @@ Playing as S
         //      (and/or high player count)
         // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
 
-        const ValueAndSlope actual_RiskLoss = tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu));
+        const struct RiskLoss actual_RiskLoss = tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu));
         #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
-        assert((std::fabs(actual_RiskLoss.v) <= std::numeric_limits<float64>::epsilon()) && "In the OLD_BROKEN_RISKLOSS_WRONG_SIGN it returns 0.0 when the raiseTo is too extreme (and of course also a positive value if it's a small & safe raiseTo)");
+        assert((std::fabs(actual_RiskLoss.old_broken_riskloss_wrong_sign().v) <= std::numeric_limits<float64>::epsilon()) && "In the OLD_BROKEN_RISKLOSS_WRONG_SIGN it returns 0.0 when the raiseTo is too extreme (and of course also a positive value if it's a small & safe raiseTo)");
         #else
-        assert((std::fabs(actual_RiskLoss.v) / 6.0 > std::numeric_limits<float64>::epsilon()) && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
+        assert((std::fabs(actual_RiskLoss.riskLoss_adjustment_for_raising_too_much().v) / 6.0 > std::numeric_limits<float64>::epsilon()) && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
         #endif
 
         FacedOddsRaiseGeom<void> actual(myTable.GetChipDenom());
-        FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss.v);
+        FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss);
         actual.FG.waitLength.load(cps, avgBlind);
         actual.FG.waitLength.opponents = tablestate_tableinfo.handsToShowdownAgainst();
         actual.FG.waitLength.setMeanConv(nullptr);
         const float64 noRaisePct = actual.FindZero(0.0, 1.0, false);
-        const float64 d_noRaisePct_dbetsize = ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(tablestate_tableinfo, hypothetical, noRaisePct, actual_RiskLoss.D_v);
+        const float64 d_noRaisePct_dbetsize = ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(tablestate_tableinfo, hypothetical, noRaisePct);
 
         actual_noRaisePct_vs_betSize.push_back( std::pair<float64, ValueAndSlope>( p3_betSize , ValueAndSlope {
           noRaisePct, d_noRaisePct_dbetsize

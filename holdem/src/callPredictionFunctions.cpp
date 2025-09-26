@@ -756,7 +756,7 @@ template<typename T> void FacedOddsAlgb<T>::query( const float64 w )
 template<typename T> float64 FacedOddsAlgb<T>::f( const float64 w ) { query(w);  return lastF; }
 template<typename T> float64 FacedOddsAlgb<T>::fd( const float64 w, const float64 excessU ) { query(w);  return lastFD; }
 
-template<typename T> void FacedOddsRaiseGeom<T>::configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, float64 currentRiskLoss) {
+template<typename T> void FacedOddsRaiseGeom<T>::configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, const struct RiskLoss &currentRiskLoss) {
   const struct ChipPositionState &cps = hypotheticalRaise.bettorSituation;
 
   a.callPot = cps.pot;
@@ -860,7 +860,6 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
   const float64 callIncrBase = callWin / (FG.waitLength.bankroll - this->fold_bet);
   const float64 callGain = std::pow(callIncrLoss, 1 - fw) * std::pow(callIncrBase,fw);
 
-
 	// TODO(from joseph): Idea → if it's the _final_ betting round, we can still use FoldWaitGainModel, right?
 	const float64 applyRiskLoss = (bCheckPossible || bRaiseWouldBeCalled) ? riskLoss : 0.0;
 	// And then you should still set bUseCall accordingly, in that case
@@ -868,7 +867,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 #else
   const float64 callIncrLoss = 1 - this->fold_bet / FG.waitLength.bankroll;
   const float64 callIncrBase = (FG.waitLength.bankroll + callPot)/(FG.waitLength.bankroll - this->fold_bet); // = 1 + (pot + fold_bet) / (bankroll - fold_bet);
-  const float64 applyRiskLoss =  (bCheckPossible) ? 0 : riskLoss;
+  const float64 applyRiskLoss =  (bCheckPossible) ? 0 : riskLoss.old_broken_riskloss_wrong_sign().v;
 
 	const float64 callGain =
 	  bRaiseWouldBeCalled ? (
@@ -877,6 +876,10 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 
 #endif
 
+  //   ▸ when bRaiseWouldBeCalled, we compare `callGain` vs `raiseGain` as usual (i.e. only raise if it helps our Expected Value)
+  //                                  OR is this where we apply RiskLoss normally? (Since even if we know the raise _won't be folded against, it's still possible that folding could strengthen the showdown for the folder and thus it's still the right response to our raise)
+  //   ▸ when !bRaiseWouldBeCalled... TODO(from joseph): do we assume you'll fold and we win the pot? (But then bots will never bet if they think their opponents know that bot will fold. Perhaps scale knowledge down to the river based on the number of betting rounds remaining?)
+  //                                  OR is this where we apply RiskLoss in reverse?
   bool bUseCall = ( callGain > excess_by_w.v );
   const ValueAndSlope nonRaiseGain = (bUseCall ?
 	  (   //calling is more profitable than folding

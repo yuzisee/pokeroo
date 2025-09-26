@@ -252,7 +252,7 @@ const Player * ExpectedCallD::ViewPlayer() const {
 //  + src/stratPosition.h has `DeterredGainStrategy` and `ImproveGainStrategy` which both have varying levels of ExactCallBluffD
 //  + src/stratPosition.cpp also creates StateModel objects in all three of ImproveGainStrategy::MakeBet & DeterredGainStrategy::MakeBet & PureGainStrategy::MakeBet
 //                          so do they all eventually call into RiskLoss?
-struct ValueAndSlope ExpectedCallD::RiskLossHeuristic(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * foldwait_length_distr) const
+struct RiskLoss ExpectedCallD::RiskLossHeuristic(const struct HypotheticalBet & hypotheticalRaise, CommunityStatsCdf * foldwait_length_distr) const
 {
     const float64 raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     const int8 N = handsDealt(); // This is the number of people they would have to beat in order to ultimately come back and win the hand on the time they choose to catch you.
@@ -306,17 +306,17 @@ struct ValueAndSlope ExpectedCallD::RiskLossHeuristic(const struct HypotheticalB
 
 	return (RiskLoss{
 	  comparisonCutoff,
-    nominalFoldChips,
+      nominalFoldChips,
     // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
-    trueFoldChipsEV,
+      trueFoldChipsEV,
     // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
     //                                                                             ^^^ see `setAmountSacrificeVoluntary`
     //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
     //-(FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
-    FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot + d_AmountSacrifice_d_pot
+      FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot + d_AmountSacrifice_d_pot
     // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
     // In this case, doesn't `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂facedBet though?
-	}).old_broken_riskloss_wrong_sign();
+	});
 
 }
 
