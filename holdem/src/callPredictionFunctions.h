@@ -405,6 +405,7 @@ struct RiskLoss {
         ValueAndSlope riskLoss_by_pot = {
           trueFoldChipsEV - nominalFoldChips, d_trueFoldChipsEV_dpot
         };
+
         return riskLoss_by_pot;
       }
     return ValueAndSlope{0.0, 0.0};
