@@ -375,17 +375,26 @@ struct RiskLoss {
     return std::isnan(comparisonCutoff) || std::isnan(nominalFoldChips) || std::isnan(trueFoldChipsEV) || std::isnan(d_trueFoldChipsEV_dpot);
   }
 
+  // When `trueFoldChipsEV` is sufficiently low, there is no benefit to folding so they might as well make their stand
+  constexpr bool b_raise_will_be_called() const {
+  // We move comparisonCutoff to the nominalFoldChips side because
+  //   `trueFoldChipsEV + comparisonCutoff < nominalFoldChips`
+  // will never happen, considering FoldGain would simply set `FG.n == 0` in that case
+    return trueFoldChipsEV <= nominalFoldChips + comparisonCutoff;
+  }
+
+  // If trueFoldChipsEV is *strictly profitable*, then the player who made `faced_bet` could "win" by folding, meaning it's overly risky for this person (doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
+  constexpr bool b_raise_is_too_dangerous() const {
+    return comparisonCutoff < trueFoldChipsEV;
+  }
+
   // This is an adjustment being made by `ExpectedCallD::RiskLoss` and if it's negative it means the HypotheticalBet under consideration is taking too much risk
   constexpr ValueAndSlope riskLoss_adjustment_for_raising_too_much() const {
     ValueAndSlope riskLossAdjustment_by_pot = {
-      (comparisonCutoff < trueFoldChipsEV) ? ( -trueFoldChipsEV
-			  // If trueFoldChipsEV is *strictly profitable*, then the player who made `faced_bet` could "win" by folding, meaning it's overly risky for this person (doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
-        // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
-			)
-			: ( 0.0 )
-			,
+      // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
+      b_raise_is_too_dangerous() ? ( -trueFoldChipsEV ) : ( 0.0 ) ,
 
-			(nominalFoldChips + comparisonCutoff < trueFoldChipsEV) ? (
+			(!b_raise_will_be_called()) ? (
         // If trueFoldChipsEV offers any benefit at all, then the player who made `faced_bet` could benefit more by folding, meaning it's not productive this opponent (the person doing HypotheticalBet right now) to raise as high as `hypotheticalRaise.hypotheticalRaiseTo`
         // As such, we need to penalize this `hypotheticalRaise.hypotheticalRaiseTo` by returning a riskLoss quantity that represents this surplus
           -d_trueFoldChipsEV_dpot
@@ -398,9 +407,9 @@ struct RiskLoss {
 
   constexpr ValueAndSlope old_broken_riskloss_wrong_sign() const {
     #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
-      if (trueFoldChipsEV + comparisonCutoff < nominalFoldChips) {
+      if (b_raise_will_be_called()) {
     #else
-      if (nominalFoldChips + comparisonCutoff < trueFoldChipsEV) {
+      if (!b_raise_will_be_called()) {
     #endif
         ValueAndSlope riskLoss_by_pot = {
           trueFoldChipsEV - nominalFoldChips, d_trueFoldChipsEV_dpot

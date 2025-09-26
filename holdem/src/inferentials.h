@@ -323,7 +323,7 @@ public:
 	virtual StatResult bestHandToHave() const;
 	virtual StatResult worstHandToHave() const;
 
-    // Here, X is the fraction of hands we care about. If X === 0.0, this returns oddsAgainstBestHand(). If X === 1.0, this means just include all hands and effectively returns statmean.
+    // Here, X is the fraction of hands we care about. If X === 0.0, this returns bestHandToHave(). If X === 1.0, this means just include all hands and effectively returns statmean.
     // Returns both the StatResult at X, as well as d_{StatResult.pct}_dX
     // The two return values are returned as an std::pair
 	virtual std::pair<StatResult, float64> bestXHands(float64 X) const;

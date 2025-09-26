@@ -5,20 +5,20 @@
 
 void StatResultProbabilities::logfileAppendStatResultProbabilities(struct PositionalStrategyLogOptions const &logOptions, std::ostream &logFile) const
 {
-    logfileAppendPercentages(logFile, logOptions.bLogMean,"M","M.w","M.s","M.l",core.statmean);
+    logfileAppendPercentages(logFile, logOptions.bLogMean,"M","M.w","M.s","M.l",core.statmean, true);
 
 
-    logfileAppendPercentages(logFile, logOptions.bLogRanking,"Better All-in",0,"Re.s",0,statrelation);
-    logfileAppendPercentages(logFile, logOptions.bLogRanking,"Better Mean Rank",0,"Ra.s",0,statranking);
+    logfileAppendPercentages(logFile, logOptions.bLogRanking,"Better All-in",0,"Re.s",0,statrelation, true);
+    logfileAppendPercentages(logFile, logOptions.bLogRanking,"Better Mean Rank",0,"Ra.s",0,statranking, true);
 
-    logfileAppendPercentages(logFile, logOptions.bLogHybrid,"Geomean Win&Rank",0,"H.s",0,hybridMagnified);
+    logfileAppendPercentages(logFile, logOptions.bLogHybrid,"Geomean Win&Rank",0,"H.s",0,hybridMagnified, true);
 }
 
 void StatResultProbabilities::logfileAppendStatResultProbability_statworse(std::ostream &logFile, const StatResult & p, playernumber_t handsCompeting) const
 {
     logFile << "Worst.handsCompeting = " << (int)handsCompeting << std::endl;
-    logfileAppendPercentage(logFile, "Worst", p.pct);
-    logfileAppendPercentages(logFile, true,0,"P.w","P.s","P.l",p);
+    logfileAppendPercentage(logFile, "Worst", p.pct, true);
+    logfileAppendPercentages(logFile, true,0,"P.w","P.s","P.l",p, true);
 }
 
 void StatResultProbabilities::Process_FoldCallMean()
