@@ -759,8 +759,23 @@ template<typename T> float64 FacedOddsAlgb<T>::fd( const float64 w, const float6
 template<typename T> void FacedOddsRaiseGeom<T>::configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, const struct RiskLoss &currentRiskLoss) {
   const struct ChipPositionState &cps = hypotheticalRaise.bettorSituation;
 
+  // const float64 possibleOpponentsAgainstRaise = a.FG.waitLength.opponents - (hypotheticalRaise.bWillGetCalled ? 0.0 : 1.0);
+  // const float64 effectiveOneOpponent = possibleOpponentsAgainstRaise / a.FG.waitLength.opponents;
+
+  // Your current bankroll (i.e. the maximum that `raiseTo - fold_bet` could be) is:
+  //   `FG.waitLength.bankroll - this->fold_bet`
+  // Bankroll after raising:
+  //   `FG.waitLength.bankroll - raiseTo`
+  // If you win the hand in the showdown by raising, you'll get everything in the pot:
+  //  + You get back all the chips you put in for your raise(s): `raiseTo`
+  //  + You also get back everyone else's committed chips: prevRoundsPot + thisRoundFoldedPot + std::min(raiseTo, opponent_bankroll)
+  //  = FG.waitLength.bankroll + prevRoundsPot + thisRoundFoldedPot + std::min(raiseTo, opponent_bankroll)
+  //  = FG.waitLength.bankroll + pot + (raiseTo - faced_bet)
+  // If you lose the hand by raising, you'll end up with
+  //   `FG.waitLength.bankroll - raiseTo`
+  a.raisedPot = cps.pot + hypotheticalRaise.hypotheticalRaiseTo - hypotheticalRaise.faced_bet();
+
   a.callPot = cps.pot;
-  a.raisedPot = cps.pot + (hypotheticalRaise.bWillGetCalled ? (hypotheticalRaise.betIncrease()) : 0);
     a.raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     a.fold_bet = hypotheticalRaise.fold_bet();
     a.faced_bet = hypotheticalRaise.faced_bet();
@@ -796,6 +811,16 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 //Fraction scale
     const struct ShowdownOpponents showdown_opponents = {
       #ifdef REFINED_FACED_ODDS_RAISE_GEOM
+        // Suppose there are 10 opponents.
+        // Ideally we could use something like OpponentHandOpportunity to estimate how many poeple will call this Hypothetical raise, but for now we can approximate as follows:
+        //   Let's say the best of 11 players is me, and I win
+        //   Let's say the 2nd of 11 players will call my raise 95% of the time
+        //   Let's say the 3rd of 11 players will call my raise 85% of the time
+        //   Let's say the 9th of 11 players will call my raise 25% of the time
+        //   Let's say the 10th of 11 players will call my raise 15% of the time
+        //   Let's say the 11th of 11 players will call my raise 5% of the time
+        //   etc.
+        // You'll get 50% E[call] on average
         FG.waitLength.opponents - (bRaiseWouldBeCalled ? 0 : 0.5), // TODO(from joseph): 0.5 is a Schrodinger's player, maybe fold vs. maybe not fold. If we know this hypothetical raise will push one player out FOR SURE !00% guaranteed, we could deduct a full 1.0 instead of 0.5 (but is that too obnoxious?) Let's go with 0.5 for now.
       #else
         FG.waitLength.opponents,
@@ -817,32 +842,8 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
     const float64 dU_dw = U * dfw*std::log1p((showdown_opponents.raisedPot+raiseTo)/(FG.waitLength.bankroll-raiseTo));
     const ValueAndSlope U_by_w = {U, dU_dw};
 
-    ValueAndSlope excess_by_w = {1.0, 0.0};
+  // TODO(from joseph): Don't `U` and `callGain` both need to consider callPot & raisedPot will be larger when the number of showdown_opponents is greater?
 
-    if( !bCheckPossible )
-    {
-      // Nominally, FoldGain is
-      //     betSize * "pr{W} after n_hands_to_wait" - betSize "Pr{L} after n_hands_to_wait"         - n_hands_to_wait * betSacrifice
-      //     betSize * "pr{W} after n_hands_to_wait" - betSize (1.0 - "Pr{W} after n_hands_to_wait") - n_hands_to_wait * betSacrifice
-      // 2 * betSize * "pr{W} after n_hands_to_wait"             - n_hands_to_wait * betSacrifice - betSize
-      // 2 * betSize * (1.0 - 1.0 / n_hands_to_wait)^N_opponents - n_hands_to_wait * betSacrifice - betSize
-      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      //       ↑ seems like `F_a` i.e. `lastFA` is the
-      //              derivative of this section?
-      //                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      //                                                           ↑ seems like `F_c` i.e. `lastFC`
-      //                                                          is the derivative of this section?
-      //
-      // So, is `lastFB` a.k.a. `F_b` the derivative of the last `-betSize` on the end, there?
-      //
-      // Furthermore, `ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF` has a `float64 A;` and a `float64 C;`  so are they related to these in some way?
-        excess_by_w.v += FG.f(fold_bet) / FG.waitLength.bankroll;
-        excess_by_w.D_v += FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
-    }
-
-  //We need to compare raising to the opportunity cost of calling/folding
-	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
-#ifdef REFINED_FACED_ODDS_RAISE_GEOM
   // If we were to _call_ instead of raising to `raiseTo`, what would our Geom gain be?
   // Your current bankroll (i.e. the maximum that `raiseTo - fold_bet` could be) is:
   //   `FG.waitLength.bankroll - this->fold_bet`
@@ -858,29 +859,52 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
   const float64 callLoss = (FG.waitLength.bankroll - this->faced_bet);
   const float64 callIncrLoss = callLoss / (FG.waitLength.bankroll - this->fold_bet);
   const float64 callIncrBase = callWin / (FG.waitLength.bankroll - this->fold_bet);
+
   const float64 callGain = std::pow(callIncrLoss, 1 - fw) * std::pow(callIncrBase,fw);
 
-	// TODO(from joseph): Idea → if it's the _final_ betting round, we can still use FoldWaitGainModel, right?
-	const float64 applyRiskLoss = (bCheckPossible || bRaiseWouldBeCalled) ? riskLoss : 0.0;
-	// And then you should still set bUseCall accordingly, in that case
+  #if defined(DEBUG_TRACE_P_RAISE) && defined(DEBUG_TRACE_ZERO)
+    if (traceOut_pRaise != nullptr) {
+      *this->traceOut_pRaise << "\t\t\t\t▾ compare points of reference: U = " << (1 + showdown_opponents.raisedPot/FG.waitLength.bankroll) << "^fw ⋅ " << (1 - raiseTo/FG.waitLength.bankroll) << "^(1-fw) on a winnable $" << showdown_opponents.raisedPot << std::endl;
+      *this->traceOut_pRaise << "\t\t\t\t                        callGain = " << callIncrBase << "^fw ⋅ " << callIncrLoss << "^(1-fw) on a winnable $" << (callPot) << std::endl;
+      // *this->traceOut_pRaise << "\t\t\t\t (DEBUG)  FG.waitLength.bankroll=" << FG.waitLength.bankroll << "    this->fold_bet=" << this->fold_bet << "   callIncrBase=" << callIncrBase << std::endl;
+    }
+  #endif
 
-#else
-  const float64 callIncrLoss = 1 - this->fold_bet / FG.waitLength.bankroll;
-  const float64 callIncrBase = (FG.waitLength.bankroll + callPot)/(FG.waitLength.bankroll - this->fold_bet); // = 1 + (pot + fold_bet) / (bankroll - fold_bet);
-  const float64 applyRiskLoss =  (bCheckPossible) ? 0 : riskLoss.old_broken_riskloss_wrong_sign().v;
+  ValueAndSlope excess_by_w = {1.0, 0.0};
 
-	const float64 callGain =
-	  bRaiseWouldBeCalled ? (
-			callIncrLoss * std::pow(callIncrBase,fw)
-		) : 0;
+    // Nominally, FoldGain is
+    //     betSize * "pr{W} after n_hands_to_wait" - betSize "Pr{L} after n_hands_to_wait"         - n_hands_to_wait * betSacrifice
+    //     betSize * "pr{W} after n_hands_to_wait" - betSize (1.0 - "Pr{W} after n_hands_to_wait") - n_hands_to_wait * betSacrifice
+    // 2 * betSize * "pr{W} after n_hands_to_wait"             - n_hands_to_wait * betSacrifice - betSize
+    // 2 * betSize * (1.0 - 1.0 / n_hands_to_wait)^N_opponents - n_hands_to_wait * betSacrifice - betSize
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    //       ↑ seems like `F_a` i.e. `lastFA` is the
+    //              derivative of this section?
+    //                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    //                                                           ↑ seems like `F_c` i.e. `lastFC`
+    //                                                          is the derivative of this section?
+    //
+    // So, is `lastFB` a.k.a. `F_b` the derivative of the last `-betSize` on the end, there?
+    //
+    // Furthermore, `ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF` has a `float64 A;` and a `float64 C;`  so are they related to these in some way?
+      excess_by_w.v += FG.f(fold_bet) / FG.waitLength.bankroll;
+      excess_by_w.D_v += FG.waitLength.d_dw(FG.n)/FG.waitLength.bankroll;
 
-#endif
+  bool bUseCall;
+  if( bCheckPossible ) {
+    bUseCall = true;
+    // When bCheckPossible your options are: check vs. raise
+    //   ▸ there ought still to be `callGain` but simply with `this->faced_bet == this->fold_bet`
+    // When !bCheckPossible your options are: fold vs. call vs. raise
+    //   ▸ we know foldgain (it's calculated as `excess_by_w` above)
+    //   ▸ we know callgain (it's calculated above)
+  } else {
+      bUseCall = ( callGain > excess_by_w.v );
+  }
 
-  //   ▸ when bRaiseWouldBeCalled, we compare `callGain` vs `raiseGain` as usual (i.e. only raise if it helps our Expected Value)
-  //                                  OR is this where we apply RiskLoss normally? (Since even if we know the raise _won't be folded against, it's still possible that folding could strengthen the showdown for the folder and thus it's still the right response to our raise)
-  //   ▸ when !bRaiseWouldBeCalled... TODO(from joseph): do we assume you'll fold and we win the pot? (But then bots will never bet if they think their opponents know that bot will fold. Perhaps scale knowledge down to the river based on the number of betting rounds remaining?)
-  //                                  OR is this where we apply RiskLoss in reverse?
-  bool bUseCall = ( callGain > excess_by_w.v );
+
+  //We need to compare raising to the opportunity cost of calling/folding
+	//Depending on whether call or fold is more profitable, we choose the most significant opportunity cost
   const ValueAndSlope nonRaiseGain = (bUseCall ?
 	  (   //calling is more profitable than folding
 	  	ValueAndSlope {
@@ -899,12 +923,8 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 				//         dy/dw = y * dfw * (ln(1 + callIncrBase/callIncrLoss - 1))
 				//         dy/dw = y * dfw * (ln1p(callIncrBase/callIncrLoss - 1))
 				//         dy/dw = y * dfw * (ln1p((callIncrBase-callIncrLoss)/callIncrLoss))
-				#ifdef REFINED_FACED_ODDS_RAISE_GEOM
 					callGain * dfw * stable_ln_div(callIncrBase, callIncrLoss)
 					// We use the `std::log1p(…) formulation to ensure numerical stability in the extreme case when `callIncrBase` could be quite large whereas `callIncrLoss` could be quite small
-				#else
-					/*const float64 dL_dw =*/ dfw*std::log1p(callIncrBase) * callGain
-				#endif
 			}
 	  ) : (
 	    //else, folding (opportunity cost) is more profitable than calling (expected value)
@@ -913,17 +933,65 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	)
 	;
 
-// Raise only if (U + riskLoss) is better than `nonRaiseGain`
-  lastF_by_w = U_by_w;
-  lastF_by_w.v += applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain.v;
+	const bool expected_raiseWillBeCalled = riskLoss.b_raise_will_be_called(); // what the raiser thinks
+  const bool actual_raiseWillBeCalled = bRaiseWouldBeCalled; // what the faced_bet player thinks
 
-    if( (!bCheckPossible) && FG.n > 0 && !bUseCall)
-    {
-      lastF_by_w.D_v -= nonRaiseGain.D_v;
+  float64 applyRiskLoss = 0.0;
+  //   ▸ when bRaiseWouldBeCalled, we compare `callGain` vs `raiseGain` as usual (i.e. only raise if it helps our Expected Value)
+  //     ...as long as `expected_raiseWillBeCalled` there is no RiskLoss adjustment because they can't really benefit by folding at this raiseTo
+  //   ▸ when !bRaiseWouldBeCalled... (Perhaps scale knowledge down to the river based on the number of betting rounds remaining?)
+  //                                  OR is this where we apply RiskLoss in reverse?
+  if (!expected_raiseWillBeCalled) {
+    // Four cases:
+    //   b_raise_is_too_dangerous() && actual_raiseWillBeCalled ⟹ the raise will suffer because other players at the table will fold until they catch you with a better hand, even if not the faced_bet player themselves
+    //   b_raise_is_too_dangerous() && !actual_raiseWillBeCalled ⟹ discourage the raise using riskLoss
+    //   !b_raise_is_too_dangerous() && actual_raiseWillBeCalled ⟹ it's borderline, but they want you to raise so be adversarial and discourage it slightly
+    //   !b_raise_is_too_dangerous() && !actual_raiseWillBeCalled ⟹ it's borderline, but they don't want you to raise so be adversarial and encourage it slightly
+    if (riskLoss.b_raise_is_too_dangerous()) {
+      applyRiskLoss = -riskLoss.trueFoldChipsEV;
+    } else {
+      // TODO(from joseph): Idea → if it's the _final_ betting round, we can still use FoldWaitGainModel, right?
+      if (actual_raiseWillBeCalled) {
+        applyRiskLoss = riskLoss.nominalFoldChips - riskLoss.trueFoldChipsEV;
+      }
     }
-    if (bUseCall) {
-      lastF_by_w.D_v -= nonRaiseGain.D_v;
+  }
+
+  // Raise only if (U + riskLoss) is better than `nonRaiseGain`
+    lastF_by_w = U_by_w - nonRaiseGain;
+    lastF_by_w.v += applyRiskLoss / FG.waitLength.bankroll; // dRiskLoss_dW is zero??? (Presumably yes, because whether your opponents fold isn't impacted by whether you end up winning. They can't see your cards.)
+
+  #ifdef DEBUGASSERT
+    if (lastF_by_w.any_nan()) {
+      std::cerr << "Calculation problem inside FacedOddsRaiseGeom::query(" << w << ") " << lastF_by_w.v << "   " << lastF_by_w.D_v << std::endl;
+      exit(1);
     }
+  #endif
+
+  #if defined(DEBUG_TRACE_P_RAISE) && defined(DEBUG_TRACE_ZERO)
+    if (traceOut_pRaise != nullptr) {
+      *this->traceOut_pRaise << "\t\t\t\t└▸ FacedOddsRaiseGeom::query(if you had " << (w * 100.0) << "% chance to win) ↦ would you... U: "
+
+      // << U_by_w.v
+      << (U_by_w.v - 1.0) * (FG.waitLength.bankroll-raiseTo) << "⛁"
+
+      << " (and then adjusted by " <<
+      applyRiskLoss << "⛁"// (applyRiskLoss / FG.waitLength.bankroll)
+      << ")  or would you  " << (bUseCall ? "callGain" : "foldGain") << " " <<
+
+      // nonRaiseGain.v
+      ((nonRaiseGain.v - 1.0) * (bUseCall ? (FG.waitLength.bankroll - this->fold_bet) : (FG.waitLength.bankroll))) << "⛃"
+
+      << std::endl;
+
+      if (lastF_by_w.v < 0) {
+        *this->traceOut_pRaise << "\t\t\t\t  [DECISION] no raise, prefer "  << (bUseCall ? "callGain" : "foldGain") << std::endl;
+      }
+      if (lastF_by_w.v > 0) {
+        *this->traceOut_pRaise << "\t\t\t\t  [DECISION] Raise!" << std::endl;
+      }
+    }
+  #endif
 
 }
 

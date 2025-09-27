@@ -954,20 +954,26 @@ namespace UnitTests {
         // tableinfo->RiskLossHeuristic(0, 2474, 4, 6.75, 0, 0) = 0.0
         HypotheticalBet hypothetical0 = {
           oppCPS, 6.75 + oppCPS.alreadyBet,
-          std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
+          1.75, // So it's effectively raiseBy 5.0
           4.5, true
         };
-        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest<void>(0.0, 1.0 /* denom */, riskLoss0 , 0.31640625 /* avgBlind */
-                                                                     ,hypothetical0, 4, nullptr);
+        float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest<void>(
+          #ifdef DEBUG_TRACE_P_RAISE
+            nullptr,
+          #endif
+          0.0, 1.0 /* denom */, riskLoss0 , 0.31640625 /* avgBlind */ ,hypothetical0, 4, nullptr);
         // tableinfo->RiskLossHeuristic(0, 2474, 4, 11.25, 0, 0) == 0.0
         HypotheticalBet hypothetical1 = {
           oppCPS,
           11.25 + oppCPS.alreadyBet,
-          std::numeric_limits<float64>::signaling_NaN(), // raiseBy is not needed for this test, unless you also want to test the derivative
+          1.75,
           4.5, true
         };
-        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest<void>(w_r_rank0, 1.0, riskLoss0 ,  0.31640625
-                                                                     ,hypothetical1, 4, nullptr);
+        float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest<void>(
+          #ifdef DEBUG_TRACE_P_RAISE
+            nullptr,
+          #endif
+          w_r_rank0, 1.0, riskLoss0 ,  0.31640625 ,hypothetical1, 4, nullptr);
 
         // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
         assert(w_r_rank0 <= w_r_rank1);
@@ -1010,7 +1016,7 @@ namespace RegressionTests {
     {
 	public:
 
-        FixedReplayPlayerStrategy(const std::vector<float64> bets) : bets(bets), i(0) {}
+        FixedReplayPlayerStrategy(const std::vector<float64> bet_sequence) : bets(bet_sequence), i(0) {}
 		virtual ~FixedReplayPlayerStrategy(){};
 
         virtual void SeeCommunity(const Hand&, const int8) {};
@@ -1045,6 +1051,11 @@ namespace RegressionTests {
           }
         }
 
+        void resetNextBetSequence(const std::vector<float64> new_sequence) {
+          bets.assign(new_sequence.begin(), new_sequence.end());
+          i = 0;
+        }
+
     private:
         float64 proceedWithBet(const float64 myBet) const {
           if (myBet == myBet) {
@@ -1055,7 +1066,7 @@ namespace RegressionTests {
           }
         }
 
-        const std::vector<float64> bets; // a list of predetermined bets
+        std::vector<float64> bets; // a list of predetermined bets
         size_t i; // the index of the next bet to make
     }
     ;
@@ -1550,6 +1561,7 @@ namespace RegressionTests {
             std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN(),
             100.0,
+            std::numeric_limits<float64>::signaling_NaN(),
             std::numeric_limits<float64>::signaling_NaN()};
 
         FixedReplayPlayerStrategy nS(VectorOf(callCallFold));
@@ -1676,7 +1688,7 @@ namespace RegressionTests {
          Turn:	Ac Qd 2h 2d  (Pot: $34)
          */
 
-        // You have top two pair. One of your
+        // You have top two pair, but now there is the possibility of someone hitting triple twos...
 
         if (myTable.PlayRound_Turn(myFlop, myTurn, std::cout) == -1) {
           // ORIGINALLY: Assert → PureGainStrategy should not fold with top two pair, right?
@@ -3076,10 +3088,13 @@ namespace RegressionTests {
          ConservativeBotV folds
          SpaceBotV folds
          GearBotV folds
-         ActionBotV checks
+         ActionBot6 checks
          */
-        assert(myTable.PlayRound_BeginHand(std::cout) != -1);
-
+        if (myTable.PlayRound_BeginHand(std::cout) == -1) {
+          // It's over already?
+          assert((!myTable.IsInHand(1)) && "Well if ActionBot6 folds pre-flop, it won't get itself into the problem later anyway, so it's acceptable...");
+          return;
+        }
 
 
         /*
@@ -3106,9 +3121,9 @@ namespace RegressionTests {
          [ActionBotV $3020.62]
          [NormalBotV $2228.75]
 
-         ActionBotV bets $11.25 ($39.375)
+         ActionBot6 bets $11.25 ($39.375)
          NormalBotV raises to $80 ($119.375)
-         ActionBotV calls $68.75 ($188.125)
+         ActionBot6 calls $68.75 ($188.125)
          */
 
 
@@ -3155,6 +3170,7 @@ namespace RegressionTests {
               fail_count += 1;
             }
           }
+          assert(pass_count + fail_count == all_bGamble_vals.size());
 
           bot.bGamble_alternate(bGambleToTest); // This was the original setting
           const float64 original_bGamble_Bet = bot.MakeBet();
@@ -3180,7 +3196,7 @@ namespace RegressionTests {
 
           // If we're still playing, it means NormalBotV raised, and ActionBot re-raised, and we let NormalBot call that.
           // That's not what we want ActionBot to do, but see if the majority of bGamble settings did the right thing.
-          const bool success_by_callfold = (all_bGamble_vals.size() < pass_count * 2);
+          const bool success_by_callfold = (fail_count < pass_count);
           assert(success_by_callfold);
 
         /*
@@ -3271,7 +3287,7 @@ namespace RegressionTests {
          (Pot: $0)
          (8 players)
          [GearBotV $3004.5]
-         [ConservativeBotV $1500]
+         [ConservativeBot5 $1500]
          [MultiBotV $1500]
          [SpaceBotV $1500]
          [ActionBotV $1500]
@@ -3286,13 +3302,11 @@ namespace RegressionTests {
         HoldemArena myTable(b.GetSmallBlind(), true, true);
 
         const std::vector<float64> foldOnly(1, 0.0);
-        static const float64 arr[] = {10.125, 18.0, 805.5, 1489.88};
-        const std::vector<float64> aA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
         FixedReplayPlayerStrategy gS(foldOnly);
 
         FixedReplayPlayerStrategy mS(foldOnly);
         FixedReplayPlayerStrategy sS(foldOnly);
-        FixedReplayPlayerStrategy aS(aA);
+        FixedReplayPlayerStrategy aS(std::vector<float64>{});
         FixedReplayPlayerStrategy dS(foldOnly);
         FixedReplayPlayerStrategy pS(foldOnly);
         FixedReplayPlayerStrategy nS(foldOnly);
@@ -3302,7 +3316,7 @@ namespace RegressionTests {
         PlayerStrategy * const botToTest = &bot;
 
         myTable.ManuallyAddPlayer("GearBotV", 3004.5, &gS);
-        myTable.ManuallyAddPlayer("ConservativeBotV", 1500.0, botToTest);
+        myTable.ManuallyAddPlayer("ConservativeBot5", 1500.0, botToTest);
         myTable.ManuallyAddPlayer("MultiBotV", 1500.0, &mS); // NormalBot is the dealer, since GearBot is the small blind
         myTable.ManuallyAddPlayer("SpaceBotV", 1500.0, &sS);
         myTable.ManuallyAddPlayer("ActionBotV", 1500.0, &aS);
@@ -3344,19 +3358,18 @@ namespace RegressionTests {
          Ali folds
          NormalBotV folds
          GearBotV folds
-         ConservativeBotV checks
+         ConservativeBot5 checks
          */
 
+        aS.resetNextBetSequence(std::vector<float64>{10.125, std::numeric_limits<float64>::signaling_NaN()});
         assert(myTable.PlayRound_BeginHand(std::cout) != -1);
-
 
         /*
          Flop:	4s 5h Kd    (Pot: $25.3125)
          (2 players)
-         [ConservativeBotV $1489.88]
+         [ConservativeBot5 $1489.88]
          [ActionBotV $1489.88]
          */
-
 
         CommunityPlus myFlop;
 
@@ -3370,18 +3383,17 @@ namespace RegressionTests {
         myFlop.AddToHand(card);
 
         /*
-
-         ConservativeBotV checks
+         ConservativeBot5 checks
          ActionBotV bets $18 ($43.3125)
-         ConservativeBotV raises to $112.5 ($155.812)
+         ConservativeBot5 raises to $112.5 ($155.812)
          ActionBotV raises to $805.5 ($943.312)
-         ConservativeBotV raises all-in to $1489.88 ($2320.69)
+         ConservativeBot5 raises all-in to $1489.88 ($2320.69)
          ActionBotV calls $684.375 ($3005.06)
-
          */
+         aS.resetNextBetSequence(std::vector<float64>{18.0 / 25.3125 * myTable.GetPotSize(), 805.5, 1489.88, std::numeric_limits<float64>::signaling_NaN()});
 
         const playernumber_t flopCalledIdx = myTable.PlayRound_Flop(myFlop, std::cout);
-        //assert(myTable.PlayRound_Flop(myFlop, std::cout) != 1);
+
         if (flopCalledIdx != -1) {
 
             /*
@@ -3389,10 +3401,22 @@ namespace RegressionTests {
              (2 players)
              */
 
+            const float64 potBeforeTurn = myTable.GetPotSize();
+
             DeckLocation myTurn; // Ah
             myTurn.SetByIndex(49);
 
-            assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != 1);
+            DeckLocation myRiver; // Qd
+            myRiver.SetByIndex(34);
+
+            aS.resetNextBetSequence(std::vector<float64>{std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()});
+            if (myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1) {
+              myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
+
+              // Well then, as long as you don't do anything dumb, I'll accept it
+              // assert(myTable.GetPotSize() <= potBeforeTurn + myTable.GetBlindValues().GetBigBlind() * 2);
+              assert(myTable.GetPotSize() < potBeforeTurn + myTable.GetChipDenom());
+            }
         }
 
         /*
@@ -3409,7 +3433,7 @@ namespace RegressionTests {
 
 
 
-         ConservativeBotV is ahead with: 5c 7d
+         ConservativeBot5 is ahead with: 5c 7d
          Trying to stay alive, makes
          005		Pair of Fives
          4 5 A 5 7 Q K 	AKQJT98765432
@@ -4981,10 +5005,10 @@ Playing as S
         #endif
 
         FacedOddsRaiseGeom<void> actual(myTable.GetChipDenom());
-        FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss);
         actual.FG.waitLength.load(cps, avgBlind);
         actual.FG.waitLength.opponents = tablestate_tableinfo.handsToShowdownAgainst();
         actual.FG.waitLength.setMeanConv(nullptr);
+        FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss);
         const float64 noRaisePct = actual.FindZero(0.0, 1.0, false);
         const float64 d_noRaisePct_dbetsize = ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(tablestate_tableinfo, hypothetical, noRaisePct);
 

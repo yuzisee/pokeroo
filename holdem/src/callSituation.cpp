@@ -50,7 +50,7 @@ static playercounts_t suggestPlayerCount(const HoldemArena & table) {
 }
 
 
-
+// @return the absolute foldGain (i.e. a value of 1.0 means folding is neutral, a value below 1.0 means folding is detrimental, and a value above 1.0 means you can net profit from folding now due to being able to trap your opponent later)
 float64 FoldOrCall::foldGain(MeanOrRank meanOrRank, const float64 extra, const float64 facedBet, float64 * const foldWaitLength_out) const
 {
     const Player &p = fPlayer;
@@ -282,7 +282,9 @@ struct RiskLoss ExpectedCallD::RiskLossHeuristic(const struct HypotheticalBet & 
     // It has, as a "bankroll" that splits the entire rest of the chip stack equally
     // It has, as a "sacrifice" the average amount that everyone else has bet
     //        ↑ it's been that way since https://github.com/yuzisee/pokeroo/blob/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7/holdem/src/callPrediction.cpp#L567
-    FG.waitLength.setAmountSacrificeVoluntary( (table->GetPotSize() - stagnantPot() - hypotheticalRaise.bettorSituation.alreadyBet)/(handsIn()-1) );
+    // FG.waitLength.setAmountSacrificeVoluntary( (table->GetPotSize() - stagnantPot() - hypotheticalRaise.bettorSituation.alreadyBet)/(handsIn()-1) );
+
+    FG.waitLength.setAmountSacrificeVoluntary( hypotheticalRaise.faced_bet() );
     // ^^^ If amountSacrificeVoluntary were for a single player it would be: that player's current bet size − that player's forced bet (e.g. blinds)
 
     FG.waitLength.bankroll = (allChips() - hypotheticalRaise.bettorSituation.bankroll)/(N-1);
@@ -432,7 +434,7 @@ float64 FoldOrCall::predictedRaiseToThisRound(float64 actualBetToCall, float64 h
 
 FoldResponse FoldOrCall::myFoldGainAgainstPredictedReraise(MeanOrRank meanOrRank, float64 currentAlreadyBet, float64 actualBetToCall, float64 hypotheticalMyRaiseTo, float64 predictedReraiseToFinal) const {
     struct FoldResponse result;
-    result.gain = foldGain(meanOrRank, hypotheticalMyRaiseTo - currentAlreadyBet
+    result.gain = foldGain(meanOrRank, /* extra */ hypotheticalMyRaiseTo - currentAlreadyBet
                     ,
                     // predictedReraiseToFinal
                     predictedRaiseToThisRound(actualBetToCall, hypotheticalMyRaiseTo, predictedReraiseToFinal)
@@ -443,7 +445,7 @@ FoldResponse FoldOrCall::myFoldGainAgainstPredictedReraise(MeanOrRank meanOrRank
 }
 
 float64 FoldOrCall::myFoldGain(MeanOrRank meanOrRank) const {
-    return foldGain(meanOrRank, 0, fTable.GetBetToCall(), (float64*)0);
+    return foldGain(meanOrRank, /* extra */ 0, fTable.GetBetToCall(), (float64*)0);
 }
 
 std::pair<float64,float64> FoldOrCall::myFoldGainAndWaitlength(MeanOrRank meanOrRank) const {

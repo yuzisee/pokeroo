@@ -179,7 +179,11 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct Hypot
     const float64 avgBlind = tableinfo->table->GetBlindValues().OpportunityPerHand(N);
 
 
-    return facedOdds_raise_Geom_forTest( startingPoint
+    return facedOdds_raise_Geom_forTest(
+    #ifdef DEBUG_TRACE_P_RAISE
+      (foldwait_length_distr == nullptr) ? this->traceOut_dexf : nullptr,
+    #endif
+                                         startingPoint
                                         ,tableinfo->table->GetChipDenom()
                                         ,riskLoss
                                         ,avgBlind
@@ -190,7 +194,11 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom(const struct Hypot
 }
 
 // @return at what win percentages is it profitable to raise to `a.raiseTo` i.e. `hypotheticalRaise.hypotheticalRaiseTo`
-template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, const struct RiskLoss &riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr)
+template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(
+  #ifdef DEBUG_TRACE_P_RAISE
+    std::ostream * traceOut_pRaise,
+  #endif
+  float64 startingPoint, float64 denom, const struct RiskLoss &riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD<T, OppositionPerspective> * foldwait_length_distr)
 {
   const struct ChipPositionState &cps = hypotheticalRaise.bettorSituation;
     if( hypotheticalRaise.hypotheticalRaiseTo >= cps.bankroll )
@@ -207,15 +215,18 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
     }
 
     FacedOddsRaiseGeom<T> a(denom);
-    FacedOddsRaiseGeom<T>::configure_with(a, hypotheticalRaise, riskLoss);
 
     // We don't need to set w, because a.FindZero searches over w
     a.FG.waitLength.load(cps, avgBlind);
     a.FG.waitLength.opponents = opponents;
     a.FG.waitLength.setMeanConv(foldwait_length_distr);
+    FacedOddsRaiseGeom<T>::configure_with(a, hypotheticalRaise, riskLoss);
 
     //a.FG.dw_dbet = 0; //We don't need this, unless we want the derivative of FG.f; Since we don't need any extrema or zeros of FG, we can set this to anything
 
+    #ifdef DEBUG_TRACE_P_RAISE
+      a.traceOut_pRaise = traceOut_pRaise;
+    #endif
 
 /*
     const float64 fold_utility = bCheckPossible ? 0 : FG.f(fold_bet);
@@ -228,7 +239,11 @@ template<typename T> float64 ExactCallD::facedOdds_raise_Geom_forTest(float64 st
     return a.FindZero(startingPoint,1.0, false);
 }
 // ↑ the template above gets generated intelligently because it's needed when `facedOdds_raise_Geom` is called, but during unit tests GCC might choose to inline or optimize away, so explicitly ask for any versions we are unit testing, just in case ↓
-template float64 ExactCallD::facedOdds_raise_Geom_forTest<void>( float64, float64, const struct RiskLoss&, float64, const HypotheticalBet&, float64, CallCumulationD<void, OppositionPerspective>*);
+template float64 ExactCallD::facedOdds_raise_Geom_forTest<void>(
+  #ifdef DEBUG_TRACE_P_RAISE
+    std::ostream *,
+  #endif
+float64, float64, const struct RiskLoss&, float64, const HypotheticalBet&, float64, CallCumulationD<void, OppositionPerspective>*);
 
 float64 ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 w)
 {
@@ -446,7 +461,7 @@ struct FacedOdds {
   // TODO(from yuzisee): Raises are now Algb instead of Geom?
   // @return the win probability this opponent would need in order to justify (re)raising us to the amount of `oppRaise.hypotheticalRaiseTo`
   void init_facedOdds_raise(ExactCallD & pr_call_pr_raiseby, const FacedOdds &prev_w_r, const struct HypotheticalBet& oppRaise, const struct RiskLoss &riskLoss) {
-    const float64 opponents = pr_call_pr_raiseby.tableinfo->handsToShowdownAgainst();
+    const float64 opponents = pr_call_pr_raiseby.tableinfo->handsToShowdownAgainst(); // TODO(from joseph): Do we need OpponentHandOpportunity in order to estimate how many people will call this Hypothetical raise?
 
     // Is it possible to use OpponentHandOpportunity instead?
 
@@ -499,6 +514,12 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
     #ifdef DEBUG_TRACE_DEXF
             if( traceOut_dexf != 0 ) *traceOut_dexf << "\tBegin Query(betSize=" << betSize << ",callSteps=" << callSteps << ") with myexf=" << myexf << "  mydexf=" << mydexf << " ⇒ initialize to " << this->totalexf << " +" << this->totaldexf << "∂betSize" << endl;
+    #endif
+
+    #ifdef DEBUG_TRACE_P_RAISE
+      if (this->traceOut_dexf != nullptr) {
+        *this->traceOut_dexf << "\t⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯" << std::endl;
+      }
     #endif
 
     this->noRaiseArraySize = 0;
@@ -575,6 +596,12 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 // This simulates the actions of the player (pIndex)
 // It will accumulate this->totalexf as the expected amount you can win in a showdown
 void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out) {
+  if( !tableinfo->table->CanStillBet(pIndex) ) // Make sure the player is still fit to bet ( in this or any future round )
+  {
+    // Q: We used to run the "FINAL RESULT" section below, even if this player can't bet... but isn't that pointless because we really don't do anything?
+    return;
+  }
+
   const float64 prevPot = tableinfo->table->GetPrevPotSize();
   const float64 opponents = tableinfo->handsToShowdownAgainst(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
 
@@ -589,6 +616,8 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
   {
             nextNoRaise_A[i].v = 1; //Won't raise (by default)
             nextNoRaise_A[i].D_v = 0;
+            // [!TIP]
+            // ^^^ These are temporary variables, allocated once outside the `accumulateOneOpponentPossibleRaises` loop but reused for each invocation of `accumulateOneOpponentPossibleRaises` for memory efficiency.
   }
 
   ///Initialize player bet state
@@ -615,11 +644,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       }
   }
 
-  if( tableinfo->table->CanStillBet(pIndex) ) // Make sure the player is still fit to bet ( in this or any future round )
-  {
-
       if( betSize - oppBankRoll < tableinfo->chipDenom()/4  ) // betSize <= oppBankRoll
-      {	//Can still call, at least
+      {
+        #ifdef DEBUG_TRACE_P_RAISE
+          if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf << "\taccumulateOneOpponentPossibleRaises evaluates AgainstRaise(" << betSize << "): "
+            << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << " can still call, at least." << std::endl;
+          }
+        #endif
 
           // Assume that the "total pot" they can win is the current `this->totalexf` so far
           const ChipPositionState oppCPS(oppBankRoll,totalexf,oppBetAlready,oppPastCommit, prevPot);
@@ -629,7 +660,12 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 			///=========================
       // This populates nextNoRaise_A of this player, for all raise amounts. Step 3 will aggregate it them into noRaiseChance_A which combines all players.
           if( oppRaiseChances > 0 )
-          { //The player can raise you if he hasn't called yet, OR you're (hypothetically) raising
+          {
+            #ifdef DEBUG_TRACE_P_RAISE
+              if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
+                "\t\tThe player can raise you if they haven't called yet, OR you're (hypothetically) raising" << std::endl;
+              }
+            #endif
 
               //if( callBet() > 0 && oppBetAlready == callBet() ) bInBlinds = false;
 
@@ -651,6 +687,11 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                   };
 
                   if( oppRaise.betIncrease() <= 0 ) {
+                    #ifdef DEBUG_TRACE_P_RAISE
+                      if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
+                        "\t\t\tThey've already hit $" << thisRaise << " so nextNoRaise_A["<< static_cast<int>(i_step) << "] will be forced to zero across all players at the table (which means 100% chance of raising to this amount by the showdown)" << std::endl;
+                      }
+                    #endif
                       nextNoRaise_A[i_step].v = 0.0; // well then we're guaranteed to hit this amount
                       nextNoRaise_A[i_step].D_v = 0.0;
                       prevRaise = 0;
@@ -676,6 +717,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                           }
                           #endif
 
+
                           FacedOdds w_r_facedodds; // TODO(from joseph): Rename to noraiseRank or, rename noraiseRankD to w_r_facedodds_D
                           w_r_facedodds.init_facedOdds_raise(*this, prev_w_r, oppRaise, riskLoss);
 
@@ -693,6 +735,12 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                                   fCore.callcumu.Pr_haveWorsePCT_continuous(w_r_facedodds.mean - EPS_WIN_PCT).first.D_v * dfacedOdds_raise_dfacedBet_GeomDEXF( *tableinfo, oppRaise, w_r_facedodds.mean)
                                 };
 
+                          #ifdef DEBUG_TRACE_P_RAISE
+                            if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
+                              "\t\t\tFacedOddsRaiseGeom.FindZero gives us w_rank=" << w_r_facedodds.rank << " w_pess=" << w_r_facedodds.pess << " w_mean=" << w_r_facedodds.mean << std::endl
+                              << "\t\t\tChoosing between noraiseRank=" << w_r_facedodds.rank << " vs. noraisePess=" << noraisePess.v << " vs. noraiseMean=" << noraiseMean.v << " based on RiskLoss: {nominalFoldChips: " << riskLoss.nominalFoldChips << ", trueFoldChipsEV: " << riskLoss.trueFoldChipsEV << "}" << std::endl;
+                            }
+                          #endif
                           //nextNoRaise_A[i_step].v = w_r_facedodds.rank;
                           //nextNoRaise_A[i_step].D_v = noraiseRankD;
 
@@ -707,8 +755,20 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                                         ValueAndSlope::greaterOfTwo(noraisePess, noraiseMean) // I won't call. I want them not to raise. (Adversarial is the larger "no raise")
                                     ;
 
+                          #ifdef DEBUG_TRACE_P_RAISE
+                            if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
+                              "\t\t\t\tUPDATING: `nextNoRaise_A[" << static_cast<int>(i_step) << "=$" << thisRaise << "].v` (before) " << nextNoRaise_A[i_step].v << "  ⟶  ";
+                            }
+                          #endif
+
                           nextNoRaise_A[i_step].v = (noraise.v + w_r_facedodds.rank)/2;
                           nextNoRaise_A[i_step].D_v = (noraise.D_v + noraiseRankD)/2;
+
+                          #ifdef DEBUG_TRACE_P_RAISE
+                            if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
+                              " (after) " << nextNoRaise_A[i_step].v << " … and therefore 'yes raise' is currently at " << (100.0 * (1.0 - nextNoRaise_A[i_step].v)) << "%" << std::endl;
+                            }
+                          #endif
 
                           #ifdef DEBUGASSERT
                            if(std::isnan(nextNoRaise_A[i_step].D_v)) {
@@ -752,7 +812,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
                       }else
                       { // raising this amount would put player[pIndex] all-in.
-                          const float64 oppAllInMake = oppBankRoll - oppBetAlready;
+                        const float64 oppAllInMake = oppBankRoll - oppBetAlready;
+
+                        #ifdef DEBUG_TRACE_P_RAISE
+                          if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
+                            "\t\t\t\tWould they go as far as to (re)raise you all-in? For them that would be a raiseBy = $"  << oppAllInMake << " on i_step = " << static_cast<int>(i_step) << std::endl;
+                          }
+                        #endif
 
                           if (prevRaise > 0 && oppBankRoll > prevRaise && oppAllInMake > 0)
                           { //This is the precise bet of the all-in raise. Higher raiseAmounts won't be raised by this player, no matter what hand he/she has regardless of their chance to win the showdown.
@@ -784,17 +850,23 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                               nextNoRaise_A[i_step].D_v = 0;
                           }
 
+                          #ifdef DEBUG_TRACE_P_RAISE
+                            if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
+                              "\t\t\t\tUPDATED: `nextNoRaise_A[" << static_cast<int>(i_step) << "=$" << thisRaise << "].v` → " << nextNoRaise_A[i_step].v << std::endl;
+                            }
+                          #endif
+
                           prevRaise = 0;
                           prev_w_r = FacedOdds::all_nan();
 
                       } // end of block: if (thisRaise <= oppBankRoll), else ...
 
                   } // end of block: if (oppRaiseMake <= 1), else ...
-              }//end of for loop
+              }//end of loop across [i_step]
           }
 
 			///=====================
-			///   2. Estimate exf
+			///   2. Estimate exf (the amount of money that will end up in the pot)
 			///=====================
 
 				///Check for most likely call amount
@@ -841,7 +913,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 				//End of else, blocked executed UNLESS oppBetMake <= 0
 
       }else
-      {///Opponent would be all-in to call this bet
+      {
+        #ifdef DEBUG_TRACE_P_RAISE
+          if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf << "\taccumulateOneOpponentPossibleRaises: "
+            << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << " would be all-in to call this bet." << std::endl;
+          }
+        #endif
+
           const float64 oldpot = tableinfo->table->GetPrevPotSize();
           const float64 effroundpot = (totalexf - oldpot) * oppBankRoll / betSize;
           const float64 oppBetMake = oppBankRoll - oppBetAlready;
@@ -898,7 +976,6 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
           *overdexf_out += nextdexf;
       }
 
-  } // end if CanStillBet(pIndex)
 
   // FINAL RESULT
   //
@@ -940,6 +1017,11 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       //At this point, each nextNoRaise is 100% unless otherwise adjusted.
       const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step].v < std::numeric_limits<float64>::epsilon()) ? 0 : std::pow(nextNoRaise_A[i_step].v,oppRaiseChancesAware);
 
+      #ifdef DEBUG_TRACE_P_RAISE
+        if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
+          "\t\tRESULT: Choosing noRaiseChance_adjust=" << noRaiseChance_adjust << " at step [" << static_cast<int>(i_step) << "] by extrapolating (" << nextNoRaise_A[i_step].v << "^r), where r= either " << static_cast<int>(oppRaiseChancesPessimistic) << "⟳ or " << static_cast<int>(oppRaiseChances) << "⟳ rounds" << std::endl;
+        }
+      #endif
 
 #ifdef DEBUGASSERT
       if (oppRaiseChancesAware < 0) {
@@ -973,7 +1055,13 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       {
           noRaiseChanceD_A[i_step] += nextNoRaise_A[i_step].D_v/nextNoRaise_A[i_step].v  *   oppRaiseChancesAware; //Logarithmic differentiation
       }
-  }
+
+      #ifdef DEBUG_TRACE_P_RAISE
+        if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
+          "\t\tthis->noRaiseChance_A[" << static_cast<int>(i_step) << "] is now " << this->noRaiseChance_A[i_step] << std::endl;
+        }
+      #endif
+  } // end loop over i_step
 } // end accumulateOneOpponentPossibleRaises
 
 void ExactCallBluffD::query(const float64 betSize)
