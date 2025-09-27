@@ -26,6 +26,7 @@
 #include "inferentials.h"
 #include "callPredictionFunctions.h"
 #include "callSituation.h"
+#include <limits>
 
 #if defined(DEBUG_TRACE_PWIN) || defined(DEBUG_TRACE_DEXF)
 #include <iostream>

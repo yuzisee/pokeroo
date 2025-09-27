@@ -29,7 +29,6 @@
 
 #define NO_AUTO_RAISE
 
-
 //#define ANTI_CHECK_PLAY
 
 ExactCallD::~ExactCallD()
