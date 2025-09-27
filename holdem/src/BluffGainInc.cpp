@@ -700,7 +700,13 @@ void StateModel::query( const float64 betSize )
 
     dy = gainCombined.contribution.D_v; // e.g. (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
 
-    y -= fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank());
+    if (table_spec.tableView->ViewPlayer()->GetBetSize() < table_spec.tableView->table->GetBetToCall()) {
+      // Only consider the action of betting `betSize` to be a "positive" action if it's better than folding.
+      y -= fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank());
+    } else {
+      y -= 1.0; // When you check, nothing happens. You don't win money and you don't lose money. You stay at 1.0 of your bankroll.
+    }
+
     /* called with ea.ed */
 #ifdef DEBUGASSERT
     if(std::isnan(y))

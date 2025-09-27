@@ -881,7 +881,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
     *this->traceOut_pRaise << "\t\t\t\t                        callGain = " << callIncrBase << "^fw ⋅ " << callIncrLoss << "^(1-fw) on a winnable $" << (callPot) << std::endl;
     // *this->traceOut_pRaise << "\t\t\t\t (DEBUG)  FG.waitLength.bankroll=" << FG.waitLength.bankroll << "    this->fold_bet=" << this->fold_bet << "   callIncrBase=" << callIncrBase << std::endl;
   }
-#endif
+  #endif
   ValueAndSlope excess_by_w = {1.0, 0.0};
   const float64 foldGain_of_facedBet = FG.f(faced_bet);
 

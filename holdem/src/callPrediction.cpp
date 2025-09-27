@@ -620,7 +620,6 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
     // Q: We used to run the "FINAL RESULT" section below, even if this player can't bet... but isn't that pointless because we really don't do anything?
     return;
   }
-
   const float64 prevPot = tableinfo->table->GetPrevPotSize();
   const float64 opponents = tableinfo->handsToShowdownAgainst(); // The number of "opponents" that people will think they have (as expressed through their predicted showdown hand strength)
 
@@ -794,6 +793,12 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                             }
                           #endif
 
+                          #ifdef DEBUG_TRACE_P_RAISE
+                            if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
+                              " (after) " << nextNoRaise_A[i_step].v << " … and therefore 'yes raise' is currently at " << (100.0 * (1.0 - nextNoRaise_A[i_step].v)) << "%" << std::endl;
+                            }
+                          #endif
+
                           #ifdef DEBUGASSERT
                            if(std::isnan(nextNoRaise_A[i_step].D_v)) {
                              std::cerr << "One of noraise.D_v or noraiseRankD are NaN" << std::endl;
@@ -836,7 +841,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
 
                       }else
                       { // raising this amount would put player[pIndex] all-in.
-                          const float64 oppAllInMake = oppBankRoll - oppBetAlready;
+                        const float64 oppAllInMake = oppBankRoll - oppBetAlready;
 
                           #ifdef DEBUG_TRACE_P_RAISE
                             if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
@@ -886,7 +891,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                       } // end of block: if (thisRaise <= oppBankRoll), else ...
 
                   } // end of block: if (oppRaiseMake <= 1), else ...
-              }//end of for loop across [i_step]
+              }//end of loop across [i_step]
           }
 
 			///=====================

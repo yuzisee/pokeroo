@@ -892,7 +892,6 @@ float64 GainModelGeom::fd(const float64 betSize, const float64 y)
 }
 
 
-
 // @return a value as a fraction of your bankroll. Returning 0.0 means "lose everything"
 float64 GainModelNoRisk::g(float64 betSize)
 {
