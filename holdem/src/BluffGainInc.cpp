@@ -20,7 +20,6 @@
 
 #include "BluffGainInc.h"
 #include "callPrediction.h"
-#include "callPredictionFunctions.h"
 #include "math_support.h"
 
 #include <float.h>
@@ -477,7 +476,7 @@ firstFoldToRaise_t StateModel::firstFoldToRaise_only(T & m, const float64 displa
               #ifdef DEBUG_WILL_FOLD_TO_RERAISE
               , &logF
               #endif
-            );
+             );
             if (will_fold_to_reraise.bGoodFold) {
               if (firstGoodFoldToRaise == -1) {
                 firstGoodFoldToRaise = raiseStep;
@@ -758,6 +757,7 @@ SimulateReraiseResponse StateModel::willFoldToReraise
     const bool bIsProfitableCall = concedeGain < playGain; // At least by calling I can win back a little more than losing concedeGain upfront
 
     if (bIsOverbetAgainstThisRound) {
+      // We can profit from folding. This is a way overbet and we wouldn't call here then.
       #ifdef DEBUG_WILL_FOLD_TO_RERAISE
         if (trace_statemodel != nullptr) {
           *trace_statemodel << "\t\tStateModel::willFoldToReraise being re-raised to $" << raiseAmount << " would be a clear overbet,";
@@ -770,14 +770,14 @@ SimulateReraiseResponse StateModel::willFoldToReraise
         }
       #endif
 
-        // We can profit from folding. This is a way overbet and we wouldn't call here then.
     } else if (!bIsProfitableCall) {
+      // Not a profitable call either? Then I guess we'll fold to reraise. Return true.
       #ifdef DEBUG_WILL_FOLD_TO_RERAISE
         if (trace_statemodel != nullptr) {
           *trace_statemodel << "\t\tStateModel::willFoldToReraise will fold to $" << raiseAmount << " after we already tried first raising to $" << hypotheticalMyRaiseTo << " based on comparing " << ((playGain - 1.0) * myInfo.ViewPlayer()->GetMoney() ) << "⛀ ≤ " << ((concedeGain - 1.0) * myInfo.ViewPlayer()->GetMoney()) << "⛀" << std::endl;
         }
       #endif
-        // Not a profitable call either? Then I guess we'll fold to reraise. Return true.
+
     }
 
     return SimulateReraiseResponse {

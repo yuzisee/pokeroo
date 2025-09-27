@@ -540,6 +540,12 @@ void ExactCallD::query(const float64 betSize, const firstFoldToRaise_t callSteps
       }
     #endif
 
+    #ifdef DEBUG_TRACE_P_RAISE
+      if (this->traceOut_dexf != nullptr) {
+        *this->traceOut_dexf << "\t⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯" << std::endl;
+      }
+    #endif
+
     this->noRaiseArraySize = 0;
     while( RaiseAmount(*tableinfo, betSize,this->noRaiseArraySize) < tableinfo->maxRaiseAmount() )
     {
