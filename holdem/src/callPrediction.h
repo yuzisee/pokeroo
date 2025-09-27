@@ -57,9 +57,9 @@ public:
 
     virtual ~IExf() {}
 
-    // E[x]
+    // @return E[pot] the amount of money that will be in the pot by the showdown
     virtual float64 exf(const float64 betSize) = 0;
-    // d/dbetsize E[x]
+    // d/dbetsize E[pot]
     virtual float64 dexf(const float64 betSize) = 0;
 
 }
@@ -105,7 +105,11 @@ class ExactCallD : public IExf
 
     // By default, startingPoint == 0.0
     // When using this function for the purposes of nextNoRaise_A, you'll want to start at the previous value to avoid rounding errors.
-    template<typename T> static float64 facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, const struct RiskLoss &riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean);
+    template<typename T> static float64 facedOdds_raise_Geom_forTest(
+      #ifdef DEBUG_TRACE_P_RAISE
+        std::ostream * traceOut_pRaise,
+      #endif
+      float64 startingPoint, float64 denom, const struct RiskLoss &riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean);
 
 
     // CallCumulationD &choicecumu = statprob.core.callcumu;
@@ -115,7 +119,7 @@ class ExactCallD : public IExf
     CommunityStatsCdf * ed() const {
         return &(fCore.callcumu);
     }
-#ifdef DEBUG_TRACE_DEXF
+#if defined(DEBUG_TRACE_DEXF) || defined(DEBUG_TRACE_P_RAISE)
 		std::ostream * traceOut_dexf;
 #endif
 
@@ -131,7 +135,7 @@ class ExactCallD : public IExf
         ,
         //ed(data)
         fCore(core)
-#ifdef DEBUG_TRACE_DEXF
+#if defined(DEBUG_TRACE_DEXF) || defined(DEBUG_TRACE_P_RAISE)
 					,traceOut_dexf(0)
 #endif
             {

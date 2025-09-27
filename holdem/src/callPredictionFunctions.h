@@ -33,6 +33,7 @@
 
 //#define DEBUG_EXFDEXF
 //#define DEBUG_TRACE_DEXF 2
+#define DEBUG_TRACE_P_RAISE 0
 // ^^^ Define if you need to trace through a specific search
 //     For example, if you are debugging `PureGainStrategy bot("abc.txt", 2)` you will want to `#define DEBUG_TRACE_DEXF 2`
 // ^^^ Disable (i.e. You can explicitly `#undef DEBUG_TRACE_DEXF`) if you don't want `.github/workflows/ci.yml` to test with it
@@ -433,7 +434,12 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     float64 lastW;
     ValueAndSlope lastF_by_w;
     void query( const float64 w );
+
     public:
+    #ifdef DEBUG_TRACE_P_RAISE
+      std::ostream * traceOut_pRaise;
+    #endif
+
     float64 raisedPot;
     float64 callPot;
     float64 raiseTo;
@@ -444,7 +450,11 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     bool bCheckPossible;
 
     FoldGainModel<T, OppositionPerspective> FG;
-    FacedOddsRaiseGeom(float64 myQuantum) : ScalarFunctionModel(SEARCH_SPACE_PROBABILITY_QUANTUM), lastW(-1),
+    FacedOddsRaiseGeom(float64 myQuantum) : ScalarFunctionModel(SEARCH_SPACE_PROBABILITY_QUANTUM),
+      lastW(-1),
+    #ifdef DEBUG_TRACE_P_RAISE
+      traceOut_pRaise(nullptr),
+    #endif
       riskLoss(RiskLoss{std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()}),
       FG(myQuantum/2)
     {}
@@ -452,7 +462,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
 
-    // This populates everything EXCEPT for `this->FG.waitLength`
+    // You MUST populate `this->FG.waitLength` first, before calling this. We will populate everything else here.
     static void configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, const struct RiskLoss &currentRiskLoss);
 }
 ;
