@@ -19,8 +19,6 @@
  ***************************************************************************/
 
 #include "stratPosition.h"
-#include "BluffGainInc.h"
-#include "callPredictionFunctions.h"
 #include "stratFear.h"
 
 #include <math.h>
