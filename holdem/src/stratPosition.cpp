@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "stratPosition.h"
+#include "BluffGainInc.h"
 #include "stratFear.h"
 
 #include <math.h>
@@ -604,7 +605,7 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOr
     if (printAllFold.first != nullptr) {
       // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
       logF << "\tpush=all_fold → "; // << "left"
-      const float64 allFoldPr = printAllFold->pWin(rAmount);
+      const float64 allFoldPr = printAllFold.first->pWin(rAmount);
       #ifdef DEBUG_TRACE_PWIN
       logF << " ⎌⟂ ";
       #endif
@@ -625,7 +626,7 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOr
       printPessimisticWinPct(logF, ( raiseStep >= firstFoldToRaise.first ) ? "✲ʷᵃᶦᵗ" : ( (raiseStep >= firstFoldToRaise.second) ? "(Wᶠᵒˡᵈ) " : ""), rAmount, *printAllFold.second, n_1v1_outcomes);
     }
 
-    printPessimisticWinPct(logF, ( raiseStep >= firstFoldToRaise ) ? "(Wᶠᵒˡᵈ) " : "", rAmount, csrp_ref, n_1v1_outcomes);
+    printPessimisticWinPct(logF, ( raiseStep >= firstFoldToRaise.first ) ? "✲ʷᵃᶦᵗ" : ( (raiseStep >= firstFoldToRaise.second) ? "(Wᶠᵒˡᵈ) " : ""), rAmount, *printAllFold.second, n_1v1_outcomes);
     // logF << " ⋯  noRaiseChance_adjust was... " << noRaiseChance_A_deduced
     logF << endl;
   }
@@ -646,6 +647,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
     {
         const FoldOrCall rlF(*(tablestate.table), opp_callraise.fCore);
 
+        ExactCallBluffD * const printMoreDetails = nullptr;
         if (separatorBet != betToCall) {
           logF << std::endl << "Why didn't I " << ((tablestate.alreadyBet() == betToCall) ? "check" : "call") << "?" << std::endl;
         }
@@ -655,7 +657,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
               #ifdef DEBUG_WILL_FOLD_TO_RERAISE
               , logF
               #endif
-            ), betToCall, std::make_pair(nullptr, csrp), n_possible_1v1_outcomes, logF);
+            ), betToCall, std::make_pair(printMoreDetails, csrp), n_possible_1v1_outcomes, logF);
     }
 
     logF << endl;
@@ -692,7 +694,6 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
 
 #endif // LOGPOSITION
 }
-
 
 ///==============================
 ///   AceBot, TrapBot, NormBot

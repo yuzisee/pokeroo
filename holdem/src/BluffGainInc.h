@@ -173,7 +173,6 @@ public:
     struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const override final;
 };
 
-
 // Evaluate gainWithFold*gainNormal*gainRaised
 // on an AutoScalingFunction
 // and relative to foldGain and everything.
@@ -240,7 +239,7 @@ public:
       #endif
     );
 
-    static SimulateReraiseResponse willFoldToReraise
+    static struct SimulateReraiseResponse willFoldToReraise
     (
      const float64 raiseAmount
      ,

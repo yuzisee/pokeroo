@@ -728,7 +728,7 @@ void StateModel::query( const float64 betSize )
     delete [] potRaisedWin_A;
 }
 
-SimulateReraiseResponse StateModel::willFoldToReraise
+struct SimulateReraiseResponse StateModel::willFoldToReraise
 (
  const float64 raiseAmount // their hypothetical re-raise amount
  ,

@@ -19,19 +19,15 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
-#include "callPredictionFunctions.h"
 #include "inferentials.h"
+#include "math_support.h"
 #include <algorithm>
-
 
 //The idea behind eaFold, meanFold, rankFold, eaRkFold is that opponents have different reasons for folding
 
-
 ///In the end, we had to stick with Algb for foldgain. (At low blinds, oppfold is guaranteed in Geom)
 
-
 #define NO_AUTO_RAISE
-
 
 
 //#define ANTI_CHECK_PLAY
