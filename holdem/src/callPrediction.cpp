@@ -516,6 +516,12 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
             if( traceOut_dexf != 0 ) *traceOut_dexf << "\tBegin Query(betSize=" << betSize << ",callSteps=" << callSteps << ") with myexf=" << myexf << "  mydexf=" << mydexf << " ⇒ initialize to " << this->totalexf << " +" << this->totaldexf << "∂betSize" << endl;
     #endif
 
+    #ifdef DEBUG_TRACE_P_RAISE
+      if (this->traceOut_dexf != nullptr) {
+        *this->traceOut_dexf << "\t⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯" << std::endl;
+      }
+    #endif
+
     this->noRaiseArraySize = 0;
     while( RaiseAmount(*tableinfo, betSize,this->noRaiseArraySize) < tableinfo->maxRaiseAmount() )
     {
@@ -641,7 +647,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       if( betSize - oppBankRoll < tableinfo->chipDenom()/4  ) // betSize <= oppBankRoll
       {
         #ifdef DEBUG_TRACE_P_RAISE
-          if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf << "\taccumulateOneOpponentPossibleRaises: "
+          if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf << "\taccumulateOneOpponentPossibleRaises evaluates AgainstRaise(" << betSize << "): "
             << tableinfo->table->ViewPlayer(pIndex)->GetIdent() << " can still call, at least." << std::endl;
           }
         #endif
