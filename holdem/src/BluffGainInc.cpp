@@ -408,9 +408,11 @@ float64 StateModel::fd(const float64 betSize, const float64 yval)
     return dy;
 }
 
-int32 StateModel::calculate_final_potRaisedWin(const size_t arraySize, ValueAndSlope * potRaisedWin_A, const float64 betSize, const FoldOrCall myFoldGain) {
+const std::pair<const int32, const FoldOrCall> StateModel::calculate_final_potRaisedWin(const size_t arraySize, ValueAndSlope * potRaisedWin_A, const float64 betSize) {
 
   size_t found_firstFoldToRaise = arraySize;
+
+  const FoldOrCall myFoldGain(*(table_spec.tableView->table), c.fCore); // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
 
 	for( size_t i=0;i<arraySize; ++i)
      {
@@ -439,7 +441,7 @@ int32 StateModel::calculate_final_potRaisedWin(const size_t arraySize, ValueAndS
 
      }
 
-	return static_cast<int32>(found_firstFoldToRaise);
+	return std::make_pair(static_cast<int32>(found_firstFoldToRaise), myFoldGain);
 }
 
 ValueAndSlope StateModel::calculate_oppRaisedChance(const float64 betSize, const size_t arraySize, ValueAndSlope * const oppRaisedChance_A, const int32 firstFoldToRaise, ValueAndSlope * const potRaisedWin_A, const ValueAndSlope &oppFoldChance) const {
@@ -503,14 +505,25 @@ ValueAndSlope StateModel::calculate_oppRaisedChance(const float64 betSize, const
       return lastuptoRaisedChance;
 }
 
+//Count needed array size
+int32 StateModel::state_model_array_size_for_blending(float64 betSize) const {
+  int32 arraySize = 0;
+  while( ExactCallD::RaiseAmount(*table_spec.tableView, betSize,arraySize) < table_spec.tableView->maxRaiseAmount() )
+  {
+      ++arraySize;
+  }
+  //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
+  if(betSize < table_spec.tableView->maxRaiseAmount()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
+
+  return arraySize;
+}
+
 // The primary purpose of this query is to return `y` which is our E[x] if betting `betSize`
 void StateModel::query( const float64 betSize )
 {
     // betSize here is always "my" bet size. The perspective of opponents is already covered in <tt>ea</tt>
 
     last_x = betSize;
-
-    const FoldOrCall fMyFoldGain(*(table_spec.tableView->table), c.fCore); // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
 
     ///Establish [PushGain] values
 
@@ -530,19 +543,13 @@ void StateModel::query( const float64 betSize )
 
     ///Establish [Raised] values
 
-    //Count needed array size
-    int32 arraySize = 0;
-    while( ExactCallD::RaiseAmount(*table_spec.tableView, betSize,arraySize) < table_spec.tableView->maxRaiseAmount() )
-    {
-        ++arraySize;
-    }
-    //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
-    if(betSize < table_spec.tableView->maxRaiseAmount()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
-
     //Create arrays
+    const int32 arraySize = state_model_array_size_for_blending(betSize);
 
     ValueAndSlope * potRaisedWin_A = new ValueAndSlope[arraySize];
-    firstFoldToRaise = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize, fMyFoldGain);
+    const std::pair<const int32, const FoldOrCall> potRaised_delimeters = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize);
+    firstFoldToRaise = potRaised_delimeters.first;
+    const FoldOrCall fMyFoldGain = std::move(potRaised_delimeters.second);
 
     ValueAndSlope * oppRaisedChance_A = new ValueAndSlope[arraySize];
     ValueAndSlope lastuptoRaisedChance = calculate_oppRaisedChance(betSize, arraySize, oppRaisedChance_A, firstFoldToRaise, potRaisedWin_A, oppFoldChance);

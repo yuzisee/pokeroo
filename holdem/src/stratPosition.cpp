@@ -19,11 +19,6 @@
  ***************************************************************************/
 
 #include "stratPosition.h"
-#include "arena.h"
-#include "callPrediction.h"
-#include "callRarity.h"
-#include "inferentials.h"
-#include "portability.h"
 #include "stratFear.h"
 
 #include <math.h>
@@ -477,6 +472,19 @@ void PositionalStrategy::printFoldGain(float64 raiseGain, CommunityStatsCdf * e,
 #endif // #ifdef LOGPOSITION
 }
 
+static const char * valSignToString(const float64 val) {
+  if (val > 0.0) {
+      return "+$";
+  }
+  if (val < 0.0) {
+      return "−$";
+  }
+  if (val == 0.0) {
+      return "$";
+  }
+  return "~";
+}
+
 static const char * chipSignToString(const struct AggregatedState & state) {
     const float64 val = state.value;
 
@@ -505,6 +513,35 @@ void PositionalStrategy::printStateModel(std::ofstream &logF, float64 displaybet
     logF << std::endl;
     logF << "        Push("<< displaybet <<")=" << ap_aggressive.outcomePush.contribution.v << " from " << chipSignToString(ap_aggressive.outcomePush) << ((ap_aggressive.outcomePush.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.outcomePush.pr << endl;
 
+}
+
+static void printAgainstRaiseComponents(std::ofstream &logF, const ExpectedCallD &tablestate, StateModel &m, ExactCallBluffD &pr_opponentfold, float64 displayBet) {
+
+  const int32 arraySize = m.state_model_array_size_for_blending(displayBet);
+  std::unique_ptr<ValueAndSlope[]> potRaisedWin = std::make_unique<ValueAndSlope[]>(arraySize);
+  std::unique_ptr<ValueAndSlope[]> oppRaisedChance = std::make_unique<ValueAndSlope[]>(arraySize);
+
+  const int32 firstFoldToRaise = m.calculate_final_potRaisedWin(arraySize, potRaisedWin.get(), displayBet).first;
+  m.calculate_oppRaisedChance(displayBet, arraySize, oppRaisedChance.get(), firstFoldToRaise, potRaisedWin.get(), ValueAndSlope{ pr_opponentfold.pWin(displayBet), pr_opponentfold.pWinD(displayBet) });
+
+  // GainModelNoRisk and GainModelGeom both use `betFraction` so...
+  const float64 chipUnits = tablestate.ViewPlayer()->GetMoney();
+
+  logF << "AgainstRaise(" << displayBet << ") components:" << std::endl << "\t📊"; // ∑
+  for(int32 i=0; i < arraySize; ++i) {
+    const float64 raiseAmount =  ExactCallD::RaiseAmount(tablestate, displayBet, i);
+    if (i != 0) {
+      logF << std::endl << "\t⊔ ";
+    }
+    logF << "Ω[" << raiseAmount << "]";
+    if ((std::fabs(potRaisedWin[i].v - 1.0) < std::numeric_limits<float64>::epsilon()) && (oppRaisedChance[i].v <= std::numeric_limits<float64>::epsilon())) {
+      logF << " … presumed impossible";
+    } else {
+      const float64 chipResult = ((potRaisedWin[i].v - 1.0) * chipUnits);
+      logF << "\t" << valSignToString(chipResult) << std::fabs(chipResult) << " ∩ " << (oppRaisedChance[i].v * 100.0) << "%";
+    }
+  }
+  logF << std::endl;
 }
 
 static void printPessimisticWinPct(std::ofstream & logF, const std::string &prefix_str, float64 betSize, CombinedStatResultsPessimistic &csrp, const float64 n_1v1_outcomes) {
@@ -1606,10 +1643,12 @@ float64 PureGainStrategy::MakeBet()
     printFoldGain(choicemodel.f(displaybet), &(statprob.core.callcumu), tablestate);
 
     printStateModel(logFile, displaybet, ap_aggressive, ViewPlayer());
+    printAgainstRaiseComponents(logFile, tablestate, ap_aggressive, ea, displaybet);
 
     if (betToCall < displaybet) {
         // If you raised, also show CALL
         printStateModel(logFile, betToCall, ap_aggressive, ViewPlayer());
+        printAgainstRaiseComponents(logFile, tablestate, ap_aggressive, ea, betToCall);
     }
 
     const float64 displayMinRaise = (myMoney < minRaiseTo) ? myMoney : minRaiseTo;
@@ -1618,6 +1657,7 @@ float64 PureGainStrategy::MakeBet()
         // If you called, also show MINRAISE
         if (betToCall < displayMinRaise) {
             printStateModel(logFile, displayMinRaise, ap_aggressive, ViewPlayer());
+            printAgainstRaiseComponents(logFile, tablestate, ap_aggressive, ea, displayMinRaise);
         }
     }
   #endif // VERBOSE_STATEMODEL_INTERFACE
