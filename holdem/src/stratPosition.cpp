@@ -625,8 +625,6 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOr
     if (printAllFold.second != nullptr) {
       printPessimisticWinPct(logF, ( raiseStep >= firstFoldToRaise.first ) ? "✲ʷᵃᶦᵗ" : ( (raiseStep >= firstFoldToRaise.second) ? "(Wᶠᵒˡᵈ) " : ""), rAmount, *printAllFold.second, n_1v1_outcomes);
     }
-
-    printPessimisticWinPct(logF, ( raiseStep >= firstFoldToRaise.first ) ? "✲ʷᵃᶦᵗ" : ( (raiseStep >= firstFoldToRaise.second) ? "(Wᶠᵒˡᵈ) " : ""), rAmount, *printAllFold.second, n_1v1_outcomes);
     // logF << " ⋯  noRaiseChance_adjust was... " << noRaiseChance_A_deduced
     logF << endl;
   }
