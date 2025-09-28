@@ -1,5 +1,5 @@
 
-==========#14==========
+==========#468==========
 Playing as ~
 *
 (Better All-in) 94.0816%
@@ -45,14 +45,15 @@ OppRAISEChanceR [F] 0 @ $860 ($27.6233 now)
 
 (Fixed at $10)
 	--
-Why didn't I raise to $20?
-OppRAISEChanceR [*] 0.268293 @ $30 ($10 now)
-OppRAISEChanceR [*] 0.263468 @ $50 ($10 now)
-OppRAISEChanceR [*] 0.253823 @ $90 ($12.3624 now)
-OppRAISEChanceR [*] 0.233609 @ $170 ($15.9653 now)
-OppRAISEChanceR [*] 0.193824 @ $330 ($20.9801 now)
-OppRAISEChanceR [F] 0.0564175 @ $650 ($25.2628 now)
-OppRAISEChanceR [F] 0 @ $860 ($27.4959 now)
+Why didn't I raise to $20 in this round?
+"all fold" precision will be 0.000904977
+OppRAISEChanceR [*] 0.268293 @ $30 ($10 now)	push=all_fold → 0.0859729
+OppRAISEChanceR [*] 0.263468 @ $50 ($10 now)	push=all_fold → 0.238914
+OppRAISEChanceR [*] 0.253823 @ $90 ($12.3624 now)	push=all_fold → 0.339367
+OppRAISEChanceR [*] 0.233609 @ $170 ($15.9653 now)	push=all_fold → 0.463348
+OppRAISEChanceR [*] 0.193824 @ $330 ($20.9801 now)	push=all_fold → 0.558371
+OppRAISEChanceR [F] 0.0564175 @ $650 ($25.2628 now)	push=all_fold → 0.644344
+OppRAISEChanceR [F] 0 @ $860 ($27.4959 now)	push=all_fold → 0.658824
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -82,7 +83,6 @@ Choice Optimal 0
 Choice Fold 20
 f(0)=1.01586
 CALL 0
-FoldGainᵣ()=0.988235 by waiting 0 hands(=0 folds)	vs play:1.0041
  AgainstCall(0)=1.0041 from $1.00995 @ 0.413068
 AgainstRaise(0)=1 from $1 @ 0.586932
         Push(0)=1 from $1 @ 0
@@ -101,14 +101,15 @@ OppRAISEChanceR [F] 0 @ $850 ($40.782 now)
 
 (Fixed at $0)
 	--
-Why didn't I raise to $10?
-OppRAISEChanceR [*] 0.629244 @ $20 ($10 now)
-OppRAISEChanceR [*] 0.625408 @ $40 ($10 now)
-OppRAISEChanceR [F] 0.613795 @ $80 ($14.8627 now)
-OppRAISEChanceR [F] 0.374659 @ $160 ($20.5938 now)
-OppRAISEChanceR [F] 0.169832 @ $320 ($28.1764 now)
-OppRAISEChanceR [F] 0.0652055 @ $640 ($36.1814 now)
-OppRAISEChanceR [F] 0 @ $850 ($40.5865 now)
+Why didn't I raise to $10 in this round?
+"all fold" precision will be 0.0015083
+OppRAISEChanceR [*] 0.629244 @ $20 ($10 now)	push=all_fold → 0.0708899
+OppRAISEChanceR [*] 0.625408 @ $40 ($10 now)	push=all_fold → 0.168929
+OppRAISEChanceR [F] 0.613795 @ $80 ($14.8627 now)	push=all_fold → 0.257919
+OppRAISEChanceR [F] 0.374659 @ $160 ($20.5938 now)	push=all_fold → 0.3454
+OppRAISEChanceR [F] 0.169832 @ $320 ($28.1764 now)	push=all_fold → 0.33635
+OppRAISEChanceR [F] 0.0652055 @ $640 ($36.1814 now)	push=all_fold → 0.357466
+OppRAISEChanceR [F] 0 @ $850 ($40.5865 now)	push=all_fold → 0.357466
 Guaranteed > $45 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -138,7 +139,6 @@ Choice Optimal 0
 Choice Fold 25
 f(0)=1.01914
 CALL 0
-FoldGainᵣ()=0.988235 by waiting 0 hands(=0 folds)	vs play:1.00738
  AgainstCall(0)=1.00752 from $1.01413 @ 0.534392
 AgainstRaise(0)=0.999856 from $0.99969 @ 0.465608
         Push(0)=1 from $1 @ 0
@@ -157,14 +157,15 @@ OppRAISEChanceR [F] 0 @ $850 ($87.7046 now)
 
 (Fixed at $0)
 	--
-Why didn't I raise to $10?
-OppRAISEChanceR [*] 0.607407 @ $20 ($10 now)
-OppRAISEChanceR [*] 0.603423 @ $40 ($13.0278 now)
-OppRAISEChanceR [F] 0.598617 @ $80 ($21.9235 now)
-OppRAISEChanceR [F] 0.396313 @ $160 ($34.0475 now)
-OppRAISEChanceR [F] 0.146924 @ $320 ($50.9079 now)
-OppRAISEChanceR [F] 0.0609848 @ $640 ($74.6651 now)
-OppRAISEChanceR [F] 0 @ $850 ($87.1477 now)
+Why didn't I raise to $10 in this round?
+"all fold" precision will be 0.0015083
+OppRAISEChanceR [*] 0.607407 @ $20 ($10 now)	push=all_fold → 0.131222
+OppRAISEChanceR [*] 0.603423 @ $40 ($13.0278 now)	push=all_fold → 0.239819
+OppRAISEChanceR [F] 0.598617 @ $80 ($21.9235 now)	push=all_fold → 0.330317
+OppRAISEChanceR [F] 0.396313 @ $160 ($34.0475 now)	push=all_fold → 0.419306
+OppRAISEChanceR [F] 0.146924 @ $320 ($50.9079 now)	push=all_fold → 0.420814
+OppRAISEChanceR [F] 0.0609848 @ $640 ($74.6651 now)	push=all_fold → 0.441931
+OppRAISEChanceR [F] 0 @ $850 ($87.1477 now)	push=all_fold → 0.443439
 Guaranteed > $45 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
 
@@ -206,8 +207,5 @@ Against(485)Algb=1.42941
 OppRAISEChanceR [*] 0 @ $850 ($365 now)
 
 (Fixed at $485)
-	--
-Why didn't I raise to $970?
-OppRAISEChanceR [*] 0 @ $850 ($-120 now)
 Guaranteed > $45 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
