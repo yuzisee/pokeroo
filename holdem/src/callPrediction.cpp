@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
+#include <algorithm>
 
 //The idea behind eaFold, meanFold, rankFold, eaRkFold is that opponents have different reasons for folding
 ///In the end, we had to stick with Algb for foldgain. (At low blinds, oppfold is guaranteed in Geom)
