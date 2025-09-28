@@ -262,7 +262,7 @@ template<typename T1, typename T2> float64 CallCumulationD<T1, T2>::inverseD(con
 //How this works:
 //reverseLookup(0.9) returns A pct, where (1-0.9) of hands are better to have than A pct.
 ///If you have rank, you would have winPCT
-float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
+std::pair<float64, char> CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
 {
     //Search for this .repeated is the rank_toHave
     const size_t maxsize = cumulation.size();
@@ -288,21 +288,21 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
     if( rank_toHave < 0 )
     {//Closer to rank 0 than the smallest positive rank
        if(cumulation[0].pct <= cumulation[high_index].pct) {
-         return 0.0;
+         return std::pair<float64, char>(0.0, 'L'); // 'l' for low (out of bounds)
        } else {
-         return 1.0;
+         return std::pair<float64, char>(1.0, 'L'); // 'l' for low (out of bounds)
        }
     }
     #endif
     if( rank_toHave < low_rank )
     {
-        //.pct is toHave -- if you haven't ReversePerspective()/ReversedPerspective() yet then that's the pct of the first hand dealt. See the bottom of CallStats::Analyze()
-        return cumulation[0].pct;
+       //.pct is toHave -- if you haven't ReversePerspective()/ReversedPerspective() yet then that's the pct of the first hand dealt. See the bottom of CallStats::Analyze()
+       return std::pair<float64, char>(cumulation[0].pct, 'B'); // 'b' for begin
     }
     if( rank_toHave > cumulation[high_index-1].repeated )
     {
-        //.pct is toHave.
-        return cumulation[high_index].pct;
+       //.pct is toHave.
+       return std::pair<float64, char>(cumulation[high_index].pct, 'E'); // 'e' for end
     }
     // It wasn't possible to trigger the codepath below anyway, since you would have returned already from the above `if` statement
     /*
@@ -310,9 +310,9 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
     if( rank_toHave > high_rank ) //Greater than 1??
     {
       if(cumulation[0].pct <= cumulation[high_index].pct) {
-        return 1.0;
+        return std::pair<float64, char>(1.0, 'H'); // 'h' for high (out of bounds)
       } else {
-        return 0.0;
+        return std::pair<float64, char>(0.0, 'H'); // 'h' for high (out of bounds)
       }
     }
     #endif
@@ -396,7 +396,7 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
         }else
         {//Perfect match. The PCT for a given rank is one index higher
             cached_high_index = guess_index;
-            return cumulation[guess_index+1].pct;
+            return std::pair<float64, char>(cumulation[guess_index+1].pct, 'P'); // 'p' for perfect
         }
 
     }
@@ -410,11 +410,11 @@ float64 CallCumulation::nearest_winPCT_given_rank(const float64 rank_toHave)
 
     cached_high_index = high_index;
 
-    return (
+    return std::pair<float64, char>((
                 low_pct * (high_rank - rank_toHave)
                 +
                 high_pct * (rank_toHave - low_rank)
-            ) / (high_rank - low_rank);
+            ) / (high_rank - low_rank), 'I'); // 'i' for interpolated
 
 
 }
