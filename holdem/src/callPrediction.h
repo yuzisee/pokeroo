@@ -27,7 +27,6 @@
 #include <iostream>
 #endif
 
-
 // All values should be expressed as a fraction of your bankroll (so that Geom and Algb can be compared directly)
 // 1.0 is "no change"
 class IStateCombiner {

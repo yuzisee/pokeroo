@@ -20,7 +20,6 @@
 
 #include "BluffGainInc.h"
 #include "callPrediction.h"
-#include "callPredictionFunctions.h"
 #include "math_support.h"
 
 #include <float.h>
@@ -608,12 +607,12 @@ void StateModel::query( const float64 betSize )
 
     //Create arrays
     const int32 arraySize = state_model_array_size_for_blending(betSize);
-
     ValueAndSlope * potRaisedWin_A = new ValueAndSlope[arraySize];
+    ValueAndSlope * oppRaisedChance_A = new ValueAndSlope[arraySize];
+
     std::pair<firstFoldToRaise_t, FoldOrCall> potRaised_delimiters = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize);
     const FoldOrCall fMyFoldGain = std::move(potRaised_delimiters.second);
 
-    ValueAndSlope * oppRaisedChance_A = new ValueAndSlope[arraySize];
     ValueAndSlope lastuptoRaisedChance = calculate_oppRaisedChance(betSize, arraySize, oppRaisedChance_A, potRaised_delimiters.first, potRaisedWin_A, oppFoldChance);
 
     ValueAndSlope potNormalWin = g_raised(betSize,betSize);
@@ -752,6 +751,7 @@ SimulateReraiseResponse StateModel::willFoldToReraise
     const bool bIsProfitableCall = concedeGain < playGain; // At least by calling I can win back a little more than losing concedeGain upfront
 
     if (bIsOverbetAgainstThisRound) {
+      // We can profit from folding. This is a way overbet and we wouldn't call here then.
       #ifdef DEBUG_WILL_FOLD_TO_RERAISE
         if (trace_statemodel != nullptr) {
           *trace_statemodel << "\t\tStateModel::willFoldToReraise being re-raised to $" << raiseAmount << " would be a clear overbet,";
@@ -764,14 +764,14 @@ SimulateReraiseResponse StateModel::willFoldToReraise
         }
       #endif
 
-        // We can profit from folding. This is a way overbet and we wouldn't call here then.
     } else if (!bIsProfitableCall) {
+      // Not a profitable call either? Then I guess we'll fold to reraise. Return true.
       #ifdef DEBUG_WILL_FOLD_TO_RERAISE
         if (trace_statemodel != nullptr) {
           *trace_statemodel << "\t\tStateModel::willFoldToReraise will fold to $" << raiseAmount << " after we already tried first raising to $" << hypotheticalMyRaiseTo << " based on comparing " << ((playGain - 1.0) * myInfo.ViewPlayer()->GetMoney() ) << "⛀ ≤ " << ((concedeGain - 1.0) * myInfo.ViewPlayer()->GetMoney()) << "⛀" << std::endl;
         }
       #endif
-        // Not a profitable call either? Then I guess we'll fold to reraise. Return true.
+
     }
 
     return SimulateReraiseResponse {
