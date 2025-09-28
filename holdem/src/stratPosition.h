@@ -46,7 +46,7 @@ public:
         static void printStateModel(std::ofstream &logF, float64 betSize, StateModel &choicemodel, const Player &me);
 
         template< typename T >
-        void printBetGradient(std::ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * csrp) const;
+        void printBetGradient(std::ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * const csrp) const;
         // ^^^ `.pRaise(…)` and `.pWin(…)` will update their respective caches, so it's not a *true* `const ExactCallD &` nor `const ExactCallBluffD &`
 
         void printFoldGain(float64 raiseGain, CommunityStatsCdf * e, ExpectedCallD & estat);

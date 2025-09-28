@@ -19,15 +19,12 @@
  ***************************************************************************/
 
 #include "stratPosition.h"
-#include "arena.h"
-#include "callPrediction.h"
-#include "callRarity.h"
-#include "inferentials.h"
-#include "portability.h"
+#include "BluffGainInc.h"
 #include "stratFear.h"
 
 #include <math.h>
 #include <float.h>
+#include <memory>
 
 //#define DEBUG_TRAP_AS_NORMAL
 
@@ -448,6 +445,11 @@ void PositionalStrategy::printCommon(const ExpectedCallD &tablestate) {
 
 void PositionalStrategy::printFoldGain(float64 raiseGain, CommunityStatsCdf * e, ExpectedCallD & estat) {
 #ifdef LOGPOSITION
+    if (ViewTable().GetBetToCall() == this->myBet) {
+      // I can check, so there's no FoldGain here.
+      return;
+    }
+
     FoldOrCall foldGainCalculator(ViewTable(), statprob.core);
     std::pair<float64, float64> foldgainVal_xw = foldGainCalculator.myFoldGainAndWaitlength(foldGainCalculator.suggestMeanOrRank());
     const float64 &foldgainVal = foldgainVal_xw.first; // gain
@@ -479,7 +481,7 @@ static const char * chipSignToString(const struct AggregatedState & state) {
         return "+$";
     }
     if (val < 1.0) {
-        return "-$";
+        return "−$";
     }
     if (val == 1.0) {
         return "$";
@@ -491,31 +493,35 @@ void PositionalStrategy::printStateModel(std::ofstream &logF, float64 displaybet
 
     ap_aggressive.f(displaybet); // query
     logF << " AgainstCall("<< displaybet <<")=" << ap_aggressive.outcomeCalled.contribution.v << " from " << chipSignToString(ap_aggressive.outcomeCalled) << (fabs(ap_aggressive.outcomeCalled.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.outcomeCalled.pr << endl;
-    logF << "AgainstRaise("<< displaybet <<")=" << ap_aggressive.blendedRaises.contribution.v << " from " << chipSignToString(ap_aggressive.blendedRaises) << (fabs(ap_aggressive.blendedRaises.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.blendedRaises.pr  << endl;
+    logF << "AgainstRaise("<< displaybet <<")=";
+    if ((ap_aggressive.blendedRaises.pr == 0.0) && (ap_aggressive.blendedRaises.contribution.v == 1.0)) {
+      logF << " … presumed to be impossible";
+    } else {
+      logF << ap_aggressive.blendedRaises.contribution.v << " from " << chipSignToString(ap_aggressive.blendedRaises) << (fabs(ap_aggressive.blendedRaises.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.blendedRaises.pr;
+    }
+    logF << std::endl;
     logF << "        Push("<< displaybet <<")=" << ap_aggressive.outcomePush.contribution.v << " from " << chipSignToString(ap_aggressive.outcomePush) << ((ap_aggressive.outcomePush.value - 1.0) * me.GetMoney()) << " @ " << ap_aggressive.outcomePush.pr << endl;
 
 }
 
-static void printPessimisticWinPct(std::ofstream & logF, float64 betSize, CombinedStatResultsPessimistic * const csrp, const float64 n_1v1_outcomes) {
-    if (csrp != 0) {
+static void printPessimisticWinPct(std::ofstream & logF, const std::string &prefix_str, float64 betSize, CombinedStatResultsPessimistic &csrp, const float64 n_1v1_outcomes) {
         const float64 safety_rounding = (n_1v1_outcomes < RAREST_HAND_CHANCE) ? RAREST_HAND_CHANCE : n_1v1_outcomes;
-        const StatResult & showdown1v1 = csrp->ViewShape(betSize);
+  const StatResult & showdown1v1 = csrp.ViewShape(betSize);
         // const float64 stable_splits = std::round(showdown1v1.splits * n_1v1_outcomes * 2) / n_1v1_outcomes;
         // const float64 stable_splits = (showdown1v1.splits < std::sqrt(std::numeric_limits<float64>::epsilon())) ? 0.0 : showdown1v1.splits;
         const float64 stable_splits = (showdown1v1.splits < (0.25 / safety_rounding)) ? 0.0 : showdown1v1.splits;
         // At` betSize` we predict we would need a hand good enough to beat this many players
         //                ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-        logF << "\tW(" << csrp->getHandsToBeat(betSize) << "×)=" << csrp->getWinProb(betSize) << " L=" << csrp->getLoseProb(betSize) << " " << ((int)(csrp->splitOpponents())) << "×o.w_s=(" << showdown1v1.wins << "," << stable_splits << ")";
+  logF << "\t" << prefix_str << "W(" << csrp.getHandsToBeat(betSize) << "×)=" << csrp.getWinProb(betSize) << " L=" << csrp.getLoseProb(betSize) << " " << ((int)(csrp.splitOpponents())) << "×o.w_s=(" << showdown1v1.wins << "," << stable_splits << ")";
         //                                                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         //                                                                                             This is the _actual_ number of people you would be in the showdown with
-    }
 }
 
 // TODO(from joseph): Do we need `betToCall` and `maxShowdown`? What about `tablestate.table.GetBetToCall()` and `tablestate.table.GetMaxShowdown()` directly?
-static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD & opp_callraise, const FoldOrCall &rF, const int32 firstFoldToRaise, const ExpectedCallD & tablestate, const float64 n_1v1_outcomes, const float64 betToCall, const float64 maxShowdown, const std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *> printAllFold, std::ofstream &logF) {
+static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOrCall &rF, const ExpectedCallD & tablestate, const float64 maxShowdown, ExactCallD & opp_callraise, const int32 firstFoldToRaise, const float64 betToCall, std::pair<ExactCallBluffD * const,  CombinedStatResultsPessimistic * const> printAllFold, const float64 n_1v1_outcomes, std::ofstream &logF) {
   // pWin() generally relies on FindZero as part of its calculation, so show the precision we know it has...
   const float64 foldPrecision = DISPLAY_PROBABILITY_QUANTUM / tablestate.handsToShowdownAgainst();
-  if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
+  if (printAllFold.first != nullptr) {
     logF << "\"all fold\" precision will be " << foldPrecision << std::endl;
 
     #ifdef DEBUG_TRACE_PWIN
@@ -554,9 +560,9 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD &
     // ↑ ABOVE is the probability of the opponents raising me
     // ↓ BELOW is the probability of the opponents folding if I raise
 
-    if (printAllFold.first != nullptr && printAllFold.second != nullptr) {
+    if (printAllFold.first != nullptr) {
       // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
-      logF << "\tfold -- "; // << "left"
+      logF << "\tpush=all_fold → "; // << "left"
       const float64 allFoldPr = printAllFold.first->pWin(rAmount);
       #ifdef DEBUG_TRACE_PWIN
       logF << " ⎌⟂ ";
@@ -569,11 +575,13 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD &
           logF << "1.0";
         } else {
           const float64 allFoldPr_rounded = 1.0 - std::round(anyNonFoldPr / foldPrecision) * foldPrecision;
-          logF << allFoldPr_rounded; //<< "  " << rr.pWin(orAmount) << " right";
+          logF << allFoldPr_rounded; //<< "  " << rr.pWin(rAmount) << " right";
         }
       }
+    }
 
-      printPessimisticWinPct(logF, rAmount, printAllFold.second, n_1v1_outcomes);
+    if (printAllFold.second != nullptr) {
+      printPessimisticWinPct(logF, ( raiseStep >= firstFoldToRaise ) ? "(Wᶠᵒˡᵈ) " : "", rAmount, *printAllFold.second, n_1v1_outcomes);
     }
     // logF << " ⋯  noRaiseChance_adjust was... " << noRaiseChance_A_deduced
     logF << endl;
@@ -587,79 +595,82 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, ExactCallD &
 }
 
 template< typename T >
-void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet,  CombinedStatResultsPessimistic * csrp) const
-{
-#ifdef LOGPOSITION
+static int32 firstFoldToRaise(T & m, const float64 displayBet, const FoldOrCall &myFoldGain, const ExpectedCallD & tablestate, const float64 maxShowdown
+#ifdef DEBUG_WILL_FOLD_TO_RERAISE
+, std::ostream &logF
+#endif
+) {
+  int32 found_firstFoldToRaise = -1;
 
-    const float64 n_possible_1v1_outcomes = this->detailPCT.n * this->statprob.core.handcumu.cumulation.size();
 
     int32 raiseStep = 0;
+  float64 rAmount;
+  for(raiseStep = 0, rAmount = 0.0; rAmount < maxShowdown; ++raiseStep )
+  {
+      rAmount =  ExactCallD::RaiseAmount(tablestate, displayBet, raiseStep);
+            const float64 oppRaisedPlayGain = m.g_raised(displayBet, rAmount);
+            if (StateModel::willFoldToReraise(rAmount, oppRaisedPlayGain, myFoldGain, tablestate, displayBet))
+            { break; /* We'd fold at this point. Stop incrementing */ } else {  found_firstFoldToRaise = raiseStep+1; }
+  }
+  return found_firstFoldToRaise;
+}
+
+template< typename T >
+void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_callraise, ExactCallBluffD & opp_fold, T & m, ExpectedCallD & tablestate, float64 separatorBet, CombinedStatResultsPessimistic * const csrp) const
+{
+#ifdef LOGPOSITION
+    const float64 n_possible_1v1_outcomes = this->detailPCT.n * this->statprob.core.handcumu.cumulation.size();
 
     {
-        FoldOrCall rlF(*(tablestate.table), opp_callraise.fCore);
+        const FoldOrCall rlF(*(tablestate.table), opp_callraise.fCore);
 
-        int32 firstFoldToRaise = -1;
-        float64 orAmount;
-        for(raiseStep = 0, orAmount = 0.0; orAmount < maxShowdown; ++raiseStep )
-        {
-            orAmount =  ExactCallD::RaiseAmount(tablestate, betToCall,raiseStep);
-
-            const float64 oppRaisedPlayGain = m.g_raised(betToCall,orAmount);
-            if(StateModel::willFoldToReraise(orAmount, oppRaisedPlayGain, rlF, tablestate, betToCall))
-            { break; /* We'd fold at this point. Stop incrementing */ } else {  firstFoldToRaise = raiseStep+1; }
-        }
-        ;
-
+        ExactCallBluffD * const printMoreDetails = nullptr;
         if (separatorBet != betToCall) {
-            logF << std::endl << "Why didn't I call?" << std::endl;
+          logF << std::endl << "Why didn't I " << ((tablestate.alreadyBet() == betToCall) ? "check" : "call") << "?" << std::endl;
         }
-
-        print_raise_chances_if_i(betToCall, opp_callraise, rlF, firstFoldToRaise, tablestate, n_possible_1v1_outcomes, betToCall, maxShowdown, std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *>(&opp_fold, csrp), logF);
+        // Render what happens if you call
+        print_raise_chances_if_i(betToCall, rlF, tablestate, maxShowdown, opp_callraise,
+            firstFoldToRaise(m, betToCall, rlF, tablestate, maxShowdown
+              #ifdef DEBUG_WILL_FOLD_TO_RERAISE
+              , logF
+              #endif
+            ), betToCall, std::make_pair(printMoreDetails, csrp), n_possible_1v1_outcomes, logF);
     }
 
     logF << endl;
     logF << "(Fixed at $" << separatorBet << ")";
-    printPessimisticWinPct(logF, separatorBet, csrp,  n_possible_1v1_outcomes);
+    if (csrp != nullptr) {
+      printPessimisticWinPct(logF, "", separatorBet, *csrp, n_possible_1v1_outcomes);
+    }
     logF << endl;
 
-    const float64 minNextRaiseTo = (separatorBet*2-betToCall);
-    if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
+    if (separatorBet == betToCall) {
+      const float64 minNextRaiseTo = (separatorBet*2-betToCall);
+      if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
+    }
 
-    std::pair<ExactCallBluffD *, CombinedStatResultsPessimistic *> foldPrintConfig;
+    ExactCallBluffD * const foldPrintConfig = &opp_fold;
     float64 alternativeBetToCompare;
     logF << "\t--" << endl;
     if (separatorBet != betToCall) {
-      logF << "What am I expecting now, given my actual bet?" << endl;
+      logF << "What am I expecting now, given my actual bet of $" << separatorBet << "?" << endl;
       alternativeBetToCompare = separatorBet;
-      foldPrintConfig = std::make_pair( nullptr, nullptr );
     } else {
-      logF << "Why didn't I raise to $" << tablestate.minRaiseTo() << "?" << endl;
+      logF << "Why didn't I raise to $" << tablestate.minRaiseTo() << " in this round?" << endl;
       alternativeBetToCompare = tablestate.minRaiseTo();
-      foldPrintConfig = std::make_pair( &opp_fold, csrp );
     }
 
-        FoldOrCall rrF(*(tablestate.table), opp_callraise.fCore);
+        const FoldOrCall rrF(*(tablestate.table), opp_callraise.fCore);
 
-        int32 firstFoldToRaise = -1;
-        float64 mrAmount;
-        for(raiseStep = 0, mrAmount = 0.0; mrAmount < maxShowdown; ++raiseStep )
-        {
-            mrAmount = ExactCallD::RaiseAmount(tablestate, alternativeBetToCompare,raiseStep);
-
-            const float64 oppRaisedPlayGain = m.g_raised(alternativeBetToCompare,mrAmount);
-            if(StateModel::willFoldToReraise(mrAmount, oppRaisedPlayGain, rrF, tablestate, alternativeBetToCompare))
-            { break; /* We'd fold at this point. Stop incrementing */ } else {  firstFoldToRaise = raiseStep+1; }
-
-        }
-
-        print_raise_chances_if_i(alternativeBetToCompare, opp_callraise, rrF, firstFoldToRaise, tablestate, n_possible_1v1_outcomes, betToCall, maxShowdown, foldPrintConfig, logF);
+        print_raise_chances_if_i(alternativeBetToCompare, rrF, tablestate, maxShowdown, opp_callraise,
+            firstFoldToRaise(m, alternativeBetToCompare, rrF, tablestate, maxShowdown
+              #ifdef DEBUG_WILL_FOLD_TO_RERAISE
+              , logF
+              #endif
+            ), betToCall, std::make_pair(foldPrintConfig, csrp), n_possible_1v1_outcomes, logF);
 
 #endif // LOGPOSITION
 }
-
-
-
-
 
 
 ///==============================
@@ -681,8 +692,6 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
 // Increases implied odds on Low Bets proportional to detailPCT.avgDev
 // /* On higher bets: Reduces considered opponents (you probably don't have to beat the people who folded), especially if you are going to improve your hand */
 //
-
-
 float64 ImproveGainStrategy::MakeBet()
 {
 	setupPosition();
@@ -1492,17 +1501,6 @@ float64 PureGainStrategy::MakeBet()
         // Mean / Pessemistic mode (heads-up)
         statResultMode = 'm';
     }
-    // [!NOTE]
-    // In the "playing hand" scenario,
-    //   leftCS.getWinProb() === initByRank(..., left).fOutrightWinProb
-    //   leftCS.getLoseProb() === initByRank(..., left).fLoseProb
-    //   leftCS.ViewShape() == initByRank(..., left.fShape)
-    logFile << "CallStrength W(" << static_cast<int>(tablestate.handStrengthOfRound()) << statResultMode << ")=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
-    // leftCS.ViewShape() is your "implied" win rate against a single opponent (i.e. the generalized hand strength of your current situation)
-    const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
-    logFile << "(MinRaise to $" << minRaiseTo << ") ";
-    printPessimisticWinPct(logFile, minRaiseTo, &csrp, detailPCT.n * statprob.core.handcumu.cumulation.size());
-    logFile << endl;
 
 	if( bGamble == 0 )
 	{ logFile << " -  statranking algb RAW - " << endl;}
@@ -1553,22 +1551,46 @@ float64 PureGainStrategy::MakeBet()
     // PureGainStrategy doesn't perform any blending across StateModel objects.
     // It has some scaling between GainModel (for calls) → CombinedStatResultsPessimistic (for raises) instead.
     StateModel ap_aggressive( state_model_config, ea, pr_opponentcallraise, &callOrRaise );
-
+    // ^^^ callOrRaise is used to compute `E[f(betSize)]` when calculating how much we'll win if e.g. a call reaches the showdown
 
 
     HoldemFunctionModel& choicemodel = ap_aggressive;
 
-    #if defined(DEBUG_TRACE_DEXF) && defined(LOGPOSITION)
+    #if (defined(DEBUG_TRACE_DEXF)) && defined(LOGPOSITION)
       if (bGamble == DEBUG_TRACE_DEXF) {
         logFile << "SOLVING E[x] for bGamble=" << static_cast<int>(bGamble) << std::endl;
         pr_opponentcallraise.traceOut_dexf = &logFile;
       }
+
     #endif
 
     const float64 bestBet = solveGainModel(&choicemodel);
 
 
 #ifdef LOGPOSITION
+    // [!NOTE]
+    // In the "playing hand" scenario,
+    //   leftCS.getWinProb() === initByRank(..., left).fOutrightWinProb
+    //   leftCS.getLoseProb() === initByRank(..., left).fLoseProb
+    //   leftCS.ViewShape() == initByRank(..., left.fShape)
+    logFile << "CallStrength[" << statResultMode << "] W(" << static_cast<int>(tablestate.handStrengthOfRound()) << "👤)=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
+    // leftCS.ViewShape() is your "implied" win rate against a single opponent (i.e. the generalized hand strength of your current situation)
+
+    logFile << "Can you win by " << ((betToCall == tablestate.alreadyBet()) ? "checking" : "calling") << "? " << callModel.f(betToCall) << " for a showdown of $" << pr_opponentcallraise.exf(betToCall)
+      << " @ onWin=" << (leftCS.getWinProb(betToCall) * 100.0) << "% vs. onLoss=" << (leftCS.getLoseProb(betToCall) * 100.0) << "% risking $" << betToCall
+      // plus some other details for splits, see `GainModelNoRisk::g` for more
+      << std::endl;
+   // ^^^ Use DEBUG_TRACE_SEARCH to explore further.
+   if (bestBet > betToCall) {
+     logFile << "Can you win by raising to $" << bestBet << "? " << raiseModel.f(bestBet) << " all the way to a showdown of $" << pr_opponentcallraise.exf(bestBet)
+       << " @ onWin=" << (csrp.getWinProb(bestBet) * 100.0) << "% vs. onLoss=" << (csrp.getLoseProb(bestBet) * 100.0) << "% risking $" << bestBet
+       // plus some other details for splits, see `GainModelGeom::g` or `GainModelNoRisk::g` depending on `raiseModel`
+       << std::endl;
+   }
+   const float64 minRaiseTo = betToCall + ViewTable().GetMinRaise();
+   logFile << "(MinRaise to $" << minRaiseTo << ") ";
+   printPessimisticWinPct(logFile, "", minRaiseTo, csrp, detailPCT.n * statprob.core.handcumu.cumulation.size());
+   logFile << endl;
 
   #ifdef DEBUG_TRACE_DEXF
     logFile << "└─> bGamble " << static_cast<int>(bGamble) << "'s result: $" << bestBet << "⛂" << std::endl;
@@ -1597,14 +1619,12 @@ float64 PureGainStrategy::MakeBet()
     }
   #endif // VERBOSE_STATEMODEL_INTERFACE
 
-    //if( bestBet < betToCall + ViewTable().GetChipDenom() )
-    {
-        /*
-         logFile << "PlayAt($"<< displaybet <<")Call=" << callModel.f(displaybet) << endl;
-         logFile << "PlayAt($"<< displaybet <<")Raise=" << raiseModel.f(displaybet) << endl;
-         */
 
-    }
+    #ifdef DEBUG_TRACE_P_RAISE
+      if(bGamble == DEBUG_TRACE_P_RAISE) {
+        pr_opponentcallraise.traceOut_dexf = &logFile;
+      }
+    #endif
 
     printBetGradient< StateModel >
     (logFile, pr_opponentcallraise, ea, ap_aggressive, tablestate, displaybet, &csrp);
