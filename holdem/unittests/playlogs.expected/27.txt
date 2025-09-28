@@ -45,6 +45,8 @@ FoldGainᵣ()=3.45147 by waiting 55 hands(=31.1592 folds)	vs play:0.419567
  AgainstCall(108)=1 from −$81.1731 @ 0
 AgainstRaise(108)=0.419567 from −$74.2955 @ 1
         Push(108)=1 from $0 @ 0
+AgainstRaise(108) components:
+	📊Ω[128]	−$74.2955 ∩ 100%   −$128↔+$192.429
  AgainstCall(128)=0.419567 from −$74.2955 @ 1
 AgainstRaise(128)= … presumed to be impossible
         Push(128)=1 from $0 @ 0
