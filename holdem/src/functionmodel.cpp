@@ -893,7 +893,7 @@ float64 GainModelGeom::fd(const float64 betSize, const float64 y)
 
 
 
-// Returns a value as a fraction of your bankroll. Returning 0.0 means "lose everything"
+// @return a value as a fraction of your bankroll. Returning 0.0 means "lose everything"
 float64 GainModelNoRisk::g(float64 betSize)
 {
 
@@ -943,6 +943,7 @@ float64 GainModelNoRisk::g(float64 betSize)
     return h(x, betSize, exf, f_pot, fOutcome);
 }
 
+// @param exf is how much we think will be in the pot by the time we get to showdown
 float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, float64 f_pot,  ICombinedStatResults & fOutcome) {
     const float64 base = ExpectedCallD::handBetBase();
     const float64 x = betFraction;
@@ -1040,11 +1041,11 @@ float64 GainModelNoRisk::h(float64 betFraction, float64 betSize, float64 exf, fl
     return result;
 }
 
-
+// g() is the main implementation of GainModelNoRisk -- we have `f` here only so it's searchable by `HoldemFunctionModel::FindBestBet` and whatnot
 float64 GainModelNoRisk::f(const float64 betSize)
 {
-    const float64 wls = g(betSize);
-    const float64 fx = wls;
+    const float64 wls = g(betSize); // win loss split
+    const float64 fx = wls; // f(x)
     return fx;
 }
 

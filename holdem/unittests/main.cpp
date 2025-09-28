@@ -4981,10 +4981,10 @@ Playing as S
         #endif
 
         FacedOddsRaiseGeom<void> actual(myTable.GetChipDenom());
-        FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss);
         actual.FG.waitLength.load(cps, avgBlind);
         actual.FG.waitLength.opponents = tablestate_tableinfo.handsToShowdownAgainst();
         actual.FG.waitLength.setMeanConv(nullptr);
+        FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss);
         const float64 noRaisePct = actual.FindZero(0.0, 1.0, false);
         const float64 d_noRaisePct_dbetsize = ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(tablestate_tableinfo, hypothetical, noRaisePct);
 
