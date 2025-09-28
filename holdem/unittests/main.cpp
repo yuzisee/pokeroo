@@ -4978,16 +4978,22 @@ Playing as S
       //     ...should be switched over to OpponentHandOpportunity via CombinedStatResultsPessemistic
       {
         const struct RiskLoss actual_RiskLoss = tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu));
-        assert((actual_RiskLoss.old_broken_riskloss_wrong_sign().v == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
+        assert(actual_RiskLoss.b_raise_will_be_called() && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
       }
 
       const float64 p4_raiseTo = 2400.0;
       // const float mydexf = 1.0; // tablestate_tableinfo.RiskLossHeuristic(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
       std::vector<std::pair<float64, ValueAndSlope>> actual_noRaisePct_vs_betSize;
       // Mimic src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
-      // for (float64 betSize = 2000.0; betSize < 4001.0; betSize += 100.0) {
+
+      hypothetical.hypotheticalRaiseTo = p4_raiseTo;
+
+      hypothetical.hypotheticalRaiseAgainst = 250;
+      assert(tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu)).b_raise_is_too_dangerous() && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
+      hypothetical.hypotheticalRaiseAgainst = 500;
+      assert(tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu)).b_raise_will_be_called() && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is still pretty large on a table with 5 players. RiskLoss can slightly discourage that.");
+
       for (float64 p3_betSize = 250.0; p3_betSize < 2501.0; p3_betSize += 250.0) {
-        hypothetical.hypotheticalRaiseTo = p4_raiseTo;
         hypothetical.hypotheticalRaiseAgainst = p3_betSize;
 
         // To get a high P4 RiskLoss against P3, we want:
@@ -5007,11 +5013,6 @@ Playing as S
         // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
 
         const struct RiskLoss actual_RiskLoss = tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu));
-        #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
-        assert((std::fabs(actual_RiskLoss.old_broken_riskloss_wrong_sign().v) <= std::numeric_limits<float64>::epsilon()) && "In the OLD_BROKEN_RISKLOSS_WRONG_SIGN it returns 0.0 when the raiseTo is too extreme (and of course also a positive value if it's a small & safe raiseTo)");
-        #else
-        assert((std::fabs(actual_RiskLoss.riskLoss_adjustment_for_raising_too_much().v) / 6.0 > std::numeric_limits<float64>::epsilon()) && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
-        #endif
 
         FacedOddsRaiseGeom<void> actual(myTable.GetChipDenom());
         actual.FG.waitLength.load(cps, avgBlind);
@@ -5019,16 +5020,16 @@ Playing as S
         actual.FG.waitLength.setMeanConv(nullptr);
         FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss);
         const float64 noRaisePct = actual.FindZero(0.0, 1.0, false);
-        const float64 d_noRaisePct_dbetsize = 0.0;
+        const float64 d_noRaisePct_dbetsize = actual.dw_dfacedBet(noRaisePct);
 
         actual_noRaisePct_vs_betSize.push_back( std::pair<float64, ValueAndSlope>( p3_betSize , ValueAndSlope {
           noRaisePct, d_noRaisePct_dbetsize
         }));
       }
 
-      const float64 reasonableDerivatives = UnitTests::print_x_y_dy_derivative_ok(actual_noRaisePct_vs_betSize, 0.0009);
+      const float64 reasonableDerivatives = UnitTests::print_x_y_dy_derivative_ok(actual_noRaisePct_vs_betSize, 0.00015);
       std::cout << "actual_noRaisePct_vs_betSize derivatives correct " << (reasonableDerivatives * 100.0) << "% of the time" << std::endl;
-      assert(reasonableDerivatives > 0.75);
+      assert(reasonableDerivatives > 0.85);
     } // end testHybrid_drisk_handsIn
 }
 
