@@ -38,12 +38,9 @@
 //     For example, if you are debugging `PureGainStrategy bot("abc.txt", 2)` you will want to `#define DEBUG_TRACE_DEXF 2`
 // ^^^ Disable (i.e. You can explicitly `#undef DEBUG_TRACE_DEXF`) if you don't want `.github/workflows/ci.yml` to test with it
 
-
+#include "callPredictionTypes.h"
 #include "functionbase.h"
 #include "inferentials.h"
-#include "portability.h"
-#include <cmath>
-#include <limits>
 
 #define SACRIFICE_COMMITTED
 
@@ -54,8 +51,6 @@
 
 constexpr float64 SEARCH_SPACE_PROBABILITY_QUANTUM = 0.25/RAREST_HAND_CHANCE;
 constexpr float64 DISPLAY_PROBABILITY_QUANTUM = 1.0/RAREST_HAND_CHANCE;
-
-typedef std::pair<int32, int32> firstFoldToRaise_t;
 
 struct DBetSizeCache {
   bool b_assume_w_is_constant = false;

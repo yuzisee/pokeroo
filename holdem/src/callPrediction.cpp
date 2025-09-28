@@ -19,44 +19,30 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
-#include "callPredictionFunctions.h"
-#include "inferentials.h"
-#include <algorithm>
-
 
 //The idea behind eaFold, meanFold, rankFold, eaRkFold is that opponents have different reasons for folding
-
-
 ///In the end, we had to stick with Algb for foldgain. (At low blinds, oppfold is guaranteed in Geom)
 
-
 #define NO_AUTO_RAISE
-
-
 
 //#define ANTI_CHECK_PLAY
 
 ExactCallD::~ExactCallD()
 {
-    if( noRaiseChance_A != 0 )
-    {
+    if( noRaiseChance_A != 0 ) {
         delete [] noRaiseChance_A;
     }
-    if( noRaiseChanceD_A != 0 )
-    {
+    if( noRaiseChanceD_A != 0 ) {
         delete [] noRaiseChanceD_A;
     }
 }
 
-ExactCallBluffD::~ExactCallBluffD()
-{
-}
+ExactCallBluffD::~ExactCallBluffD() { }
 
 void ExactCallD::SetImpliedFactor(const float64 bonus)
 {
     impliedFactor = bonus;
 }
-
 
 /*
 float64 ExactCallBluffD::topTwoOfThree(float64 a, float64 b, float64 c, float64 a_d, float64 b_d, float64 c_d, float64 & r) const
