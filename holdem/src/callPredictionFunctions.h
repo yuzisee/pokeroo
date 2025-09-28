@@ -55,6 +55,8 @@
 constexpr float64 SEARCH_SPACE_PROBABILITY_QUANTUM = 0.25/RAREST_HAND_CHANCE;
 constexpr float64 DISPLAY_PROBABILITY_QUANTUM = 1.0/RAREST_HAND_CHANCE;
 
+typedef std::pair<int32, int32> firstFoldToRaise_t;
+
 struct ChipPositionState
 {
     ChipPositionState(float64 stack, float64 tablepot, float64 sofar, float64 commit, float64 pastpot)
@@ -66,16 +68,32 @@ struct ChipPositionState
     const float64 alreadyBet; // What is my bet so far, this round? (As I understand it, this is included in `pot`)
     const float64 alreadyContributed; // This is the same as `alreadyBet` (except it excludes any blinds, until you call or raise)
     float64 prevPot;
-
 }
 ;
+
+struct SimulateReraiseResponse {
+  bool bGoodFold; // You forced an overbet, so go ahead and fold because you will profit from this.
+  bool bUnprofitable;
+
+  // You got caught on an unprofitable hand but now at a higher bet size. We need to fold but would have preferred to not have raised in the first place.
+  constexpr bool bBadFold() const {
+    return bUnprofitable && !bGoodFold;
+  }
+
+  constexpr static SimulateReraiseResponse at_callSteps(firstFoldToRaise_t callSteps, int32 i) {
+    return SimulateReraiseResponse {
+      callSteps.first <= i,
+      callSteps.second <= i
+    };
+  }
+};
 
 struct HypotheticalBet {
   const struct ChipPositionState &bettorSituation;
   float64 hypotheticalRaiseTo;
   float64 hypotheticalRaiseAgainst;
   const float64 counterfactualFoldAbandon_raw; // This is the same as `bettorSituation.alreadyContributed` EXCEPT it includes any blinds you are on the hook for as well. In theory it's exactly `bettorSituation.alreadyBet`
-  const bool bWillGetCalled;
+  const struct SimulateReraiseResponse bWillGetCalled;
 
   // if you're _RE-RAISING_ this is the increase compared to the highest bet so far
   constexpr float64 raiseBy() const {
@@ -444,7 +462,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     float64 fold_bet; // if I "fold" instead of `raiseTo`, what bet can we get back to just by waiting?
     float64 faced_bet; // if I "call", I increase my bet **to** `faced_bet` (i.e. increase my bet **by** `faced_bet - fold_bet`)
     struct RiskLoss riskLoss;
-	  bool bRaiseWouldBeCalled; // If this is `true`, at least *one* person will cause the raise (you won't get an all-fold situation)
+	  struct SimulateReraiseResponse bRaiseWouldBeCalled; // If this is `true`, at least *one* person will cause the raise (you won't get an all-fold situation)
     bool bCheckPossible;
 
     FoldGainModel<T, OppositionPerspective> FG;

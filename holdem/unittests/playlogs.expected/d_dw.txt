@@ -153,7 +153,7 @@ OppRAISEChanceR [F] 0.403175 @ $80 by showdown ($23.7176 this round)
 OppRAISEChanceR [F] 0.177184 @ $160 by showdown ($35.306 this round)
 OppRAISEChanceR [F] 0.0804698 @ $320 by showdown ($51.7964 this round)
 OppRAISEChanceR [F] 0.0254446 @ $640 by showdown ($75.2992 this round)
-OppRAISEChanceR [F] 0 @ $850 by showdown ($87.7046 this round)
+OppRAISEChanceR [W] 0 @ $850 by showdown ($87.7046 this round)
 
 (Fixed at $0)
 	--

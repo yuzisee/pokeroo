@@ -21,9 +21,15 @@
 #ifndef HOLDEM_StateModel
 #define HOLDEM_StateModel
 
+// #define DEBUG_WILL_FOLD_TO_RERAISE
+
+#include "callPredictionFunctions.h"
 #include "callSituation.h"
 #include "functionmodel.h"
 #include "math_support.h"
+#ifdef DEBUG_WILL_FOLD_TO_RERAISE
+#include <ostream>
+#endif
 
 #define VERBOSE_STATEMODEL_INTERFACE
 
@@ -193,8 +199,6 @@ protected:
 
 public:
 
-    int32 firstFoldToRaise;
-
     // Outcome if push succeeds (e.g. all fold to you)
     struct AggregatedState outcomePush;
 
@@ -219,30 +223,8 @@ public:
     c(pr_opponentcallraise)
     ,
     fp(function),bSingle(false)
-    ,
-    firstFoldToRaise(-1)
     {
     }
-
-    /*
-     StateModel(ExactCallBluffD &c, IFunctionDifferentiable &functionL, IFunctionDifferentiable &functionR) : ScalarFunctionModel(c.tableinfo->chipDenom()),HoldemFunctionModel(c.tableinfo->chipDenom(),c.tableinfo)
-     ,last_x(-1)
-     ,
-     ea(c)
-     ,
-     fMyFoldGain(*(c.tableinfo->table), c.fCore)
-     ,
-     bSingle(true),firstFoldToRaise(-1)
-     {
-     if( ((HoldemFunctionModel *)(&functionL)) != (HoldemFunctionModel *)(&functionR) ) //ASSERT: LL == RR !!
-     {
-     std::cerr << "Static Type Error. Use this constructor only when <class LL>==<class RR>." << endl;
-     exit(1);
-     }
-     fp = new AutoScalingFunction(functionL,functionR,0,0,c.tableinfo);
-     query(0);
-     }*/
-
 
     virtual ~StateModel();
 
@@ -250,10 +232,16 @@ public:
     virtual float64 fd(const float64, const float64);
 
     int32 state_model_array_size_for_blending(float64 betSize) const;
-    std::pair<int32, FoldOrCall> calculate_final_potRaisedWin(const size_t, ValueAndSlope * potRaisedWin_A, const float64 betSize);
-    ValueAndSlope calculate_oppRaisedChance(const float64 betSize, const size_t arraySize, ValueAndSlope * const oppRaisedChance_A, const int32 firstFoldToRaise, ValueAndSlope * const potRaisedWin_A, const ValueAndSlope &oppFoldChance) const;
+    std::pair<firstFoldToRaise_t, FoldOrCall> calculate_final_potRaisedWin(const size_t, ValueAndSlope * potRaisedWin_A, const float64 betSize);
+    ValueAndSlope calculate_oppRaisedChance(const float64 betSize, const size_t arraySize, ValueAndSlope * const oppRaisedChance_A, const firstFoldToRaise_t firstFoldToRaise, ValueAndSlope * const potRaisedWin_A, const ValueAndSlope &oppFoldChance) const;
 
-    static bool willFoldToReraise
+    template< typename T > static firstFoldToRaise_t firstFoldToRaise_only(T & m, const float64 displayBet, const FoldOrCall &myFoldGain, const ExpectedCallD & tablestate, const float64 maxShowdown
+      #ifdef DEBUG_WILL_FOLD_TO_RERAISE
+      , std::ostream &logF
+      #endif
+    );
+
+    static SimulateReraiseResponse willFoldToReraise
     (
      const float64 raiseAmount
      ,
@@ -264,6 +252,9 @@ public:
      const ExpectedCallD & myInfo
      ,
      const float64 hypotheticalMyRaiseTo
+     #ifdef DEBUG_WILL_FOLD_TO_RERAISE
+     , std::ostream * trace_statemodel
+     #endif
      );
 
 

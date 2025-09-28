@@ -20,6 +20,7 @@
 
 #include "BluffGainInc.h"
 #include "callPrediction.h"
+#include "callPredictionFunctions.h"
 #include "math_support.h"
 
 #include <float.h>
@@ -409,9 +410,10 @@ float64 StateModel::fd(const float64 betSize, const float64 yval)
 
 static constexpr float64 INVISIBLE_PERCENT = EPS_WIN_PCT;
 
-std::pair<int32, FoldOrCall> StateModel::calculate_final_potRaisedWin(const size_t arraySize, ValueAndSlope * potRaisedWin_A, const float64 betSize) {
+std::pair<firstFoldToRaise_t, FoldOrCall> StateModel::calculate_final_potRaisedWin(const size_t arraySize, ValueAndSlope * potRaisedWin_A, const float64 betSize) {
 
-  size_t firstFoldToRaise = arraySize;
+  size_t found_firstBadFoldToRaise = arraySize;
+  size_t found_firstGoodFoldToRaise = arraySize;
 
   const FoldOrCall myFoldGain(*(table_spec.tableView->table), c.fCore); // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
 
@@ -428,25 +430,83 @@ std::pair<int32, FoldOrCall> StateModel::calculate_final_potRaisedWin(const size
          potRaisedWin_A[i] = g_raised(sliderx,evalX); // as you can see below, this value is only blended in if we are below firstFoldToRaise
          // ^^^ Can't use `.set_value_and_slope` here because we need `potRaisedWin_A[i].v` when computing `potRaisedWin_A[i].D_v`
 
-         if (willFoldToReraise(evalX, potRaisedWin_A[i].v, myFoldGain, *(table_spec.tableView), betSize))
+         const struct SimulateReraiseResponse will_fold_to_reraise = willFoldToReraise(evalX, potRaisedWin_A[i].v, myFoldGain, *(table_spec.tableView), betSize
+           #ifdef DEBUG_WILL_FOLD_TO_RERAISE
+           , nullptr
+           #endif
+         );
+         if (will_fold_to_reraise.bGoodFold) {
+           if( found_firstGoodFoldToRaise == arraySize ) found_firstGoodFoldToRaise = i;
+         }
+         else if (will_fold_to_reraise.bBadFold())
          {
-           if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
+           if( found_firstBadFoldToRaise == arraySize ) { found_firstBadFoldToRaise = i; }
 
-             const float64 g_raised_by_folding = 1.0 - table_spec.tableView->betFraction(betSize);
-
+           const float64 g_raised_by_folding = 1.0 - table_spec.tableView->betFraction(betSize);
+           if (potRaisedWin_A[i].v < g_raised_by_folding) {
              //Since g_raised isn't pessimistic based on raiseAmount (especially when we're just calling), don't add additional gain opportunity -- we should instead assume that if we would fold against such a raise that the opponent has us as beat as we are.
              potRaisedWin_A[i].set_value_and_slope(
                // Deduct the bet you make, and fold
                g_raised_by_folding, -1.0
              );
+           }
          }
 
      } // end for `i`
 
-	return std::make_pair(firstFoldToRaise, myFoldGain);
+	return std::make_pair(std::make_pair(found_firstGoodFoldToRaise, found_firstBadFoldToRaise), myFoldGain);
 }
+// ↑↓ are these two basically the same thing? TODO(from joseph): Can we combine/simplify?
+template< typename T >
+firstFoldToRaise_t StateModel::firstFoldToRaise_only(T & m, const float64 displayBet, const FoldOrCall &myFoldGain, const ExpectedCallD & tablestate, const float64 maxShowdown
+#ifdef DEBUG_WILL_FOLD_TO_RERAISE
+, std::ostream &logF
+#endif
+) {
+  int32 firstGoodFoldToRaise = -1;
+  int32 firstBadFoldToRaise = -1;
 
-ValueAndSlope StateModel::calculate_oppRaisedChance(const float64 betSize, const size_t arraySize, ValueAndSlope * const oppRaisedChance_A, const int32 firstFoldToRaise, ValueAndSlope * const potRaisedWin_A, const ValueAndSlope &oppFoldChance) const {
+    int32 raiseStep = 0;
+  float64 rAmount;
+  for(raiseStep = 0, rAmount = 0.0; rAmount < maxShowdown; ++raiseStep )
+  {
+      rAmount =  ExactCallD::RaiseAmount(tablestate, displayBet, raiseStep);
+
+            const float64 oppRaisedPlayGain = m.g_raised(displayBet, rAmount).v;
+            const struct SimulateReraiseResponse will_fold_to_reraise = StateModel::willFoldToReraise(rAmount, oppRaisedPlayGain, myFoldGain, tablestate, displayBet
+              #ifdef DEBUG_WILL_FOLD_TO_RERAISE
+              , &logF
+              #endif
+            );
+            if (will_fold_to_reraise.bGoodFold) {
+              if (firstGoodFoldToRaise == -1) {
+                firstGoodFoldToRaise = raiseStep;
+              }
+            } else if (will_fold_to_reraise.bBadFold()) {
+              if (firstBadFoldToRaise == -1) {
+                firstBadFoldToRaise = raiseStep;
+              }
+            }
+            if ((firstBadFoldToRaise != -1) && (firstGoodFoldToRaise != -1))
+            { break; /* We'd fold at this point. Stop incrementing */ }
+  } // end for rAmount (raiseStep)
+
+  if (firstBadFoldToRaise == -1) {
+    firstBadFoldToRaise = raiseStep;
+  }
+  if (firstGoodFoldToRaise == -1) {
+    firstGoodFoldToRaise = raiseStep;
+  }
+
+  return std::make_pair(firstGoodFoldToRaise, firstBadFoldToRaise);
+}
+template firstFoldToRaise_t StateModel::firstFoldToRaise_only(StateModel & m, const float64 displayBet, const FoldOrCall &myFoldGain, const ExpectedCallD & tablestate, const float64 maxShowdown
+  #ifdef DEBUG_WILL_FOLD_TO_RERAISE
+  , std::ostream &logF
+  #endif
+);
+
+ValueAndSlope StateModel::calculate_oppRaisedChance(const float64 betSize, const size_t arraySize, ValueAndSlope * const oppRaisedChance_A, const firstFoldToRaise_t firstFoldToRaise, ValueAndSlope * const potRaisedWin_A, const ValueAndSlope &oppFoldChance) const {
       ValueAndSlope lastuptoRaisedChance = {0.0, 0.0};
 
       const bool bCallerWillPush = (arraySize == 1); //If arraySize is 1, then minRaise goes over maxbet. Anybody who can call will just reraise over the top.
@@ -550,11 +610,11 @@ void StateModel::query( const float64 betSize )
     const int32 arraySize = state_model_array_size_for_blending(betSize);
 
     ValueAndSlope * potRaisedWin_A = new ValueAndSlope[arraySize];
-    std::pair<int32, FoldOrCall> potRaised_delimeters = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize);
-    const FoldOrCall fMyFoldGain = std::move(potRaised_delimeters.second);
+    std::pair<firstFoldToRaise_t, FoldOrCall> potRaised_delimiters = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize);
+    const FoldOrCall fMyFoldGain = std::move(potRaised_delimiters.second);
 
     ValueAndSlope * oppRaisedChance_A = new ValueAndSlope[arraySize];
-    ValueAndSlope lastuptoRaisedChance = calculate_oppRaisedChance(betSize, arraySize, oppRaisedChance_A, potRaised_delimeters.first, potRaisedWin_A, oppFoldChance);
+    ValueAndSlope lastuptoRaisedChance = calculate_oppRaisedChance(betSize, arraySize, oppRaisedChance_A, potRaised_delimiters.first, potRaisedWin_A, oppFoldChance);
 
     ValueAndSlope potNormalWin = g_raised(betSize,betSize);
 
@@ -659,16 +719,11 @@ void StateModel::query( const float64 betSize )
     //);
 #endif // DEBUGASSERT
 
-
     delete [] oppRaisedChance_A;
-
-
     delete [] potRaisedWin_A;
-
-
 }
 
-bool StateModel::willFoldToReraise
+SimulateReraiseResponse StateModel::willFoldToReraise
 (
  const float64 raiseAmount // their hypothetical re-raise amount
  ,
@@ -679,6 +734,9 @@ bool StateModel::willFoldToReraise
  const ExpectedCallD & myInfo
  ,
  const float64 hypotheticalMyRaiseTo
+ #ifdef DEBUG_WILL_FOLD_TO_RERAISE
+ , std::ostream * trace_statemodel
+ #endif
 ) {
     const float64 betSize = hypotheticalMyRaiseTo;
 
@@ -688,25 +746,36 @@ bool StateModel::willFoldToReraise
 
     const bool bIsOverbetAgainstThisRound = 0 < oppRaisedMyFoldGain.n; // this is an overbet even this round, so I'd just fold to it now and win more later
 
-
-    if (bIsOverbetAgainstThisRound) {
-        // We can profit from folding. This is a way overbet and we wouldn't call here then.
-        return true;
-    }
-
     // When we can't profit from folding, foldGain will return the concede gain, conveniently.
     const float64 concedeGain = oppRaisedMyFoldGain.gain;
 
     const bool bIsProfitableCall = concedeGain < playGain; // At least by calling I can win back a little more than losing concedeGain upfront
 
-    if (!bIsProfitableCall) {
+    if (bIsOverbetAgainstThisRound) {
+      #ifdef DEBUG_WILL_FOLD_TO_RERAISE
+        if (trace_statemodel != nullptr) {
+          *trace_statemodel << "\t\tStateModel::willFoldToReraise being re-raised to $" << raiseAmount << " would be a clear overbet,";
+          if ((myInfo.alreadyBet() == 0.0) && (myInfo.callBet() == 0.0) && (betSize == 0.0)) {
+            *trace_statemodel << " as the first action";
+          } else {
+            *trace_statemodel << " if I first raised from " << myInfo.alreadyBet() << " to " << betSize << " in the face of " <<  myInfo.callBet();
+          }
+          *trace_statemodel << " — folding would allow me to improve on my current " << /* fMyFoldGain.fCore.statmean.pct */ myInfo.meanW << " winPCT" << std::endl;
+        }
+      #endif
+
+        // We can profit from folding. This is a way overbet and we wouldn't call here then.
+    } else if (!bIsProfitableCall) {
+      #ifdef DEBUG_WILL_FOLD_TO_RERAISE
+        if (trace_statemodel != nullptr) {
+          *trace_statemodel << "\t\tStateModel::willFoldToReraise will fold to $" << raiseAmount << " after we already tried first raising to $" << hypotheticalMyRaiseTo << " based on comparing " << ((playGain - 1.0) * myInfo.ViewPlayer()->GetMoney() ) << "⛀ ≤ " << ((concedeGain - 1.0) * myInfo.ViewPlayer()->GetMoney()) << "⛀" << std::endl;
+        }
+      #endif
         // Not a profitable call either? Then I guess we'll fold to reraise. Return true.
-        return true;
     }
 
-    // ...
-
-
-
-    return false;
+    return SimulateReraiseResponse {
+      bIsOverbetAgainstThisRound,
+      !bIsProfitableCall
+    };
 }

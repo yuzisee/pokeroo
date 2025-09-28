@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include "callPrediction.h"
+#include "callPredictionFunctions.h"
 #include "inferentials.h"
 #include <algorithm>
 
@@ -473,7 +474,7 @@ struct FacedOdds {
 
     Note: callSteps represents firstFoldToRaise and is used in bMyWouldCall
 */
-void ExactCallD::query(const float64 betSize, const int32 callSteps)
+void ExactCallD::query(const float64 betSize, const firstFoldToRaise_t callSteps)
 {
 ///Check for cache hit
 	if( queryinput == betSize && querycallSteps == callSteps )
@@ -498,7 +499,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
     this->totaldexf = mydexf;
 
     #ifdef DEBUG_TRACE_DEXF
-            if( traceOut_dexf != 0 ) *traceOut_dexf << "\tBegin Query(betSize=" << betSize << ",callSteps=" << callSteps << ") with myexf=" << myexf << "  mydexf=" << mydexf << " ⇒ initialize to " << this->totalexf << " +" << this->totaldexf << "∂betSize" << endl;
+            if( traceOut_dexf != 0 ) *traceOut_dexf << "\tBegin Query(betSize=" << betSize << ",callSteps=" << callSteps.first << "|" << callSteps.second << ") with myexf=" << myexf << "  mydexf=" << mydexf << " ⇒ initialize to " << this->totalexf << " +" << this->totaldexf << "∂betSize" << endl;
     #endif
 
     #ifdef DEBUG_TRACE_P_RAISE
@@ -580,7 +581,7 @@ void ExactCallD::query(const float64 betSize, const int32 callSteps)
 
 // This simulates the actions of the player (pIndex)
 // It will accumulate this->totalexf as the expected amount you can win in a showdown
-void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out) {
+void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, float64 betSize, const firstFoldToRaise_t callSteps, float64 * const overexf_out, float64 * const overdexf_out) {
 
   if( !tableinfo->table->CanStillBet(pIndex) ) // Make sure the player is still fit to bet ( in this or any future round )
   {
@@ -660,7 +661,6 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
               for( size_t i_step=0;i_step<noRaiseArraySize_now;++i_step)
               {
                   const int32 i = i_step;
-                  const bool bMyWouldCall = i < callSteps;
                   const float64 thisRaise = RaiseAmount(*tableinfo, betSize,i);
 
                   const struct HypotheticalBet oppRaise = {
@@ -668,7 +668,7 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                     thisRaise,
                     betSize,
                     oppBetAlready,
-                    bMyWouldCall
+                    SimulateReraiseResponse::at_callSteps(callSteps, i)
                   };
 
                   if( oppRaise.betIncrease() <= 0 ) {
@@ -734,9 +734,10 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
                           //   If you know you'd fold (weak hand), let the opponent raise the worse amount (larger)
                           //   If you know you'd call (good hand), let the opponent raise the worse amount (smaller)
 
-                                const ValueAndSlope noraise = bMyWouldCall ?
-                                        ValueAndSlope::lesserOfTwo(noraisePess, noraiseMean) : // I would call. I want them to raise. (Adversarial is the smaller "no raise")
-                                        ValueAndSlope::greaterOfTwo(noraisePess, noraiseMean) // I won't call. I want them not to raise. (Adversarial is the larger "no raise")
+                                const ValueAndSlope noraise = (oppRaise.bWillGetCalled.bUnprofitable) ?
+                                        ValueAndSlope::greaterOfTwo(noraisePess, noraiseMean) // I'll fold because it's unprofitable to call. I want them not to raise. (Adversarial, therefore, would be to raise more = the *larger* "no raise")
+                                        :
+                                        ValueAndSlope::lesserOfTwo(noraisePess, noraiseMean) // I would call. I want them to raise. (Adversarial is the smaller "no raise")
                                     ;
 
                           #ifdef DEBUG_TRACE_P_RAISE
@@ -987,13 +988,11 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
   {
       const int32 i = i_step;
       //Always be pessimistic about the opponent's raises.
+
       //If being raised against is preferable for you, then expect an aware opponent not to raise into you in later rounds -- since they'd be giving you money.
       //If being raised against is undesirable for you, expect an aware opponent to raise you in every round where they can afford it -- since you are giving them push-opportunity
-      const bool bMyWouldCall = (i < callSteps);
-
-      const int8 oppRaiseChancesAware = bMyWouldCall ? oppRaiseChancesPessimistic : oppRaiseChances;
+      const int8 oppRaiseChancesAware = SimulateReraiseResponse::at_callSteps(callSteps, i).bBadFold() ? oppRaiseChances : oppRaiseChancesPessimistic ;
       // Increasing oppRaiseChancesAware decreases noRaiseChance, which increases the chance we expect to be raised at a certain price.
-
 
       //At this point, each nextNoRaise is 100% unless otherwise adjusted.
       const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step].v < std::numeric_limits<float64>::epsilon()) ? 0 : std::pow(nextNoRaise_A[i_step].v,oppRaiseChancesAware);
@@ -1011,7 +1010,8 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       }
 
       if (i_step>0
-           && (i != callSteps) // at the callSteps boundary, sometimes the raise probability spikes (and thus the noRaise probability drops) before continuing to converge toward "very unlikely to raise all-in" and thus noRaise --> 1.0 again.
+           && (i != callSteps.first) // at the callSteps boundary, sometimes the raise probability spikes (and thus the noRaise probability drops) before continuing to converge toward "very unlikely to raise all-in" and thus noRaise --> 1.0 again.
+           && (i != callSteps.second)
           ) {
           if (!(
                 noRaiseChance_A[i_step-1]
@@ -1364,7 +1364,7 @@ float64 ExactCallBluffD::pWinD(const float64 betSize)
     return allFoldChanceD;//*impliedFactor;
 }
 
-const struct ValueAndSlope ExactCallD::pRaise(const float64 betSize, const int32 step, const int32 callSteps)
+const struct ValueAndSlope ExactCallD::pRaise(const float64 betSize, const int32 step, const firstFoldToRaise_t callSteps)
 {
     query(betSize, callSteps);
 
@@ -1390,12 +1390,17 @@ const struct ValueAndSlope ExactCallD::pRaise(const float64 betSize, const int32
     };
 }
 
+static constexpr firstFoldToRaise_t all_reraises_considered_bad_folds() {
+  static_assert(sizeof(int32) <= sizeof(size_t), "We'll be using int32_t::max() and it needs to fit into both. Thanks!");
+  // TODO(from joseph): There is room for very minor further tuning of what to do during FacedOddsRaiseGeom::query and its relationship with ExpectedCallD::RiskLossHeuristic
+  return std::pair<int32, int32> { -1, std::numeric_limits<int32>::max() - 1 };
+}
 
 float64 ExactCallD::exf(const float64 betSize)
 {
     // no callSteps because `.exf()` is for searching through E[callers], i.e. the number of players you'll meet in the showdown (and thus, we are assuming we want to find the optimal bet size to take us to the showdown -- in this part of the calculation, we won't be folding ourselves)
     // this usually happens during `StateModel::query` → `g_raised` → GainModelGeom/GainModelNoRisk → `.f` → `.g` → `espec.exf(…)`
-    query(betSize, OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE);
+    query(betSize, all_reraises_considered_bad_folds());
     // `callSteps` has two effects here, all inside of ExactCallD::accumulateOneOpponentPossibleRaises
     //  → it doesn't change the _value_ of `tableinfo->RiskLossHeuristic` (from src/callSituation.cpp) but it changes how `FacedOddsRaiseGeom::query` (from src/callPredictionFunctions.cpp) chooses to use that value
     //  → and, it shrinks the value of `oppRaiseChancesAware` to project slightly fewer re-raises against you
@@ -1405,9 +1410,7 @@ float64 ExactCallD::exf(const float64 betSize)
 
 float64 ExactCallD::dexf(const float64 betSize)
 {
-
-    query(betSize, OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE);
-
+    query(betSize, all_reraises_considered_bad_folds());
 
     return totaldexf*impliedFactor;
 }
