@@ -518,6 +518,7 @@ void PositionalStrategy::printStateModel(std::ofstream &logF, float64 displaybet
 }
 
 static void printAgainstRaiseComponents(std::ofstream &logF, const ExpectedCallD &tablestate, StateModel &m, ExactCallBluffD &pr_opponentfold, ExactCallD &espec, float64 displayBet) {
+  if ((m.blendedRaises.pr == 0.0) && (m.blendedRaises.contribution.v == 1.0)) { return; } // already presumed to be impossible, see printStateModel
 
   const int32 arraySize = m.state_model_array_size_for_blending(displayBet);
   std::unique_ptr<ValueAndSlope[]> potRaisedWin = std::make_unique<ValueAndSlope[]>(arraySize);

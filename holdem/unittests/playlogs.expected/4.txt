@@ -415,16 +415,6 @@ AgainstRaise(21) components:
  AgainstCall(10)=1.01092 from +$16.397 @ 1
 AgainstRaise(10)= … presumed to be impossible
         Push(10)=1 from $0 @ 0
-AgainstRaise(10) components:
-	📊Ω[20] … presumed impossible
-	⊔ Ω[30] … presumed impossible
-	⊔ Ω[50] … presumed impossible
-	⊔ Ω[90] … presumed impossible
-	⊔ Ω[170] … presumed impossible
-	⊔ Ω[330] … presumed impossible
-	⊔ Ω[650] … presumed impossible
-	⊔ Ω[1290] … presumed impossible
-	⊔ Ω[1502] … presumed impossible
 
 Why didn't I call?
 OppRAISEChanceM [*] 0 @ $20 by showdown ($10 this round)	W(1×)=0.848485 L=0.145455 1×o.w_s=(0.848485,0.00606061)
@@ -470,15 +460,6 @@ FoldGainₘ()=0.98269 by waiting 0 hands(=0 folds)	vs play:1.02121
  AgainstCall(32)=1.02121 from +$31.8636 @ 1
 AgainstRaise(32)= … presumed to be impossible
         Push(32)=1 from $0 @ 0
-AgainstRaise(32) components:
-	📊Ω[43] … presumed impossible
-	⊔ Ω[75] … presumed impossible
-	⊔ Ω[118] … presumed impossible
-	⊔ Ω[204] … presumed impossible
-	⊔ Ω[376] … presumed impossible
-	⊔ Ω[720] … presumed impossible
-	⊔ Ω[1408] … presumed impossible
-	⊔ Ω[1502] … presumed impossible
  AgainstCall(43)=1.01389 from +$39.597 @ 0.526914
 AgainstRaise(43)=0.998272 from −$5.48482 @ 0.473086
         Push(43)=1 from $0 @ 0

@@ -123,8 +123,6 @@ AgainstRaise(158) components:
  AgainstCall(210)=1.39582 from +$83.1225 @ 1
 AgainstRaise(210)= … presumed to be impossible
         Push(210)=1 from $0 @ 0
-AgainstRaise(210) components:
-	📊
 OppRAISEChanceR [*] 0 @ $204 by showdown ($46 this round)	W(6×)=0.485968 L=0.464946 2×o.w_s=(0.583244,0.028747)
 
 (Fixed at $158)	W(6×)=0.485968 L=0.464946 2×o.w_s=(0.583244,0.028747)

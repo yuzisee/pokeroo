@@ -213,16 +213,6 @@ Can you win by checking? 1.01286 for a showdown of $25 @ onWin=76.3614% vs. onLo
  AgainstCall(0)=1.01286 from +$19.1579 @ 1
 AgainstRaise(0)= … presumed to be impossible
         Push(0)=1 from $0 @ 0
-AgainstRaise(0) components:
-	📊Ω[10] … presumed impossible
-	⊔ Ω[20] … presumed impossible
-	⊔ Ω[40] … presumed impossible
-	⊔ Ω[80] … presumed impossible
-	⊔ Ω[160] … presumed impossible
-	⊔ Ω[320] … presumed impossible
-	⊔ Ω[640] … presumed impossible
-	⊔ Ω[1280] … presumed impossible
-	⊔ Ω[1490] … presumed impossible
  AgainstCall(10)=1.00327 from +$24.4842 @ 0.198821
 AgainstRaise(10)=0.996574 from −$10 @ 0.510441
         Push(10)=1.00519 from +$26.6154 @ 0.290738
@@ -289,16 +279,6 @@ FoldGainₘ()=0.993289 by waiting 0 hands(=0 folds)	vs play:1.01742
  AgainstCall(10)=1.01742 from +$25.9545 @ 1
 AgainstRaise(10)= … presumed to be impossible
         Push(10)=1 from $0 @ 0
-AgainstRaise(10) components:
-	📊Ω[20] … presumed impossible
-	⊔ Ω[30] … presumed impossible
-	⊔ Ω[50] … presumed impossible
-	⊔ Ω[90] … presumed impossible
-	⊔ Ω[170] … presumed impossible
-	⊔ Ω[330] … presumed impossible
-	⊔ Ω[650] … presumed impossible
-	⊔ Ω[1290] … presumed impossible
-	⊔ Ω[1490] … presumed impossible
  AgainstCall(20)=1.01107 from +$31.9343 @ 0.516507
 AgainstRaise(20)=0.999011 from −$3.04737 @ 0.483493
         Push(20)=1 from $0 @ 0

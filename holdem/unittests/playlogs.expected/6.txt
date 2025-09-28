@@ -403,13 +403,6 @@ FoldGainₘ()=1.00603 by waiting 16.6667 hands(=6.17914 folds)	vs play:1.00658  
  AgainstCall(80)=1.00658 from +$19.8824 @ 1
 AgainstRaise(80)= … presumed to be impossible
         Push(80)=1 from $0 @ 0
-AgainstRaise(80) components:
-	📊Ω[160] … presumed impossible
-	⊔ Ω[240] … presumed impossible
-	⊔ Ω[400] … presumed impossible
-	⊔ Ω[720] … presumed impossible
-	⊔ Ω[1360] … presumed impossible
-	⊔ Ω[2228.75] … presumed impossible
  AgainstCall(160)=1.00143 from +$20.2901 @ 0.212877
 AgainstRaise(160)=0.958067 from −$160 @ 0.787123
         Push(160)=1 from $0 @ 0
@@ -468,13 +461,6 @@ FoldGainₘ()=1.00603 by waiting 16.6667 hands(=6.17914 folds)	vs play:1.00658  
  AgainstCall(80)=1.00658 from +$19.8824 @ 1
 AgainstRaise(80)= … presumed to be impossible
         Push(80)=1 from $0 @ 0
-AgainstRaise(80) components:
-	📊Ω[160] … presumed impossible
-	⊔ Ω[240] … presumed impossible
-	⊔ Ω[400] … presumed impossible
-	⊔ Ω[720] … presumed impossible
-	⊔ Ω[1360] … presumed impossible
-	⊔ Ω[2228.75] … presumed impossible
  AgainstCall(160)=1.00175 from +$24.8321 @ 0.212877
 AgainstRaise(160)=0.958307 from −$160 @ 0.787123
         Push(160)=1 from $0 @ 0

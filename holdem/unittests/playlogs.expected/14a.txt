@@ -118,9 +118,6 @@ FoldGainᵣ()=0.981481 by waiting 0 hands(=0 folds)	vs play:1.29196   ->assumes 
  AgainstCall(365)=1.29196 from +$236.488 @ 1
 AgainstRaise(365)= … presumed to be impossible
         Push(365)=1 from $0 @ 0
-AgainstRaise(365) components:
-	📊Ω[710] … presumed impossible
-	⊔ Ω[810] … presumed impossible
  AgainstCall(710)=1 from $0 @ 0
 AgainstRaise(710)=0.123457 from −$710 @ 1
         Push(710)=1 from $0 @ 0
