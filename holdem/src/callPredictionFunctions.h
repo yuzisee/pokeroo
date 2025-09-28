@@ -96,9 +96,11 @@ struct SimulateReraiseResponse {
     return std::pair<int32, int32> { -1, std::numeric_limits<int32>::max() - 1 };
   }
 
-  static constexpr SimulateReraiseResponse contruct_as_all_bad_folds() {
+  // This is a strictly invalid state. If you look at how StateModel::firstFoldToRaise_only and/or StateModel::calculate_final_potRaisedWin work, it should be essentially impossible to interpret bIsOverbetAgainstThisRound without bUnprofitable also being true at the same time
+  // Use it to represent a value of "uninitialized"
+  static constexpr SimulateReraiseResponse construct_uninitialized() {
     return SimulateReraiseResponse {
-      true, true
+      true, false
     };
   }
 }; // end SimulateReraiseResposne
@@ -487,7 +489,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
       traceOut_pRaise(nullptr),
     #endif
       riskLoss(RiskLoss{std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()}),
-      bRaiseWouldBeCalled(SimulateReraiseResponse::contruct_as_all_bad_folds()), // this is a placeholder only; you should always overwrite it using FacedOddsRaiseGeom::configure_with
+      bRaiseWouldBeCalled(SimulateReraiseResponse::construct_uninitialized()), // this is a placeholder only; you should always overwrite it using FacedOddsRaiseGeom::configure_with
       FG(myQuantum/2)
     {}
 
