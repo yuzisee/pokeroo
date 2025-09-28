@@ -39,7 +39,7 @@ public:
     virtual ~IStateCombiner() {}
 
     virtual struct AggregatedState createOutcome(float64 value, float64 probability, float64 dValue, float64 dProbability) const = 0;
-    virtual struct AggregatedState createBlendedOutcome(const size_t arraySize, const ValueAndSlope * const values, const ValueAndSlope * const probabilities) const = 0;
+    virtual struct AggregatedState createBlendedOutcome(const size_t arraySize, const struct ValueAndSlope * const values, const struct ValueAndSlope * const probabilities) const = 0;
 
     virtual struct AggregatedState combinedContributionOf(const struct AggregatedState &a, const struct AggregatedState &b, const struct AggregatedState &c) const = 0;
 }
@@ -76,7 +76,7 @@ class ExactCallD : public IExf
         float64 totalexf;
         float64 totaldexf;
 
-        void accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, const float64 betSize, const firstFoldToRaise_t callSteps, float64 * const overexf_out, float64 * const overdexf_out);
+        void accumulateOneOpponentPossibleRaises(const int8 pIndex, struct ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, const float64 betSize, const firstFoldToRaise_t callSteps, float64 * const overexf_out, float64 * const overdexf_out);
 
         const ExpectedCallD * const tableinfo;
     protected:

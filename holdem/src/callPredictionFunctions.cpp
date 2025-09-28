@@ -758,6 +758,8 @@ template<typename T> float64 FacedOddsAlgb<T>::fd( const float64 w, const float6
 
 template<typename T> void FacedOddsRaiseGeom<T>::configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, const struct RiskLoss &currentRiskLoss) {
   const struct ChipPositionState &cps = hypotheticalRaise.bettorSituation;
+  // const float64 possibleOpponentsAgainstRaise = a.FG.waitLength.opponents - (hypotheticalRaise.bWillGetCalled ? 0.0 : 1.0);
+  // const float64 effectiveOneOpponent = possibleOpponentsAgainstRaise / a.FG.waitLength.opponents;
 
   // const float64 possibleOpponentsAgainstRaise = a.FG.waitLength.opponents - (hypotheticalRaise.bWillGetCalled ? 0.0 : 1.0);
   // const float64 effectiveOneOpponent = possibleOpponentsAgainstRaise / a.FG.waitLength.opponents;
@@ -1052,6 +1054,41 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
     }
   #endif
 
+  #ifdef DEBUGASSERT
+    /*
+    if ((this->lastF_by_w.D_v == 0.0) && (this->dLastF_by_facedBet == 0.0)) {
+      std::cerr << "ExactCallD::facedOdds_raise_Geom_by_facedBet is going to crash, so instead investigate now" << std::endl;
+      std::cerr << "U_by_w.D_v=" << U_by_w.D_v << "\tnonRaiseGain.D_v=" << nonRaiseGain.D_v << std::endl;
+      std::cerr << "dU_dfacedBet=" << dU_dfacedBet << "\td_applyRiskLoss_dbetSize / bankroll = " << d_applyRiskLoss_dbetSize << " / " << FG.waitLength.bankroll << "\td_nonRaiseGain_dfacedBet=" << d_nonRaiseGain_dfacedBet << std::endl;
+      exit(1);
+    }
+    */
+  #endif
+
+  #if defined(DEBUG_TRACE_P_RAISE) && defined(DEBUG_TRACE_ZERO)
+    if (traceOut_pRaise != nullptr) {
+      *this->traceOut_pRaise << "\t\t\t\t└▸ FacedOddsRaiseGeom::query(if you had " << (w * 100.0) << "% chance to win) ↦ would you... U: "
+
+      // << U_by_w.v
+      << (U_by_w.v - 1.0) * (FG.waitLength.bankroll-raiseTo) << "⛁"
+
+      << " (and then adjusted by " <<
+      applyRiskLoss << "⛁"// (applyRiskLoss / FG.waitLength.bankroll)
+      << ")  or would you  " << (bUseCall ? "callGain" : "foldGain") << " " <<
+
+      // nonRaiseGain.v
+      ((nonRaiseGain.v - 1.0) * (bUseCall ? (FG.waitLength.bankroll - this->fold_bet) : (FG.waitLength.bankroll))) << "⛃"
+
+      << std::endl;
+
+      if (lastF_by_w.v < 0) {
+        *this->traceOut_pRaise << "\t\t\t\t  [DECISION] no raise, prefer "  << (bUseCall ? "callGain" : "foldGain") << std::endl;
+      }
+      if (lastF_by_w.v > 0) {
+        *this->traceOut_pRaise << "\t\t\t\t  [DECISION] Raise!" << std::endl;
+      }
+    }
+  #endif
 }
 
 template<typename T> float64 FacedOddsRaiseGeom<T>::f( const float64 w ) { query(w);  return lastF_by_w.v; }
