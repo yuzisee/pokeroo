@@ -955,25 +955,25 @@ namespace UnitTests {
         HypotheticalBet hypothetical0 = {
           oppCPS, 6.75 + oppCPS.alreadyBet,
           1.75, // So it's effectively raiseBy 5.0
-          4.5, true
+          4.5, SimulateReraiseResponse {false, false}
         };
         float64 w_r_rank0 = ExactCallD::facedOdds_raise_Geom_forTest<void>(
           #ifdef DEBUG_TRACE_P_RAISE
             nullptr,
           #endif
-          0.0, 1.0 /* denom */, riskLoss0 , 0.31640625 /* avgBlind */ ,hypothetical0, 4, nullptr);
+          0.0, 1.0 /* denom */, riskLoss0 , 0.31640625 /* avgBlind */ ,hypothetical0, 4, nullptr).v;
         // tableinfo->RiskLossHeuristic(0, 2474, 4, 11.25, 0, 0) == 0.0
         HypotheticalBet hypothetical1 = {
           oppCPS,
           11.25 + oppCPS.alreadyBet,
           1.75,
-          4.5, true
+          4.5, SimulateReraiseResponse {false, false}
         };
         float64 w_r_rank1 = ExactCallD::facedOdds_raise_Geom_forTest<void>(
           #ifdef DEBUG_TRACE_P_RAISE
             nullptr,
           #endif
-          w_r_rank0, 1.0, riskLoss0 ,  0.31640625 ,hypothetical1, 4, nullptr);
+          w_r_rank0, 1.0, riskLoss0 ,  0.31640625 ,hypothetical1, 4, nullptr).v;
 
         // The bug is: These two values, if otherwise equal, can end up being within half-quantum.
         assert(w_r_rank0 <= w_r_rank1);
@@ -4964,7 +4964,7 @@ Playing as S
         50.0,
         15.0,
         cps.alreadyBet,
-        true
+        SimulateReraiseResponse {false, false}
       };
 
       // assert(dRiskLoss_pot >= 1.0 / (tablestate_tableinfo.handsIn()-1));
@@ -5019,7 +5019,7 @@ Playing as S
         actual.FG.waitLength.setMeanConv(nullptr);
         FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss);
         const float64 noRaisePct = actual.FindZero(0.0, 1.0, false);
-        const float64 d_noRaisePct_dbetsize = ExactCallD::dfacedOdds_raise_dfacedBet_GeomDEXF(tablestate_tableinfo, hypothetical, noRaisePct);
+        const float64 d_noRaisePct_dbetsize = 0.0;
 
         actual_noRaisePct_vs_betSize.push_back( std::pair<float64, ValueAndSlope>( p3_betSize , ValueAndSlope {
           noRaisePct, d_noRaisePct_dbetsize

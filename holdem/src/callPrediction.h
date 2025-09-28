@@ -97,13 +97,20 @@ class ExactCallD : public IExf
         template<typename T> float64 facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
         template<typename T> float64 dfacedOdds_call_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
 
-        template<typename T> float64 facedOdds_raise_Geom(const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 n, CallCumulationD<T, OppositionPerspective> * useMean, const struct RiskLoss &riskLoss) const;
     public:
-        static float64 dfacedOdds_raise_dfacedBet_GeomDEXF(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 w);
+    template<typename T> static struct ValueAndSlope facedOdds_raise_Geom_by_facedBet(const ExpectedCallD &tbase, const struct HypotheticalBet & hypothetical, float64 startingPoint, float64 n, CallCumulationD<T, OppositionPerspective> * useMean, const struct RiskLoss &riskLoss
+      #ifdef DEBUG_TRACE_P_RAISE
+        , std::ostream *
+      #endif
+    );
 
     // By default, startingPoint == 0.0
     // When using this function for the purposes of nextNoRaise_A, you'll want to start at the previous value to avoid rounding errors.
-    template<typename T> static float64 facedOdds_raise_Geom_forTest(float64 startingPoint, float64 denom, const struct RiskLoss &riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean);
+    template<typename T> static ValueAndSlope facedOdds_raise_Geom_forTest(
+      #ifdef DEBUG_TRACE_P_RAISE
+        std::ostream * traceOut_pRaise,
+      #endif
+      float64 startingPoint, float64 denom, const struct RiskLoss &riskLoss, float64 avgBlind, const struct HypotheticalBet & hypotheticalRaise, float64 opponents, CallCumulationD<T, OppositionPerspective> * useMean);
 
 
     // CallCumulationD &choicecumu = statprob.core.callcumu;
