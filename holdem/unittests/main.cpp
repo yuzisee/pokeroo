@@ -1383,7 +1383,19 @@ namespace RegressionTests {
         myTable.BeginInitialState(26);
         myTable.BeginNewHands(std::cout, b, false, dealer);
 
-
+ /*
+Gear posts SB of $2.85714 ($2.85714)
+P0 posts BB of $5.71428 ($8.57142)
+P3 folds
+P2 folds
+Multi folds
+i4 raises to $20 ($28.5714)
+P4 folds
+D0 folds
+D2 folds
+Gear calls $17.1429 ($45.7143)
+P0 calls $14.2857 ($60)
+ */
 
         assert(myTable.PlayRound_BeginHand(std::cout) != -1);
 
@@ -1410,8 +1422,7 @@ namespace RegressionTests {
         assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
 
 
-        // Turn Ts
-
+        // Turn [Ts]
 
 
         DeckLocation myTurn;
@@ -1421,7 +1432,7 @@ namespace RegressionTests {
         // Check, check
         assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
 
-        // River 8d
+        // River [8d]
 
 
         DeckLocation myRiver;
@@ -2579,8 +2590,7 @@ namespace RegressionTests {
 
 
         /*
-
-         ActionBotV posts SB of $5 ($5)
+         ActionBot14 posts SB of $5 ($5)
          NormalBotV posts BB of $10 ($15)
          TrapBotV folds
          Ali folds
@@ -2589,17 +2599,15 @@ namespace RegressionTests {
          ConservativeBotV folds
          SpaceBotV folds
          GearBotV folds
-         ActionBotV raises to $55 ($65)
+         ActionBot14 raises to $55 ($65)
          NormalBotV raises to $365 ($420)
-         ActionBotV raises to $705 ($1070)
+         ActionBot14 raises to $705 ($1070)
          NormalBotV raises to $1045 ($1750)
-         ActionBotV folds
+         ActionBot14 folds
 
          All fold! NormalBotV wins $705
-
-
          */
-        assert (myTable.PlayRound_BeginHand(std::cout) != -1);
+        assert (myTable.PlayRound_BeginHand(std::cout) != -1); // assert that everyone folded
 
     }
 
@@ -4275,7 +4283,7 @@ Playing as S
          NormalBotV folds
          ActionBotV folds
          GearBotV folds
-         SpaceBotV raises to $5 ($8.375)
+         SpaceBot9 raises to $5 ($8.375)
          Nav calls $5 ($13.375)
          ConservativeBotV folds
          DangerBotV folds
@@ -4301,7 +4309,7 @@ Playing as S
 
          Flop:	2d Qd Kc    (Pot: $13.375)
          (2 players)
-         [SpaceBotV $712]
+         [SpaceBot9 $712]
          [Nav $2469]
          */
 
@@ -4315,9 +4323,9 @@ Playing as S
          }
 
         /*
-         SpaceBotV bets $2.25 ($15.625)
+         SpaceBot9 bets $2.25 ($15.625)
          Nav raises to $12.25 ($27.875)
-         SpaceBotV raises to $49 ($74.625)
+         SpaceBot9 raises to $49 ($74.625)
          Nav calls $36.75 ($111.375)
          */
         DeckLocation myTurn; // 2s
@@ -4325,7 +4333,7 @@ Playing as S
         /*
          Turn:	2d Qd Kc 2s   (Pot: $111.375)
          (2 players)
-         [SpaceBotV $663]
+         [SpaceBot9 $663]
          [Nav $2420]
          */
         playernumber_t highbet = myTable.PlayRound_Turn(myFlop, myTurn, std::cout);
@@ -4341,16 +4349,16 @@ Playing as S
         {
         /*
 
-         SpaceBotV bets $83 ($194.375)
+         SpaceBot9 bets $83 ($194.375)
          Nav raises to $168 ($362.375)
-         SpaceBotV calls $85 ($447.375)
+         SpaceBot9 calls $85 ($447.375)
          */
         DeckLocation myRiver; // 7c
         myRiver.SetByIndex(22);
         /*
          River:	2d Qd Kc 2s 7c  (Pot: $447.375)
          (2 players)
-         [SpaceBotV $495]
+         [SpaceBot9 $495]
          [Nav $2252]
          */
         highbet = (myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout) );
@@ -4381,7 +4389,7 @@ Playing as S
          2 2 A 7 K 2 Q AKQJT98765432
          s h h c c d d 11-----------
 
-         SpaceBotV turns over Td Ad
+         SpaceBot9 turns over Td Ad
          Is eliminated after making only
          002	 Pair of Deuces
          2 7 K 2 T Q A AKQJT98765432
