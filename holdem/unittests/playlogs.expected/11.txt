@@ -32,18 +32,18 @@ Matchup outcome against an unknown hand: my chance to win=56.9062% split=2.45692
 9 dealt, 8 opp. (round), 2 opp. assumed str., 2 opp. still in
 Choice Optimal 10
 Choice Fold 10
-f(10)=0.996865
+f(10)=0.997156
 CHECK/FOLD
 CallStrength[r] W(2👤)=0.426489 L=0.570306 o.w_s=(0.653061,0.00244898)
 Can you win by calling? 1.00188 for a showdown of $20 @ onWin=42.6489% vs. onLoss=57.0306% risking $10
 (MinRaise to $20) 	W(2×)=0.459014 L=0.519155 2×o.w_s=(0.578635,0.0135998)
-FoldGainᵣ()=0.999074 by waiting 0 hands(=0 folds)	vs play:0.995939   ->assumes $5 forced
+FoldGainᵣ()=0.999074 by waiting 0 hands(=0 folds)	vs play:0.99623   ->assumes $5 forced
  AgainstCall(10)=1.00058 from +$2.82672 @ 0.305634
-AgainstRaise(10)=0.995366 from −$10 @ 0.694366
+AgainstRaise(10)=0.995657 from −$9.37245 @ 0.694366
         Push(10)=1 from $0 @ 0
 AgainstRaise(10) components:
 	📊Ω[20] … presumed impossible
-	⊔ Ω[30]	−$10 ∩ 14.0655%   −$30↔+$42.6449
+	⊔ Ω[30]	−$6.89944 ∩ 14.0655%   −$30↔+$42.6449
 	⊔ Ω[50]	−$10 ∩ 17.9303%   −$50↔+$62.5143
 	⊔ Ω[90]	−$10 ∩ 14.4208%   −$90↔+$102.351
 	⊔ Ω[170]	−$10 ∩ 10.5744%   −$170↔+$183.918
@@ -52,11 +52,11 @@ AgainstRaise(10) components:
 	⊔ Ω[1290]	−$10 ∩ 1.73633%   −$1290↔+$1300
 	⊔ Ω[1500] … presumed impossible
  AgainstCall(20)=1.00081 from +$4.34407 @ 0.279822
-AgainstRaise(20)=0.99038 from −$20 @ 0.720178
+AgainstRaise(20)=0.990753 from −$19.2245 @ 0.720178
         Push(20)=1 from $0 @ 0
 AgainstRaise(20) components:
 	📊Ω[30] … presumed impossible
-	⊔ Ω[50]	−$20 ∩ 14.8183%   −$50↔+$62.5143
+	⊔ Ω[50]	−$16.2272 ∩ 14.8183%   −$50↔+$62.5143
 	⊔ Ω[90]	−$20 ∩ 20.4649%   −$90↔+$102.351
 	⊔ Ω[170]	−$20 ∩ 15.8053%   −$170↔+$183.918
 	⊔ Ω[330]	−$20 ∩ 10.8589%   −$330↔+$346.269

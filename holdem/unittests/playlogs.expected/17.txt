@@ -211,13 +211,13 @@ Matchup outcome against an unknown hand: my chance to win=52.7361% split=3.16864
 9 dealt, 3 opp. (round), 3 opp. assumed str., 3 opp. still in
 Choice Optimal 0
 Choice Fold 20
-f(0)=1.01158
+f(0)=1.01038
 CALL 0
 CallStrength[r] W(3👤)=0.21333 L=0.78667 o.w_s=(0.597518,0)
 Can you win by checking? 1.00643 for a showdown of $45 @ onWin=21.333% vs. onLoss=78.667% risking $0
 (MinRaise to $10) 	W(7.5×)=0.20224 L=0.79776 3×o.w_s=(0.586979,0)
  AgainstCall(0)=1.00488 from +$9.59986 @ 0.757927
-AgainstRaise(0)=1 from $0 @ 0.242073
+AgainstRaise(0)=0.998809 from −$7.34618 @ 0.242073
         Push(0)=1 from $0 @ 0
 AgainstRaise(0) components:
 	📊Ω[10] … presumed impossible
@@ -226,8 +226,8 @@ AgainstRaise(0) components:
 	⊔ Ω[80]	$0 ∩ 10.0986%   −$80↔+$154.149
 	⊔ Ω[160]	$0 ∩ 6.7322%   −$160↔+$256.064
 	⊔ Ω[320]	$0 ∩ 4.00593%   −$320↔+$423.44
-	⊔ Ω[640]	$0 ∩ 2.37212%   −$640↔+$753.085
-	⊔ Ω[1280]	$0 ∩ 0.998458%   −$1280↔+$1393.09
+	⊔ Ω[640]	$0 ∩ 3.12003%   −$640↔+$753.085
+	⊔ Ω[1280]	−$709.75 ∩ 0.250555%   −$1280↔+$1393.09
 	⊔ Ω[1492.5] … presumed impossible
  AgainstCall(10)=1.00194 from +$6.16843 @ 0.470325
 AgainstRaise(10)=0.996451 from −$10 @ 0.529675
@@ -248,8 +248,8 @@ OppRAISEChanceR [F] 0.242073 @ $80 by showdown ($23.7176 this round)	(Wᶠᵒˡ�
 OppRAISEChanceR [F] 0.141087 @ $160 by showdown ($35.306 this round)	(Wᶠᵒˡᵈ) W(32×)=0.167062 L=0.832938 3×o.w_s=(0.550756,0)
 OppRAISEChanceR [F] 0.0737651 @ $320 by showdown ($51.7964 this round)	(Wᶠᵒˡᵈ) W(41.25×)=0.162796 L=0.837204 3×o.w_s=(0.546028,0)
 OppRAISEChanceR [F] 0.0337058 @ $640 by showdown ($75.2992 this round)	(Wᶠᵒˡᵈ) W(55.75×)=0.159091 L=0.840909 3×o.w_s=(0.541853,0)
-OppRAISEChanceR [F] 0.00998458 @ $1280 by showdown ($109.464 this round)	(Wᶠᵒˡᵈ) W(76.25×)=0.159091 L=0.840909 3×o.w_s=(0.541853,0)
-OppRAISEChanceR [F] 0 @ $1492.5 by showdown ($119.066 this round)	(Wᶠᵒˡᵈ) W(58.75×)=0.159091 L=0.840909 3×o.w_s=(0.541853,0)
+OppRAISEChanceR [W] 0.00250555 @ $1280 by showdown ($109.464 this round)	✲ʷᵃᶦᵗW(76.25×)=0.159091 L=0.840909 3×o.w_s=(0.541853,0)
+OppRAISEChanceR [W] 0 @ $1492.5 by showdown ($119.066 this round)	✲ʷᵃᶦᵗW(58.75×)=0.159091 L=0.840909 3×o.w_s=(0.541853,0)
 
 (Fixed at $0)	W(3×)=0.239196 L=0.760804 3×o.w_s=(0.620752,0)
 	--

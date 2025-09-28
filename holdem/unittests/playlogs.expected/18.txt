@@ -32,19 +32,19 @@ Matchup outcome against an unknown hand: my chance to win=62.5352% split=2.05617
 9 dealt, 8 opp. (round), 2 opp. assumed str., 2 opp. still in
 Choice Optimal 10
 Choice Fold 10
-f(10)=1.00201
+f(10)=1.00253
 CALL 10
 CallStrength[r] W(2👤)=0.838906 L=0.156601 o.w_s=(0.915918,0.00244898)
 Can you win by calling? 1.01011 for a showdown of $20 @ onWin=83.8906% vs. onLoss=15.6601% risking $10
 (MinRaise to $20) 	W(2×)=0.57279 L=0.406879 2×o.w_s=(0.612466,0.0107746)
-FoldGainᵣ()=0.999077 by waiting 0 hands(=0 folds)	vs play:1.00109   ->assumes $5 forced
+FoldGainᵣ()=0.999077 by waiting 0 hands(=0 folds)	vs play:1.00161   ->assumes $5 forced
  AgainstCall(10)=1.00467 from +$15.2121 @ 0.463729
-AgainstRaise(10)=0.996431 from −$10 @ 0.536271
+AgainstRaise(10)=0.996951 from −$8.54549 @ 0.536271
         Push(10)=1 from $0 @ 0
 AgainstRaise(10) components:
 	📊Ω[20] … presumed impossible
 	⊔ Ω[30] … presumed impossible
-	⊔ Ω[50]	−$10 ∩ 16.184%   −$50↔+$62.3184
+	⊔ Ω[50]	−$5.17492 ∩ 16.184%   −$50↔+$62.3184
 	⊔ Ω[90]	−$10 ∩ 14.4201%   −$90↔+$102.351
 	⊔ Ω[170]	−$10 ∩ 10.5738%   −$170↔+$183.918
 	⊔ Ω[330]	−$10 ∩ 6.64815%   −$330↔+$346.269
