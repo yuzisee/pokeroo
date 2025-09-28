@@ -20,7 +20,6 @@
 
 #include "BluffGainInc.h"
 #include "callPrediction.h"
-#include "callSituation.h"
 #include "math_support.h"
 
 #include <float.h>
@@ -408,7 +407,9 @@ float64 StateModel::fd(const float64 betSize, const float64 yval)
     return dy;
 }
 
-const std::pair<const int32, const FoldOrCall> StateModel::calculate_final_potRaisedWin(const size_t arraySize, ValueAndSlope * potRaisedWin_A, const float64 betSize) {
+static constexpr float64 INVISIBLE_PERCENT = EPS_WIN_PCT;
+
+std::pair<int32, FoldOrCall> StateModel::calculate_final_potRaisedWin(const size_t arraySize, ValueAndSlope * potRaisedWin_A, const float64 betSize) {
 
   size_t firstFoldToRaise = arraySize;
 
@@ -549,7 +550,7 @@ void StateModel::query( const float64 betSize )
     const int32 arraySize = state_model_array_size_for_blending(betSize);
 
     ValueAndSlope * potRaisedWin_A = new ValueAndSlope[arraySize];
-    const std::pair<const int32, const FoldOrCall> potRaised_delimeters = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize);
+    std::pair<int32, FoldOrCall> potRaised_delimeters = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize);
     const FoldOrCall fMyFoldGain = std::move(potRaised_delimeters.second);
 
     ValueAndSlope * oppRaisedChance_A = new ValueAndSlope[arraySize];

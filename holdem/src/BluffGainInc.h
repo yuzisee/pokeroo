@@ -249,9 +249,8 @@ public:
 	virtual float64 f(const float64);
     virtual float64 fd(const float64, const float64);
 
-    const float64 INVISIBLE_PERCENT = EPS_WIN_PCT;
     int32 state_model_array_size_for_blending(float64 betSize) const;
-    const std::pair<const int32, const FoldOrCall> calculate_final_potRaisedWin(const size_t, ValueAndSlope * potRaisedWin_A, const float64 betSize);
+    std::pair<int32, FoldOrCall> calculate_final_potRaisedWin(const size_t, ValueAndSlope * potRaisedWin_A, const float64 betSize);
     ValueAndSlope calculate_oppRaisedChance(const float64 betSize, const size_t arraySize, ValueAndSlope * const oppRaisedChance_A, const int32 firstFoldToRaise, ValueAndSlope * const potRaisedWin_A, const ValueAndSlope &oppFoldChance) const;
 
     static bool willFoldToReraise

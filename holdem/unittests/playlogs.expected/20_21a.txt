@@ -49,29 +49,29 @@ AgainstRaise(2)=0.999313 from −$2 @ 0.892892
  AgainstCall(4)=0.999926 from −$0.705141 @ 0.271555
 AgainstRaise(4)=0.998879 from −$4 @ 0.728445
         Push(4)=1 from $0 @ 0
-OppRAISEChanceR [F] 0.892892 @ $4 ($2 now)	(Wᶠᵒˡᵈ) W(7×)=0.238645 L=0.726624 6×o.w_s=(0.706109,0.0161727)
-OppRAISEChanceR [F] 0.810148 @ $6 ($2 now)	(Wᶠᵒˡᵈ) W(41.8019×)=0.14571 L=0.844206 6×o.w_s=(0.699907,0.00784916)
-OppRAISEChanceR [F] 0.686264 @ $10 ($2 now)	(Wᶠᵒˡᵈ) W(49.501×)=0.143368 L=0.846089 6×o.w_s=(0.699393,0.00832018)
-OppRAISEChanceR [F] 0.517709 @ $18 ($2.59072 now)	(Wᶠᵒˡᵈ) W(68.5997×)=0.139521 L=0.847851 6×o.w_s=(0.698092,0.0101543)
-OppRAISEChanceR [F] 0.339286 @ $34 ($3.28741 now)	(Wᶠᵒˡᵈ) W(83.9205×)=0.136923 L=0.848723 6×o.w_s=(0.697084,0.0116795)
-OppRAISEChanceR [F] 0.193044 @ $66 ($4.25272 now)	(Wᶠᵒˡᵈ) W(108.429×)=0.133132 L=0.849758 6×o.w_s=(0.695494,0.0141576)
-OppRAISEChanceR [F] 0.092369 @ $130 ($5.07774 now)	(Wᶠᵒˡᵈ) W(144.069×)=0.128026 L=0.851168 6×o.w_s=(0.693271,0.0176196)
-OppRAISEChanceR [F] 0.044468 @ $258 ($6.14688 now)	(Wᶠᵒˡᵈ) W(177.642×)=0.123732 L=0.85229 6×o.w_s=(0.691298,0.020713)
-OppRAISEChanceR [F] 0.0158112 @ $514 ($7.62596 now)	(Wᶠᵒˡᵈ) W(213.356×)=0.119284 L=0.853479 6×o.w_s=(0.689177,0.0240324)
-OppRAISEChanceR [F] 0.0107364 @ $800 ($8.35458 now)	(Wᶠᵒˡᵈ) W(183.042×)=0.123041 L=0.852471 6×o.w_s=(0.690973,0.0212224)
+OppRAISEChanceR [F] 0.892892 @ $4 by showdown ($2 this round)	(Wᶠᵒˡᵈ) W(7×)=0.238645 L=0.726624 6×o.w_s=(0.706109,0.0161727)
+OppRAISEChanceR [F] 0.810148 @ $6 by showdown ($2 this round)	(Wᶠᵒˡᵈ) W(41.8019×)=0.14571 L=0.844206 6×o.w_s=(0.699907,0.00784916)
+OppRAISEChanceR [F] 0.686264 @ $10 by showdown ($2 this round)	(Wᶠᵒˡᵈ) W(49.501×)=0.143368 L=0.846089 6×o.w_s=(0.699393,0.00832018)
+OppRAISEChanceR [F] 0.517709 @ $18 by showdown ($2.59072 this round)	(Wᶠᵒˡᵈ) W(68.5997×)=0.139521 L=0.847851 6×o.w_s=(0.698092,0.0101543)
+OppRAISEChanceR [F] 0.339286 @ $34 by showdown ($3.28741 this round)	(Wᶠᵒˡᵈ) W(83.9205×)=0.136923 L=0.848723 6×o.w_s=(0.697084,0.0116795)
+OppRAISEChanceR [F] 0.193044 @ $66 by showdown ($4.25272 this round)	(Wᶠᵒˡᵈ) W(108.429×)=0.133132 L=0.849758 6×o.w_s=(0.695494,0.0141576)
+OppRAISEChanceR [F] 0.092369 @ $130 by showdown ($5.07774 this round)	(Wᶠᵒˡᵈ) W(144.069×)=0.128026 L=0.851168 6×o.w_s=(0.693271,0.0176196)
+OppRAISEChanceR [F] 0.044468 @ $258 by showdown ($6.14688 this round)	(Wᶠᵒˡᵈ) W(177.642×)=0.123732 L=0.85229 6×o.w_s=(0.691298,0.020713)
+OppRAISEChanceR [F] 0.0158112 @ $514 by showdown ($7.62596 this round)	(Wᶠᵒˡᵈ) W(213.356×)=0.119284 L=0.853479 6×o.w_s=(0.689177,0.0240324)
+OppRAISEChanceR [F] 0.0107364 @ $800 by showdown ($8.35458 this round)	(Wᶠᵒˡᵈ) W(183.042×)=0.123041 L=0.852471 6×o.w_s=(0.690973,0.0212224)
 
 (Fixed at $2)	W(7×)=0.238645 L=0.726624 6×o.w_s=(0.706109,0.0161727)
 	--
 Why didn't I raise to $4 in this round?
 "all fold" precision will be 0.000754148
-OppRAISEChanceR [*] 0.278121 @ $6 ($2 now)	push=all_fold → 0.0	W(41.8019×)=0.14571 L=0.844206 6×o.w_s=(0.699907,0.00784916)
-OppRAISEChanceR [F] 0.728445 @ $10 ($2 now)	push=all_fold → 0.0015083	(Wᶠᵒˡᵈ) W(49.501×)=0.143368 L=0.846089 6×o.w_s=(0.699393,0.00832018)
-OppRAISEChanceR [F] 0.635606 @ $18 ($2.47247 now)	push=all_fold → 0.00301659	(Wᶠᵒˡᵈ) W(68.5997×)=0.139521 L=0.847851 6×o.w_s=(0.698092,0.0101543)
-OppRAISEChanceR [F] 0.439547 @ $34 ($3.19306 now)	push=all_fold → 0.0135747	(Wᶠᵒˡᵈ) W(83.9205×)=0.136923 L=0.848723 6×o.w_s=(0.697084,0.0116795)
-OppRAISEChanceR [F] 0.261282 @ $66 ($4.19602 now)	push=all_fold → 0.0301659	(Wᶠᵒˡᵈ) W(108.429×)=0.133132 L=0.849758 6×o.w_s=(0.695494,0.0141576)
-OppRAISEChanceR [F] 0.130145 @ $130 ($5.05255 now)	push=all_fold → 0.0588235	(Wᶠᵒˡᵈ) W(144.069×)=0.128026 L=0.851168 6×o.w_s=(0.693271,0.0176196)
-OppRAISEChanceR [F] 0.062973 @ $258 ($6.1317 now)	push=all_fold → 0.086727	(Wᶠᵒˡᵈ) W(177.642×)=0.123732 L=0.85229 6×o.w_s=(0.691298,0.020713)
-OppRAISEChanceR [F] 0.0222117 @ $514 ($7.61325 now)	push=all_fold → 0.0965309	(Wᶠᵒˡᵈ) W(213.356×)=0.119284 L=0.853479 6×o.w_s=(0.689177,0.0240324)
-OppRAISEChanceR [F] 0.0161134 @ $800 ($8.34891 now)	push=all_fold → 0.0671192	(Wᶠᵒˡᵈ) W(183.042×)=0.123041 L=0.852471 6×o.w_s=(0.690973,0.0212224)
+OppRAISEChanceR [*] 0.278121 @ $6 by showdown ($2 this round)	push=all_fold → 0.0	W(41.8019×)=0.14571 L=0.844206 6×o.w_s=(0.699907,0.00784916)
+OppRAISEChanceR [F] 0.728445 @ $10 by showdown ($2 this round)	push=all_fold → 0.0015083	(Wᶠᵒˡᵈ) W(49.501×)=0.143368 L=0.846089 6×o.w_s=(0.699393,0.00832018)
+OppRAISEChanceR [F] 0.635606 @ $18 by showdown ($2.47247 this round)	push=all_fold → 0.00301659	(Wᶠᵒˡᵈ) W(68.5997×)=0.139521 L=0.847851 6×o.w_s=(0.698092,0.0101543)
+OppRAISEChanceR [F] 0.439547 @ $34 by showdown ($3.19306 this round)	push=all_fold → 0.0135747	(Wᶠᵒˡᵈ) W(83.9205×)=0.136923 L=0.848723 6×o.w_s=(0.697084,0.0116795)
+OppRAISEChanceR [F] 0.261282 @ $66 by showdown ($4.19602 this round)	push=all_fold → 0.0301659	(Wᶠᵒˡᵈ) W(108.429×)=0.133132 L=0.849758 6×o.w_s=(0.695494,0.0141576)
+OppRAISEChanceR [F] 0.130145 @ $130 by showdown ($5.05255 this round)	push=all_fold → 0.0588235	(Wᶠᵒˡᵈ) W(144.069×)=0.128026 L=0.851168 6×o.w_s=(0.693271,0.0176196)
+OppRAISEChanceR [F] 0.062973 @ $258 by showdown ($6.1317 this round)	push=all_fold → 0.086727	(Wᶠᵒˡᵈ) W(177.642×)=0.123732 L=0.85229 6×o.w_s=(0.691298,0.020713)
+OppRAISEChanceR [F] 0.0222117 @ $514 by showdown ($7.61325 this round)	push=all_fold → 0.0965309	(Wᶠᵒˡᵈ) W(213.356×)=0.119284 L=0.853479 6×o.w_s=(0.689177,0.0240324)
+OppRAISEChanceR [F] 0.0161134 @ $800 by showdown ($8.34891 this round)	push=all_fold → 0.0671192	(Wᶠᵒˡᵈ) W(183.042×)=0.123041 L=0.852471 6×o.w_s=(0.690973,0.0212224)
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0
