@@ -20,13 +20,10 @@
 
 #include "BluffGainInc.h"
 #include "callPrediction.h"
+#include "callSituation.h"
 #include "math_support.h"
 
 #include <float.h>
-
-#define RAISED_PWIN
-
-
 
 void AutoScalingFunction::query(float64 sliderx, float64 x)
 {
@@ -379,19 +376,17 @@ StateModel::~StateModel()
 }
 
 
-float64 StateModel::g_raised(float64 raisefrom, const float64 betSize)
+ValueAndSlope StateModel::g_raised(float64 raisefrom, const float64 betSize)
 {
     const float64 potWin = fp->f_raised(raisefrom, betSize);
-    return potWin;
+
+    const float64 yval = potWin; // Subtract out foldgain, to get f_raised without computing it again.
+
+    return ValueAndSlope {
+      potWin,
+      fp->fd_raised(raisefrom, betSize, yval) // There is no derivative of ea.FoldGain() here because it is constant relative to betSize.
+    };
 }
-
-
-float64 StateModel::gd_raised(float64 raisefrom, const float64 betSize, const float64 yval)
-{
-    const float64 fp_f_raised = yval; // Subtract out foldgain, to get f_raised without computing it again.
-    return fp->fd_raised(raisefrom, betSize, fp_f_raised); // There is no derivative of ea.FoldGain() here because it is constant relative to betSize.
-}
-
 
 float64 StateModel::f(const float64 betSize)
 {
@@ -413,169 +408,162 @@ float64 StateModel::fd(const float64 betSize, const float64 yval)
     return dy;
 }
 
+const std::pair<const int32, const FoldOrCall> StateModel::calculate_final_potRaisedWin(const size_t arraySize, ValueAndSlope * potRaisedWin_A, const float64 betSize) {
+
+  size_t firstFoldToRaise = arraySize;
+
+  const FoldOrCall myFoldGain(*(table_spec.tableView->table), c.fCore); // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
+
+	for( size_t i=0;i<arraySize; ++i)
+     {
+         const float64 sliderx = betSize;
+         // TODO(from yuzisee): Explore using
+         /* fMyFoldGain.predictedRaiseToThisRound(<#float64 currentBetToCall#>, <#float64 currentAlreadyBet#>, <#float64 predictedRaiseTo#>) */
+         // as sliderx?
 
 
+         const float64 evalX =  ExactCallD::RaiseAmount(*table_spec.tableView, betSize,i);
+         // g_raised ultimately calls into either `GainModelGeom` or `GainModelNoRisk`, both of which are IExf of their own
+         potRaisedWin_A[i] = g_raised(sliderx,evalX); // as you can see below, this value is only blended in if we are below firstFoldToRaise
+         // ^^^ Can't use `.set_value_and_slope` here because we need `potRaisedWin_A[i].v` when computing `potRaisedWin_A[i].D_v`
+
+         if (willFoldToReraise(evalX, potRaisedWin_A[i].v, myFoldGain, *(table_spec.tableView), betSize))
+         {
+           if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
+
+             const float64 g_raised_by_folding = 1.0 - table_spec.tableView->betFraction(betSize);
+
+             //Since g_raised isn't pessimistic based on raiseAmount (especially when we're just calling), don't add additional gain opportunity -- we should instead assume that if we would fold against such a raise that the opponent has us as beat as we are.
+             potRaisedWin_A[i].set_value_and_slope(
+               // Deduct the bet you make, and fold
+               g_raised_by_folding, -1.0
+             );
+         }
+
+     } // end for `i`
+
+	return std::make_pair(firstFoldToRaise, myFoldGain);
+}
+
+ValueAndSlope StateModel::calculate_oppRaisedChance(const float64 betSize, const size_t arraySize, ValueAndSlope * const oppRaisedChance_A, const int32 firstFoldToRaise, ValueAndSlope * const potRaisedWin_A, const ValueAndSlope &oppFoldChance) const {
+      ValueAndSlope lastuptoRaisedChance = {0.0, 0.0};
+
+      const bool bCallerWillPush = (arraySize == 1); //If arraySize is 1, then minRaise goes over maxbet. Anybody who can call will just reraise over the top.
+
+      // TODO(from joseph) ValueAndSlope
+      float64 newRaisedChance = 0;
+      float64 newRaisedChanceD = 0;
+      // Read the values of ea's pRaise below so they can be combined with the values of g_raised above to get an aggregate gain.
+      // Note that we read from the top down, in case it's not monotonic (which can occur due to pessimistic bMyWouldCall) and
+      // the higher of the raises takes precedent (which is the Fold outcome, which trumps expecting lower bets to make money if you can be pushed)
+      for( int32 i=arraySize-1;i>=0; --i)
+      {
+          if( bCallerWillPush )
+          {
+              //ASSERT: i == 0 && arraySize == 1 && lastUptoRaisedChance == 0 && oppFoldChance and oppFoldChanceD have already been determined
+              newRaisedChance = 1 - oppFoldChance.v;
+              newRaisedChanceD = - oppFoldChance.D_v;
+          }else{
+              //Standard calculation
+              const ValueAndSlope pr_raiseto_showdown = c.pRaise(betSize,i,firstFoldToRaise);
+              // NOTE! Pr{Raise} includes the probability of being raised later in future rounds too
+              newRaisedChance = pr_raiseto_showdown.v;
+              newRaisedChanceD = pr_raiseto_showdown.D_v;
+          }
+
+		if( newRaisedChance - lastuptoRaisedChance.v > INVISIBLE_PERCENT )
+		{
+			oppRaisedChance_A[i].v = newRaisedChance - lastuptoRaisedChance.v;
+			oppRaisedChance_A[i].D_v = newRaisedChanceD - lastuptoRaisedChance.D_v;
+			lastuptoRaisedChance.v = newRaisedChance;
+			lastuptoRaisedChance.D_v = newRaisedChanceD;
+		}
+		//if( oppRaisedChance_A[i] < INVISIBLE_PERCENT )
+		else
+          {
+              //raiseAmount_A[i] = 0;
+              oppRaisedChance_A[i].clearToZero();
+              potRaisedWin_A[i].v = 1; // "no change"
+              potRaisedWin_A[i].D_v = 0;
+          }
+
+  #ifdef DEBUGASSERT
+          if (oppRaisedChance_A[i].any_nan()) {
+              std::cerr << "oppRaisedChance_A[" << static_cast<int>(i) << "] should not be NaN" << std::endl;
+              std::cerr << oppRaisedChance_A[i].v << " = " << newRaisedChance << " − " << lastuptoRaisedChance.v << " during bCallerWillPush=" << bCallerWillPush << std::endl;
+              std::cerr << oppRaisedChance_A[i].D_v << " = " << newRaisedChanceD << " − " << lastuptoRaisedChance.D_v << std::endl;
+              exit(1);
+          }
+  #endif // DEBUGASSERT
+
+  #ifdef DEBUG_TRACE_SEARCH
+          if(traceEnable != nullptr)
+          {
+              std::cout << "\t\t(oppRaiseChance[" << i << "] , cur, highest) = " << oppRaisedChance_A[i].v  << " , "  << newRaisedChance << " , " << lastuptoRaisedChance.v << std::endl;
+          }
+  #endif
+      }
+
+      return lastuptoRaisedChance;
+}
+
+//Count needed array size
+int32 StateModel::state_model_array_size_for_blending(float64 betSize) const {
+  int32 arraySize = 0;
+  while( ExactCallD::RaiseAmount(*table_spec.tableView, betSize,arraySize) < table_spec.tableView->maxRaiseAmount() )
+  {
+      ++arraySize;
+  }
+  //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
+  if(betSize < table_spec.tableView->maxRaiseAmount()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
+
+  return arraySize;
+}
+
+// The primary purpose of this query is to return `y` which is our E[x] if betting `betSize`
 void StateModel::query( const float64 betSize )
 {
     // betSize here is always "my" bet size. The perspective of opponents is already covered in <tt>ea</tt>
 
     last_x = betSize;
-    const float64 invisiblePercent = EPS_WIN_PCT;// quantum / myInfo->allChips();
-
-    const FoldOrCall fMyFoldGain(*(table_spec.tableView->table), c.fCore); // My current foldgain with the same units as my CombinedStatResult (for proper comparison with call vs. fold)
 
     ///Establish [PushGain] values
 
 	float64 potFoldWin = table_spec.tableView->PushGain();
 	const float64 potFoldWinD = 0;
 #ifndef DUMP_CSV_PLOTS
-	float64
+  ValueAndSlope
 #endif // if ! DUMP_CSV_PLOTS
-    oppFoldChance = ea.pWin(betSize);
-
-    float64 oppFoldChanceD = ea.pWinD(betSize);
+    oppFoldChance = { ea.pWin(betSize), ea.pWinD(betSize) };
 
     //#ifdef DEBUGASSERT
-	if( potFoldWin < 0 || oppFoldChance < invisiblePercent ){
+	if( potFoldWin < 0 || oppFoldChance.v < INVISIBLE_PERCENT ){
 		potFoldWin =  1;
-		oppFoldChance = 0;
-		oppFoldChanceD = 0;
+		oppFoldChance.clearToZero();
 	}
     //#endif
 
     ///Establish [Raised] values
 
-    //Count needed array size
-    int32 arraySize = 0;
-    while( ExactCallD::RaiseAmount(*table_spec.tableView, betSize,arraySize) < table_spec.tableView->maxRaiseAmount() )
-    {
-        ++arraySize;
-    }
-    //This array loops until noRaiseArraySize is the index of the element with RaiseAmount(noRaiseArraySize) == maxBet()
-    if(betSize < table_spec.tableView->maxRaiseAmount()) ++arraySize; //Now it's the size of the array (unless you're pushing all-in already)
-
-    const bool bCallerWillPush = (arraySize == 1); //If arraySize is 1, then minRaise goes over maxbet. Anybody who can call will just reraise over the top.
-
     //Create arrays
-    // TODO(from joseph) ValueAndSlope
-    float64 * raiseAmount_A = new float64[arraySize];
+    const int32 arraySize = state_model_array_size_for_blending(betSize);
+
+    ValueAndSlope * potRaisedWin_A = new ValueAndSlope[arraySize];
+    const std::pair<const int32, const FoldOrCall> potRaised_delimeters = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize);
+    const FoldOrCall fMyFoldGain = std::move(potRaised_delimeters.second);
 
     ValueAndSlope * oppRaisedChance_A = new ValueAndSlope[arraySize];
-    ValueAndSlope * potRaisedWin_A = new ValueAndSlope[arraySize];
+    ValueAndSlope lastuptoRaisedChance = calculate_oppRaisedChance(betSize, arraySize, oppRaisedChance_A, potRaised_delimeters.first, potRaisedWin_A, oppFoldChance);
 
-    float64 lastuptoRaisedChance = 0;
-    float64 lastuptoRaisedChanceD = 0;
-    float64 newRaisedChance = 0;
-    float64 newRaisedChanceD = 0;
-
-	firstFoldToRaise = arraySize;
-
-	for( int32 i=0;i<arraySize; ++i)
-    {
-#ifdef RAISED_PWIN
-        raiseAmount_A[i] = ExactCallD::RaiseAmount(*table_spec.tableView, betSize,i);
-
-        const float64 sliderx = betSize;
-        // TODO(from yuzisee): Explore using
-        /* fMyFoldGain.predictedRaiseToThisRound(<#float64 currentBetToCall#>, <#float64 currentAlreadyBet#>, <#float64 predictedRaiseTo#>) */
-        // as sliderx?
-
-
-        const float64 evalX = raiseAmount_A[i];
-        // g_raised ultimately calls into either `GainModelGeom` or `GainModelNoRisk`, both of which are IExf of their own
-        potRaisedWin_A[i].v = g_raised(sliderx,evalX); // as you can see below, this value is only blended in if we are below firstFoldToRaise
-        potRaisedWin_A[i].D_v = gd_raised(sliderx,evalX,potRaisedWin_A[i].v);
-        // ^^^ Can't use `.set_value_and_slope` here because we need `potRaisedWin_A[i].v` when computing `potRaisedWin_A[i].D_v`
-
-        if (willFoldToReraise(raiseAmount_A[i], potRaisedWin_A[i].v, fMyFoldGain, *(table_spec.tableView), betSize))
-        {
-          if( firstFoldToRaise == arraySize ) firstFoldToRaise = i;
-
-            //Since g_raised isn't pessimistic based on raiseAmount (especially when we're just calling), don't add additional gain opportunity -- we should instead assume that if we would fold against such a raise that the opponent has us as beat as we are.
-            // Deduct the bet you make and fold
-            potRaisedWin_A[i].set_value_and_slope(
-              1.0 - table_spec.tableView->betFraction(betSize)
-              , -1.0
-            );
-        }
-
-    }
-
-    // Read the values of ea's pRaise below so they can be combined with the values of g_raised above to get an aggregate gain.
-    // Note that we read from the top down, in case it's not monotonic (which can occur due to pessimistic bMyWouldCall) and
-    // the higher of the raises takes precedent (which is the Fold outcome, which trumps expecting lower bets to make money if you can be pushed)
-    for( int32 i=arraySize-1;i>=0; --i)
-    {
-
-        if( bCallerWillPush )
-        {
-            //ASSERT: i == 0 && arraySize == 1 && lastUptoRaisedChance == 0 && oppFoldChance and oppFoldChanceD have already been determined
-            newRaisedChance = 1 - oppFoldChance;
-            newRaisedChanceD = - oppFoldChanceD;
-        }else{
-            //Standard calculation
-            // NOTE! Pr{Raise} includes the probability of being raised later in future rounds too
-            newRaisedChance = c.pRaise(betSize,i,firstFoldToRaise);
-            newRaisedChanceD = c.pRaiseD(betSize,i,firstFoldToRaise);
-        }
-
-		if( newRaisedChance - lastuptoRaisedChance > invisiblePercent )
-		{
-			oppRaisedChance_A[i].v = newRaisedChance - lastuptoRaisedChance;
-			oppRaisedChance_A[i].D_v = newRaisedChanceD - lastuptoRaisedChanceD;
-			lastuptoRaisedChance = newRaisedChance;
-			lastuptoRaisedChanceD = newRaisedChanceD;
-		}
-		//if( oppRaisedChance_A[i] < invisiblePercent )
-		else
-#endif
-        {
-            //raiseAmount_A[i] = 0;
-            oppRaisedChance_A[i].clearToZero();
-            potRaisedWin_A[i].v = 1; // "no change"
-            potRaisedWin_A[i].D_v = 0;
-        }
-
-#ifdef DEBUGASSERT
-        if (oppRaisedChance_A[i].any_nan()) {
-            std::cerr << "oppRaisedChance_A[" << static_cast<int>(i) << "] should not be NaN" << std::endl;
-            std::cerr << oppRaisedChance_A[i].v << " = " << newRaisedChance << " − " << lastuptoRaisedChance << " during bCallerWillPush=" << bCallerWillPush << std::endl;
-            std::cerr << oppRaisedChance_A[i].D_v << " = " << newRaisedChanceD << " − " << lastuptoRaisedChanceD << std::endl;
-            exit(1);
-        }
-#endif // DEBUGASSERT
-
-#ifdef DEBUG_TRACE_SEARCH
-        if(traceEnable != nullptr)
-        {
-            std::cout << "\t\t(oppRaiseChance[" << i << "] , cur, highest) = " << oppRaisedChance_A[i].v  << " , "  << newRaisedChance << " , " << lastuptoRaisedChance << std::endl;
-        }
-#endif
-
-    }
-
-
+    ValueAndSlope potNormalWin = g_raised(betSize,betSize);
 
     ///Establish [Play] values
 #ifndef DUMP_CSV_PLOTS
 	float64
 #endif // if ! DUMP_CSV_PLOTS
-	playChance = 1 - oppFoldChance - lastuptoRaisedChance;
-	float64 playChanceD = - oppFoldChanceD - lastuptoRaisedChanceD;
-    /*
-     float64 playChance = 1 - oppFoldChance;
-     float64 playChanceD = - oppFoldChanceD;
-     for( int32 i=0;i<arraySize;++i )
-     {
-     playChance -= oppRaisedChance_A[i];
-     playChanceD -= oppRaisedChanceD_A[i];
-     }*/
-
-
-    float64 potNormalWin = g_raised(betSize,betSize);
-    float64 potNormalWinD = gd_raised(betSize,betSize,potNormalWin);
-
-    if( 0.0 < playChance && playChance <= invisiblePercent ) //roundoff, but {playChance == 0} is push-fold for the opponent
+	playChance = 1 - oppFoldChance.v - lastuptoRaisedChance.v;
+	float64 playChanceD = - oppFoldChance.D_v - lastuptoRaisedChance.D_v;
+    if( 0.0 < playChance && playChance <= INVISIBLE_PERCENT ) //roundoff, but {playChance == 0} is push-fold for the opponent
     {
         //Correct other odds
         const float64 totalChance = 1.0 - playChance;
@@ -583,27 +571,21 @@ void StateModel::query( const float64 betSize )
         {
             oppRaisedChance_A[i].rescale (1.0 / totalChance);
         }
-        oppFoldChance /= totalChance;
-        oppFoldChanceD /= totalChance;
+              oppFoldChance.rescale(1.0 / totalChance);
 
         //Remove call odds
         playChance = 0;
         playChanceD = 0;
-        potNormalWin = 1;
-        potNormalWinD = 0;
+              potNormalWin.set_value_and_slope(1.0, 0.0);
     }
-
-
 
 
 
     ///Calculate factors
 
-
-    outcomePush = table_spec.stateCombiner.createOutcome(potFoldWin, oppFoldChance, potFoldWinD, oppFoldChanceD);
-    outcomeCalled = table_spec.stateCombiner.createOutcome(potNormalWin, playChance, potNormalWinD, playChanceD);
-
+    outcomeCalled = table_spec.stateCombiner.createOutcome(potNormalWin.v, playChance, potNormalWin.D_v, playChanceD);
     blendedRaises = table_spec.stateCombiner.createBlendedOutcome(arraySize, potRaisedWin_A, oppRaisedChance_A);
+    outcomePush = table_spec.stateCombiner.createOutcome(potFoldWin, oppFoldChance.v, potFoldWinD, oppFoldChance.D_v);
 
     /*
      STATEMODEL_ACCESS gainRaised = 1;
@@ -614,7 +596,7 @@ void StateModel::query( const float64 betSize )
      {
      gainRaised *= (potRaisedWin_A[i] < DBL_EPSILON) ? 0 : pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
 
-     if( oppRaisedChance_A[i] >= invisiblePercent )
+     if( oppRaisedChance_A[i] >= INVISIBLE_PERCENT )
      {
      #ifdef DEBUG_TRACE_SEARCH
      if(bTraceEnable)
@@ -676,8 +658,6 @@ void StateModel::query( const float64 betSize )
     //);
 #endif // DEBUGASSERT
 
-
-    delete [] raiseAmount_A;
 
     delete [] oppRaisedChance_A;
 

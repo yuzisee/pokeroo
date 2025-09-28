@@ -1364,25 +1364,30 @@ float64 ExactCallBluffD::pWinD(const float64 betSize)
     return allFoldChanceD;//*impliedFactor;
 }
 
-
-float64 ExactCallD::pRaise(const float64 betSize, const int32 step, const int32 callSteps)
+const struct ValueAndSlope ExactCallD::pRaise(const float64 betSize, const int32 step, const int32 callSteps)
 {
     query(betSize, callSteps);
 
-	if( RaiseAmount( *tableinfo, betSize, step ) >= tableinfo->maxBet() - tableinfo->chipDenom()/2 )
-    { return 0; } //You don't care about raises if you are all-in
-	else if( step >= noRaiseArraySize )
-    { return std::numeric_limits<float64>::signaling_NaN(); }
+    return ValueAndSlope {
+      ( RaiseAmount( *tableinfo, betSize, step ) >= tableinfo->maxBet() - tableinfo->chipDenom()/2 ) ? (
+        0.0 // You don't care about raises if you are all-in
+      ) : (
+        ( step >= noRaiseArraySize ) ? (
+          std::numeric_limits<float64>::signaling_NaN()
+        )
+        :
+        (
+          1.0-noRaiseChance_A[step]
+        )
+      )
 
-    return 1.0-noRaiseChance_A[step];
-}
+      ,
 
-float64 ExactCallD::pRaiseD(const float64 betSize, const int32 step, const int32 callSteps)
-{
-    query(betSize, callSteps);
+      ( step < noRaiseArraySize ) ? (
+        -noRaiseChanceD_A[step]
+      ) : 0.0
 
-    if( step < noRaiseArraySize ) return -noRaiseChanceD_A[step];
-    else return 0;
+    };
 }
 
 

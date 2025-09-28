@@ -550,9 +550,9 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOr
     // i.e.  `if( raiseStep >= firstFoldToRaise ) { bWillGetCalled = false } else { bWillGetCalled = true }`
     // We print "[F]" when bWillGetCalled is false.
 
-    const float64 noRaiseChance_A_deduced = 1.0 - opp_callraise.pRaise(bet_this_amount,raiseStep,firstFoldToRaise);
+    const float64 noRaiseChance_A_deduced = 1.0 - opp_callraise.pRaise(bet_this_amount,raiseStep,firstFoldToRaise).v;
     // Here, raiseStep is just the iterator. ExactCallD::RaiseAmount(bet_this_amount,raiseStep) is the amount, opp_callraise.pRaise(bet_this_amount,raiseStep,maxcallStep) is the probability that we see a raise of (at least) this amount
-    logF << (1.0 - noRaiseChance_A_deduced) << " @ $" << rAmount << " ($" << rF.predictedRaiseToThisRound(betToCall, bet_this_amount, rAmount) << " now)";
+    logF << (1.0 - noRaiseChance_A_deduced) << " @ $" << rAmount << " by showdown ($" << rF.predictedRaiseToThisRound(betToCall, bet_this_amount, rAmount) << " this round)";
     // `pRaise` returns `1.0 - noRaiseChance_A`
     // `noRaiseChance_A[i]` is the cumulative product of noRaiseChance_adjust[player=p] for each player left at the table
     // Whenever opp_callraise.pRaise(…) returns 0.0, it means `noRaiseChance_A[i] == 1.0`, which means every single `noRaiseChance_adjust` was 1.0
@@ -608,7 +608,7 @@ static int32 firstFoldToRaise(T & m, const float64 displayBet, const FoldOrCall 
   for(raiseStep = 0, rAmount = 0.0; rAmount < maxShowdown; ++raiseStep )
   {
       rAmount =  ExactCallD::RaiseAmount(tablestate, displayBet, raiseStep);
-            const float64 oppRaisedPlayGain = m.g_raised(displayBet, rAmount);
+            const float64 oppRaisedPlayGain = m.g_raised(displayBet, rAmount).v;
             if (StateModel::willFoldToReraise(rAmount, oppRaisedPlayGain, myFoldGain, tablestate, displayBet))
             { break; /* We'd fold at this point. Stop incrementing */ } else {  found_firstFoldToRaise = raiseStep+1; }
   }
