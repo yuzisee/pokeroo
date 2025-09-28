@@ -57,9 +57,9 @@ public:
 
     virtual ~IExf() {}
 
-    // E[x]
+    // @return E[pot] the amount of money that will be in the pot by the showdown
     virtual float64 exf(const float64 betSize) = 0;
-    // d/dbetsize E[x]
+    // d/dbetsize E[pot]
     virtual float64 dexf(const float64 betSize) = 0;
 
 }
@@ -115,7 +115,7 @@ class ExactCallD : public IExf
     CommunityStatsCdf * ed() const {
         return &(fCore.callcumu);
     }
-#ifdef DEBUG_TRACE_DEXF
+#if defined(DEBUG_TRACE_DEXF) || defined(DEBUG_TRACE_P_RAISE)
 		std::ostream * traceOut_dexf;
 #endif
 
@@ -131,7 +131,7 @@ class ExactCallD : public IExf
         ,
         //ed(data)
         fCore(core)
-#ifdef DEBUG_TRACE_DEXF
+#if defined(DEBUG_TRACE_DEXF) || defined(DEBUG_TRACE_P_RAISE)
 					,traceOut_dexf(0)
 #endif
             {

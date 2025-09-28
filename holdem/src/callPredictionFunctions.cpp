@@ -876,6 +876,14 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 
 #endif
 
+#if defined(DEBUG_TRACE_P_RAISE) && defined(DEBUG_TRACE_ZERO)
+  if (traceOut_pRaise != nullptr) {
+    *this->traceOut_pRaise << "\t\t\t\t▾ compare points of reference: U = " << (1 + showdown_opponents.raisedPot/FG.waitLength.bankroll) << "^fw ⋅ " << (1 - raiseTo/FG.waitLength.bankroll) << "^(1-fw) on a winnable $" << showdown_opponents.raisedPot << std::endl;
+    *this->traceOut_pRaise << "\t\t\t\t                        callGain = " << callIncrBase << "^fw ⋅ " << callIncrLoss << "^(1-fw) on a winnable $" << (callPot) << std::endl;
+    // *this->traceOut_pRaise << "\t\t\t\t (DEBUG)  FG.waitLength.bankroll=" << FG.waitLength.bankroll << "    this->fold_bet=" << this->fold_bet << "   callIncrBase=" << callIncrBase << std::endl;
+  }
+#endif
+
   //   ▸ when bRaiseWouldBeCalled, we compare `callGain` vs `raiseGain` as usual (i.e. only raise if it helps our Expected Value)
   //                                  OR is this where we apply RiskLoss normally? (Since even if we know the raise _won't be folded against, it's still possible that folding could strengthen the showdown for the folder and thus it's still the right response to our raise)
   //   ▸ when !bRaiseWouldBeCalled... TODO(from joseph): do we assume you'll fold and we win the pot? (But then bots will never bet if they think their opponents know that bot will fold. Perhaps scale knowledge down to the river based on the number of betting rounds remaining?)
@@ -913,6 +921,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
 	)
 	;
 
+// This is an adjustment being made by `ExpectedCallD::RiskLoss` and if it's negative it means the HypotheticalBet under consideration is taking too much risk
 // Raise only if (U + riskLoss) is better than `nonRaiseGain`
   lastF_by_w = U_by_w;
   lastF_by_w.v += applyRiskLoss / FG.waitLength.bankroll - nonRaiseGain.v;

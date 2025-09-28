@@ -338,7 +338,7 @@ public:
 
     virtual playernumber_t splitOpponents() const override { return e_battle; }
     const virtual StatResult & ViewShape(float64 betSize) override { return shape; }
-    const StatResult & ViewShape() { return shape; }
+    const StatResult & ViewShape() const { return shape; }
 
     /*
      * Raise s to s^f_battle, where s is the weighted geomean of b1 (weight x1) and b2 (weight x2)
