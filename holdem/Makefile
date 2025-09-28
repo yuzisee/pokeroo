@@ -68,13 +68,13 @@ test:
 	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
 	date
 	echo '::group::Compile bin/unittests_gcc_O3'
-	g++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) $(CXXFLAGS_EXTREME_SPEEDUP) -o bin/unittests_gcc_O3 $(wildcard src/*.cpp) unittests/main.cpp
+	g++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) $(CXXFLAGS_EXTREME_SPEEDUP) -pg -o bin/unittests_gcc_O3 $(wildcard src/*.cpp) unittests/main.cpp
 	echo '::endgroup::'
 	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
 	date
 	echo ~/pokeroo-run/lib/holdemdb/ > unittests/holdemdb.ini
 	mkdir -p /tmp/code_coverage.llvm
-	cd unittests && LLVM_PROFILE_FILE="/tmp/code_coverage.llvm/unittests.profraw" sh test_harness.sh ../bin/unittests_clang && sh test_harness.sh ../bin/unittests_gcc_O3
+	cd unittests && LLVM_PROFILE_FILE="/tmp/code_coverage.llvm/unittests.profraw" sh test_harness.sh ../bin/unittests_clang && sh test_harness.sh perf record -F max -g -o unittests_gcc_O3.perf -- ../bin/unittests_gcc_O3
 
 REGENERATE_OPENING_BOOK_SRC = unittests/regenerate_opening_book.cpp src/aiCache.cpp src/aiInformation.cpp src/ai.cpp src/engine.cpp src/engine_base.cpp src/inferentials.cpp src/holdemutil.cpp src/holdem2.cpp src/randomDeck.cpp
 
