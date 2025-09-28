@@ -191,11 +191,6 @@ protected:
     AutoScalingFunction *fp;
     const bool bSingle;
 
-
-#ifdef DEBUG_TRACE_SEARCH
-public:
-#endif
-    float64 gd_raised(float64 raisefrom, float64, const float64);
 public:
 
     int32 firstFoldToRaise;
@@ -210,7 +205,7 @@ public:
     // It's blended because there are actually several raise possibilities and this blends them into one.
     struct AggregatedState blendedRaises;
 
-    float64 g_raised(float64 raisefrom, float64);
+    ValueAndSlope g_raised(float64 raisefrom, float64);
 
     StateModel(const struct TableSpec &currentSituation, ExactCallBluffD & pr_opponentfold, ExactCallD & pr_opponentcallraise, AutoScalingFunction *function
                )
@@ -254,6 +249,10 @@ public:
 	virtual float64 f(const float64);
     virtual float64 fd(const float64, const float64);
 
+    int32 state_model_array_size_for_blending(float64 betSize) const;
+    std::pair<int32, FoldOrCall> calculate_final_potRaisedWin(const size_t, ValueAndSlope * potRaisedWin_A, const float64 betSize);
+    ValueAndSlope calculate_oppRaisedChance(const float64 betSize, const size_t arraySize, ValueAndSlope * const oppRaisedChance_A, const int32 firstFoldToRaise, ValueAndSlope * const potRaisedWin_A, const ValueAndSlope &oppFoldChance) const;
+
     static bool willFoldToReraise
     (
      const float64 raiseAmount
@@ -270,22 +269,16 @@ public:
 
 
 #ifdef DUMP_CSV_PLOTS
-	float64 oppFoldChance;
+	ValueAndSlope oppFoldChance;
 	float64 playChance;
-    void dump_csv_plots(std::ostream &targetoutput, float64 betSize)
-    {
-
-
+    void dump_csv_plots(std::ostream &targetoutput, float64 betSize) {
         targetoutput.precision(4);
-        targetoutput << oppFoldChance << "," << playChance << "," << std::flush;
-
-
+        targetoutput << oppFoldChance.v << "," << playChance << "," << std::flush;
     }
 #endif
 
 }
 ;
-
 
 
 #endif

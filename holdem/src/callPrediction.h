@@ -151,8 +151,7 @@ class ExactCallD : public IExf
             // callSteps is an index that indicates: "all iterator values (of step) starting from this one and higher, are raises that I would fold against)
             // In other worst, callSteps it the smallest RaiseAmount where we know we would just fold to it.
             static float64 RaiseAmount(const ExpectedCallD &tableinfo, const float64 betSize, int32 step);
-			virtual float64 pRaise(const float64 betSize, const int32 step, const int32 callSteps );
-			virtual float64 pRaiseD(const float64 betSize, const int32 step, const int32 callSteps );
+			virtual const struct ValueAndSlope pRaise(const float64 betSize, const int32 step, const int32 callSteps );
 
             virtual void SetImpliedFactor(const float64 bonus);
 

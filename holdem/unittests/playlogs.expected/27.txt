@@ -48,7 +48,7 @@ AgainstRaise(108)=0.419567 from −$74.2955 @ 1
  AgainstCall(128)=0.419567 from −$74.2955 @ 1
 AgainstRaise(128)= … presumed to be impossible
         Push(128)=1 from $0 @ 0
-OppRAISEChanceR [*] 0 @ $128 ($20 now)	W(30.6662×)=0.170737 L=0.809981 3×o.w_s=(0.562909,0.0204386)
+OppRAISEChanceR [*] 0 @ $128 by showdown ($20 this round)	W(30.6662×)=0.170737 L=0.809981 3×o.w_s=(0.562909,0.0204386)
 
 (Fixed at $108)	W(43.0894×)=0.146467 L=0.845289 3×o.w_s=(0.55668,0.010254)
 Guaranteed > $0 is in the pot for sure
