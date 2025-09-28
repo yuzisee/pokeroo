@@ -969,6 +969,26 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
   )
   ;
 
+  float64 d_nonRaiseGain_dfacedBet = (bUseCall) ? (
+    // ∂callgain/∂facedBet
+    //                   = ∂/∂facedBet { std::pow(callIncrLoss, 1 - fw)  *  std::pow(callIncrBase,fw) }
+    //                   = std::pow(callIncrBase,fw) * ∂/∂facedBet { std::pow(callIncrLoss, 1 - fw) }
+    //                   = std::pow(callIncrBase,fw) * ∂/∂facedBet { std::pow((bankroll - faced_bet)/(bankroll - fold_bet), 1 - fw) }
+    //                   = std::pow(callIncrBase,fw) * (1 - fw) * std::pow((bankroll - faced_bet)/(bankroll - fold_bet), - fw) * ∂/∂facedBet {(bankroll - faced_bet)/(bankroll - fold_bet)}
+    //                   = std::pow(callIncrBase,fw) * (1 - fw) / std::pow(callIncrLoss, fw) * ∂/∂facedBet {(bankroll - faced_bet)/(bankroll - fold_bet)}
+    //                   = std::pow(callIncrBase,fw) * (1 - fw) / std::pow(callIncrLoss, fw) * ∂/∂facedBet {(-faced_bet)/(bankroll - fold_bet)}
+    //                   = std::pow(callIncrBase,fw) * (1 - fw) / std::pow(callIncrLoss, fw) * (-1) / (bankroll - fold_bet)
+    //                   = std::pow(callIncrBase/callIncrLoss,fw) * (1 - fw) * (-1) / (bankroll - fold_bet)
+    //                   = std::pow(callIncrBase/callIncrLoss,fw) * (fw - 1) / (bankroll - fold_bet)
+    std::pow(callWin / callLoss, fw) * (fw - 1.0) / (FG.waitLength.bankroll - this->fold_bet)
+  )
+  :
+  (
+    //  ∂U/∂excess
+    FG.fd(faced_bet, foldGain_of_facedBet) / FG.waitLength.bankroll
+  )
+  ;
+
 	const bool expected_raiseWillBeCalled = riskLoss.b_raise_will_be_called(); // what the raiser thinks
   const bool actual_raisePerceivedAsOverbet = bRaiseWouldBeCalled.bGoodFold; // what the faced_bet player thinks
   const bool actual_raiseWouldBeProblematicForFacedBet = bRaiseWouldBeCalled.bBadFold(); // what the faced_bet player thinks

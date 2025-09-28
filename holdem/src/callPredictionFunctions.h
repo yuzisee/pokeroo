@@ -471,6 +471,9 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     virtual float64 df_dfacedBet(const float64 w);
     virtual float64 dw_dfacedBet(const float64 w);
 
+    virtual float64 df_dfacedBet(const float64 w);
+    virtual float64 dw_dfacedBet(const float64 w);
+
     // You MUST populate `this->FG.waitLength` first, before calling this. We will populate everything else here.
     static void configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, const struct RiskLoss &currentRiskLoss);
 }

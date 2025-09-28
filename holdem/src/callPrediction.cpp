@@ -22,6 +22,7 @@
 #include "inferentials.h"
 #include "math_support.h"
 #include <algorithm>
+#include <limits>
 
 //The idea behind eaFold, meanFold, rankFold, eaRkFold is that opponents have different reasons for folding
 
