@@ -20,10 +20,10 @@
 
 #include "stratPosition.h"
 #include "BluffGainInc.h"
+#include "callPredictionFunctions.h"
 #include "stratFear.h"
 
 #include <math.h>
-#include <float.h>
 #include <memory>
 
 //#define DEBUG_TRAP_AS_NORMAL
@@ -524,7 +524,7 @@ static void printAgainstRaiseComponents(std::ofstream &logF, const ExpectedCallD
   std::unique_ptr<ValueAndSlope[]> potRaisedWin = std::make_unique<ValueAndSlope[]>(arraySize);
   std::unique_ptr<ValueAndSlope[]> oppRaisedChance = std::make_unique<ValueAndSlope[]>(arraySize);
 
-  const int32 firstFoldToRaise = m.calculate_final_potRaisedWin(arraySize, potRaisedWin.get(), displayBet).first;
+  const firstFoldToRaise_t firstFoldToRaise = m.calculate_final_potRaisedWin(arraySize, potRaisedWin.get(), displayBet).first;
   m.calculate_oppRaisedChance(displayBet, arraySize, oppRaisedChance.get(), firstFoldToRaise, potRaisedWin.get(), ValueAndSlope{ pr_opponentfold.pWin(displayBet), pr_opponentfold.pWinD(displayBet) });
 
   // GainModelNoRisk and GainModelGeom both use `betFraction` so...
@@ -561,7 +561,7 @@ static void printPessimisticWinPct(std::ofstream & logF, const std::string &pref
 }
 
 // TODO(from joseph): Do we need `betToCall` and `maxShowdown`? What about `tablestate.table.GetBetToCall()` and `tablestate.table.GetMaxShowdown()` directly?
-static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOrCall &rF, const ExpectedCallD & tablestate, const float64 maxShowdown, ExactCallD & opp_callraise, const int32 firstFoldToRaise, const float64 betToCall, std::pair<ExactCallBluffD * const,  CombinedStatResultsPessimistic * const> printAllFold, const float64 n_1v1_outcomes, std::ofstream &logF) {
+static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOrCall &rF, const ExpectedCallD & tablestate, const float64 maxShowdown, ExactCallD & opp_callraise, const firstFoldToRaise_t firstFoldToRaise, const float64 betToCall, std::pair<ExactCallBluffD * const,  CombinedStatResultsPessimistic * const> printAllFold, const float64 n_1v1_outcomes, std::ofstream &logF) {
   // pWin() generally relies on FindZero as part of its calculation, so show the precision we know it has...
   const float64 foldPrecision = DISPLAY_PROBABILITY_QUANTUM / tablestate.handsToShowdownAgainst();
   if (printAllFold.first != nullptr) {
@@ -587,7 +587,7 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOr
             logF << "R";
             break;
     }
-    if( raiseStep >= firstFoldToRaise ) {  logF << " [F] ";  } else { logF << " [*] "; }
+    if( raiseStep >= firstFoldToRaise.first ) {  logF << " [W] ";  } else if ( raiseStep >= firstFoldToRaise.second ) {  logF << " [F] ";  } else { logF << " [*] "; }
     //      `bWillGetCalled = i < callSteps`
     // i.e. `bWillGetCalled = i < firstFoldToRaise`
     // i.e.  `if( raiseStep >= firstFoldToRaise ) { bWillGetCalled = false } else { bWillGetCalled = true }`
@@ -624,7 +624,7 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOr
     }
 
     if (printAllFold.second != nullptr) {
-      printPessimisticWinPct(logF, ( raiseStep >= firstFoldToRaise ) ? "(Wᶠᵒˡᵈ) " : "", rAmount, *printAllFold.second, n_1v1_outcomes);
+      printPessimisticWinPct(logF, ( raiseStep >= firstFoldToRaise.first ) ? "✲ʷᵃᶦᵗ" : ( (raiseStep >= firstFoldToRaise.second) ? "(Wᶠᵒˡᵈ) " : ""), rAmount, *printAllFold.second, n_1v1_outcomes);
     }
     // logF << " ⋯  noRaiseChance_adjust was... " << noRaiseChance_A_deduced
     logF << endl;
@@ -635,27 +635,6 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOr
       printAllFold.first->traceOut = nullptr;
     }
   #endif
-}
-
-template< typename T >
-static int32 firstFoldToRaise(T & m, const float64 displayBet, const FoldOrCall &myFoldGain, const ExpectedCallD & tablestate, const float64 maxShowdown
-#ifdef DEBUG_WILL_FOLD_TO_RERAISE
-, std::ostream &logF
-#endif
-) {
-  int32 found_firstFoldToRaise = -1;
-
-
-    int32 raiseStep = 0;
-  float64 rAmount;
-  for(raiseStep = 0, rAmount = 0.0; rAmount < maxShowdown; ++raiseStep )
-  {
-      rAmount =  ExactCallD::RaiseAmount(tablestate, displayBet, raiseStep);
-            const float64 oppRaisedPlayGain = m.g_raised(displayBet, rAmount).v;
-            if (StateModel::willFoldToReraise(rAmount, oppRaisedPlayGain, myFoldGain, tablestate, displayBet))
-            { break; /* We'd fold at this point. Stop incrementing */ } else {  found_firstFoldToRaise = raiseStep+1; }
-  }
-  return found_firstFoldToRaise;
 }
 
 template< typename T >
@@ -673,7 +652,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
         }
         // Render what happens if you call
         print_raise_chances_if_i(betToCall, rlF, tablestate, maxShowdown, opp_callraise,
-            firstFoldToRaise(m, betToCall, rlF, tablestate, maxShowdown
+            StateModel::firstFoldToRaise_only(m, betToCall, rlF, tablestate, maxShowdown
               #ifdef DEBUG_WILL_FOLD_TO_RERAISE
               , logF
               #endif
@@ -706,7 +685,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
         const FoldOrCall rrF(*(tablestate.table), opp_callraise.fCore);
 
         print_raise_chances_if_i(alternativeBetToCompare, rrF, tablestate, maxShowdown, opp_callraise,
-            firstFoldToRaise(m, alternativeBetToCompare, rrF, tablestate, maxShowdown
+            StateModel::firstFoldToRaise_only(m, alternativeBetToCompare, rrF, tablestate, maxShowdown
               #ifdef DEBUG_WILL_FOLD_TO_RERAISE
               , logF
               #endif

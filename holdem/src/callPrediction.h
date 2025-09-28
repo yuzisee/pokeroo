@@ -76,14 +76,12 @@ class ExactCallD : public IExf
         float64 totalexf;
         float64 totaldexf;
 
-        void accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, const float64 betSize, const int32 callSteps, float64 * const overexf_out, float64 * const overdexf_out);
+        void accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAndSlope * const nextNoRaise_A, const size_t noRaiseArraySize_now, const float64 betSize, const firstFoldToRaise_t callSteps, float64 * const overexf_out, float64 * const overdexf_out);
 
         const ExpectedCallD * const tableinfo;
-
-        static constexpr int32 OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE = -1;
     protected:
         float64 queryinput;
-		int32 querycallSteps;
+        firstFoldToRaise_t querycallSteps;
 
         float64 nearest; // If you're raising and in exf we assume you have been called, tell us what else would have had to be added to the player most likely to make the smallest call to call you. This ensures that exf is accurate (pessimistic) when raising.
         float64 impliedFactor;
@@ -94,7 +92,7 @@ class ExactCallD : public IExf
         float64 *noRaiseChance_A;
         float64 *noRaiseChanceD_A;
 
-        void query(const float64 betSize, const int32 callSteps);
+        void query(const float64 betSize, const firstFoldToRaise_t callSteps);
 
         template<typename T> float64 facedOdds_call_Geom(const ChipPositionState & cps, float64 humanbet, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
         template<typename T> float64 dfacedOdds_call_dbetSize_Geom(const ChipPositionState & cps, float64 humanbet, float64 dpot, float64 w, float64 n,  CallCumulationD<T, OppositionPerspective> * useMean) const;
@@ -136,7 +134,7 @@ class ExactCallD : public IExf
 #endif
             {
                 queryinput = UNINITIALIZED_QUERY;
-                querycallSteps = OPPONENTS_ARE_ALWAYS_ENCOURAGED_TO_RAISE;
+                querycallSteps = std::pair<int32, int32> {-2, -2}; // Set to invalid values so the cache is considered clear
             }
 
             virtual ~ExactCallD();
@@ -151,7 +149,7 @@ class ExactCallD : public IExf
             // callSteps is an index that indicates: "all iterator values (of step) starting from this one and higher, are raises that I would fold against)
             // In other worst, callSteps it the smallest RaiseAmount where we know we would just fold to it.
             static float64 RaiseAmount(const ExpectedCallD &tableinfo, const float64 betSize, int32 step);
-			virtual const struct ValueAndSlope pRaise(const float64 betSize, const int32 step, const int32 callSteps );
+			virtual const struct ValueAndSlope pRaise(const float64 betSize, const int32 step, const firstFoldToRaise_t callSteps );
 
             virtual void SetImpliedFactor(const float64 bonus);
 

@@ -759,8 +759,27 @@ template<typename T> float64 FacedOddsAlgb<T>::fd( const float64 w, const float6
 template<typename T> void FacedOddsRaiseGeom<T>::configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, const struct RiskLoss &currentRiskLoss) {
   const struct ChipPositionState &cps = hypotheticalRaise.bettorSituation;
 
+  // const float64 possibleOpponentsAgainstRaise = a.FG.waitLength.opponents - (hypotheticalRaise.bWillGetCalled ? 0.0 : 1.0);
+  // const float64 effectiveOneOpponent = possibleOpponentsAgainstRaise / a.FG.waitLength.opponents;
+
+  // Your current bankroll (i.e. the maximum that `raiseTo - fold_bet` could be) is:
+  //   `FG.waitLength.bankroll - this->fold_bet`
+  // Bankroll after raising:
+  //   `FG.waitLength.bankroll - raiseTo`
+  // If you win the hand in the showdown by raising, you'll get everything in the pot:
+  //  + You get back all the chips you put in for your raise(s): `raiseTo`
+  //  + You also get back everyone else's committed chips: prevRoundsPot + thisRoundFoldedPot + std::min(raiseTo, opponent_bankroll)
+  //  = FG.waitLength.bankroll + prevRoundsPot + thisRoundFoldedPot + std::min(raiseTo, opponent_bankroll)
+  //  = FG.waitLength.bankroll + pot + (raiseTo - faced_bet)
+  // If you lose the hand by raising, you'll end up with
+  //   `FG.waitLength.bankroll - raiseTo`
+  #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
+  a.raisedPot = cps.pot + (hypotheticalRaise.bWillGetCalled.bUnprofitable ? 0.0 : hypotheticalRaise.betIncrease());
+  #else
+  a.raisedPot = cps.pot + hypotheticalRaise.hypotheticalRaiseTo - hypotheticalRaise.faced_bet();
+  #endif
+
   a.callPot = cps.pot;
-  a.raisedPot = cps.pot + (hypotheticalRaise.bWillGetCalled ? (hypotheticalRaise.betIncrease()) : 0);
     a.raiseTo = hypotheticalRaise.hypotheticalRaiseTo;
     a.fold_bet = hypotheticalRaise.fold_bet();
     a.faced_bet = hypotheticalRaise.faced_bet();
@@ -870,7 +889,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
   const float64 applyRiskLoss =  (bCheckPossible) ? 0 : riskLoss.old_broken_riskloss_wrong_sign().v;
 
 	const float64 callGain =
-	  bRaiseWouldBeCalled ? (
+	  !bRaiseWouldBeCalled.bUnprofitable ? (
 			callIncrLoss * std::pow(callIncrBase,fw)
 		) : 0;
 
