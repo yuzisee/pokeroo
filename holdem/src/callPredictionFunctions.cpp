@@ -825,7 +825,7 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
         //   Let's say the 11th of 11 players will call my raise 5% of the time
         //   etc.
         // You'll get 50% E[call] on average
-        FG.waitLength.opponents - (((FG.waitLength.opponents > 1) && bRaiseWouldBeCalled) ? 0 : 0.5), // TODO(from joseph): 0.5 is a Schrodinger's player, maybe fold vs. maybe not fold. If we know this hypothetical raise will push one player out FOR SURE !00% guaranteed, we could deduct a full 1.0 instead of 0.5 (but is that too obnoxious?) Let's go with 0.5 for now.
+        FG.waitLength.opponents - (((FG.waitLength.opponents > 1) && !bRaiseWouldBeCalled) ? 0.5 : 0.0), // TODO(from joseph): 0.5 is a Schrodinger's player, maybe fold vs. maybe not fold. If we know this hypothetical raise will push one player out FOR SURE !00% guaranteed, we could deduct a full 1.0 instead of 0.5 (but is that too obnoxious?) Let's go with 0.5 for now.
       #else
         FG.waitLength.opponents,
       #endif
