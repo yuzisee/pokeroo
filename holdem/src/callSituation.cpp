@@ -282,7 +282,7 @@ struct RiskLoss ExpectedCallD::RiskLossHeuristic(const struct HypotheticalBet & 
     // It has, as a "bankroll" that splits the entire rest of the chip stack equally
     // It has, as a "sacrifice" the average amount that everyone else has bet
     //        ↑ it's been that way since https://github.com/yuzisee/pokeroo/blob/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7/holdem/src/callPrediction.cpp#L567
-    FG.waitLength.setAmountSacrificeVoluntary( (table->GetPotSize() - stagnantPot() - hypotheticalRaise.bettorSituation.alreadyBet)/(handsIn()-1) );
+    FG.waitLength.setAmountSacrificeVoluntary( hypotheticalRaise.faced_bet() );
     // ^^^ If amountSacrificeVoluntary were for a single player it would be: that player's current bet size − that player's forced bet (e.g. blinds)
 
     FG.waitLength.bankroll = (allChips() - hypotheticalRaise.bettorSituation.bankroll)/(N-1);
@@ -300,20 +300,15 @@ struct RiskLoss ExpectedCallD::RiskLossHeuristic(const struct HypotheticalBet & 
 
     // INVARIANT: If `FG.f( raiseTo )` (i.e. "FoldGain") is positive, it means it is profitable to fold against `raiseTo`
 
-  const float64 d_AmountSacrifice_d_pot = 1.0 / static_cast<float64>(handsIn()-1);
-
 	return (RiskLoss{
 	  comparisonCutoff,
       nominalFoldChips,
     // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
       trueFoldChipsEV,
-    // d_riskLoss/d_pot = d/dpot { FG.f( raiseTo ) }                           + d/dpot { FG.waitLength.amountSacrifice }
+    // ∂{riskLoss.v}/∂facedBet = d/dfacedBet { FG.f( raiseTo ) } + d/dfacedBet { FG.waitLength.amountSacrifice }
     //                                                                             ^^^ see `setAmountSacrificeVoluntary`
-    //   d_pot/d_AmountSacrifice { FG.f( raiseTo ) } * d_AmountSacrifice/d_pot + d/dpot { FG.waitLength.amountSacrifice }
-    //-(FG.dF_dAmountSacrifice( raiseTo ) / (handsIn()-1) + 1.0 / static_cast<float64>(handsIn()-1))
-      FG.dF_dAmountSacrifice( raiseTo ) * d_AmountSacrifice_d_pot + d_AmountSacrifice_d_pot
-    // TODO(from joseph): Do we need a unit test for this? (Is it still used considering it has been deprecated?)
-    // In this case, doesn't `riskLoss.D_v` needs to be ∂{riskLoss.v}/∂facedBet though?
+	                             FG.dF_dAmountSacrifice( raiseTo ) + hypotheticalRaise.faced_bet()
+    // TODO(from joseph): Do we need a unit test for this?
 	});
 
 }
