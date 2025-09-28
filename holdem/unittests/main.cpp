@@ -1016,7 +1016,7 @@ namespace RegressionTests {
     {
 	public:
 
-        FixedReplayPlayerStrategy(const std::vector<float64> bet_sequence) : bets(bet_sequence), i(0) {}
+        explicit FixedReplayPlayerStrategy(std::vector<float64> bet_sequence) : bets(std::move(bet_sequence)), i(0) {}
 		virtual ~FixedReplayPlayerStrategy(){};
 
         virtual void SeeCommunity(const Hand&, const int8) {};
@@ -1052,7 +1052,7 @@ namespace RegressionTests {
         }
 
         void resetNextBetSequence(const std::vector<float64> new_sequence) {
-          bets.assign(new_sequence.begin(), new_sequence.end());
+          bets = std::move(new_sequence);
           i = 0;
         }
 

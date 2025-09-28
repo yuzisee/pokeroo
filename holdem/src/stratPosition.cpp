@@ -644,9 +644,9 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
     }
     logF << endl;
 
-    if (separatorBet == betToCall) {
-      const float64 minNextRaiseTo = (separatorBet*2-betToCall);
-      if( maxShowdown - minNextRaiseTo < DBL_EPSILON ) return;
+    if ((separatorBet == betToCall) && (maxShowdown + tablestate.chipDenom() / 2.0 <= tablestate.minRaiseTo())) {
+      // We already showed `separatorBet` so there's no use for "Why didn't I raise to" below.
+      return;
     }
 
     ExactCallBluffD * const foldPrintConfig = &opp_fold;
