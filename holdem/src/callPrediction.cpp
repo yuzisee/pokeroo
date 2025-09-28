@@ -1390,7 +1390,7 @@ const struct ValueAndSlope ExactCallD::pRaise(const float64 betSize, const int32
     };
 }
 
-static constexpr std::pair<int32, int32> all_reraises_considered_bad_folds() {
+static constexpr firstFoldToRaise_t all_reraises_considered_bad_folds() {
   static_assert(sizeof(int32) <= sizeof(size_t), "We'll be using int32_t::max() and it needs to fit into both. Thanks!");
   // TODO(from joseph): There is room for very minor further tuning of what to do during FacedOddsRaiseGeom::query and its relationship with ExpectedCallD::RiskLossHeuristic
   return std::pair<int32, int32> { -1, std::numeric_limits<int32>::max() - 1 };

@@ -610,11 +610,11 @@ void StateModel::query( const float64 betSize )
     const int32 arraySize = state_model_array_size_for_blending(betSize);
 
     ValueAndSlope * potRaisedWin_A = new ValueAndSlope[arraySize];
-    std::pair<firstFoldToRaise_t, FoldOrCall> potRaised_delimeters = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize);
-    const FoldOrCall fMyFoldGain = std::move(potRaised_delimeters.second);
+    std::pair<firstFoldToRaise_t, FoldOrCall> potRaised_delimiters = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize);
+    const FoldOrCall fMyFoldGain = std::move(potRaised_delimiters.second);
 
     ValueAndSlope * oppRaisedChance_A = new ValueAndSlope[arraySize];
-    ValueAndSlope lastuptoRaisedChance = calculate_oppRaisedChance(betSize, arraySize, oppRaisedChance_A, potRaised_delimeters.first, potRaisedWin_A, oppFoldChance);
+    ValueAndSlope lastuptoRaisedChance = calculate_oppRaisedChance(betSize, arraySize, oppRaisedChance_A, potRaised_delimiters.first, potRaisedWin_A, oppFoldChance);
 
     ValueAndSlope potNormalWin = g_raised(betSize,betSize);
 
