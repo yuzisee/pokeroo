@@ -43,9 +43,26 @@ FoldGainᵣ()=0.998285 by waiting 0 hands(=0 folds)	vs play:1.01934   ->assumes 
  AgainstCall(20)=1.00311 from +$12.8156 @ 0.197736
 AgainstRaise(20)=1.01122 from +$20.1184 @ 0.454814
         Push(20)=1.00491 from +$11.4893 @ 0.347449
+AgainstRaise(20) components:
+	📊Ω[30]	+$11.2944 ∩ 0.805549%   −$30↔+$30
+	⊔ Ω[50]	+$16.8603 ∩ 2.01947%   −$50↔+$50
+	⊔ Ω[90]	+$26.5652 ∩ 1.50978%   −$90↔+$90
+	⊔ Ω[170]	+$37.6536 ∩ 5.56138%   −$170↔+$170
+	⊔ Ω[330]	+$27.0664 ∩ 28.5352%   −$330↔+$330
+	⊔ Ω[650]	−$20 ∩ 7.05007%   −$650↔+$650
+	⊔ Ω[810] … presumed impossible
  AgainstCall(10)=1.00431 from +$6.47914 @ 0.540405
 AgainstRaise(10)=1.01339 from +$23.7775 @ 0.459595
         Push(10)=1 from $0 @ 0
+AgainstRaise(10) components:
+	📊Ω[20]	+$12.8156 ∩ 0.239726%   −$20↔+$20
+	⊔ Ω[30]	+$11.2944 ∩ 0.969276%   −$30↔+$30
+	⊔ Ω[50]	+$16.8603 ∩ 1.53058%   −$50↔+$50
+	⊔ Ω[90]	+$26.5652 ∩ 2.00137%   −$90↔+$90
+	⊔ Ω[170]	+$37.6536 ∩ 5.56487%   −$170↔+$170
+	⊔ Ω[330]	+$27.0664 ∩ 31.0535%   −$330↔+$330
+	⊔ Ω[650]	−$10 ∩ 4.60013%   −$650↔+$650
+	⊔ Ω[810] … presumed impossible
 
 Why didn't I call?
 OppRAISEChanceR [*] 0.459595 @ $20 by showdown ($10 this round)	W(1×)=0.821173 L=0.17326 1×o.w_s=(0.821173,0.00556689)
@@ -101,9 +118,14 @@ FoldGainᵣ()=0.981481 by waiting 0 hands(=0 folds)	vs play:1.29196   ->assumes 
  AgainstCall(365)=1.29196 from +$236.488 @ 1
 AgainstRaise(365)= … presumed to be impossible
         Push(365)=1 from $0 @ 0
+AgainstRaise(365) components:
+	📊Ω[710] … presumed impossible
+	⊔ Ω[810] … presumed impossible
  AgainstCall(710)=1 from $0 @ 0
 AgainstRaise(710)=0.123457 from −$710 @ 1
         Push(710)=1 from $0 @ 0
+AgainstRaise(710) components:
+	📊Ω[810]	−$710 ∩ 100%   −$810↔+$810
 OppRAISEChanceR [*] 0 @ $710 by showdown ($345 this round)	W(1×)=0.821173 L=0.17326 1×o.w_s=(0.821173,0.00556689)
 OppRAISEChanceR [F] 0 @ $810 by showdown ($345 this round)	(Wᶠᵒˡᵈ) W(1×)=0.821173 L=0.17326 1×o.w_s=(0.821173,0.00556689)
 

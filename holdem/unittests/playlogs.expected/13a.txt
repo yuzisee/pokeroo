@@ -40,9 +40,21 @@ FoldGainᵣ()=0.999148 by waiting 0 hands(=0 folds)	vs play:1.00549   ->assumes 
  AgainstCall(55)=1.00549 from +$8.94816 @ 1
 AgainstRaise(55)= … presumed to be impossible
         Push(55)=1 from $0 @ 0
+AgainstRaise(55) components:
+	📊Ω[100] … presumed impossible
+	⊔ Ω[155] … presumed impossible
+	⊔ Ω[255] … presumed impossible
+	⊔ Ω[455] … presumed impossible
+	⊔ Ω[810] … presumed impossible
  AgainstCall(100)=1.0044 from +$13.3464 @ 0.538229
 AgainstRaise(100)=0.971187 from −$100 @ 0.461771
         Push(100)=1 from $0 @ 0
+AgainstRaise(100) components:
+	📊Ω[145] … presumed impossible
+	⊔ Ω[235] … presumed impossible
+	⊔ Ω[415]	−$100 ∩ 32.5361%   −$415↔+$415
+	⊔ Ω[775]	−$100 ∩ 12.7391%   −$775↔+$775
+	⊔ Ω[810]	−$100 ∩ 0.901911%   −$810↔+$810
 OppRAISEChanceR [*] 0 @ $100 by showdown ($45 this round)	W(1×)=0.569062 L=0.406369 1×o.w_s=(0.569062,0.0245692)
 OppRAISEChanceR [*] 0 @ $155 by showdown ($45 this round)	W(1×)=0.569062 L=0.406369 1×o.w_s=(0.569062,0.0245692)
 OppRAISEChanceR [*] 0 @ $255 by showdown ($46.9084 this round)	W(5.33333×)=0.356636 L=0.634716 1×o.w_s=(0.356636,0.00864828)

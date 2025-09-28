@@ -44,9 +44,18 @@ FoldGainᵣ()=0.991582 by waiting 0 hands(=0 folds)	vs play:1.01988   ->assumes 
  AgainstCall(20)=1.02032 from +$2.11655 @ 0.905126
 AgainstRaise(20)=0.999561 from −$0.435866 @ 0.0948743
         Push(20)=1 from $0 @ 0
+AgainstRaise(20) components:
+	📊Ω[34.2857]	+$1.49065 ∩ 1.66206%   −$34.2857↔+$40.9096
+	⊔ Ω[54.2857]	+$0.591717 ∩ 3.09479%   −$54.2857↔+$59.404
+	⊔ Ω[88.5714]	−$1.78499 ∩ 4.73058%   −$88.5714↔+$58.5714
+	⊔ Ω[94.2857] … presumed impossible
  AgainstCall(34.2857)=0.895716 from −$13.1415 @ 0.748198
 AgainstRaise(34.2857)=0.908435 from −$34.2857 @ 0.251802
         Push(34.2857)=1 from $0 @ 0
+AgainstRaise(34.2857) components:
+	📊Ω[48.5714] … presumed impossible
+	⊔ Ω[77.1429]	−$34.2857 ∩ 25.1802%   −$77.1429↔+$59.0962
+	⊔ Ω[94.2857] … presumed impossible
 OppRAISEChanceR [*] 0.0948743 @ $34.2857 by showdown ($14.2857 this round)	W(13.7433×)=0.262409 L=0.6964 2×o.w_s=(0.496787,0.0375698)
 OppRAISEChanceR [*] 0.0782537 @ $54.2857 by showdown ($14.2857 this round)	W(12.5556×)=0.264851 L=0.694228 2×o.w_s=(0.498076,0.0370961)
 OppRAISEChanceR [*] 0.0473058 @ $88.5714 by showdown ($15.2625 this round)	W(13.9444×)=0.261772 L=0.696486 2×o.w_s=(0.496347,0.0381109)
@@ -102,9 +111,20 @@ Can you win by checking? 1.14919 for a showdown of $60 @ onWin=16.3993% vs. onLo
  AgainstCall(0)=1.08138 from +$11.0829 @ 0.545447
 AgainstRaise(0)=0.953651 from −$7.57466 @ 0.454553
         Push(0)=1 from $0 @ 0
+AgainstRaise(0) components:
+	📊Ω[5.71428]	+$8.40999 ∩ 6.37237%   −$5.71428↔+$71.4286
+	⊔ Ω[11.4286]	+$5.73703 ∩ 3.58309%   −$11.4286↔+$82.8571
+	⊔ Ω[22.8571]	+$0.142497 ∩ 11.8926%   −$22.8571↔+$104.198
+	⊔ Ω[45.7142]	−$17.7975 ∩ 23.6073%   −$45.7142↔+$105.714
+	⊔ Ω[74.2857] … presumed impossible
  AgainstCall(5.71428)=1.04691 from +$5.51337 @ 0.632013
 AgainstRaise(5.71428)=0.920293 from −$16.0905 @ 0.367987
         Push(5.71428)=1 from $0 @ 0
+AgainstRaise(5.71428) components:
+	📊Ω[11.4286]	+$2.12889 ∩ 1.75694%   −$11.4286↔+$82.8571
+	⊔ Ω[22.8571]	−$4.82624 ∩ 12.5416%   −$22.8571↔+$104.198
+	⊔ Ω[45.7142]	−$23.7919 ∩ 22.5002%   −$45.7142↔+$105.714
+	⊔ Ω[74.2857] … presumed impossible
 OppRAISEChanceR [*] 0.454553 @ $5.71428 by showdown ($5.71428 this round)	W(2×)=0.122803 L=0.837891 2×o.w_s=(0.403822,0.0601458)
 OppRAISEChanceR [*] 0.39083 @ $11.4286 by showdown ($5.71428 this round)	W(2×)=0.122803 L=0.837891 2×o.w_s=(0.403822,0.0601458)
 OppRAISEChanceR [*] 0.354999 @ $22.8571 by showdown ($6.55677 this round)	W(2×)=0.122803 L=0.837891 2×o.w_s=(0.403822,0.0601458)
@@ -152,9 +172,14 @@ FoldGainᵣ()=0.730769 by waiting 0 hands(=0 folds)	vs play:0.942296
  AgainstCall(32.8571)=0.942296 from −$4.28656 @ 1
 AgainstRaise(32.8571)= … presumed to be impossible
         Push(32.8571)=1 from $0 @ 0
+AgainstRaise(32.8571) components:
+	📊Ω[65.7142] … presumed impossible
+	⊔ Ω[74.2857] … presumed impossible
  AgainstCall(65.7142)=1 from −$34.0586 @ 0
 AgainstRaise(65.7142)=0.459008 from −$40.188 @ 1
         Push(65.7142)=1 from $0 @ 0
+AgainstRaise(65.7142) components:
+	📊Ω[74.2857]	−$40.188 ∩ 100%   −$74.2857↔+$167.143
 OppRAISEChanceR [*] 0 @ $65.7142 by showdown ($32.8571 this round)	W(2×)=0.122803 L=0.837891 2×o.w_s=(0.403822,0.0601458)
 OppRAISEChanceR [*] 0 @ $74.2857 by showdown ($32.8571 this round)	W(2×)=0.122803 L=0.837891 2×o.w_s=(0.403822,0.0601458)
 
@@ -206,9 +231,18 @@ Can you win by checking? 2.13039 for a showdown of $158.571 @ onWin=29.5327% vs.
  AgainstCall(0)=1.93441 from +$46.8303 @ 0.826625
 AgainstRaise(0)=1.15817 from +$37.7962 @ 0.173375
         Push(0)=1 from $0 @ 0
+AgainstRaise(0) components:
+	📊Ω[5.71428]	+$44.4912 ∩ 0.327684%   −$5.71428↔+$164.286
+	⊔ Ω[11.4286]	+$42.1521 ∩ 0.703149%   −$11.4286↔+$170
+	⊔ Ω[22.8571]	+$37.4739 ∩ 16.3067%   −$22.8571↔+$181.428
+	⊔ Ω[41.4286] … presumed impossible
  AgainstCall(5.71428)=1.4113 from +$20.5076 @ 0.830896
 AgainstRaise(5.71428)=1.0347 from +$8.50022 @ 0.169104
         Push(5.71428)=1 from $0 @ 0
+AgainstRaise(5.71428) components:
+	📊Ω[11.4286]	+$16.394 ∩ 0.685739%   −$11.4286↔+$170
+	⊔ Ω[22.8571]	+$8.16659 ∩ 16.2247%   −$22.8571↔+$181.428
+	⊔ Ω[41.4286] … presumed impossible
 OppRAISEChanceR [*] 0.173375 @ $5.71428 by showdown ($5.71428 this round)	W(2×)=0.0835968 L=0.803491 2×o.w_s=(0.337842,0.180134)
 OppRAISEChanceR [*] 0.170098 @ $11.4286 by showdown ($5.71428 this round)	W(2×)=0.0835968 L=0.803491 2×o.w_s=(0.337842,0.180134)
 OppRAISEChanceR [*] 0.163067 @ $22.8571 by showdown ($8.92313 this round)	W(2×)=0.0835968 L=0.803491 2×o.w_s=(0.337842,0.180134)
@@ -253,9 +287,18 @@ Can you win by checking? 1.33541 for a showdown of $158.571 @ onWin=8.76291% vs.
  AgainstCall(0)=1.21009 from +$13.8955 @ 0.626384
 AgainstRaise(0)=0.958025 from −$4.65436 @ 0.373616
         Push(0)=1 from $0 @ 0
+AgainstRaise(0) components:
+	📊Ω[5.71428]	+$9.18266 ∩ 0.327684%   −$5.71428↔+$164.286
+	⊔ Ω[11.4286]	+$4.46986 ∩ 0.703149%   −$11.4286↔+$170
+	⊔ Ω[22.8571]	−$4.95575 ∩ 36.3308%   −$22.8571↔+$181.428
+	⊔ Ω[41.4286] … presumed impossible
  AgainstCall(5.71428)=0.913013 from −$5.71428 @ 0.630654
 AgainstRaise(5.71428)=0.798115 from −$22.6449 @ 0.369346
         Push(5.71428)=1 from $0 @ 0
+AgainstRaise(5.71428) components:
+	📊Ω[11.4286]	−$11.4286 ∩ 0.685739%   −$11.4286↔+$170
+	⊔ Ω[22.8571]	−$22.8571 ∩ 36.2488%   −$22.8571↔+$181.428
+	⊔ Ω[41.4286] … presumed impossible
 OppRAISEChanceR [*] 0.373616 @ $5.71428 by showdown ($5.71428 this round)	W(2×)=0 L=1 2×o.w_s=(0,0)
 OppRAISEChanceR [*] 0.37034 @ $11.4286 by showdown ($11.4286 this round)	W(2×)=0 L=1 2×o.w_s=(0,0)
 OppRAISEChanceR [*] 0.363308 @ $22.8571 by showdown ($22.8571 this round)	W(2×)=0 L=1 2×o.w_s=(0,0)
