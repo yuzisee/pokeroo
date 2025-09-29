@@ -870,7 +870,6 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
   const float64 callGain = std::pow(callIncrLoss, 1 - fw) * std::pow(callIncrBase,fw);
 
 
-
 #if defined(DEBUG_TRACE_P_RAISE) && defined(DEBUG_TRACE_ZERO)
   if (traceOut_pRaise != nullptr) {
     *this->traceOut_pRaise << "\t\t\t\t▾ compare points of reference: U = " << (1 + showdown_opponents.raisedPot/FG.waitLength.bankroll) << "^fw ⋅ " << (1 - raiseTo/FG.waitLength.bankroll) << "^(1-fw) on a winnable $" << showdown_opponents.raisedPot << std::endl;
@@ -910,7 +909,6 @@ template<typename T> void FacedOddsRaiseGeom<T>::query( const float64 w )
   } else {
       bUseCall = ( callGain > excess_by_w.v );
   }
-
 
   //We need to compare raising to the opportunity cost of calling/folding
 	  //Depending on whether call or fold is more profitable, we choose the most significant opportunity cost

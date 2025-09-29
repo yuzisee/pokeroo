@@ -558,14 +558,14 @@ static void printPessimisticWinPct(std::ofstream & logF, const std::string &pref
 }
 
 // TODO(from joseph): Do we need `betToCall` and `maxShowdown`? What about `tablestate.table.GetBetToCall()` and `tablestate.table.GetMaxShowdown()` directly?
-static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOrCall &rF, const ExpectedCallD & tablestate, const float64 maxShowdown, ExactCallD & opp_callraise, const firstFoldToRaise_t firstFoldToRaise, const float64 betToCall, std::pair<ExactCallBluffD * const,  CombinedStatResultsPessimistic * const> printAllFold, const float64 n_1v1_outcomes, std::ofstream &logF) {
+static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOrCall &rF, const ExpectedCallD & tablestate, const float64 maxShowdown, ExactCallD & opp_callraise, const firstFoldToRaise_t firstFoldToRaise, const float64 betToCall, std::pair<ExactCallBluffD * const,  CombinedStatResultsPessimistic * const> printMoreDetails, const float64 n_1v1_outcomes, std::ofstream &logF) {
   // pWin() generally relies on FindZero as part of its calculation, so show the precision we know it has...
   const float64 foldPrecision = DISPLAY_PROBABILITY_QUANTUM / tablestate.handsToShowdownAgainst();
-  if (printAllFold.first != nullptr) {
+  if (printMoreDetails.first != nullptr) {
     logF << "\"all fold\" precision will be " << foldPrecision << std::endl;
 
     #ifdef DEBUG_TRACE_PWIN
-        printAllFold.first->traceOut = &logF;
+        printMoreDetails.first->traceOut = &logF;
     #endif
   }
 
@@ -600,10 +600,10 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOr
     // ↑ ABOVE is the probability of the opponents raising me
     // ↓ BELOW is the probability of the opponents folding if I raise
 
-    if (printAllFold.first != nullptr) {
+    if (printMoreDetails.first != nullptr) {
       // This is the probability that everyone else folds (e.g. if they knew what you had and have a uniform distribution of possible hands -- but note that their decision is based on which StatResult you choose, so it can vary from bet to bet as well as bot to bot.)
       logF << "\tpush=all_fold → "; // << "left"
-      const float64 allFoldPr = printAllFold.first->pWin(rAmount);
+      const float64 allFoldPr = printMoreDetails.first->pWin(rAmount);
       #ifdef DEBUG_TRACE_PWIN
       logF << " ⎌⟂ ";
       #endif
@@ -620,16 +620,16 @@ static void print_raise_chances_if_i(const float64 bet_this_amount, const FoldOr
       }
     }
 
-    if (printAllFold.second != nullptr) {
-      printPessimisticWinPct(logF, ( raiseStep >= firstFoldToRaise.first ) ? "✲ʷᵃᶦᵗ" : ( (raiseStep >= firstFoldToRaise.second) ? "(Wᶠᵒˡᵈ) " : ""), rAmount, *printAllFold.second, n_1v1_outcomes);
+    if (printMoreDetails.second != nullptr) {
+      printPessimisticWinPct(logF, ( raiseStep >= firstFoldToRaise.first ) ? "✲ʷᵃᶦᵗ" : ( (raiseStep >= firstFoldToRaise.second) ? "(Wᶠᵒˡᵈ) " : ""), rAmount, *printMoreDetails.second, n_1v1_outcomes);
     }
     // logF << " ⋯  noRaiseChance_adjust was... " << noRaiseChance_A_deduced
     logF << endl;
   }
 
   #ifdef DEBUG_TRACE_PWIN
-    if (printAllFold.first != nullptr) {
-      printAllFold.first->traceOut = nullptr;
+    if (printMoreDetails.first != nullptr) {
+      printMoreDetails.first->traceOut = nullptr;
     }
   #endif
 }
@@ -643,7 +643,6 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
     {
         const FoldOrCall rlF(*(tablestate.table), opp_callraise.fCore);
 
-        ExactCallBluffD * const printMoreDetails = nullptr;
         if (separatorBet != betToCall) {
           logF << std::endl << "Why didn't I " << ((tablestate.alreadyBet() == betToCall) ? "check" : "call") << "?" << std::endl;
         }
@@ -653,7 +652,7 @@ void PositionalStrategy::printBetGradient(std::ofstream &logF, ExactCallD & opp_
               #ifdef DEBUG_WILL_FOLD_TO_RERAISE
               , logF
               #endif
-            ), betToCall, std::make_pair(printMoreDetails, csrp), n_possible_1v1_outcomes, logF);
+            ), betToCall, std::make_pair(nullptr, csrp), n_possible_1v1_outcomes, logF);
     }
 
     logF << endl;

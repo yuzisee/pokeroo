@@ -21,9 +21,11 @@
 #ifndef HOLDEM_StateModel
 #define HOLDEM_StateModel
 
-// #define DEBUG_WILL_FOLD_TO_RERAISE
 
-#include "callPredictionTypes.h"
+// #define DEBUG_WILL_FOLD_TO_RERAISE
+// ^^^ uncomment to debug the `willFoldToReraise` formulas
+
+#include "callSituation.h"
 #include "functionmodel.h"
 #ifdef DEBUG_WILL_FOLD_TO_RERAISE
 #include <ostream>
