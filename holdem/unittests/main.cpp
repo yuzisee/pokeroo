@@ -1413,6 +1413,7 @@ P0 calls $14.2857 ($60)
         myFlop.AddToHand(card);
 
 
+        i4.resetNextBetSequence({i4.ViewPlayer().GetMoney(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()});
 
         // Gear checks
         // P0 checks
@@ -1808,13 +1809,9 @@ P0 calls $14.2857 ($60)
         myTable.BeginInitialState(21);
         myTable.BeginNewHands(std::cout, b, false, dealer);
 
-        /*
-
-         All-limp except one.
-
-         */
-
-
+        std::cout << " ―――――――" << std::endl;
+        std::cout << "|excerpt| All-limp except one\t→\tNow, skip ahead to the flop …" << std::endl;
+        std::cout << " ―――――――" << std::endl;
 
         myTable.PrepBettingRound(true,3);  //flop, turn, river remaining
 
@@ -1891,23 +1888,21 @@ P0 calls $14.2857 ($60)
          Andrew checks
          Mona checks
          h21 checks
-         Nav bets $50
-         Sam calls $50
+         Nav bets $20
+         Sam calls $20
          Laily folds
          Andrew folds
          Mona folds
-         h21 calls $50
+         h21 calls $20
          */
-
 
 
         DeckLocation myTurn;
         myTurn.SetByIndex(32);
         /*
 
-         Turn:	9c Qh Kh 10s   (Pot: $164)
+         Turn:	9c Qh Kh 10s   (Pot: $74)
          */
-
 
         assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
         /*
@@ -1927,18 +1922,14 @@ P0 calls $14.2857 ($60)
         myRiver.SetByIndex(10);
 
         /*
-         River:	9c Qh Kh 10s 4c  (Pot: $164)
+         River:	9c Qh Kh 10s 4c  (Pot: $74)
          */
 
+        const float64 potBeforeRiver = myTable.GetPotSize();
         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
-        (void)highbettor; // -Wunused-variable
-        //assert(highbettor == 4);
-
-        // No all-fold; assert that the pot was increased at least.
-        //assert(myTable.GetPotSize() > 55);
-
-
-
+        if (myTable.GetPotSize() != potBeforeRiver) {
+          assert((highbettor != 0) && "h21 should not be the one leading with a bet here...");
+        }
     }
 
 
@@ -1974,7 +1965,7 @@ P0 calls $14.2857 ($60)
 
         PureGainStrategy bot("20_21a.txt", 3);
         PlayerStrategy * const botToTest = &bot;
-        myTable.ManuallyAddPlayer("h21", 2600.0, botToTest);
+        myTable.ManuallyAddPlayer("h20", 2600.0, botToTest);
         myTable.ManuallyAddPlayer("Nav", 300.0, &nS);
         myTable.ManuallyAddPlayer("Sam", 800.0, &sS); // dealer
         myTable.ManuallyAddPlayer("Laily", 140.0, &lS);
@@ -2066,13 +2057,13 @@ P0 calls $14.2857 ($60)
          Joyce checks
          Andrew checks
          Mona checks
-         h21 checks
+         h20 checks
          Nav bets $50
          Sam calls $50
          Laily folds
          Andrew folds
          Mona folds
-         h21 calls $50
+         h20 calls $50
          */
 
 
@@ -2089,30 +2080,28 @@ P0 calls $14.2857 ($60)
         /*
 
          (3 players)
-         [Joseph]
+         [h20]
          [Nav]
          [Sam]
 
-         h21 checks
+         h20 checks (with Ah 2h)
          Nav checks
          Sam checks
 
          */
 
         DeckLocation myRiver;
-        myRiver.SetByIndex(49);
+        myRiver.SetByIndex(10);
 
         /*
          River:	9c Qh Kh 10s 4c  (Pot: $164)
          */
 
-        const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
-        (void)highbettor; // -Wunused-variable
-        //assert(highbettor == 4);
-
-        // No all-fold; assert that the pot was increased at least.
-        //assert(myTable.GetPotSize() > 55);
-
+         const float64 potBeforeRiver = myTable.GetPotSize();
+         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
+         if (myTable.GetPotSize() != potBeforeRiver) {
+           assert((highbettor != 0) && "Not sure about this, but I suppose you didn't hit anything so even if you're ~$50 committed into a $160+ pot.");
+         }
 
     }
 
@@ -2608,6 +2597,9 @@ P0 calls $14.2857 ($60)
          All fold! NormalBotV wins $705
          */
         assert (myTable.PlayRound_BeginHand(std::cout) != -1); // assert that everyone folded
+
+        assert((botToTest->ViewPlayer().GetBetSize() < 150) && "Raising more than 10× the pot seems a little irresponsible?");
+        // assert ((myTable.GetLivePotSize() < 150)
 
     }
 

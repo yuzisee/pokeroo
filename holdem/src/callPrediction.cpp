@@ -1024,7 +1024,14 @@ void ExactCallD::accumulateOneOpponentPossibleRaises(const int8 pIndex, ValueAnd
       // Increasing oppRaiseChancesAware decreases noRaiseChance, which increases the chance we expect to be raised at a certain price.
 
       //At this point, each nextNoRaise is 100% unless otherwise adjusted.
-      const float64 noRaiseChance_adjust = (nextNoRaise_A[i_step].v < std::numeric_limits<float64>::epsilon()) ? 0 : std::pow(nextNoRaise_A[i_step].v,oppRaiseChancesAware);
+      const float64 noRaiseChance_adjust =
+        (nextNoRaise_A[i_step].v <= std::numeric_limits<float64>::epsilon())
+        ?
+        0
+        :
+        (
+          std::pow(nextNoRaise_A[i_step].v,oppRaiseChancesAware)
+        );
 
       #ifdef DEBUG_TRACE_P_RAISE
         if (this->traceOut_dexf != nullptr) { *this->traceOut_dexf <<
