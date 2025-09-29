@@ -255,7 +255,12 @@ void CommunityCallStats::Analyze()
         #endif
     if( !bSortedHands )
     {
-        std::sort(myHands,myHands+showdownIndex);
+      // std::sort(myHands,myHands+showdownIndex);
+      #ifdef HARDCORE_SPEEDUP
+        std::sort(myHands.get(), myHands.get() + showdownIndex);
+      #else
+        std::sort(myHands.begin(), myHands.begin() + showdownIndex);
+      #endif
         bSortedHands = true;
     }
         #ifdef PROGRESSUPDATE
@@ -392,14 +397,11 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
     myTotalChances = oppHands;
     #endif
 
-	#ifdef DEBUG_MEMFAIL
-		std::cout << "Requesting " << showdownCount << std::endl;
-	#endif
-    myHands = new PocketHand[ showdownCount ];
-	#ifdef DEBUG_MEMFAIL
-		std::cout << "Received @ " << myHands << std::endl;
-	#endif
-
+    #ifdef HARDCORE_SPEEDUP
+    myHands = std::make_unique<PocketHand[]>(showdownCount);
+    #else
+    myHands.resize(showdownCount); // `initCC` is only ever called from within the constructor, so you don't have to worry about `myHands` already containing data from before
+    #endif
 
 #ifdef PERFECT_IHAVE
     const int8 preCardsAvail = cardsAvail - 2;
@@ -415,17 +417,4 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
 
 }
 
-CommunityCallStats::~CommunityCallStats()
-{
-#ifdef DEBUG_MEMFAIL
-std::cout << "Releasing " << std::flush;
-#endif
-    if( myHands != 0 )
-    {
-		#ifdef DEBUG_MEMFAIL
-			std::cout << "@ " << myHands << std::endl;
-		#endif
-        delete [] myHands;
-        myHands = 0;
-    }
-}
+CommunityCallStats::~CommunityCallStats() { }

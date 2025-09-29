@@ -26,6 +26,7 @@
 //#include "aiCombo.h"
 #include "engine.h"
 
+#include <memory>
 
 class PocketHand
 {
@@ -79,7 +80,15 @@ private:
 protected:
 
 	int8 indexHistory[2];
-	PocketHand* myHands; // Keeps track of all the individual showdown outcomes so we can sort and group them.
+
+	// `myHands` keeps track of all the individual showdown outcomes so we can sort and group them.
+	#ifdef HARDCORE_SPEEDUP
+	std::unique_ptr<PocketHand[]> myHands;
+	#else
+	std::vector<PocketHand> myHands;
+	// NOTE: We still  have `showdownCount` below, anyway
+	#endif
+
 	int32 showdownIndex;
 	int32 showdownCount;
 	float64 showdownMax;
