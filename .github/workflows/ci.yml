@@ -110,7 +110,8 @@ jobs:
         compression-level: 0
         retention-days: 5
     - name: Runtime performance profiling report(s)
-      run: perf report holdem/unittests/unittests_gcc_O3.perf && gprof holdem/bin/unittests_gcc_O3 holdem/unittests/gmon.out
+      run: gprof holdem/bin/unittests_gcc_O3 holdem/unittests/gmon.out
+      # run: perf report holdem/unittests/unittests_gcc_O3.perf && gprof holdem/bin/unittests_gcc_O3 holdem/unittests/gmon.out
 
   self_test_fail_fast:
     name: 'Wait for both build & test to complete. If either has failed, abort everything else.'
