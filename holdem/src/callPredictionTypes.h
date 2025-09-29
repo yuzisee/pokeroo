@@ -22,6 +22,8 @@
 #define HOLDEM_CallPredictionTypes
 
 #include "portability.h"
+#include <cstddef>
+#include <limits>
 #include <utility>
 
 typedef std::pair<int32, int32> firstFoldToRaise_t;
