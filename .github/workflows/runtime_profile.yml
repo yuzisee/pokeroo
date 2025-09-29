@@ -22,18 +22,18 @@ jobs:
         unzip "$(make echoreleasearchive | tail -n 1)" -d ~/pokeroo-run/lib/holdemdb/
         #  ^^^   e.g. >>> `unzip holdemdb_clang.zip -d ~/pokeroo-run/lib/holdemdb/`
         # ~/pokeroo-run/lib/holdemdb ← is because of the runtime path used in the `test` target of the Makefile
-    - name: Pre-install valgrind + gprof2dot (requires graphviz)
+    - name: Pre-install valgrind + gprof2dot (which outputs to graphviz)
       # curl -LsSf https://astral.sh/uv/install.sh | sh
-      run: pip install uv && sudo apt-get update && sudo apt-get install -y valgrind graphviz && uv tool install gprof2dot
+      run: pip install uv && sudo apt-get update && sudo apt-get install -y valgrind graphviz
     - name: Instrument
       run: valgrind --tool=callgrind --cache-sim=yes --branch-sim=yes --callgrind-out-file=holdem/unittests/unittests_clang.callgrind -- holdem/bin/unittests_clang
     - name: Runtime performance profiling report
       run: |
         callgrind_annotate holdem/unittests/unittests_clang.callgrind | tee holdem/unittests/callgrind_report.txt
-        gprof2dot -f callgrind holdem/unittests/unittests_clang.callgrind > holdem/unittests/callgrind_report.dot
+        uvx gprof2dot -f callgrind holdem/unittests/unittests_clang.callgrind > holdem/unittests/callgrind_report.dot
         dot -O -Tpdf holdem/unittests/callgrind_report.dot
         tar -cv holdem/unittests/unittests_clang.callgrind holdem/unittests/callgrind_report.* | xz -vv -z -9 -e > "runtimeperformance-${RUNNER_NAME}-$(hostname)_${GITHUB_DESCRIPTION}.${GITHUB_SHA}.${GITHUB_HEAD_REF}_callgrind.tar.xz"
-    - name: Upload flamegraph
+    - name: Upload runtime profiling reports (callgrind → gprof2dot)
       uses: actions/upload-artifact@v4
       with:
         name: callgrind-${{ runner.name }}_${{ github.description }}.${{ github.sha }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_flamegraphs
