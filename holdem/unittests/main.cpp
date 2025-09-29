@@ -1897,14 +1897,12 @@ P0 calls $14.2857 ($60)
          */
 
 
-
         DeckLocation myTurn;
         myTurn.SetByIndex(32);
         /*
 
          Turn:	9c Qh Kh 10s   (Pot: $74)
          */
-
 
         assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
         /*
@@ -1930,7 +1928,7 @@ P0 calls $14.2857 ($60)
         const float64 potBeforeRiver = myTable.GetPotSize();
         const playernumber_t highbettor = myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout);
         if (myTable.GetPotSize() != potBeforeRiver) {
-          assert((highbettor != 0) && "h22 should not be the one leading with a bet here...");
+          assert((highbettor != 0) && "h21 should not be the one leading with a bet here...");
         }
     }
 
@@ -1967,7 +1965,7 @@ P0 calls $14.2857 ($60)
 
         PureGainStrategy bot("20_21a.txt", 3);
         PlayerStrategy * const botToTest = &bot;
-        myTable.ManuallyAddPlayer("h21", 2600.0, botToTest);
+        myTable.ManuallyAddPlayer("h20", 2600.0, botToTest);
         myTable.ManuallyAddPlayer("Nav", 300.0, &nS);
         myTable.ManuallyAddPlayer("Sam", 800.0, &sS); // dealer
         myTable.ManuallyAddPlayer("Laily", 140.0, &lS);
@@ -2059,13 +2057,13 @@ P0 calls $14.2857 ($60)
          Joyce checks
          Andrew checks
          Mona checks
-         h21 checks
+         h20 checks
          Nav bets $50
          Sam calls $50
          Laily folds
          Andrew folds
          Mona folds
-         h21 calls $50
+         h20 calls $50
          */
 
 
@@ -2082,11 +2080,11 @@ P0 calls $14.2857 ($60)
         /*
 
          (3 players)
-         [Joseph]
+         [h20]
          [Nav]
          [Sam]
 
-         h21 checks (with Ah 2h)
+         h20 checks (with Ah 2h)
          Nav checks
          Sam checks
 
