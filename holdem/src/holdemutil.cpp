@@ -231,7 +231,6 @@ uint32 HandPlus::getValueset() const
 
 void Hand::SetEmpty()
 {
-
     cardset[0] = 0;
     cardset[1] = 0;
     cardset[2] = 0;
@@ -312,10 +311,14 @@ void Hand::AppendUnique(const Hand& h)
 
 void Hand::ResetCardset(const uint32 * const cardArray)
 {
+  #ifdef HARDCORE_SPEEDUP
+     memcpy(cardset, cardArray, sizeof(cardset));
+  #else
     cardset[0] = cardArray[0];
 	cardset[1] = cardArray[1];
 	cardset[2] = cardArray[2];
 	cardset[3] = cardArray[3];
+	#endif
 }
 
 void Hand::SetUnique(const Hand& h)
