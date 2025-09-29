@@ -65,7 +65,7 @@ struct SimulateReraiseResponse {
   static constexpr firstFoldToRaise_t all_reraises_considered_bad_folds() {
     static_assert(sizeof(int32) <= sizeof(size_t), "We'll be using int32_t::max() and it needs to fit into both. Thanks!");
     // TODO(from joseph): There is room for very minor further tuning of what to do during FacedOddsRaiseGeom::query and its relationship with ExpectedCallD::RiskLossHeuristic
-    return std::pair<int32, int32> { -1, std::numeric_limits<int32>::max() - 1 };
+    return std::pair<int32, int32> { std::numeric_limits<int32>::max() - 1, -1 };
   }
 
   // This is a strictly invalid state. If you look at how StateModel::firstFoldToRaise_only and/or StateModel::calculate_final_potRaisedWin work, it should be essentially impossible to interpret bIsOverbetAgainstThisRound without bUnprofitable also being true at the same time
