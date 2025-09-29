@@ -56,6 +56,7 @@ STRAIGHT (OR the cardsets, then AND-SHIFT x; 5)
 */
 //#include <fstream>
 #include "holdem2.h"
+#include <cstring>
 #include <stdexcept>
 
 using std::endl;
