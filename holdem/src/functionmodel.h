@@ -21,12 +21,7 @@
 #ifndef HOLDEM_GainModels
 #define HOLDEM_GainModels
 
-#include "functionbase.h"
-#include "inferentials.h"
 #include "callPrediction.h"
-#include <math.h>
-
-
 
 #define DEFAULT_EPS_STEP 0.001
 

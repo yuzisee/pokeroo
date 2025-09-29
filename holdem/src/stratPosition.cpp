@@ -19,11 +19,8 @@
  ***************************************************************************/
 
 #include "stratPosition.h"
-#include "BluffGainInc.h"
-#include "callPredictionFunctions.h"
 #include "stratFear.h"
 
-#include <math.h>
 #include <memory>
 
 //#define DEBUG_TRAP_AS_NORMAL

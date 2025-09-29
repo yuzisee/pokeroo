@@ -23,10 +23,8 @@
 
 // #define DEBUG_WILL_FOLD_TO_RERAISE
 
-#include "callPredictionFunctions.h"
-#include "callSituation.h"
+#include "callPredictionTypes.h"
 #include "functionmodel.h"
-#include "math_support.h"
 #ifdef DEBUG_WILL_FOLD_TO_RERAISE
 #include <ostream>
 #endif

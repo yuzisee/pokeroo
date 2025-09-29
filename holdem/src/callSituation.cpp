@@ -19,31 +19,9 @@
  ***************************************************************************/
 
 #include "callSituation.h"
-#include "inferentials.h"
 
 
-ExpectedCallD::~ExpectedCallD()
-{
-}
-
-/*
-float64 FoldOrCall::foldGain(CallCumulationD* const e)
-{
-    return foldGain(e,0);
-}
-
-
-float64 FoldOrCall::foldGain(CallCumulationD* const e, float64 * const foldWaitLength_out)
-{
-    return foldGain(e,0,callBet(),foldWaitLength_out);
-}
-
-float64 FoldOrCall::foldGain(CallCumulationD* const e, const float64 extra, const float64 facedBet)
-{
-    return foldGain(e,extra, facedBet, 0);
-}
-*/
-
+ExpectedCallD::~ExpectedCallD() { }
 
 static playercounts_t suggestPlayerCount(const HoldemArena & table) {
     return table.NumberStartedRound();

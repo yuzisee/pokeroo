@@ -21,10 +21,6 @@
 #ifndef HOLDEM_CallPredict
 #define HOLDEM_CallPredict
 
-
-#include "math_support.h"
-#include "inferentials.h"
-#include "callPredictionFunctions.h"
 #include "callSituation.h"
 
 #if defined(DEBUG_TRACE_PWIN) || defined(DEBUG_TRACE_DEXF)

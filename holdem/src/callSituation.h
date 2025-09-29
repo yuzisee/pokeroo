@@ -22,8 +22,6 @@
 #define HOLDEM_ArenaSituations
 
 #include "arena.h"
-#include "math_support.h"
-#include "inferentials.h"
 #include "callPredictionFunctions.h"
 
 
