@@ -89,8 +89,8 @@ jobs:
         overwrite: true
         compression-level: 0
         retention-days: 21
-    - name: We need llvm-profdata for what comes next
-      run: sudo apt-get update && sudo apt-get install -y llvm
+    - name: We need llvm-profdata and gprof2dot (and therefore graphviz) to generate reports
+      run: sudo apt-get update && sudo apt-get install -y llvm graphviz && pip install uv
       # echo /Library/Developer/CommandLineTools/usr/bin/llvm-{profdata,cov}
     - name: clang coverage report
       run: |
@@ -109,11 +109,13 @@ jobs:
         overwrite: true
         compression-level: 0
         retention-days: 5
-    - name: Runtime performance profiling report(s)
+    - name: Dynamic runtime analysis, runtime performance
       run: |
         gprof holdem/bin/unittests_gcc_O3 holdem/unittests/gmon.out > holdem/unittests/gprof_report.txt
         # perf report holdem/unittests/unittests_gcc_O3.perf && gprof holdem/bin/unittests_gcc_O3 holdem/unittests/gmon.out
-        tar -cv holdem/unittests/gmon.out holdem/unittests/gprof_report.txt | xz -vv -z -9 -e > "runtimeperformance-${RUNNER_NAME}-$(hostname)_${GITHUB_DESCRIPTION}.${GITHUB_SHA}.${GITHUB_HEAD_REF}_gmon-gprof.tar.xz"
+        uvx gprof2dot holdem/unittests/gprof_report.txt > holdem/unittests/gprof_report.dot
+        dot -O -Tpdf holdem/unittests/gprof_report.dot
+        tar -cv holdem/unittests/gmon.out holdem/unittests/gprof_report.* | xz -vv -z -9 -e > "runtimeperformance-${RUNNER_NAME}-$(hostname)_${GITHUB_DESCRIPTION}.${GITHUB_SHA}.${GITHUB_HEAD_REF}_gmon-gprof.tar.xz"
     - name: Upload flamegraph
       uses: actions/upload-artifact@v4
       with:
