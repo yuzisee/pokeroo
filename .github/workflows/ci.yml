@@ -64,7 +64,7 @@ jobs:
   automated_tests:
     name: 'Test (see holdem/unittests/main.cpp)'
     runs-on: 'ubuntu-24.04'
-    timeout-minutes: 12
+    timeout-minutes: 17
     # We have to assume that apt-get calls can sometimes take 6+ minutes
     steps:
     - uses: actions/checkout@v5
@@ -89,8 +89,8 @@ jobs:
         overwrite: true
         compression-level: 0
         retention-days: 21
-    - name: We need llvm-profdata
-      run: sudo apt-get update && sudo apt-get install -y llvm
+    - name: We need llvm-profdata and valgrind for what comes next
+      run: sudo apt-get update && sudo apt-get install -y llvm valgrind
       # echo /Library/Developer/CommandLineTools/usr/bin/llvm-{profdata,cov}
     - name: clang coverage report
       run: |
@@ -110,8 +110,22 @@ jobs:
         compression-level: 0
         retention-days: 5
     - name: Runtime performance profiling report(s)
-      run: gprof holdem/bin/unittests_gcc_O3 holdem/unittests/gmon.out
-      # run: perf report holdem/unittests/unittests_gcc_O3.perf && gprof holdem/bin/unittests_gcc_O3 holdem/unittests/gmon.out
+      run: |
+        gprof holdem/bin/unittests_gcc_O3 holdem/unittests/gmon.out > holdem/unittests/gprof_report.txt
+        # perf report holdem/unittests/unittests_gcc_O3.perf && gprof holdem/bin/unittests_gcc_O3 holdem/unittests/gmon.out
+        valgrind --tool=callgrind --cache-sim=yes --branch-sim=yes --callgrind-out-file=holdem/unittests/unittests_clang.callgrind -- holdem/bin/unittests_clang
+        callgrind_annotate holdem/unittests/unittests_clang.callgrind > holdem/unittests/callgrind_report.txt
+        tar -cv holdem/unittests/gmon.out holdem/unittests/gprof_report.txt holdem/unittests/unittests_clang.callgrind holdem/unittests/callgrind_report.txt | xz -vv -z -9 -e > "runtimeperformance-${RUNNER_NAME}-$(hostname)_${GITHUB_DESCRIPTION}.${GITHUB_SHA}.${GITHUB_HEAD_REF}_gmon-gprof_callgrind.tar.xz"
+    - name: Upload code_coverage.llvm
+      uses: actions/upload-artifact@v4
+      with:
+        name: runtimeperformance-${{ runner.name }}_${{ github.description }}.${{ github.sha }}.${{ endsWith(github.ref_name, '/merge') && github.head_ref || github.ref_name }}_flamegraphs
+        path: runtimeperformance-*_gmon-gprof_callgrind.tar.xz
+        # include-hidden-files: false by default
+        if-no-files-found: error
+        overwrite: true
+        compression-level: 0
+        retention-days: 5
 
   self_test_fail_fast:
     name: 'Wait for both build & test to complete. If either has failed, abort everything else.'
