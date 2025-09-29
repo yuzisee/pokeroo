@@ -405,10 +405,10 @@ struct RiskLoss {
   float64 comparisonCutoff;
   float64 nominalFoldChips;
   float64 trueFoldChipsEV;
-  float64 d_trueFoldChipsEV_dpot;
+  float64 d_trueFoldChipsEV_dfacedBet;
 
   constexpr bool any_nan() const {
-    return std::isnan(comparisonCutoff) || std::isnan(nominalFoldChips) || std::isnan(trueFoldChipsEV) || std::isnan(d_trueFoldChipsEV_dpot);
+    return std::isnan(comparisonCutoff) || std::isnan(nominalFoldChips) || std::isnan(trueFoldChipsEV) || std::isnan(d_trueFoldChipsEV_dfacedBet);
   }
 
   // When `trueFoldChipsEV` is sufficiently low, there is no benefit to folding so they might as well make their stand
@@ -425,34 +425,6 @@ struct RiskLoss {
   constexpr bool b_raise_is_too_dangerous() const {
     return comparisonCutoff < trueFoldChipsEV;
   }
-
-  constexpr ValueAndSlope riskLoss_adjustment_for_raising_too_much() const {
-    ValueAndSlope riskLossAdjustment_by_pot = {
-      b_raise_is_too_dangerous() ? ( -trueFoldChipsEV ) : ( 0.0 ) ,
-
-			(!b_raise_will_be_called()) ? (
-          -d_trueFoldChipsEV_dpot
-      )
-      : ( 0.0 )
-    };
-
-    return riskLossAdjustment_by_pot;
-  }
-
-  constexpr ValueAndSlope old_broken_riskloss_wrong_sign() const {
-    #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
-      if (b_raise_will_be_called()) {
-    #else
-      if (!b_raise_will_be_called()) {
-    #endif
-        ValueAndSlope riskLoss_by_pot = {
-          trueFoldChipsEV - nominalFoldChips, d_trueFoldChipsEV_dpot
-        };
-
-        return riskLoss_by_pot;
-      }
-    return ValueAndSlope{0.0, 0.0};
-  }
 }
 ;
 
@@ -466,6 +438,7 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
     protected:
     float64 lastW;
     ValueAndSlope lastF_by_w;
+    float64 dLastF_by_facedBet;
     void query( const float64 w );
 
     public:
@@ -495,6 +468,8 @@ class FacedOddsRaiseGeom : public virtual ScalarFunctionModel
 
     virtual float64 f(const float64 w);
     virtual float64 fd(const float64 w, const float64 U);
+    virtual float64 df_dfacedBet(const float64 w);
+    virtual float64 dw_dfacedBet(const float64 w);
 
     // You MUST populate `this->FG.waitLength` first, before calling this. We will populate everything else here.
     static void configure_with(FacedOddsRaiseGeom &a, const HypotheticalBet &hypotheticalRaise, const struct RiskLoss &currentRiskLoss);

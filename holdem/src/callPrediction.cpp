@@ -240,16 +240,7 @@ template<typename T> ValueAndSlope ExactCallD::facedOdds_raise_Geom_forTest(
 */
     const float64 w = a.FindZero(startingPoint,1.0, false);
 
-		const float64 x1 = hypotheticalRaise.faced_bet();
-		const float64 x2 = hypotheticalRaise.hypotheticalRaiseTo;
-		const float64 y1 = w;
-		const float64 y2 = 0.0;
-    const float64 d_w_dfacedBet =
-    ( w <= 0 ) ? 0 : (
-    ( hypotheticalRaise.bEffectivelyAllIn(denom) ) ? 0 : (
-		  ( hypotheticalRaise.raiseBy() < std::numeric_limits<float64>::epsilon() ) ? 0 : (
-		       (y2 - y1) / (x2 - x1)
-    ))           );
+    const float64 d_w_dfacedBet = a.dw_dfacedBet(w);
 
     return ValueAndSlope {
       w,

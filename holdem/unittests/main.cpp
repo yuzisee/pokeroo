@@ -1383,7 +1383,19 @@ namespace RegressionTests {
         myTable.BeginInitialState(26);
         myTable.BeginNewHands(std::cout, b, false, dealer);
 
-
+ /*
+Gear posts SB of $2.85714 ($2.85714)
+P0 posts BB of $5.71428 ($8.57142)
+P3 folds
+P2 folds
+Multi folds
+i4 raises to $20 ($28.5714)
+P4 folds
+D0 folds
+D2 folds
+Gear calls $17.1429 ($45.7143)
+P0 calls $14.2857 ($60)
+ */
 
         assert(myTable.PlayRound_BeginHand(std::cout) != -1);
 
@@ -1410,8 +1422,7 @@ namespace RegressionTests {
         assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
 
 
-        // Turn Ts
-
+        // Turn [Ts]
 
 
         DeckLocation myTurn;
@@ -1421,7 +1432,7 @@ namespace RegressionTests {
         // Check, check
         assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
 
-        // River 8d
+        // River [8d]
 
 
         DeckLocation myRiver;
@@ -2579,8 +2590,7 @@ namespace RegressionTests {
 
 
         /*
-
-         ActionBotV posts SB of $5 ($5)
+         ActionBot14 posts SB of $5 ($5)
          NormalBotV posts BB of $10 ($15)
          TrapBotV folds
          Ali folds
@@ -2589,17 +2599,15 @@ namespace RegressionTests {
          ConservativeBotV folds
          SpaceBotV folds
          GearBotV folds
-         ActionBotV raises to $55 ($65)
+         ActionBot14 raises to $55 ($65)
          NormalBotV raises to $365 ($420)
-         ActionBotV raises to $705 ($1070)
+         ActionBot14 raises to $705 ($1070)
          NormalBotV raises to $1045 ($1750)
-         ActionBotV folds
+         ActionBot14 folds
 
          All fold! NormalBotV wins $705
-
-
          */
-        assert (myTable.PlayRound_BeginHand(std::cout) != -1);
+        assert (myTable.PlayRound_BeginHand(std::cout) != -1); // assert that everyone folded
 
     }
 
@@ -4275,7 +4283,7 @@ Playing as S
          NormalBotV folds
          ActionBotV folds
          GearBotV folds
-         SpaceBotV raises to $5 ($8.375)
+         SpaceBot9 raises to $5 ($8.375)
          Nav calls $5 ($13.375)
          ConservativeBotV folds
          DangerBotV folds
@@ -4301,7 +4309,7 @@ Playing as S
 
          Flop:	2d Qd Kc    (Pot: $13.375)
          (2 players)
-         [SpaceBotV $712]
+         [SpaceBot9 $712]
          [Nav $2469]
          */
 
@@ -4315,9 +4323,9 @@ Playing as S
          }
 
         /*
-         SpaceBotV bets $2.25 ($15.625)
+         SpaceBot9 bets $2.25 ($15.625)
          Nav raises to $12.25 ($27.875)
-         SpaceBotV raises to $49 ($74.625)
+         SpaceBot9 raises to $49 ($74.625)
          Nav calls $36.75 ($111.375)
          */
         DeckLocation myTurn; // 2s
@@ -4325,7 +4333,7 @@ Playing as S
         /*
          Turn:	2d Qd Kc 2s   (Pot: $111.375)
          (2 players)
-         [SpaceBotV $663]
+         [SpaceBot9 $663]
          [Nav $2420]
          */
         playernumber_t highbet = myTable.PlayRound_Turn(myFlop, myTurn, std::cout);
@@ -4341,16 +4349,16 @@ Playing as S
         {
         /*
 
-         SpaceBotV bets $83 ($194.375)
+         SpaceBot9 bets $83 ($194.375)
          Nav raises to $168 ($362.375)
-         SpaceBotV calls $85 ($447.375)
+         SpaceBot9 calls $85 ($447.375)
          */
         DeckLocation myRiver; // 7c
         myRiver.SetByIndex(22);
         /*
          River:	2d Qd Kc 2s 7c  (Pot: $447.375)
          (2 players)
-         [SpaceBotV $495]
+         [SpaceBot9 $495]
          [Nav $2252]
          */
         highbet = (myTable.PlayRound_River(myFlop, myTurn, myRiver, std::cout) );
@@ -4381,7 +4389,7 @@ Playing as S
          2 2 A 7 K 2 Q AKQJT98765432
          s h h c c d d 11-----------
 
-         SpaceBotV turns over Td Ad
+         SpaceBot9 turns over Td Ad
          Is eliminated after making only
          002	 Pair of Deuces
          2 7 K 2 T Q A AKQJT98765432
@@ -4978,16 +4986,22 @@ Playing as S
       //     ...should be switched over to OpponentHandOpportunity via CombinedStatResultsPessemistic
       {
         const struct RiskLoss actual_RiskLoss = tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu));
-        assert((actual_RiskLoss.old_broken_riskloss_wrong_sign().v == 0) && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
+        assert(actual_RiskLoss.b_raise_will_be_called() && "Betting only 50.0 should be fine. No RiskLoss needed to discourage that?");
       }
 
       const float64 p4_raiseTo = 2400.0;
       // const float mydexf = 1.0; // tablestate_tableinfo.RiskLossHeuristic(cps.alreadyBet, cps.bankroll, opponents, raiseto, useMean, &dRiskLoss_pot);
       std::vector<std::pair<float64, ValueAndSlope>> actual_noRaisePct_vs_betSize;
       // Mimic src/callPrediction.cpp#ExactCallD::dfacedOdds_dpot_GeomDEXF
-      // for (float64 betSize = 2000.0; betSize < 4001.0; betSize += 100.0) {
+
+      hypothetical.hypotheticalRaiseTo = p4_raiseTo;
+
+      hypothetical.hypotheticalRaiseAgainst = 250;
+      assert(tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu)).b_raise_is_too_dangerous() && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
+      hypothetical.hypotheticalRaiseAgainst = 500;
+      assert(tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu)).b_raise_will_be_called() && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is still pretty large on a table with 5 players. RiskLoss can slightly discourage that.");
+
       for (float64 p3_betSize = 250.0; p3_betSize < 2501.0; p3_betSize += 250.0) {
-        hypothetical.hypotheticalRaiseTo = p4_raiseTo;
         hypothetical.hypotheticalRaiseAgainst = p3_betSize;
 
         // To get a high P4 RiskLoss against P3, we want:
@@ -5007,11 +5021,6 @@ Playing as S
         // This RiskLoss heuristic reports a loss (negative value) if your bet is large enough for the average opponent to prot (opportunity) by folding and waiting for a better hand
 
         const struct RiskLoss actual_RiskLoss = tablestate_tableinfo.RiskLossHeuristic(hypothetical, (&core.callcumu));
-        #ifdef OLD_BROKEN_RISKLOSS_WRONG_SIGN
-        assert((std::fabs(actual_RiskLoss.old_broken_riskloss_wrong_sign().v) <= std::numeric_limits<float64>::epsilon()) && "In the OLD_BROKEN_RISKLOSS_WRONG_SIGN it returns 0.0 when the raiseTo is too extreme (and of course also a positive value if it's a small & safe raiseTo)");
-        #else
-        assert((std::fabs(actual_RiskLoss.riskLoss_adjustment_for_raising_too_much().v) / 6.0 > std::numeric_limits<float64>::epsilon()) && "Raising from p3_betSize → hypothetical.hypotheticalRaiseTo is extreme on a table with 5 players. RiskLoss should be discouraging that.");
-        #endif
 
         FacedOddsRaiseGeom<void> actual(myTable.GetChipDenom());
         actual.FG.waitLength.load(cps, avgBlind);
@@ -5019,16 +5028,16 @@ Playing as S
         actual.FG.waitLength.setMeanConv(nullptr);
         FacedOddsRaiseGeom<void>::configure_with(actual, hypothetical, actual_RiskLoss);
         const float64 noRaisePct = actual.FindZero(0.0, 1.0, false);
-        const float64 d_noRaisePct_dbetsize = 0.0;
+        const float64 d_noRaisePct_dbetsize = actual.dw_dfacedBet(noRaisePct);
 
         actual_noRaisePct_vs_betSize.push_back( std::pair<float64, ValueAndSlope>( p3_betSize , ValueAndSlope {
           noRaisePct, d_noRaisePct_dbetsize
         }));
       }
 
-      const float64 reasonableDerivatives = UnitTests::print_x_y_dy_derivative_ok(actual_noRaisePct_vs_betSize, 0.0009);
+      const float64 reasonableDerivatives = UnitTests::print_x_y_dy_derivative_ok(actual_noRaisePct_vs_betSize, 0.00015);
       std::cout << "actual_noRaisePct_vs_betSize derivatives correct " << (reasonableDerivatives * 100.0) << "% of the time" << std::endl;
-      assert(reasonableDerivatives > 0.75);
+      assert(reasonableDerivatives > 0.85);
     } // end testHybrid_drisk_handsIn
 }
 
