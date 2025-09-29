@@ -330,10 +330,16 @@ void HandPlus::populateValueset()
 
 	for(int8 i=13;i>=1;--i)
 	{
-		valueset += (cardset[0] & HoldemUtil::CARDORDER[i]);
-		valueset += (cardset[1] & HoldemUtil::CARDORDER[i]);
-		valueset += (cardset[2] & HoldemUtil::CARDORDER[i]);
-		valueset += (cardset[3] & HoldemUtil::CARDORDER[i]);
+	#ifdef HARDCORE_SPEEDUP
+	  // Compute directly instead of table lookup
+	  const uint32 mask = 1u << i;
+	#else
+	  const uint32 mask = HoldemUtil::CARDORDER[i];
+	#endif
+		valueset += (cardset[0] & mask);
+		valueset += (cardset[1] & mask);
+		valueset += (cardset[2] & mask);
+		valueset += (cardset[3] & mask);
 		valueset <<= 1;
 	}
 
