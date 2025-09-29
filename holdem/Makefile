@@ -55,11 +55,7 @@ all:
 	echo "Building project"
 	make $(FINAL_TARGETS)
 
-test:
-	echo $(SRC_DIRS)
-	echo $(HEADERS_SRC)
-	echo $(BUILD_SRC)
-	echo $(CORE_OBJS)
+testbin:
 	mkdir -v -p bin
 	date
 	echo '::group::Compile bin/unittests_clang'
@@ -70,7 +66,13 @@ test:
 	echo '::group::Compile bin/unittests_gcc_O3'
 	g++ $(CXXFLAGS) $(CXXFLAGS_LIVEDEBUG) $(CXXFLAGS_EXTREME_SPEEDUP) -pg -o bin/unittests_gcc_O3 $(wildcard src/*.cpp) unittests/main.cpp
 	echo '::endgroup::'
+
+test: testbin
 	echo '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'
+	echo $(SRC_DIRS)
+	echo $(HEADERS_SRC)
+	echo $(BUILD_SRC)
+	echo $(CORE_OBJS)
 	date
 	echo ~/pokeroo-run/lib/holdemdb/ > unittests/holdemdb.ini
 	mkdir -p /tmp/code_coverage.llvm
