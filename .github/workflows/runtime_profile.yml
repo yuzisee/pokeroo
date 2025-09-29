@@ -2,6 +2,9 @@ name: Profile Runtime
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - dev-gprof-perf
 
 jobs:
   profile_with_callgrind:
@@ -14,19 +17,22 @@ jobs:
     - name: Set up opening book (so we can profile inference but not training)
       run: |
         mkdir -v -p ~/pokeroo-run/lib/holdemdb
+        echo ~/pokeroo-run/lib/holdemdb/ | tee holdemdb.ini
         cd holdem
         unzip "$(make echoreleasearchive | tail -n 1)" -d ~/pokeroo-run/lib/holdemdb/
         #  ^^^   e.g. >>> `unzip holdemdb_clang.zip -d ~/pokeroo-run/lib/holdemdb/`
         # ~/pokeroo-run/lib/holdemdb ← is because of the runtime path used in the `test` target of the Makefile
+    - name: Pre-install valgrind + gprof2dot (requires graphviz)
+      # curl -LsSf https://astral.sh/uv/install.sh | sh
+      run: pip install uv && sudo apt-get update && sudo apt-get install -y valgrind graphviz && uv tool install gprof2dot
     - name: Instrument
-      run: |
-        sudo apt-get update && sudo apt-get install -y valgrind
-        echo ~/pokeroo-run/lib/holdemdb/ | tee holdemdb.ini
-        valgrind --tool=callgrind --cache-sim=yes --branch-sim=yes --callgrind-out-file=holdem/unittests/unittests_clang.callgrind -- holdem/bin/unittests_clang
+      run: valgrind --tool=callgrind --cache-sim=yes --branch-sim=yes --callgrind-out-file=holdem/unittests/unittests_clang.callgrind -- holdem/bin/unittests_clang
     - name: Runtime performance profiling report
       run: |
         callgrind_annotate holdem/unittests/unittests_clang.callgrind | tee holdem/unittests/callgrind_report.txt
-        tar -cv holdem/unittests/unittests_clang.callgrind holdem/unittests/callgrind_report.txt | xz -vv -z -9 -e > "runtimeperformance-${RUNNER_NAME}-$(hostname)_${GITHUB_DESCRIPTION}.${GITHUB_SHA}.${GITHUB_HEAD_REF}_callgrind.tar.xz"
+        gprof2dot -f callgrind holdem/unittests/unittests_clang.callgrind > holdem/unittests/callgrind_report.dot
+        dot -O -Tpdf holdem/unittests/callgrind_report.dot
+        tar -cv holdem/unittests/unittests_clang.callgrind holdem/unittests/callgrind_report.* | xz -vv -z -9 -e > "runtimeperformance-${RUNNER_NAME}-$(hostname)_${GITHUB_DESCRIPTION}.${GITHUB_SHA}.${GITHUB_HEAD_REF}_callgrind.tar.xz"
     - name: Upload flamegraph
       uses: actions/upload-artifact@v4
       with:
@@ -36,4 +42,4 @@ jobs:
         if-no-files-found: error
         overwrite: true
         compression-level: 0
-        retention-days: 5
+        retention-days: 30
