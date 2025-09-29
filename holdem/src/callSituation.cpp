@@ -306,8 +306,8 @@ struct RiskLoss ExpectedCallD::RiskLossHeuristic(const struct HypotheticalBet & 
     // https://github.com/yuzisee/pokeroo/commit/6b1eaf1bbaf9e4a9c41476c1200965d32e25fcb7
       trueFoldChipsEV,
     // ∂{riskLoss.v}/∂facedBet = d/dfacedBet { FG.f( raiseTo ) } + d/dfacedBet { FG.waitLength.amountSacrifice }
-    //                                                                             ^^^ see `setAmountSacrificeVoluntary`
-	                             FG.dF_dAmountSacrifice( raiseTo ) + hypotheticalRaise.faced_bet()
+    //                                                                             ^^^ see `setAmountSacrificeVoluntary` where we setAmountSacrifice to `… + faced_bet`
+	                             FG.dF_dAmountSacrifice( raiseTo ) + 1.0 //            ...and: d/dfacedBet { … + faced_bet} = 1.0
     // TODO(from joseph): Do we need a unit test for this?
 	});
 
