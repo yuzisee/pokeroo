@@ -21,6 +21,9 @@
 #ifndef HOLDEM_BaseClasses
 #define HOLDEM_BaseClasses
 
+// Use fine-tuning of data/memory layout to find runtime performance & cache locality improvements
+#define HARDCORE_SPEEDUP
+
 #define FASTPATH_NCHOOSEP_IMPL \
   switch (p) { \
 	   case 0: { return 1; } \

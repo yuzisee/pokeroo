@@ -604,12 +604,19 @@ void CommunityPlus::SetUnique(const Hand& h)
 
 void CommunityPlus::preEvalStrength()
 {
+  #ifdef HARDCORE_SPEEDUP
+    flushCount[0] = __builtin_popcount(cardset[0]) - 5;
+    flushCount[1] = __builtin_popcount(cardset[1]) - 5;
+    flushCount[2] = __builtin_popcount(cardset[2]) - 5;
+    flushCount[3] = __builtin_popcount(cardset[3]) - 5;
+  #else
 	uint32 tempforflush[4];
     for(int8 i=0;i<4;++i)
     {
         flushCount[i] = -5;
         tempforflush[i] = cardset[i];
     }
+  #endif
 
 ///If it was last a triple and not a pair, the old set becomes the current pair
 //I guess this is FALSE by default.
@@ -617,6 +624,17 @@ void CommunityPlus::preEvalStrength()
     uint32 mockValueset = valueset;
     for(uint8 i=1;i<=13;++i)
     {
+      #ifndef HARDCORE_SPEEDUP
+        tempforflush[0] >>= 1;
+        flushCount[0] += static_cast<int8>(tempforflush[0] & 1);
+        tempforflush[1] >>= 1;
+        flushCount[1] += static_cast<int8>(tempforflush[1] & 1);
+        tempforflush[2] >>= 1;
+        flushCount[2] += static_cast<int8>(tempforflush[2] & 1);
+        tempforflush[3] >>= 1;
+        flushCount[3] += static_cast<int8>(tempforflush[3] & 1);
+      #endif
+
 		mockValueset >>= 2;
 
         if( (mockValueset & 3) == 3 )
@@ -635,17 +653,6 @@ void CommunityPlus::preEvalStrength()
         	nextbestPair = bestPair;
 			bestPair = i;
         }
-
-
-
-		tempforflush[0] >>= 1;
-		flushCount[0] += static_cast<int8>(tempforflush[0] & 1);
-        tempforflush[1] >>= 1;
-        flushCount[1] += static_cast<int8>(tempforflush[1] & 1);
-        tempforflush[2] >>= 1;
-        flushCount[2] += static_cast<int8>(tempforflush[2] & 1);
-        tempforflush[3] >>= 1;
-        flushCount[3] += static_cast<int8>(tempforflush[3] & 1);
 
     }
 
