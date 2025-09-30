@@ -671,7 +671,7 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const Commun
 
     if( comp > best || comp == best ) //Better hand or tie
     {
-        broadcastHand(playerHand,curIndex);
+        broadcastHand(playerHand.hand_impl,curIndex);
         if( bVerbose )
         {
             gamelog << endl << withP.GetIdent() << flush;
@@ -692,7 +692,7 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const Commun
     else
     {///Distinctly defeated
      //  http://www.texasholdem-poker.com/holdem_rules.php
-        broadcastHand(playerHand,curIndex);
+        broadcastHand(playerHand.hand_impl,curIndex);
         if( bVerbose )
         {
             gamelog << endl << withP.GetIdent() << flush;
@@ -732,7 +732,7 @@ Reveal HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Commun
 				///We set the allIn, since this player "IsInHand()"
 				PlayerAllIn(withP) = myPot;
 
-				broadcastHand(playerHand,curIndex);
+				broadcastHand(playerHand.hand_impl,curIndex);
                 comp.DisplayHandText(revealAction);
 				if( bVerbose )
 				{
@@ -755,7 +755,7 @@ Reveal HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Commun
 			else if( comp == best ) //can only split, if not beaten later
 			{
 
-				broadcastHand(playerHand,curIndex);
+				broadcastHand(playerHand.hand_impl,curIndex);
                 comp.DisplayHandText(revealAction);
 				if( bVerbose )
 				{

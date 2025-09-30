@@ -66,17 +66,21 @@ class OrderedDeck
 			SetEmpty();
 		}
 
-                virtual ~OrderedDeck();
+                ~OrderedDeck();
 
 		constexpr bool operator==(const OrderedDeck&) const;
+
+		friend class DealableOrderedDeck;
+		friend class DealRemainder;
 }
 ;
 
 
-class DealableOrderedDeck : public OrderedDeck
+class DealableOrderedDeck
 {
 
 	public:
+    OrderedDeck deck_impl;
         virtual float64 DealCard(Hand&)=0;
         virtual void UndealCard(const DeckLocation & deck); //Can be undealt only if not locked into addendSum
 
@@ -86,7 +90,7 @@ class DealableOrderedDeck : public OrderedDeck
 		}
 		constexpr int8 BaseDealtSuit() const
 		{
-			return firstSuit;
+			return deck_impl.firstSuit;
 		}
 		constexpr uint8 BaseDealtRank() const
 		{
@@ -101,12 +105,12 @@ class DealableOrderedDeck : public OrderedDeck
 
     //after redealing it, set dealtSuit and dealtValue to
     //0 and ACELOW. This allows the next card to be independant
-        DealableOrderedDeck(const DealableOrderedDeck& other) : OrderedDeck(other)
+        DealableOrderedDeck(const DealableOrderedDeck& other) : deck_impl(OrderedDeck(other.deck_impl))
         {
 			dealt = other.dealt;
         }
 
-		DealableOrderedDeck() : OrderedDeck()
+		DealableOrderedDeck() : deck_impl(OrderedDeck())
 		{
 		}
 

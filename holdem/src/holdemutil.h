@@ -240,22 +240,22 @@ public:
 		return cardset[someSuit];
 	}
 //    const int Occurrences() const;
-    virtual void ResetCardset(const uint32 * const);
-    virtual void SetEmpty();
-    virtual bool IsEmpty() const;
+    void ResetCardset(const uint32 * const);
+    void SetEmpty();
+    bool IsEmpty() const;
 
-    virtual void AddToHand(const DeckLocation& deck)
+    void AddToHand(const DeckLocation& deck)
     {
     	AddToHand(deck.Suit,deck.Rank,deck.Value);
 	}
-    virtual void RemoveFromHand(const DeckLocation& deck)
+    void RemoveFromHand(const DeckLocation& deck)
     {	RemoveFromHand(deck.Suit,deck.Rank,deck.Value);	}
 
-    virtual void RemoveFromHand(const int8 aSuit,const uint8 aIndex,const uint32 aCard)
+    void RemoveFromHand(const int8 aSuit,const uint8 aIndex,const uint32 aCard)
     {
         cardset[aSuit] &= ~aCard;
     }
-    virtual void AddToHand(const int8 aSuit,const uint8 aIndex,const uint32 aCard)
+    void AddToHand(const int8 aSuit,const uint8 aIndex,const uint32 aCard)
     {///NO ERROR CHECKING. Use carefully.
 #ifdef DEBUGASSERT
 		if ( HoldemUtil::CARDORDER[aIndex] != aCard )
@@ -268,8 +268,8 @@ public:
         cardset[aSuit] |= aCard;
     }
 
-	virtual void AppendUnique(const Hand&);
-	virtual void SetUnique(const Hand&);
+	void AppendUnique(const Hand&);
+	void SetUnique(const Hand&);
 
 	const Hand& operator=(const Hand& h);
 	bool operator==(const Hand& h) const;
@@ -287,23 +287,27 @@ public:
     }
 
     virtual ~Hand();
+
+    friend class HandPlus;
+    friend class CommunityPlus;
 }
 ;
 
-class HandPlus : public virtual Hand
+class HandPlus
 {
 	protected:
 		void populateValueset();
     //unsigned long tempcardset[4]; //short?
 
 	public:
+	Hand hand_impl;
 	uint32 valueset; //use most significant 6 (5? 3?) bits to store info?
 	virtual void DisplayHand(std::ostream&) const;
     virtual void DisplayHandBig(std::ostream&) const;
-	uint32 getValueset() const;
+	constexpr uint32 getValueset() const;
 
 
-	HandPlus() : Hand(), valueset(0)
+	HandPlus() : hand_impl(Hand()), valueset(0)
 	{
 		SetEmpty();
 	}

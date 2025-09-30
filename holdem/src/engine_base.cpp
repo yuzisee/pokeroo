@@ -139,7 +139,7 @@ void OrderedDeck::AssignSuitsFrom(const OrderedDeck & suitorder)
 
 void DealableOrderedDeck::UndealCard(const DeckLocation& deck)
 {
-	dealtHand[deck.Suit] &= ~deck.Value;
+	deck_impl.dealtHand[deck.Suit] &= ~deck.Value;
 	dealt = deck;
 }
 
@@ -166,7 +166,7 @@ void DealableOrderedDeck::SetIndependant()
 
 void DealableOrderedDeck::SetNextSuit()
 {
-	dealt.Suit = nextSuit[dealt.Suit];
+	dealt.Suit = deck_impl.nextSuit[dealt.Suit];
 	dealt.Value = BaseDealtValue();
 	dealt.Rank = BaseDealtRank();
 }
@@ -182,7 +182,7 @@ void OrderedDeck::SetEmpty()
 
 void DealableOrderedDeck::UndealAll()
 {
-	OrderedDeck::SetEmpty();
+	deck_impl.SetEmpty();
 	SetIndependant();
 }
 
