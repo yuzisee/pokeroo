@@ -76,6 +76,7 @@ public:
     virtual void SetEmpty();
 
     CommunityPlus();
+    virtual ~CommunityPlus() = default;
 
     int8 CardsInSuit(const int8) const;
 	virtual void DisplayHand(std::ostream&) const;

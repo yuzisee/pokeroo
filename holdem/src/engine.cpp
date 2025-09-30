@@ -28,7 +28,7 @@
 
 float64 DealRemainder::DealCard(Hand& h)
 {
-    const int8 & qprevSuit = prevSuit[dealt.Suit];
+    const int8 & qprevSuit = deck_impl.prevSuit[dealt.Suit];
 
 	++(dealt.Rank);
 	dealt.Value <<= 1;
@@ -47,12 +47,12 @@ float64 DealRemainder::DealCard(Hand& h)
 		return DealCard(h);
 
 	}
-	else if ( (dealtHand[dealt.Suit] & dealt.Value) != 0 )
+	else if ( (deck_impl.dealtHand[dealt.Suit] & dealt.Value) != 0 )
 	{//card already dealt/omitted, i.e. needs to be skipped
 
 		return DealCard(h);
 	}
-	else if(prevSuit[dealt.Suit] != HoldemConstants::NO_SUIT) //unless we are in the first suit, we have to check for certain cases
+	else if(deck_impl.prevSuit[dealt.Suit] != HoldemConstants::NO_SUIT) //unless we are in the first suit, we have to check for certain cases
 	{
         ///What we're looking for is...
         ///    (Action) Reason...
@@ -101,12 +101,12 @@ float64 DealRemainder::DealCard(Hand& h)
 	//successful!
 	uint8 occBase = 0;
 
-	uint32 baseInto = dealtHand[dealt.Suit]; ///This is prior to {dealtHand[dealt.Suit] |= dealt.Value;}
+	uint32 baseInto = deck_impl.dealtHand[dealt.Suit]; ///This is prior to {dealtHand[dealt.Suit] |= dealt.Value;}
 
-		for( int8 i=dealt.Suit;i!=HoldemConstants::NO_SUIT;i = nextSuit[i])
+		for( int8 i=dealt.Suit;i!=HoldemConstants::NO_SUIT;i = deck_impl.nextSuit[i])
 		{//Although we could check all four here, it is assumed that you would only deal into the first of identical suits, plus it may help sort out the 2/2/2 corner case
 
-			if ((dealtHand[i] == baseInto) && (isAddendSameSuit(dealt.Suit, i)))
+			if ((deck_impl.dealtHand[i] == baseInto) && (isAddendSameSuit(dealt.Suit, i)))
 			{
 				++occBase;
 			}
@@ -115,12 +115,12 @@ float64 DealRemainder::DealCard(Hand& h)
 		}
 
 
-	dealtHand[dealt.Suit] |= dealt.Value;
+	deck_impl.dealtHand[dealt.Suit] |= dealt.Value;
 
 
 	h.AddToHand(dealt);
 
-	uint32 dealtTo = dealtHand[dealt.Suit];
+	uint32 dealtTo = deck_impl.dealtHand[dealt.Suit];
 	uint32 addedTo = h.SeeCards(dealt.Suit);
 
 
@@ -128,7 +128,7 @@ float64 DealRemainder::DealCard(Hand& h)
 
 	for(int8 i=0;i<4;++i)
 	{
-		if (dealtHand[i] == dealtTo &&
+		if (deck_impl.dealtHand[i] == dealtTo &&
 				  h.SeeCards(i) == addedTo &&
 				        isAddendSameSuit(dealt.Suit, i) )  ++matchesNew;
 	}
@@ -151,19 +151,16 @@ void DealRemainder::CleanStats()
 void DealRemainder::OmitSet(const CommunityPlus& setOne, const CommunityPlus& setTwo)
 {//Note: Sorting is done by OmitCards
 
-
-
-
     if( setOne.IsEmpty() )
     {//This is used especially by aiInformation
-        addendSum.SetUnique(setTwo);
-        OmitCards(setTwo); UpdateSameSuits();
+        addendSum.SetUnique(setTwo.hand_impl);
+        deck_impl.OmitCards(setTwo.hand_impl); UpdateSameSuits();
     }else
     {
-        addendSum.SetUnique(setOne);//usually onlyCommunity?
-        OmitCards(setOne); UpdateSameSuits();
-        addendSum.SetUnique(setTwo);
-        OmitCards(setTwo); UpdateSameSuits();
+        addendSum.SetUnique(setOne.hand_impl);//usually onlyCommunity?
+        deck_impl.OmitCards(setOne.hand_impl); UpdateSameSuits();
+        addendSum.SetUnique(setTwo.hand_impl);
+        deck_impl.OmitCards(setTwo.hand_impl); UpdateSameSuits();
     }
 
 }
@@ -182,12 +179,12 @@ void DealRemainder::UpdateSameSuits()
         }
     }
 
-    sortSuits();
+    deck_impl.sortSuits();
 }
 
 void DealRemainder::LockNewAddend()
 {
-    addendSum.ResetCardset( dealtHand );
+    addendSum.ResetCardset( deck_impl.dealtHand );
     UpdateSameSuits();
 
     SetIndependant();
@@ -268,7 +265,6 @@ float64 DealRemainder::executeComparison(const DealRemainder & refDeck, PlayStat
 
 float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* const lastStats), const int16 moreCards, const float64 fromRuns)
 {
-
     if ( moreCards == 1 )
     {
         return executeComparison(deckState,lastStats,fromRuns);
@@ -282,8 +278,6 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
 
     DeckLocation lastDealt;
 
-
-
     while( (dOcc = deckState.DealCard(deckState.justDealt)*fromRuns) > 0 )
     {
 
@@ -292,10 +286,8 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
 /// ==================
 
 
-
 ///Note: You can use lastDealt to see which card was dealt
                 lastDealt = deckState.dealt;
-
 
 
 /// ====================
@@ -306,7 +298,6 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
             {//We couldn't deal a card, this is termination
                 return totalRuns;
             }///EARLY RETURN
-
 
 
 /// ===============================
@@ -332,16 +323,13 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
                 }
 
 
-
 			deckState.justDealt.RemoveFromHand(lastDealt);
 			lastStats->DropCard(lastDealt);
 
 			deckState.UndealCard(lastDealt);
 		}
 
-
     return totalRuns;
-
 }
 
 ///TODO: Remove totalruns? (no need to return something)
@@ -349,9 +337,6 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
 //fromRuns is carried through for the purpose of compounding, and is set to 1 when needed during traversal
 float64 DealRemainder::executeRecursive(const DealRemainder & refDeck, PlayStats (* const lastStats), const int16 moreCards)
 {
-
-
-
 
     DealRemainder deckState(refDeck);
 

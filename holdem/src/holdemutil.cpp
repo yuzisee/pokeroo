@@ -157,7 +157,7 @@ void HandPlus::DisplayHand(std::ostream& logFile) const
 
     for(int8 i=0;i<4;++i)
     {
-        temp[i] = cardset[i];
+        temp[i] = hand_impl.cardset[i];
     }
 
     for(int8 val=2;val<=14;++val)
@@ -180,7 +180,7 @@ void HandPlus::DisplayHandBig(std::ostream& logFile) const
 
     for(int8 i=0;i<4;++i)
     {
-        temp[i] = cardset[i];
+        temp[i] = hand_impl.cardset[i];
     }
     //top row
     for(int8 suit=0;suit<4;++suit)
@@ -198,7 +198,7 @@ void HandPlus::DisplayHandBig(std::ostream& logFile) const
 
     for(int8 i=0;i<4;++i)
     {
-        temp[i] = cardset[i];
+        temp[i] = hand_impl.cardset[i];
     }
     //second row
     for(int8 suit=0;suit<4;++suit)
@@ -224,14 +224,13 @@ void HandPlus::DisplayHandBig(std::ostream& logFile) const
 }
 
 
-uint32 HandPlus::getValueset() const
+constexpr uint32 HandPlus::getValueset() const
 {
 	return valueset;
 }
 
 void Hand::SetEmpty()
 {
-
     cardset[0] = 0;
     cardset[1] = 0;
     cardset[2] = 0;
@@ -248,12 +247,8 @@ bool Hand::IsEmpty() const
 
 void HandPlus::SetEmpty()
 {
-	Hand::SetEmpty();
+	hand_impl.SetEmpty();
 	valueset = 0;
-	cardset[0] = 0;
-	cardset[1] = 0;
-	cardset[2] = 0;
-	cardset[3] = 0;
 }
 
 bool HandPlus::IsEmpty() const
@@ -263,32 +258,32 @@ bool HandPlus::IsEmpty() const
 
 void HandPlus::SetUnique(const HandPlus& h)
 {
-	Hand::SetUnique(h);
+	hand_impl.SetUnique(h.hand_impl);
 	valueset = h.valueset;
 }
 
 void HandPlus::SetUnique(const Hand& h)
 {
-	Hand::SetUnique(h);
+	hand_impl.SetUnique(h);
 	populateValueset();
 }
 
 void HandPlus::AppendUnique(const Hand& h)
 {
-	Hand::AppendUnique(h);
+	hand_impl.AppendUnique(h);
 	populateValueset();
 }
 
 void HandPlus::AppendUnique(const HandPlus& h)
 {
-	Hand::AppendUnique(h);
+	hand_impl.AppendUnique(h.hand_impl);
 	valueset += h.valueset;
 }
 
 void HandPlus::RemoveFromHand(
 	const int8 aSuit,const uint8 aIndex,const uint32 aCard)
 {
-	Hand::RemoveFromHand(aSuit,aIndex,aCard);
+	hand_impl.RemoveFromHand(aSuit,aIndex,aCard);
 	valueset-=HoldemUtil::INCRORDER[aIndex];
 }
 
@@ -296,7 +291,7 @@ void HandPlus::RemoveFromHand(
 void HandPlus::AddToHand(
 	const int8 aSuit,const uint8 aIndex,const uint32 aCard)
 {
-	Hand::AddToHand(aSuit,aIndex,aCard);
+	hand_impl.AddToHand(aSuit,aIndex,aCard);
 	valueset+=HoldemUtil::INCRORDER[aIndex];
 
 }
@@ -330,10 +325,10 @@ void HandPlus::populateValueset()
 
 	for(int8 i=13;i>=1;--i)
 	{
-		valueset += (cardset[0] & HoldemUtil::CARDORDER[i]);
-		valueset += (cardset[1] & HoldemUtil::CARDORDER[i]);
-		valueset += (cardset[2] & HoldemUtil::CARDORDER[i]);
-		valueset += (cardset[3] & HoldemUtil::CARDORDER[i]);
+		valueset += (hand_impl.cardset[0] & HoldemUtil::CARDORDER[i]);
+		valueset += (hand_impl.cardset[1] & HoldemUtil::CARDORDER[i]);
+		valueset += (hand_impl.cardset[2] & HoldemUtil::CARDORDER[i]);
+		valueset += (hand_impl.cardset[3] & HoldemUtil::CARDORDER[i]);
 		valueset <<= 1;
 	}
 

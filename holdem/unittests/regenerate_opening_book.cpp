@@ -19,8 +19,8 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
           withCommunity.AddToHand(holeCards.second);
 
           NamedTriviaDeck o;
-          o.OmitCards(withCommunity);
-          o.DiffHand(CommunityPlus::EMPTY_COMPLUS);
+          o.OmitCards(withCommunity.hand_impl);
+          o.DiffHand(Hand::EMPTY_HAND);
           o.sortSuits();
           string handName = o.NamePockets();
 
@@ -49,7 +49,7 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
             // EXPORT as .jsonC
 
             StatsManager::holdemCtoJSON(holdemjson_data, statprob_core_handcumu);
-            (std::ofstream(StatsManager::dbFileName(withCommunity, CommunityPlus::EMPTY_COMPLUS,"C.json")) << holdemjson_data.str()).close();
+            (std::ofstream(StatsManager::dbFileName(withCommunity.hand_impl, Hand::EMPTY_HAND,"C.json")) << holdemjson_data.str()).close();
 
           } else if (fileSuffix == 'W') {
 
@@ -64,7 +64,7 @@ static string spotCheckDb(const struct DeckLocationPair &holeCards, char fileSuf
             // EXPORT as .jsonW
 
             StatsManager::holdemWtoJSON(holdemjson_data, dPCT);
-            (std::ofstream(StatsManager::dbFileName(withCommunity, CommunityPlus::EMPTY_COMPLUS,"W.json")) << holdemjson_data.str()).close();
+            (std::ofstream(StatsManager::dbFileName(withCommunity.hand_impl, Hand::EMPTY_HAND,"W.json")) << holdemjson_data.str()).close();
           } else {
             std::cerr << "spotCheckDb(…, " << fileSuffix << ")" << std::endl;
             exit(70); // man sysexits → EX_SOFTWARE
@@ -328,8 +328,8 @@ int main(int argc, const char * argv[]) {
       r.DealCard(withCommunity);
       std::cout << "2" << std::endl;
     #else
-      r.DealCard(withCommunity);
-      r.DealCard(withCommunity);
+      r.DealCard(withCommunity.hand_impl);
+      r.DealCard(withCommunity.hand_impl);
     #endif
 
     PreflopCallStats pfcs(withCommunity, CommunityPlus::EMPTY_COMPLUS);

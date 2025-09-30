@@ -36,8 +36,8 @@ namespace NamedTriviaDeckTests {
 
 
         NamedTriviaDeck o;
-        o.OmitCards(withCommunity);
-        o.DiffHand(onlyCommunity);
+        o.OmitCards(withCommunity.hand_impl);
+        o.DiffHand(onlyCommunity.hand_impl);
         o.sortSuits();
 
 
@@ -4643,8 +4643,8 @@ Playing as S
         withCommunity.AddToHand(card);
 
         // turn, river
-        withCommunity.Hand::AddToHand(myTurn);
-        withCommunity.Hand::AddToHand(myRiver);
+        withCommunity.hand_impl.AddToHand(myTurn);
+        withCommunity.hand_impl.AddToHand(myRiver);
 
         std::cout << "Starting next round..." << endl;
 
