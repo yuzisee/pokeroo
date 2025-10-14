@@ -105,14 +105,12 @@ class DealableOrderedDeck
 
     //after redealing it, set dealtSuit and dealtValue to
     //0 and ACELOW. This allows the next card to be independant
-        DealableOrderedDeck(const DealableOrderedDeck& other) : deck_impl(OrderedDeck(other.deck_impl))
+        DealableOrderedDeck(const DealableOrderedDeck& other) : deck_impl(other.deck_impl)
         {
 			dealt = other.dealt;
         }
 
-		DealableOrderedDeck() : deck_impl(OrderedDeck())
-		{
-		}
+        DealableOrderedDeck() = default;
 
         virtual ~DealableOrderedDeck();
 

@@ -612,7 +612,7 @@ void CommunityPlus::preEvalStrength()
     for(int8 i=0;i<4;++i)
     {
         flushCount[i] = -5;
-        tempforflush[i] = cardset[i];
+        tempforflush[i] = hand_impl.cardset[i];
     }
   #endif
 

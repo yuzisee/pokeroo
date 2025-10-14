@@ -306,7 +306,7 @@ class HandPlus
     virtual void DisplayHandBig(std::ostream&) const;
 	constexpr uint32 getValueset() const;
 
-
+  virtual ~HandPlus() = default;
 	HandPlus() : hand_impl(Hand()), valueset(0)
 	{
 		SetEmpty();
