@@ -4643,8 +4643,8 @@ Playing as S
         withCommunity.AddToHand(card);
 
         // turn, river
-        withCommunity.hand_impl.AddToHand(myTurn);
-        withCommunity.hand_impl.AddToHand(myRiver);
+        withCommunity.AddToHand(myTurn);
+        withCommunity.AddToHand(myRiver);
 
         std::cout << "Starting next round..." << endl;
 
