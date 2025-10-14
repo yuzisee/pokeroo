@@ -286,7 +286,7 @@ public:
         SetUnique(o);
     }
 
-    virtual ~Hand();
+    ~Hand();
 
     friend class HandPlus;
     friend class CommunityPlus;
