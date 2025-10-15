@@ -80,8 +80,8 @@ void CommunityCallStats::Compare(const float64 occ)
     }
 
     ///TODO: WTF If I use Reset(oppStrength) then it fails to SetUnique correctly the valueset field.
-    newEntry.result.strength = oppStrength.strength;
-    newEntry.result.valueset = oppStrength.hand_logic.valueset;
+    newEntry.result.strength = winloss_counter.oppStrength.strength;
+    newEntry.result.valueset = winloss_counter.oppStrength.hand_logic.valueset;
     newEntry.result.revtiebreak = newEntry.a*52+newEntry.b;
     ++showdownIndex;
     if( incr > 1 )
@@ -196,7 +196,7 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
                 if( destination == 0 )
                 {
                     now.splits -= splitgroupRepeated;
-                    now.loss -= myChancesEach - splitgroupRepeated;
+                    now.loss -= winloss_counter.myChancesEach - splitgroupRepeated;
 
                     destination = new StatResult;
                     *destination = now * thisOcc;
@@ -208,7 +208,7 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
                 {
                     now.wins -= destination->repeated - prevsplitRepeated;
                     now.splits -= splitgroupRepeated;
-                    now.loss -= myChancesEach - splitgroupRepeated - destination->repeated + prevsplitRepeated;
+                    now.loss -= winloss_counter.myChancesEach - splitgroupRepeated - destination->repeated + prevsplitRepeated;
                     *destination = (*destination) + ( now * thisOcc );
                 }
 
@@ -235,8 +235,8 @@ void CommunityCallStats::Analyze()
 {
     #ifdef DEBUGASSERT
         const int32 countedDealt = static_cast<int32>(showdownMax);
-        int8 cardsAvail = realCardsAvailable(static_cast<int8>(7 - moreCards));
-        const int32 expectedDealt = cardsAvail*(cardsAvail-1)/2 * HoldemUtil::nchoosep<int32>(cardsAvail-2,moreCards-2) ;
+        int8 cardsAvail = realCardsAvailable(static_cast<int8>(7 - winloss_counter.moreCards));
+        const int32 expectedDealt = cardsAvail*(cardsAvail-1)/2 * HoldemUtil::nchoosep<int32>(cardsAvail-2, winloss_counter.moreCards-2) ;
         if( showdownIndex != showdownCount )
         {
             std::cerr << "PLEASE CHECK CommunityCallStats::Compare();" << endl;
@@ -244,8 +244,8 @@ void CommunityCallStats::Analyze()
         }
         if( expectedDealt != countedDealt )
         {
-            HandPlus::DisplayHand(std::cerr, myStrength.hand_logic.hand_impl);
-            HandPlus::DisplayHand(std::cerr, oppStrength.hand_logic.hand_impl);
+            HandPlus::DisplayHand(std::cerr, winloss_counter.myStrength.hand_logic.hand_impl);
+            HandPlus::DisplayHand(std::cerr, winloss_counter.oppStrength.hand_logic.hand_impl);
             std::cerr << "Maybe you didn't deal out proper hands" << endl;
             exit(1);
         }
@@ -290,7 +290,7 @@ void CommunityCallStats::Analyze()
     std::cout << "@@@@@@@@@@@ StatCount set to " << statCount << endl;
 #endif
 
-    for( int16 i=0 ; i < 52*52 && statIndex < statCount ; ++i )
+    for( int16 i=0 ; i < 52*52 && statIndex < winloss_counter.statCount ; ++i )
     {
         if( table[i] != 0 )
         {
@@ -310,8 +310,8 @@ void CommunityCallStats::Analyze()
             #endif
 
 
-                    myWins[statIndex] = *(table[i]);
-                    myWins[statIndex].repeated /= myChancesEach;
+                    winloss_counter.myWins[statIndex] = *(table[i]);
+                    winloss_counter.myWins[statIndex].repeated /= winloss_counter.myChancesEach;
                     ++statIndex;
                         #ifdef DEBUGNEWCALLSTATS
                             std::cout << "+" << std::flush;
@@ -348,9 +348,9 @@ void CommunityCallStats::Analyze()
     ///we tend to generate the result correponding to the line below, due to
     ///the fact that the iHave.diff~emptyDeck comparison isn't as easily acheived when
     ///performing our "pyramid" algorithm. We instead fall back on iHave~oHave.
-    const float64 dealout = HoldemUtil::nchoosep<float64>(realCardsAvailable(static_cast<int8>(7-moreCards)),2)
-            * HoldemUtil::nchoosep<float64>(realCardsAvailable(static_cast<int8>(7-moreCards))-2,moreCards-2);
-    myChancesEach = ( dealout - myChancesEach )*myChancesEach;
+    const float64 dealout = HoldemUtil::nchoosep<float64>(realCardsAvailable(static_cast<int8>(7 - winloss_counter.moreCards)),2)
+            * HoldemUtil::nchoosep<float64>(realCardsAvailable(static_cast<int8>(7 - winloss_counter.moreCards))-2, winloss_counter.moreCards-2);
+    winloss_counter.myChancesEach = ( dealout - winloss_counter.myChancesEach )*winloss_counter.myChancesEach;
 
     CallStats::Analyze();
 }
@@ -367,7 +367,7 @@ void CommunityCallStats::showProgressUpdate() const
     }
     std::cout << " statGroup=" << statGroup << ", statCount=" << statCount << endl;
 #else
-    if (statGroup == 0 ) std::cerr << endl << endl;
+    if (winloss_counter.statGroup == 0 ) std::cerr << endl << endl;
     std::cerr << "I: " << showdownIndex << "/" << showdownCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 #endif
 
@@ -388,11 +388,11 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
     showdownCount = oppHands * HoldemUtil::nchoosep<int32>(cardsAvail - 2,5-cardsInCommunity);
     //This variable will overload if you try to calculate preflop
 
-	statCount = oppHands;
-    delete [] myWins;
-    myWins = new StatResult[oppHands];
+	winloss_counter.statCount = oppHands;
+    delete [] winloss_counter.myWins;
+    winloss_counter.myWins = new StatResult[oppHands];
     #ifndef PERFECT_IHAVE
-    myTotalChances = oppHands;
+    winloss_counter.myTotalChances = oppHands;
     #endif
 
     #ifdef HARDCORE_SPEEDUP
@@ -407,7 +407,7 @@ void CommunityCallStats::initCC(const int8 cardsInCommunity)
     oppHands = preCardsAvail*(preCardsAvail-1)/2;
     myTotalChances = oppHands;
 #endif
-    myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
+    winloss_counter.myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
     //const float64 & t_f  = myChancesEach;
     showdownIndex = 0;
     showdownMax = 0;

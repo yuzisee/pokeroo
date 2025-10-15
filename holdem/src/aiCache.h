@@ -144,7 +144,7 @@ class PreflopCallStats : public virtual CallStats
         //const virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
     public:
         PreflopCallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity)
-            : PlayStats(hP,onlycommunity),CallStats(hP,onlycommunity,0)
+            : CallStats(hP,onlycommunity,0)
             {
                 initPC();
             }

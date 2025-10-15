@@ -49,21 +49,21 @@ void WinStats::Compare(const float64 occ) { SimpleCompare::simple_compare(this, 
 template<typename T> void SimpleCompare::simple_compare(T * const play_stats, const float64 occ)
 {
 
-	if ( play_stats->myStrength.strength > play_stats->oppStrength.strength )
+	if ( play_stats->winloss_counter.myStrength.strength > play_stats->winloss_counter.oppStrength.strength )
 	{
 		play_stats->countWin(occ);
 	}
-	else if (play_stats->myStrength.strength < play_stats->oppStrength.strength)
+	else if (play_stats->winloss_counter.myStrength.strength < play_stats->winloss_counter.oppStrength.strength)
 	{
 		play_stats->countLoss(occ);
 	}
 	else
 	{
-		if ( play_stats->myStrength.hand_logic.valueset > play_stats->oppStrength.hand_logic.valueset )
+		if ( play_stats->winloss_counter.myStrength.hand_logic.valueset > play_stats->winloss_counter.oppStrength.hand_logic.valueset )
 		{
 			play_stats->countWin(occ);
 		}
-		else if (play_stats->myStrength.hand_logic.valueset == play_stats->oppStrength.hand_logic.valueset)
+		else if (play_stats->winloss_counter.myStrength.hand_logic.valueset == play_stats->winloss_counter.oppStrength.hand_logic.valueset)
 		{
 			play_stats->countSplit(occ);
 		}
@@ -79,34 +79,36 @@ template void SimpleCompare::simple_compare<WinStats>(WinStats * const, const fl
 
 void CallStats::countWin(const float64 occ)
 {
-	myWins[statGroup].wins += occ;
+	winloss_counter.myWins[winloss_counter.statGroup].wins += occ;
 }
 void CallStats::countSplit(const float64 occ)
 {
-	myWins[statGroup].splits += occ;
+	winloss_counter.myWins[winloss_counter.statGroup].splits += occ;
 }
 void CallStats::countLoss(const float64 occ)
 {
-	myWins[statGroup].loss += occ;
+	winloss_counter.myWins[winloss_counter.statGroup].loss += occ;
 }
 
 void WinStats::countSplit(const float64 occ)
 {
     float64 dOccRep = oppReps * occ;
-    myWins[statGroup].splits += dOccRep; // i.e. `PlayStats::countSplit(dOccRep);`
-	myAvg.splits += dOccRep * myWins[statGroup].repeated;
+    winloss_counter.myWins[winloss_counter.statGroup].splits += dOccRep; // i.e. `PlayStats::countSplit(dOccRep);`
+	myAvg.splits += dOccRep * winloss_counter.myWins[winloss_counter.statGroup].repeated;
+
 }
 void WinStats::countLoss(const float64 occ)
 {
     float64 dOccRep = oppReps * occ;
-    myWins[statGroup].loss += dOccRep; // i.e. `PlayStats::countLoss(dOccRep);`
-	myAvg.loss += dOccRep * myWins[statGroup].repeated;
+    winloss_counter.myWins[winloss_counter.statGroup].loss += dOccRep; // i.e. `PlayStats::countLoss(dOccRep);`
+	myAvg.loss += dOccRep * winloss_counter.myWins[winloss_counter.statGroup].repeated;
 }
 void WinStats::countWin(const float64 occ)
 {
     float64 dOccRep = oppReps * occ;
-    myWins[statGroup].wins += dOccRep; // i.e.  `PlayStats::countWin(dOccRep);`
-	myAvg.wins += dOccRep * myWins[statGroup].repeated;
+    winloss_counter.myWins[winloss_counter.statGroup].wins += dOccRep; // i.e.  `PlayStats::countWin(dOccRep);`
+	myAvg.wins += dOccRep * winloss_counter.myWins[winloss_counter.statGroup].repeated;
+
 }
 
 // [!NOTE]
@@ -115,17 +117,17 @@ void WinStats::Analyze()
 {
 
 	clearDistr();
-	myAvg.wins /= myTotalChances;
-	myAvg.loss /= myTotalChances;
-	myAvg.splits /= myTotalChances;
+	myAvg.wins /= winloss_counter.myTotalChances;
+	myAvg.loss /= winloss_counter.myTotalChances;
+	myAvg.splits /= winloss_counter.myTotalChances;
 	myAvg.genPCT();
 
-    myWins[0].genPCT();
-    StatResult best = myWins[0];
-    StatResult worst = myWins[0];
-    for(int32 i=0;i<statCount;i++)
+    winloss_counter.myWins[0].genPCT();
+    StatResult best = winloss_counter.myWins[0];
+    StatResult worst = winloss_counter.myWins[0];
+    for(int32 i=0;i<winloss_counter.statCount;i++)
 	{
-		StatResult& wr = myWins[i];
+		StatResult& wr = winloss_counter.myWins[i];
 		wr.genPCT();
 
         if (best < wr) { best = wr; }
@@ -136,16 +138,16 @@ void WinStats::Analyze()
   // [!NOTE]
   // The constructor initializes myDistr->coarseHistogram[...] to all zeroes
   // See for yourself at src/inferentials.cpp:DistrShape::DistrShape
-	myDistr = new DistrShape(myTotalChances, worst, myAvg, best);
+	myDistr = new DistrShape(winloss_counter.myTotalChances, worst, myAvg, best);
 
-	for(int32 i=0;i<statCount;i++)
+	for(int32 i=0;i<winloss_counter.statCount;i++)
 	{
-		const StatResult& wr = myWins[i];
+		const StatResult& wr = winloss_counter.myWins[i];
 		myDistr->AddVal( wr );
 
 	}
 
-    myDistr->Complete(myChancesEach);
+    myDistr->Complete(winloss_counter.myChancesEach);
 }
 
 const DistrShape& WinStats::getDistr()
@@ -162,8 +164,8 @@ const StatResult& WinStats::avgStat() const
 StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 {
     StatRequest r;
-    const int16 undoCurrentCard = currentCard;
-	++currentCard;
+    const int16 undoCurrentCard = winloss_counter.currentCard;
+	++(winloss_counter.currentCard);
 
 		#ifdef SUPERPROGRESSUPDATE
 		if( statGroup > 10)
@@ -177,23 +179,23 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 		#endif
 
 
-	if (currentCard <= cardsToNextBet )
+	if (winloss_counter.currentCard <= cardsToNextBet )
 		//That is, we're dealing deal out the first batch (counting the upcoming card as dealt)
 	{
-		myUndo[undoCurrentCard].SetUnique(myStrength);
-		oppUndo[undoCurrentCard].SetUnique(oppStrength);
-		myStrength.AddToHand(deck);
-		oppStrength.AddToHand(deck);
-		if (currentCard == cardsToNextBet)
+		myUndo[undoCurrentCard].SetUnique(winloss_counter.myStrength);
+		oppUndo[undoCurrentCard].SetUnique(winloss_counter.oppStrength);
+		winloss_counter.myStrength.AddToHand(deck);
+		winloss_counter.oppStrength.AddToHand(deck);
+		if (winloss_counter.currentCard == cardsToNextBet)
 		{
 			//SPECIAL CASE: Dealing river
-			if (moreCards == 3)
+			if (winloss_counter.moreCards == 3)
 			{
-				myStrength.evaluateStrength();
+				winloss_counter.myStrength.evaluateStrength();
 			}
 
 			//Complete batch
-			++statGroup;
+			++(winloss_counter.statGroup);
 
 				#ifdef PROGRESSUPDATE
 			  	if ((statGroup % PROGRESSUPDATE) == 0) {
@@ -203,10 +205,10 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 				#endif
 
 
-			myWins[statGroup].repeated = occ;
+			winloss_counter.myWins[winloss_counter.statGroup].repeated = occ;
 			if (occ > 1)
 			{
-				statCount -= static_cast<int32>(occ) - 1;
+				winloss_counter.statCount -= static_cast<int32>(occ) - 1;
 			}
 
 
@@ -223,20 +225,20 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 	}
 	else ///we're within the statGroup
 	{
-		short cardsLeft = moreCards - currentCard + 1;
+		short cardsLeft = winloss_counter.moreCards - winloss_counter.currentCard + 1;
 		//don't count the upcoming card as dealt
-		oppUndo[undoCurrentCard].SetUnique(oppStrength);
-		oppStrength.AddToHand(deck);
+		oppUndo[undoCurrentCard].SetUnique(winloss_counter.oppStrength);
+		winloss_counter.oppStrength.AddToHand(deck);
 
 
 		if( cardsLeft >= 3 )
 		{
-			myUndo[undoCurrentCard].SetUnique(myStrength);
-			myStrength.AddToHand(deck);
+			myUndo[undoCurrentCard].SetUnique(winloss_counter.myStrength);
+			winloss_counter.myStrength.AddToHand(deck);
 			if (cardsLeft == 3) //Complete community (three cards were left: the river, and the opponent's two)
 			{
                 //You just dealt the last community card
-				myStrength.evaluateStrength();
+				winloss_counter.myStrength.evaluateStrength();
 
                 oppReps = occ;
                 r.bNewSet = true;
@@ -249,7 +251,7 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 			if( cardsLeft == 1 )
 			{//You just dealt the last card
 
-				oppStrength.evaluateStrength();
+				winloss_counter.oppStrength.evaluateStrength();
 			}
             return r;
         }
@@ -259,22 +261,17 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 void WinStats::DropCard(const DeckLocation deck)
 {
 
-	oppStrength.SetUnique(oppUndo[currentCard-1]);
+	winloss_counter.oppStrength.SetUnique(oppUndo[winloss_counter.currentCard - 1]);
 
 
-	short cardsLeft = moreCards - currentCard;
+	short cardsLeft = winloss_counter.moreCards - winloss_counter.currentCard;
 	if (cardsLeft >= 2)
 	{
-		myStrength.SetUnique(myUndo[currentCard-1]);
+		winloss_counter.myStrength.SetUnique(myUndo[winloss_counter.currentCard-1]);
 	}
 
 
-
-
-
-	--currentCard;
-
-
+	--(winloss_counter.currentCard);
 
 }
 
@@ -284,9 +281,9 @@ void WinStats::DropCard(const DeckLocation deck)
 
 void WinStats::initW(const int8 cardsInCommunity)
 {
-  PlayStats::moreCards = (5-cardsInCommunity+2);
+  winloss_counter.moreCards = (5-cardsInCommunity+2);
 
-    const size_t moreCardsAlloc = moreCards;
+    const size_t moreCardsAlloc = winloss_counter.moreCards;
 		if ((2 <= moreCardsAlloc) && (moreCardsAlloc <= 7)) {
 		  myUndo = new CommunityPlus[moreCardsAlloc-2];
 		  oppUndo = new CommunityPlus[moreCardsAlloc];
@@ -298,20 +295,22 @@ void WinStats::initW(const int8 cardsInCommunity)
         exit(1);
     }
 
-			int8 temp1 = oppStrength.CardsInSuit( 0 ) +
-				oppStrength.CardsInSuit( 1 ) +
-				oppStrength.CardsInSuit( 2 ) +
-				oppStrength.CardsInSuit( 3 ) ;
+			int8 temp1 = winloss_counter.oppStrength.CardsInSuit( 0 ) +
+			             winloss_counter.oppStrength.CardsInSuit( 1 ) +
+			             winloss_counter.oppStrength.CardsInSuit( 2 ) +
+			             winloss_counter.oppStrength.CardsInSuit( 3 );
+
 			if( cardsInCommunity != temp1 )
 			{
                 std::cerr << "MISDEAL COMMUNITY PARAMETERS! WATCH IT." << endl;
 				exit(1);
 				return;
 			}
-				temp1 = myStrength.CardsInSuit( 0 ) +
-				myStrength.CardsInSuit( 1 ) +
-				myStrength.CardsInSuit( 2 ) +
-				myStrength.CardsInSuit( 3 )  -temp1;
+				temp1 = winloss_counter.myStrength.CardsInSuit( 0 ) +
+				        winloss_counter.myStrength.CardsInSuit( 1 ) +
+				        winloss_counter.myStrength.CardsInSuit( 2 ) +
+				        winloss_counter.myStrength.CardsInSuit( 3 )  -temp1;
+
 			if( 2 !=temp1 )
 			{
 				std::cerr << "MISDEAL!!\nWATCH " << static_cast<int>(temp1) << " cards reported in hand" << endl;
@@ -320,17 +319,17 @@ void WinStats::initW(const int8 cardsInCommunity)
 			}
 		#endif
 
-	if( moreCards == 2)
+	if( winloss_counter.moreCards == 2)
 	{
 		cardsToNextBet = 0;
 			//No more community cards
 	}
-	else if ( moreCards < 5 )
+	else if ( winloss_counter.moreCards < 5 )
 	{
 		cardsToNextBet = 1;
 			//It was the turn or river to start with
 	}
-	else if ( moreCards == 7)
+	else if ( winloss_counter.moreCards == 7)
 	{
 		cardsToNextBet = 3;
 			//It's pre-flop
@@ -347,25 +346,25 @@ void WinStats::initW(const int8 cardsInCommunity)
     oppReps = 1;
 
 	//SPECIAL CASE:
-	if( moreCards == 2 )
+	if( winloss_counter.moreCards == 2 )
 	{
-		myStrength.evaluateStrength();
-		myWins = new StatResult[1];
+		winloss_counter.myStrength.evaluateStrength();
+		winloss_counter.myWins = new StatResult[1];
 
 
-		myWins[0].repeated = 1;
-		statGroup = 0;
-		myTotalChances = 1;
-		statCount = 1;
-		myChancesEach = 990;
+		winloss_counter.myWins[0].repeated = 1;
+		winloss_counter.statGroup = 0;
+		winloss_counter.myTotalChances = 1;
+		winloss_counter.statCount = 1;
+		winloss_counter.myChancesEach = 990;
 	}
 	else
 	{
 
 		int8 cardsDealt = cardsInCommunity + 2;
 
-		statCount = HoldemUtil::nchoosep<int32>(52-cardsDealt,cardsToNextBet);
-		myTotalChances = static_cast<float64>(statCount);
+		winloss_counter.statCount = HoldemUtil::nchoosep<int32>(52-cardsDealt,cardsToNextBet);
+		winloss_counter.myTotalChances = static_cast<float64>(winloss_counter.statCount);
 
 		#ifdef DEBUGASSERT
 		  // cardsInCommunity inclusive of [0..5]
@@ -378,31 +377,31 @@ void WinStats::initW(const int8 cardsInCommunity)
 				 HoldemUtil::nchoosep<int32>(52-2,3) i.e. 19600 (Pre-flop)
 				]
 			*/
-		  if(statCount > 19600) {
-				std::cerr << "WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") caused moreCards=" << PlayStats::moreCards
+		  if(winloss_counter.statCount > 19600) {
+				std::cerr << "WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") caused moreCards=" << winloss_counter.moreCards
 				  << " cardsToNextBet=" << static_cast<int>(cardsToNextBet)
 				  << " cardsDealt=" << static_cast<int>(cardsDealt)
 					<< " HoldemUtil::nchoosep<int32>(" << static_cast<int>(52-cardsDealt) << "," << static_cast<int>(cardsToNextBet) << ")"
-					<< " = " << statCount << std::endl;
+					<< " = " << winloss_counter.statCount << std::endl;
 				return exit(1);
 			}
-			if(statCount < 46) {
+			if(winloss_counter.statCount < 46) {
 				std::cerr << "HoldemUtil::nchoosep<int32>(" << static_cast<int>(52-cardsDealt) << "," << static_cast<int>(cardsToNextBet) << ")"
-				  << " = " << statCount << " would never return a negative value. And otherwise You should have hit the special case above for (moreCards == 2)" << std::endl
+				  << " = " << winloss_counter.statCount << " would never return a negative value. And otherwise You should have hit the special case above for (moreCards == 2)" << std::endl
 					<< "So then, how did WinStats::initW(" << static_cast<int>(cardsInCommunity) << ") cause "
 					<< " cardsToNextBet=" << static_cast<int>(cardsToNextBet)
 				  << " cardsDealt=" << static_cast<int>(cardsDealt) << std::endl;
 				return exit(1);
 			}
 		#endif
-		myWins = new StatResult[statCount];
+		winloss_counter.myWins = new StatResult[winloss_counter.statCount];
 
 
 		cardsDealt += cardsToNextBet;
 		//moreCards is the number of cards to be dealt to table + opponent
-		myChancesEach = HoldemUtil::nchoosep<float64>(52 - cardsDealt,moreCards-cardsToNextBet-2);
-		cardsDealt += moreCards-cardsToNextBet-2;
-		myChancesEach *= HoldemUtil::nchoosep<float64>(52 - cardsDealt,2);
+		winloss_counter.myChancesEach = HoldemUtil::nchoosep<float64>(52 - cardsDealt, winloss_counter.moreCards - cardsToNextBet-2);
+		cardsDealt += winloss_counter.moreCards - cardsToNextBet - 2;
+		winloss_counter.myChancesEach *= HoldemUtil::nchoosep<float64>(52 - cardsDealt,2);
 	}
 
 
@@ -411,45 +410,45 @@ void WinStats::initW(const int8 cardsInCommunity)
 
 void CallStats::Analyze()
 {
-	for(int32 k=0;k<statCount;++k)
+	for(int32 k=0; k < winloss_counter.statCount ;++k)
 	{
-		myWins[k].genPCT();
+		winloss_counter.myWins[k].genPCT();
 		#ifdef DEBUGASSERT
-          if( myWins[k].forceSum() > myChancesEach + 0.1 || myWins[k].forceSum() < myChancesEach - 0.1  )
+          if( winloss_counter.myWins[k].forceSum() > winloss_counter.myChancesEach + 0.1 || winloss_counter.myWins[k].forceSum() < winloss_counter.myChancesEach - 0.1  )
           {
-              std::cerr << "Failure to generate w+s+l=" << myChancesEach << " with {"<< k <<"}. Instead, w+s+l=" << (myWins[k].forceSum()) << endl;
+              std::cerr << "Failure to generate w+s+l=" << winloss_counter.myChancesEach << " with {"<< k <<"}. Instead, w+s+l=" << (winloss_counter.myWins[k].forceSum()) << endl;
               exit(1);
           }
 	    #endif
 	}
 
-	sort(myWins,myWins+statCount);//Ascending by default
+	sort(winloss_counter.myWins,winloss_counter.myWins + winloss_counter.statCount);//Ascending by default
                                 //  http://www.ddj.com/dept/cpp/184403792
 
 //populate cumulation
 	int32 count=1;
 
 	vector<StatResult>& cpop = calc->cumulation;
-	cpop.reserve(statCount);
+	cpop.reserve(winloss_counter.statCount);
 
-    float64 cumulate = myWins[0].repeated;
-    myWins[0].wins *= cumulate;
-	myWins[0].splits *= cumulate;
-	myWins[0].loss *= cumulate;
+    float64 cumulate = winloss_counter.myWins[0].repeated;
+    winloss_counter.myWins[0].wins *= cumulate;
+	winloss_counter.myWins[0].splits *= cumulate;
+	winloss_counter.myWins[0].loss *= cumulate;
 
-	cpop.push_back(myWins[0]);
+	cpop.push_back(winloss_counter.myWins[0]);
 	size_t vectorLast = cpop.size()-1; //(zero)
 	float64 lastStreak=cumulate; //ASSERT: lastStreak == myWins[0].repeated
 
-	while(count < statCount)
+	while(count < winloss_counter.statCount)
 	{
 
-		cumulate += myWins[count].repeated ;
+		cumulate += winloss_counter.myWins[count].repeated ;
 
         StatResult &b = cpop.back();
 
 		//if (!( myWins[i].bIdenticalTo( myWins[i-1]) ))
-		if( myWins[count].pct != myWins[count-1].pct )
+		if( winloss_counter.myWins[count].pct != winloss_counter.myWins[count-1].pct )
 		{	//add new StatResult
             b.wins /= lastStreak;
             b.splits /= lastStreak;
@@ -467,21 +466,21 @@ void CallStats::Analyze()
 #endif
 
 			//Prep existing
-			lastStreak = myWins[count].repeated;
-			myWins[count].wins *= lastStreak;
-			myWins[count].splits *= lastStreak;
-			myWins[count].loss *= lastStreak;
+			lastStreak = winloss_counter.myWins[count].repeated;
+			winloss_counter.myWins[count].wins *= lastStreak;
+			winloss_counter.myWins[count].splits *= lastStreak;
+			winloss_counter.myWins[count].loss *= lastStreak;
 
 
 			//Load for cumulation
-			cpop.push_back(myWins[count]);
+			cpop.push_back(winloss_counter.myWins[count]);
 			++vectorLast;
 		}else
         {
-            b.wins += myWins[count].wins * myWins[count].repeated;
-            b.splits += myWins[count].splits * myWins[count].repeated;
-            b.loss += myWins[count].loss * myWins[count].repeated;
-            lastStreak += myWins[count].repeated;
+            b.wins += winloss_counter.myWins[count].wins * winloss_counter.myWins[count].repeated;
+            b.splits += winloss_counter.myWins[count].splits * winloss_counter.myWins[count].repeated;
+            b.loss += winloss_counter.myWins[count].loss * winloss_counter.myWins[count].repeated;
+            lastStreak += winloss_counter.myWins[count].repeated;
 		}
 		//cumulation[vectorLast].repeated = cumulate;
 		cpop.back().repeated = cumulate;
@@ -496,9 +495,9 @@ void CallStats::Analyze()
 
 
 #ifdef DEBUGASSERT
-    if( cumulate != myTotalChances )
+    if( cumulate != winloss_counter.myTotalChances )
     {
-        std::cerr << "Raw count after sorting does not match: " << cumulate << " counted, but " << myTotalChances << " expected." << endl;
+        std::cerr << "Raw count after sorting does not match: " << cumulate << " counted, but " << winloss_counter.myTotalChances << " expected." << endl;
         exit(1);
     }
 
@@ -510,19 +509,20 @@ void CallStats::Analyze()
 	    StatResult& temptarget = calc->cumulation[k];
 
 	    #ifdef DEBUGASSERT
-          if( temptarget.forceSum() > myChancesEach + 0.1 || temptarget.forceSum() < myChancesEach - 0.1  )
+          if( temptarget.forceSum() > winloss_counter.myChancesEach + 0.1 || temptarget.forceSum() < winloss_counter.myChancesEach - 0.1  )
           {
-              std::cerr << "Failure to maintain w+s+l=" << myChancesEach << " after combine step on {"<< k <<"}. Instead, w+s+l=" << (temptarget.forceSum()) << endl;
+              std::cerr << "Failure to maintain w+s+l=" << winloss_counter.myChancesEach << " after combine step on {"<< k <<"}. Instead, w+s+l=" << (temptarget.forceSum()) << endl;
               exit(1);
           }
 	    #endif
 
-		temptarget.wins /= myChancesEach;
-		temptarget.loss /= myChancesEach;
-		temptarget.splits /= myChancesEach;
+		temptarget.wins /= winloss_counter.myChancesEach;
+		temptarget.loss /= winloss_counter.myChancesEach;
+		temptarget.splits /= winloss_counter.myChancesEach;
         ///All outcomes so far are myPCT (having the first hand dealt. For CallStats that's the fixed hand I have. For CommunityCallStats that's the pockets named in the distribution.
-        temptarget.pct = temptarget.pct/myChancesEach;
-		temptarget.repeated /= myTotalChances;
+        temptarget.pct = temptarget.pct/winloss_counter.myChancesEach;
+    // TODO(from joseph): We have `.scaleOrdinateOnly()` you should probably use instead
+		temptarget.repeated /= winloss_counter.myTotalChances;
 	}
 
 
@@ -535,56 +535,52 @@ void CallStats::Analyze()
 
 void CallStats::myAddCard(const DeckLocation& cardinfo, const int16 undoIndex)
 {
-    myUndo[undoIndex].SetUnique(myStrength);
-    myStrength.AddToHand(cardinfo);
+    myUndo[undoIndex].SetUnique(winloss_counter.myStrength);
+    winloss_counter.myStrength.AddToHand(cardinfo);
 }
 
 void CallStats::myRevert(const int16 undoIndex)
 {
-    myStrength.SetUnique(myUndo[undoIndex]);
+    winloss_counter.myStrength.SetUnique(myUndo[undoIndex]);
 }
 
 void CallStats::myEval()
 {
-    myStrength.evaluateStrength();
+    winloss_counter.myStrength.evaluateStrength();
 }
 
 void CallStats::setCurrentGroupOcc(const float64 occ)
 {
-    myWins[statGroup].repeated = occ;
+    winloss_counter.myWins[winloss_counter.statGroup].repeated = occ;
 }
 
 void CallStats::showProgressUpdate() const
 {
-    if (statGroup == 0 ) std::cerr << endl << endl;
-    std::cerr << "C: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
+    if (winloss_counter.statGroup == 0 ) std::cerr << endl << endl;
+    std::cerr << "C: " << winloss_counter.statGroup << "/" << winloss_counter.statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 }
 
 void CallStats::DropCard(const DeckLocation deck)
 {
 
-	oppStrength.SetUnique(oppUndo[currentCard-1]);
+	winloss_counter.oppStrength.SetUnique(oppUndo[winloss_counter.currentCard - 1]);
 
-	if (currentCard > 2)
+	if (winloss_counter.currentCard > 2)
 	{
-		myRevert(currentCard-3);
+		myRevert(winloss_counter.currentCard-3);
 	}
 
 
-
-
-
-	--currentCard;
+	--(winloss_counter.currentCard);
 
 }
 
 StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 {
 
-
 	StatRequest r;
-	const int16 undoCurrentCard = currentCard;
-	++currentCard;
+	const int16 undoCurrentCard = winloss_counter.currentCard;
+	++(winloss_counter.currentCard);
 
 		#ifdef SUPERPROGRESSUPDATE
 		if( currentCard < moreCards )
@@ -598,30 +594,30 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 		#endif
 
 
-	oppUndo[undoCurrentCard].SetUnique(oppStrength);
-	oppStrength.AddToHand(deck);
+	oppUndo[undoCurrentCard].SetUnique(winloss_counter.oppStrength);
+	winloss_counter.oppStrength.AddToHand(deck);
 
-	if ( currentCard > 2 )
+	if ( winloss_counter.currentCard > 2 )
 	{
 		//past dealing opp hand
-		myAddCard(deck,currentCard-3);
-		if ( currentCard == moreCards )
+		myAddCard(deck, winloss_counter.currentCard - 3);
+		if ( winloss_counter.currentCard == winloss_counter.moreCards )
 		{
 			myEval();
-			oppStrength.evaluateStrength();
+			winloss_counter.oppStrength.evaluateStrength();
 		}
 	}
 	else
 	{
 
 	    mynoAddCard(deck, undoCurrentCard);
-	    if ( currentCard == 2 )
+	    if ( winloss_counter.currentCard == 2 )
         {
 
 
-            if( moreCards == 2) oppStrength.evaluateStrength();
+            if( winloss_counter.moreCards == 2) winloss_counter.oppStrength.evaluateStrength();
 
-            ++statGroup;
+            ++(winloss_counter.statGroup);
 
 
             r.bNewSet = true;
@@ -630,7 +626,7 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
             if(occ > 1)
             {
-                statCount -= static_cast<int32>(occ) - 1;
+                winloss_counter.statCount -= static_cast<int32>(occ) - 1;
             }
 
 
@@ -662,23 +658,23 @@ void CallStats::initC(const int8 cardsInCommunity)
 	const int8 cardsAvail = realCardsAvailable(cardsInCommunity);
 		const size_t oppHands = cardsAvail*(cardsAvail-1)/2;
 
-	moreCards = 7-cardsInCommunity;
+	winloss_counter.moreCards = 7-cardsInCommunity;
 
-		const size_t moreCardsAlloc = moreCards;
+		const size_t moreCardsAlloc = winloss_counter.moreCards;
 
 		if ((2 <= moreCardsAlloc) && (moreCardsAlloc <= 7)) {
 				myUndo = new CommunityPlus[moreCardsAlloc-2];
 				oppUndo = new CommunityPlus[moreCardsAlloc];
 		}
 		#ifdef DEBUGASSERT
-		else if (moreCards < 2) {
+		else if (winloss_counter.moreCards < 2) {
 				std::cerr << "How did we get `cardsInCommunity > 5` causing CallStats::initC(" << static_cast<int>(cardsInCommunity) << ")" << std::endl;
 				return exit(1);
-		} else if (moreCards > 7) {
+		} else if (winloss_counter.moreCards > 7) {
 				std::cerr << "CallStats::initC(" << static_cast<int>(cardsInCommunity) << ") is being called with a negative value??" << std::endl;
 				return exit(1);
 		} else {
-				std::cerr << "There's no way to get here. We guarded on `moreCardsAlloc` in multiple places: " << static_cast<int>(moreCards) << " : " << moreCardsAlloc << std::endl;
+				std::cerr << "There's no way to get here. We guarded on `moreCardsAlloc` in multiple places: " << static_cast<int>(winloss_counter.moreCards) << " : " << moreCardsAlloc << std::endl;
 				return exit(1);
 		}
 
@@ -689,15 +685,15 @@ void CallStats::initC(const int8 cardsInCommunity)
 					}
 	#endif
 
-				myTotalChances = static_cast<float64>(oppHands);
-	statCount = oppHands;
+				winloss_counter.myTotalChances = static_cast<float64>(oppHands);
+	winloss_counter.statCount = oppHands;
 
-				myWins = new StatResult[oppHands];
+				winloss_counter.myWins = new StatResult[oppHands];
 
 
-				myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
+				winloss_counter.myChancesEach = HoldemUtil::nchoosep<float64>(cardsAvail - 2,5-cardsInCommunity);
 
-	if (moreCards == 2)
+	if (winloss_counter.moreCards == 2)
 	{
 								myEval();
 	}

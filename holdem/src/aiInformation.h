@@ -107,15 +107,15 @@ protected:
 public:
 
     CommunityCallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity,
-		int8 cardsInCommunity) : PlayStats(hP,onlycommunity),CallStats(hP,onlycommunity,cardsInCommunity)
+		int8 cardsInCommunity) : CallStats(hP,onlycommunity,cardsInCommunity)
 	{
 	    initCC(cardsInCommunity);
 	}
     CommunityCallStats(const CommunityCallStats& covered, const CommunityPlus& withCommunity, const CommunityPlus& onlycommunity)
-        : PlayStats(withCommunity,onlycommunity)
-        ,CallStats(withCommunity,onlycommunity,static_cast<int8>(7-covered.moreCards))
+        :
+        CallStats(withCommunity,onlycommunity,static_cast<int8>(7-covered.winloss_counter.moreCards))
     {
-        initCC(static_cast<int8>(7-covered.moreCards));
+        initCC(static_cast<int8>(7-covered.winloss_counter.moreCards));
         showdownIndex = covered.showdownIndex;
         showdownCount = covered.showdownCount;
         showdownMax = covered.showdownMax;
@@ -129,7 +129,7 @@ public:
             myHands[i].result.valueset = covered.myHands[i].result.valueset;
             myHands[i].result.revtiebreak = covered.myHands[i].result.revtiebreak;
         }
-        statCount = covered.statCount;
+        winloss_counter.statCount = covered.winloss_counter.statCount;
         bSortedHands = covered.bSortedHands;
     }
 
