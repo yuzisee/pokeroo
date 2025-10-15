@@ -244,8 +244,8 @@ void CommunityCallStats::Analyze()
         }
         if( expectedDealt != countedDealt )
         {
-            myStrength.DisplayHand(std::cerr);
-            oppStrength.DisplayHand(std::cerr);
+            HandPlus::DisplayHand(std::cerr, myStrength.hand_logic.hand_impl);
+            HandPlus::DisplayHand(std::cerr, oppStrength.hand_logic.hand_impl);
             std::cerr << "Maybe you didn't deal out proper hands" << endl;
             exit(1);
         }
@@ -317,9 +317,7 @@ void CommunityCallStats::Analyze()
                             std::cout << "+" << std::flush;
                         //float64 ttt = myWins[statIndex].loss+myWins[statIndex].splits+myWins[statIndex].wins;
                         //if( ttt >= myChancesEach - 2 || ttt == 0 )
-                                HandPlus uPrint;
-                                uPrint.SetUnique(oHave);
-                                uPrint.DisplayHand(std::cout);
+                                HandPlus::DisplayHand(std::cout, oHave);
                                 std::cout.precision(4);
                                 std::cout << "{" << (statIndex-1) << "}" << myWins[statIndex-1].loss << " l + " <<
                                 myWins[statIndex-1].splits << " s + " << myWins[statIndex-1].wins << " w = " <<

@@ -67,15 +67,11 @@ void ThresholdStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
                 logFile.open((ViewPlayer().GetIdent() + ".Thresh.txt").c_str());
             }
             logFile << endl;
-            HandPlus convertOutput;
-            if( !(convertOutput == h) )
+            if( !(Hand::EMPTY_HAND == h) )
             {
-                convertOutput.SetUnique(h);
-                convertOutput.DisplayHand(logFile);
+                HandPlus::DisplayHand(logFile, h);
                 logFile << "community" << endl;
-
             }
-
             else
             {
                     logFile << "==========#" << ViewTable().handnum << "==========" << endl;
@@ -134,12 +130,8 @@ float64 MultiThresholdStrategy::MakeBet()
                 logFile.open((ViewPlayer().GetIdent() + ".MultiThresh.txt").c_str());
             }
 
-
-            HandPlus convertOutput;
-            convertOutput.SetUnique(ViewDealtHand());
-            convertOutput.DisplayHand(logFile);
+            HandPlus::DisplayHand(logFile, ViewDealtHand().hand_logic.hand_impl);
             logFile << "ThresholdAI" << endl;
-
 
             logFile << multiThreshhold << " = " << w->mean.pct << "^" << (int)(toBeat+redundancy) << endl;
         #endif

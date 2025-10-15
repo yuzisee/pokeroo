@@ -354,12 +354,12 @@ std::cout.precision(old_precision);
 
 
             std::cout << "Cards available to me" << endl;
-            withCommunity.DisplayHand(std::cout);
+            HandPlus::DisplayHand(std::cout, withCommunity.hand_logic.hand_impl);
             std::cout << endl;
 
 
             std::cout << "Cards in community" << endl;
-            onlyCommunity.DisplayHand(std::cout);
+            HandPlus::DisplayHand(std::cout, onlyCommunity.hand_logic.hand_impl);
             std::cout << endl;
 
             std::cout << endl;

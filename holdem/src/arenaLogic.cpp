@@ -172,9 +172,7 @@ void HoldemArena::PrepShowdownRound(const CommunityPlus & community, std::ostrea
 
 		gamelog << "Final Community Cards:" << endl;
 
-        Hand displayCom;
-        displayCom.SetUnique(community.hand_logic.hand_impl);
-        HandPlus::DisplayHand(gamelog, displayCom);
+        HandPlus::DisplayHand(gamelog, community.hand_logic.hand_impl);
         gamelog << endl << endl << endl;
 	}
 }

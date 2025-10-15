@@ -139,7 +139,7 @@ void HoldemArena::RequestCards(GameDeck * myDealer, uint8 numCards, CommunityPlu
         /*
         if( saveCards )
         {
-            intoCards.HandPlus::DisplayHand(*saveCards);
+            HandPlus::DisplayHand(*saveCards, intoCards.hand_logic.hand_impl);
             saveCards->flush();
         }
         */
