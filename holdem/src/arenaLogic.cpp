@@ -357,7 +357,7 @@ void HoldemArena::prepareRound(const CommunityPlus& community, const int8 comSiz
 			Player& withP = *(p[curIndex]);
             if( withP.IsBot() )
             {
-                withP.myStrat->SeeCommunity(community, comSize);
+                withP.myStrat->SeeCommunity(community.hand_impl, comSize);
             }
 		}
 	}while( curIndex != curDealer);

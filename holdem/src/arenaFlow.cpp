@@ -117,7 +117,7 @@ void HoldemArena::RequestCards(GameDeck * myDealer, uint8 numCards, CommunityPlu
     {
 
         for(uint8 n=0;n<numCards;++n)                    {
-            if ((  myDealer->DealCard(intoCards) == 0.0  ))
+            if ((  myDealer->DealCard(intoCards.hand_impl) == 0.0  ))
             {
                 std::cerr << "OUT OF CARDS ERROR" << endl; exit(1);
             }

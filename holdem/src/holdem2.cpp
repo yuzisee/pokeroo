@@ -220,11 +220,9 @@ void CommunityPlus::evaluateStrength()
     {
         if( bFlushSuit >= 0 ) //(bFlushSuit != -1) implies bFlushSuit == 0 .. 3
         {
-
             uint32 sflush;
 
-
-            sflush = cardset[bFlushSuit];
+            sflush = hand_impl.cardset[bFlushSuit];
 
             sflush |= sflush >> 13;//first add ace-low if ace-high exists
 
@@ -249,7 +247,7 @@ void CommunityPlus::evaluateStrength()
 
 
     //EVALUATE QUAD
-    uint32 quads = cardset[0] & cardset[1] & cardset[2] & cardset[3];
+    uint32 quads = hand_impl.cardset[0] & hand_impl.cardset[1] & hand_impl.cardset[2] & hand_impl.cardset[3];
 
     if (quads > 0)
     {
@@ -292,7 +290,7 @@ void CommunityPlus::evaluateStrength()
 
             //There is a flush
             strength = HoldemConstants::FLUSH;
-            valueset = cardset[bFlushSuit];
+            valueset = hand_impl.cardset[bFlushSuit];
 
             //Just like cleanLastTwo()
             int8 shiftCount = 1; //for consistency at least with
@@ -466,7 +464,7 @@ void CommunityPlus::AppendUnique(const HandPlus& h)
 		{
 			for(int8 cd=0;cd<4;++cd)
 			{
-				uint32 theCard = cardset[cd] & HoldemUtil::CARDORDER[i];
+				uint32 theCard = hand_impl.cardset[cd] & HoldemUtil::CARDORDER[i];
 				if( theCard > 0)
 				{
 					AddToHand(cd,i,theCard);
@@ -605,16 +603,16 @@ void CommunityPlus::SetUnique(const Hand& h)
 void CommunityPlus::preEvalStrength()
 {
   #ifdef HARDCORE_SPEEDUP
-    flushCount[0] = __builtin_popcount(cardset[0]) - 5;
-    flushCount[1] = __builtin_popcount(cardset[1]) - 5;
-    flushCount[2] = __builtin_popcount(cardset[2]) - 5;
-    flushCount[3] = __builtin_popcount(cardset[3]) - 5;
+    flushCount[0] = __builtin_popcount(hand_impl.cardset[0]) - 5;
+    flushCount[1] = __builtin_popcount(hand_impl.cardset[1]) - 5;
+    flushCount[2] = __builtin_popcount(hand_impl.cardset[2]) - 5;
+    flushCount[3] = __builtin_popcount(hand_impl.cardset[3]) - 5;
   #else
 	uint32 tempforflush[4];
     for(int8 i=0;i<4;++i)
     {
         flushCount[i] = -5;
-        tempforflush[i] = cardset[i];
+        tempforflush[i] = hand_impl.cardset[i];
     }
   #endif
 
@@ -662,7 +660,7 @@ void CommunityPlus::preEvalStrength()
     if( 0 <= flushCount[2] ) bFlushSuit = 2;
     if( 0 <= flushCount[3] ) bFlushSuit = 3;
 
-    prestraight = cardset[0] | cardset[1] | cardset[2] | cardset[3];
+    prestraight = hand_impl.cardset[0] | hand_impl.cardset[1] | hand_impl.cardset[2] | hand_impl.cardset[3];
 }
 
 void CommunityPlus::SetUnique(const HandPlus& h)
