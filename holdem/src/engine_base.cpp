@@ -180,6 +180,7 @@ void OrderedDeck::SetEmpty()
 }
 
 
+// TODO(from joseph): Do we need to clear `addendSum` / `justDealt` / `addendSameSuit` also? How do we know if it's necessary or not?
 void DealableOrderedDeck::UndealAll()
 {
 	deck_impl.SetEmpty();

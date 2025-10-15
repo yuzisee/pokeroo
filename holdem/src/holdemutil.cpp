@@ -150,14 +150,14 @@ template int64_t HoldemUtil::nchoosep_selftest<int64_t>(const int32, int32);
 template int32 HoldemUtil::nchoosep_selftest<int32>(const int32, int32);
 template float64 HoldemUtil::nchoosep_selftest<float64>(const int32, int32);
 
-void HandPlus::DisplayHand(std::ostream& logFile) const
+void HandPlus::DisplayHand(std::ostream& logFile, const Hand& h)
 {
 
 	uint32 temp[4];
 
     for(int8 i=0;i<4;++i)
     {
-        temp[i] = hand_impl.cardset[i];
+        temp[i] = h.cardset[i];
     }
 
     for(int8 val=2;val<=14;++val)

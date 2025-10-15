@@ -92,11 +92,11 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 #endif
 #ifdef LOGPOSITION
     logFile << endl;
-    HandPlus convertOutput;
+    Hand convertOutput;
     if( !(h == Hand::EMPTY_HAND) )
     {
         convertOutput.SetUnique(h);
-        convertOutput.DisplayHand(logFile);
+        HandPlus::DisplayHand(logFile, convertOutput);
         logFile << "community" << endl;
 
     }
@@ -251,9 +251,9 @@ void PositionalStrategy::setupPosition()
 {
 #ifdef LOGPOSITION
     logFile << endl << "*" << endl;
-    HandPlus convertOutput;
-    convertOutput.SetUnique(ViewDealtHand());
-    convertOutput.DisplayHand(logFile);
+    Hand convertOutput;
+    convertOutput.SetUnique(ViewDealtHand().hand_logic.hand_impl);
+    HandPlus::DisplayHand(logFile, convertOutput);
 #endif
 
 

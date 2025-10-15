@@ -81,7 +81,7 @@ void CommunityCallStats::Compare(const float64 occ)
 
     ///TODO: WTF If I use Reset(oppStrength) then it fails to SetUnique correctly the valueset field.
     newEntry.result.strength = oppStrength.strength;
-    newEntry.result.valueset = oppStrength.valueset;
+    newEntry.result.valueset = oppStrength.hand_logic.valueset;
     newEntry.result.revtiebreak = newEntry.a*52+newEntry.b;
     ++showdownIndex;
     if( incr > 1 )
