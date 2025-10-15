@@ -49,6 +49,7 @@ private:
 
 	void preEvalStrength();
     void cleanLastTwo();
+    void cleanLastTwo_twoPair();
 public:
     static const CommunityPlus EMPTY_COMPLUS;
 
