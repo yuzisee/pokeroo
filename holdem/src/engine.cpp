@@ -151,16 +151,16 @@ void DealRemainder::CleanStats()
 void DealRemainder::OmitSet(const CommunityPlus& setOne, const CommunityPlus& setTwo)
 {//Note: Sorting is done by OmitCards
 
-    if( setOne.IsEmpty() )
+    if( setOne.hand_logic.IsEmpty() )
     {//This is used especially by aiInformation
-        addendSum.SetUnique(setTwo.hand_impl);
-        deck_impl.OmitCards(setTwo.hand_impl); UpdateSameSuits();
+        addendSum.SetUnique(setTwo.hand_logic.hand_impl);
+        deck_impl.OmitCards(setTwo.hand_logic.hand_impl); UpdateSameSuits();
     }else
     {
-        addendSum.SetUnique(setOne.hand_impl);//usually onlyCommunity?
-        deck_impl.OmitCards(setOne.hand_impl); UpdateSameSuits();
-        addendSum.SetUnique(setTwo.hand_impl);
-        deck_impl.OmitCards(setTwo.hand_impl); UpdateSameSuits();
+        addendSum.SetUnique(setOne.hand_logic.hand_impl);//usually onlyCommunity?
+        deck_impl.OmitCards(setOne.hand_logic.hand_impl); UpdateSameSuits();
+        addendSum.SetUnique(setTwo.hand_logic.hand_impl);
+        deck_impl.OmitCards(setTwo.hand_logic.hand_impl); UpdateSameSuits();
     }
 
 }

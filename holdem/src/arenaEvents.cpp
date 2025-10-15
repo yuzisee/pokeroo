@@ -671,7 +671,7 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const Commun
 
     if( comp > best || comp == best ) //Better hand or tie
     {
-        broadcastHand(playerHand.hand_impl,curIndex);
+        broadcastHand(playerHand.hand_logic.hand_impl, curIndex);
         if( bVerbose )
         {
             gamelog << endl << withP.GetIdent() << flush;
@@ -679,9 +679,9 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const Commun
                 gamelog << " also has: " << flush;
             else
                 gamelog << " is ahead with: " << flush;
-            HandPlus viewHand;
-            viewHand.SetUnique(playerHand);
-            viewHand.DisplayHand(gamelog);
+            Hand viewHand;
+            viewHand.SetUnique(playerHand.hand_logic.hand_impl);
+            HandPlus::DisplayHand(gamelog, viewHand);
             gamelog << endl << "Trying to stay alive, makes " << flush;
             comp.DisplayHandBig(gamelog); //comp.DisplayHandText(gamelog);
         }
@@ -692,14 +692,14 @@ void HoldemArenaShowdown::RevealHandAllIns(const ShowdownRep& comp, const Commun
     else
     {///Distinctly defeated
      //  http://www.texasholdem-poker.com/holdem_rules.php
-        broadcastHand(playerHand.hand_impl,curIndex);
+        broadcastHand(playerHand.hand_logic.hand_impl, curIndex);
         if( bVerbose )
         {
             gamelog << endl << withP.GetIdent() << flush;
             gamelog << " turns over " << flush;
-            HandPlus viewHand;
-            viewHand.SetUnique(playerHand);
-            viewHand.DisplayHand(gamelog);
+            Hand viewHand;
+            viewHand.SetUnique(playerHand.hand_logic.hand_impl);
+            HandPlus::DisplayHand(gamelog, viewHand);
             gamelog << endl << "Is eliminated after making only" << flush;
             comp.DisplayHandBig(gamelog); //comp.DisplayHandText(gamelog);
         }
@@ -732,7 +732,7 @@ Reveal HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Commun
 				///We set the allIn, since this player "IsInHand()"
 				PlayerAllIn(withP) = myPot;
 
-				broadcastHand(playerHand.hand_impl,curIndex);
+				broadcastHand(playerHand.hand_logic.hand_impl, curIndex);
                 comp.DisplayHandText(revealAction);
 				if( bVerbose )
 				{
@@ -740,9 +740,9 @@ Reveal HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Commun
 
 					gamelog << endl << withP.GetIdent() << flush;
 					gamelog << " reveals: " << flush;
-                    			HandPlus viewHand;
-					viewHand.SetUnique(playerHand);
-					viewHand.DisplayHand(gamelog);
+					Hand viewHand;
+					viewHand.SetUnique(playerHand.hand_logic.hand_impl);
+					HandPlus::DisplayHand(gamelog, viewHand);
 					gamelog << endl << "Making," << flush;
 					comp.DisplayHandBig(gamelog); //comp.DisplayHandText(gamelog);
 				}
@@ -755,16 +755,16 @@ Reveal HoldemArenaShowdown::RevealHandMain(const ShowdownRep& comp, const Commun
 			else if( comp == best ) //can only split, if not beaten later
 			{
 
-				broadcastHand(playerHand.hand_impl,curIndex);
+				broadcastHand(playerHand.hand_logic.hand_impl, curIndex);
                 comp.DisplayHandText(revealAction);
 				if( bVerbose )
 				{
-					HandPlus viewHand;
+					Hand viewHand;
 
 					gamelog << endl << withP.GetIdent() << flush;
 					gamelog << " turns up: ";
-					viewHand.SetUnique(playerHand);
-					viewHand.DisplayHand(gamelog); // viewHand.DisplayHandBig(gamelog);
+					viewHand.SetUnique(playerHand.hand_logic.hand_impl);
+					HandPlus::DisplayHand(gamelog, viewHand); // viewHand.DisplayHandBig(gamelog);
 					gamelog << endl << "Split... " << flush;
 					comp.DisplayHand(gamelog); //comp.DisplayHandText(gamelog);
 					gamelog << endl;
@@ -802,7 +802,7 @@ Reveal HoldemArenaShowdown::RevealHand(const CommunityPlus & playerHand, const C
 
     CommunityPlus withHandP;
 
-    if( playerHand.IsEmpty() )
+    if( playerHand.hand_logic.IsEmpty() )
     {
         comp.SetMuck();
     }else
