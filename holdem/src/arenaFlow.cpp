@@ -117,7 +117,7 @@ void HoldemArena::RequestCards(GameDeck * myDealer, uint8 numCards, CommunityPlu
     {
 
         for(uint8 n=0;n<numCards;++n)                    {
-            if ((  myDealer->DealCard(intoCards.hand_impl) == 0.0  ))
+            if ((  myDealer->DealCard(intoCards.hand_logic.hand_impl) == 0.0  ))
             {
                 std::cerr << "OUT OF CARDS ERROR" << endl; exit(1);
             }
@@ -139,7 +139,7 @@ void HoldemArena::RequestCards(GameDeck * myDealer, uint8 numCards, CommunityPlu
         /*
         if( saveCards )
         {
-            intoCards.HandPlus::DisplayHand(*saveCards);
+            HandPlus::DisplayHand(*saveCards, intoCards.hand_logic.hand_impl);
             saveCards->flush();
         }
         */
@@ -229,8 +229,7 @@ void HoldemArena::DealAllHands(GameDeck * tableDealer, std::ostream & holecardsD
 				}
 				#endif
 				;;
-
-                dealHandP.HandPlus::DisplayHand(holecardsData);
+                HandPlus::DisplayHand(holecardsData, dealHandP.hand_logic.hand_impl);
                 holecardsData << withP.GetIdent().c_str() << endl;
             }
         }
@@ -404,7 +403,7 @@ int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop, std::ostream &gamel
     {
         gamelog << endl;
         gamelog << "Flop:\t" << flush;
-        flop.HandPlus::DisplayHand(gamelog);
+        HandPlus::DisplayHand(gamelog, flop.hand_logic.hand_impl);
         gamelog << "   " << flush;
 
     }
@@ -425,7 +424,7 @@ int8 HoldemArena::PlayRound_Turn(const CommunityPlus & flop, const DeckLocation 
         gamelog << endl;
         gamelog << "Turn:\t" << flush;
 
-        flop.HandPlus::DisplayHand(gamelog);
+        HandPlus::DisplayHand(gamelog, flop.hand_logic.hand_impl);
         HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
         gamelog << "   " << flush;
     }
@@ -449,7 +448,7 @@ int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation
         gamelog << endl;
         gamelog << "River:\t" << flush;
 
-        flop.HandPlus::DisplayHand(gamelog);
+        HandPlus::DisplayHand(gamelog, flop.hand_logic.hand_impl);
         HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
         gamelog << " " << flush;
 

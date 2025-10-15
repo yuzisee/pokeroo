@@ -30,7 +30,8 @@
 using std::endl;
 
 
-class CommunityPlus : public virtual HandPlus //greater strength wins, then greater valueset
+// greater strength wins, then greater valueset
+class CommunityPlus
 {
 private:
     uint32 prestraight;
@@ -51,6 +52,7 @@ private:
     void cleanLastTwo();
     void cleanLastTwo_twoPair();
 public:
+  HandPlus hand_logic;
     static const CommunityPlus EMPTY_COMPLUS;
 
 
@@ -107,7 +109,7 @@ class ShowdownRep
 			comp.SetUnique(utilHand);
 			comp.evaluateStrength();
 			strength = comp.strength;
-			valueset = comp.valueset;
+			valueset = comp.hand_logic.valueset;
 		}
 
 
@@ -117,7 +119,7 @@ class ShowdownRep
 			comp.SetUnique(*h);
 			comp.evaluateStrength();
 			strength = comp.strength;
-			valueset = comp.valueset;
+			valueset = comp.hand_logic.valueset;
 		}
 
 		void swap(ShowdownRep& other) noexcept
@@ -198,7 +200,7 @@ class ShowdownRep
 
     bool IsMuck()
     {
-        return( (strength == 0) && (valueset == 0) && (revtiebreak == 0) && comp.IsEmpty() );
+        return( (strength == 0) && (valueset == 0) && (revtiebreak == 0) && comp.hand_logic.IsEmpty() );
     }
 
     void SetMuck()
@@ -214,7 +216,7 @@ class ShowdownRep
         comp.SetUnique(*h);
         comp.evaluateStrength();
         strength = comp.strength;
-        valueset = comp.valueset;
+        valueset = comp.hand_logic.valueset;
     }
 
 	CommunityPlus comp;

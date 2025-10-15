@@ -362,12 +362,9 @@ void ConsoleStrategy::showSituation()
     UI_DESCRIPTOR << "Position Strength of first bet = " << (int)(ViewTable().NumberAtFirstActionOfRound().total) << endl ;
     UI_DESCRIPTOR << endl ;
 
-	UI_DESCRIPTOR << endl << "You ("<< ViewPlayer().GetIdent() <<") have: " << flush;
+    UI_DESCRIPTOR << endl << "You ("<< ViewPlayer().GetIdent() <<") have: " << flush;
 
-
-	HandPlus u;
-	u.SetUnique(ViewDealtHand());
-	u.DisplayHand(UI_DESCRIPTOR);
+    HandPlus::DisplayHand(UI_DESCRIPTOR, ViewDealtHand().hand_logic.hand_impl);
 
 #ifdef INFOASSIST_STRONG
     UI_DESCRIPTOR.precision(4);

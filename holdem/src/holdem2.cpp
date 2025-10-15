@@ -27,7 +27,7 @@ const CommunityPlus CommunityPlus::EMPTY_COMPLUS;
 
 void CommunityPlus::PrintInterpretHand(std::ostream& targetFile) const
 {
-    unsigned long tempv = valueset;
+    unsigned long tempv = this->hand_logic.valueset;
     const char cardNamePlural[13][8]
     =
         {"Deuces","Threes","Fours","Fives","Sixes","Sevens",
@@ -126,17 +126,17 @@ int8 CommunityPlus::CardsInSuit(const int8 a) const
 
 void CommunityPlus::DisplayHand(std::ostream& targetFile) const
 {
-	HandPlus::DisplayHand(targetFile);
+	HandPlus::DisplayHand(targetFile, this->hand_logic.hand_impl);
 	targetFile << "\t";
 	targetFile << (int)(strength);
 	targetFile << " : ";
-	targetFile << valueset;
+	targetFile << this->hand_logic.valueset;
 	targetFile << endl;
 }
 
 void CommunityPlus::DisplayHandText(std::ostream& targetFile) const
 {
-	HandPlus::DisplayHand(targetFile);
+  HandPlus::DisplayHand(targetFile, this->hand_logic.hand_impl);
 	targetFile << "\t";
     PrintInterpretHand(targetFile);
 	targetFile << endl;
@@ -153,7 +153,7 @@ void CommunityPlus::DisplayHandBig(std::ostream& targetFile) const
     PrintInterpretHand(targetFile);
     targetFile << endl;
 
-	HandPlus::DisplayHandBig(targetFile);
+	hand_logic.DisplayHandBig(targetFile);
 }
 
 void CommunityPlus::cleanLastTwo()
@@ -162,34 +162,34 @@ void CommunityPlus::cleanLastTwo()
     //THIS MEANS WE ALWAYS HAVE SEVEN CARDS!!
     int8 shiftCount = 0;
     // int8 cleanLeft = 2;
-    this->valueset >>= VALUESETSHIFT;
+    this->hand_logic.valueset >>= VALUESETSHIFT;
     #ifdef RTTIASSERT
-       if (this->valueset == 0) { std::cerr << "IMPOSSIBLE! cleanLastTwo() is called only during evaluateStrength() which should have 7 cards" << endl; exit(1); }
+       if (this->hand_logic.valueset == 0) { std::cerr << "IMPOSSIBLE! cleanLastTwo() is called only during evaluateStrength() which should have 7 cards" << endl; exit(1); }
     #endif
 
     for (int8 cleanLeft = 2; cleanLeft > 0; --cleanLeft)
     {
       /*
-        while ((valueset & HoldemConstants::VALUE_ACELOW) == 0)
+        while ((this->hand_logic.valueset & HoldemConstants::VALUE_ACELOW) == 0)
         {
             shiftCount+=2;
-            valueset >>= 2;
+            this->hand_logic.valueset >>= 2;
         }
-        valueset--;
+        this->hand_logic.valueset--;
         */
         // [!TIP]
         // The while-loop above is functionally identical, but much slower
         const int8 slideLowestCard =
-          __builtin_ctz(this->valueset)
+          __builtin_ctz(this->hand_logic.valueset)
           & ~1u; // round down to even: 0,2,4,…,30
         shiftCount += slideLowestCard;
-        this->valueset >>= slideLowestCard;
+        this->hand_logic.valueset >>= slideLowestCard;
         // INVARIANT: The lowest value card is now in the front two least significant digits (so we can subtract one, as the next line does)
-        this->valueset--;
+        this->hand_logic.valueset--;
         // INVARIANT: Whatever was your lowest card now has one fewer
     }
 
-    this->valueset <<= shiftCount + VALUESETSHIFT;
+    this->hand_logic.valueset <<= shiftCount + VALUESETSHIFT;
 }
 
 // Similar to `cleanLastTwo` but only for flushes
@@ -216,8 +216,8 @@ static uint32 cleanLastTwo_flush(const uint32 cardset_for_bFlushSuit, int8 *flus
 }
 
 void CommunityPlus::cleanLastTwo_twoPair() {
-  this->valueset &= ~HoldemUtil::VALUEORDER[nextbestPair];
-  this->valueset &= ~HoldemUtil::VALUEORDER[bestPair];
+  this->hand_logic.valueset &= ~HoldemUtil::VALUEORDER[nextbestPair];
+  this->hand_logic.valueset &= ~HoldemUtil::VALUEORDER[bestPair];
   bestPair-=2; //A TREY becomes 0
   nextbestPair-=2; //A DEUCE becomes -1
   strength = ((bestPair*bestPair+bestPair)>>1) + nextbestPair
@@ -255,7 +255,7 @@ void CommunityPlus::evaluateStrength()
         {
             uint32 sflush;
 
-            sflush = hand_impl.cardset[bFlushSuit];
+            sflush = this->hand_logic.hand_impl.cardset[bFlushSuit];
 
             sflush |= sflush >> 13;//first add ace-low if ace-high exists
 
@@ -270,7 +270,7 @@ void CommunityPlus::evaluateStrength()
                 sflush &= ~((sflush >> 1) & sflush);
 
                 strength = HoldemConstants::ROYAL;
-                valueset = sflush;
+                this->hand_logic.valueset = sflush; // No need to `cleanLastTwo()` because the high card of the Flush is all that's needed for tiebreak
                 return;
             }
 
@@ -280,7 +280,10 @@ void CommunityPlus::evaluateStrength()
 
 
     //EVALUATE QUAD
-    uint32 quads = hand_impl.cardset[0] & hand_impl.cardset[1] & hand_impl.cardset[2] & hand_impl.cardset[3];
+    uint32 quads = this->hand_logic.hand_impl.cardset[0]
+                 & this->hand_logic.hand_impl.cardset[1]
+                 & this->hand_logic.hand_impl.cardset[2]
+                 & this->hand_logic.hand_impl.cardset[3];
 
     if (quads > 0)
     {
@@ -296,13 +299,14 @@ void CommunityPlus::evaluateStrength()
             quads <<= 1;
         }
 
-		valueset = 13;
+        // [NOTE]
+        // Instead of cleanLastTwo() we need only the single largest card that's not in the four-of-a-kind
+        this->hand_logic.valueset = 13;
         while( (prestraight & HoldemConstants::CARD_ACEHIGH) == 0 )
-		{
-			--valueset;
+          {
+            --(this->hand_logic.valueset);
             prestraight <<= 1;
-
-		}
+          }
 
         return;
     }
@@ -312,7 +316,7 @@ void CommunityPlus::evaluateStrength()
     {
         //There is a full-house
         strength = HoldemConstants::BOAT;
-        valueset = bestPair + threeOfAKind * HoldemConstants::CARD_ACEHIGH;
+        this->hand_logic.valueset = bestPair + threeOfAKind * HoldemConstants::CARD_ACEHIGH; // The "effective" `cleanLastTwo()` for a full house should encode only the full house itself
         return;
     }
 
@@ -322,7 +326,7 @@ void CommunityPlus::evaluateStrength()
     {
             //There is a flush
             strength = HoldemConstants::FLUSH;
-            this->valueset = cleanLastTwo_flush(hand_impl.cardset[bFlushSuit], this->flushCount + bFlushSuit);
+            this->hand_logic.valueset = cleanLastTwo_flush(hand_logic.hand_impl.cardset[bFlushSuit], this->flushCount + bFlushSuit);
             return;
     }
 
@@ -331,7 +335,7 @@ void CommunityPlus::evaluateStrength()
     {
         straights &= ~((straights >> 1) & straights);
         strength = HoldemConstants::STRAIGHT;
-        valueset = straights;
+        this->hand_logic.valueset = straights; // no need for a complicated `cleanLastTwo()` here, since the straight itself is the only tiebreak
         return;
     }
 
@@ -339,8 +343,10 @@ void CommunityPlus::evaluateStrength()
     if( threeOfAKind != 0 )
     {
         strength = HoldemConstants::SET_ZERO + threeOfAKind;
-        valueset &= ~HoldemUtil::VALUEORDER[threeOfAKind];
+
+        this->hand_logic.valueset &= ~HoldemUtil::VALUEORDER[threeOfAKind];
         cleanLastTwo();
+
         return;
     }
 
@@ -354,8 +360,10 @@ void CommunityPlus::evaluateStrength()
     if (bestPair != 0)
     {
         strength = bestPair+HoldemConstants::PAIR_ZERO;
-        valueset &= ~HoldemUtil::VALUEORDER[bestPair];
+
+        this->hand_logic.valueset &= ~HoldemUtil::VALUEORDER[bestPair];
         cleanLastTwo();
+
         return;
     }
 
@@ -386,7 +394,7 @@ void CommunityPlus::RemoveFromHand(
 void CommunityPlus::AddToHand(
 	const int8 aSuit,const uint8 aIndex,const uint32 aCard)
 {
-	HandPlus::AddToHand(aSuit,aIndex,aCard);
+  hand_logic.AddToHand(aSuit,aIndex,aCard);
     prestraight |= aCard;
 
 	++flushCount[aSuit];
@@ -396,7 +404,7 @@ void CommunityPlus::AddToHand(
         bFlushSuit = aSuit;
     }
 
-	if(HoldemUtil::VALUEORDER[aIndex] == (HoldemUtil::VALUEORDER[aIndex] & valueset))
+	if(HoldemUtil::VALUEORDER[aIndex] == (HoldemUtil::VALUEORDER[aIndex] & this->hand_logic.valueset))
 	{//Three of a kind
 
 
@@ -437,7 +445,7 @@ void CommunityPlus::AddToHand(
 		//ASSUMPTION: Omaha might need a different system?
 
 
-		if( HoldemUtil::INCRORDER[aIndex] != (HoldemUtil::VALUEORDER[aIndex] & valueset) )
+		if( HoldemUtil::INCRORDER[aIndex] != (HoldemUtil::VALUEORDER[aIndex] & this->hand_logic.valueset) )
 		{///This card matches another! (It couldn't be a trip because of above)
 
 
@@ -458,7 +466,7 @@ void CommunityPlus::AddToHand(
 
 void CommunityPlus::AppendUnique(const Hand& h)
 {
-	HandPlus::AppendUnique(h);
+  hand_logic.AppendUnique(h);
 	preEvalStrength();
 }
 
@@ -472,7 +480,7 @@ void CommunityPlus::AppendUnique(const HandPlus& h)
 		{
 			for(int8 cd=0;cd<4;++cd)
 			{
-				uint32 theCard = hand_impl.cardset[cd] & HoldemUtil::CARDORDER[i];
+				uint32 theCard = this->hand_logic.hand_impl.cardset[cd] & HoldemUtil::CARDORDER[i];
 				if( theCard > 0)
 				{
 					AddToHand(cd,i,theCard);
@@ -484,7 +492,7 @@ void CommunityPlus::AppendUnique(const HandPlus& h)
 
 void CommunityPlus::AppendUnique(const CommunityPlus& h)
 {
-	HandPlus::AppendUnique(h);
+	hand_logic.AppendUnique(h.hand_logic);
 
     prestraight |= h.prestraight;
 
@@ -506,7 +514,7 @@ void CommunityPlus::AppendUnique(const CommunityPlus& h)
 	}
 	/*Note: Since quads override trips in evaluateStrength, we don't have to worry
 	about incorrect trips due to achieving a quad	*/
-	unsigned long mockValueset = valueset;
+	unsigned long mockValueset = this->hand_logic.valueset;
     for(unsigned char i=13;i>threeOfAKind;--i)
     {
 
@@ -538,7 +546,7 @@ void CommunityPlus::AppendUnique(const CommunityPlus& h)
 //Note: Here "fixed" means "corrected"
 	if( threeOfAKind > 0 )
 	{///Only bestPair is fixed
-		mockValueset = valueset;
+		mockValueset = this->hand_logic.valueset;
 		for(unsigned char i=13;i>bestPair;--i)
 		{
 
@@ -556,7 +564,7 @@ void CommunityPlus::AppendUnique(const CommunityPlus& h)
 		{
 			nextbestPair = h.nextbestPair;
 		}
-		mockValueset = valueset;
+		mockValueset = this->hand_logic.valueset;
 		///We count downwards here to find if there is BEST a pair better than what we assume currently
 		for(unsigned char i=13;i>bestPair;--i)
 		{
@@ -588,7 +596,7 @@ void CommunityPlus::AppendUnique(const CommunityPlus& h)
 
 void CommunityPlus::SetEmpty()
 {
-	HandPlus::SetEmpty();
+	hand_logic.SetEmpty();
 	flushCount[0] = -5;
 	flushCount[1] = -5;
 	flushCount[2] = -5;
@@ -603,7 +611,7 @@ void CommunityPlus::SetEmpty()
 
 void CommunityPlus::SetUnique(const Hand& h)
 {
-	HandPlus::SetUnique(h); // convert from Hand to HandPlus
+	hand_logic.SetUnique(h); // convert from Hand to HandPlus
 	//set valueset
 	preEvalStrength(); // convert from HandPlus to CommunityPlus
 }
@@ -611,23 +619,23 @@ void CommunityPlus::SetUnique(const Hand& h)
 void CommunityPlus::preEvalStrength()
 {
   #ifdef HARDCORE_SPEEDUP
-    flushCount[0] = __builtin_popcount(hand_impl.cardset[0]) - 5;
-    flushCount[1] = __builtin_popcount(hand_impl.cardset[1]) - 5;
-    flushCount[2] = __builtin_popcount(hand_impl.cardset[2]) - 5;
-    flushCount[3] = __builtin_popcount(hand_impl.cardset[3]) - 5;
+    flushCount[0] = __builtin_popcount(this->hand_logic.hand_impl.cardset[0]) - 5;
+    flushCount[1] = __builtin_popcount(this->hand_logic.hand_impl.cardset[1]) - 5;
+    flushCount[2] = __builtin_popcount(this->hand_logic.hand_impl.cardset[2]) - 5;
+    flushCount[3] = __builtin_popcount(this->hand_logic.hand_impl.cardset[3]) - 5;
   #else
 	uint32 tempforflush[4];
     for(int8 i=0;i<4;++i)
     {
         flushCount[i] = -5;
-        tempforflush[i] = hand_impl.cardset[i];
+        tempforflush[i] = this->hand_logic.hand_impl.cardset[i];
     }
   #endif
 
 ///If it was last a triple and not a pair, the old set becomes the current pair
 //I guess this is FALSE by default.
 
-    uint32 mockValueset = valueset;
+    uint32 mockValueset = this->hand_logic.valueset;
     for(uint8 i=1;i<=13;++i)
     {
       #ifndef HARDCORE_SPEEDUP
@@ -668,12 +676,15 @@ void CommunityPlus::preEvalStrength()
     if( 0 <= flushCount[2] ) bFlushSuit = 2;
     if( 0 <= flushCount[3] ) bFlushSuit = 3;
 
-    prestraight = hand_impl.cardset[0] | hand_impl.cardset[1] | hand_impl.cardset[2] | hand_impl.cardset[3];
+    prestraight = this->hand_logic.hand_impl.cardset[0]
+                | this->hand_logic.hand_impl.cardset[1]
+                | this->hand_logic.hand_impl.cardset[2]
+                | this->hand_logic.hand_impl.cardset[3];
 }
 
 void CommunityPlus::SetUnique(const HandPlus& h)
 {
-	HandPlus::SetUnique(h);
+	hand_logic.SetUnique(h);
 
 	preEvalStrength(); // convert from HandPlus to CommunityPlus
 
@@ -683,7 +694,7 @@ void CommunityPlus::SetUnique(const HandPlus& h)
 // Please keep this behavior EXACTLY MATCHING the copy constructor of CommunityPlus
 void CommunityPlus::SetUnique(const CommunityPlus& h)
 {
-	HandPlus::SetUnique(h);
+	hand_logic.SetUnique(h.hand_logic);
 
 	prestraight = h.prestraight;
 	bFlushSuit = h.bFlushSuit;

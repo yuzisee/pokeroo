@@ -56,11 +56,11 @@ void PlayStats::Compare(const float64 occ)
 	}
 	else
 	{
-		if ( myStrength.valueset > oppStrength.valueset )
+		if ( myStrength.hand_logic.valueset > oppStrength.hand_logic.valueset )
 		{
 			countWin(occ);
 		}
-		else if (myStrength.valueset == oppStrength.valueset)
+		else if (myStrength.hand_logic.valueset == oppStrength.hand_logic.valueset)
 		{
 			countSplit(occ);
 		}

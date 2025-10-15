@@ -36,8 +36,8 @@ namespace NamedTriviaDeckTests {
 
 
         NamedTriviaDeck o;
-        o.OmitCards(withCommunity.hand_impl);
-        o.DiffHand(onlyCommunity.hand_impl);
+        o.OmitCards(withCommunity.hand_logic.hand_impl);
+        o.DiffHand(onlyCommunity.hand_logic.hand_impl);
         o.sortSuits();
 
 
@@ -3112,7 +3112,7 @@ P0 calls $14.2857 ($60)
         myFlop.AddToHand(card);
 
         std::cout << "Flop:\t" << flush;
-        myFlop.HandPlus::DisplayHand(std::cout);
+        HandPlus::DisplayHand(std::cout, myFlop.hand_logic.hand_impl);
       	std::cout << "(Pot: $" << myTable.GetPotSize() << ")" << endl;
      		myTable.PrintPositions(std::cout);
         /*

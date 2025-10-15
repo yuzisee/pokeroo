@@ -302,31 +302,30 @@ class HandPlus
 	public:
 	Hand hand_impl;
 	uint32 valueset; //use most significant 6 (5? 3?) bits to store info?
-	virtual void DisplayHand(std::ostream&) const;
-    virtual void DisplayHandBig(std::ostream&) const;
+	static void DisplayHand(std::ostream&, const Hand& h);
+    void DisplayHandBig(std::ostream&) const;
 	constexpr uint32 getValueset() const;
 
-  virtual ~HandPlus() = default;
+  ~HandPlus() = default;
 	HandPlus() : hand_impl(Hand()), valueset(0)
 	{
 		SetEmpty();
 	}
-	virtual void AppendUnique(const HandPlus&);
-	virtual void AppendUnique(const Hand&);
-	virtual void SetUnique(const Hand&);
-	virtual void SetUnique(const HandPlus&);
+	void AppendUnique(const HandPlus&);
+	void AppendUnique(const Hand&);
+	void SetUnique(const Hand&);
+	void SetUnique(const HandPlus&);
 
-    virtual void AddToHand(const DeckLocation& deck)
+    void AddToHand(const DeckLocation& deck)
     {	AddToHand(deck.Suit,deck.Rank,deck.Value);	}
-    virtual void RemoveFromHand(const DeckLocation& deck)
+    void RemoveFromHand(const DeckLocation& deck)
     {	RemoveFromHand(deck.Suit,deck.Rank,deck.Value);	}
 
-	virtual void AddToHand(const int8,const uint8,const uint32);
-	virtual void RemoveFromHand(const int8,const uint8,const uint32);
+	void AddToHand(const int8,const uint8,const uint32);
+	void RemoveFromHand(const int8,const uint8,const uint32);
 
-	virtual void SetEmpty();
-	virtual bool IsEmpty() const;
-
+	void SetEmpty();
+	bool IsEmpty() const;
 }
 ;
 

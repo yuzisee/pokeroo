@@ -293,7 +293,7 @@ void StatsManager::Query(DistrShape* dPCT,
     string datafilename = "";
     if( CACHEABLESTAGE >= n )
     {
-        datafilename = dbFileName(withCommunity.hand_impl, onlyCommunity.hand_impl,"W");
+        datafilename = dbFileName(withCommunity.hand_logic.hand_impl, onlyCommunity.hand_logic.hand_impl,"W");
         ifstream dataserial(datafilename.c_str(),std::ios::in | std::ios::binary);
         if( dataserial.is_open() )
         {
@@ -354,12 +354,12 @@ std::cout.precision(old_precision);
 
 
             std::cout << "Cards available to me" << endl;
-            withCommunity.DisplayHand(std::cout);
+            HandPlus::DisplayHand(std::cout, withCommunity.hand_logic.hand_impl);
             std::cout << endl;
 
 
             std::cout << "Cards in community" << endl;
-            onlyCommunity.DisplayHand(std::cout);
+            HandPlus::DisplayHand(std::cout, onlyCommunity.hand_logic.hand_impl);
             std::cout << endl;
 
             std::cout << endl;
@@ -431,7 +431,7 @@ std::cout.precision(old_precision);
 #ifdef GLOBAL_AICACHE_SPEEDUP
     }else
     {///There is a pointer to work with, lastds
-        if( *lastds != 0 && onlyCommunity.hand_impl == dsCommunity.hand_impl )
+        if( *lastds != 0 && onlyCommunity.hand_logic.hand_impl == dsCommunity.hand_logic.hand_impl )
         {
             CommunityCallStats *newds;
             newds = new CommunityCallStats(**lastds,withCommunity,onlyCommunity);
@@ -478,7 +478,7 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
     string datafilename = "";
     if( CACHEABLESTAGE >= n )
     {
-        datafilename = dbFileName(withCommunity.hand_impl, onlyCommunity.hand_impl,"C");
+        datafilename = dbFileName(withCommunity.hand_logic.hand_impl, onlyCommunity.hand_logic.hand_impl,"C");
         ifstream dataserial(datafilename.c_str(),std::ios::in | std::ios::binary);
         if( dataserial.is_open() )
         {
@@ -570,12 +570,12 @@ int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
     tempOpp.SetByIndex(carda);oppTempStrength.AddToHand(tempOpp);
     tempOpp.SetByIndex(cardb);oppTempStrength.AddToHand(tempOpp);
 
-    handOpp.OmitCards(oppTempStrength.hand_impl);
+    handOpp.OmitCards(oppTempStrength.hand_logic.hand_impl);
     handOpp.sortSuits();
 
     NamedTriviaDeck myPockets;
-    myPockets.OmitCards(myStrength.hand_impl);
-    myPockets.DiffHand(oppStrength.hand_impl);
+    myPockets.OmitCards(myStrength.hand_logic.hand_impl);
+    myPockets.DiffHand(oppStrength.hand_logic.hand_impl);
     myPockets.sortSuits();
 
     string oppPocketName = handOpp.NamePockets() ;
@@ -634,7 +634,7 @@ void PreflopCallStats::AutoPopulate()
 
 
     OrderedDeck myPockets;
-    myPockets.OmitCards(myStrength.hand_impl);
+    myPockets.OmitCards(myStrength.hand_logic.hand_impl);
         #ifdef SUPERPROGRESSUPDATE
             std::cout << "Analyzing...                    \r" << flush;
         #endif
