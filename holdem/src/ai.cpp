@@ -198,9 +198,9 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 			++(winloss_counter.statGroup);
 
 				#ifdef PROGRESSUPDATE
-			  	if ((statGroup % PROGRESSUPDATE) == 0) {
-                if (statGroup == 0 ) std::cerr << endl << endl;
-                std::cerr << "\rW: " << statGroup << "/" << statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
+			  	if ((winloss_counter.statGroup % PROGRESSUPDATE) == 0) {
+                if (winloss_counter.statGroup == 0 ) std::cerr << endl << endl;
+                std::cerr << "\rW: " << winloss_counter.statGroup << "/" << winloss_counter.statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 					}
 				#endif
 
@@ -631,7 +631,7 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
 
 #ifdef PROGRESSUPDATE
-    if ((statGroup % PROGRESSUPDATE) == 0) { showProgressUpdate(); }
+    if ((winloss_counter.statGroup % PROGRESSUPDATE) == 0) { showProgressUpdate(); }
 #endif
 
         }

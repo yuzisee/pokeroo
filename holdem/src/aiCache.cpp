@@ -517,7 +517,7 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
     const CallCumulation &newC = *(ds.calc);
 
     #ifdef PROGRESSUPDATE
-    std::cout << endl << "Efficiency: " << ds.handsComputed << " of " << handsTotal << " = " << (std::round(handsTotal / ds.handsComputed * 10.0) / 10.0) << "×" << endl;
+    std::cout << endl << "Efficiency: " << ds.winloss_counter.handsComputed << " of " << handsTotal << " = " << (std::round(handsTotal / ds.winloss_counter.handsComputed * 10.0) / 10.0) << "×" << endl;
     #endif
 
     if( "" != datafilename )
