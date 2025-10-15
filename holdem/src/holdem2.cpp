@@ -192,6 +192,39 @@ void CommunityPlus::cleanLastTwo()
     this->valueset <<= shiftCount + VALUESETSHIFT;
 }
 
+// Similar to `cleanLastTwo` but only for flushes
+static uint32 cleanLastTwo_flush(const uint32 cardset_for_bFlushSuit, int8 *flushcount_out) {
+
+  uint32 final_valueset = cardset_for_bFlushSuit;
+
+  //Just like cleanLastTwo()
+  int8 shiftCount = 1; //for consistency at least with straights
+  // because straights are the other hand that uses `valueset = tempcardset`
+  final_valueset >>= shiftCount;
+  while (*flushcount_out > 0) //While there is a SURPLUS of cards in the flush suit
+  {
+      while ((final_valueset & HoldemConstants::CARD_ACELOW) == 0)
+      {
+          ++shiftCount;
+          final_valueset >>= 1;
+      }
+      (*flushcount_out)--;
+      final_valueset &= ~1;
+  }
+  final_valueset <<= shiftCount;
+  return final_valueset;
+}
+
+void CommunityPlus::cleanLastTwo_twoPair() {
+  this->valueset &= ~HoldemUtil::VALUEORDER[nextbestPair];
+  this->valueset &= ~HoldemUtil::VALUEORDER[bestPair];
+  bestPair-=2; //A TREY becomes 0
+  nextbestPair-=2; //A DEUCE becomes -1
+  strength = ((bestPair*bestPair+bestPair)>>1) + nextbestPair
+                                                  + HoldemConstants::PAIRS_LOW + 1;
+  cleanLastTwo();
+}
+
 // TODO(from joseph): Improve cache locality by loading critical member variables into local variables.
 //                    Especially, `cardset[0..4]`, bFlushSuit, cardset[bFlushSuit]
 void CommunityPlus::evaluateStrength()
@@ -287,28 +320,9 @@ void CommunityPlus::evaluateStrength()
 	///ASSUMPTION: You can't have two flushes
     if( bFlushSuit >= 0 ) //(bFlushSuit != -1) implies bFlushSuit == 0 .. 3
     {
-
             //There is a flush
             strength = HoldemConstants::FLUSH;
-            valueset = hand_impl.cardset[bFlushSuit];
-
-            //Just like cleanLastTwo()
-            int8 shiftCount = 1; //for consistency at least with
-            //straights, the other hand that
-            //uses valueset = tempcardset
-            valueset >>= shiftCount;
-            while (flushCount[bFlushSuit] > 0) //While there is a SURPLUS of cards in the flush suit
-            {
-                while ((valueset & HoldemConstants::CARD_ACELOW) == 0)
-                {
-                    ++shiftCount;
-                    valueset >>= 1;
-                }
-                flushCount[bFlushSuit]--;
-                valueset &= ~1;
-            }
-            valueset <<= shiftCount;
-
+            this->valueset = cleanLastTwo_flush(hand_impl.cardset[bFlushSuit], this->flushCount + bFlushSuit);
             return;
     }
 
@@ -333,13 +347,7 @@ void CommunityPlus::evaluateStrength()
     //EVALUATE TWO-PAIR, PAIR, HIGH CARD...
     if (nextbestPair != 0)
     {
-        valueset &= ~HoldemUtil::VALUEORDER[nextbestPair];
-        valueset &= ~HoldemUtil::VALUEORDER[bestPair];
-        bestPair-=2; //A TREY becomes 0
-        nextbestPair-=2; //A DEUCE becomes -1
-        strength = ((bestPair*bestPair+bestPair)>>1) + nextbestPair
-                                                        + HoldemConstants::PAIRS_LOW + 1;
-        cleanLastTwo();
+        cleanLastTwo_twoPair();
         return;
     }
 
