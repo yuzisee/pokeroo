@@ -24,15 +24,17 @@
 
 #include "engine_base.h"
 
+
 class DealRemainder : public virtual DealableOrderedDeck
 {
 	private:
         Hand addendSum;
         Hand justDealt;
 
-		static float64 executeRecursive(const DealRemainder & refDeck, PlayStats (* const lastStats), const int16 moreCards);
-		static float64 executeDealing(DealRemainder & refDeck, PlayStats (* const lastStats), const int16 moreCards, const float64 fromRuns);
-		static float64 executeComparison(const DealRemainder & refDeck, PlayStats (* const lastStats), const float64 fromRuns);
+        template<typename T> static float64 executeComparison(const DealRemainder & refDeck, T (* const lastStats), const float64 fromRuns);
+        template<typename T> static float64 executeDealing(DealRemainder & deckState, T (* const lastStats), const int16 moreCards, const float64 fromRuns);
+        template<typename T> static float64 executeRecursive(const DealRemainder & refDeck, T (* const lastStats), const int16 moreCards);
+        template<typename T> static float64 AnalyzeComplete_impl(DealRemainder * const dealSource, T * const lastStats);
 
         void UpdateSameSuits();
 
@@ -61,7 +63,8 @@ class DealRemainder : public virtual DealableOrderedDeck
 
 		void CleanStats(); //Releasing memory?
 
-		float64 AnalyzeComplete(PlayStats* instructions);
+		float64 AnalyzeComplete(CallStats* instructions);
+		float64 AnalyzeComplete(WinStats* instructions);
 
         DealRemainder(const DealRemainder & other) : DealableOrderedDeck(other)
         {

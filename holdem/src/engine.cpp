@@ -190,13 +190,14 @@ void DealRemainder::LockNewAddend()
     SetIndependant();
 }
 
-float64 DealRemainder::AnalyzeComplete(PlayStats* lastStats)
+
+template<typename T> float64 DealRemainder::AnalyzeComplete_impl(DealRemainder * const dealSource, T * const lastStats)
 {
     #ifdef PROGRESSUPDATE
     lastStats->handsComputed = 0;
     #endif
 
-	CleanStats();
+	dealSource->CleanStats();
 	float64 returnResult;
 
     const int16 & moreCards = lastStats->moreCards;
@@ -208,15 +209,25 @@ float64 DealRemainder::AnalyzeComplete(PlayStats* lastStats)
 		returnResult = 1;
 	}else
 	{
-		returnResult = executeRecursive(*this,lastStats,lastStats->moreCards);
+		returnResult = DealRemainder::executeRecursive(*dealSource, lastStats,lastStats->moreCards);
 	}
 
 	lastStats->Analyze();
 
 	return returnResult;
 }
+template float64 DealRemainder::AnalyzeComplete_impl<WinStats>(DealRemainder * const, WinStats * const);
+template float64 DealRemainder::AnalyzeComplete_impl<CallStats>(DealRemainder * const, CallStats * const);
 
-float64 DealRemainder::executeComparison(const DealRemainder & refDeck, PlayStats (* const lastStats), const float64 fromRuns)
+float64 DealRemainder::AnalyzeComplete(CallStats * const lastStats) {
+  return AnalyzeComplete_impl(this, lastStats);
+}
+float64 DealRemainder::AnalyzeComplete(WinStats * const lastStats) {
+  return AnalyzeComplete_impl(this, lastStats);
+}
+
+
+template<typename T> float64 DealRemainder::executeComparison(const DealRemainder & refDeck, T (* const lastStats), const float64 fromRuns)
 {
 
     DealRemainder deckState(refDeck);
@@ -262,8 +273,11 @@ float64 DealRemainder::executeComparison(const DealRemainder & refDeck, PlayStat
 
     return totalRuns;
 }
+template float64 DealRemainder::executeComparison<CallStats>(const DealRemainder & refDeck, CallStats (* const lastStats), const float64 fromRuns);
+template float64 DealRemainder::executeComparison<WinStats>(const DealRemainder & refDeck, WinStats (* const lastStats), const float64 fromRuns);
 
-float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* const lastStats), const int16 moreCards, const float64 fromRuns)
+
+template<typename T> float64 DealRemainder::executeDealing(DealRemainder & deckState, T (* const lastStats), const int16 moreCards, const float64 fromRuns)
 {
     if ( moreCards == 1 )
     {
@@ -331,13 +345,14 @@ float64 DealRemainder::executeDealing(DealRemainder & deckState, PlayStats (* co
 
     return totalRuns;
 }
+template float64 DealRemainder::executeDealing<CallStats>(DealRemainder &, CallStats (* const lastStats), const int16, const float64);
+template float64 DealRemainder::executeDealing<WinStats>(DealRemainder &, WinStats (* const lastStats), const int16, const float64);
 
 ///TODO: Remove totalruns? (no need to return something)
 //We need to distinguish between counting occurrences that contribute to statgroup.repeated, versus counting occurrences that contribute to Comparisons,
 //fromRuns is carried through for the purpose of compounding, and is set to 1 when needed during traversal
-float64 DealRemainder::executeRecursive(const DealRemainder & refDeck, PlayStats (* const lastStats), const int16 moreCards)
+template<typename T> float64 DealRemainder::executeRecursive(const DealRemainder & refDeck, T (* const lastStats), const int16 moreCards)
 {
-
     DealRemainder deckState(refDeck);
 
 //The card you just dealt completes an addendSet. The next card must be part of a new addendSet.
@@ -348,5 +363,6 @@ float64 DealRemainder::executeRecursive(const DealRemainder & refDeck, PlayStats
     ///We used to store suitorder here, but we keep a stack during deckState traversal now.
 
     return executeDealing(deckState, lastStats, moreCards, 1);
-
 }
+template float64 DealRemainder::executeRecursive<CallStats>(const DealRemainder & refDeck, CallStats (* const lastStats), const int16);
+template float64 DealRemainder::executeRecursive<WinStats>(const DealRemainder & refDeck, WinStats (* const lastStats), const int16);
