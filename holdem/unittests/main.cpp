@@ -279,7 +279,7 @@ namespace UnitTests {
           onlyCommunity.AddToHand(flop2);
           onlyCommunity.AddToHand(flop3);
 
-          TestCallStats stats(withHand, onlyCommunity, 2); // Start with 2 community cards
+          TestCallStats stats(withHand, onlyCommunity, 3); // Start with 3 community cards: flop1, flop2, flop3
 
           // Test transition at 3 cards remaining (completes community)
           DeckLocation opp1, opp2, turn1;
