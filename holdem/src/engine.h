@@ -23,7 +23,7 @@
 #define HOLDEM_BaseStrategy
 
 #include "engine_base.h"
-
+#include "aiInformation.h"
 
 class DealRemainder : public virtual DealableOrderedDeck
 {
@@ -63,6 +63,7 @@ class DealRemainder : public virtual DealableOrderedDeck
 
 		void CleanStats(); //Releasing memory?
 
+		float64 AnalyzeComplete(CommunityCallStats* instructions);
 		float64 AnalyzeComplete(CallStats* instructions);
 		float64 AnalyzeComplete(WinStats* instructions);
 

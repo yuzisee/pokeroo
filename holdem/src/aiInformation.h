@@ -24,7 +24,7 @@
 
 #include "ai.h"
 //#include "aiCombo.h"
-#include "engine.h"
+#include "engine_base.h"
 
 #include <memory>
 
@@ -72,8 +72,9 @@ public:
 }
 ;
 
-class CommunityCallStats : public virtual CallStats
+class CommunityCallStats
 {
+  friend class DealRemainder;
 private:
 	void initCC(const int8);
     bool bSortedHands;
@@ -94,7 +95,9 @@ protected:
 	float64 showdownMax;
     float64 groupRepeated;
 
-    virtual void fillMyWins(StatResult ** table);
+    PlayStats winloss_counter;
+
+    void fillMyWins(StatResult ** table);
 
     // TODO(from joseph): Mark as `override` if they are overriding...
     virtual int8 realCardsAvailable(const int8 cardsInCommunity) const override final;
@@ -107,13 +110,13 @@ protected:
 public:
 
     CommunityCallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity,
-		int8 cardsInCommunity) : CallStats(hP,onlycommunity,cardsInCommunity)
+		int8 cardsInCommunity) : winloss_counter(hP,onlycommunity)
 	{
 	    initCC(cardsInCommunity);
 	}
     CommunityCallStats(const CommunityCallStats& covered, const CommunityPlus& withCommunity, const CommunityPlus& onlycommunity)
         :
-        CallStats(withCommunity,onlycommunity,static_cast<int8>(7-covered.winloss_counter.moreCards))
+        winloss_counter(withCommunity,onlycommunity)
     {
         initCC(static_cast<int8>(7-covered.winloss_counter.moreCards));
         showdownIndex = covered.showdownIndex;
@@ -135,9 +138,8 @@ public:
 
     virtual ~CommunityCallStats();
 
-	virtual void Analyze() override final;
-
-	virtual void Compare(const float64 occ) override final;
+	void Analyze();
+	void Compare(const float64 occ);
 }
 ;
 
