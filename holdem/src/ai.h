@@ -38,10 +38,17 @@ struct StatRequest
 }
 ;
 
+namespace UnitTests {
+  class TestCallStats;
+  class TestWinStats;
+}
 
 // Shared logic that both `CallStats` and `WinStats` have in common.
 class PlayStats
 {
+  friend class UnitTests::TestCallStats;
+  friend class UnitTests::TestWinStats;
+
   friend class CommunityCallStats;
   friend class PreflopCallStats;
   friend class CallStats;
