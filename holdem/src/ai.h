@@ -23,12 +23,8 @@
 
 #include "debug_flags.h"
 
-
 #include "holdem2.h"
-
 #include "inferentials.h"
-
-
 
 struct StatRequest
 {
@@ -42,6 +38,8 @@ namespace UnitTests {
   class TestCallStats;
   class TestWinStats;
 }
+
+class CommunityCallStats;
 
 // Shared logic that both `CallStats` and `WinStats` have in common.
 class PlayStats
@@ -99,6 +97,17 @@ class PlayStats
 }
 ;
 
+class EnumerateByHoleCards {
+  public:
+
+  PlayStats winloss_counter;
+  CommunityPlus* myUndo;
+	CommunityPlus* oppUndo;
+
+  void DropCard(const DeckLocation);
+  StatRequest NewCard(const DeckLocation, const float64 occ);
+}
+;
 
 class CallStats
 {
@@ -110,14 +119,9 @@ private:
 	void initC(const int8);
 protected:
 
-		virtual void countWin(const float64);
-		virtual void countSplit(const float64);
-		virtual void countLoss(const float64);
-
-	PlayStats winloss_counter;
-	CommunityPlus* myUndo;
-	CommunityPlus* oppUndo;
-
+		void countWin(const float64);
+		void countSplit(const float64);
+		void countLoss(const float64);
 
 
 	CallCumulation* calc;
@@ -139,11 +143,9 @@ public:
      * Discussion:
      *   Once this->myWins has been populated with raw sampled outcomes, this will reorder and accumulate them into a cumulative histogram for O(log(n)) lookup.
      */
-    virtual void Analyze();
-    virtual void Compare(const float64 occ);
+    void Analyze();
+    void Compare(const float64 occ);
 
-    virtual void DropCard(const DeckLocation) final;
-    virtual StatRequest NewCard(const DeckLocation, const float64 occ) final;
 
 	CallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity,
 		int8 cardsInCommunity) : winloss_counter(hP,onlycommunity)
@@ -160,6 +162,16 @@ public:
 }
 ;
 
+class EnumerateByCommunityCards {
+  PlayStats winloss_counter;
+  CommunityPlus* myUndo;
+	CommunityPlus* oppUndo;
+
+	void DropCard(const DeckLocation);
+    StatRequest NewCard(const DeckLocation, const float64 occ);
+}
+;
+
 class WinStats
 {
   friend class DealRemainder;
@@ -172,22 +184,17 @@ protected:
 	void countWin(const float64);
 	void countSplit(const float64);
 	void countLoss(const float64);
-	CommunityPlus* myUndo;
-	CommunityPlus* oppUndo;
 
 	float64 oppReps;
 
     DistrShape *myDistr;
 	StatResult myAvg;
-	PlayStats winloss_counter;
 public:
     const DistrShape& getDistr();
     const StatResult& avgStat() const;
 
 	void Analyze();
 	virtual void Compare(const float64 occ) final;
-	StatRequest NewCard(const DeckLocation, const float64 occ);
-	void DropCard(const DeckLocation);
 
 	WinStats(const CommunityPlus& myP, const CommunityPlus& cP, const int8 cardsInCommunity)
     :
