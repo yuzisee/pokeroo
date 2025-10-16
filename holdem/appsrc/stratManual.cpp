@@ -77,7 +77,7 @@ void ConsoleStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
         rankPCT.wins = 1 - rarity;
         rankPCT.splits = winMean.splits;
         rankPCT.loss = rarity;
-        const float64 scaleTotal = rankPCT.wins + rankPCT.splits + rankPCT.loss;
+        const float64 scaleTotal = rankPCT.forceSum();
         rankPCT.wins /= scaleTotal;
         rankPCT.splits /= scaleTotal;
         rankPCT.loss /= scaleTotal;

@@ -217,10 +217,10 @@ void CommunityCallStats::fillMyWins(StatResult ** table)
 
                 ///Sum{wins,loss,splits,pct}   Average{repeated}
                     #ifdef DEBUGNEWCALLSTATS
-                        if( now.wins + now.splits + now.loss != onlyPrintIfWrong )
+                        if( now.forceSum() != onlyPrintIfWrong )
                         {
-                            std::cout << now.wins + now.splits + now.loss << "  = Sum{wins,loss,splits,pct} = Average{repeated}" << std::endl;
-                            onlyPrintIfWrong = now.wins + now.splits + now.loss;
+                            std::cout << now.forceSum() << "  = Sum{wins,loss,splits,pct} = Average{repeated}" << std::endl;
+                            onlyPrintIfWrong = now.forceSum();
                         }
                     #endif
             }
@@ -315,14 +315,14 @@ void CommunityCallStats::Analyze()
                     ++statIndex;
                         #ifdef DEBUGNEWCALLSTATS
                             std::cout << "+" << std::flush;
-                        //float64 ttt = myWins[statIndex].loss+myWins[statIndex].splits+myWins[statIndex].wins;
+                        //float64 ttt = myWins[statIndex].forceSum();
                         //if( ttt >= myChancesEach - 2 || ttt == 0 )
                                 HandPlus::DisplayHand(std::cout, oHave);
                                 std::cout.precision(4);
                                 std::cout << "{" << (statIndex-1) << "}" << myWins[statIndex-1].loss << " l + " <<
                                 myWins[statIndex-1].splits << " s + " << myWins[statIndex-1].wins << " w = " <<
                                 (myWins[statIndex-1].wins + (myWins[statIndex-1].splits/2)) << " (T:"
-                                << (myWins[statIndex-1].splits + myWins[statIndex-1].loss + myWins[statIndex-1].wins )
+                                << (myWins[statIndex-1].forceSum() )
                                 << ")\tx;"<< myWins[statIndex-1].repeated << std::endl;
 
                     #endif
