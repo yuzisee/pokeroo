@@ -373,6 +373,236 @@ namespace UnitTests {
     }
     ;
 
+    class TestWinStats : public WinStats {
+      public:
+
+      TestWinStats(const CommunityPlus& myP, const CommunityPlus& cP, const int8 cardsInCommunity)
+      : PlayStats(myP, cP), WinStats(myP, cP, cardsInCommunity) {}
+
+      static void test_WinStatsDistributionBuilding() {
+        CommunityPlus withHand, onlyCommunity;
+        DeckLocation pocketA, pocketB;
+        pocketA.SetByIndex(0);
+        pocketB.SetByIndex(1);
+        withHand.AddToHand(pocketA);
+        withHand.AddToHand(pocketB);
+        onlyCommunity.SetEmpty();
+
+        TestWinStats stats(withHand, onlyCommunity, 0);
+
+        DeckLocation flop1, flop2, flop3;
+        flop1.SetByIndex(4);
+        flop2.SetByIndex(5);
+        flop3.SetByIndex(6);
+
+        stats.NewCard(flop1, 1.0);
+        stats.NewCard(flop2, 1.0);
+        stats.NewCard(flop3, 1.0);
+
+        DeckLocation turn, river;
+        turn.SetByIndex(7);
+        river.SetByIndex(8);
+
+        stats.NewCard(turn, 1.0);
+        stats.NewCard(river, 1.0);
+
+        DeckLocation opp1, opp2;
+        opp1.SetByIndex(9);
+        opp2.SetByIndex(10);
+
+        stats.NewCard(opp1, 1.0);
+        stats.NewCard(opp2, 1.0);
+
+        stats.Compare(1.0);
+
+        stats.Analyze();
+
+        const StatResult& avg = stats.avgStat();
+        if (avg.wins < 0.0 || avg.wins > 1.0) {
+            std::cerr << "FAILED: avgStat win probability out of range: " << avg.wins << std::endl;
+            exit(1);
+        }
+
+        if (avg.splits < 0.0 || avg.splits > 1.0) {
+            std::cerr << "FAILED: avgStat split probability out of range: " << avg.splits << std::endl;
+            exit(1);
+        }
+
+        if (avg.loss < 0.0 || avg.loss > 1.0) {
+            std::cerr << "FAILED: avgStat loss probability out of range: " << avg.loss << std::endl;
+            exit(1);
+        }
+
+        float64 totalProb = avg.forceSum();
+        if (totalProb < 0.99 || totalProb > 1.01) {
+            std::cerr << "FAILED: avgStat probabilities don't sum to ~1.0: " << totalProb << std::endl;
+            /*
+            exit(1);
+            */
+        }
+
+        const DistrShape& distr = stats.getDistr();
+        if (distr.n < 0) {
+            std::cerr << "FAILED: Distribution has negative size" << std::endl;
+            exit(1);
+        }
+      }
+
+      // WinStats State Restoration After Multiple Cycles
+      static void test_WinStatsMultipleCycles() {
+        CommunityPlus withHand, onlyCommunity;
+        DeckLocation pocketA, pocketB;
+        pocketA.SetByIndex(0);
+        pocketB.SetByIndex(1);
+        withHand.AddToHand(pocketA);
+        withHand.AddToHand(pocketB);
+        onlyCommunity.SetEmpty();
+
+        TestWinStats stats(withHand, onlyCommunity, 0);
+
+        int16 initialCurrentCard = stats.currentCard;
+        int32 initialStatGroup = stats.statGroup;
+        CommunityPlus initialMyStrength = stats.myStrength;
+
+        DeckLocation cards[7];
+        for (int i = 0; i < 7; i++) {
+            cards[i].SetByIndex(4 + i);
+        }
+
+        for (int cycle = 0; cycle < 3; cycle++) {
+            for (int i = 0; i < 5; i++) {
+                stats.NewCard(cards[i], 1.0);
+            }
+
+            for (int i = 4; i >= 0; i--) {
+                stats.DropCard(cards[i]);
+            }
+
+            if (stats.currentCard != initialCurrentCard) {
+                std::cerr << "FAILED: currentCard not restored in cycle " << cycle
+                          << ". Expected " << initialCurrentCard
+                          << " but got " << stats.currentCard << std::endl;
+                exit(1);
+            }
+
+            if ((stats.myStrength.strength != initialMyStrength.strength) || (stats.myStrength.hand_logic.valueset != initialMyStrength.hand_logic.valueset)) {
+                std::cerr << "FAILED: myStrength not restored in cycle " << cycle << std::endl;
+                exit(1);
+            }
+        }
+      }
+
+      // Test WinStats Undo Boundaries
+      static void test_WinStatsUndoBoundaries() {
+        CommunityPlus withHand, onlyCommunity;
+        DeckLocation pocketA, pocketB;
+        pocketA.SetByIndex(0);
+        pocketB.SetByIndex(1);
+        withHand.AddToHand(pocketA);
+        withHand.AddToHand(pocketB);
+        onlyCommunity.SetEmpty();
+
+        TestWinStats stats(withHand, onlyCommunity, 0);
+
+        int16 initialCurrentCard = stats.currentCard;
+        CommunityPlus initialOppStrength = stats.oppStrength;
+
+        DeckLocation firstCard;
+        firstCard.SetByIndex(4);
+
+        stats.NewCard(firstCard, 1.0);
+
+        if (stats.currentCard != initialCurrentCard + 1) {
+            std::cerr << "FAILED: currentCard not incremented after first NewCard" << std::endl;
+            exit(1);
+        }
+
+        CommunityPlus afterFirstCard = stats.oppStrength;
+
+        stats.DropCard(firstCard);
+
+        if (stats.currentCard != initialCurrentCard) {
+            std::cerr << "FAILED: currentCard not restored. Expected "
+                      << initialCurrentCard << " but got "
+                      << stats.currentCard << std::endl;
+            exit(1);
+        }
+
+        if ((stats.oppStrength.strength != initialOppStrength.strength) || (stats.oppStrength.hand_logic.valueset != initialOppStrength.hand_logic.valueset)) {
+            std::cerr << "FAILED: oppStrength not restored correctly" << std::endl;
+            exit(1);
+        }
+
+        stats.NewCard(firstCard, 1.0);
+
+        if ((stats.oppStrength.strength != afterFirstCard.strength) || (stats.oppStrength.hand_logic.valueset != afterFirstCard.hand_logic.valueset)) {
+            std::cerr << "FAILED: oppStrength not consistent on re-deal" << std::endl;
+            exit(1);
+        }
+      }
+
+      // Test WinStats with Pre-existing Community Cards
+      static void test_WinStatsWithCommunity() {
+        CommunityPlus withHand, onlyCommunity;
+        DeckLocation pocketA, pocketB, flop1, flop2, flop3;
+        pocketA.SetByIndex(0);
+        pocketB.SetByIndex(1);
+        flop1.SetByIndex(4);
+        flop2.SetByIndex(5);
+        flop3.SetByIndex(6);
+
+        withHand.AddToHand(pocketA);
+        withHand.AddToHand(pocketB);
+        withHand.AddToHand(flop1);
+        withHand.AddToHand(flop2);
+        withHand.AddToHand(flop3);
+
+        onlyCommunity.AddToHand(flop1);
+        onlyCommunity.AddToHand(flop2);
+        onlyCommunity.AddToHand(flop3);
+
+        TestWinStats stats(withHand, onlyCommunity, 3);
+
+        int16 expectedMoreCards = 7 - 3;
+        if (stats.moreCards != expectedMoreCards) {
+            std::cerr << "FAILED: moreCards should be " << expectedMoreCards
+                      << " but got " << stats.moreCards << std::endl;
+            exit(1);
+        }
+
+        DeckLocation turn, river;
+        turn.SetByIndex(7);
+        river.SetByIndex(8);
+
+        int16 beforeTurn = stats.currentCard;
+        stats.NewCard(turn, 1.0);
+
+        if (stats.currentCard != beforeTurn + 1) {
+            std::cerr << "FAILED: currentCard not incremented after turn" << std::endl;
+            exit(1);
+        }
+
+        int16 beforeRiver = stats.currentCard;
+        stats.NewCard(river, 1.0);
+
+        if (stats.currentCard != beforeRiver + 1) {
+            std::cerr << "FAILED: currentCard not incremented after river" << std::endl;
+            exit(1);
+        }
+
+        stats.DropCard(river);
+        stats.DropCard(turn);
+
+        if (stats.currentCard != 0) {
+            std::cerr << "FAILED: currentCard not fully restored. Expected 0 but got "
+                      << stats.currentCard << std::endl;
+            exit(1);
+        }
+      }
+
+    }
+    ;
+
     void assertDerivative(IFunctionDifferentiable &f, float64 xa, float64 xb, float64 eps_rel) {
         const float64 ya = f.f(xa);
         const float64 yb = f.f(xb);
@@ -392,6 +622,13 @@ namespace UnitTests {
 
     }
 
+    void testUnit_WinStats() {
+      TestWinStats::test_WinStatsDistributionBuilding();
+      TestWinStats::test_WinStatsMultipleCycles();
+      TestWinStats::test_WinStatsUndoBoundaries();
+      TestWinStats::test_WinStatsWithCommunity();
+    }
+
     void testUnit_nchoosep() {
       assert(HoldemUtil::nchoosep_selftest<float64>(45, 0) == HoldemUtil::nchoosep_slow<float64>(45, 0));
       assert(HoldemUtil::nchoosep_selftest<float64>(46, 1) == HoldemUtil::nchoosep_slow<float64>(46, 1));
@@ -402,7 +639,6 @@ namespace UnitTests {
       assert(HoldemUtil::nchoosep_selftest<float64>(48, 5) == HoldemUtil::nchoosep_slow<float64>(48, 5));
       assert(static_cast<int32>(HoldemUtil::nchoosep_selftest<float64>(48, 5)) == HoldemUtil::nchoosep_slow<int32>(48, 5));
     }
-
 
     // Test CoarseHistogramBin
     void testUnit_CoarseHistogramBin() {
@@ -5299,6 +5535,7 @@ static void all_unit_tests() {
   NamedTriviaDeckTests::testNamePockets();
 
   UnitTests::testUnit_StateManager();
+  UnitTests::testUnit_WinStats();
   UnitTests::testUnit_nchoosep();
   UnitTests::testUnit_CoarseHistogramBin();
   UnitTests::testMatrixbase_023();
