@@ -41,6 +41,10 @@ struct StatRequest
 
 class PlayStats
 {
+  friend class CommunityCallStats;
+  friend class PreflopCallStats;
+  friend class CallStats;
+  friend class WinStats;
   friend class SimpleCompare;
   protected:
 
@@ -94,6 +98,7 @@ class PlayStats
 
 class CallStats : virtual public PlayStats
 {
+    friend class DealRemainder;
     friend class StatsManager;
     //friend void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
     friend class SimpleCompare;
@@ -152,6 +157,7 @@ public:
 
 class WinStats : virtual public PlayStats
 {
+  friend class DealRemainder;
   friend class SimpleCompare;
 private:
 	int8 cardsToNextBet;
