@@ -286,8 +286,8 @@ void CommunityCallStats::Analyze()
     int32 statIndex = 0;
 
 #ifdef DEBUG_STATGROUP
-    std::cout << "@@@@@@@@@@@ StatGroup begins at " << statGroup << endl;
-    std::cout << "@@@@@@@@@@@ StatCount set to " << statCount << endl;
+    std::cout << "@@@@@@@@@@@ StatGroup begins at " << winloss_counter.statGroup << endl;
+    std::cout << "@@@@@@@@@@@ StatCount set to " << winloss_counter.statCount << endl;
 #endif
 
     for( int16 i=0 ; i < 52*52 && statIndex < winloss_counter.statCount ; ++i )
@@ -365,7 +365,7 @@ void CommunityCallStats::showProgressUpdate() const
     {
         std::cout << (int)(indexHistory[1])*52 + indexHistory[0] << std::flush;
     }
-    std::cout << " statGroup=" << statGroup << ", statCount=" << statCount << endl;
+    std::cout << " statGroup=" << winloss_counter.statGroup << ", statCount=" << winloss_counter.statCount << endl;
 #else
     if (winloss_counter.statGroup == 0 ) std::cerr << endl << endl;
     std::cerr << "I: " << showdownIndex << "/" << showdownCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;

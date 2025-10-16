@@ -168,9 +168,9 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 	++(winloss_counter.currentCard);
 
 		#ifdef SUPERPROGRESSUPDATE
-		if( statGroup > 10)
+		if( winloss_counter.statGroup > 10)
 		{
-			std::cout << (currentCard % 10) << " -- " << statGroup << "\n" << flush;
+			std::cout << (winloss_counter.currentCard % 10) << " -- " << winloss_counter.statGroup << "\n" << flush;
 		//}
 		//else
 		//{
@@ -583,9 +583,9 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 	++(winloss_counter.currentCard);
 
 		#ifdef SUPERPROGRESSUPDATE
-		if( currentCard < moreCards )
+		if( winloss_counter.currentCard < winloss_counter.moreCards )
 		{
-			std::cout << (currentCard % 10) << "\r" << flush;
+			std::cout << (winloss_counter.currentCard % 10) << "\r" << flush;
 		//}
 		//else
 		//{
