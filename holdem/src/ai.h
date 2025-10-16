@@ -41,11 +41,8 @@ struct StatRequest
 
 class PlayStats
 {
+  friend class SimpleCompare;
     protected:
-
-		virtual void countWin(const float64);
-		virtual void countSplit(const float64);
-		virtual void countLoss(const float64);
 
 		CommunityPlus myStrength;
 		CommunityPlus oppStrength;
@@ -66,7 +63,6 @@ class PlayStats
 		int32 statGroup;
 
         virtual void Analyze() = 0;
-		virtual void Compare(const float64 occ);
 
         constexpr const CommunityPlus & SeeCommunityOnly() const { return oppStrength; }
         constexpr const CommunityPlus & SeeCommunityAndHand() const { return myStrength; }
@@ -103,9 +99,15 @@ class CallStats : virtual public PlayStats
 {
     friend class StatsManager;
     //friend void StatsManager::Query(CallCumulation& q, const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n);
+    friend class SimpleCompare;
 private:
 	void initC(const int8);
 protected:
+
+    virtual void countWin(const float64);
+		virtual void countSplit(const float64);
+		virtual void countLoss(const float64);
+
 	CommunityPlus* myUndo;
 	CommunityPlus* oppUndo;
 
@@ -130,10 +132,11 @@ public:
      * Discussion:
      *   Once this->myWins has been populated with raw sampled outcomes, this will reorder and accumulate them into a cumulative histogram for O(log(n)) lookup.
      */
-    virtual void Analyze();
+    virtual void Analyze() override;
+    virtual void Compare(const float64 occ);
 
-    virtual void DropCard(const DeckLocation);
-    virtual StatRequest NewCard(const DeckLocation, const float64 occ);
+    virtual void DropCard(const DeckLocation) override;
+    virtual StatRequest NewCard(const DeckLocation, const float64 occ) override;
 
 	CallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity,
 		int8 cardsInCommunity) : PlayStats(hP,onlycommunity)
@@ -152,6 +155,7 @@ public:
 
 class WinStats : virtual public PlayStats
 {
+  friend class SimpleCompare;
 private:
 	int8 cardsToNextBet;
 	void initW(const int8);
@@ -171,9 +175,10 @@ public:
     const DistrShape& getDistr();
     const StatResult& avgStat() const;
 
-	virtual void Analyze();
-	virtual StatRequest NewCard(const DeckLocation, const float64 occ);
-	virtual void DropCard(const DeckLocation);
+	virtual void Analyze() override final;
+	virtual void Compare(const float64 occ) final;
+	virtual StatRequest NewCard(const DeckLocation, const float64 occ) final;
+	virtual void DropCard(const DeckLocation) final;
 
 	WinStats(const CommunityPlus& myP, const CommunityPlus& cP, const int8 cardsInCommunity)
     : PlayStats(myP, cP)
@@ -190,7 +195,11 @@ public:
 }
 ;
 
-
+class SimpleCompare {
+  public:
+    template<typename T> static void simple_compare(T * const play_stats, const float64);
+}
+;
 
 
 #endif

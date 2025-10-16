@@ -43,44 +43,49 @@ void CallStats::dump_csv_plot(const char * dump_filename)
   }
 #endif
 
-void PlayStats::Compare(const float64 occ)
+void CallStats::Compare(const float64 occ) { SimpleCompare::simple_compare(this, occ); }
+void WinStats::Compare(const float64 occ) { SimpleCompare::simple_compare(this, occ); }
+
+template<typename T> void SimpleCompare::simple_compare(T * const play_stats, const float64 occ)
 {
 
-	if ( myStrength.strength > oppStrength.strength )
+	if ( play_stats->myStrength.strength > play_stats->oppStrength.strength )
 	{
-		countWin(occ);
+		play_stats->countWin(occ);
 	}
-	else if (myStrength.strength < oppStrength.strength)
+	else if (play_stats->myStrength.strength < play_stats->oppStrength.strength)
 	{
-		countLoss(occ);
+		play_stats->countLoss(occ);
 	}
 	else
 	{
-		if ( myStrength.hand_logic.valueset > oppStrength.hand_logic.valueset )
+		if ( play_stats->myStrength.hand_logic.valueset > play_stats->oppStrength.hand_logic.valueset )
 		{
-			countWin(occ);
+			play_stats->countWin(occ);
 		}
-		else if (myStrength.hand_logic.valueset == oppStrength.hand_logic.valueset)
+		else if (play_stats->myStrength.hand_logic.valueset == play_stats->oppStrength.hand_logic.valueset)
 		{
-			countSplit(occ);
+			play_stats->countSplit(occ);
 		}
 		else
 		{
-			countLoss(occ);
+			play_stats->countLoss(occ);
 		}
 	}
 
 }
+template void SimpleCompare::simple_compare<CallStats>(CallStats * const, const float64);
+template void SimpleCompare::simple_compare<WinStats>(WinStats * const, const float64);
 
-void PlayStats::countWin(const float64 occ)
+void CallStats::countWin(const float64 occ)
 {
 	myWins[statGroup].wins += occ;
 }
-void PlayStats::countSplit(const float64 occ)
+void CallStats::countSplit(const float64 occ)
 {
 	myWins[statGroup].splits += occ;
 }
-void PlayStats::countLoss(const float64 occ)
+void CallStats::countLoss(const float64 occ)
 {
 	myWins[statGroup].loss += occ;
 }
@@ -88,22 +93,20 @@ void PlayStats::countLoss(const float64 occ)
 void WinStats::countSplit(const float64 occ)
 {
     float64 dOccRep = oppReps * occ;
-	PlayStats::countSplit(dOccRep);
+    myWins[statGroup].splits += dOccRep; // i.e. `PlayStats::countSplit(dOccRep);`
 	myAvg.splits += dOccRep * myWins[statGroup].repeated;
-
 }
 void WinStats::countLoss(const float64 occ)
 {
     float64 dOccRep = oppReps * occ;
-	PlayStats::countLoss(dOccRep);
+    myWins[statGroup].loss += dOccRep; // i.e. `PlayStats::countLoss(dOccRep);`
 	myAvg.loss += dOccRep * myWins[statGroup].repeated;
 }
 void WinStats::countWin(const float64 occ)
 {
     float64 dOccRep = oppReps * occ;
-	PlayStats::countWin(dOccRep);
+    myWins[statGroup].wins += dOccRep; // i.e.  `PlayStats::countWin(dOccRep);`
 	myAvg.wins += dOccRep * myWins[statGroup].repeated;
-
 }
 
 // [!NOTE]
