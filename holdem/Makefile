@@ -28,8 +28,8 @@ BUILD_DIR = objs
 BIN_DIR = bin
 LIB_DIR = lib
 
-
-CORE_OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(wildcard src/*.cpp)) appsrc/stratManual.o
+ENTRYPOINT_OBJS = appsrc/stratManual.o
+CORE_OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(wildcard src/*.cpp)) $(ENTRYPOINT_OBJS)
 
 BUILT_OBJS := $(wildcard $(BUILD_DIR)/*.o)
 BUILD_DEPS = $(patsubst $(BUILD_DIR)/%.o,$(BUILD_DIR)/%.d,$(BUILT_OBJS))
@@ -123,7 +123,7 @@ echoreleasearchive:
 	@echo holdemdb.zip
 
 clean:
-	rm -R $(BUILD_DIR)
+	rm -R $(ENTRYPOINT_OBJS) $(BUILD_DIR)
 
 depends:
 	make $(BUILD_DEPS)
