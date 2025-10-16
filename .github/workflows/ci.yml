@@ -33,7 +33,7 @@ jobs:
   automated_build:
     name: 'Build (see Makefile)'
     runs-on: 'ubuntu-24.04'
-    timeout-minutes: 11
+    timeout-minutes: 12
     # Installing ctags can take anywhere from 1 minute to 6+ minutes!!
     steps:
     - uses: actions/checkout@v5
@@ -64,7 +64,7 @@ jobs:
   automated_tests:
     name: 'Test (see holdem/unittests/main.cpp)'
     runs-on: 'ubuntu-24.04'
-    timeout-minutes: 12
+    timeout-minutes: 11
     # We have to assume that apt-get calls can sometimes take 6+ minutes
     steps:
     - uses: actions/checkout@v5
