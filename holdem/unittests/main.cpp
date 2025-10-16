@@ -4732,7 +4732,7 @@ Playing as S
         const float64 dw = testC.get_d_WinProb_dbetSize(unreasonableBet);
         const float64 dl = testC.get_d_LoseProb_dbetSize(unreasonableBet);
 
-        assert(testC.ViewShape(unreasonableBet).wins + testC.ViewShape(unreasonableBet).splits + testC.ViewShape(unreasonableBet).loss == 1.0);
+        assert(testC.ViewShape(unreasonableBet).forceSum() == 1.0);
 
         assert(w == 1.0);
         assert(l+w == 1.0);
@@ -4858,7 +4858,7 @@ Playing as S
         const float64 dw = testC.get_d_WinProb_dbetSize(testBet);
         const float64 dl = testC.get_d_LoseProb_dbetSize(testBet);
 
-        assert(testC.ViewShape(testBet).wins + testC.ViewShape(testBet).splits + testC.ViewShape(testBet).loss == 1.0);
+        assert(testC.ViewShape(testBet).forceSum() == 1.0);
 
         assert(w < 0.1);
         assert(l+w > 0.86);

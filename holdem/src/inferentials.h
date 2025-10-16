@@ -226,9 +226,13 @@ class StatResult
         }
     }
 
+    constexpr float64 forceSum() const {
+      return wins + splits + loss;
+    }
+
     void forceRenormalize()
     {
-        const float64 scaleTotal = wins + splits + loss;
+        const float64 scaleTotal = forceSum();
         wins /= scaleTotal;
         splits /= scaleTotal;
         loss /= scaleTotal;

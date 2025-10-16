@@ -51,7 +51,7 @@ class DealRemainder : public virtual DealableOrderedDeck
          *    The number of possible hands that were dealt.
          *    (This function will call itself recursively and use this returned count to multiply-accumulate up the stack.)
          */
-        virtual float64 DealCard(Hand&);
+        virtual float64 DealCard(Hand&) override final;
 
 
    		void OmitSet(const CommunityPlus& setOne, const CommunityPlus& setTwo);

@@ -97,13 +97,13 @@ protected:
     virtual void fillMyWins(StatResult ** table);
 
     // TODO(from joseph): Mark as `override` if they are overriding...
-    virtual int8 realCardsAvailable(const int8 cardsInCommunity) const;
-    virtual void showProgressUpdate() const;
-    virtual void setCurrentGroupOcc(const float64 occ);
-    virtual void mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex);
-    virtual void myAddCard(const DeckLocation& cardinfo, const int16 undoIndex){}
-	virtual void myEval(){}
-	virtual void myRevert(const int16 undoIndex){}
+    virtual int8 realCardsAvailable(const int8 cardsInCommunity) const override final;
+    virtual void showProgressUpdate() const override final;
+    virtual void setCurrentGroupOcc(const float64 occ) override final;
+    virtual void mynoAddCard(const DeckLocation& cardinfo, const int16 undoIndex) override final;
+    virtual void myAddCard(const DeckLocation& cardinfo, const int16 undoIndex) override final {}
+	virtual void myEval() override final {}
+	virtual void myRevert(const int16 undoIndex) override final {}
 public:
 
     CommunityCallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity,
@@ -135,9 +135,9 @@ public:
 
     virtual ~CommunityCallStats();
 
-	virtual void Analyze();
+	virtual void Analyze() override final;
 
-	virtual void Compare(const float64 occ);
+	virtual void Compare(const float64 occ) override final;
 }
 ;
 

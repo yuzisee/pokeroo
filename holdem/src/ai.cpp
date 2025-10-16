@@ -162,6 +162,7 @@ const StatResult& WinStats::avgStat() const
 StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 {
     StatRequest r;
+    const int16 undoCurrentCard = currentCard;
 	++currentCard;
 
 		#ifdef SUPERPROGRESSUPDATE
@@ -179,8 +180,8 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 	if (currentCard <= cardsToNextBet )
 		//That is, we're dealing deal out the first batch (counting the upcoming card as dealt)
 	{
-		myUndo[currentCard-1].SetUnique(myStrength);
-		oppUndo[currentCard-1].SetUnique(oppStrength);
+		myUndo[undoCurrentCard].SetUnique(myStrength);
+		oppUndo[undoCurrentCard].SetUnique(oppStrength);
 		myStrength.AddToHand(deck);
 		oppStrength.AddToHand(deck);
 		if (currentCard == cardsToNextBet)
@@ -224,13 +225,13 @@ StatRequest WinStats::NewCard(const DeckLocation deck, float64 occ)
 	{
 		short cardsLeft = moreCards - currentCard + 1;
 		//don't count the upcoming card as dealt
-		oppUndo[currentCard-1].SetUnique(oppStrength);
+		oppUndo[undoCurrentCard].SetUnique(oppStrength);
 		oppStrength.AddToHand(deck);
 
 
 		if( cardsLeft >= 3 )
 		{
-			myUndo[currentCard-1].SetUnique(myStrength);
+			myUndo[undoCurrentCard].SetUnique(myStrength);
 			myStrength.AddToHand(deck);
 			if (cardsLeft == 3) //Complete community (three cards were left: the river, and the opponent's two)
 			{
@@ -414,9 +415,9 @@ void CallStats::Analyze()
 	{
 		myWins[k].genPCT();
 		#ifdef DEBUGASSERT
-          if( myWins[k].loss+myWins[k].splits+myWins[k].wins > myChancesEach + 0.1 || myWins[k].loss+myWins[k].splits+myWins[k].wins < myChancesEach - 0.1  )
+          if( myWins[k].forceSum() > myChancesEach + 0.1 || myWins[k].forceSum() < myChancesEach - 0.1  )
           {
-              std::cerr << "Failure to generate w+s+l=" << myChancesEach << " with {"<< k <<"}. Instead, w+s+l=" << (myWins[k].loss+myWins[k].splits+myWins[k].wins) << endl;
+              std::cerr << "Failure to generate w+s+l=" << myChancesEach << " with {"<< k <<"}. Instead, w+s+l=" << (myWins[k].forceSum()) << endl;
               exit(1);
           }
 	    #endif
@@ -509,9 +510,9 @@ void CallStats::Analyze()
 	    StatResult& temptarget = calc->cumulation[k];
 
 	    #ifdef DEBUGASSERT
-          if( temptarget.wins + temptarget.splits + temptarget.loss > myChancesEach + 0.1 || temptarget.wins + temptarget.splits + temptarget.loss < myChancesEach - 0.1  )
+          if( temptarget.forceSum() > myChancesEach + 0.1 || temptarget.forceSum() < myChancesEach - 0.1  )
           {
-              std::cerr << "Failure to maintain w+s+l=" << myChancesEach << " after combine step on {"<< k <<"}. Instead, w+s+l=" << (temptarget.wins + temptarget.splits + temptarget.loss) << endl;
+              std::cerr << "Failure to maintain w+s+l=" << myChancesEach << " after combine step on {"<< k <<"}. Instead, w+s+l=" << (temptarget.forceSum()) << endl;
               exit(1);
           }
 	    #endif
@@ -582,6 +583,7 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 
 
 	StatRequest r;
+	const int16 undoCurrentCard = currentCard;
 	++currentCard;
 
 		#ifdef SUPERPROGRESSUPDATE
@@ -596,7 +598,7 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 		#endif
 
 
-	oppUndo[currentCard-1].SetUnique(oppStrength);
+	oppUndo[undoCurrentCard].SetUnique(oppStrength);
 	oppStrength.AddToHand(deck);
 
 	if ( currentCard > 2 )
@@ -612,7 +614,7 @@ StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
 	else
 	{
 
-	    mynoAddCard(deck,currentCard-1);
+	    mynoAddCard(deck, undoCurrentCard);
 	    if ( currentCard == 2 )
         {
 

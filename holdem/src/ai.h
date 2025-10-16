@@ -42,7 +42,7 @@ struct StatRequest
 class PlayStats
 {
   friend class SimpleCompare;
-    protected:
+  protected:
 
 		CommunityPlus myStrength;
 		CommunityPlus oppStrength;
@@ -54,10 +54,7 @@ class PlayStats
 
 		int16 currentCard;
 
-
-
-    public:
-
+  public:
 
 		int16 moreCards;
 		int32 statGroup;
@@ -161,9 +158,9 @@ private:
 	void initW(const int8);
 	void clearDistr();
 protected:
-	virtual void countWin(const float64);
-	virtual void countSplit(const float64);
-	virtual void countLoss(const float64);
+	virtual void countWin(const float64) final;
+	virtual void countSplit(const float64) final;
+	virtual void countLoss(const float64) final;
 	CommunityPlus* myUndo;
 	CommunityPlus* oppUndo;
 
@@ -190,7 +187,6 @@ public:
 		initW(cardsInCommunity);
 	}
     ~WinStats();
-
 
 }
 ;
