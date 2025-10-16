@@ -28,8 +28,9 @@ BUILD_DIR = objs
 BIN_DIR = bin
 LIB_DIR = lib
 
-
-CORE_OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(wildcard src/*.cpp)) appsrc/stratManual.o
+# CONSOLE_OBJS are included in CORE_OBJS for now, but it's the only file that tries to take input from `stdin` and for specialized builds (interfaceC.dll, unit tests, etc.) we'd like to figure out in the future how to leave out the console input code since it's unnecessary in those codepaths
+CONSOLE_OBJS = appsrc/stratManual.o
+CORE_OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(wildcard src/*.cpp)) $(CONSOLE_OBJS)
 
 BUILT_OBJS := $(wildcard $(BUILD_DIR)/*.o)
 BUILD_DEPS = $(patsubst $(BUILD_DIR)/%.o,$(BUILD_DIR)/%.d,$(BUILT_OBJS))
@@ -123,7 +124,7 @@ echoreleasearchive:
 	@echo holdemdb.zip
 
 clean:
-	rm -R $(BUILD_DIR)
+	rm -R $(CONSOLE_OBJS) $(BUILD_DIR)
 
 depends:
 	make $(BUILD_DEPS)
