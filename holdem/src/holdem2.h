@@ -59,32 +59,32 @@ public:
 	void evaluateStrength();
     char strength;
 
-	virtual void AppendUnique(const Hand&);
-	virtual void AppendUnique(const HandPlus&);
-	virtual void AppendUnique(const CommunityPlus&);
+	void AppendUnique(const Hand&);
+	void AppendUnique(const HandPlus&);
+	void AppendUnique(const CommunityPlus&);
 
 
-    virtual void AddToHand(const DeckLocation& deck)
+    void AddToHand(const DeckLocation& deck)
     {	AddToHand(deck.Suit,deck.Rank,deck.Value);	}
-    virtual void RemoveFromHand(const DeckLocation& deck)
+    void RemoveFromHand(const DeckLocation& deck)
     {	RemoveFromHand(deck.Suit,deck.Rank,deck.Value);	}
 
-	virtual void AddToHand(const int8,const uint8,const uint32);
-	virtual void RemoveFromHand(const int8,const uint8,const uint32);
+	void AddToHand(const int8,const uint8,const uint32);
+	void RemoveFromHand(const int8,const uint8,const uint32);
 
-	virtual void SetUnique(const Hand&);
-	virtual void SetUnique(const HandPlus&);
-	virtual void SetUnique(const CommunityPlus&);
+	void SetUnique(const Hand&);
+	void SetUnique(const HandPlus&);
+	void SetUnique(const CommunityPlus&);
 
-    virtual void SetEmpty();
+    void SetEmpty();
 
     CommunityPlus();
-    virtual ~CommunityPlus() = default;
+    ~CommunityPlus() = default;
 
     int8 CardsInSuit(const int8) const;
-	virtual void DisplayHand(std::ostream&) const;
-	virtual void DisplayHandText(std::ostream&) const;
-    virtual void DisplayHandBig(std::ostream&) const;
+	void DisplayHand(std::ostream&) const;
+	void DisplayHandText(std::ostream&) const;
+    void DisplayHandBig(std::ostream&) const;
     void PrintInterpretHand(std::ostream&) const;
 } // end CommunityPlus
 ;
