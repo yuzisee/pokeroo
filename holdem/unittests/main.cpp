@@ -412,7 +412,11 @@ namespace UnitTests {
 
         stats.NewCard(opp1, 1.0);
         stats.NewCard(opp2, 1.0);
+        stats.Compare(1.0);
 
+        stats.DropCard(opp2);
+        opp2.SetByIndex(11);
+        stats.NewCard(opp2, 1.0);
         stats.Compare(1.0);
 
         stats.Analyze();
@@ -433,12 +437,10 @@ namespace UnitTests {
             exit(1);
         }
 
-        float64 totalProb = avg.forceSum();
-        if (totalProb < 0.99 || totalProb > 1.01) {
-            std::cerr << "FAILED: avgStat probabilities don't sum to ~1.0: " << totalProb << std::endl;
-            /*
+        float64 totalProb = avg.forceSum() * stats.myTotalChances;
+        if (totalProb < 1.99 || totalProb > 2.01) {
+            std::cerr << "FAILED: avgStat should have counted 2.00 instances since we added `opp2` twice so far: " << totalProb << std::endl;
             exit(1);
-            */
         }
 
         const DistrShape& distr = stats.getDistr();
