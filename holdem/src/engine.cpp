@@ -194,13 +194,13 @@ void DealRemainder::LockNewAddend()
 template<typename T> float64 DealRemainder::AnalyzeComplete_impl(DealRemainder * const dealSource, T * const lastStats)
 {
     #ifdef PROGRESSUPDATE
-    lastStats->handsComputed = 0;
+    lastStats->winloss_counter.handsComputed = 0;
     #endif
 
 	dealSource->CleanStats();
 	float64 returnResult;
 
-    const int16 & moreCards = lastStats->moreCards;
+    const int16 & moreCards = lastStats->winloss_counter.moreCards;
 
 
 	if( moreCards == 0 )
@@ -209,7 +209,7 @@ template<typename T> float64 DealRemainder::AnalyzeComplete_impl(DealRemainder *
 		returnResult = 1;
 	}else
 	{
-		returnResult = DealRemainder::executeRecursive(*dealSource, lastStats,lastStats->moreCards);
+		returnResult = DealRemainder::executeRecursive(*dealSource, lastStats,lastStats->winloss_counter.moreCards);
 	}
 
 	lastStats->Analyze();
@@ -249,7 +249,7 @@ template<typename T> float64 DealRemainder::executeComparison(const DealRemainde
 /// ======================================
 
 #ifdef PROGRESSUPDATE
-++(lastStats->handsComputed);
+++(lastStats->winloss_counter.handsComputed);
 #endif
 
         if(r.bNewSet)
