@@ -560,7 +560,7 @@ void CallStats::showProgressUpdate() const
     std::cerr << "C: " << winloss_counter.statGroup << "/" << winloss_counter.statCount << "  \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r" << flush;
 }
 
-void CallStats::DropCard(const DeckLocation deck)
+void EnumerateHoleCards::DropCard(const DeckLocation deck)
 {
 
 	winloss_counter.oppStrength.SetUnique(oppUndo[winloss_counter.currentCard - 1]);
@@ -575,7 +575,7 @@ void CallStats::DropCard(const DeckLocation deck)
 
 }
 
-StatRequest CallStats::NewCard(const DeckLocation deck, float64 occ)
+StatRequest EnumerateHoleCards::NewCard(const DeckLocation deck, float64 occ)
 {
 
 	StatRequest r;

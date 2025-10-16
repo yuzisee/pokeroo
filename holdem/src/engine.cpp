@@ -218,7 +218,11 @@ template<typename T> float64 DealRemainder::AnalyzeComplete_impl(DealRemainder *
 }
 template float64 DealRemainder::AnalyzeComplete_impl<WinStats>(DealRemainder * const, WinStats * const);
 template float64 DealRemainder::AnalyzeComplete_impl<CallStats>(DealRemainder * const, CallStats * const);
+template float64 DealRemainder::AnalyzeComplete_impl<CommunityCallStats>(DealRemainder * const, CommunityCallStats * const);
 
+float64 DealRemainder::AnalyzeComplete(CommunityCallStats * const lastStats) {
+  return AnalyzeComplete_impl(this, lastStats);
+}
 float64 DealRemainder::AnalyzeComplete(CallStats * const lastStats) {
   return AnalyzeComplete_impl(this, lastStats);
 }
