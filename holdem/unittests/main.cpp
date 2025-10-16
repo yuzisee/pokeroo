@@ -130,7 +130,7 @@ namespace UnitTests {
 
     class TestCallStats : public CallStats {
       TestCallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity, int8 cardsInCommunity)
-      : PlayStats(hP,onlycommunity), CallStats(hP, onlycommunity, cardsInCommunity) {}
+      : CallStats(hP, onlycommunity, cardsInCommunity) {}
 
       public:
 
@@ -147,8 +147,8 @@ namespace UnitTests {
         onlyCommunity.SetEmpty();
 
         TestCallStats stats(withHand, onlyCommunity, 0);
-        int32 initialStatGroup = stats.statGroup;
-        int16 initialCurrentCard = stats.currentCard;
+        int32 initialStatGroup = stats.winloss_counter.statGroup;
+        int16 initialCurrentCard = stats.winloss_counter.currentCard;
 
         // Simulate dealing flop, turn, river with drops
         DeckLocation card1, card2, card3;
@@ -159,11 +159,11 @@ namespace UnitTests {
         // Add 3 cards (flop)
         stats.NewCard(card1, 1.0);
         stats.NewCard(card2, 1.0);
-        int32 stateAfterOpposingHoleCards = stats.statGroup;
+        int32 stateAfterOpposingHoleCards = stats.winloss_counter.statGroup;
         stats.NewCard(card3, 1.0);
 
         // Capture state after flop
-        int16 currentCardAfterThree = stats.currentCard;
+        int16 currentCardAfterThree = stats.winloss_counter.currentCard;
 
         // Drop back to pre-flop
         stats.DropCard(card3);
@@ -171,13 +171,13 @@ namespace UnitTests {
         stats.DropCard(card1);
 
         // expected pre-flop value
-        if (stats.currentCard != initialCurrentCard) {
+        if (stats.winloss_counter.currentCard != initialCurrentCard) {
             std::cerr << "Verify state restored FAILED: Expected currentCard " << initialCurrentCard
-                      << " but got " << stats.currentCard << std::endl;
+                      << " but got " << stats.winloss_counter.currentCard << std::endl;
             exit(1);
         }
-        if ((stats.statGroup != stateAfterOpposingHoleCards) || (stateAfterOpposingHoleCards != initialStatGroup + 1)) {
-            std::cerr << "FAILED: statGroup should be incremented once we cross the hole card boundary " << initialStatGroup << " → " <<  stateAfterOpposingHoleCards << " but got " << stats.statGroup << std::endl;
+        if ((stats.winloss_counter.statGroup != stateAfterOpposingHoleCards) || (stateAfterOpposingHoleCards != initialStatGroup + 1)) {
+            std::cerr << "FAILED: statGroup should be incremented once we cross the hole card boundary " << initialStatGroup << " → " <<  stateAfterOpposingHoleCards << " but got " << stats.winloss_counter.statGroup << std::endl;
             exit(1);
         }
 
@@ -187,15 +187,15 @@ namespace UnitTests {
         stats.NewCard(card2, 1.0);
         stats.NewCard(card3, 1.0);
 
-        if (stats.statGroup != stateAfterOpposingHoleCards + 1) {
+        if (stats.winloss_counter.statGroup != stateAfterOpposingHoleCards + 1) {
             std::cerr << "EXPECT_EQ(stats.statGroup, stateAfterOpposingHoleCards + 1) FAILED: Expected "
-                      << (stateAfterOpposingHoleCards + 1) << " but got " << stats.statGroup << std::endl;
+                      << (stateAfterOpposingHoleCards + 1) << " but got " << stats.winloss_counter.statGroup << std::endl;
             exit(1);
         }
 
-        if (stats.currentCard != currentCardAfterThree) {
+        if (stats.winloss_counter.currentCard != currentCardAfterThree) {
             std::cerr << "FAILED: currentCard not consistent on re-deal. Expected "
-                      << currentCardAfterThree << " but got " << stats.currentCard << std::endl;
+                      << currentCardAfterThree << " but got " << stats.winloss_counter.currentCard << std::endl;
             exit(1);
         }
       }
@@ -213,48 +213,48 @@ namespace UnitTests {
         onlyCommunity.SetEmpty();
 
         TestCallStats stats(withHand, onlyCommunity, 0);
-        int16 initialCurrentCard = stats.currentCard;
-        CommunityPlus initialMyStrength = stats.myStrength;
-        CommunityPlus initialOppStrength = stats.oppStrength;
+        int16 initialCurrentCard = stats.winloss_counter.currentCard;
+        CommunityPlus initialMyStrength = stats.winloss_counter.myStrength;
+        CommunityPlus initialOppStrength = stats.winloss_counter.oppStrength;
 
         // Test first card (currentCard = 0 → 1)
 
         DeckLocation firstCard;
         firstCard.SetByIndex(4);
         stats.NewCard(firstCard, 1.0);
-        if (stats.currentCard != 1) {
+        if (stats.winloss_counter.currentCard != 1) {
           exit(1);
         }
-        if (stats.currentCard != initialCurrentCard + 1) {
-            std::cerr << "EXPECT_EQ(" << static_cast<int>(stats.currentCard) << ", 1);" << std::endl;
+        if (stats.winloss_counter.currentCard != initialCurrentCard + 1) {
+            std::cerr << "EXPECT_EQ(" << static_cast<int>(stats.winloss_counter.currentCard) << ", 1);" << std::endl;
             exit(1);
         }
 
         // Drop immediately - should handle currentCard-1 = 0
         stats.DropCard(firstCard);
-        // EXPECT_EQ(stats.currentCard, 0);
-        if (stats.currentCard != initialCurrentCard) {
+        // EXPECT_EQ(stats.winloss_counter.currentCard, 0);
+        if (stats.winloss_counter.currentCard != initialCurrentCard) {
             std::cerr << "FAILED: currentCard not restored to " << initialCurrentCard
-                      << " after DropCard, got " << stats.currentCard << std::endl;
+                      << " after DropCard, got " << stats.winloss_counter.currentCard << std::endl;
             exit(1);
         }
 
         // Verify myStrength/oppStrength restored correctly
-        if (std::make_tuple(stats.myStrength.strength, stats.myStrength.hand_logic.valueset, stats.myStrength.hand_logic.hand_impl)
+        if (std::make_tuple(stats.winloss_counter.myStrength.strength, stats.winloss_counter.myStrength.hand_logic.valueset, stats.winloss_counter.myStrength.hand_logic.hand_impl)
            !=
            std::make_tuple(initialMyStrength.strength, initialMyStrength.hand_logic.valueset, initialMyStrength.hand_logic.hand_impl)
         ) {
-            stats.myStrength.DisplayHand(std::cerr);
+            stats.winloss_counter.myStrength.DisplayHand(std::cerr);
             std::cerr << "FAILED: myStrength not restored correctly" << std::endl;
             initialMyStrength.DisplayHand(std::cerr);
             exit(1);
         }
         // ... add assertions comparing to initial state ...
-        if (std::make_tuple(stats.oppStrength.strength, stats.oppStrength.hand_logic.valueset, stats.oppStrength.hand_logic.hand_impl)
+        if (std::make_tuple(stats.winloss_counter.oppStrength.strength, stats.winloss_counter.oppStrength.hand_logic.valueset, stats.winloss_counter.oppStrength.hand_logic.hand_impl)
            !=
            std::make_tuple(initialOppStrength.strength, initialOppStrength.hand_logic.valueset, initialOppStrength.hand_logic.hand_impl)
         ) {
-            stats.oppStrength.DisplayHand(std::cerr);
+            stats.winloss_counter.oppStrength.DisplayHand(std::cerr);
             std::cerr << "FAILED: oppStrength not restored correctly" << std::endl;
             initialOppStrength.DisplayHand(std::cerr);
             exit(1);
@@ -287,36 +287,36 @@ namespace UnitTests {
           opp2.SetByIndex(7);
           turn1.SetByIndex(8);
 
-          int32 initialStatGroup = stats.statGroup;
+          int32 initialStatGroup = stats.winloss_counter.statGroup;
 
           stats.NewCard(opp1, 1.0); // 4 cards left
           stats.NewCard(opp2, 1.0); // 3 cards left - triggers "Complete community"
           // Verify batch transition occurred
-          int32 statGroupAfterOppHoleCards = stats.statGroup;
+          int32 statGroupAfterOppHoleCards = stats.winloss_counter.statGroup;
 
           stats.NewCard(turn1, 1.0); // 2 cards left - different batch logic
-          // int32 statGroupAfterOpp1 = stats.statGroup;
+          // int32 statGroupAfterOpp1 = stats.winloss_counter.statGroup;
 
           // Drop back through transition
           stats.DropCard(turn1);
           // Verify state fully restored
-          if ((stats.statGroup != statGroupAfterOppHoleCards) || (initialStatGroup + 1 != statGroupAfterOppHoleCards)) {
+          if ((stats.winloss_counter.statGroup != statGroupAfterOppHoleCards) || (initialStatGroup + 1 != statGroupAfterOppHoleCards)) {
               std::cerr << "FAILED: statGroup continues counting each time we generate new opposition hole cards. Expected "
-                        << statGroupAfterOppHoleCards << " but got " << stats.statGroup << std::endl;
+                        << statGroupAfterOppHoleCards << " but got " << stats.winloss_counter.statGroup << std::endl;
               exit(1);
           }
 
           stats.DropCard(opp2);
-          if (stats.statGroup != statGroupAfterOppHoleCards) {
+          if (stats.winloss_counter.statGroup != statGroupAfterOppHoleCards) {
               std::cerr << "FAILED: statGroup should remain until we get NewCard different opposing hole cards. Expected "
-                        << statGroupAfterOppHoleCards << " but got " << stats.statGroup << std::endl;
+                        << statGroupAfterOppHoleCards << " but got " << stats.winloss_counter.statGroup << std::endl;
               exit(1);
           }
 
           stats.DropCard(opp1);
-          if (stats.statGroup != statGroupAfterOppHoleCards) {
+          if (stats.winloss_counter.statGroup != statGroupAfterOppHoleCards) {
               std::cerr << "FAILED: only NewCard can cause statGroup to increment! Expected "
-                        << statGroupAfterOppHoleCards << " but got " << stats.statGroup << std::endl;
+                        << statGroupAfterOppHoleCards << " but got " << stats.winloss_counter.statGroup << std::endl;
               exit(1);
           }
       }
@@ -329,14 +329,14 @@ namespace UnitTests {
         TestCallStats stats(emptyHand, emptyCommunity, 0);
 
         // Verify initial state
-        if (stats.currentCard != 0) {
-            std::cerr << "FAILED: Initial currentCard should be 0, got " << stats.currentCard << std::endl;
+        if (stats.winloss_counter.currentCard != 0) {
+            std::cerr << "FAILED: Initial currentCard should be 0, got " << stats.winloss_counter.currentCard << std::endl;
             exit(1);
         }
 
         int16 expectedMoreCards = 7 - 0;
-        if (stats.moreCards != expectedMoreCards) {
-            std::cerr << "FAILED: Initial moreCards should be " << expectedMoreCards << ", got " << stats.moreCards << std::endl;
+        if (stats.winloss_counter.moreCards != expectedMoreCards) {
+            std::cerr << "FAILED: Initial moreCards should be " << expectedMoreCards << ", got " << stats.winloss_counter.moreCards << std::endl;
             exit(1);
         }
 
@@ -350,13 +350,13 @@ namespace UnitTests {
         // ... initialize ...
         card.SetByIndex(4);
 
-        int16 beforeCurrentCard = stats.currentCard;
-        int32 beforeStatGroup = stats.statGroup;
+        int16 beforeCurrentCard = stats.winloss_counter.currentCard;
+        int32 beforeStatGroup = stats.winloss_counter.statGroup;
 
         stats.NewCard(card, 1.0);
 
         // Verify no crashes, proper state initialization
-        if (stats.currentCard != beforeCurrentCard + 1) {
+        if (stats.winloss_counter.currentCard != beforeCurrentCard + 1) {
             std::cerr << "FAILED: currentCard not incremented after NewCard" << std::endl;
             exit(1);
         }
@@ -364,9 +364,9 @@ namespace UnitTests {
         stats.DropCard(card);
 
         // Verify clean restoration
-        if (stats.currentCard != beforeCurrentCard) {
+        if (stats.winloss_counter.currentCard != beforeCurrentCard) {
             std::cerr << "FAILED: currentCard not restored after DropCard. Expected "
-                      << beforeCurrentCard << " but got " << stats.currentCard << std::endl;
+                      << beforeCurrentCard << " but got " << stats.winloss_counter.currentCard << std::endl;
             exit(1);
         }
       }
@@ -374,10 +374,10 @@ namespace UnitTests {
     ;
 
     class TestWinStats : public WinStats {
-      public:
-
       TestWinStats(const CommunityPlus& myP, const CommunityPlus& cP, const int8 cardsInCommunity)
-      : PlayStats(myP, cP), WinStats(myP, cP, cardsInCommunity) {}
+      : WinStats(myP, cP, cardsInCommunity) {}
+
+      public:
 
       static void test_WinStatsDistributionBuilding() {
         CommunityPlus withHand, onlyCommunity;
@@ -437,7 +437,7 @@ namespace UnitTests {
             exit(1);
         }
 
-        float64 totalProb = avg.forceSum() * stats.myTotalChances;
+        float64 totalProb = avg.forceSum() * stats.winloss_counter.myTotalChances;
         if (totalProb < 1.99 || totalProb > 2.01) {
             std::cerr << "FAILED: avgStat should have counted 2.00 instances since we added `opp2` twice so far: " << totalProb << std::endl;
             exit(1);
@@ -462,9 +462,9 @@ namespace UnitTests {
 
         TestWinStats stats(withHand, onlyCommunity, 0);
 
-        int16 initialCurrentCard = stats.currentCard;
-        int32 initialStatGroup = stats.statGroup;
-        CommunityPlus initialMyStrength = stats.myStrength;
+        int16 initialCurrentCard = stats.winloss_counter.currentCard;
+        int32 initialStatGroup = stats.winloss_counter.statGroup;
+        CommunityPlus initialMyStrength = stats.winloss_counter.myStrength;
 
         DeckLocation cards[7];
         for (int i = 0; i < 7; i++) {
@@ -480,14 +480,14 @@ namespace UnitTests {
                 stats.DropCard(cards[i]);
             }
 
-            if (stats.currentCard != initialCurrentCard) {
+            if (stats.winloss_counter.currentCard != initialCurrentCard) {
                 std::cerr << "FAILED: currentCard not restored in cycle " << cycle
                           << ". Expected " << initialCurrentCard
-                          << " but got " << stats.currentCard << std::endl;
+                          << " but got " << stats.winloss_counter.currentCard << std::endl;
                 exit(1);
             }
 
-            if ((stats.myStrength.strength != initialMyStrength.strength) || (stats.myStrength.hand_logic.valueset != initialMyStrength.hand_logic.valueset)) {
+            if ((stats.winloss_counter.myStrength.strength != initialMyStrength.strength) || (stats.winloss_counter.myStrength.hand_logic.valueset != initialMyStrength.hand_logic.valueset)) {
                 std::cerr << "FAILED: myStrength not restored in cycle " << cycle << std::endl;
                 exit(1);
             }
@@ -506,38 +506,38 @@ namespace UnitTests {
 
         TestWinStats stats(withHand, onlyCommunity, 0);
 
-        int16 initialCurrentCard = stats.currentCard;
-        CommunityPlus initialOppStrength = stats.oppStrength;
+        int16 initialCurrentCard = stats.winloss_counter.currentCard;
+        CommunityPlus initialOppStrength = stats.winloss_counter.oppStrength;
 
         DeckLocation firstCard;
         firstCard.SetByIndex(4);
 
         stats.NewCard(firstCard, 1.0);
 
-        if (stats.currentCard != initialCurrentCard + 1) {
+        if (stats.winloss_counter.currentCard != initialCurrentCard + 1) {
             std::cerr << "FAILED: currentCard not incremented after first NewCard" << std::endl;
             exit(1);
         }
 
-        CommunityPlus afterFirstCard = stats.oppStrength;
+        CommunityPlus afterFirstCard = stats.winloss_counter.oppStrength;
 
         stats.DropCard(firstCard);
 
-        if (stats.currentCard != initialCurrentCard) {
+        if (stats.winloss_counter.currentCard != initialCurrentCard) {
             std::cerr << "FAILED: currentCard not restored. Expected "
                       << initialCurrentCard << " but got "
-                      << stats.currentCard << std::endl;
+                      << stats.winloss_counter.currentCard << std::endl;
             exit(1);
         }
 
-        if ((stats.oppStrength.strength != initialOppStrength.strength) || (stats.oppStrength.hand_logic.valueset != initialOppStrength.hand_logic.valueset)) {
+        if ((stats.winloss_counter.oppStrength.strength != initialOppStrength.strength) || (stats.winloss_counter.oppStrength.hand_logic.valueset != initialOppStrength.hand_logic.valueset)) {
             std::cerr << "FAILED: oppStrength not restored correctly" << std::endl;
             exit(1);
         }
 
         stats.NewCard(firstCard, 1.0);
 
-        if ((stats.oppStrength.strength != afterFirstCard.strength) || (stats.oppStrength.hand_logic.valueset != afterFirstCard.hand_logic.valueset)) {
+        if ((stats.winloss_counter.oppStrength.strength != afterFirstCard.strength) || (stats.winloss_counter.oppStrength.hand_logic.valueset != afterFirstCard.hand_logic.valueset)) {
             std::cerr << "FAILED: oppStrength not consistent on re-deal" << std::endl;
             exit(1);
         }
@@ -566,9 +566,9 @@ namespace UnitTests {
         TestWinStats stats(withHand, onlyCommunity, 3);
 
         int16 expectedMoreCards = 7 - 3;
-        if (stats.moreCards != expectedMoreCards) {
+        if (stats.winloss_counter.moreCards != expectedMoreCards) {
             std::cerr << "FAILED: moreCards should be " << expectedMoreCards
-                      << " but got " << stats.moreCards << std::endl;
+                      << " but got " << stats.winloss_counter.moreCards << std::endl;
             exit(1);
         }
 
@@ -576,18 +576,18 @@ namespace UnitTests {
         turn.SetByIndex(7);
         river.SetByIndex(8);
 
-        int16 beforeTurn = stats.currentCard;
+        int16 beforeTurn = stats.winloss_counter.currentCard;
         stats.NewCard(turn, 1.0);
 
-        if (stats.currentCard != beforeTurn + 1) {
+        if (stats.winloss_counter.currentCard != beforeTurn + 1) {
             std::cerr << "FAILED: currentCard not incremented after turn" << std::endl;
             exit(1);
         }
 
-        int16 beforeRiver = stats.currentCard;
+        int16 beforeRiver = stats.winloss_counter.currentCard;
         stats.NewCard(river, 1.0);
 
-        if (stats.currentCard != beforeRiver + 1) {
+        if (stats.winloss_counter.currentCard != beforeRiver + 1) {
             std::cerr << "FAILED: currentCard not incremented after river" << std::endl;
             exit(1);
         }
@@ -595,9 +595,9 @@ namespace UnitTests {
         stats.DropCard(river);
         stats.DropCard(turn);
 
-        if (stats.currentCard != 0) {
+        if (stats.winloss_counter.currentCard != 0) {
             std::cerr << "FAILED: currentCard not fully restored. Expected 0 but got "
-                      << stats.currentCard << std::endl;
+                      << stats.winloss_counter.currentCard << std::endl;
             exit(1);
         }
       }

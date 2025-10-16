@@ -38,9 +38,17 @@ struct StatRequest
 }
 ;
 
+namespace UnitTests {
+  class TestCallStats;
+  class TestWinStats;
+}
 
+// Shared logic that both `CallStats` and `WinStats` have in common.
 class PlayStats
 {
+  friend class UnitTests::TestCallStats;
+  friend class UnitTests::TestWinStats;
+
   friend class CommunityCallStats;
   friend class PreflopCallStats;
   friend class CallStats;
@@ -63,8 +71,6 @@ class PlayStats
 		int16 moreCards;
 		int32 statGroup;
 
-        virtual void Analyze() = 0;
-
         constexpr const CommunityPlus & SeeCommunityOnly() const { return oppStrength; }
         constexpr const CommunityPlus & SeeCommunityAndHand() const { return myStrength; }
 
@@ -83,9 +89,7 @@ class PlayStats
 
 		//Returns whether or not you need to reset addend
 
-		virtual StatRequest NewCard(const DeckLocation, const float64 occ) = 0;
-		virtual void DropCard(const DeckLocation) = 0;
-        virtual ~PlayStats();
+    ~PlayStats();
 
 
 		#ifdef PROGRESSUPDATE
@@ -96,7 +100,7 @@ class PlayStats
 ;
 
 
-class CallStats : virtual public PlayStats
+class CallStats
 {
     friend class DealRemainder;
     friend class StatsManager;
@@ -106,10 +110,11 @@ private:
 	void initC(const int8);
 protected:
 
-    virtual void countWin(const float64);
+		virtual void countWin(const float64);
 		virtual void countSplit(const float64);
 		virtual void countLoss(const float64);
 
+	PlayStats winloss_counter;
 	CommunityPlus* myUndo;
 	CommunityPlus* oppUndo;
 
@@ -134,14 +139,14 @@ public:
      * Discussion:
      *   Once this->myWins has been populated with raw sampled outcomes, this will reorder and accumulate them into a cumulative histogram for O(log(n)) lookup.
      */
-    virtual void Analyze() override;
+    virtual void Analyze();
     virtual void Compare(const float64 occ);
 
-    virtual void DropCard(const DeckLocation) override;
-    virtual StatRequest NewCard(const DeckLocation, const float64 occ) override;
+    virtual void DropCard(const DeckLocation) final;
+    virtual StatRequest NewCard(const DeckLocation, const float64 occ) final;
 
 	CallStats(const CommunityPlus& hP, const CommunityPlus& onlycommunity,
-		int8 cardsInCommunity) : PlayStats(hP,onlycommunity)
+		int8 cardsInCommunity) : winloss_counter(hP,onlycommunity)
 	{
 		initC(cardsInCommunity);
 	}
@@ -155,7 +160,7 @@ public:
 }
 ;
 
-class WinStats : virtual public PlayStats
+class WinStats
 {
   friend class DealRemainder;
   friend class SimpleCompare;
@@ -164,9 +169,9 @@ private:
 	void initW(const int8);
 	void clearDistr();
 protected:
-	virtual void countWin(const float64) final;
-	virtual void countSplit(const float64) final;
-	virtual void countLoss(const float64) final;
+	void countWin(const float64);
+	void countSplit(const float64);
+	void countLoss(const float64);
 	CommunityPlus* myUndo;
 	CommunityPlus* oppUndo;
 
@@ -174,21 +179,23 @@ protected:
 
     DistrShape *myDistr;
 	StatResult myAvg;
+	PlayStats winloss_counter;
 public:
     const DistrShape& getDistr();
     const StatResult& avgStat() const;
 
-	virtual void Analyze() override final;
+	void Analyze();
 	virtual void Compare(const float64 occ) final;
-	virtual StatRequest NewCard(const DeckLocation, const float64 occ) final;
-	virtual void DropCard(const DeckLocation) final;
+	StatRequest NewCard(const DeckLocation, const float64 occ);
+	void DropCard(const DeckLocation);
 
 	WinStats(const CommunityPlus& myP, const CommunityPlus& cP, const int8 cardsInCommunity)
-    : PlayStats(myP, cP)
-    ,
+    :
     oppReps(1.0)
     ,
     myDistr(0)
+    ,
+    winloss_counter(myP, cP)
 	{
 		initW(cardsInCommunity);
 	}

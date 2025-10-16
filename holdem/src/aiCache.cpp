@@ -517,7 +517,7 @@ void StatsManager::QueryDefense(CallCumulation& q, const CommunityPlus& withComm
     const CallCumulation &newC = *(ds.calc);
 
     #ifdef PROGRESSUPDATE
-    std::cout << endl << "Efficiency: " << ds.handsComputed << " of " << handsTotal << " = " << (std::round(handsTotal / ds.handsComputed * 10.0) / 10.0) << "×" << endl;
+    std::cout << endl << "Efficiency: " << ds.winloss_counter.handsComputed << " of " << handsTotal << " = " << (std::round(handsTotal / ds.winloss_counter.handsComputed * 10.0) / 10.0) << "×" << endl;
     #endif
 
     if( "" != datafilename )
@@ -574,8 +574,8 @@ int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
     handOpp.sortSuits();
 
     NamedTriviaDeck myPockets;
-    myPockets.OmitCards(myStrength.hand_logic.hand_impl);
-    myPockets.DiffHand(oppStrength.hand_logic.hand_impl);
+    myPockets.OmitCards(winloss_counter.myStrength.hand_logic.hand_impl);
+    myPockets.DiffHand(winloss_counter.oppStrength.hand_logic.hand_impl);
     myPockets.sortSuits();
 
     string oppPocketName = handOpp.NamePockets() ;
@@ -615,14 +615,14 @@ int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
     CommunityPlus emptyHand;
 
     // === Write the result into myWins[statGroup] ... ===
-    StatResult * entryTarget = myWins+statGroup;
+    StatResult * entryTarget = winloss_counter.myWins + winloss_counter.statGroup;
     DistrShape distrShape(DistrShape::newEmptyDistrShape());
     StatsManager::Query(&distrShape, oppTempStrength, emptyHand, 0);
     *entryTarget = distrShape.mean;
     entryTarget->repeated = dOcc;
 
     // === ... and then increment statGroup ===
-    ++statGroup;
+    ++(winloss_counter.statGroup);
 
     return dOcc;
 }
@@ -630,11 +630,11 @@ int8 PreflopCallStats::popSet(const int8 carda, const int8 cardb)
 
 void PreflopCallStats::AutoPopulate()
 {
-    statGroup = 0; // Initialize statGroup here. Each call to popSet() will increment it.
+    winloss_counter.statGroup = 0; // Initialize statGroup here. Each call to popSet() will increment it.
 
 
     OrderedDeck myPockets;
-    myPockets.OmitCards(myStrength.hand_logic.hand_impl);
+    myPockets.OmitCards(winloss_counter.myStrength.hand_logic.hand_impl);
         #ifdef SUPERPROGRESSUPDATE
             std::cout << "Analyzing...                    \r" << flush;
         #endif
@@ -658,7 +658,7 @@ void PreflopCallStats::AutoPopulate()
             popSet(carda,cards); // (carda,cards) is suited
         }
     }
-    statCount = statGroup;
+    winloss_counter.statCount = winloss_counter.statGroup;
     //myChancesEach =
         #ifdef SUPERPROGRESSUPDATE
             std::cout << "Deciding.....                    \r" << endl;
@@ -672,7 +672,7 @@ void PreflopCallStats::initPC()
 
 //    int8 cardsAvail = realCardsAvailable(0);
 
-    myChancesEach = 1;
+    winloss_counter.myChancesEach = 1;
 }
 
 
