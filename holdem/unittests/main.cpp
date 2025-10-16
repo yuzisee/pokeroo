@@ -159,10 +159,10 @@ namespace UnitTests {
         // Add 3 cards (flop)
         stats.NewCard(card1, 1.0);
         stats.NewCard(card2, 1.0);
+        int32 stateAfterOpposingHoleCards = stats.statGroup;
         stats.NewCard(card3, 1.0);
 
         // Capture state after flop
-        int32 stateAfterThreeCards = stats.statGroup;
         int16 currentCardAfterThree = stats.currentCard;
 
         // Drop back to pre-flop
@@ -170,19 +170,15 @@ namespace UnitTests {
         stats.DropCard(card2);
         stats.DropCard(card1);
 
+        // expected pre-flop value
         if (stats.currentCard != initialCurrentCard) {
             std::cerr << "Verify state restored FAILED: Expected currentCard " << initialCurrentCard
                       << " but got " << stats.currentCard << std::endl;
             exit(1);
         }
-
-        // expected pre-flop value
-        if (stats.statGroup != initialStatGroup) {
-          /*
-            std::cerr << "FAILED: statGroup not restored. Expected " << initialStatGroup
-                      << " but got " << stats.statGroup << std::endl;
+        if ((stats.statGroup != stateAfterOpposingHoleCards) || (stateAfterOpposingHoleCards != initialStatGroup + 1)) {
+            std::cerr << "FAILED: statGroup should be incremented once we cross the hole card boundary " << initialStatGroup << " → " <<  stateAfterOpposingHoleCards << " but got " << stats.statGroup << std::endl;
             exit(1);
-          */
         }
 
         // Re-deal with different cards - verify no corruption
@@ -191,12 +187,10 @@ namespace UnitTests {
         stats.NewCard(card2, 1.0);
         stats.NewCard(card3, 1.0);
 
-        if (stats.statGroup != stateAfterThreeCards) {
-          /*
-            std::cerr << "EXPECT_EQ(stats.statGroup, stateAfterThreeCards) FAILED: Expected "
-                      << stateAfterThreeCards << " but got " << stats.statGroup << std::endl;
+        if (stats.statGroup != stateAfterOpposingHoleCards + 1) {
+            std::cerr << "EXPECT_EQ(stats.statGroup, stateAfterOpposingHoleCards + 1) FAILED: Expected "
+                      << (stateAfterOpposingHoleCards + 1) << " but got " << stats.statGroup << std::endl;
             exit(1);
-            */
         }
 
         if (stats.currentCard != currentCardAfterThree) {
@@ -272,106 +266,60 @@ namespace UnitTests {
       static void test_BatchTransitions() {
 
           CommunityPlus withHand, onlyCommunity;
-          DeckLocation pocketA, pocketB, flop1, flop2;
+          DeckLocation pocketA, pocketB, flop1, flop2, flop3;
           pocketA.SetByIndex(0);
           pocketB.SetByIndex(1);
           flop1.SetByIndex(4);
           flop2.SetByIndex(5);
+          flop3.SetByIndex(51);
 
           withHand.AddToHand(pocketA);
           withHand.AddToHand(pocketB);
           onlyCommunity.AddToHand(flop1);
           onlyCommunity.AddToHand(flop2);
+          onlyCommunity.AddToHand(flop3);
 
           TestCallStats stats(withHand, onlyCommunity, 2); // Start with 2 community cards
 
           // Test transition at 3 cards remaining (completes community)
-          DeckLocation turn, river, opp1;
-          turn.SetByIndex(6);
-          river.SetByIndex(7);
-          opp1.SetByIndex(8);
+          DeckLocation opp1, opp2, turn1;
+          opp1.SetByIndex(6);
+          opp2.SetByIndex(7);
+          turn1.SetByIndex(8);
 
           int32 initialStatGroup = stats.statGroup;
 
-          stats.NewCard(turn, 1.0); // 4 cards left
-          int32 statGroupAfterTurn = stats.statGroup;
-
-          stats.NewCard(river, 1.0); // 3 cards left - triggers "Complete community"
+          stats.NewCard(opp1, 1.0); // 4 cards left
+          stats.NewCard(opp2, 1.0); // 3 cards left - triggers "Complete community"
           // Verify batch transition occurred
-          int32 statGroupAfterRiver = stats.statGroup;
+          int32 statGroupAfterOppHoleCards = stats.statGroup;
 
-          stats.NewCard(opp1, 1.0); // 2 cards left - different batch logic
+          stats.NewCard(turn1, 1.0); // 2 cards left - different batch logic
           // int32 statGroupAfterOpp1 = stats.statGroup;
 
           // Drop back through transition
-          stats.DropCard(opp1);
+          stats.DropCard(turn1);
           // Verify state fully restored
-          if (stats.statGroup != statGroupAfterRiver) {
-              std::cerr << "FAILED: statGroup not restored after dropping opp1. Expected "
-                        << statGroupAfterRiver << " but got " << stats.statGroup << std::endl;
+          if ((stats.statGroup != statGroupAfterOppHoleCards) || (initialStatGroup + 1 != statGroupAfterOppHoleCards)) {
+              std::cerr << "FAILED: statGroup continues counting each time we generate new opposition hole cards. Expected "
+                        << statGroupAfterOppHoleCards << " but got " << stats.statGroup << std::endl;
               exit(1);
           }
 
-          stats.DropCard(river);
-          /*
-          if (stats.statGroup != statGroupAfterTurn) {
-              std::cerr << "FAILED: statGroup not restored after dropping river. Expected "
-                        << statGroupAfterTurn << " but got " << stats.statGroup << std::endl;
+          stats.DropCard(opp2);
+          if (stats.statGroup != statGroupAfterOppHoleCards) {
+              std::cerr << "FAILED: statGroup should remain until we get NewCard different opposing hole cards. Expected "
+                        << statGroupAfterOppHoleCards << " but got " << stats.statGroup << std::endl;
               exit(1);
           }
-          */
 
-          stats.DropCard(turn);
-          if (stats.statGroup != initialStatGroup) {
-            /*
-              std::cerr << "FAILED: statGroup not fully restored. Expected "
-                        << initialStatGroup << " but got " << stats.statGroup << std::endl;
+          stats.DropCard(opp1);
+          if (stats.statGroup != statGroupAfterOppHoleCards) {
+              std::cerr << "FAILED: only NewCard can cause statGroup to increment! Expected "
+                        << statGroupAfterOppHoleCards << " but got " << stats.statGroup << std::endl;
               exit(1);
-            */
           }
       }
-
-
-      static void test_StatGroupConsistency() {
-        CommunityPlus withHand, onlyCommunity;
-        DeckLocation pocketA, pocketB;
-        pocketA.SetByIndex(0);
-        pocketB.SetByIndex(1);
-        withHand.AddToHand(pocketA);
-        withHand.AddToHand(pocketB);
-        onlyCommunity.SetEmpty();
-
-        TestCallStats stats(withHand, onlyCommunity, 0);
-
-        int32 statGroupHistory[5];
-        DeckLocation cards[5];
-
-        // initialize cards[i]
-        for (int i = 0; i < 5; i++) {
-            cards[i].SetByIndex(4 + i);
-        }
-
-        // Deal multiple cards, recording statGroup
-        for (int i = 0; i < 5; i++) {
-            stats.NewCard(cards[i], 1.0);
-            statGroupHistory[i] = stats.statGroup;
-        }
-
-        // Drop in reverse, verify statGroup restoration
-        for (int i = 4; i >= 0; i--) {
-            stats.DropCard(cards[i]);
-            if (i > 0) {
-                if (stats.statGroup != statGroupHistory[i-1]) {
-                    std::cerr << "FAILED: statGroup mismatch at position " << i
-                              << ". Expected " << statGroupHistory[i-1]
-                              << " but got " << stats.statGroup << std::endl;
-                    /*
-                    exit(1);
-                    */
-                }
-            }
-        }
-      } // END: statGroup Consistency Test
 
       // Empty Community Edge Case
       static void test_EmptyCommunityEdgeCase() {
@@ -397,20 +345,6 @@ namespace UnitTests {
         pocketB.SetByIndex(1);
         emptyHand.AddToHand(pocketA);
         emptyHand.AddToHand(pocketB);
-
-        TestCallStats realCardsAvailable(emptyHand, emptyCommunity, 0);
-        expectedMoreCards = 52 - 0 - 2;
-
-        if (realCardsAvailable.currentCard != 0) {
-            std::cerr << "FAILED: Again, currentCard should be 0, got " << realCardsAvailable.currentCard << std::endl;
-            exit(1);
-        }
-        /*
-        if (realCardsAvailable.moreCards != expectedMoreCards) {
-            std::cerr << "FAILED: This time, moreCards should be " << expectedMoreCards << ", got " << realCardsAvailable.moreCards << std::endl;
-            exit(1);
-        }
-        */
 
         DeckLocation card;
         // ... initialize ...
@@ -454,7 +388,6 @@ namespace UnitTests {
       TestCallStats::test_DeepRecursionCycle();
       TestCallStats::test_UndoArrayBoundaries(); // Verify undo arrays at currentCard boundaries (where `myUndo[undoCurrentCard]` appears)
       TestCallStats::test_BatchTransitions(); // Test transition values where the different logic changes between: `cardsLeft >= 3` vs `cardsLeft == 3`
-      TestCallStats::test_StatGroupConsistency(); // statGroup tracks statistical groups. Verify it's consistent across add/drop:
       TestCallStats::test_EmptyCommunityEdgeCase(); // Test starting from completely empty state:
 
     }
