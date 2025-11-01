@@ -203,6 +203,15 @@ template<typename T> ValueAndSlope ExactCallD::facedOdds_raise_Geom_forTest(
         }
     }
 
+    if (hypotheticalRaise.raiseBy() < std::numeric_limits<float64>::epsilon()) {
+      // We've already reached this raiseTo amount, so any cards would get us there (we got called, it's not even our turn)
+      if (RAREST_HAND_CHANCE < startingPoint) {
+        return ValueAndSlope{ startingPoint, 0.0 };
+      } else {
+        return ValueAndSlope{ RAREST_HAND_CHANCE, 0.0 };
+      }
+    }
+
     FacedOddsRaiseGeom<T> a(denom);
 
     // We don't need to set w, because a.FindZero searches over w
