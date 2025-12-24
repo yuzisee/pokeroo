@@ -424,6 +424,7 @@ class HoldemArena
 		static const float64 FOLDED;
 		static const float64 INVALID;
 
+		static const uint8 BETTING_ROUNDS_REMAINING_UNINITIALIZED = std::numeric_limits<uint8>::max();
 
 
 //============================
@@ -433,7 +434,7 @@ class HoldemArena
 
 		HoldemArena(float64 smallestChipAmount, bool illustrate, bool spectate)
 		: curIndex(-1),  nextNewPlayer(0)
-
+        ,bettingRoundsRemaining(BETTING_ROUNDS_REMAINING_UNINITIALIZED)
         ,bVerbose(illustrate),bSpectate(spectate)
         ,livePlayers(0),curHighBlind(-1),smallestChip(smallestChipAmount),allChips(0)
 		,lastRaise(0),highBet(0), myPot(0), myFoldedPot(0), myBetSum(0), prevRoundFoldedPot(0), prevRoundPot(0),forcedBetSum(0), blindOnlySum(0)

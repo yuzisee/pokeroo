@@ -412,6 +412,13 @@ int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop, std::ostream &gamel
 
     }
 
+    #ifdef DEBUGASSERT
+    if (bettingRoundsRemaining == BETTING_ROUNDS_REMAINING_UNINITIALIZED) {
+        std::cerr << "Unit test out of order: did you forget to PlayRound_BeginHand (" << static_cast<int>(bettingRoundsRemaining) << ")? because otherwise HoldemArenaBetting::finishBettingRound will infinite loop..." << endl;
+				exit(78);
+    }
+    #endif
+
 	PrepBettingRound(false,2); //turn, river remaining
 
     return PlayRound(flop,3, gamelog); // `HoldemArena::PlayRound is implemented in src/arenaLogic.cpp`

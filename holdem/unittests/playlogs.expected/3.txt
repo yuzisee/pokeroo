@@ -8,13 +8,13 @@ Playing as ~
 (Ra.s) 0%
 
 *
-5d 8s Bet to call 50 (from 50) at 100 pot, 
+5d 8s Bet to call 50 (from 50) at 100 pot,
 Worst.handsCompeting = 9
 (Worst) 23.869%
 (P.w) 21.9668%
 (P.s) 3.80425%
 (P.l) 74.2289%
- -  SpaceRank  - 
+ -  SpaceRank  -
 9 dealt, 8 opp. (round), 1 opp. assumed str., 1 opp. still in
 Act(0%) or React(100%)? 0.0588235, pct 0.211837 ... 0.23869 ... 0.23869
 Choice Optimal 50
@@ -53,13 +53,13 @@ OppFoldChance% ...    0   ∇=0
 (Ra.s) 0%
 
 *
-5d 8s Bet to call 0 (from 0) at 100 pot, 
+5d 8s Bet to call 0 (from 0) at 100 pot,
 Worst.handsCompeting = 9
 (Worst) 4.65151%
 (P.w) 4.22009%
 (P.s) 0.862837%
 (P.l) 94.9171%
- -  SpaceRank  - 
+ -  SpaceRank  -
 9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Act(0%) or React(100%)? 0.105263, pct 0.158649 ... 0.0465151 ... 0.0465151
 Choice Optimal 0
@@ -100,13 +100,13 @@ OppFoldChance% ...    0   ∇=0
 (Ra.s) 0%
 
 *
-5d 8s Bet to call 0 (from 0) at 100 pot, 
+5d 8s Bet to call 0 (from 0) at 100 pot,
 Worst.handsCompeting = 9
 (Worst) 0%
 (P.w) 0%
 (P.s) 0%
 (P.l) 100%
- -  SpaceRank  - 
+ -  SpaceRank  -
 9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Act(0%) or React(100%)? 0.105263, pct 0.149275 ... 0 ... 0
 Choice Optimal 0
