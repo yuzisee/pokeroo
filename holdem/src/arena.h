@@ -129,6 +129,8 @@ class PlayerStrategy
 
 
         const CommunityPlus& ViewDealtHand() const { return myDealtHand; }
+        virtual void CopyDealtHand(const Hand & o){ myDealtHand.SetUnique(o); }
+        virtual void SaveDealtHand(const HandPlus & o){ myDealtHand.SetUnique(o); }
         virtual void StoreDealtHand(const CommunityPlus & o){ myDealtHand.SetUnique(o); }
         virtual void ClearDealtHand(){ myDealtHand.SetEmpty(); }
 
@@ -144,7 +146,7 @@ class PlayerStrategy
             game = o->game;
             myPositionIndex = o->myPositionIndex;
 
-			StoreDealtHand(o->ViewDealtHand());
+			this->StoreDealtHand(o->ViewDealtHand());
         }
 
         virtual void Link(Player * const p, HoldemArena * const g, const int8 & i)
@@ -560,7 +562,7 @@ class HoldemArena
 		constexpr playernumber_t GetDealer() const;
 
 		const Player* ViewPlayer(playernumber_t) const;
-		bool ShowHoleCards(const Player & withP, const CommunityPlus & dealHandP);
+		bool ShowHoleCards(const Player & withP, const HandPlus & dealHandP);
 		float64 GetBetDecision(playernumber_t);
 		char GetPlayerBotType(playernumber_t) const;
 

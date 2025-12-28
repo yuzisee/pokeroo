@@ -186,13 +186,22 @@ DeckLocation HoldemArena::RequestCard(GameDeck * myDealer)
 
 }
 
-bool HoldemArena::ShowHoleCards(const Player & withP, const CommunityPlus & dealHandP)
+bool HoldemArena::ShowHoleCards(const Player & withP, const HandPlus & dealHandP)
 {
+
+  #ifdef DEBUGASSERT
+    if (dealHandP.valueset == 0) {
+      std::cerr << "ShowHoleCards missing actual cards?" << endl;
+      HandPlus::DisplayHand(std::cerr, dealHandP.hand_impl);
+					exit(65); // EX_DATAERR
+    }
+  #endif
+
 	if( withP.myMoney > 0 )
 	{
 		if( withP.IsBot() )
 		{
-			withP.myStrat->StoreDealtHand(dealHandP);
+			withP.myStrat->SaveDealtHand(dealHandP);
 			return true;
 		}
 	}
@@ -233,7 +242,7 @@ void HoldemArena::DealAllHands(GameDeck * tableDealer, std::ostream & holecardsD
 				}
 				#endif
 				;;
-                HandPlus::DisplayHand(holecardsData, dealHandP.hand_logic.hand_impl);
+                HandPlus::DisplayHand(holecardsData, dealHandP.hand_impl);
                 holecardsData << withP.GetIdent().c_str() << endl;
             }
         }
