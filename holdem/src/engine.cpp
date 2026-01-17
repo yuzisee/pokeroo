@@ -26,7 +26,7 @@
 // return (addendSameSuit_bits >> (suitNumA * 4 + suitNumB)) & 1;
 #define isAddendSameSuit(suitA, suitB) ( this->addendSameSuit[(suitA)][(suitB)] )
 
-float64 DealRemainder::DealCard(Hand& h)
+float64 DealRemainder::DealCard(dealatom_t& h)
 {
     const int8 & qprevSuit = deck_impl.prevSuit[dealt.Suit];
 
@@ -362,6 +362,7 @@ template<typename T> float64 DealRemainder::executeRecursive(const DealRemainder
 
     ///We used to store suitorder here, but we keep a stack during deckState traversal now.
 
+    // MAIN CODEPATH when invoked by `AnalyzeComplete_impl(…)`
     return executeDealing(deckState, lastStats, moreCards, 1);
 }
 template float64 DealRemainder::executeRecursive<CallStats>(const DealRemainder & refDeck, CallStats (* const lastStats), const int16);
