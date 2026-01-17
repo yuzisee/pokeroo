@@ -1488,7 +1488,7 @@ namespace RegressionTests {
         virtual void ShuffleDeck() {assert(false);};
         virtual void ShuffleDeck(uint32) {assert(false);};
 
-        virtual float64 DealCard(Hand& h) {
+        virtual float64 DealCard(dealatom_t& h) {
             assert(i < n);
             h.AddToHand(cards[i]);
             ++i;
@@ -1577,6 +1577,124 @@ namespace RegressionTests {
     ;
 
 
+    void testRegression_222() {
+      /*
+
+      Next Dealer is DangerBotV
+      ────────────────────────────────────────────────────────────────
+      ============================New Hand #2========================
+      BEGIN 25⛀
+
+
+      Preflop
+      (Pot: $0)
+      */
+
+      BlindValues b;
+      b.SetSmallBigBlind(25);
+
+      HoldemArena myTable(b.GetSmallBlind(), true, true);
+      myTable.setSmallestChip(25);
+
+      const playernumber_t dealer = 0;
+
+      const std::vector<float64> foldOnly(1, 0.0);
+
+      static const float64 a222[] = {
+        std::numeric_limits<float64>::signaling_NaN(),
+        std::numeric_limits<float64>::signaling_NaN(),
+      };
+      FixedReplayPlayerStrategy dS(VectorOf(a222));
+
+      FixedReplayPlayerStrategy p_sb(foldOnly);
+      FixedReplayPlayerStrategy p1(foldOnly);
+      FixedReplayPlayerStrategy p2(foldOnly);
+      FixedReplayPlayerStrategy p3(foldOnly);
+      FixedReplayPlayerStrategy p4(foldOnly);
+      FixedReplayPlayerStrategy p5(foldOnly);
+      FixedReplayPlayerStrategy p6(foldOnly);
+
+      PureGainStrategy bot("222.txt", 3);
+      PlayerStrategy * const botToTest = &bot;
+      myTable.ManuallyAddPlayer("DangerBot", 975, &dS);
+      myTable.ManuallyAddPlayer("ConservativeBot", 1025, &p_sb);
+      myTable.ManuallyAddPlayer("TrapBot222", 1000, botToTest);
+      myTable.ManuallyAddPlayer("NormalBot", 1000, &p1);
+      myTable.ManuallyAddPlayer("GearBot", 1000, &p2);
+      myTable.ManuallyAddPlayer("MultiBot", 1000, &p3);
+      myTable.ManuallyAddPlayer("ActionBot", 1000, &p4);
+      myTable.ManuallyAddPlayer("SpaceBot", 1000, &p5);
+      myTable.ManuallyAddPlayer("Player", 1000, &p6);
+
+      /*
+      (9 players)
+              [ConservativeBotV $1025]
+              [TrapBotV $1000]
+              [NormalBotV $1000]
+              [GearBotV $1000]
+              [MultiBotV $1000]
+              [ActionBotV $1000]
+              [SpaceBotV $1000]
+              [Player $1000]
+              [DangerBotV $975]
+              */
+              DeckLocation card;
+
+              {
+                  CommunityPlus handToTest; // 4h 4c
+
+                  card.SetByIndex(9);
+                  handToTest.AddToHand(card);
+
+                  card.SetByIndex(10);
+                  handToTest.AddToHand(card);
+
+                  botToTest->StoreDealtHand(handToTest);
+              }
+
+
+              myTable.BeginInitialState(222);
+              myTable.BeginNewHands(std::cout, b, false, dealer);
+
+
+              assert(  myTable.PlayRound_BeginHand(std::cout)  !=  -1);
+              /*
+
+      ConservativeBotV posts SB of $25 ($25)
+      TrapBotV posts BB of $50 ($75)
+      NormalBotV folds
+      GearBotV folds
+      MultiBotV folds
+      ActionBotV folds
+      SpaceBotV folds
+      Player folds
+      DangerBotV calls $50 ($125)
+      ConservativeBotV folds
+      TrapBotV checks
+      */
+      CommunityPlus myFlop;
+
+      card.SetByIndex(1);
+      myFlop.AddToHand(card);
+
+      card.SetByIndex(4);
+      myFlop.AddToHand(card);
+
+      card.SetByIndex(13);
+      myFlop.AddToHand(card);
+
+       /*
+
+      Flop:   2h 3s 5h    (Pot: $125)
+      */
+
+      assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
+      /*
+      (2 players)
+              [TrapBotV $950]
+              [DangerBotV $925]
+       */
+    }
     void testRegression_028() {
 
 
@@ -4155,6 +4273,139 @@ P0 calls $14.2857 ($60)
          */
     }
 
+    void testRegression_003() {
+
+      BlindValues b;
+      b.SetSmallBigBlind(25.0);
+
+      HoldemArena myTable(b.GetSmallBlind(), true, true);
+      // Playing as S
+      // new DeterredGainStrategy(logfilename, 2);
+      /*
+
+      ============================New Hand #3========================
+      BEGIN 25
+
+
+      Preflop
+      (Pot: $0)
+      (9 players)
+              [TrapBotV $850]
+              [NormalBotV $1000]
+              [GearBotV $1000]
+              [MultiBotV $1000]
+              [ActionBotV $1000]
+              [SpaceBotV $1000]
+              [Player $1175]
+              [DangerBotV $975]
+              [ConservativeBotV $1000]
+              */
+
+              const std::vector<float64> foldOnly(1, 0.0);
+              static const float64 arr[] = {std::numeric_limits<float64>::signaling_NaN(), std::numeric_limits<float64>::signaling_NaN()};
+              const std::vector<float64> pA(arr, arr + sizeof(arr) / sizeof(arr[0]) );
+
+              FixedReplayPlayerStrategy tA(pA);
+
+              FixedReplayPlayerStrategy pS(foldOnly);
+              FixedReplayPlayerStrategy sS(foldOnly);
+              FixedReplayPlayerStrategy cS(foldOnly);
+              FixedReplayPlayerStrategy dS(foldOnly);
+              FixedReplayPlayerStrategy mS(foldOnly);
+              FixedReplayPlayerStrategy gS(foldOnly);
+              FixedReplayPlayerStrategy aS(foldOnly);
+
+
+              DeterredGainStrategy bot("3.txt", 2);
+              PlayerStrategy * const botToTest = &bot;
+
+              myTable.ManuallyAddPlayer("ConservativeBotV", 1000.0, &cS);
+              myTable.ManuallyAddPlayer("TrapBotV", 850.0, &tA);
+              myTable.ManuallyAddPlayer("NormalBot3", 1000.0, botToTest);
+              myTable.ManuallyAddPlayer("GearBot", 1000.0, &gS);
+              myTable.ManuallyAddPlayer("MultiBotV", 1000.0, &mS);
+              myTable.ManuallyAddPlayer("ActionBotV", 1000.0, &aS);
+              myTable.ManuallyAddPlayer("SpaceBotV", 1000.0, &sS);
+              myTable.ManuallyAddPlayer("PPPPP", 1175.0, &pS);
+              myTable.ManuallyAddPlayer("DangerBotV", 975.0, &dS);
+              /*
+
+      TrapBotV posts SB of $25 ($25)
+      NormalBotV posts BB of $50 ($75)
+      GearBotV folds
+      MultiBotV folds
+      ActionBotV folds
+      SpaceBotV folds
+      Player folds
+      DangerBotV folds
+      ConservativeBotV folds
+      TrapBotV calls $25 ($100)
+      NormalBotV checks
+
+      */
+
+      const playernumber_t dealer = 0;
+      myTable.setSmallestChip(25.0);
+
+      DeckLocation card;
+
+      {
+          CommunityPlus handToTest; // 5d 8s
+
+          card.SetByIndex(15);
+          handToTest.AddToHand(card);
+
+          card.SetByIndex(24);
+          handToTest.AddToHand(card);
+
+          botToTest->StoreDealtHand(handToTest);
+      }
+
+      myTable.BeginInitialState(3);
+      myTable.BeginNewHands(std::cout, b, false, dealer);
+
+      assert(myTable.PlayRound_BeginHand(std::cout) != -1);
+
+      /*
+
+      Flop:   4c 9h Ts    (Pot: $100)
+      (2 players)
+              [TrapBotV $800]
+              [NormalBotV $950]
+              */
+
+              CommunityPlus myFlop;
+
+              card.SetByIndex(10);
+              myFlop.AddToHand(card);
+
+              card.SetByIndex(29);
+              myFlop.AddToHand(card);
+
+              card.SetByIndex(32);
+              myFlop.AddToHand(card);
+              /*
+
+      TrapBotV checks
+      NormalBotV checks
+      */
+
+      assert(myTable.PlayRound_Flop(myFlop, std::cout) != -1);
+      /*
+
+      Turn:   4c 9h Ts 4s   (Pot: $100)
+      (2 players)
+              [TrapBotV $800]
+              [NormalBotV $950]
+
+      TrapBotV checks
+       */
+
+       DeckLocation myTurn; // 4s
+       myTurn.SetByIndex(8);
+       assert(myTable.PlayRound_Turn(myFlop, myTurn, std::cout) != -1);
+    }
+
 
     // 2013.08.30-19.58.15
     // Hand #11
@@ -5556,6 +5807,7 @@ static void all_unit_tests() {
 }
 
 static void all_regression_tests() {
+  RegressionTests::testRegression_222();
     RegressionTests::testRegression_028();
     RegressionTests::testRegression_027();
     RegressionTests::testRegression_026();
@@ -5577,6 +5829,7 @@ static void all_regression_tests() {
 
     RegressionTests::testRegression_005();
     RegressionTests::testRegression_004();
+    RegressionTests::testRegression_003();
 
     RegressionTests::testRegression_FoldWaitLengthModel_d_dw_crash();
 }
