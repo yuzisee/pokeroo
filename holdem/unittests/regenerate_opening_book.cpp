@@ -315,7 +315,7 @@ int main(int argc, const char * argv[]) {
   if (argc == 1) {
     // No arguments other than the executable name itself.
 
-    CommunityPlus withCommunity;
+    dealatom_t withCommunity_start;
     #ifdef PROGRESSUPDATE
     std::cout << "Ready" << std::endl;
     #endif
@@ -328,9 +328,12 @@ int main(int argc, const char * argv[]) {
       r.DealCard(withCommunity);
       std::cout << "2" << std::endl;
     #else
-      r.DealCard(withCommunity.hand_logic.hand_impl);
-      r.DealCard(withCommunity.hand_logic.hand_impl);
+      r.DealCard(withCommunity_start);
+      r.DealCard(withCommunity_start);
     #endif
+
+    CommunityPlus withCommunity;
+    withCommunity.SetUnique(withCommunity_start);
 
     PreflopCallStats pfcs(withCommunity, CommunityPlus::EMPTY_COMPLUS);
     std::cout << "3! Regenerating holdemdb… " << std::endl;
