@@ -75,13 +75,14 @@ class OrderedDeck
 }
 ;
 
+typedef Hand dealatom_t;
 
 class DealableOrderedDeck
 {
 
 	public:
     OrderedDeck deck_impl;
-        virtual float64 DealCard(Hand&)=0;
+        virtual float64 DealCard(dealatom_t&)=0;
         virtual void UndealCard(const DeckLocation & deck); //Can be undealt only if not locked into addendSum
 
 		constexpr uint32 BaseDealtValue() const

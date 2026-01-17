@@ -32,7 +32,7 @@ public:
     virtual void ShuffleDeck()=0;
     virtual void ShuffleDeck(uint32)=0;
 
-    virtual float64 DealCard(Hand&)=0;
+    virtual float64 DealCard(dealatom_t&)=0;
 
 }
 ;
@@ -56,7 +56,7 @@ class RandomDeck : virtual public GameDeck
 		virtual void ShuffleDeck();
 		virtual void ShuffleDeck(uint32);
 
-		virtual float64 DealCard(Hand&);
+		virtual float64 DealCard(dealatom_t&);
 
     // NOTE: We usually don't autoshuffle. Instead, we call LoggedShuffle before each hand.
 		RandomDeck(bool autoshuffle = false) : DealableOrderedDeck(), bDeckEmpty(false), bAutoShuffle(autoshuffle), lastDealtPos(-1)

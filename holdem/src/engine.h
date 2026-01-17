@@ -29,7 +29,8 @@ class DealRemainder : public virtual DealableOrderedDeck
 {
 	private:
         Hand addendSum;
-        Hand justDealt;
+        dealatom_t justDealt; // this is a `Hand` and not `CommunityPlus` because `CommunityPlus`' `RemoveFromHand` is super inefficient.:
+        // TODO(from joseph): But... can we save any time during the most severe hotpaths by storing HandPlus instead?
 
         template<typename T> static float64 executeComparison(const DealRemainder & refDeck, T (* const lastStats), const float64 fromRuns);
         template<typename T> static float64 executeDealing(DealRemainder & deckState, T (* const lastStats), const int16 moreCards, const float64 fromRuns);
@@ -51,7 +52,7 @@ class DealRemainder : public virtual DealableOrderedDeck
          *    The number of possible hands that were dealt.
          *    (This function will call itself recursively and use this returned count to multiply-accumulate up the stack.)
          */
-        virtual float64 DealCard(Hand&) override final;
+        virtual float64 DealCard(dealatom_t&) override final;
 
 
    		void OmitSet(const CommunityPlus& setOne, const CommunityPlus& setTwo);
