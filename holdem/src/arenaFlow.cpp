@@ -49,6 +49,8 @@ void HoldemArena::PlayGameInner(HoldemArena & my, GameDeck * tableDealer, std::o
 	if( my.PlayRound_BeginHand(gamelog) == -1 ) return;
 
 	dealatom_t myFlop_input;
+	// [!TIP]
+	// The `request_str` is unused as long as `tableDealer != nullptr`
 	my.RequestCards(tableDealer,3,myFlop_input, "Please enter the flop (no whitespace): ");
 	CommunityPlus myFlop;
 	myFlop.SetUnique(myFlop_input);
@@ -228,8 +230,10 @@ void HoldemArena::DealAllHands(GameDeck * tableDealer, std::ostream & holecardsD
 
                 if( !tableDealer ) std::cerr << withP.GetIdent().c_str() << std::flush;
                 RequestCards(tableDealer,2,dealHandP_input,", enter your cards (no whitespace): ");
+                // [!TIP]
+	              // The `request_str` is unused as long as `tableDealer != nullptr`
 
-                CommunityPlus dealHandP;
+                HandPlus dealHandP;
                 dealHandP.SetUnique(dealHandP_input);
 				#ifdef DEBUGASSERT
 				if(!
@@ -242,7 +246,7 @@ void HoldemArena::DealAllHands(GameDeck * tableDealer, std::ostream & holecardsD
 				}
 				#endif
 				;;
-                HandPlus::DisplayHand(holecardsData, dealHandP.hand_impl);
+                HandPlus::DisplayHand(holecardsData, dealHandP_input);
                 holecardsData << withP.GetIdent().c_str() << endl;
             }
         }
