@@ -1,0 +1,140 @@
+
+==========#3==========
+Playing as ~
+*
+(Better All-in) 21.1837%
+(Re.s) 0.244898%
+(Better Mean Rank) 21.2245%
+(Ra.s) 0%
+
+*
+5d 8s Bet to call 50 (from 50) at 100 pot, 
+Worst.handsCompeting = 9
+(Worst) 23.869%
+(P.w) 21.9668%
+(P.s) 3.80425%
+(P.l) 74.2289%
+ -  SpaceRank  - 
+9 dealt, 8 opp. (round), 1 opp. assumed str., 1 opp. still in
+Act(0%) or React(100%)? 0.0588235, pct 0.211837 ... 0.23869 ... 0.23869
+Choice Optimal 50
+Choice Fold 50
+f(50)=0.969668
+CHECK/FOLD
+ AgainstCall(50)=0.981298 from $0.970359 @ 0.627444
+AgainstRaise(50)=0.981072 from $0.95 @ 0.372556
+        Push(50)=1 from $1 @ 0
+"riskprice"... 125(based on scaler 125)
+oppFoldChance is first 0.00452489, when betting b_min=87.5
+Against(50)Geom=1.97036
+Against(50)Algb=1.97387
+OppRAISEChanceR [F] 0.372556 @ $100 by showdown ($50 this round)
+OppRAISEChanceR [F] 0.372556 @ $150 by showdown ($50 this round)
+OppRAISEChanceR [F] 0.372556 @ $250 by showdown ($50 this round)
+OppRAISEChanceR [F] 0.372556 @ $450 by showdown ($64.7679 this round)
+OppRAISEChanceR [F] 0.00677199 @ $850 by showdown ($82.1852 this round)
+
+(Fixed at $50)
+	--
+Why didn't I raise to $100 in this round?
+"all fold" precision will be 0.00452489
+OppRAISEChanceR [F] 0.417788 @ $150 by showdown ($50 this round)	push=all_fold → 0.0723982
+OppRAISEChanceR [F] 0.417788 @ $250 by showdown ($50 this round)	push=all_fold → 0.135747
+OppRAISEChanceR [F] 0.417788 @ $450 by showdown ($61.8118 this round)	push=all_fold → 0.217195
+OppRAISEChanceR [F] 0.00901911 @ $850 by showdown ($79.8264 this round)	push=all_fold → 0.294118
+Guaranteed > $0 is in the pot for sure
+OppFoldChance% ...    0   ∇=0
+
+4c 9h Ts community
+*
+(Better All-in) 15.8649%
+(Re.s) 0.647549%
+(Better Mean Rank) 0%
+(Ra.s) 0%
+
+*
+5d 8s Bet to call 0 (from 0) at 100 pot, 
+Worst.handsCompeting = 9
+(Worst) 4.65151%
+(P.w) 4.22009%
+(P.s) 0.862837%
+(P.l) 94.9171%
+ -  SpaceRank  - 
+9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
+Act(0%) or React(100%)? 0.105263, pct 0.158649 ... 0.0465151 ... 0.0465151
+Choice Optimal 0
+Choice Fold 25
+f(0)=1.01279
+CALL 0
+ AgainstCall(0)=1.00548 from $1.01601 @ 0.344214
+AgainstRaise(0)=1 from $1 @ 0.655786
+        Push(0)=1 from $1 @ 0
+"riskprice"... 225(based on scaler 225)
+oppFoldChance is first 0.00452489, when betting b_min=112.5
+Against(0)Geom=2.01601
+Against(0)Algb=2.0049
+OppRAISEChanceM [F] 0.655786 @ $50 by showdown ($50 this round)
+OppRAISEChanceM [F] 0.634295 @ $100 by showdown ($50 this round)
+OppRAISEChanceM [F] 0.574751 @ $200 by showdown ($57.3718 this round)
+OppRAISEChanceM [W] 0 @ $400 by showdown ($78.6614 this round)
+OppRAISEChanceM [W] 0 @ $800 by showdown ($105.765 this round)
+OppRAISEChanceM [W] 0 @ $950 by showdown ($113.621 this round)
+
+(Fixed at $0)
+	--
+Why didn't I raise to $50 in this round?
+"all fold" precision will be 0.00452489
+OppRAISEChanceM [F] 0.73773 @ $100 by showdown ($50 this round)	push=all_fold → 0.0
+OppRAISEChanceM [F] 0.698733 @ $200 by showdown ($50 this round)	push=all_fold → 0.0542986
+OppRAISEChanceM [F] 0.571969 @ $400 by showdown ($74.3137 this round)	push=all_fold → 0.266968
+OppRAISEChanceM [F] 0.00677199 @ $800 by showdown ($102.969 this round)	push=all_fold → 0.235294
+OppRAISEChanceM [F] 0 @ $950 by showdown ($111.079 this round)	push=all_fold → 0.235294
+Guaranteed > $100 is in the pot for sure
+OppFoldChance% ...    0   ∇=0
+
+4s 4c 9h Ts community
+*
+(Better All-in) 14.9275%
+(Re.s) 3.18841%
+(Better Mean Rank) 0%
+(Ra.s) 0%
+
+*
+5d 8s Bet to call 0 (from 0) at 100 pot, 
+Worst.handsCompeting = 9
+(Worst) 0%
+(P.w) 0%
+(P.s) 0%
+(P.l) 100%
+ -  SpaceRank  - 
+9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
+Act(0%) or React(100%)? 0.105263, pct 0.149275 ... 0 ... 0
+Choice Optimal 0
+Choice Fold 25
+f(0)=1.0224
+CALL 0
+ AgainstCall(0)=1.01509 from $1.01509 @ 1
+AgainstRaise(0)=1 from $1 @ 0
+        Push(0)=1 from $1 @ 0
+"riskprice"... 175(based on scaler 175)
+oppFoldChance is first 0.00452489, when betting b_min=75
+Against(0)Geom=2.01509
+Against(0)Algb=2
+OppRAISEChanceM [W] 0 @ $50 by showdown ($50 this round)
+OppRAISEChanceM [W] 0 @ $100 by showdown ($50 this round)
+OppRAISEChanceM [W] 0 @ $200 by showdown ($78.0775 this round)
+OppRAISEChanceM [W] 0 @ $400 by showdown ($118.588 this round)
+OppRAISEChanceM [W] 0 @ $800 by showdown ($176.53 this round)
+OppRAISEChanceM [W] 0 @ $950 by showdown ($194.376 this round)
+
+(Fixed at $0)
+	--
+Why didn't I raise to $50 in this round?
+"all fold" precision will be 0.00452489
+OppRAISEChanceM [F] 0.61655 @ $100 by showdown ($50 this round)	push=all_fold → 0.0542986
+OppRAISEChanceM [F] 0.557473 @ $200 by showdown ($65.1388 this round)	push=all_fold → 0.122172
+OppRAISEChanceM [F] 0.485298 @ $400 by showdown ($109.617 this round)	push=all_fold → 0.352941
+OppRAISEChanceM [F] 0.00540409 @ $800 by showdown ($170.238 this round)	push=all_fold → 0.221719
+OppRAISEChanceM [F] 0 @ $950 by showdown ($188.552 this round)	push=all_fold → 0.221719
+Guaranteed > $100 is in the pot for sure
+OppFoldChance% ...    0   ∇=0
