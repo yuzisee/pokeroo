@@ -322,10 +322,10 @@ int main(int argc, const char * argv[]) {
     RandomDeck r;
     r.ShuffleDeck();
     #ifdef SUPERPROGRESSUPDATE
-      std::cout << "TODO(from joseph): We shouldn't need this stwp" << std::endl;
-      r.DealCard(withCommunity);
+      std::cout << "TODO(from joseph): We shouldn't need this step" << std::endl;
+      r.DealCard(withCommunity_start);
       std::cout << "1" << std::endl;
-      r.DealCard(withCommunity);
+      r.DealCard(withCommunity_start);
       std::cout << "2" << std::endl;
     #else
       r.DealCard(withCommunity_start);
