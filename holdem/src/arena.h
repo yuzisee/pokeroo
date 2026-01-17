@@ -485,7 +485,7 @@ class HoldemArena
 
 		void PlayShowdown(const CommunityPlus &,const playernumber_t, std::ostream &gamelog);
 
-		void RequestCards(GameDeck *, uint8, CommunityPlus &, const char * request_str);//, std::ofstream * saveCards);
+		void RequestCards(GameDeck *, uint8, dealatom_t &, const char * request_str);//, std::ofstream * saveCards);
 		static DeckLocation RequestCard(GameDeck *);//, std::ofstream *);
     void RefreshPlayers(std::ostream *spectateLog);
 

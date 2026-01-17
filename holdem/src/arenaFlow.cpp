@@ -48,8 +48,10 @@ void HoldemArena::PlayGameInner(HoldemArena & my, GameDeck * tableDealer, std::o
 
 	if( my.PlayRound_BeginHand(gamelog) == -1 ) return;
 
+	dealatom_t myFlop_input;
+	my.RequestCards(tableDealer,3,myFlop_input, "Please enter the flop (no whitespace): ");
 	CommunityPlus myFlop;
-	my.RequestCards(tableDealer,3,myFlop, "Please enter the flop (no whitespace): ");
+	myFlop.SetUnique(myFlop_input);
     if( my.PlayRound_Flop(myFlop, gamelog) == -1 ) return;
 
 
@@ -110,14 +112,14 @@ DeckLocation HoldemArena::ExternalQueryCard(std::istream& s)
 }
 
 
-void HoldemArena::RequestCards(GameDeck * myDealer, uint8 numCards, CommunityPlus & intoCards, const char * request_str)
+void HoldemArena::RequestCards(GameDeck * myDealer, uint8 numCards, dealatom_t & intoCards, const char * request_str)
 //, std::ofstream *saveCards)
 {
     if( myDealer )
     {
 
         for(uint8 n=0;n<numCards;++n)                    {
-            if ((  myDealer->DealCard(intoCards.hand_logic.hand_impl) == 0.0  ))
+            if ((  myDealer->DealCard(intoCards) == 0.0  ))
             {
                 std::cerr << "OUT OF CARDS ERROR" << endl; exit(1);
             }
@@ -139,7 +141,7 @@ void HoldemArena::RequestCards(GameDeck * myDealer, uint8 numCards, CommunityPlu
         /*
         if( saveCards )
         {
-            HandPlus::DisplayHand(*saveCards, intoCards.hand_logic.hand_impl);
+            HandPlus::DisplayHand(*saveCards, intoCards.hand_logic().hand_impl);
             saveCards->flush();
         }
         */
@@ -154,7 +156,7 @@ DeckLocation HoldemArena::RequestCard(GameDeck * myDealer)
 
     if( myDealer )
     {
-        Hand newCard;
+        dealatom_t newCard;
         if ((  myDealer->DealCard(newCard) == 0.0 ))
         {
             std::cerr << "OUT OF CARDS ERROR" << endl;
@@ -213,11 +215,13 @@ void HoldemArena::DealAllHands(GameDeck * tableDealer, std::ostream & holecardsD
 
             if( withP.IsBot() )
             {
-                CommunityPlus dealHandP;
+                dealatom_t dealHandP_input;
 
                 if( !tableDealer ) std::cerr << withP.GetIdent().c_str() << std::flush;
-                RequestCards(tableDealer,2,dealHandP,", enter your cards (no whitespace): ");
+                RequestCards(tableDealer,2,dealHandP_input,", enter your cards (no whitespace): ");
 
+                CommunityPlus dealHandP;
+                dealHandP.SetUnique(dealHandP_input);
 				#ifdef DEBUGASSERT
 				if(!
 				#endif

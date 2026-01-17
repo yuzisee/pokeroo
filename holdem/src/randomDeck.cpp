@@ -77,7 +77,7 @@ uint32 RandomDeck::Float64ToUint32Seed(int8 small_int, float64 seedShift)
 void RandomDeck::ShuffleDeck(uint32 psychoRandom)
 {
 
-	
+
 
 	ShuffleDeck();
 
@@ -132,7 +132,7 @@ void RandomDeck::ShuffleDeck(uint32 psychoRandom)
 }
 
 
-float64 RandomDeck::DealCard(Hand& h)
+float64 RandomDeck::DealCard(dealatom_t& h)
 {
     if( bDeckEmpty )
     {
@@ -161,4 +161,3 @@ float64 RandomDeck::DealCard(Hand& h)
 
 	return 1;//return 0; if no cards left
 }
-

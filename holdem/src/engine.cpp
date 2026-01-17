@@ -26,7 +26,7 @@
 // return (addendSameSuit_bits >> (suitNumA * 4 + suitNumB)) & 1;
 #define isAddendSameSuit(suitA, suitB) ( this->addendSameSuit[(suitA)][(suitB)] )
 
-float64 DealRemainder::DealCard(Hand& h)
+float64 DealRemainder::DealCard(dealatom_t& h)
 {
     const int8 & qprevSuit = deck_impl.prevSuit[dealt.Suit];
 
@@ -65,8 +65,8 @@ float64 DealRemainder::DealCard(Hand& h)
         /// 3. (matchesnew)  Imagine having 2 Spades, and then dealing a 2 of Hearts. That has ×3, but then what if the next card is 2 of Clubs, without LockNewAddend?
 
 
-		const uint32 hHere=h.SeeCards(dealt.Suit);
-		const uint32 hBack=h.SeeCards(qprevSuit);
+		const uint32 hHere=h.hand_impl.SeeCards(dealt.Suit);
+		const uint32 hBack=h.hand_impl.SeeCards(qprevSuit);
 
 		// Remember, `dealtHand` is everything that has been dealt previously.
 		// `h.SeeCards(…)` is what's currently in the hand
@@ -121,7 +121,7 @@ float64 DealRemainder::DealCard(Hand& h)
 	h.AddToHand(dealt);
 
 	uint32 dealtTo = deck_impl.dealtHand[dealt.Suit];
-	uint32 addedTo = h.SeeCards(dealt.Suit);
+	uint32 addedTo = h.hand_impl.SeeCards(dealt.Suit);
 
 
 	uint8 matchesNew = 0; //matchesNew reflects how many new duplicate suits formed.
@@ -129,7 +129,7 @@ float64 DealRemainder::DealCard(Hand& h)
 	for(int8 i=0;i<4;++i)
 	{
 		if (deck_impl.dealtHand[i] == dealtTo &&
-				  h.SeeCards(i) == addedTo &&
+				  h.hand_impl.SeeCards(i) == addedTo &&
 				        isAddendSameSuit(dealt.Suit, i) )  ++matchesNew;
 	}
 
@@ -362,6 +362,7 @@ template<typename T> float64 DealRemainder::executeRecursive(const DealRemainder
 
     ///We used to store suitorder here, but we keep a stack during deckState traversal now.
 
+    // MAIN CODEPATH when invoked by `AnalyzeComplete_impl(…)`
     return executeDealing(deckState, lastStats, moreCards, 1);
 }
 template float64 DealRemainder::executeRecursive<CallStats>(const DealRemainder & refDeck, CallStats (* const lastStats), const int16);
