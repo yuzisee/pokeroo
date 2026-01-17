@@ -281,7 +281,7 @@ void PositionalStrategy::setupPosition()
 {
 #ifdef LOGPOSITION
     logFile << endl << "*" << endl;
-    HandPlus::DisplayHand(logFile, ViewDealtHand().hand_logic.hand_impl);
+    HandPlus::DisplayHand(logFile, ViewDealtHand().hand_logic().hand_impl);
 #endif
 
 
