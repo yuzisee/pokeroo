@@ -172,7 +172,7 @@ void HoldemArena::PrepShowdownRound(const CommunityPlus & community, std::ostrea
 
 		gamelog << "Final Community Cards:" << endl;
 
-        HandPlus::DisplayHand(gamelog, community.hand_logic.hand_impl);
+        HandPlus::DisplayHand(gamelog, community.hand_logic().hand_impl);
         gamelog << endl << endl << endl;
 	}
 }
@@ -355,7 +355,7 @@ void HoldemArena::prepareRound(const CommunityPlus& community, const int8 comSiz
 			Player& withP = *(p[curIndex]);
             if( withP.IsBot() )
             {
-                withP.myStrat->SeeCommunity(community.hand_logic.hand_impl, comSize);
+                withP.myStrat->SeeCommunity(community.hand_logic().hand_impl, comSize);
             }
 		}
 	}while( curIndex != curDealer);

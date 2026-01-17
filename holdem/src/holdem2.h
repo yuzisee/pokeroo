@@ -51,8 +51,10 @@ private:
 	void preEvalStrength();
     void cleanLastTwo();
     void cleanLastTwo_twoPair();
+protected:
+  HandPlus fHandLogic;
 public:
-  HandPlus hand_logic;
+  inline constexpr const HandPlus& hand_logic() const { return this->fHandLogic; }
     static const CommunityPlus EMPTY_COMPLUS;
 
 
@@ -109,7 +111,7 @@ class ShowdownRep
 			comp.SetUnique(utilHand);
 			comp.evaluateStrength();
 			strength = comp.strength;
-			valueset = comp.hand_logic.valueset;
+			valueset = comp.hand_logic().valueset;
 		}
 
 
@@ -119,7 +121,7 @@ class ShowdownRep
 			comp.SetUnique(*h);
 			comp.evaluateStrength();
 			strength = comp.strength;
-			valueset = comp.hand_logic.valueset;
+			valueset = comp.hand_logic().valueset;
 		}
 
 		void swap(ShowdownRep& other) noexcept
@@ -200,7 +202,7 @@ class ShowdownRep
 
     bool IsMuck()
     {
-        return( (strength == 0) && (valueset == 0) && (revtiebreak == 0) && comp.hand_logic.IsEmpty() );
+        return( (strength == 0) && (valueset == 0) && (revtiebreak == 0) && comp.hand_logic().IsEmpty() );
     }
 
     void SetMuck()
@@ -216,7 +218,7 @@ class ShowdownRep
         comp.SetUnique(*h);
         comp.evaluateStrength();
         strength = comp.strength;
-        valueset = comp.hand_logic.valueset;
+        valueset = comp.hand_logic().valueset;
     }
 
 	CommunityPlus comp;
