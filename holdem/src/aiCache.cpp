@@ -292,7 +292,7 @@ void StatsManager::Query(DistrShape* dPCT,
 {
 
 #ifdef RTTIASSERT
-if (withCommunity.hand_logic.valueset == onlyCommunity.hand_logic.valueset) {
+if (withCommunity.hand_logic().valueset == onlyCommunity.hand_logic().valueset) {
   if (
     (withCommunity.CardsInSuit(0) != onlyCommunity.CardsInSuit(0))
     || (withCommunity.CardsInSuit(1) != onlyCommunity.CardsInSuit(1))
