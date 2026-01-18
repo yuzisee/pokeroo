@@ -54,7 +54,7 @@ private:
 protected:
   HandPlus fHandLogic;
 public:
-  inline constexpr const HandPlus& hand_logic() const { return this->fHandLogic; }
+    inline const HandPlus& hand_logic() const { return this->fHandLogic; }
     static const CommunityPlus EMPTY_COMPLUS;
 
 
