@@ -36,8 +36,8 @@ namespace NamedTriviaDeckTests {
 
 
         NamedTriviaDeck o;
-        o.OmitCards(withCommunity.hand_logic.hand_impl);
-        o.DiffHand(onlyCommunity.hand_logic.hand_impl);
+        o.OmitCards(withCommunity.hand_logic().hand_impl);
+        o.DiffHand(onlyCommunity.hand_logic().hand_impl);
         o.sortSuits();
 
 
@@ -240,9 +240,9 @@ namespace UnitTests {
         }
 
         // Verify myStrength/oppStrength restored correctly
-        if (std::make_tuple(stats.winloss_counter.myStrength.strength, stats.winloss_counter.myStrength.hand_logic.valueset, stats.winloss_counter.myStrength.hand_logic.hand_impl)
+        if (std::make_tuple(stats.winloss_counter.myStrength.strength, stats.winloss_counter.myStrength.hand_logic().valueset, stats.winloss_counter.myStrength.hand_logic().hand_impl)
            !=
-           std::make_tuple(initialMyStrength.strength, initialMyStrength.hand_logic.valueset, initialMyStrength.hand_logic.hand_impl)
+           std::make_tuple(initialMyStrength.strength, initialMyStrength.hand_logic().valueset, initialMyStrength.hand_logic().hand_impl)
         ) {
             stats.winloss_counter.myStrength.DisplayHand(std::cerr);
             std::cerr << "FAILED: myStrength not restored correctly" << std::endl;
@@ -250,9 +250,9 @@ namespace UnitTests {
             exit(1);
         }
         // ... add assertions comparing to initial state ...
-        if (std::make_tuple(stats.winloss_counter.oppStrength.strength, stats.winloss_counter.oppStrength.hand_logic.valueset, stats.winloss_counter.oppStrength.hand_logic.hand_impl)
+        if (std::make_tuple(stats.winloss_counter.oppStrength.strength, stats.winloss_counter.oppStrength.hand_logic().valueset, stats.winloss_counter.oppStrength.hand_logic().hand_impl)
            !=
-           std::make_tuple(initialOppStrength.strength, initialOppStrength.hand_logic.valueset, initialOppStrength.hand_logic.hand_impl)
+           std::make_tuple(initialOppStrength.strength, initialOppStrength.hand_logic().valueset, initialOppStrength.hand_logic().hand_impl)
         ) {
             stats.winloss_counter.oppStrength.DisplayHand(std::cerr);
             std::cerr << "FAILED: oppStrength not restored correctly" << std::endl;
@@ -487,7 +487,7 @@ namespace UnitTests {
                 exit(1);
             }
 
-            if ((stats.winloss_counter.myStrength.strength != initialMyStrength.strength) || (stats.winloss_counter.myStrength.hand_logic.valueset != initialMyStrength.hand_logic.valueset)) {
+            if ((stats.winloss_counter.myStrength.strength != initialMyStrength.strength) || (stats.winloss_counter.myStrength.hand_logic().valueset != initialMyStrength.hand_logic().valueset)) {
                 std::cerr << "FAILED: myStrength not restored in cycle " << cycle << std::endl;
                 exit(1);
             }
@@ -530,14 +530,14 @@ namespace UnitTests {
             exit(1);
         }
 
-        if ((stats.winloss_counter.oppStrength.strength != initialOppStrength.strength) || (stats.winloss_counter.oppStrength.hand_logic.valueset != initialOppStrength.hand_logic.valueset)) {
+        if ((stats.winloss_counter.oppStrength.strength != initialOppStrength.strength) || (stats.winloss_counter.oppStrength.hand_logic().valueset != initialOppStrength.hand_logic().valueset)) {
             std::cerr << "FAILED: oppStrength not restored correctly" << std::endl;
             exit(1);
         }
 
         stats.NewCard(firstCard, 1.0);
 
-        if ((stats.winloss_counter.oppStrength.strength != afterFirstCard.strength) || (stats.winloss_counter.oppStrength.hand_logic.valueset != afterFirstCard.hand_logic.valueset)) {
+        if ((stats.winloss_counter.oppStrength.strength != afterFirstCard.strength) || (stats.winloss_counter.oppStrength.hand_logic().valueset != afterFirstCard.hand_logic().valueset)) {
             std::cerr << "FAILED: oppStrength not consistent on re-deal" << std::endl;
             exit(1);
         }
@@ -3721,7 +3721,7 @@ P0 calls $14.2857 ($60)
         myFlop.AddToHand(card);
 
         std::cout << "Flop:\t" << flush;
-        HandPlus::DisplayHand(std::cout, myFlop.hand_logic.hand_impl);
+        HandPlus::DisplayHand(std::cout, myFlop.hand_logic().hand_impl);
       	std::cout << "(Pot: $" << myTable.GetPotSize() << ")" << endl;
      		myTable.PrintPositions(std::cout);
         /*

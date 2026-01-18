@@ -81,7 +81,7 @@ void CommunityCallStats::Compare(const float64 occ)
 
     ///TODO: WTF If I use Reset(oppStrength) then it fails to SetUnique correctly the valueset field.
     newEntry.result.strength = winloss_counter.oppStrength.strength;
-    newEntry.result.valueset = winloss_counter.oppStrength.hand_logic.valueset;
+    newEntry.result.valueset = winloss_counter.oppStrength.hand_logic().valueset;
     newEntry.result.revtiebreak = newEntry.a*52+newEntry.b;
     ++showdownIndex;
     if( incr > 1 )
@@ -244,8 +244,8 @@ void CommunityCallStats::Analyze()
         }
         if( expectedDealt != countedDealt )
         {
-            HandPlus::DisplayHand(std::cerr, winloss_counter.myStrength.hand_logic.hand_impl);
-            HandPlus::DisplayHand(std::cerr, winloss_counter.oppStrength.hand_logic.hand_impl);
+            HandPlus::DisplayHand(std::cerr, winloss_counter.myStrength.hand_logic().hand_impl);
+            HandPlus::DisplayHand(std::cerr, winloss_counter.oppStrength.hand_logic().hand_impl);
             std::cerr << "Maybe you didn't deal out proper hands" << endl;
             exit(1);
         }

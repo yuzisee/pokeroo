@@ -59,11 +59,11 @@ template<typename T> void SimpleCompare::simple_compare(T * const play_stats, co
 	}
 	else
 	{
-		if ( play_stats->winloss_counter.myStrength.hand_logic.valueset > play_stats->winloss_counter.oppStrength.hand_logic.valueset )
+		if ( play_stats->winloss_counter.myStrength.hand_logic().valueset > play_stats->winloss_counter.oppStrength.hand_logic().valueset )
 		{
 			play_stats->countWin(occ);
 		}
-		else if (play_stats->winloss_counter.myStrength.hand_logic.valueset == play_stats->winloss_counter.oppStrength.hand_logic.valueset)
+		else if (play_stats->winloss_counter.myStrength.hand_logic().valueset == play_stats->winloss_counter.oppStrength.hand_logic().valueset)
 		{
 			play_stats->countSplit(occ);
 		}
