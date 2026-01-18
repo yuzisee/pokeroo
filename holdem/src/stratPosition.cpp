@@ -83,6 +83,19 @@ void PositionalStrategy::ReleaseLogFile()
 void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity)
 {
 
+#ifdef DEBUGASSERT
+  if (ViewDealtHand().hand_logic.hand_impl == Hand::EMPTY_HAND) {
+    std::cerr << "Shouldn't we have a hand, though?" << std::endl;
+    exit(70); // EX_SOFTWARE
+  }
+  if (ViewDealtHand().hand_logic.valueset == 0) {
+    std::cerr << "Did we mix up the types or something? " << ViewPlayer().GetIdent() << std::endl;
+    ViewDealtHand().DisplayHandBig(std::cerr);
+    ViewDealtHand().DisplayHandText(std::cerr);
+    exit(70); // EX_SOFTWARE
+  }
+#endif
+
     ///=============================
     ///   Log Community/Situation
     ///=============================
@@ -130,6 +143,25 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
 
     ///Compute CommunityCallStats
     ViewTable().CachedQueryOffense(statprob.core.callcumu,onlyCommunity, withCommunity);
+
+    #ifdef DEBUGASSERT
+    if (
+      (__builtin_popcount(withCommunity.hand_logic.hand_impl.SeeCards(0)) != withCommunity.CardsInSuit(0))
+      || (__builtin_popcount(withCommunity.hand_logic.hand_impl.SeeCards(1)) != withCommunity.CardsInSuit(1))
+      || (__builtin_popcount(withCommunity.hand_logic.hand_impl.SeeCards(2)) != withCommunity.CardsInSuit(2))
+      || (__builtin_popcount(withCommunity.hand_logic.hand_impl.SeeCards(3)) != withCommunity.CardsInSuit(3))
+    ) {
+      std::cerr << "We've lost track of withCommunity (why wasn't flushCount updated?)" << std::endl;
+      std::cerr << static_cast<int>(__builtin_popcount(withCommunity.hand_logic.hand_impl.SeeCards(0))) << "\t" << static_cast<int>(withCommunity.CardsInSuit(0)) << std::endl;
+      std::cerr << static_cast<int>(__builtin_popcount(withCommunity.hand_logic.hand_impl.SeeCards(1))) << "\t" << static_cast<int>(withCommunity.CardsInSuit(1)) << std::endl;
+      std::cerr << static_cast<int>(__builtin_popcount(withCommunity.hand_logic.hand_impl.SeeCards(2))) << "\t" << static_cast<int>(withCommunity.CardsInSuit(2)) << std::endl;
+      std::cerr << static_cast<int>(__builtin_popcount(withCommunity.hand_logic.hand_impl.SeeCards(3))) << "\t" << static_cast<int>(withCommunity.CardsInSuit(3)) << std::endl;
+// HandPlus::DisplayHand(std::cerr, withCommunity.hand_logic.hand_impl);
+withCommunity.DisplayHandBig(std::cerr);
+withCommunity.DisplayHandText(std::cerr);
+exit(70); // EX_SOFTWARE
+    }
+    #endif
 
     ///Compute WinStats
     StatsManager::Query(&detailPCT,withCommunity,onlyCommunity,cardsInCommunity);

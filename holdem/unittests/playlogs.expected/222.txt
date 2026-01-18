@@ -12,7 +12,7 @@ Playing as ~
 (Ra.s) 0.0816327%
 
 *
-4h 4c Bet to call 50 (from 50) at 125 pot, 
+4h 4c Bet to call 50 (from 50) at 125 pot,
 Community outcomes (stdev = 0.138833 pcts , avgdev = 0.0951057 pcts ), kurtosis = 2.08574
 0.331404 pct: least helpful community
 0.402482 pct: 658 / 19600 (3.35714%)
@@ -28,7 +28,7 @@ Matchup outcome against top ¼ᵗʰ hands: my chance to win=43.3006% split=1.394
 Matchup outcome against top ⅓ʳᵈ hands: my chance to win=45.3453% split=1.29479%
 Matchup outcome against top ½ hands: my chance to win=47.7791% split=1.21061%
 Matchup outcome against an unknown hand: my chance to win=56.2565% split=1.53261%
- -  stat_low geom SLIDERX - 
+ -  stat_low geom SLIDERX -
 9 dealt, 8 opp. (round), 2 opp. assumed str., 1 opp. still in
 Choice Optimal 50
 Choice Fold 50
@@ -87,7 +87,7 @@ OppFoldChance% ...    0   ∇=0
 (Ra.s) 0%
 
 *
-4h 4c Bet to call 0 (from 0) at 125 pot, 
+4h 4c Bet to call 0 (from 0) at 125 pot,
 Community outcomes (stdev = 0.0919785 pcts , avgdev = 0.0727097 pcts ), kurtosis = 0.508543
 0.640865 pct: least helpful community
 0.647524 pct: 28 / 47 (59.5745%)
@@ -102,7 +102,7 @@ Community outcomes (stdev = 0.0919785 pcts , avgdev = 0.0727097 pcts ), kurtosis
 Matchup outcome against top ⅓ʳᵈ hands: my chance to win=44.5094% split=7.16078%
 Matchup outcome against top ½ hands: my chance to win=55.113% split=5.80944%
 Matchup outcome against an unknown hand: my chance to win=68.6159% split=3.5204%
- -  stat_low geom SLIDERX - 
+ -  stat_low geom SLIDERX -
 9 dealt, 1 opp. (round), 1 opp. assumed str., 1 opp. still in
 Choice Optimal 0
 Choice Fold 225

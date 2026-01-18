@@ -290,6 +290,26 @@ bool StatsManager::UnserializeC( ifstream& dataf,  CallCumulation& q )
 void StatsManager::Query(DistrShape* dPCT,
     const CommunityPlus& withCommunity, const CommunityPlus& onlyCommunity, int8 n)
 {
+
+#ifdef RTTIASSERT
+if (withCommunity.hand_logic.valueset == onlyCommunity.hand_logic.valueset) {
+  if (
+    (withCommunity.CardsInSuit(0) != onlyCommunity.CardsInSuit(0))
+    || (withCommunity.CardsInSuit(1) != onlyCommunity.CardsInSuit(1))
+    || (withCommunity.CardsInSuit(2) != onlyCommunity.CardsInSuit(2))
+    || (withCommunity.CardsInSuit(3) != onlyCommunity.CardsInSuit(3))
+    ) {
+      std::cerr << "We've lost track of CommunityPlus. One is supposed to be a subset of the other..." << std::endl;
+// HandPlus::DisplayHand(std::cerr, withCommunity.hand_logic.hand_impl);
+// HandPlus::DisplayHand(std::cerr, onlyCommunity.hand_logic.hand_impl);
+withCommunity.DisplayHandBig(std::cerr);
+withCommunity.DisplayHandText(std::cerr);
+onlyCommunity.DisplayHandBig(std::cerr);
+onlyCommunity.DisplayHandText(std::cerr);
+exit(70); // EX_SOFTWARE
+    }
+}
+#endif
     string datafilename = "";
     if( CACHEABLESTAGE >= n )
     {

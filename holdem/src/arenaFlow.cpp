@@ -49,6 +49,8 @@ void HoldemArena::PlayGameInner(HoldemArena & my, GameDeck * tableDealer, std::o
 	if( my.PlayRound_BeginHand(gamelog) == -1 ) return;
 
 	dealatom_t myFlop_input;
+	// [!TIP]
+	// The `request_str` is unused as long as `tableDealer != nullptr`
 	my.RequestCards(tableDealer,3,myFlop_input, "Please enter the flop (no whitespace): ");
 	CommunityPlus myFlop;
 	myFlop.SetUnique(myFlop_input);
@@ -186,13 +188,22 @@ DeckLocation HoldemArena::RequestCard(GameDeck * myDealer)
 
 }
 
-bool HoldemArena::ShowHoleCards(const Player & withP, const CommunityPlus & dealHandP)
+bool HoldemArena::ShowHoleCards(const Player & withP, const HandPlus & dealHandP)
 {
+
+  #ifdef DEBUGASSERT
+    if (dealHandP.valueset == 0) {
+      std::cerr << "ShowHoleCards missing actual cards?" << endl;
+      HandPlus::DisplayHand(std::cerr, dealHandP.hand_impl);
+					exit(65); // EX_DATAERR
+    }
+  #endif
+
 	if( withP.myMoney > 0 )
 	{
 		if( withP.IsBot() )
 		{
-			withP.myStrat->StoreDealtHand(dealHandP);
+			withP.myStrat->SaveDealtHand(dealHandP);
 			return true;
 		}
 	}
@@ -219,8 +230,10 @@ void HoldemArena::DealAllHands(GameDeck * tableDealer, std::ostream & holecardsD
 
                 if( !tableDealer ) std::cerr << withP.GetIdent().c_str() << std::flush;
                 RequestCards(tableDealer,2,dealHandP_input,", enter your cards (no whitespace): ");
+                // [!TIP]
+	              // The `request_str` is unused as long as `tableDealer != nullptr`
 
-                CommunityPlus dealHandP;
+                HandPlus dealHandP;
                 dealHandP.SetUnique(dealHandP_input);
 				#ifdef DEBUGASSERT
 				if(!
@@ -233,7 +246,7 @@ void HoldemArena::DealAllHands(GameDeck * tableDealer, std::ostream & holecardsD
 				}
 				#endif
 				;;
-                HandPlus::DisplayHand(holecardsData, dealHandP.hand_logic.hand_impl);
+                HandPlus::DisplayHand(holecardsData, dealHandP_input);
                 holecardsData << withP.GetIdent().c_str() << endl;
             }
         }
@@ -411,6 +424,13 @@ int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop, std::ostream &gamel
         gamelog << "   " << flush;
 
     }
+
+    #ifdef DEBUGASSERT
+    if (bettingRoundsRemaining == BETTING_ROUNDS_REMAINING_UNINITIALIZED) {
+        std::cerr << "Unit test out of order: did you forget to PlayRound_BeginHand (" << static_cast<int>(bettingRoundsRemaining) << ")? because otherwise HoldemArenaBetting::finishBettingRound will infinite loop..." << endl;
+				exit(78);
+    }
+    #endif
 
 	PrepBettingRound(false,2); //turn, river remaining
 
