@@ -217,6 +217,9 @@ CONSOLESEPARATE_HTML_EPILOGUE = r"""
               req.addEventListener("load", function(progress_event) {
                   keyboard_event.target.value = '';
                   keyboard_event.target.disabled = false;
+                  keyboard_event.target.focus(); // because `disabled = true` would have unfocused the element if the delay is longer than 1(?) tick
+                  setTimeout( function() { userEntryEl.focus() }, 0); // sometimes a race condition?  https://old.reddit.com/r/reactjs/comments/lt5st2/trying_to_focus_an_input_immediately_after_it/
+
                   document.getElementById('main').style.removeProperty('cursor');
               });
               // `holdem/appsrc/stratManual.cpp → DualInputStream::AbsorbNewline` expects "\n" which is %0A
