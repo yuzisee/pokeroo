@@ -562,10 +562,15 @@ static void printAgainstRaiseComponents(std::ofstream &logF, const ExpectedCallD
       logF << std::endl << "\t⊔ ";
     }
     logF << "Ω[" << raiseAmount << "]";
+    // if they ultimately reraise me to `raiseAmount`...
     if ((std::fabs(potRaisedWin[i].v - 1.0) < std::numeric_limits<float64>::epsilon()) && (oppRaisedChance[i].v <= std::numeric_limits<float64>::epsilon())) {
       logF << " … presumed impossible";
     } else {
       const float64 chipResult = ((potRaisedWin[i].v - 1.0) * chipUnits);
+      // ...I could win `chipResult` by calling all the way down (and we predict `oppRaisedChance[i].v` of the time they will present that opportunity to us)
+      // and the final showdown outcome will range from:
+      //   → `raiseAmount` which is the most you can lose (if you call all the way down and lose in the showdown)
+      //   → `espec.exf(raiseAmount)` which is E[pot] (the total amount of money that will be in the pot by the showdown, INCLUDING YOUR OWN CHIPS)
       logF << "\t" << valSignToString(chipResult) << std::fabs(chipResult) << " ∩ " << (oppRaisedChance[i].v * 100.0) << "%   −$" << raiseAmount << "↔+$" << espec.exf(raiseAmount);
     }
   }
@@ -1256,6 +1261,8 @@ float64 DeterredGainStrategy::MakeBet()
         logFile << "impliedFactor... " << 1 / nearEndOfBets << endl;
         logFile << endl;
     }
+	  // If you're heads-up and the pot is currently 15% of the way to the maximum possible bet, we'll scale 15% of the way
+		// TODO(from joseph): Is that actually a good idea? Probably not? In any case, these days PureGainStrategy is deemed superior to DeterredGainStrategy
     logFile << "Act(0%) or React(100%)? " << certainty << ", pct " << left.pct << " ... " << rightCS.ViewShape().pct << " ... " << right.pct << endl;
 
 #endif
