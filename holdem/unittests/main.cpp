@@ -1215,7 +1215,7 @@ namespace UnitTests {
         assert(statprob.core.getFractionOfOpponentsWhereMyWinrateIsAtLeast(0.6) > 0.93);
 
         // 19th strongest out of 20 hands
-        const float64 actualWinPct = statprob.core.callcumu.nearest_winPCT_given_rank(0.95);
+        const float64 actualWinPct = statprob.core.callcumu.nearest_winPCT_given_rank(0.95).first;
         assert(actualWinPct < 0.8); // Such a hand has about a 65% chance to win? Even aces have only 70 something right?
         assert(0.6457 < actualWinPct);
 

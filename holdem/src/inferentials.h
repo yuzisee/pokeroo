@@ -323,7 +323,7 @@ public:
 
 
 	virtual float64 Pr_haveWinPCT_strictlyBetterThan(const float64 w_toHave) const;
-	virtual float64 nearest_winPCT_given_rank(const float64 rank); // for now is not `const` because it caches the result
+	virtual std::pair<float64, char> nearest_winPCT_given_rank(const float64 rank); // for now is not `const` because it caches the result
 	virtual StatResult bestHandToHave() const;
 	virtual StatResult worstHandToHave() const;
 
