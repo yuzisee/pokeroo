@@ -341,7 +341,7 @@ enum return_status ShowHoleCardsToBot(void * table_ptr, playernumber_t playerNum
 		}else
 		{
 			const Player * myPlayer = myTable->ViewPlayer(playerNumber);
-			myTable->ShowHoleCards( *myPlayer , myHand->hand_logic );
+			myTable->ShowHoleCards( *myPlayer , myHand->hand_logic() );
 		}
 
 	}

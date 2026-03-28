@@ -364,7 +364,7 @@ void ConsoleStrategy::showSituation()
 
     UI_DESCRIPTOR << endl << "You ("<< ViewPlayer().GetIdent() <<") have: " << flush;
 
-    HandPlus::DisplayHand(UI_DESCRIPTOR, ViewDealtHand().hand_logic.hand_impl);
+    HandPlus::DisplayHand(UI_DESCRIPTOR, ViewDealtHand().hand_logic().hand_impl);
 
 #ifdef INFOASSIST_STRONG
     UI_DESCRIPTOR.precision(4);
