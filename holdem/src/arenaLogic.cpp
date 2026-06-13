@@ -502,7 +502,7 @@ int8 HoldemArena::PlayRound(const CommunityPlus & community, const int8 comSize,
 		}
 
 		gamelog << "(Pot: $" << myPot << ")" << endl;
-		PrintPositions(gamelog);
+		PrintPositions(gamelog, true);
 		gamelog <<endl;
 	}
 

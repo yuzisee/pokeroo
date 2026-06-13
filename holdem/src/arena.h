@@ -394,7 +394,7 @@ class HoldemArena
 
 	public:
 
-	void PrintPositions(std::ostream& o);
+	void PrintPositions(std::ostream& o, bool bAnnotatePreflop);
 
 //===========================
 //   Marshalling Functions

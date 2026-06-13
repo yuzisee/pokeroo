@@ -116,6 +116,8 @@ void PositionalStrategy::SeeCommunity(const Hand& h, const int8 cardsInCommunity
     {
         logFile << "==========#" << ViewTable().handnum << "==========" << endl;
         logFile << "Playing as " << ViewTable().GetPlayerBotType(myPositionIndex) << endl;
+        // ↑ See `switch( botType )` in src/arenaManagement.cpp#HoldemArena::AddStrategyBot
+        // and then compare with e.g. src/stratPosition.cpp#PureGainStrategy::MakeBet usage of `bGamble`
     }
 #endif
 
@@ -571,7 +573,7 @@ static void printAgainstRaiseComponents(std::ofstream &logF, const ExpectedCallD
       // and the final showdown outcome will range from:
       //   → `raiseAmount` which is the most you can lose (if you call all the way down and lose in the showdown)
       //   → `espec.exf(raiseAmount)` which is E[pot] (the total amount of money that will be in the pot by the showdown, INCLUDING YOUR OWN CHIPS)
-      logF << "\t" << valSignToString(chipResult) << std::fabs(chipResult) << " ∩ " << (oppRaisedChance[i].v * 100.0) << "%   −$" << raiseAmount << "↔+$" << espec.exf(raiseAmount);
+      logF << "\t" << valSignToString(chipResult) << std::fabs(chipResult) << " ∩ " << (oppRaisedChance[i].v * 100.0) << "%   ⚔️{−$" << raiseAmount << "..+$" << espec.exf(raiseAmount) << "}";
     }
   }
   logF << std::endl;
@@ -585,9 +587,9 @@ static void printPessimisticWinPct(std::ofstream & logF, const std::string &pref
         const float64 stable_splits = (showdown1v1.splits < (0.25 / safety_rounding)) ? 0.0 : showdown1v1.splits;
         // At` betSize` we predict we would need a hand good enough to beat this many players
         //                ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-  logF << "\t" << prefix_str << "W(" << csrp.getHandsToBeat(betSize) << "×)=" << csrp.getWinProb(betSize) << " L=" << csrp.getLoseProb(betSize) << " " << ((int)(csrp.splitOpponents())) << "×o.w_s=(" << showdown1v1.wins << "," << stable_splits << ")";
-        //                                                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        //                                                                                             This is the _actual_ number of people you would be in the showdown with
+  logF << "\t" << prefix_str << "W(" << csrp.getHandsToBeat(betSize) << "×🂠🂠)=" << csrp.getWinProb(betSize) << " L=" << csrp.getLoseProb(betSize) << " " << ((int)(csrp.splitOpponents())) << "👤×o.w_s=(" << showdown1v1.wins << "," << stable_splits << ")";
+        //                                                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        //   `csrp.splitOpponents()` is `opponentHandOpportunity.fTable.NumberInHand().inclAllIn() - 1`  → → →   This is the _actual_ number of people you would be in the showdown against (see see src/functionmodel.cpp)
 }
 
 // TODO(from joseph): Do we need `betToCall` and `maxShowdown`? What about `tablestate.table.GetBetToCall()` and `tablestate.table.GetMaxShowdown()` directly?
@@ -1626,7 +1628,7 @@ float64 PureGainStrategy::MakeBet()
     //   leftCS.getWinProb() === initByRank(..., left).fOutrightWinProb
     //   leftCS.getLoseProb() === initByRank(..., left).fLoseProb
     //   leftCS.ViewShape() == initByRank(..., left.fShape)
-    logFile << "CallStrength[" << statResultMode << "] W(" << static_cast<int>(tablestate.handStrengthOfRound()) << "👤)=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
+    logFile << "CallStrength[" << statResultMode << "] W(" << static_cast<int>(tablestate.handStrengthOfRound()) << "🆚)=" << leftCS.getWinProb(betToCall) << " L=" << leftCS.getLoseProb(betToCall) << " o.w_s=(" << leftCS.ViewShape(betToCall).wins << "," << leftCS.ViewShape(betToCall).splits << ")" << endl;
     // leftCS.ViewShape() is your "implied" win rate against a single opponent (i.e. the generalized hand strength of your current situation)
 
     logFile << "Can you win by " << ((betToCall == tablestate.alreadyBet()) ? "checking" : "calling") << "? " << callModel.f(betToCall) << " for a showdown of $" << pr_opponentcallraise.exf(betToCall)

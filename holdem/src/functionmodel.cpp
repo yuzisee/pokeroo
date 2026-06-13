@@ -56,6 +56,7 @@ static NetStatResult allNaN() {
     result.fShape.repeated = std::numeric_limits<float64>::signaling_NaN();
     return result;
 }
+
 CombinedStatResultsPessimistic::CombinedStatResultsPessimistic(OpponentHandOpportunity & opponentHandOpportunity, CoreProbabilities & core)
 :
 fLastBetSize(std::numeric_limits<float64>::signaling_NaN())
