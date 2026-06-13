@@ -124,12 +124,12 @@ void HoldemArena::PrintPositions(std::ostream& o, bool bAnnotatePreflop)
         if( CanStillBet(tempIndex) )
         {
             o << "\t[" << p[tempIndex]->GetIdent() << " $" << p[tempIndex]->GetMoney() << "]";
-            o << endl;
+            o << extra_disc << endl;
         }
         else if( IsInHand(tempIndex) && !HasFolded(tempIndex) )
         {
            o << "\t[" << p[tempIndex]->GetIdent() << " all-in]";
-           o << endl;
+           o << extra_disc << endl;
         }
 
     }while( tempIndex != curDealer );
