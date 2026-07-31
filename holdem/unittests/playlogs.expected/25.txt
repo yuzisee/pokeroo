@@ -37,15 +37,15 @@ Choice Optimal 74.2857
 Choice Fold 74.2857
 f(74.2857)=-1.14259
 CHECK/FOLD
-CallStrength[c] W(5👤)=0.0636722 L=0.88884 o.w_s=(0.356595,0.0471504)
+CallStrength[c] W(5🆚)=0.0636722 L=0.88884 o.w_s=(0.356595,0.0471504)
 Can you win by calling? 0.188516 for a showdown of $90.2507 @ onWin=6.36722% vs. onLoss=88.884% risking $74.2857
-(MinRaise to $225.714) 	W(28.6938×)=0.170605 L=0.817847 4×o.w_s=(0.629216,0.010388)
+(MinRaise to $225.714) 	W(28.6938×🂠🂠)=0.170605 L=0.817847 4👤×o.w_s=(0.629216,0.010388)
 FoldGainᵣ()=2.3311 by waiting 31.3333 hands(=20.8463 folds)	vs play:0.188516
  AgainstCall(74.2857)=0.188516 from −$60.2817 @ 1
 AgainstRaise(74.2857)= … presumed to be impossible
         Push(74.2857)=1 from $0 @ 0
-OppRAISEChanceR [*] 0 @ $74.2857 by showdown ($0 this round)	W(27.3118×)=0.174392 L=0.811652 4×o.w_s=(0.629392,0.0122303)
+OppRAISEChanceR [*] 0 @ $74.2857 by showdown ($0 this round)	W(27.3118×🂠🂠)=0.174392 L=0.811652 4👤×o.w_s=(0.629392,0.0122303)
 
-(Fixed at $74.2857)	W(27.3118×)=0.174392 L=0.811652 4×o.w_s=(0.629392,0.0122303)
+(Fixed at $74.2857)	W(27.3118×🂠🂠)=0.174392 L=0.811652 4👤×o.w_s=(0.629392,0.0122303)
 Guaranteed > $0 is in the pot for sure
 OppFoldChance% ...    0   ∇=0

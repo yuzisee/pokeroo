@@ -95,21 +95,43 @@ void HoldemArena::ToString(const HoldemAction& e, std::ostream& o)
     }
 }
 
-void HoldemArena::PrintPositions(std::ostream& o)
+void HoldemArena::PrintPositions(std::ostream& o, bool bAnnotatePreflop)
 {
+    playernumber_t pos_after_dealer = 1;
+    bool bHeadsUp = NumberInHandInclAllIn() == 2;
     o << "(" << (int)(NumberInHandInclAllIn()) << " players)" << endl;
     int8 tempIndex = curDealer;
     do
     {
         incrIndex(tempIndex);
+
+        const char * extra_disc = "";
+        if (IsInHand(tempIndex) && bAnnotatePreflop && !bHeadsUp) {
+          // [!TIP]
+          // During `bHeadsUp` the blinds are flipped (small blind posted by dealer)
+          switch(pos_after_dealer) {
+            case 1: extra_disc = "ⓢ"; break; // 🇸
+            case 2: extra_disc = "Ⓑ"; break; // 🇧
+            default: break;
+          }
+          pos_after_dealer++;
+        }
+        if (tempIndex == curDealer) {
+          // https://en.wikipedia.org/wiki/Enclosed_Alphanumerics
+          extra_disc = "🔘"; // 🅓🇩Ⓓ⚪🔘
+        }
+
         if( CanStillBet(tempIndex) )
         {
-            o << "\t[" << p[tempIndex]->GetIdent() << " $" << p[tempIndex]->GetMoney() << "]" << endl;
+            o << "\t[" << p[tempIndex]->GetIdent() << " $" << p[tempIndex]->GetMoney() << "]";
+            o << extra_disc << endl;
         }
         else if( IsInHand(tempIndex) && !HasFolded(tempIndex) )
         {
-            o << "\t[" << p[tempIndex]->GetIdent() << " all-in]" << endl;
+           o << "\t[" << p[tempIndex]->GetIdent() << " all-in]";
+           o << extra_disc << endl;
         }
+
     }while( tempIndex != curDealer );
 
 }

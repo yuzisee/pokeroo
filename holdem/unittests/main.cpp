@@ -3723,7 +3723,7 @@ P0 calls $14.2857 ($60)
         std::cout << "Flop:\t" << flush;
         HandPlus::DisplayHand(std::cout, myFlop.hand_logic.hand_impl);
       	std::cout << "(Pot: $" << myTable.GetPotSize() << ")" << endl;
-     		myTable.PrintPositions(std::cout);
+     		myTable.PrintPositions(std::cout, false);
         /*
          (2 players)
          [ActionBotV $3020.62]
