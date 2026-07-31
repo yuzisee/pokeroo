@@ -451,7 +451,7 @@ std::pair<firstFoldToRaise_t, FoldOrCall> StateModel::calculate_final_potRaisedW
            }
          }
 
-     } // end for `i`
+     } // end loop over [i]
 
 	return std::make_pair(std::make_pair(found_firstGoodFoldToRaise, found_firstBadFoldToRaise), myFoldGain);
 }
@@ -518,8 +518,7 @@ ValueAndSlope StateModel::calculate_oppRaisedChance(const float64 betSize, const
       // the higher of the raises takes precedent (which is the Fold outcome, which trumps expecting lower bets to make money if you can be pushed)
       for( int32 i=arraySize-1;i>=0; --i)
       {
-          if( bCallerWillPush )
-          {
+          if( bCallerWillPush ) {
               //ASSERT: i == 0 && arraySize == 1 && lastUptoRaisedChance == 0 && oppFoldChance and oppFoldChanceD have already been determined
               newRaisedChance = 1 - oppFoldChance.v;
               newRaisedChanceD = - oppFoldChance.D_v;
@@ -557,8 +556,7 @@ ValueAndSlope StateModel::calculate_oppRaisedChance(const float64 betSize, const
   #endif // DEBUGASSERT
 
   #ifdef DEBUG_TRACE_SEARCH
-          if(traceEnable != nullptr)
-          {
+          if(traceEnable != nullptr) {
               std::cout << "\t\t(oppRaiseChance[" << i << "] , cur, highest) = " << oppRaisedChance_A[i].v  << " , "  << newRaisedChance << " , " << lastuptoRaisedChance.v << std::endl;
           }
   #endif
@@ -609,6 +607,7 @@ void StateModel::query( const float64 betSize )
     const int32 arraySize = state_model_array_size_for_blending(betSize);
     ValueAndSlope * potRaisedWin_A = new ValueAndSlope[arraySize];
     ValueAndSlope * oppRaisedChance_A = new ValueAndSlope[arraySize];
+    // TODO(from joseph): Go with `unique_ptr` instead?
 
     std::pair<firstFoldToRaise_t, FoldOrCall> potRaised_delimiters = calculate_final_potRaisedWin(arraySize, potRaisedWin_A, betSize);
     const FoldOrCall fMyFoldGain = std::move(potRaised_delimiters.second);
@@ -640,54 +639,17 @@ void StateModel::query( const float64 betSize )
     }
 
 
-
     ///Calculate factors
 
     outcomeCalled = table_spec.stateCombiner.createOutcome(potNormalWin.v, playChance, potNormalWin.D_v, playChanceD);
     blendedRaises = table_spec.stateCombiner.createBlendedOutcome(arraySize, potRaisedWin_A, oppRaisedChance_A);
     outcomePush = table_spec.stateCombiner.createOutcome(potFoldWin, oppFoldChance.v, potFoldWinD, oppFoldChance.D_v);
 
-    /*
-     STATEMODEL_ACCESS gainRaised = 1;
-     float64 gainRaisedlnD = 0;
-
-
-     for( int32 i=0;i<arraySize;++i )
-     {
-     gainRaised *= (potRaisedWin_A[i] < DBL_EPSILON) ? 0 : pow( potRaisedWin_A[i],oppRaisedChance_A[i]);
-
-     if( oppRaisedChance_A[i] >= INVISIBLE_PERCENT )
-     {
-     #ifdef DEBUG_TRACE_SEARCH
-     if(bTraceEnable)
-     {
-     std::cout << "\t\t\t(potRaisedWinD_A[" << i << "] , oppRaisedChanceD_A[" << i << "] , log...) = " << potRaisedWinD_A[i] << " , " << oppRaisedChanceD_A[i] << " , " <<  log( g_raised(betSize,raiseAmount_A[i]-quantum/2) ) << std::endl;
-     }
-     #endif
-
-     if( raiseAmount_A[i] >= myInfo->maxBet()-quantum/2 )
-     {
-     gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/ g_raised(betSize,raiseAmount_A[i]-quantum/2) + oppRaisedChanceD_A[i]*log( g_raised(betSize,raiseAmount_A[i]-quantum/2) );
-     }else
-     {
-     gainRaisedlnD += oppRaisedChance_A[i]*potRaisedWinD_A[i]/potRaisedWin_A[i] + oppRaisedChanceD_A[i]*log(potRaisedWin_A[i]);
-     }
-     }
-     }
-
-
-     if( betSize >= myInfo->maxBet() )
-     {
-     gainNormallnD = playChance*potNormalWinD/g_raised(betSize,betSize-quantum/2) + playChanceD*log(g_raised(betSize,betSize-quantum/2));
-     }
-     */
-
      ///Store results
      struct AggregatedState gainCombined = table_spec.stateCombiner.combinedContributionOf(outcomePush, outcomeCalled, blendedRaises);
 
 #ifdef DEBUG_TRACE_SEARCH
-    if(traceEnable != nullptr)
-    {
+    if(traceEnable != nullptr) {
       // https://github.com/yuzisee/pokeroo/commit/ecec2a0e4f8d119a01f310fef9ce4e4652c3ce58
         std::cout << "\t\t (gainWithFold*gainNormal*gainRaised) = " << gainCombined.contribution.v << std::endl;
         std::cout << "\t\t ((gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y) = " << gainCombined.contribution.D_v << std::endl;
@@ -699,7 +661,13 @@ void StateModel::query( const float64 betSize )
 
     dy = gainCombined.contribution.D_v; // e.g. (gainWithFoldlnD+gainNormallnD+gainRaisedlnD)*y;
 
-    y -= fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank());
+    if (table_spec.tableView->ViewPlayer()->GetBetSize() < table_spec.tableView->table->GetBetToCall()) {
+      // Only consider the action of betting `betSize` to be a "positive" action if it's better than folding.
+      y -= fMyFoldGain.myFoldGain(fMyFoldGain.suggestMeanOrRank());
+    } else {
+      y -= 1.0; // When you check, nothing happens. You don't win money and you don't lose money. You stay at 1.0 of your bankroll.
+    }
+
     /* called with ea.ed */
 #ifdef DEBUGASSERT
     if(std::isnan(y))
@@ -720,7 +688,7 @@ void StateModel::query( const float64 betSize )
 
     delete [] oppRaisedChance_A;
     delete [] potRaisedWin_A;
-}
+} // end StateModel::query
 
 SimulateReraiseResponse StateModel::willFoldToReraise
 (
