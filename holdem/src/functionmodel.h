@@ -21,8 +21,14 @@
 #ifndef HOLDEM_GainModels
 #define HOLDEM_GainModels
 
+
+#undef DEBUG_AGAINSTXOPPONENTS
+
 #include "callPrediction.h"
 
+#ifdef DEBUG_AGAINSTXOPPONENTS
+#include <iostream>
+#endif
 #define DEFAULT_EPS_STEP 0.001
 
 class HoldemFunctionModel : public virtual ScalarFunctionModel
@@ -150,6 +156,9 @@ public:
 
     virtual float64 getHandsToBeat(float64 betSize) { query(betSize); return fHandsToBeat; }
 
+    #ifdef DEBUG_AGAINSTXOPPONENTS
+    std::ofstream * traceDebug;
+    #endif
 private:
     void query(float64 betSize);
 

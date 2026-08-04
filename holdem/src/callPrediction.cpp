@@ -1463,7 +1463,7 @@ float64 ExactCallBluffD::RiskPrice(const ExpectedCallD &tableinfo, FoldStatsCdf 
     //   + distinguish between (information given to opponent)
     // ef() is pessimistic
     // NOTE: below that opponents = 1, so RANK is not necessary here.
-    FG.waitLength.setW( foldcumu_caching->nearest_winPCT_given_rank(1.0 - 1.0/Ne) ); //If you're past the flop, we need definitely consider only the true number of opponents
+    FG.waitLength.setW( foldcumu_caching->nearest_winPCT_given_rank(1.0 - 1.0/Ne).first ); //If you're past the flop, we need definitely consider only the true number of opponents
     FG.waitLength.amountSacrificeVoluntary = estSacrifice; //rarity() already implies the Ne
 	FG.waitLength.amountSacrificeForced = 0; //estSacrifice*rarity() already implies a forced avgBlinds
     FG.waitLength.bankroll = maxStack;
