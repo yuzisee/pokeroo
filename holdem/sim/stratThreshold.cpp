@@ -130,7 +130,7 @@ float64 MultiThresholdStrategy::MakeBet()
                 logFile.open((ViewPlayer().GetIdent() + ".MultiThresh.txt").c_str());
             }
 
-            HandPlus::DisplayHand(logFile, ViewDealtHand().hand_logic.hand_impl);
+            HandPlus::DisplayHand(logFile, ViewDealtHand().hand_logic().hand_impl);
             logFile << "ThresholdAI" << endl;
 
             logFile << multiThreshhold << " = " << w->mean.pct << "^" << (int)(toBeat+redundancy) << endl;

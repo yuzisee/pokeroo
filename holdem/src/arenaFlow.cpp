@@ -420,7 +420,7 @@ int8 HoldemArena::PlayRound_Flop(const CommunityPlus & flop, std::ostream &gamel
     {
         gamelog << endl;
         gamelog << "Flop:\t" << flush;
-        HandPlus::DisplayHand(gamelog, flop.hand_logic.hand_impl);
+        HandPlus::DisplayHand(gamelog, flop.hand_logic().hand_impl);
         gamelog << "   " << flush;
 
     }
@@ -448,7 +448,7 @@ int8 HoldemArena::PlayRound_Turn(const CommunityPlus & flop, const DeckLocation 
         gamelog << endl;
         gamelog << "Turn:\t" << flush;
 
-        HandPlus::DisplayHand(gamelog, flop.hand_logic.hand_impl);
+        HandPlus::DisplayHand(gamelog, flop.hand_logic().hand_impl);
         HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
         gamelog << "   " << flush;
     }
@@ -472,7 +472,7 @@ int8 HoldemArena::PlayRound_River(const CommunityPlus & flop, const DeckLocation
         gamelog << endl;
         gamelog << "River:\t" << flush;
 
-        HandPlus::DisplayHand(gamelog, flop.hand_logic.hand_impl);
+        HandPlus::DisplayHand(gamelog, flop.hand_logic().hand_impl);
         HoldemUtil::PrintCard(gamelog, turn.Suit,turn.Value);
         gamelog << " " << flush;
 
