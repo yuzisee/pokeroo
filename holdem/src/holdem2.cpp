@@ -203,13 +203,19 @@ static uint32 cleanLastTwo_flush(const uint32 cardset_for_bFlushSuit, int8 *flus
   final_valueset >>= shiftCount;
   while (*flushcount_out > 0) //While there is a SURPLUS of cards in the flush suit
   {
+    /*
       while ((final_valueset & HoldemConstants::CARD_ACELOW) == 0)
       {
           ++shiftCount;
           final_valueset >>= 1;
       }
-      (*flushcount_out)--;
       final_valueset &= ~1;
+    */
+    // [!TIP]
+    // The while-loop above is functionally identical, but much slower
+    final_valueset &= (final_valueset - 1);
+
+    (*flushcount_out)--;
   }
   final_valueset <<= shiftCount;
   return final_valueset;
