@@ -22,6 +22,7 @@
 //#define QUERYTOTALS
 
 #include "aiCache.h"
+#include "engine.h"
 #include <sstream>
 #include <fstream>
 

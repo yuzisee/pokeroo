@@ -23,6 +23,7 @@
 
 #include "ai.h"
 
+// TODO(from joseph): Is this still used? I think we have `MatchupStatsCdf` + `FoldStatsCdf` instead now? It's not perfect but perhaps close enough?
 class AllInShowdown : virtual public PlayStats
 {
 
@@ -37,7 +38,7 @@ protected:
 public:
         float64 pctWillCall(const float64) const;
 
-    //double myCallPct(double); //give pct of HIS percieved bankroll and returns chance to call
+    //double myCallPct(double); //give pct of THEIR percieved bankroll and returns chance to call
     virtual void Analyze();
     virtual void DropCard(const DeckLocation);
     virtual StatRequest NewCard(const DeckLocation, const float64 occ);
@@ -54,4 +55,3 @@ public:
 ;
 
 #endif
-
